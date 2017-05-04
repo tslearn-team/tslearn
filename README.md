@@ -8,7 +8,7 @@ At some point, it should be available on PyPI (as soon as it proves sufficiently
 
 * A `metrics` module provides:
   * efficient DTW computation (derived from `cydtw` code)
-  * Locally-Regularized DTW (detailed presentation to come)
+  * efficient Locally-Regularized DTW (detailed presentation to come)
 
 ## TODO list
 
