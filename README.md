@@ -9,11 +9,12 @@ At some point, it should be available on PyPI (as soon as it proves sufficiently
 * A `metrics` module provides:
   * efficient DTW computation (derived from `cydtw` code)
   * efficient Locally-Regularized DTW (detailed presentation to come)
+* A domain adaptation for time series module named `adaptation` that contains:
+  * a method for DTW-based non linear resampling that was previously released in `dtw_resample` repo 
 
 ## TODO list
 
 * Add standard time-series scalers (`TransformerMixin`)
-* Integrate `dtw_resample`
 * Add (Triangular) Global Alignment Kernel and soft-DTW to the proposed metrics
 * Implement Learning Shapelets from Grabocka et al. (Conv+L2, + unsupervised)
 * Add local feature extractors (`TransformerMixin`)

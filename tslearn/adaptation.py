@@ -8,6 +8,15 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 class DTWSampler(BaseEstimator, TransformerMixin):
+    """A class for non-linear DTW-based resampling of time series.
+    The principle is to use a modality (or a set of modalities) to perform DTW alignment with respect to a reference
+    and then resample other modalities using the obtained DTW path.
+
+    A typical usage should be:
+    1- build the sampler by calling the constructor
+    2- fit (i.e. provide reference time series)
+    3- call prepare_transform to perform DTW between base modalities of the targets and those of the reference.
+    4- call transform to get resampled time series for all other modalities"""
     def __init__(self, n_samples=100, interp_kind="slinear"):
         self.n_samples = n_samples
         self.interp_kind = interp_kind
@@ -56,16 +65,21 @@ class DTWSampler(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
+        assert X.shape[0] == len(self.saved_dtw_paths_)
         X_resampled = numpy.zeros((X.shape[0], self.n_samples, X.shape[2]))
         xnew = numpy.linspace(0, 1, self.n_samples)
         for i in range(X.shape[0]):
             end = last_index(X[i])
-            for j in range(X.shape[2]):
-                X_resampled[i, :, j] = resampled(X[i, :end, j], n_samples=self.n_samples, kind=self.interp_kind)
+            X_resampled[i] = resampled(X[i, :end], n_samples=self.n_samples, kind=self.interp_kind)
             # Compute indices based on alignment of dimension self.scaling_col_idx with the reference
             indices_xy = [[] for _ in range(self.n_samples)]
 
-            for t_current, t_ref in self.saved_dtw_paths_[i]:
+            if len(self.saved_dtw_paths_) == 1:
+                path = self.saved_dtw_paths_[0]
+            else:
+                path = self.saved_dtw_paths_[i]
+
+            for t_current, t_ref in path:
                 indices_xy[t_ref].append(t_current)
             for j in range(X.shape[2]):
                 ynew = numpy.array([numpy.mean(X_resampled[i, indices, j]) for indices in indices_xy])
@@ -74,9 +88,15 @@ class DTWSampler(BaseEstimator, TransformerMixin):
 
 
 def resampled(X, n_samples=100, kind="linear"):
+    if X.ndim == 1:
+        X = X.reshape((-1, 1))
+    assert X.ndim == 2
+    X_out = numpy.zeros((n_samples, X.shape[-1]))
     xnew = numpy.linspace(0, 1, n_samples)
-    f = interp1d(numpy.linspace(0, 1, X.shape[0]), X, kind=kind)
-    return f(xnew)
+    for di in range(X.shape[-1]):
+        f = interp1d(numpy.linspace(0, 1, X.shape[0]), X[:, di], kind=kind)
+        X_out[:, di] = f(xnew)
+    return X_out
 
 
 def last_index(X):
