@@ -98,3 +98,5 @@ ENV/
 # Own stuff
 .idea/
 tslearn/test
+tslearn/cydtw.c
+tslearn/cylrdtw.c
