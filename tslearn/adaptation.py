@@ -2,7 +2,7 @@ import numpy
 from sklearn.base import BaseEstimator, TransformerMixin
 from scipy.interpolate import interp1d
 
-from tslearn.metrics import dtw_path
+from tslearn.metrics import dtw_path, lr_dtw_path
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -11,18 +11,43 @@ class DTWSampler(BaseEstimator, TransformerMixin):
     """A class for non-linear DTW-based resampling of time series.
     The principle is to use a modality (or a set of modalities) to perform DTW alignment with respect to a reference
     and then resample other modalities using the obtained DTW path.
+    Note that LR-DTW algorithm can also be used as a substitute for DTW if necessary.
 
     A typical usage should be:
     1- build the sampler by calling the constructor
     2- fit (i.e. provide reference time series)
     3- call prepare_transform to perform DTW between base modalities of the targets and those of the reference.
-    4- call transform to get resampled time series for all other modalities"""
-    def __init__(self, n_samples=100, interp_kind="slinear"):
+    4- call transform to get resampled time series for all other modalities
+
+    If one wants to use LR-DTW instead of DTW at the core of this method, the `metric` attribute should be set to
+    `"lrdtw"`."""
+    def __init__(self, n_samples=100, interp_kind="slinear", metric="dtw", gamma_lr_dtw=None):
         self.n_samples = n_samples
         self.interp_kind = interp_kind
         self.reference_series_ = None
 
         self.saved_dtw_paths_ = None
+
+        self.gamma_lr_dtw = gamma_lr_dtw
+
+        self.metric = metric
+
+    def fit(self, X):
+        """Register X as the reference series and interpolate it to get a series of size self.nsamples.
+        X should contain a single (possibly multivariate) time series."""
+        if X.ndim == 1:
+            X = X.reshape((-1, 1))
+        elif X.ndim == 2:
+            if X.shape[0] == 1:
+                X = X.reshape((-1, 1))
+        elif X.ndim == 3 and X.shape[0] == 1:
+            X = X.reshape((-1, 1))
+        else:
+            raise ValueError("dimension mismatch")
+
+        end = last_index(X)
+        self.reference_series_ = resampled(X[:end], n_samples=self.n_samples, kind=self.interp_kind)
+        return self
 
     def prepare_transform(self, ts_to_be_rescaled):
         """Prepare the model for temporal resampling by computing DTW alignment path between the reference time series
@@ -44,30 +69,17 @@ class DTWSampler(BaseEstimator, TransformerMixin):
         for ts in ts_to_be_rescaled:
             end = last_index(ts)
             ts_resampled = resampled(ts[:end], n_samples=self.n_samples, kind=self.interp_kind)
-            path, d = dtw_path(self.reference_series_, ts_resampled)
+            if self.metric == "dtw":
+                path, d = dtw_path(self.reference_series_, ts_resampled)
+            elif self.metric == "lrdtw":
+                path, d = lr_dtw_path(self.reference_series_, ts_resampled, gamma=self.gamma_lr_dtw)
+            else:
+                raise ValueError("Unknown alignment function")
             self.saved_dtw_paths_.append(path)
-
-    def fit(self, X):
-        """Register X as the reference series and interpolate it to get a series of size self.nsamples.
-        X should contain a single (possibly multivariate) time series."""
-        if X.ndim == 1:
-            X = X.reshape((-1, 1))
-        elif X.ndim == 2:
-            if X.shape[0] == 1:
-                X = X.reshape((-1, 1))
-        elif X.ndim == 3 and X.shape[0] == 1:
-            X = X.reshape((-1, 1))
-        else:
-            raise ValueError
-
-        end = last_index(X)
-        self.reference_series_ = resampled(X[:end], n_samples=self.n_samples, kind=self.interp_kind)
-        return self
 
     def transform(self, X):
         assert X.shape[0] == len(self.saved_dtw_paths_)
         X_resampled = numpy.zeros((X.shape[0], self.n_samples, X.shape[2]))
-        xnew = numpy.linspace(0, 1, self.n_samples)
         for i in range(X.shape[0]):
             end = last_index(X[i])
             X_resampled[i] = resampled(X[i, :end], n_samples=self.n_samples, kind=self.interp_kind)
@@ -79,11 +91,20 @@ class DTWSampler(BaseEstimator, TransformerMixin):
             else:
                 path = self.saved_dtw_paths_[i]
 
-            for t_current, t_ref in path:
-                indices_xy[t_ref].append(t_current)
-            for j in range(X.shape[2]):
-                ynew = numpy.array([numpy.mean(X_resampled[i, indices, j]) for indices in indices_xy])
-                X_resampled[i, :, j] = ynew
+            if self.metric == "dtw":
+                for t_current, t_ref in path:
+                    indices_xy[t_ref].append(t_current)
+                for j in range(X.shape[2]):
+                    ynew = numpy.array([numpy.mean(X_resampled[i, indices, j]) for indices in indices_xy])
+                    X_resampled[i, :, j] = ynew
+            elif self.metric == "lrdtw":
+                ynew = numpy.empty((self.n_samples, X.shape[2]))
+                for t in range(self.n_samples):
+                    weights = path[t] / path[t].sum()
+                    ynew[t] = numpy.sum(X_resampled[i] * weights.reshape((-1, 1)), axis=0)
+                X_resampled[i] = ynew
+            else:
+                raise ValueError("Unknown alignment function")
         return X_resampled
 
 
