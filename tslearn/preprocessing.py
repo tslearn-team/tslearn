@@ -1,4 +1,3 @@
-import numpy
 from sklearn.base import TransformerMixin
 
 from tslearn.utils import npy3d_time_series_dataset

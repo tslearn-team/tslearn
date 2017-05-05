@@ -33,6 +33,7 @@ Also, for the whole package to run properly, its base directory should be append
 * A domain adaptation for time series module named `adaptation` that contains:
   * a method for (LR-)DTW-based non linear resampling that was previously released in `dtw_resample` repo
     * **Warning**: LR-DTW variant not tested yet!
+* A few examples are provided to serve as a doc while we build a proper one
 
 ## TODO list
 
@@ -40,5 +41,5 @@ Also, for the whole package to run properly, its base directory should be append
 * Implement Learning Shapelets from Grabocka et al. (Conv+L2, + unsupervised)
 * Add local feature extractors (`TransformerMixin`)
 * Add k-means DBA by Petitjean _et al._ and soft-DTW k-means by Cuturi and Blondel
+* Add automatic retrieval of UCR/UEA datasets
 * Provide extensive documentation
-  * A first step could be an example directory based on random walks
