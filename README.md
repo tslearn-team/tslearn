@@ -25,6 +25,8 @@ Also, for the whole package to run properly, its base directory should be append
 
 ## Already available
 
+* A `generators` module provides Random Walks generators
+* A `preprocessing` module provides standard time series scalers (implemented as `TransformerMixin`)
 * A `metrics` module provides:
   * efficient DTW computation (derived from `cydtw` code)
   * efficient Locally-Regularized DTW (detailed presentation to come)
@@ -33,11 +35,9 @@ Also, for the whole package to run properly, its base directory should be append
 
 ## TODO list
 
-* Add random time series generators (_eg._ Random Walks)
-* Add standard time-series scalers (`TransformerMixin`)
 * Add (Triangular) Global Alignment Kernel and soft-DTW to the proposed metrics
 * Implement Learning Shapelets from Grabocka et al. (Conv+L2, + unsupervised)
 * Add local feature extractors (`TransformerMixin`)
 * Add k-means DBA by Petitjean _et al._ and soft-DTW k-means by Cuturi and Blondel
 * Provide extensive documentation
-  * A first step would be an example directory based on random walks
+  * A first step could be an example directory based on random walks

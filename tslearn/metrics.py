@@ -2,16 +2,9 @@ import numpy
 
 from tslearn import cydtw
 from tslearn import cylrdtw
+from tslearn.utils import npy2d_time_series
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
-
-
-def npy2d_time_series(ts):
-    if ts.ndim == 1:
-        ts = ts.reshape((-1, 1))
-    if ts.dtype != numpy.float:
-        ts = ts.astype(numpy.float)
-    return ts
 
 
 def dtw_path(s1, s2):
