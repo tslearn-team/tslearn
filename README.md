@@ -29,7 +29,7 @@ Also, for the whole package to run properly, its base directory should be append
   * efficient DTW computation (derived from `cydtw` code)
   * efficient Locally-Regularized DTW (detailed presentation to come)
 * A domain adaptation for time series module named `adaptation` that contains:
-  * a method for DTW-based non linear resampling that was previously released in `dtw_resample` repo 
+  * a method for (LR-)DTW-based non linear resampling that was previously released in `dtw_resample` repo 
 
 ## TODO list
 
