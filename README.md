@@ -41,5 +41,6 @@ Also, for the whole package to run properly, its base directory should be append
 * Implement Learning Shapelets from Grabocka et al. (Conv+L2, + unsupervised)
 * Add local feature extractors (`TransformerMixin`)
 * Add k-means DBA by Petitjean _et al._ and soft-DTW k-means by Cuturi and Blondel
+* Metric learning for time series 
 * Add automatic retrieval of UCR/UEA datasets
 * Provide extensive documentation
