@@ -42,5 +42,5 @@ Also, for the whole package to run properly, its base directory should be append
 * Add local feature extractors (`TransformerMixin`)
 * Add k-means DBA by Petitjean _et al._ and soft-DTW k-means by Cuturi and Blondel
 * Metric learning for time series 
-* Add automatic retrieval of UCR/UEA datasets
+* Add automatic retrieval of UCR/UEA datasets and 1M remote sesensing 
 * Provide extensive documentation
