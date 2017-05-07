@@ -78,6 +78,8 @@ class DTWSampler(BaseEstimator, TransformerMixin):
             self.saved_dtw_paths_.append(path)
 
     def transform(self, X):
+        """Resample time series from dataset `X` according to resampling computed using 
+        Dynamic Time Warping."""
         assert X.shape[0] == len(self.saved_dtw_paths_)
         X_resampled = numpy.zeros((X.shape[0], self.n_samples, X.shape[2]))
         for i in range(X.shape[0]):
@@ -108,7 +110,8 @@ class DTWSampler(BaseEstimator, TransformerMixin):
         return X_resampled
 
 
-def resampled(X, n_samples=100, kind="linear"):
+def resampled(X, n_samples=100, kind="slinear"):
+    """Perform resampling for time series `X` using the method given in `kind`."""
     if X.ndim == 1:
         X = X.reshape((-1, 1))
     assert X.ndim == 2
@@ -121,6 +124,7 @@ def resampled(X, n_samples=100, kind="linear"):
 
 
 def last_index(X):
+    """Return last index at which time series in `X` is finite."""
     timestamps_infinite = numpy.all(~numpy.isfinite(X), axis=1)  # Are there NaNs padded after the TS?
     if numpy.alltrue(~timestamps_infinite):
         idx = X.shape[0]
