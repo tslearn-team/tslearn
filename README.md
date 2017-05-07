@@ -26,12 +26,13 @@ Also, for the whole package to run properly, its base directory should be append
 * A `generators` module provides Random Walks generators
 * A `preprocessing` module provides standard time series scalers (implemented as `TransformerMixin`)
 * A `metrics` module provides:
-  * efficient DTW computation (derived from `cydtw` code)
+  * efficient Dynamic Time Warping (DTW) computation (derived from `cydtw` code)
   * efficient Locally-Regularized DTW (detailed presentation to come)
 * A domain adaptation for time series module named `adaptation` that contains:
   * a method for (LR-)DTW-based non linear resampling that was previously released in `dtw_resample` repo
     * **Warning**: LR-DTW variant not tested yet!
-* A few examples are provided to serve as a doc while we build a proper one
+* A `neighbors` module includes nearest neighbor algorithms to be used with time series
+* A few examples are provided to serve as a doc while waiting for a proper one
 
 # TODO list
 
@@ -41,5 +42,5 @@ Also, for the whole package to run properly, its base directory should be append
 * Add k-means DBA by Petitjean _et al._ and soft-DTW k-means by Cuturi and Blondel
 * Add metric learning for time series (Garreau _et al._)
 * Add automatic retrieval of UCR/UEA datasets and 1M remote sensing time series
-* Add knn-dtw classifiers / regressors
+* Add LB_Keogh for nearest neighbor search
 * Provide extensive documentation
