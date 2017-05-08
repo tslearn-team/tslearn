@@ -1,3 +1,5 @@
+|docs|
+
 `tslearn` is a Python package that provides machine learning tools for the analysis of time series.
 This package builds on `scikit-learn`, `numpy` and `scipy` libraries.
 At some point, it should be available on PyPI (as soon as it proves sufficiently helpful for the community).
@@ -44,3 +46,8 @@ Also, for the whole package to run properly, its base directory should be append
 * Add automatic retrieval of UCR/UEA datasets and 1M remote sensing time series
 * Add LB_Keogh for nearest neighbor search
 * Provide extensive documentation
+
+.. |docs| image:: https://readthedocs.org/projects/docs/badge/?version=latest
+    :alt: Documentation Status
+    :scale: 100%
+    :target: https://tslearn.readthedocs.io/en/latest/?badge=latest
