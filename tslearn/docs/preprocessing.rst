@@ -1,5 +1,5 @@
 `preprocessing` module
 ======================
 
-.. automodule:: io
+.. automodule:: preprocessing
    :members:
