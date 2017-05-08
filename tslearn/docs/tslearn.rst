@@ -1,72 +1,56 @@
 tslearn package
 ===============
 
-tslearn.adaptation module
--------------------------
+tslearn.adaptation
+------------------
 
 .. automodule:: tslearn.adaptation
     :members:
     :undoc-members:
     :show-inheritance:
 
-tslearn.cydtw module
---------------------
-
-.. automodule:: tslearn.cydtw
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-tslearn.cylrdtw module
-----------------------
-
-.. automodule:: tslearn.cylrdtw
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-tslearn.generators module
--------------------------
+tslearn.generators
+------------------
 
 .. automodule:: tslearn.generators
     :members:
     :undoc-members:
     :show-inheritance:
 
-tslearn.metrics module
-----------------------
+tslearn.metrics
+---------------
 
 .. automodule:: tslearn.metrics
     :members:
     :undoc-members:
     :show-inheritance:
 
-tslearn.neighbors module
-------------------------
+tslearn.neighbors
+-----------------
 
 .. automodule:: tslearn.neighbors
     :members:
     :undoc-members:
     :show-inheritance:
 
-tslearn.preprocessing module
-----------------------------
+tslearn.preprocessing
+---------------------
 
 .. automodule:: tslearn.preprocessing
     :members:
     :undoc-members:
     :show-inheritance:
 
-tslearn.shapelets module
-------------------------
+tslearn.shapelets
+-----------------
 
 .. automodule:: tslearn.shapelets
     :members:
     :undoc-members:
     :show-inheritance:
 
-tslearn.utils module
---------------------
+tslearn.utils
+-------------
 
 .. automodule:: tslearn.utils
     :members:
