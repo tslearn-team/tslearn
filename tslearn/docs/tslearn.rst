@@ -1,9 +1,6 @@
 tslearn package
 ===============
 
-Submodules
-----------
-
 tslearn.adaptation module
 -------------------------
 
@@ -72,15 +69,6 @@ tslearn.utils module
 --------------------
 
 .. automodule:: tslearn.utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: tslearn
     :members:
     :undoc-members:
     :show-inheritance:
