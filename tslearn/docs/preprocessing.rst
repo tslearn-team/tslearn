@@ -1,5 +1,5 @@
 `preprocessing` module
 ======================
 
-.. automodule:: preprocessing
+.. automodule:: tslearn.preprocessing
    :members:
