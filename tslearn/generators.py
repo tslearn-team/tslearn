@@ -19,8 +19,7 @@ def random_walks(n_ts=100, sz=256, d=1, mu=0., std=1.0):
     :type d: int
     :param mu: Mean of the normal distribution from which random walk steps are drawn
     :type mu: float
-    :param std: Standard deviation of the normal distribution from which random walk steps 
-    are drawn
+    :param std: Standard deviation of the normal distribution from which random walk steps are drawn
     :type std: float
     
     :return: A dataset of random walk time series
@@ -55,8 +54,7 @@ def random_walk_blobs(n_ts_per_blob=100, sz=256, d=1, n_blobs=2, noise_level=1.0
     :type d: int
     :param n_blobs: Number of blobs
     :type n_blobs: int
-    :param noise_level: Standard deviation of white noise added to time series in each 
-    blob
+    :param noise_level: Standard deviation of white noise added to time series in each blob
     :type std: float
     
     :return: A dataset of random walk time series
