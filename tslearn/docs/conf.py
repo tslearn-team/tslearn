@@ -19,8 +19,6 @@ import os
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.insert(0, os.path.abspath('../../'))
-#this_directory =
-# __file__ is the absolute path to the current python file.
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
 
 # -- General configuration ------------------------------------------------
