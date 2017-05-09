@@ -1,4 +1,8 @@
 import numpy
+import os
+on_rtd = os.environ.get('READTHEDOCS') == 'True'
+if on_rtd:
+    import pyximport; pyximport.install()
 
 from tslearn import cydtw
 from tslearn import cylrdtw
