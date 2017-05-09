@@ -3,12 +3,17 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to tslearn's documentation!
-===================================
+Welcome to ``tslearn``'s documentation!
+=======================================
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
    
-   tslearn
+   generators
+   preprocessing
+   metrics
+   utils
+   neighbors
+   adaptation

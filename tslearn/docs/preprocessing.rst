@@ -1,5 +1,7 @@
-`preprocessing` module
-======================
+tslearn.preprocessing
+=====================
 
 .. automodule:: tslearn.preprocessing
-   :members:
+    :members:
+    :undoc-members:
+    :show-inheritance:
