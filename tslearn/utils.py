@@ -19,14 +19,12 @@ def npy2d_time_series(ts):
     
     Example
     -------
-    
     >>> npy2d_time_series([1, 2]) # doctest: +NORMALIZE_WHITESPACE
     array([[ 1.],
            [ 2.]])
     
     See Also
     --------
-
     npy3d_time_series_dataset : Transforms a dataset of time series
     """
     if type(ts) != numpy.ndarray:
@@ -53,14 +51,12 @@ def npy3d_time_series_dataset(dataset):
     
     Example
     -------
-    
     >>> npy3d_time_series_dataset([[1, 2]]) # doctest: +NORMALIZE_WHITESPACE
     array([[[ 1.],
             [ 2.]]])
     
     See Also
     --------
-
     npy2d_time_series : Transforms a single time series
     """
     if type(dataset) != numpy.ndarray:

@@ -178,7 +178,6 @@ def first_non_finite_index(X):
     
     Example
     -------
-    
     >>> first_non_finite_index(numpy.array([1, 2, 4, 3, numpy.nan, numpy.nan]).reshape((-1, 1)))
     4
     """

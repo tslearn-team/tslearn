@@ -26,7 +26,6 @@ def dtw_path(s1, s2):
 
     Returns
     -------
-
     list of integer pairs
         Matching path represented as a list of index pairs. In each pair, the first index corresponds to ``s1`` and the
         second one corresponds to ``s2``
@@ -35,7 +34,6 @@ def dtw_path(s1, s2):
 
     See Also
     --------
-
     dtw : Get only the similarity score for DTW
     lr_dtw : Locally_regularized Dynamic Time Warping (LR-DTW) score
     lr_dtw_path : Get both the matching path and the similarity score for LR-DTW
@@ -59,13 +57,11 @@ def dtw(s1, s2):
 
     Returns
     -------
-
     float
         Similarity score
 
     See Also
     --------
-
     dtw_path : Get both the matching path and the similarity score for DTW
     lr_dtw : Locally_regularized Dynamic Time Warping (LR-DTW) score
     lr_dtw_path : Get both the matching path and the similarity score for LR-DTW
@@ -92,13 +88,11 @@ def lr_dtw(s1, s2, gamma=0.):
 
     Returns
     -------
-
     float
         Similarity score
 
     See Also
     --------
-
     lr_dtw_path : Get both the matching path and the similarity score for LR-DTW
     dtw : Dynamic Time Warping score
     dtw_path : Get both the matching path and the similarity score for DTW
@@ -125,13 +119,11 @@ def lr_dtw_path(s1, s2, gamma=0.):
 
     Returns
     -------
-
     float
         Similarity score
 
     See Also
     --------
-
     lr_dtw : LR-DTW score
     dtw : Dynamic Time Warping (DTW) score
     dtw_path : Get both the matching path and the similarity score for DTW

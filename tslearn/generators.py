@@ -6,10 +6,10 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 def random_walks(n_ts=100, sz=256, d=1, mu=0., std=1.0):
     """Random walk time series generator.
 
-    Generate `n_ts` time series of size `sz` and dimensionality `d`.
+    Generate ``n_ts`` time series of size ``sz`` and dimensionality ``d``.
     Generated time series follow the model:
     $$ts[t] = ts[t - 1] + a$$
-    where a is drawn from a normal distribution of mean `mu` and standard deviation `std`.
+    where a is drawn from a normal distribution of mean ``mu`` and standard deviation ``std``.
 
     Parameters
     ----------
