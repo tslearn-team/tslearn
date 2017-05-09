@@ -23,6 +23,7 @@ def dtw_path(s1, s2):
         A time series
     s2 : numpy.ndarray
         Another time series
+        If not given, self-similarity of dataset1 is returned
 
     Returns
     -------
