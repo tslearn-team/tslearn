@@ -60,8 +60,8 @@ class DTWSampler(BaseEstimator, TransformerMixin):
             raise ValueError("dimension mismatch")
 
         end = first_non_finite_index(X)
-        self.reference_series_ = resampled(X[:end], n_samples=self.n_samples, 
-                                           kind=self.interp_kind)
+        self.reference_series_ = _resampled(X[:end], n_samples=self.n_samples,
+                                            kind=self.interp_kind)
         return self
 
     def prepare_transform(self, ts_to_be_rescaled):
@@ -94,8 +94,8 @@ class DTWSampler(BaseEstimator, TransformerMixin):
         self.saved_dtw_paths_ = []
         for ts in ts_to_be_rescaled:
             end = first_non_finite_index(ts)
-            ts_resampled = resampled(ts[:end], n_samples=self.n_samples, 
-                                     kind=self.interp_kind)
+            ts_resampled = _resampled(ts[:end], n_samples=self.n_samples,
+                                      kind=self.interp_kind)
             if self.metric == "dtw":
                 path, d = dtw_path(self.reference_series_, ts_resampled)
             elif self.metric == "lrdtw":
@@ -122,8 +122,8 @@ class DTWSampler(BaseEstimator, TransformerMixin):
         X_resampled = numpy.zeros((X.shape[0], self.n_samples, X.shape[2]))
         for i in range(X.shape[0]):
             end = first_non_finite_index(X[i])
-            X_resampled[i] = resampled(X[i, :end], n_samples=self.n_samples, 
-                                       kind=self.interp_kind)
+            X_resampled[i] = _resampled(X[i, :end], n_samples=self.n_samples,
+                                        kind=self.interp_kind)
             
             indices_xy = [[] for _ in range(self.n_samples)]
 
@@ -150,8 +150,8 @@ class DTWSampler(BaseEstimator, TransformerMixin):
         return X_resampled
 
 
-def resampled(X, n_samples=100, kind="slinear"):
-    """Perform resampling for time series `X` using the method given in `kind`."""
+def _resampled(X, n_samples=100, kind="slinear"):
+    """Perform resampling for time series ``X`` using the method given in ``kind``."""
     if X.ndim == 1:
         X = X.reshape((-1, 1))
     assert X.ndim == 2
