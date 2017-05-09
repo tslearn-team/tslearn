@@ -48,5 +48,4 @@ Also, for the whole package to run properly, its base directory should be append
 * Add LB_Keogh for nearest neighbor search
 * Add Cost-Aware Early Classification of TS (Tavenard & Malinowski)?
 * Documentation
-  * Bugfix : documentation on ReadTheDocs that compiles Cython-based modules
   * Add more context to the doc (not only docstrings)
