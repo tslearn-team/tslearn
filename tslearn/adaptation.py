@@ -16,6 +16,7 @@ class DTWSampler(BaseEstimator, TransformerMixin):
     Note that LR-DTW algorithm can also be used as a substitute for DTW if necessary.
 
     A typical usage should be:
+
     1. build the sampler by calling the constructor
     2. fit (i.e. provide reference time series)
     3. call prepare_transform to perform DTW between base modalities of the targets and those of the reference.
