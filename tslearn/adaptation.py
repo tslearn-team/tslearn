@@ -10,20 +10,18 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 class DTWSampler(BaseEstimator, TransformerMixin):
     """A class for non-linear DTW-based resampling of time series.
-    The principle is to use a modality (or a set of modalities) to perform DTW alignment 
-    with respect to a reference and then resample other modalities using the obtained DTW 
-    path.
+
+    The principle is to use a modality (or a set of modalities) to perform DTW alignment with respect to a reference
+    and then resample other modalities using the obtained DTW path.
     Note that LR-DTW algorithm can also be used as a substitute for DTW if necessary.
 
     A typical usage should be:
-    1- build the sampler by calling the constructor
-    2- fit (i.e. provide reference time series)
-    3- call prepare_transform to perform DTW between base modalities of the targets and 
-    those of the reference.
-    4- call transform to get resampled time series for all other modalities
+    1. build the sampler by calling the constructor
+    2. fit (i.e. provide reference time series)
+    3. call prepare_transform to perform DTW between base modalities of the targets and those of the reference.
+    4. call transform to get resampled time series for all other modalities
 
-    If one wants to use LR-DTW instead of DTW at the core of this method, the ``metric`` 
-    attribute should be set to
+    If one wants to use LR-DTW instead of DTW at the core of this method, the ``metric`` attribute should be set to
     ``"lrdtw"``."""
     def __init__(self, n_samples=100, interp_kind="slinear", metric="dtw", 
                  gamma_lr_dtw=None):
@@ -38,11 +36,17 @@ class DTWSampler(BaseEstimator, TransformerMixin):
         self.metric = metric
 
     def fit(self, X):
-        """Register ``X`` as the reference series and interpolate it to get a series of 
-        size  ``self.nsamples``.
-        
-        :param X: A time series.
-        :type X: numpy.ndarray of shape (sz, d)
+        """Register ``X`` as the reference series and interpolate it to get a series of size ``self.nsamples``.
+
+        Parameters
+        ----------
+        X : numpy.ndarray
+            A time series.
+
+        Returns
+        -------
+        DTWSampler
+            self
         """
         if X.ndim == 1:
             X = X.reshape((-1, 1))
@@ -54,24 +58,24 @@ class DTWSampler(BaseEstimator, TransformerMixin):
         else:
             raise ValueError("dimension mismatch")
 
-        end = first_index(X)
+        end = first_non_finite_index(X)
         self.reference_series_ = resampled(X[:end], n_samples=self.n_samples, 
                                            kind=self.interp_kind)
         return self
 
     def prepare_transform(self, ts_to_be_rescaled):
-        """Prepare the model for temporal resampling by computing DTW alignment path 
-        between the reference time series and a time series to be rescaled or a set of 
-        time series to be rescaled.
+        """Prepare the model for temporal resampling by computing DTW alignment path between the reference time series
+        and a time series to be rescaled or a set of time series to be rescaled.
         
-        If ``ts_to_be_rescaled contains a single time series, all series from the dataset 
-        will be rescaled using the DTW path between that time series and the reference 
-        one, otherwise, the ``X`` array given at transform time should have the same 
-        number of time series (``X.shape[0]``) as ``ts_to_be_rescaled``.
-        
-        :param ts_to_be_rescaled: A time series dataset of base modalities
-        :type X: numpy.ndarray of shape (n_ts, sz, d) with 
-        ``d = self.reference_series_.shape[-1]``
+        If ``ts_to_be_rescaled`` contains a single time series, all series from the dataset will be rescaled using the
+        DTW path between that time series and the reference one, otherwise, the ``X`` array given at transform time
+        should have the same number of time series (``X.shape[0]``) as ``ts_to_be_rescaled``.
+
+        Parameters
+        ----------
+        ts_to_be_rescaled : numpy.ndarray
+            A time series dataset of base modalities of shape (n_ts, sz, d) with
+            ``d = self.reference_series_.shape[-1]``
         """
         if ts_to_be_rescaled.ndim == 1:
             ts_to_be_rescaled = ts_to_be_rescaled.reshape((1, -1, 1))
@@ -88,7 +92,7 @@ class DTWSampler(BaseEstimator, TransformerMixin):
         # with d = self.reference_series.shape[-1]
         self.saved_dtw_paths_ = []
         for ts in ts_to_be_rescaled:
-            end = first_index(ts)
+            end = first_non_finite_index(ts)
             ts_resampled = resampled(ts[:end], n_samples=self.n_samples, 
                                      kind=self.interp_kind)
             if self.metric == "dtw":
@@ -101,17 +105,22 @@ class DTWSampler(BaseEstimator, TransformerMixin):
             self.saved_dtw_paths_.append(path)
 
     def transform(self, X):
-        """Resample time series from dataset `X` according to resampling computed using 
-        Dynamic Time Warping.
-        
-        :param X: A time series dataset to be resampled.
-        :type X: 3-dimensional numpy.ndarray
-        :return: The transformed time series dataset
+        """Resample time series from dataset `X` according to resampling computed at the ``prepare_transform`` stage.
+
+        Parameters
+        ----------
+        X : numpy.ndarray
+            A time series dataset to be resampled (3-dimensional array).
+
+        Returns
+        -------
+        numpy.ndarray
+            The transformed time series dataset
         """
         assert X.shape[0] == len(self.saved_dtw_paths_)
         X_resampled = numpy.zeros((X.shape[0], self.n_samples, X.shape[2]))
         for i in range(X.shape[0]):
-            end = first_index(X[i])
+            end = first_non_finite_index(X[i])
             X_resampled[i] = resampled(X[i, :end], n_samples=self.n_samples, 
                                        kind=self.interp_kind)
             
@@ -153,19 +162,23 @@ def resampled(X, n_samples=100, kind="slinear"):
     return X_out
 
 
-def first_index(X):
+def first_non_finite_index(X):
     """Return first index at which time series in `X` is non-finite.
+
+    Parameters
+    ----------
+    X : numpy.ndarray
+        A time series
+
+    Returns
+    -------
+    int
+        First index containing NaN, or length of the time series is it contains no NaN
     
-    :param X: A time series
-    :type X: numpy.ndarray
+    Example
+    -------
     
-    :return: First index containing NaN, or length of the time series is it contains no
-    NaN
-    :rtype: int
-    
-    :Example:
-    
-    >>> first_index(numpy.array([1, 2, 4, 3, numpy.nan, numpy.nan]).reshape((-1, 1)))
+    >>> first_non_finite_index(numpy.array([1, 2, 4, 3, numpy.nan, numpy.nan]).reshape((-1, 1)))
     4
     """
     timestamps_infinite = numpy.all(~numpy.isfinite(X), axis=1)  

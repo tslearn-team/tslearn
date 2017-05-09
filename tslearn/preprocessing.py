@@ -6,10 +6,10 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 class TimeSeriesScalerMinMax(TransformerMixin):
-    """Scaler for time series. Scales time series so that their span in each dimension 
-    is between `min` and `max`.
+    """Scaler for time series. Scales time series so that their span in each dimension is between ``min`` and ``max``.
     
-    :Example:
+    Example
+    -------
     
     >>> TimeSeriesScalerMinMax(min=1., max=2.).fit_transform([[0, 3, 6]]) # doctest: +NORMALIZE_WHITESPACE
     array([[[ 1. ],
@@ -22,9 +22,16 @@ class TimeSeriesScalerMinMax(TransformerMixin):
 
     def fit_transform(self, X):
         """Fit to data, then transform it.
-        
-        :param X: Time series dataset to be rescaled
-        :return: Rescaled time series dataset
+
+        Parameters
+        ----------
+        X
+            Time series dataset to be rescaled
+
+        Returns
+        -------
+        numpy.ndarray
+            Rescaled time series dataset
         """
         X_ = npy3d_time_series_dataset(X)
         for i in range(X_.shape[0]):
@@ -37,10 +44,11 @@ class TimeSeriesScalerMinMax(TransformerMixin):
 
 
 class TimeSeriesScalerMeanVariance(TransformerMixin):
-    """Scaler for time series. Scales time series so that their mean (resp. variance) in 
-    each dimension is `mu` (resp. `std`).
+    """Scaler for time series. Scales time series so that their mean (resp. variance) in each dimension is ``mu``
+    (resp. ``std``).
     
-    :Example:
+    Example
+    -------
     
     >>> TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform([[0, 3, 6]]) # doctest: +NORMALIZE_WHITESPACE
     array([[[-1.22474487],
@@ -54,8 +62,15 @@ class TimeSeriesScalerMeanVariance(TransformerMixin):
     def fit_transform(self, X):
         """Fit to data, then transform it.
         
-        :param X: Time series dataset to be rescaled
-        :return: Rescaled time series dataset
+        Parameters
+        ----------
+        X
+            Time series dataset to be rescaled
+
+        Returns
+        -------
+        numpy.ndarray
+            Rescaled time series dataset
         """
         X_ = npy3d_time_series_dataset(X)
         for i in range(X_.shape[0]):
