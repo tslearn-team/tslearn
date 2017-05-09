@@ -3,6 +3,7 @@ from scipy.spatial.distance import cdist
 
 cimport numpy
 cimport cython
+from cpython cimport bool
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -95,3 +96,24 @@ def dtw(numpy.ndarray[DTYPE_t, ndim=2] s1, numpy.ndarray[DTYPE_t, ndim=2] s2):
             cum_sum[i + 1, j + 1] = min(cum_sum[i, j + 1], cum_sum[i + 1, j], cum_sum[i, j]) + cross_dist[i, j]
 
     return numpy.sqrt(cum_sum[l1, l2])
+
+@cython.boundscheck(False) # turn off bounds-checking for entire function
+@cython.wraparound(False)  # turn off negative index wrapping for entire function
+def cdist_dtw(numpy.ndarray[DTYPE_t, ndim=3] dataset1, numpy.ndarray[DTYPE_t, ndim=3] dataset2, bool self_similarity):
+    assert dataset1.dtype == DTYPE and dataset2.dtype == DTYPE
+    cdef int n1 = dataset1.shape[0]
+    cdef int n2 = dataset2.shape[0]
+    cdef int i = 0
+    cdef int j = 0
+    cdef numpy.ndarray[DTYPE_t, ndim=2] cross_dist = numpy.empty((n1, n2), dtype=DTYPE)
+
+    for i in range(n1):
+        for j in range(n2):
+            if self_similarity and j < i:
+                cross_dist[i, j] = cross_dist[j, i]
+            elif self_similarity and i == j:
+                cross_dist[i, j] = 0.
+            else:
+                cross_dist[i, j] = dtw(dataset1[i], dataset2[j])
+
+    return cross_dist

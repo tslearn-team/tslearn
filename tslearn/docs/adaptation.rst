@@ -1,5 +1,5 @@
-tslearn.adaptation
-==================
+``tslearn.adaptation``
+======================
 
 .. automodule:: tslearn.adaptation
     :members:

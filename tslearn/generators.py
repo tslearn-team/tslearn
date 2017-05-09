@@ -9,7 +9,7 @@ def random_walks(n_ts=100, sz=256, d=1, mu=0., std=1.0):
     Generate ``n_ts`` time series of size ``sz`` and dimensionality ``d``.
     Generated time series follow the model:
     $$ts[t] = ts[t - 1] + a$$
-    where a is drawn from a normal distribution of mean ``mu`` and standard deviation ``std``.
+    where :math:`a` is drawn from a normal distribution of mean ``mu`` and standard deviation ``std``.
 
     Parameters
     ----------
@@ -43,10 +43,9 @@ def random_walk_blobs(n_ts_per_blob=100, sz=256, d=1, n_blobs=2, noise_level=1.0
     Generate ``n_ts_per_blobs`` * ``n_blobs`` time series of size ``sz`` and dimensionality ``d``.
     Generated time series follow the model:
     $$ts[t] = ts[t - 1] + a$$
-    where a is drawn from a normal distribution of mean ``mu`` and standard deviation ``std``.
+    where :math:`a` is drawn from a normal distribution of mean ``mu`` and standard deviation ``std``.
     
-    Each blob contains time series derived from a same seed time series with added white 
-    noise at level ``noise_level``.
+    Each blob contains time series derived from a same seed time series with added white noise at level ``noise_level``.
     
     Parameters
     ----------

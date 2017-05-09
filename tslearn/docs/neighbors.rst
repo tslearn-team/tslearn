@@ -1,5 +1,5 @@
-tslearn.neighbors
-=================
+``tslearn.neighbors``
+=====================
 
 .. automodule:: tslearn.neighbors
     :members:

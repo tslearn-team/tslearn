@@ -1,5 +1,5 @@
-tslearn.generators
-==================
+``tslearn.generators``
+======================
 
 .. automodule:: tslearn.generators
     :members:

@@ -1,5 +1,5 @@
-tslearn.metrics
-===============
+``tslearn.metrics``
+===================
 
 .. automodule:: tslearn.metrics
     :members:

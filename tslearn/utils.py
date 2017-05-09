@@ -4,8 +4,7 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 def npy2d_time_series(ts):
-    """Transforms a time series so that it fits the format used in `tslearn` 
-    models.
+    """Transforms a time series so that it fits the format used in `tslearn` models.
 
     Parameters
     ----------

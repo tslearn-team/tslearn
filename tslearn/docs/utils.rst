@@ -1,5 +1,5 @@
-tslearn.utils
-=============
+``tslearn.utils``
+=================
 
 .. automodule:: tslearn.utils
     :members:
