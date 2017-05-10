@@ -65,8 +65,3 @@ def npy3d_time_series_dataset(dataset):
     if dataset.dtype != numpy.float:
         dataset = dataset.astype(numpy.float)
     return dataset
-
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()

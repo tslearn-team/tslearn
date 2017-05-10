@@ -10,7 +10,6 @@ class TimeSeriesScalerMinMax(TransformerMixin):
     
     Example
     -------
-    
     >>> TimeSeriesScalerMinMax(min=1., max=2.).fit_transform([[0, 3, 6]]) # doctest: +NORMALIZE_WHITESPACE
     array([[[ 1. ],
             [ 1.5],

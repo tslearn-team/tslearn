@@ -151,7 +151,17 @@ class DTWSampler(BaseEstimator, TransformerMixin):
 
 
 def _resampled(X, n_samples=100, kind="slinear"):
-    """Perform resampling for time series ``X`` using the method given in ``kind``."""
+    """Perform resampling for time series ``X`` using the method given in ``kind``.
+
+    Examples
+    --------
+    >>> _resampled(numpy.array([[0], [1]]), n_samples=5) # doctest: +NORMALIZE_WHITESPACE
+    array([[ 0. ],
+           [ 0.25],
+           [ 0.5 ],
+           [ 0.75],
+           [ 1. ]])
+    """
     if X.ndim == 1:
         X = X.reshape((-1, 1))
     assert X.ndim == 2
@@ -176,10 +186,12 @@ def first_non_finite_index(X):
     int
         First index containing NaN, or length of the time series is it contains no NaN
     
-    Example
-    -------
+    Examples
+    --------
     >>> first_non_finite_index(numpy.array([1, 2, 4, 3, numpy.nan, numpy.nan]).reshape((-1, 1)))
     4
+    >>> first_non_finite_index(numpy.array([1, 2, 4, 3, 1.]).reshape((-1, 1)))
+    5
     """
     timestamps_infinite = numpy.all(~numpy.isfinite(X), axis=1)  
     # Are there NaNs padded after the TS?
@@ -188,8 +200,3 @@ def first_non_finite_index(X):
     else:  # Yes? then return the first index of these NaNs
         idx = numpy.nonzero(timestamps_infinite)[0][0]
     return idx
-
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()

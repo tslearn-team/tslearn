@@ -19,9 +19,9 @@ def dtw_path(s1, s2):
 
     Parameters
     ----------
-    s1 : numpy.ndarray
+    s1
         A time series
-    s2 : numpy.ndarray
+    s2
         Another time series
         If not given, self-similarity of dataset1 is returned
 
@@ -57,15 +57,22 @@ def dtw(s1, s2):
 
     Parameters
     ----------
-    s1 : numpy.ndarray
+    s1
         A time series
-    s2 : numpy.ndarray
+    s2
         Another time series
 
     Returns
     -------
     float
         Similarity score
+
+    Examples
+    --------
+    >>> dtw([1, 2, 3], [1., 2., 2., 3.])
+    0.0
+    >>> dtw([1, 2, 3], [1., 2., 2., 3., 4.])
+    1.0
 
     See Also
     --------
@@ -83,15 +90,24 @@ def cdist_dtw(dataset1, dataset2=None):
 
     Parameters
     ----------
-    dataset1 : numpy.ndarray
+    dataset1
         A dataset of time series
-    dataset2 : numpy.ndarray
+    dataset2
         Another time series
 
     Returns
     -------
     numpy.ndarray
         Cross-similarity matrix
+
+    Examples
+    --------
+    >>> cdist_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]])  # doctest: +NORMALIZE_WHITESPACE
+    array([[ 0., 1.],
+           [ 1., 0.]])
+    >>> cdist_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 3], [2, 3, 4]])  # doctest: +NORMALIZE_WHITESPACE
+    array([[ 0. ,  1.41421356],
+           [ 1. ,  1. ]])
 
     See Also
     --------
@@ -115,9 +131,9 @@ def lr_dtw(s1, s2, gamma=0.):
 
     Parameters
     ----------
-    s1 : numpy.ndarray
+    s1
         A time series
-    s2 : numpy.ndarray
+    s2
         Another time series
     gamma : float
         Regularization parameter
@@ -146,9 +162,9 @@ def lr_dtw_path(s1, s2, gamma=0.):
 
     Parameters
     ----------
-    s1 : numpy.ndarray
+    s1
         A time series
-    s2 : numpy.ndarray
+    s2
         Another time series
     gamma : float
         Regularization parameter
