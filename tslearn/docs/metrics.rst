@@ -15,7 +15,7 @@ done (using dynamic programming) by computing the optimal path in a similarity m
 In the implementation included in ``tslearn``, standard transition steps are used: diagonal, horizontal and vertical.
 
 .. figure:: fig/dtw.png
-    :height: 400
+    :width: 30%
     :align: center
 
     Example DTW path.
@@ -48,10 +48,10 @@ Example LR-DTW paths are visible in the following images (left: :math:`\gamma = 
 |lr_dtw1| |lr_dtw10|
 
 .. |lr_dtw1| image:: fig/lr_dtw_1.0.png
-    :height: 400
+    :width: 30%
 
 .. |lr_dtw10| image:: fig/lr_dtw_10.0.png
-    :height: 400
+    :width: 30%
 
 
 **Related functions:**
