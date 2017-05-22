@@ -33,7 +33,6 @@ Also, for the whole package to run properly, its base directory should be append
   * efficient Locally-Regularized DTW (detailed presentation to come)
 * A domain adaptation for time series module named `adaptation` that contains:
   * a method for (LR-)DTW-based non linear resampling that was previously released in `dtw_resample` repo
-    * **Warning**: LR-DTW variant not tested yet!
 * A `neighbors` module includes nearest neighbor algorithms to be used with time series
 * A few examples are provided in `tslearn/examples` to help new users discover `tslearn`
 
