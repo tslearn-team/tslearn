@@ -32,16 +32,16 @@ Locally-Regularized Dynamic Time Warping
 
 Locally-Regularized Dynamic Time Warping (LR-DTW) is an adaptation of the DTW algorithm in which transitions are not
 deterministic (`i.e.` at each step, only the less costly transition is considered). In other words, transition
-probabilities are used to determine path probabilities.
+probabilities are **learned** to determine path probabilities.
 
 To do so, if we denote :math:`p_h` the probability of a horizontal transition, :math:`p_v` the probability of a vertical
-transition and :math:`p_d` the probability of a diagonal transition (`i.e.` :math:`p_d = 1 - (p_v + p_h)`), we will
-set these probabilities by minimizing the following quantity at each step:
+transition and :math:`p_d` the probability of a diagonal transition (`i.e.` :math:`p_d = 1 - (p_v + p_h)`), LR-DTW consists in learning these probabilities by minimizing the following quantity at each step:
 $$\\sum_{i \\in \\{h, v, d\\}} p_i c_i + \\gamma \\sum_{i \\in \\{h, v, d\\}} p_i^2$$
 where :math:`c_i` is the cost associated to predecessor :math:`i`.
+From learned, local probabilities LR-DTW allows reconstruction of paths and associated probabilities.
 
-Note that if :math:`\gamma = 0`, we will get the same cost as when using DTW, and when :math:`\gamma` tends to
-infinity, all transitions will be considered equiprobable.
+Note that if :math:`\gamma = 0` (unregularized case), LR-DTW outputs the same cost as standard DTW, and when :math:`\gamma` tends to
+infinity, all transitions are considered equiprobable.
 
 Example LR-DTW paths are visible in the following images (left: :math:`\gamma = 1`, right: :math:`\gamma = 10`):
 
