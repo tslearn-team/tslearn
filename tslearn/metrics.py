@@ -22,7 +22,7 @@ def dtw_path(s1, s2):
     s1
         A time series
     s2
-        Another time series
+        Another dataset of time series
         If not given, self-similarity of dataset1 is returned
 
     Returns
