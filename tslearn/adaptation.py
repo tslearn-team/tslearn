@@ -24,8 +24,7 @@ class DTWSampler(BaseEstimator, TransformerMixin):
 
     If one wants to use LR-DTW instead of DTW at the core of this method, the ``metric`` attribute should be set to
     ``"lrdtw"``."""
-    def __init__(self, n_samples=100, interp_kind="slinear", metric="dtw", 
-                 gamma_lr_dtw=None):
+    def __init__(self, n_samples=100, interp_kind="slinear", metric="dtw", gamma_lr_dtw=1.0):
         self.n_samples = n_samples
         self.interp_kind = interp_kind
         self.reference_series_ = None
@@ -60,8 +59,7 @@ class DTWSampler(BaseEstimator, TransformerMixin):
             raise ValueError("dimension mismatch")
 
         end = first_non_finite_index(X)
-        self.reference_series_ = _resampled(X[:end], n_samples=self.n_samples,
-                                            kind=self.interp_kind)
+        self.reference_series_ = _resampled(X[:end], n_samples=self.n_samples, kind=self.interp_kind)
         return self
 
     def prepare_transform(self, ts_to_be_rescaled):
@@ -82,11 +80,9 @@ class DTWSampler(BaseEstimator, TransformerMixin):
             ts_to_be_rescaled = ts_to_be_rescaled.reshape((1, -1, 1))
         elif ts_to_be_rescaled.ndim == 2:
             if ts_to_be_rescaled.shape[1] == self.reference_series_.shape[1]:
-                ts_to_be_rescaled = ts_to_be_rescaled.reshape((1, -1, 
-                                                               ts_to_be_rescaled.shape[1]))
+                ts_to_be_rescaled = ts_to_be_rescaled.reshape((1, -1, ts_to_be_rescaled.shape[1]))
             else:
-                ts_to_be_rescaled = ts_to_be_rescaled.reshape((ts_to_be_rescaled.shape[0], 
-                                                               -1, 1))
+                ts_to_be_rescaled = ts_to_be_rescaled.reshape((ts_to_be_rescaled.shape[0], -1, 1))
         elif ts_to_be_rescaled.ndim >= 4:
             raise ValueError
         # Now ts_to_be_rescaled is of shape n_ts, sz, d 
@@ -94,13 +90,11 @@ class DTWSampler(BaseEstimator, TransformerMixin):
         self.saved_dtw_paths_ = []
         for ts in ts_to_be_rescaled:
             end = first_non_finite_index(ts)
-            ts_resampled = _resampled(ts[:end], n_samples=self.n_samples,
-                                      kind=self.interp_kind)
+            resampled_ts = _resampled(ts[:end], n_samples=self.n_samples, kind=self.interp_kind)
             if self.metric == "dtw":
-                path, d = dtw_path(self.reference_series_, ts_resampled)
+                path, d = dtw_path(self.reference_series_, resampled_ts)
             elif self.metric == "lrdtw":
-                path, d = lr_dtw_path(self.reference_series_, ts_resampled, 
-                                      gamma=self.gamma_lr_dtw)
+                path, d = lr_dtw_path(self.reference_series_, resampled_ts, gamma=self.gamma_lr_dtw)
             else:
                 raise ValueError("Unknown alignment function")
             self.saved_dtw_paths_.append(path)
@@ -118,12 +112,11 @@ class DTWSampler(BaseEstimator, TransformerMixin):
         numpy.ndarray
             The transformed time series dataset
         """
-        assert X.shape[0] == len(self.saved_dtw_paths_)
+        assert X.shape[0] == len(self.saved_dtw_paths_) or len(self.saved_dtw_paths_) == 1
         X_resampled = numpy.zeros((X.shape[0], self.n_samples, X.shape[2]))
         for i in range(X.shape[0]):
             end = first_non_finite_index(X[i])
-            X_resampled[i] = _resampled(X[i, :end], n_samples=self.n_samples,
-                                        kind=self.interp_kind)
+            X_resampled[i] = _resampled(X[i, :end], n_samples=self.n_samples, kind=self.interp_kind)
             
             indices_xy = [[] for _ in range(self.n_samples)]
 
@@ -133,11 +126,10 @@ class DTWSampler(BaseEstimator, TransformerMixin):
                 path = self.saved_dtw_paths_[i]
 
             if self.metric == "dtw":
-                for t_current, t_ref in path:
+                for t_ref, t_current in path:
                     indices_xy[t_ref].append(t_current)
                 for j in range(X.shape[2]):
-                    ynew = numpy.array([numpy.mean(X_resampled[i, indices, j]) 
-                                        for indices in indices_xy])
+                    ynew = numpy.array([numpy.mean(X_resampled[i, indices, j]) for indices in indices_xy])
                     X_resampled[i, :, j] = ynew
             elif self.metric == "lrdtw":
                 ynew = numpy.empty((self.n_samples, X.shape[2]))

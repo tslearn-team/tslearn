@@ -7,3 +7,6 @@ This `examples` folder contains the following notebooks :
   * `random_random_walk_blobs` from `tslearn.generators` module
   * `TimeSeriesScalerMinMax` from `tslearn.preprocessing` module
   * `KNeighborsDynamicTimeWarpingClassifier` from `tslearn.neighbors` module
+* [`ex_adaptation.ipynb`](ex_adaptation.ipynb) refers to the following functions/classes:
+  * `DTWSampler` from `tslearn.adaptation` module
+  * `dtw` and `lr_dtw` from `tslearn.metrics` module (though not used directly, only through `DTWSampler`)
