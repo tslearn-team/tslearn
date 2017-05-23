@@ -1,6 +1,9 @@
 ``tslearn.neighbors``
 =====================
 
+Classes
+-------
+
 .. automodule:: tslearn.neighbors
     :members:
     :undoc-members:

@@ -1,6 +1,9 @@
 ``tslearn.preprocessing``
 =========================
 
+Classes
+-------
+
 .. automodule:: tslearn.preprocessing
     :members:
     :undoc-members:

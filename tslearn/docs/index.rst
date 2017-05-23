@@ -23,15 +23,3 @@ This documentation provides information about the following ``tslearn`` modules:
    utils
    neighbors
    adaptation
-
-Examples
---------
-
-Do not hesitate to have a look at our example notebooks:
-
-.. toctree::
-    :maxdepth: 1
-
-    examples/ex_adaptation
-    examples/ex_metrics
-    examples/ex_neighbors

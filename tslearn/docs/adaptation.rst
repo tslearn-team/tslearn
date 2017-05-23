@@ -1,6 +1,9 @@
 ``tslearn.adaptation``
 ======================
 
+Classes and functions
+---------------------
+
 .. automodule:: tslearn.adaptation
     :members:
     :undoc-members:

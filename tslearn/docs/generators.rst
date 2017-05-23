@@ -1,6 +1,9 @@
 ``tslearn.generators``
 ======================
 
+Classes
+-------
+
 .. automodule:: tslearn.generators
     :members:
     :undoc-members:
