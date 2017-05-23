@@ -29,9 +29,9 @@ Also, for the whole package to run properly, its base directory should be append
 * A `generators` module provides Random Walks generators
 * A `preprocessing` module provides standard time series scalers
 * A `metrics` module provides:
-  * efficient Dynamic Time Warping (DTW) implementation (derived from `cydtw` code)
-  * efficient Locally-Regularized DTW implementation
-  * efficient Global Alignment Kernel implementation
+  * Dynamic Time Warping (DTW) (derived from `cydtw` code)
+  * Locally-Regularized DTW
+  * Global Alignment Kernel
 * A domain adaptation for time series module named `adaptation` that contains:
   * a method for (LR-)DTW-based non linear resampling that was previously released in `dtw_resample` repo
 * A `neighbors` module includes nearest neighbor algorithms to be used with time series
