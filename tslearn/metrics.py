@@ -171,6 +171,8 @@ def lr_dtw_path(s1, s2, gamma=0.):
 
     Returns
     -------
+    numpy.ndarray of shape (s1.shape[0], s2.shape[0])
+        Matching path represented as a probability map
     float
         Similarity score
 
