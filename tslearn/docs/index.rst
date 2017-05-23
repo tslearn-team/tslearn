@@ -9,6 +9,9 @@
 ``tslearn`` is a Python package that provides machine learning tools for the analysis of time series.
 This package builds on ``scikit-learn``, ``numpy`` and ``scipy`` libraries.
 
+Modules
+-------
+
 This documentation provides information about the following ``tslearn`` modules:
 
 .. toctree::
@@ -20,6 +23,9 @@ This documentation provides information about the following ``tslearn`` modules:
    utils
    neighbors
    adaptation
+
+Examples
+--------
 
 Do not hesitate to have a look at our example notebooks:
 
