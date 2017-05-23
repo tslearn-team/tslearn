@@ -12,7 +12,7 @@ This package builds on ``scikit-learn``, ``numpy`` and ``scipy`` libraries.
 This documentation provides information about the following ``tslearn`` modules:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    
    generators
    preprocessing
@@ -20,3 +20,12 @@ This documentation provides information about the following ``tslearn`` modules:
    utils
    neighbors
    adaptation
+
+Do not hesitate to have a look at our example notebooks:
+
+.. toctree::
+    :maxdepth: 1
+
+    examples/ex_adaptation
+    examples/ex_metrics
+    examples/ex_neighbors
