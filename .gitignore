@@ -97,6 +97,7 @@ ENV/
 
 # Own stuff
 .idea/
+.DS_Store
 tslearn/test
 tslearn/cydtw.c
 tslearn/cylrdtw.c
