@@ -82,11 +82,13 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
             self.labels_ = dist.argmin(axis=1)
             self.inertia_ = self._compute_inertia(dist)
             if self.verbose:
-                print("Iteration %d: Inertia: %.3f" % (it + 1, self.inertia_))
+                print("%.3f" % self.inertia_, end=" --> ")
 
             if numpy.abs(old_inertia - self.inertia_) < self.tol:
                 break
             old_inertia = self.inertia_
+        if self.verbose:
+            print("")
 
         return self
 
@@ -120,7 +122,8 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
                     min_inertia = self.inertia_
                 n_successful += 1
             except ValueError:
-                pass
+                if self.verbose:
+                    print("")
         if n_successful > 0:
             self.X_fit_ = X
             self.labels_ = last_correct_labels
@@ -142,7 +145,8 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
             # NB: we use a normalized kernel so k(x,x) = 1 for all x (including the centroid)
             dist[:, j] = 2 - 2 * numpy.sum(sw[mask] * K[:, mask], axis=1) / sw[mask].sum()
 
-    def _compute_inertia(self, dist):
+    @staticmethod
+    def _compute_inertia(dist):
         return dist.min(axis=1).sum()
 
     def predict(self, X):
