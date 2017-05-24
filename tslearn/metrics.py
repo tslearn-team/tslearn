@@ -213,10 +213,10 @@ def gak(s1, s2, sigma=1.):
 
     Examples
     --------
-    >>> gak([1, 2, 3], [1., 2., 2., 3.], sigma=2.)
-    0.83933690793680882
-    >>> gak([1, 2, 3], [1., 2., 2., 3., 4.])
-    0.2733855908733378
+    >>> gak([1, 2, 3], [1., 2., 2., 3.], sigma=2.)  # doctest: +ELLIPSIS
+    0.839...
+    >>> gak([1, 2, 3], [1., 2., 2., 3., 4.])  # doctest: +ELLIPSIS
+    0.273...
 
     See Also
     --------
@@ -250,9 +250,9 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.):
 
     Examples
     --------
-    >>> cdist_gak([[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)  # doctest: +NORMALIZE_WHITESPACE
-    array([[ 0. , 0.65629661],
-           [ 0.65629661, 0. ]])
+    >>> cdist_gak([[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    array([[ 1. , 0.656...],
+           [ 0.656..., 1. ]])
 
     See Also
     --------

@@ -79,7 +79,7 @@ def cdist_gak(numpy.ndarray[DTYPE_t, ndim=3] dataset1, numpy.ndarray[DTYPE_t, nd
             if self_similarity and j < i:
                 cross_dist[i, j] = cross_dist[j, i]
             elif self_similarity and i == j:
-                cross_dist[i, j] = 0.
+                cross_dist[i, j] = 1.
             else:
                 cross_dist[i, j] = gak(dataset1[i], dataset2[j], sigma) / (kiis[i] * kjjs[j])  # TODO: deal with divide by 0 issue
 
