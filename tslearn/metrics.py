@@ -1,5 +1,6 @@
 import numpy
 import os
+from scipy.spatial.distance import pdist
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
 if on_rtd:
     import pyximport; pyximport.install()
@@ -220,7 +221,7 @@ def gak(s1, s2, sigma=1.):
 
     See Also
     --------
-    cdist_gak : Get both the matching path and the similarity score for LR-DTW
+    cdist_gak : Compute cross-similarity matrix using Global Alignment kernel
 
     References
     ----------
@@ -256,7 +257,7 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.):
 
     See Also
     --------
-    gak : Compute Global Alignment Kernel
+    gak : Compute Global Alignment kernel
     """
     dataset1 = npy3d_time_series_dataset(dataset1)
     self_similarity = False
@@ -266,3 +267,34 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.):
     else:
         dataset2 = npy3d_time_series_dataset(dataset2)
     return cygak.cdist_gak(dataset1, dataset2, sigma, self_similarity=self_similarity)
+
+
+def sigma_gak(dataset, n_samples=100):
+    """Compute sigma value to be used for GAK as suggested in [2]_.
+
+    Parameters
+    ----------
+    dataset
+        A dataset of time series
+    n_samples : int (default: 100)
+        Number of samples on which median distance should be estimated
+
+    Returns
+    -------
+    float
+        Suggested bandwidth (:math:`sigma`) for the Global Alignment kernel
+
+    See Also
+    --------
+    gak : Compute Global Alignment kernel
+    cdist_gak : Compute cross-similarity matrix using Global Alignment kernel
+    """
+    dataset = npy3d_time_series_dataset(dataset)
+    n_ts, sz, d = dataset.shape
+    if n_ts * sz < n_samples:
+        replace = True
+    else:
+        replace = False
+    sample_indices = numpy.random.choice(n_ts * sz, size=n_samples, replace=replace)
+    dists = pdist(dataset.reshape((-1, d))[sample_indices], metric="euclidean")
+    return numpy.median(dists) * numpy.sqrt(sz)
