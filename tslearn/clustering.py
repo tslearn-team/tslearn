@@ -123,7 +123,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
                 n_successful += 1
             except ValueError:
                 if self.verbose:
-                    print("")
+                    print("Resumed because of empty cluster")
         if n_successful > 0:
             self.X_fit_ = X
             self.labels_ = last_correct_labels
