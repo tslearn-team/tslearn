@@ -19,11 +19,16 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         Number of clusters to form.
     max_iter : int (default: 50)
         Maximum number of iterations of the k-means algorithm for a single run.
+    tol : float (default: 1e-6)
+        Inertia variation threshold. If at some point, inertia varies less than this threshold between two consecutive
+        iterations, the model is considered to have converged and the algorithm stops.
     n_init : int (default: 1)
         Number of time the k-means algorithm will be run with different centroid seeds. The final results will be the
         best output of n_init consecutive runs in terms of inertia.
     sigma : float (default: 1.)
         Bandwidth parameter for the Global Alignment kernel
+    verbose : bool (default: True)
+        Whether or not to print information about the inertia while learning the model.
     random_state : integer or numpy.RandomState, optional
         Generator used to initialize the centers. If an integer is given, it fixes the seed. Defaults to the global
         numpy random number generator.
@@ -46,33 +51,42 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
     ICML 2011.
     """
 
-    def __init__(self, n_clusters=3, max_iter=50, n_init=1, sigma=1., random_state=None):
+    def __init__(self, n_clusters=3, max_iter=50, tol=1e-6, n_init=1, sigma=1., verbose=True, random_state=None):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
+        self.tol = tol
         self.random_state = random_state
         self.sigma = sigma
         self.n_init = n_init
+        self.verbose = verbose
 
         self.labels_ = None
-        self.within_distances_ = None
+        self.inertia_ = None
         self.sample_weight_ = None
         self.X_fit_ = None
 
     def _get_kernel(self, X, Y=None):
         return cdist_gak(X, Y, sigma=self.sigma)
 
-    def _fit_one_trial(self, K, rs):
+    def _fit_one_init(self, K, rs):
         n_samples = K.shape[0]
 
         self.labels_ = rs.randint(self.n_clusters, size=n_samples)
 
         dist = numpy.empty((n_samples, self.n_clusters))
-        self.within_distances_ = numpy.zeros(self.n_clusters)
+        old_inertia = numpy.inf
 
         for it in range(self.max_iter):
             dist.fill(0)
-            self._compute_dist(K, dist, self.within_distances_, update_within=True)
+            self._compute_dist(K, dist)
             self.labels_ = dist.argmin(axis=1)
+            self.inertia_ = self._compute_inertia(dist)
+            if self.verbose:
+                print("Iteration %d: Inertia: %.3f" % (it + 1, self.inertia_))
+
+            if numpy.abs(old_inertia - self.inertia_) < self.tol:
+                break
+            old_inertia = self.inertia_
 
         return self
 
@@ -95,21 +109,27 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         rs = check_random_state(self.random_state)
 
         last_correct_labels = None
+        min_inertia = numpy.inf
         for trial in range(self.n_init):
             try:
-                self._fit_one_trial(K, rs)  # TODO: assess clustering quality
-                last_correct_labels = self.labels_
+                if self.verbose:
+                    print("Init %d" % (trial + 1))
+                self._fit_one_init(K, rs)
+                if self.inertia_ < min_inertia:
+                    last_correct_labels = self.labels_
+                    min_inertia = self.inertia_
                 n_successful += 1
             except ValueError:
                 pass
         if n_successful > 0:
             self.X_fit_ = X
             self.labels_ = last_correct_labels
+            self.inertia_ = min_inertia
         else:
             self.X_fit_ = None
         return self
 
-    def _compute_dist(self, K, dist, within_distances, update_within):
+    def _compute_dist(self, K, dist):
         """Compute a n_samples x n_clusters distance matrix using the kernel trick."""
         sw = self.sample_weight_
 
@@ -119,14 +139,11 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
             if numpy.sum(mask) == 0:
                 raise ValueError("Empty cluster found, try smaller n_cluster or better kernel parameters.")
 
-            denom = sw[mask].sum()
-            denomsq = denom * denom
+            # NB: we use a normalized kernel so k(x,x) = 1 for all x (including the centroid)
+            dist[:, j] = 2 - 2 * numpy.sum(sw[mask] * K[:, mask], axis=1) / sw[mask].sum()
 
-            if update_within:
-                KK = K[mask][:, mask]  # K[mask, mask] does not work.
-                dist_j = numpy.sum(numpy.outer(sw[mask], sw[mask]) * KK / denomsq)
-                within_distances[j] = dist_j
-            dist[:, j] += within_distances[j] - 2 * numpy.sum(sw[mask] * K[:, mask], axis=1) / denom
+    def _compute_inertia(self, dist):
+        return dist.min(axis=1).sum()
 
     def predict(self, X):
         """Predict the closest cluster each time series in X belongs to.
@@ -144,6 +161,6 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         K = self._get_kernel(X, self.X_fit_)
         n_samples = X.shape[0]
         dist = numpy.zeros((n_samples, self.n_clusters))
-        self._compute_dist(K, dist, self.within_distances_, update_within=False)
+        self._compute_dist(K, dist)
         return dist.argmin(axis=1)
 
