@@ -75,4 +75,5 @@ Example usage
     :maxdepth: 1
 
     examples/ex_metrics
+    examples/ex_clustering
     examples/ex_adaptation

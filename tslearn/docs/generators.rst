@@ -16,4 +16,5 @@ Example usage
     :maxdepth: 1
 
     examples/ex_neighbors
+    examples/ex_clustering
     examples/ex_metrics

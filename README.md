@@ -35,6 +35,8 @@ Also, for the whole package to run properly, its base directory should be append
 * A domain adaptation for time series module named `adaptation` that contains:
   * a method for (LR-)DTW-based non linear resampling that was previously released in `dtw_resample` repo
 * A `neighbors` module includes nearest neighbor algorithms to be used with time series
+* A `clustering` module includes the following time series clustering algorithms:
+  * Global Alignment kernel k-means
 
 # TODO list
 

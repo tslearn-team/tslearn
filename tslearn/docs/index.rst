@@ -22,4 +22,5 @@ This documentation provides information about the following ``tslearn`` modules:
    metrics
    utils
    neighbors
+   clustering
    adaptation
