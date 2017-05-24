@@ -24,3 +24,4 @@ This documentation provides information about the following ``tslearn`` modules:
    neighbors
    clustering
    adaptation
+   barycenters
