@@ -194,7 +194,7 @@ def lr_dtw_path(s1, s2, gamma=0.):
 
 
 def gak(s1, s2, sigma=1.):
-    """Compute Global Alignment Kernel) [2]_ between (possibly multidimensional) time series and return it.
+    """Compute Global Alignment Kernel (GAK) [2]_ between (possibly multidimensional) time series and return it.
 
     It is not required that both time series share the same size, but they must be the same dimension.
 
