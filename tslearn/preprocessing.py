@@ -43,8 +43,8 @@ class TimeSeriesScalerMinMax(TransformerMixin):
 
 
 class TimeSeriesScalerMeanVariance(TransformerMixin):
-    """Scaler for time series. Scales time series so that their mean (resp. variance) in each dimension is ``mu``
-    (resp. ``std``).
+    """Scaler for time series. Scales time series so that their mean (resp. standard deviation) in each dimension is
+    ``mu`` (resp. ``std``).
     
     Example
     -------
