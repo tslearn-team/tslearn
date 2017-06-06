@@ -36,6 +36,7 @@ Also, for the whole package to run properly, its base directory should be append
   * a method for (LR-)DTW-based non linear resampling that was previously released in `dtw_resample` repo
 * A `neighbors` module includes nearest neighbor algorithms to be used with time series
 * A `clustering` module includes the following time series clustering algorithms:
+  * Standard Euclidean k-means (based on `sklearn.cluster.KMeans` with adequate array reshaping done for you)
   * Global Alignment kernel k-means
 
 # TODO list
