@@ -9,7 +9,7 @@ setup(
     include_dirs=[numpy.get_include()],
     install_requires=['Cython', 'numpy', 'scipy', 'scikit-learn'],
     version="0.0.1",
-    url="https://github.com/rtavenar/tslearn",
+    url="http://tslearn.readthedocs.io/",
     author="Romain Tavenard",
     author_email="romain.tavenard@univ-rennes2.fr"
 )
