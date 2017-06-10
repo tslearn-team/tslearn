@@ -9,7 +9,7 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 class DTWSampler(BaseEstimator, TransformerMixin):
-    """A class for non-linear DTW-based resampling of time series.
+    """A class for non-linear DTW-based resampling of time series as described in [1]_.
 
     The principle is to use a modality (or a set of modalities) to perform DTW alignment with respect to a reference
     and then resample other modalities using the obtained DTW path.
@@ -27,8 +27,8 @@ class DTWSampler(BaseEstimator, TransformerMixin):
     
     References
     ----------
-    [1] R. Dupas et al. Identifying seasonal patterns of phosphorus storm dynamics with dynamic time warping.
-        Water Resources Research, vol. 51 (11), pp. 8868--8882, 2015.
+    .. [1] R. Dupas et al. Identifying seasonal patterns of phosphorus storm dynamics with dynamic time warping.
+       Water Resources Research, vol. 51 (11), pp. 8868--8882, 2015.
     """
     def __init__(self, n_samples=100, interp_kind="slinear", metric="dtw", gamma_lr_dtw=1.0):
         self.n_samples = n_samples
