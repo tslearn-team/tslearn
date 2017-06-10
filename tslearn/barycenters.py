@@ -40,11 +40,11 @@ class DTWBarycenterAveraging:
         Tolerance to use for early stopping: if the decrease in cost is lower than this value, the EM procedure stops.
     verbose : boolean, default False
         Whether to print information about the cost at each iteration or not.
-
+    
     Reference
     ---------
     .. [1] F. Petitjean, A. Ketterlin & P. Gançarski. A global averaging method for dynamic time warping, with
-           applications to clustering. Pattern Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
+       applications to clustering. Pattern Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
     """
     def __init__(self, n_iter, barycenter_size=None, tol=1e-5, verbose=False):
         self.n_iter = n_iter
