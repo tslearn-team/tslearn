@@ -25,8 +25,8 @@ class DTWSampler(BaseEstimator, TransformerMixin):
     If one wants to use LR-DTW instead of DTW at the core of this method, the ``metric`` attribute should be set to
     ``"lrdtw"``.
     
-    Reference
-    ---------
+    References
+    ----------
     [1] R. Dupas et al. Identifying seasonal patterns of phosphorus storm dynamics with dynamic time warping.
         Water Resources Research, vol. 51 (11), pp. 8868--8882, 2015.
     """
