@@ -73,10 +73,8 @@ class DTWBarycenterAveraging:
             barycenter = self._petitjean_update_b(X_, assign)
             cost = self._petitjean_cost(X_, barycenter, assign)
             if self.verbose:
-                print("[Petitjean Barycenter] Cost after %d iterations: %.3f" % (it + 1, cost))
+                print("[DBA] epoch %d, cost: %.3f" % (it + 1, cost))
             if cost_prev - cost < self.tol:
-                if self.verbose:
-                    print("[Petitjean Barycenter] Early stopping: reached a stable state")
                 break
             else:
                 cost_prev = cost
