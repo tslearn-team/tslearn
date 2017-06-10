@@ -112,4 +112,4 @@ class DTWBarycenterAveraging:
         for t_barycenter in range(self.barycenter_size):
             for tt, (i_ts, t_ts) in enumerate(zip(assign[0][t_barycenter], assign[1][t_barycenter])):
                 cost += numpy.linalg.norm(X[i_ts, t_ts] - barycenter[t_barycenter]) ** 2
-        return cost
+        return cost / X.shape[0]
