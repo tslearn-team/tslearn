@@ -23,7 +23,13 @@ class DTWSampler(BaseEstimator, TransformerMixin):
     4. call transform to get resampled time series for all other modalities
 
     If one wants to use LR-DTW instead of DTW at the core of this method, the ``metric`` attribute should be set to
-    ``"lrdtw"``."""
+    ``"lrdtw"``.
+    
+    Reference
+    ---------
+    [1] R. Dupas et al. Identifying seasonal patterns of phosphorus storm dynamics with dynamic time warping.
+        Water Resources Research, vol. 51 (11), pp. 8868--8882, 2015.
+    """
     def __init__(self, n_samples=100, interp_kind="slinear", metric="dtw", gamma_lr_dtw=1.0):
         self.n_samples = n_samples
         self.interp_kind = interp_kind
