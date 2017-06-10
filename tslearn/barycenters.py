@@ -41,8 +41,8 @@ class DTWBarycenterAveraging:
     verbose : boolean, default False
         Whether to print information about the cost at each iteration or not.
     
-    Reference
-    ---------
+    References
+    ----------
     .. [1] F. Petitjean, A. Ketterlin & P. Gançarski. A global averaging method for dynamic time warping, with
        applications to clustering. Pattern Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
     """
