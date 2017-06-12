@@ -37,6 +37,7 @@ Also, for the whole package to run properly, its base directory should be append
 * A `neighbors` module includes nearest neighbor algorithms to be used with time series
 * A `clustering` module includes the following time series clustering algorithms:
   * Standard Euclidean k-means (based on `sklearn.cluster.KMeans` with adequate array reshaping done for you)
+  * DBA k-means from Petitjean _et al._
   * Global Alignment kernel k-means
 
 # TODO list
@@ -44,7 +45,7 @@ Also, for the whole package to run properly, its base directory should be append
 * Add soft-DTW to the proposed metrics
 * Implement Learning Shapelets from Grabocka et al. (Conv+L2, + unsupervised)
 * Add local feature extractors (`TransformerMixin`)
-* Add k-means DBA by Petitjean _et al._ (barycenter already coded) and soft-DTW k-means by Cuturi and Blondel
+* Add soft-DTW k-means by Cuturi and Blondel
 * Add metric learning for time series (Garreau _et al._)
 * Add automatic retrieval of UCR/UEA datasets and 1M remote sensing time series
 * Add LB_Keogh for nearest neighbor search

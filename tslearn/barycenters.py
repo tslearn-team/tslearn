@@ -36,9 +36,9 @@ class DTWBarycenterAveraging:
     barycenter_size : int or None, default None
         Size of the barycenter to generate. If None, the size of the barycenter is that of the data provided at fit
         time.
-    tol : float, default 1e-5
+    tol : float (default 1e-5)
         Tolerance to use for early stopping: if the decrease in cost is lower than this value, the EM procedure stops.
-    verbose : boolean, default False
+    verbose : boolean (default False)
         Whether to print information about the cost at each iteration or not.
     
     References
@@ -72,7 +72,7 @@ class DTWBarycenterAveraging:
         cost_prev, cost = numpy.inf, numpy.inf
         for it in range(self.n_iter):
             assign = self._petitjean_assignment(X_, barycenter)
-            barycenter = self._petitjean_update_b(X_, assign)
+            barycenter = self._petitjean_update_barycenter(X_, assign)
             cost = self._petitjean_cost(X_, barycenter, assign)
             if self.verbose:
                 print("[DBA] epoch %d, cost: %.3f" % (it + 1, cost))
@@ -101,7 +101,7 @@ class DTWBarycenterAveraging:
                 assign[1][pair[1]].append(pair[0])
         return assign
 
-    def _petitjean_update_b(self, X, assign):
+    def _petitjean_update_barycenter(self, X, assign):
         barycenter = numpy.zeros((self.barycenter_size, X.shape[-1]))
         for t in range(self.barycenter_size):
             barycenter[t] = X[assign[0][t], assign[1][t]].mean(axis=0)

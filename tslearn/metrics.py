@@ -94,10 +94,10 @@ def cdist_dtw(dataset1, dataset2=None):
 
     Parameters
     ----------
-    dataset1
+    dataset1 : array-like
         A dataset of time series
-    dataset2
-        Another time series
+    dataset2 : array-like, default: None
+        Another time series. If `None`, self-similarity of `dataset1` is returned.
 
     Returns
     -------
@@ -139,7 +139,7 @@ def lr_dtw(s1, s2, gamma=0.):
         A time series
     s2
         Another time series
-    gamma : float
+    gamma : float (default: 0.)
         Regularization parameter
 
     Returns
@@ -170,7 +170,7 @@ def lr_dtw_path(s1, s2, gamma=0.):
         A time series
     s2
         Another time series
-    gamma : float
+    gamma : float (default: 0.)
         Regularization parameter
 
     Returns
@@ -204,7 +204,7 @@ def gak(s1, s2, sigma=1.):
         A time series
     s2
         Another time series
-    sigma : float
+    sigma : float (default 1.)
         Bandwidth of the internal gaussian kernel used for GAK
 
     Returns
@@ -241,7 +241,7 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.):
         A dataset of time series
     dataset2
         Another time series
-    sigma : float
+    sigma : float (default 1.)
         Bandwidth of the internal gaussian kernel used for GAK
 
     Returns
