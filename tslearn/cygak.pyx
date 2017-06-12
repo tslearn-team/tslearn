@@ -1,3 +1,5 @@
+STUFF_cygak = "cygak"
+
 import numpy
 from scipy.spatial.distance import cdist
 

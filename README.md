@@ -3,7 +3,6 @@
 
 `tslearn` is a Python package that provides machine learning tools for the analysis of time series.
 This package builds on `scikit-learn`, `numpy` and `scipy` libraries.
-At some point, it should be available on PyPI (as soon as it proves sufficiently helpful for the community).
 
 # Dependencies
 
@@ -16,7 +15,21 @@ scikit-learn
 
 # Installation
 
-Run the following command for Cython code to compile:
+## Using PyPI
+
+The easiest way to install `tslearn` is probably via `pip`:
+```bash
+pip install tslearn
+```
+
+## Using github's hosted latest version
+
+If you want to get `tslearn`'s latest version, you can `git clone` the repository hosted at github:
+```bash
+git clone https://github.com/rtavenar/tslearn.git
+```
+
+Then, you should run the following command for Cython code to compile:
 ```bash
 python setup.py build_ext --inplace
 ```
@@ -48,8 +61,10 @@ Also, for the whole package to run properly, its base directory should be append
 * Add soft-DTW to the proposed metrics
 * Implement Learning Shapelets from Grabocka et al. (Conv+L2, + unsupervised)
 * Add local feature extractors (`TransformerMixin`)
+* Add SAX (+1d-SAX?) transformation (`TransformerMixin`)
 * Add soft-DTW k-means by Cuturi and Blondel
 * Add metric learning for time series (Garreau _et al._)
+* Add kShape for time series clustering
 * Add automatic retrieval of UCR/UEA datasets and 1M remote sensing time series
 * Add LB_Keogh for nearest neighbor search
 * Add Cost-Aware Early Classification of TS (Tavenard & Malinowski)?

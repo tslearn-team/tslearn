@@ -1,3 +1,5 @@
+STUFF_cylrdtw = "cylrdtw"
+
 import numpy
 from scipy.spatial.distance import cdist
 
