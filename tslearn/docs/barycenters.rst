@@ -15,4 +15,4 @@ Example usage
 .. toctree::
     :maxdepth: 1
 
-    examples/ex_barycenter
+    examples/ex_barycenters

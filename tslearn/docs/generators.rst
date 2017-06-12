@@ -18,4 +18,4 @@ Example usage
     examples/ex_neighbors
     examples/ex_clustering
     examples/ex_metrics
-    examples/ex_barycenter
+    examples/ex_barycenters
