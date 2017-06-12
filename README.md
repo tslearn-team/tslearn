@@ -43,6 +43,7 @@ Also, for the whole package to run properly, its base directory should be append
 * A `preprocessing` module provides standard time series scalers
 * A `metrics` module provides:
   * Dynamic Time Warping (DTW) (derived from `cydtw` code)
+  * LB_Keogh
   * Locally-Regularized DTW
   * Global Alignment Kernel
 * A domain adaptation for time series module named `adaptation` contains:

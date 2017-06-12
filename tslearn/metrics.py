@@ -97,7 +97,7 @@ def cdist_dtw(dataset1, dataset2=None):
     dataset1 : array-like
         A dataset of time series
     dataset2 : array-like, default: None
-        Another time series. If `None`, self-similarity of `dataset1` is returned.
+        Another dataset of time series. If `None`, self-similarity of `dataset1` is returned.
 
     Returns
     -------
@@ -150,12 +150,44 @@ def lr_dtw(s1, s2, gamma=0.):
     See Also
     --------
     lr_dtw_path : Get both the matching path and the similarity score for LR-DTW
+    cdist_lr_dtw : Cross similarity matrix between time series datasets
     dtw : Dynamic Time Warping score
     dtw_path : Get both the matching path and the similarity score for DTW
     """
     s1 = npy2d_time_series(s1)
     s2 = npy2d_time_series(s2)
     return cylrdtw.lr_dtw(s1, s2, gamma=gamma)[0]
+
+
+def cdist_lr_dtw(dataset1, dataset2=None, gamma=0.):
+    """Compute cross-similarity matrix using Locally-Regularized Dynamic Time Warping (LR-DTW) similarity measure.
+
+    Parameters
+    ----------
+    dataset1 : array-like
+        A dataset of time series
+    dataset2 : array-like (default: None)
+        Another dataset of time series. If `None`, self-similarity of `dataset1` is returned.
+    gamma : float (default: 0.)
+        :math:`\\gamma` parameter for the LR-DTW metric.
+
+    Returns
+    -------
+    numpy.ndarray
+        Cross-similarity matrix
+
+    See Also
+    --------
+    lr_dtw : Get LR-DTW similarity score
+    """
+    dataset1 = npy3d_time_series_dataset(dataset1)
+    self_similarity = False
+    if dataset2 is None:
+        dataset2 = dataset1
+        self_similarity = True
+    else:
+        dataset2 = npy3d_time_series_dataset(dataset2)
+    return cylrdtw.cdist_lr_dtw(dataset1, dataset2, gamma=gamma, self_similarity=self_similarity)
 
 
 def lr_dtw_path(s1, s2, gamma=0.):
@@ -240,7 +272,7 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.):
     dataset1
         A dataset of time series
     dataset2
-        Another time series
+        Another dataset of time series
     sigma : float (default 1.)
         Bandwidth of the internal gaussian kernel used for GAK
 
@@ -298,3 +330,70 @@ def sigma_gak(dataset, n_samples=100):
     sample_indices = numpy.random.choice(n_ts * sz, size=n_samples, replace=replace)
     dists = pdist(dataset.reshape((-1, d))[sample_indices], metric="euclidean")
     return numpy.median(dists) * numpy.sqrt(sz)
+
+
+def lb_keogh(ts_query, ts_candidate=None, radius=1, enveloppe_candidate=None):
+    """Compute LB_Keogh as defined in [3]_.
+
+    Parameters
+    ----------
+    ts_query : array-like
+        Query time-series to compare to the enveloppe of the candidate.
+    ts_candidate : array-like or None (default: None)
+        Candidate time-series. None means the enveloppe is provided via `enveloppe_query` parameter and hence does not
+        need to be computed again.
+    radius : int (default: 1)
+        Radius to be used for the enveloppe generation (the enveloppe at time index i will be generated based on
+        all observations from the candidate time series at indices comprised between i-radius and i+radius). Not used
+        if `ts_candidate` is None.
+    enveloppe_candidate: pair of array-like (enveloppe_down, enveloppe_up) or None (default: None)
+        Pre-computed enveloppe of the candidate time series. If set to None, it is computed based on `ts_candidate`.
+
+    Returns
+    -------
+    float
+        Distance between the query time series and the enveloppe of the candidate time series.
+
+    References
+    ----------
+    .. [3] Keogh, E. Exact indexing of dynamic time warping. In International Conference on Very Large Data Bases, 2002.
+       pp 406-417.
+    """
+    if ts_candidate is None:
+        enveloppe_down, enveloppe_up = enveloppe_candidate
+    else:
+        ts_candidate = npy2d_time_series(ts_candidate)
+        assert ts_candidate.shape[1] == 1, "LB_Keogh is available only for monodimensional time series"
+        enveloppe_down, enveloppe_up = lb_enveloppe(ts_candidate, radius)
+    ts_query = npy2d_time_series(ts_query)
+    assert ts_query.shape[1] == 1, "LB_Keogh is available only for monodimensional time series"
+    indices_up = ts_query[:, 0] > enveloppe_up[:, 0]
+    indices_down = ts_query[:, 0] < enveloppe_down[:, 0]
+    return numpy.sum((ts_query[indices_up, 0] - enveloppe_up[indices_up, 0]) ** 2) + \
+           numpy.sum((ts_query[indices_down, 0] - enveloppe_down[indices_down, 0]) ** 2)
+
+
+def lb_enveloppe(ts, radius=1):
+    """Compute time-series enveloppe as required by LB_Keogh [3]_.
+
+    Parameters
+    ----------
+    ts : array-like
+        Time-series for which the enveloppe should be computed.
+    radius : int (default: 1)
+        Radius to be used for the enveloppe generation (the enveloppe at time index i will be generated based on
+        all observations from the time series at indices comprised between i-radius and i+radius).
+
+    Returns
+    -------
+    array-like
+        Lower-side of the enveloppe.
+    array-like
+        Upper-side of the enveloppe.
+
+    References
+    ----------
+    .. [3] Keogh, E. Exact indexing of dynamic time warping. In International Conference on Very Large Data Bases, 2002.
+       pp 406-417.
+    """
+    return cydtw.lb_enveloppe(ts, radius=radius)

@@ -119,3 +119,26 @@ def cdist_dtw(numpy.ndarray[DTYPE_t, ndim=3] dataset1, numpy.ndarray[DTYPE_t, nd
                 cross_dist[i, j] = dtw(dataset1[i], dataset2[j])
 
     return cross_dist
+
+@cython.boundscheck(False) # turn off bounds-checking for entire function
+@cython.wraparound(False)  # turn off negative index wrapping for entire function
+def lb_enveloppe(numpy.ndarray[DTYPE_t, ndim=2] time_series, int radius):
+    assert time_series.dtype == DTYPE and time_series.shape[1] == 1
+    cdef int sz = time_series.shape[0]
+    cdef int i = 0
+    cdef int min_idx = 0
+    cdef int max_idx = 0
+    cdef numpy.ndarray[DTYPE_t, ndim=2] enveloppe_up = numpy.empty((sz, 1), dtype=DTYPE)
+    cdef numpy.ndarray[DTYPE_t, ndim=2] enveloppe_down = numpy.empty((sz, 1), dtype=DTYPE)
+
+    for i in range(sz):
+        min_idx = i - radius
+        max_idx = i + radius
+        if min_idx < 0:
+            min_idx = 0
+        if max_idx > sz:
+            max_idx = sz
+        enveloppe_down[i, 0] = time_series[min_idx:max_idx, 0].min()
+        enveloppe_up[i, 0] = time_series[min_idx:max_idx, 0].max()
+
+    return enveloppe_down, enveloppe_up

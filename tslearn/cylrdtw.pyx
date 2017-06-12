@@ -5,6 +5,7 @@ from scipy.spatial.distance import cdist
 
 cimport numpy
 cimport cython
+from cpython cimport bool
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -128,3 +129,25 @@ def lr_dtw_backtrace(numpy.ndarray[DTYPE_t, ndim=3] probas):
                                mat_probas[i, j + 1] * probas[i, j + 1, RIGHT] + \
                                mat_probas[i + 1, j + 1] * probas[i + 1, j + 1, DIAGONAL]
     return mat_probas
+
+@cython.boundscheck(False) # turn off bounds-checking for entire function
+@cython.wraparound(False)  # turn off negative index wrapping for entire function
+def cdist_lr_dtw(numpy.ndarray[DTYPE_t, ndim=3] dataset1, numpy.ndarray[DTYPE_t, ndim=3] dataset2, DTYPE_t gamma,
+                bool self_similarity):
+    assert dataset1.dtype == DTYPE and dataset2.dtype == DTYPE
+    cdef int n1 = dataset1.shape[0]
+    cdef int n2 = dataset2.shape[0]
+    cdef int i = 0
+    cdef int j = 0
+    cdef numpy.ndarray[DTYPE_t, ndim=2] cross_dist = numpy.empty((n1, n2), dtype=DTYPE)
+
+    for i in range(n1):
+        for j in range(n2):
+            if self_similarity and j < i:
+                cross_dist[i, j] = cross_dist[j, i]
+            elif self_similarity and i == j:
+                cross_dist[i, j] = 0.
+            else:
+                cross_dist[i, j] = lr_dtw(dataset1[i], dataset2[j], gamma)[0]
+
+    return cross_dist

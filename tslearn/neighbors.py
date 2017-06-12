@@ -4,10 +4,10 @@ from sklearn.neighbors.base import KNeighborsMixin, _get_weights
 from scipy import stats
 from sklearn.utils.extmath import weighted_mode
 
-from tslearn.metrics import dtw, cdist_dtw
+from tslearn.metrics import cdist_dtw, cdist_lr_dtw
 
 
-class KNeighborsDynamicTimeWarpingMixin(KNeighborsMixin):
+class KNeighborsTimeSeries(KNeighborsMixin):
     """Mixin for k-neighbors searches using Dynamic Time Warping as the core metric."""
 
     def kneighbors(self, X=None, n_neighbors=None, return_distance=True):
@@ -39,7 +39,14 @@ class KNeighborsDynamicTimeWarpingMixin(KNeighborsMixin):
         if X is None:
             X = self._fit_X
             self_neighbors = True
-        full_dist_matrix = cdist_dtw(X, self._fit_X)
+        if self.metric == "dtw":
+            cdist_fun = cdist_dtw
+        elif self.metric == "lr_dtw":
+            cdist_fun = lambda x, y: cdist_lr_dtw(x, y, gamma=self.metric_params.get("gamma", 0.))
+        else:
+            raise ValueError("Unrecognized time series metric string: %s (should be one of 'dtw', 'lr_dtw')" %
+                             self.metric)
+        full_dist_matrix = cdist_fun(X, self._fit_X)
         ind = numpy.argsort(full_dist_matrix, axis=1)
 
         if self_neighbors:
@@ -55,8 +62,8 @@ class KNeighborsDynamicTimeWarpingMixin(KNeighborsMixin):
             return ind
 
 
-class KNeighborsDynamicTimeWarpingClassifier(KNeighborsClassifier, KNeighborsDynamicTimeWarpingMixin):
-    """Classifier implementing the k-nearest neighbors vote with Dynamic Time Warping as its core metric.
+class KNeighborsTimeSeriesClassifier(KNeighborsClassifier, KNeighborsTimeSeries):
+    """Classifier implementing the k-nearest neighbors vote for Time Series.
 
     Parameters
     ----------
@@ -70,9 +77,15 @@ class KNeighborsDynamicTimeWarpingClassifier(KNeighborsClassifier, KNeighborsDyn
           will have a greater influence than neighbors which are further away.
         - [callable] : a user-defined function which accepts an array of distances, and returns an array of the same
           shape containing the weights.
+    metric : {'dtw' or 'lr_dtw'} (default: 'dtw')
+        Metric to be used at the core of the nearest neighbor procedure
+    metric_params : dict or None (default: None)
+        Dictionnary of metric parameters. Recognized keys are `"gamma"` (which has default value 0.) for LR-DTW.
     """
-    def __init__(self, n_neighbors=5, weights='uniform'):
-        KNeighborsClassifier.__init__(self, n_neighbors=n_neighbors, weights=weights, algorithm='brute', metric=dtw)
+    def __init__(self, n_neighbors=5, weights='uniform', metric="dtw", metric_params=None):
+        KNeighborsClassifier.__init__(self, n_neighbors=n_neighbors, weights=weights, algorithm='brute')
+        self.metric = metric
+        self.metric_params = metric_params
 
     def fit(self, X, y):
         """Fit the model using X as training data and y as target values
