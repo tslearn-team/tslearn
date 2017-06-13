@@ -314,7 +314,7 @@ def sigma_gak(dataset, n_samples=100):
     Returns
     -------
     float
-        Suggested bandwidth (:math:`sigma`) for the Global Alignment kernel
+        Suggested bandwidth (:math:`\\sigma`) for the Global Alignment kernel
 
     See Also
     --------
@@ -390,10 +390,5 @@ def lb_enveloppe(ts, radius=1):
         Lower-side of the enveloppe.
     array-like
         Upper-side of the enveloppe.
-
-    References
-    ----------
-    .. [3] Keogh, E. Exact indexing of dynamic time warping. In International Conference on Very Large Data Bases, 2002.
-       pp 406-417.
     """
     return cydtw.lb_enveloppe(ts, radius=radius)
