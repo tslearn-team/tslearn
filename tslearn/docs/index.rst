@@ -16,12 +16,13 @@ This documentation provides information about the following ``tslearn`` modules:
 
 .. toctree::
    :maxdepth: 1
-   
-   generators
-   preprocessing
-   metrics
-   utils
-   neighbors
-   clustering
+
    adaptation
    barycenters
+   clustering
+   generators
+   metrics
+   neighbors
+   piecewise
+   preprocessing
+   utils

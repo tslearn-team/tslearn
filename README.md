@@ -21,7 +21,7 @@ The easiest way to install `tslearn` is probably via `pip`:
 pip install tslearn
 ```
 
-## Using github's hosted latest version
+## Using latest github-hosted version
 
 If you want to get `tslearn`'s latest version, you can `git clone` the repository hosted at github:
 ```bash
@@ -55,13 +55,14 @@ Also, for the whole package to run properly, its base directory should be append
     * Based on `tslearn.barycenters` that offers DBA facility that could be used for other applications than just 
     k-means
   * Global Alignment kernel k-means
+* A `piecewise` module includes PAA and SAX transformations for time series, as well as the corresponding distances 
 
 # TODO list
 
 * Add soft-DTW to the proposed metrics
 * Implement Learning Shapelets from Grabocka et al. (Conv+L2, + unsupervised)
 * Add local feature extractors (`TransformerMixin`)
-* Add SAX (+1d-SAX?) transformation (`TransformerMixin`)
+* Add 1d-SAX transformation? (`TransformerMixin`)
 * Add soft-DTW k-means by Cuturi and Blondel
 * Add metric learning for time series (Garreau _et al._)
 * Add kShape for time series clustering
