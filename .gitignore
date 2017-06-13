@@ -99,6 +99,3 @@ ENV/
 .idea/
 .DS_Store
 tslearn/test
-tslearn/cydtw.c
-tslearn/cylrdtw.c
-tslearn/cygak.c
