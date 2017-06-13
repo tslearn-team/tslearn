@@ -16,6 +16,7 @@ Using PyPI
 ``````````
 
 The easiest way to install ``tslearn`` is probably via ``pip``:
+
 .. code-block:: bash
   
   pip install tslearn
@@ -25,11 +26,13 @@ Using latest github-hosted version
 ``````````````````````````````````
 
 If you want to get ``tslearn``'s latest version, you can ``git clone`` the repository hosted at github:
+
 .. code-block:: bash
   
   git clone https://github.com/rtavenar/tslearn.git
 
 Then, you should run the following command for Cython code to compile:
+
 .. code-block:: bash
   
   python setup.py build_ext --inplace
