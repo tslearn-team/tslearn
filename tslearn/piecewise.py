@@ -143,7 +143,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
 
     References
     ----------
-    .. [2] TODO
+    .. [2] J. Lin, E. Keogh, L. Wei, et al. Data Mining and Knowledge Discovery, 2007. vol. 15(107)
     """
     def __init__(self, n_segments, alphabet_size):
         PiecewiseAggregateApproximation.__init__(self, n_segments)
