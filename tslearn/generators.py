@@ -3,7 +3,7 @@ import numpy
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
-def random_walks(n_ts=100, sz=256, d=1, mu=0., std=1.0):
+def random_walks(n_ts=100, sz=256, d=1, mu=0., std=1.):
     """Random walk time series generator.
 
     Generate ``n_ts`` time series of size ``sz`` and dimensionality ``d``.
@@ -13,15 +13,15 @@ def random_walks(n_ts=100, sz=256, d=1, mu=0., std=1.0):
 
     Parameters
     ----------
-    n_ts : int
+    n_ts : int (default: 100)
         Number of time series
-    sz : int
+    sz : int (default: 256)
         Length of time series (number of time instants)
-    d : int
+    d : int (default: 1)
         Dimensionality of time series
-    mu : float
+    mu : float (default: 0.)
         Mean of the normal distribution from which random walk steps are drawn
-    std : float
+    std : float (default: 1.)
         Standard deviation of the normal distribution from which random walk steps are drawn
 
     Returns
@@ -37,7 +37,7 @@ def random_walks(n_ts=100, sz=256, d=1, mu=0., std=1.0):
     return ts
 
 
-def random_walk_blobs(n_ts_per_blob=100, sz=256, d=1, n_blobs=2, noise_level=1.0):
+def random_walk_blobs(n_ts_per_blob=100, sz=256, d=1, n_blobs=2, noise_level=1.):
     """Blob-based random walk time series generator.
     
     Generate ``n_ts_per_blobs`` * ``n_blobs`` time series of size ``sz`` and dimensionality ``d``.
@@ -49,15 +49,15 @@ def random_walk_blobs(n_ts_per_blob=100, sz=256, d=1, n_blobs=2, noise_level=1.0
     
     Parameters
     ----------
-    n_ts_per_blob : int
+    n_ts_per_blob : int (default: 100)
         Number of time series in each blob
-    sz : int
+    sz : int (default: 256)
         Length of time series (number of time instants)
-    d : int
+    d : int (default: 1)
         Dimensionality of time series
-    n_blobs : int
+    n_blobs : int (default: 2)
         Number of blobs
-    noise_level : float
+    noise_level : float (default: 1.)
         Standard deviation of white noise added to time series in each blob
 
     Returns

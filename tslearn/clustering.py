@@ -3,7 +3,6 @@ from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.cluster import KMeans
 from sklearn.cluster.k_means_ import _k_init
 from sklearn.utils import check_random_state
-from sklearn.utils.extmath import row_norms
 from sklearn.utils.validation import check_is_fitted
 from sklearn.metrics import euclidean_distances
 from scipy.spatial.distance import cdist
@@ -112,9 +111,9 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
 
         Parameters
         ----------
-        X : array-like, shape=(n_ts, sz, d)
+        X : array-like of shape=(n_ts, sz, d)
             Time series dataset.
-        sample_weight : array-like, shape=(n_ts, ), optional
+        sample_weight : array-like of shape=(n_ts, ) or None (default: None)
             Weights to be given to time series in the learning process. By default, all time series weights are equal.
         """
         n_successful = 0
@@ -169,12 +168,12 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
 
         Parameters
         ----------
-        X : array-like, shape=(n_ts, sz, d)
+        X : array-like of shape=(n_ts, sz, d)
             Time series dataset to predict.
 
         Returns
         -------
-        labels : array, shape=(n_ts, )
+        labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
         K = self._get_kernel(X, self.X_fit_)
@@ -182,183 +181,6 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         dist = numpy.zeros((n_samples, self.n_clusters))
         self._compute_dist(K, dist)
         return dist.argmin(axis=1)
-
-
-class TimeSeriesKMeansOld(KMeans):
-    """Standard Euclidean K-Means clustering for time series data.
-
-    Parameters
-    ----------
-    n_clusters : int, optional, default: 8
-        The number of clusters to form as well as the number of
-        centroids to generate.
-
-    max_iter : int, default: 300
-        Maximum number of iterations of the k-means algorithm for a
-        single run.
-
-    n_init : int, default: 10
-        Number of time the k-means algorithm will be run with different
-        centroid seeds. The final results will be the best output of
-        n_init consecutive runs in terms of inertia.
-
-    init : {'k-means++', 'random' or an ndarray}
-        Method for initialization, defaults to 'k-means++':
-
-        'k-means++' : selects initial cluster centers for k-mean
-        clustering in a smart way to speed up convergence. See section
-        Notes in k_init for more details.
-
-        'random': choose k observations (rows) at random from data for
-        the initial centroids.
-
-        If an ndarray is passed, it should be of shape (n_clusters, n_features)
-        and gives the initial centers.
-
-    algorithm : "auto", "full" or "elkan", default="auto"
-        K-means algorithm to use. The classical EM-style algorithm is "full".
-        The "elkan" variation is more efficient by using the triangle
-        inequality, but currently doesn't support sparse data. "auto" chooses
-        "elkan" for dense data and "full" for sparse data.
-
-    precompute_distances : {'auto', True, False}
-        Precompute distances (faster but takes more memory).
-
-        'auto' : do not precompute distances if n_samples * n_clusters > 12
-        million. This corresponds to about 100MB overhead per job using
-        double precision.
-
-        True : always precompute distances
-
-        False : never precompute distances
-
-    tol : float, default: 1e-4
-        Relative tolerance with regards to inertia to declare convergence
-
-    n_jobs : int
-        The number of jobs to use for the computation. This works by computing
-        each of the n_init runs in parallel.
-
-        If -1 all CPUs are used. If 1 is given, no parallel computing code is
-        used at all, which is useful for debugging. For n_jobs below -1,
-        (n_cpus + 1 + n_jobs) are used. Thus for n_jobs = -2, all CPUs but one
-        are used.
-
-    random_state : integer or numpy.RandomState, optional
-        The generator used to initialize the centers. If an integer is
-        given, it fixes the seed. Defaults to the global numpy random
-        number generator.
-
-    verbose : int, default 0
-        Verbosity mode.
-
-    copy_x : boolean, default True
-        When pre-computing distances it is more numerically accurate to center
-        the data first.  If copy_x is True, then the original data is not
-        modified.  If False, the original data is modified, and put back before
-        the function returns, but small numerical differences may be introduced
-        by subtracting and then adding the data mean.
-
-    Attributes
-    ----------
-    cluster_centers_ : array of shape (n_clusters, sz, d)
-        Coordinates of cluster centers
-
-    labels_ :
-        Labels of each point
-
-    inertia_ : float
-        Sum of distances of samples to their closest cluster center.
-    """
-    def __init__(self, n_clusters=8, init='k-means++', n_init=10, max_iter=300, tol=1e-4, precompute_distances='auto',
-                 verbose=0, random_state=None, copy_x=True, n_jobs=1, algorithm='auto'):
-        KMeans.__init__(self, n_clusters=n_clusters, init=init, n_init=n_init, max_iter=max_iter, tol=tol,
-                        precompute_distances=precompute_distances, verbose=verbose, random_state=random_state,
-                        copy_x=copy_x, n_jobs=n_jobs, algorithm=algorithm)
-        self.cluster_centers_ = None
-        self.labels_ = None
-        self.inertia_ = None
-
-    def fit(self, X, y=None):
-        """Compute k-means clustering.
-
-        Parameters
-        ----------
-        X : array-like, shape=(n_ts, sz, d)
-            Training time series dataset to cluster.
-        """
-        X = self._check_fit_data(X)
-        n_ts, sz, d = X.shape
-        X_ = X.reshape((n_ts, -1))
-        # TODO: The following is ugly, I just do not know why using inheritance does not work (KMeans.fit(self, X_, y))
-        km = KMeans(n_clusters=self.n_clusters, init=self.init, n_init=self.n_init, max_iter=self.max_iter,
-                    tol=self.tol, precompute_distances=self.precompute_distances, verbose=self.verbose,
-                    random_state=self.random_state, copy_x=self.copy_x, n_jobs=self.n_jobs, algorithm=self.algorithm)
-        km.fit(X_, y)
-        self.cluster_centers_ = km.cluster_centers_.reshape((-1, sz, d))
-        self.labels_ = km.labels_
-        self.inertia_ = km.inertia_
-        return self
-
-    def _check_fit_data(self, X):
-        """Verify that the number of samples given is larger than k"""
-        X = npy3d_time_series_dataset(X)
-        if X.shape[0] < self.n_clusters:
-            raise ValueError("n_samples=%d should be >= n_clusters=%d" % (X.shape[0], self.n_clusters))
-        return X
-
-    def _check_test_data(self, X):
-        X = npy3d_time_series_dataset(X)
-        n_ts, sz, d = X.shape
-        expected_sz, expected_d = self.cluster_centers_.shape[1:]
-        if not (sz == expected_sz and d == expected_d):
-            raise ValueError("Incorrect shape. Got size %d and dimension %d, expected size %d and dimension %d" %
-                             (sz, d, expected_sz, expected_d))
-
-        return X
-
-    def transform(self, X, y=None):
-        """Transform X to a cluster-distance space.
-        In the new space, each dimension is the distance to the cluster
-        centers.
-
-        Parameters
-        ----------
-        X : array-like, shape=(n_ts, sz, d)
-            Time series dataset to transform.
-        Returns
-        -------
-        X_new : array, shape=(n_samples, k)
-            X transformed in the new space.
-        """
-        X = self._check_fit_data(X)
-        return self._transform(X, y)
-
-    def _transform(self, X, y=None):
-        n_ts, sz, d = X.shape
-        return euclidean_distances(X.reshape((n_ts, -1)), self.cluster_centers_.reshape((self.n_clusters, -1)))
-
-    def predict(self, X):
-        """Predict the closest cluster each time series in X belongs to.
-        In the vector quantization literature, `cluster_centers_` is called
-        the code book and each value returned by `predict` is the index of
-        the closest code in the code book.
-
-        Parameters
-        ----------
-        X : array-like, shape=(n_ts, sz, d)
-            Time series dataset to predict.
-        Returns
-        -------
-        labels : array, shape=(n_ts,)
-            Index of the cluster each time series belongs to.
-        """
-        check_is_fitted(self, 'cluster_centers_')
-
-        X = self._check_test_data(X)
-        n_ts, sz, d = X.shape
-        dists = euclidean_distances(X.reshape((n_ts, -1)), self.cluster_centers_.reshape((self.n_clusters, -1)))
-        return numpy.argmin(dists, axis=1)
 
 
 class TimeSeriesKMeans(BaseEstimator, ClusterMixin):
@@ -376,7 +198,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin):
     n_init : int (default: 1)
         Number of time the k-means algorithm will be run with different centroid seeds. The final results will be the
         best output of n_init consecutive runs in terms of inertia.
-    metric : {"euclidean", "dtw"}, default: "euclidean"
+    metric : {"euclidean", "dtw"} (default: "euclidean")
         Metric to be used for both cluster assignment and barycenter computation. If "dtw", DBA is used for barycenter
         computation.
     n_iter_dba : int (default: 100)
@@ -463,7 +285,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin):
 
         Parameters
         ----------
-        X : array-like, shape=(n_ts, sz, d)
+        X : array-like of shape=(n_ts, sz, d)
             Time series dataset.
         """
         n_successful = 0
@@ -501,12 +323,12 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin):
 
         Parameters
         ----------
-        X : array-like, shape=(n_ts, sz, d)
+        X : array-like of shape=(n_ts, sz, d)
             Time series dataset to predict.
 
         Returns
         -------
-        labels : array, shape=(n_ts, )
+        labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
         K = self._get_kernel(X, self.X_fit_)

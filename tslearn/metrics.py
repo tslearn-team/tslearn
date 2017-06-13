@@ -96,7 +96,7 @@ def cdist_dtw(dataset1, dataset2=None):
     ----------
     dataset1 : array-like
         A dataset of time series
-    dataset2 : array-like, default: None
+    dataset2 : array-like (default: None)
         Another dataset of time series. If `None`, self-similarity of `dataset1` is returned.
 
     Returns

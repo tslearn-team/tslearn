@@ -33,12 +33,12 @@ class DTWBarycenterAveraging:
     ----------
     n_iter : int
         Number of iterations of the EM procedure.
-    barycenter_size : int or None, default None
+    barycenter_size : int or None (default: None)
         Size of the barycenter to generate. If None, the size of the barycenter is that of the data provided at fit
         time.
-    tol : float (default 1e-5)
+    tol : float (default: 1e-5)
         Tolerance to use for early stopping: if the decrease in cost is lower than this value, the EM procedure stops.
-    verbose : boolean (default False)
+    verbose : boolean (default: False)
         Whether to print information about the cost at each iteration or not.
     
     References

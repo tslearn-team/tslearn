@@ -69,7 +69,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsClassifier, KNeighborsTimeSeries)
     ----------
     n_neighbors : int (default: 5)
         Number of nearest neighbors to be considered for the decision.
-    weights : str or callable, optional (default = 'uniform')
+    weights : str or callable, optional (default: 'uniform')
         Weight function used in prediction. Possible values:
 
         - 'uniform' : uniform weights. All points in each neighborhood are weighted equally.

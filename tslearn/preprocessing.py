@@ -7,6 +7,13 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 class TimeSeriesScalerMinMax(TransformerMixin):
     """Scaler for time series. Scales time series so that their span in each dimension is between ``min`` and ``max``.
+
+    Parameters
+    ----------
+    min : float (default: 0.)
+        Minimum value for output time series.
+    max : float (default: 1.)
+        Maximum value for output time series.
     
     Example
     -------
@@ -19,12 +26,12 @@ class TimeSeriesScalerMinMax(TransformerMixin):
         self.min_ = min
         self.max_ = max
 
-    def fit_transform(self, X):
+    def fit_transform(self, X, **kwargs):
         """Fit to data, then transform it.
 
         Parameters
         ----------
-        X
+        X : array-like
             Time series dataset to be rescaled
 
         Returns
@@ -44,7 +51,14 @@ class TimeSeriesScalerMinMax(TransformerMixin):
 
 class TimeSeriesScalerMeanVariance(TransformerMixin):
     """Scaler for time series. Scales time series so that their mean (resp. standard deviation) in each dimension is
-    ``mu`` (resp. ``std``).
+    mu (resp. std).
+
+    Parameters
+    ----------
+    mu : float (default: 0.)
+        Mean of the output time series
+    std : float (default: 1.)
+        Standard deviation of the output time series
     
     Example
     -------
@@ -57,7 +71,7 @@ class TimeSeriesScalerMeanVariance(TransformerMixin):
         self.mu_ = mu
         self.std_ = std
 
-    def fit_transform(self, X):
+    def fit_transform(self, X, **kwargs):
         """Fit to data, then transform it.
         
         Parameters
@@ -77,8 +91,3 @@ class TimeSeriesScalerMeanVariance(TransformerMixin):
                 cur_std = X_[i, :, d].std()
                 X_[i, :, d] = (X_[i, :, d] - cur_mean) * self.std_ / cur_std + self.mu_
         return X_
-
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()

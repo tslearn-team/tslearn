@@ -22,15 +22,26 @@ class DTWSampler(BaseEstimator, TransformerMixin):
     3. call prepare_transform to perform DTW between base modalities of the targets and those of the reference.
     4. call transform to get resampled time series for all other modalities
 
-    If one wants to use LR-DTW instead of DTW at the core of this method, the ``metric`` attribute should be set to
-    ``"lrdtw"``.
+    If one wants to use LR-DTW instead of DTW at the core of this method, the metric attribute should be set to
+    "lrdtw".
+
+    Parameters
+    ----------
+    n_samples : int (default: 100)
+        Size of generated time series.
+    interp_kind : str (default: "slinear")
+        Interpolation kind to be used in the call to ``scipy.interpolate.interp1d``.
+    metric : {"dtw", "lrdtw"} (default: "dtw")
+        Metric to be used for time series alignment.
+    gamma_lr_dtw : float (default: 1.)
+        Gamma parameter for LR-DTW (only used if metric="lrdtw").
     
     References
     ----------
     .. [1] R. Dupas et al. Identifying seasonal patterns of phosphorus storm dynamics with dynamic time warping.
        Water Resources Research, vol. 51 (11), pp. 8868--8882, 2015.
     """
-    def __init__(self, n_samples=100, interp_kind="slinear", metric="dtw", gamma_lr_dtw=1.0):
+    def __init__(self, n_samples=100, interp_kind="slinear", metric="dtw", gamma_lr_dtw=1.):
         self.n_samples = n_samples
         self.interp_kind = interp_kind
         self.reference_series_ = None
@@ -42,7 +53,7 @@ class DTWSampler(BaseEstimator, TransformerMixin):
         self.metric = metric
 
     def fit(self, X):
-        """Register ``X`` as the reference series and interpolate it to get a series of size ``self.nsamples``.
+        """Register X as the reference series and interpolate it to get a series of size nsamples.
 
         Parameters
         ----------
@@ -72,9 +83,9 @@ class DTWSampler(BaseEstimator, TransformerMixin):
         """Prepare the model for temporal resampling by computing DTW alignment path between the reference time series
         and a time series to be rescaled or a set of time series to be rescaled.
         
-        If ``ts_to_be_rescaled`` contains a single time series, all series from the dataset will be rescaled using the
-        DTW path between that time series and the reference one, otherwise, the ``X`` array given at transform time
-        should have the same number of time series (``X.shape[0]``) as ``ts_to_be_rescaled``.
+        If ts_to_be_rescaled contains a single time series, all series from the dataset will be rescaled using the
+        DTW path between that time series and the reference one, otherwise, the X array given at transform time
+        should have the same number of time series (X.shape[0]) as ts_to_be_rescaled.
 
         Parameters
         ----------
@@ -106,7 +117,7 @@ class DTWSampler(BaseEstimator, TransformerMixin):
             self.saved_dtw_paths_.append(path)
 
     def transform(self, X):
-        """Resample time series from dataset `X` according to resampling computed at the ``prepare_transform`` stage.
+        """Resample time series from dataset X according to resampling computed at the prepare_transform stage.
 
         Parameters
         ----------
@@ -149,7 +160,7 @@ class DTWSampler(BaseEstimator, TransformerMixin):
 
 
 def _resampled(X, n_samples=100, kind="slinear"):
-    """Perform resampling for time series ``X`` using the method given in ``kind``.
+    """Perform resampling for time series X using the method given in kind.
 
     Examples
     --------
@@ -172,7 +183,7 @@ def _resampled(X, n_samples=100, kind="slinear"):
 
 
 def first_non_finite_index(X):
-    """Return first index at which time series in `X` is non-finite.
+    """Return first index at which time series in X is non-finite.
 
     Parameters
     ----------

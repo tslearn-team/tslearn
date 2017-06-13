@@ -8,13 +8,13 @@ def npy2d_time_series(ts):
 
     Parameters
     ----------
-    ts
+    ts : array-like
         The time series to be transformed
 
     Returns
     -------
-    numpy.ndarray
-        The transformed time series (of shape ``(sz, d)``)
+    numpy.ndarray of shape (sz, d)
+        The transformed time series
     
     Example
     -------
@@ -40,13 +40,13 @@ def npy3d_time_series_dataset(dataset):
 
     Parameters
     ----------
-    dataset
+    dataset : array-like
         The dataset of time series to be transformed
 
     Returns
     -------
-    numpy.ndarray
-        The transformed dataset of time series (of shape ``(n_ts, sz, d)``)
+    numpy.ndarray of shape (n_ts, sz, d)
+        The transformed dataset of time series
     
     Example
     -------
