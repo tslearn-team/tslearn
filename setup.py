@@ -12,13 +12,15 @@ if have_cython:
     ext = [
         Extension('tslearn.cydtw', ['tslearn/cydtw.pyx']),
         Extension('tslearn.cygak', ['tslearn/cygak.pyx']),
-        Extension('tslearn.cylrdtw', ['tslearn/cylrdtw.pyx'])
+        Extension('tslearn.cylrdtw', ['tslearn/cylrdtw.pyx']),
+        Extension('tslearn.cysax', ['tslearn/cysax.pyx'])
     ]
 else:
     ext = [
         Extension('tslearn.cydtw', ['tslearn/cydtw.c']),
         Extension('tslearn.cygak', ['tslearn/cygak.c']),
-        Extension('tslearn.cylrdtw', ['tslearn/cylrdtw.c'])
+        Extension('tslearn.cylrdtw', ['tslearn/cylrdtw.c']),
+        Extension('tslearn.cysax', ['tslearn/cysax.c'])
     ]
 
 setup(

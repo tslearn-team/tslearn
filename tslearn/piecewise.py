@@ -2,7 +2,8 @@ import numpy
 from scipy.stats import norm
 from sklearn.base import TransformerMixin
 
-from tslearn.utils import npy3d_time_series_dataset
+from tslearn.utils import npy3d_time_series_dataset, npy2d_time_series
+from tslearn.cysax import distance_sax
 
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -224,15 +225,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
         if self.size_fitted_ < 0:
             raise ValueError("Model not fitted yet: cannot be used for distance computation.")
         else:
-            sz, d = sax1.shape
-            s = 0.
-            for t in range(sz):  # TODO: cythonize
-                for di in range(d):
-                    if numpy.abs(sax1[t, di] - sax2[t, di]) > 1:
-                        max_symbol = max(sax1[t, di], sax2[t, di])
-                        min_symbol = min(sax1[t, di], sax2[t, di])
-                        s += (self.breakpoints_[max_symbol - 1] - self.breakpoints_[min_symbol]) ** 2
-            return numpy.sqrt(s * self.size_fitted_ / self.n_segments)
+            return distance_sax(sax1, sax2, self.breakpoints_, self.size_fitted_)
 
     def distance(self, ts1, ts2):
         """Compute distance between SAX representations as defined in [2]_.
