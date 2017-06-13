@@ -7,7 +7,7 @@
 ===========================
 
 ``tslearn`` is a Python package that provides machine learning tools for the analysis of time series.
-This package builds on ``scikit-learn``, ``numpy`` and ``scipy`` libraries.
+This package builds on (and hence depends on) ``scikit-learn``, ``numpy`` and ``scipy`` libraries.
 
 Installation
 ------------
