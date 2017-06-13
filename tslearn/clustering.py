@@ -163,6 +163,23 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
     def _compute_inertia(dist):
         return dist.min(axis=1).sum()
 
+    def fit_predict(self, X, y=None):
+        """Fit kernel k-means clustering using X and then predict the closest cluster each time series in X belongs to.
+
+        It is more efficient to use this method than to sequentially call fit and predict.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset to predict.
+
+        Returns
+        -------
+        labels : array of shape=(n_ts, )
+            Index of the cluster each sample belongs to.
+        """
+        return self.fit(X, y).labels_
+
     def predict(self, X):
         """Predict the closest cluster each time series in X belongs to.
 
@@ -280,7 +297,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin):
             else:
                 raise ValueError("Incorrect metric: %s (should be one of 'dtw', 'euclidean')" % self.metric)
 
-    def fit(self, X, y=None, sample_weight=None):
+    def fit(self, X, y=None):
         """Compute k-means clustering.
 
         Parameters
@@ -295,7 +312,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin):
         x_squared_norms = cdist(X_.reshape((X_.shape[0], -1)), numpy.zeros((1, X_.shape[1] * X_.shape[2])),
                                 metric="sqeuclidean").reshape((1, -1))
 
-        last_correct_centroids = None
+        best_correct_centroids = None
         min_inertia = numpy.inf
         for trial in range(self.n_init):
             try:
@@ -303,7 +320,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin):
                     print("Init %d" % (trial + 1))
                 self._fit_one_init(X_, x_squared_norms, rs)
                 if self.inertia_ < min_inertia:
-                    last_correct_centroids = self.cluster_centers_.copy()
+                    best_correct_centroids = self.cluster_centers_.copy()
                     min_inertia = self.inertia_
                 n_successful += 1
             except EmptyClusterError:
@@ -311,12 +328,28 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin):
                     print("Resumed because of empty cluster")
         if n_successful > 0:
             self.X_fit_ = X_
-            self.cluster_centers_ = last_correct_centroids
+            self.cluster_centers_ = best_correct_centroids
             self._assign(X_)
-            self.inertia_ = min_inertia
         else:
             self.X_fit_ = None
         return self
+
+    def fit_predict(self, X, y=None):
+        """Fit k-means clustering using X and then predict the closest cluster each time series in X belongs to.
+
+        It is more efficient to use this method than to sequentially call fit and predict.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset to predict.
+
+        Returns
+        -------
+        labels : array of shape=(n_ts, )
+            Index of the cluster each sample belongs to.
+        """
+        return self.fit(X, y).labels_
 
     def predict(self, X):
         """Predict the closest cluster each time series in X belongs to.
@@ -331,8 +364,161 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin):
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
-        K = self._get_kernel(X, self.X_fit_)
-        n_samples = X.shape[0]
+        X_ = npy3d_time_series_dataset(X)
+        K = self._get_kernel(X_, self.X_fit_)
+        n_samples = X_.shape[0]
         dist = numpy.zeros((n_samples, self.n_clusters))
         self._compute_dist(K, dist)
         return dist.argmin(axis=1)
+
+
+class KShape(BaseEstimator, ClusterMixin):
+    """kShape clustering for time series as presented in [1]_.
+
+    Parameters
+    ----------
+    n_clusters : int (default: 3)
+        Number of clusters to form.
+    max_iter : int (default: 100)
+        Maximum number of iterations of the k-Shape algorithm.
+    tol : float (default: 1e-6)
+        Inertia variation threshold. If at some point, inertia varies less than this threshold between two consecutive
+        iterations, the model is considered to have converged and the algorithm stops.
+    n_init : int (default: 1)
+        Number of time the k-Shape algorithm will be run with different centroid seeds. The final results will be the
+        best output of n_init consecutive runs in terms of inertia.
+    verbose : bool (default: True)
+        Whether or not to print information about the inertia while learning the model.
+    random_state : integer or numpy.RandomState, optional
+        Generator used to initialize the centers. If an integer is given, it fixes the seed. Defaults to the global
+        numpy random number generator.
+
+    Attributes
+    ----------
+    cluster_centers_ : numpy.ndarray of shape (sz, d).
+        Centroids
+    labels_ : numpy.ndarray of integers with shape (n_ts, ).
+        Labels of each point
+    inertia_ : float
+        Sum of distances of samples to their closest cluster center.
+
+    References
+    ----------
+    .. [1] J. Paparrizos & L. Gravano. k-Shape: Efficient and Accurate Clustering of Time Series. SIGMOD 2015.
+       pp. 1855-1870.
+    """
+    def __init__(self, n_clusters=3, max_iter=100, tol=1e-6, n_init=1, verbose=True, random_state=None):
+        self.n_clusters = n_clusters
+        self.max_iter = max_iter
+        self.tol = tol
+        self.random_state = random_state
+        self.n_init = n_init
+        self.verbose = verbose
+
+        self.labels_ = None
+        self.inertia_ = None
+        self.cluster_centers_ = None
+
+    def _update_centroids(self, X):
+        for k in range(self.n_clusters):
+            self.cluster_centers_[k] = numpy.empty((X.shape[1], X.shape[2]))  # TODO: Shape Extraction (Alg. 2 in paper)
+
+    def _cross_dists(self, X):
+        return numpy.empty((X.shape[0], self.n_clusters))  # TODO using Alg. 1
+
+    def _assign(self, X):
+        dists = self._cross_dists(X)
+        self.labels_ = dists.argmin(axis=1)
+        for k in range(self.n_clusters):
+            if numpy.sum(self.labels_ == k) == 0:
+                raise EmptyClusterError
+        self.inertia_ = numpy.sum(dists[numpy.arange(X.shape[0]), self.labels_] ** 2) / X.shape[0]
+
+    def _fit_one_init(self, X, rs):
+        n_samples, sz, d = X.shape
+        self.labels_ = rs.randint(self.n_clusters, size=n_samples)
+        self.cluster_centers_ = numpy.zeros((self.n_clusters, sz, d))
+        old_inertia = numpy.inf
+
+        for it in range(self.max_iter):
+            self._assign(X)
+            self._update_centroids(X)
+            if self.verbose:
+                print("%.3f" % self.inertia_, end=" --> ")
+
+            if numpy.abs(old_inertia - self.inertia_) < self.tol:
+                break
+            old_inertia = self.inertia_
+        if self.verbose:
+            print("")
+
+        return self
+
+    def fit(self, X, y=None):
+        """Compute k-Shape clustering.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset.
+        """
+        n_successful = 0
+
+        X_ = npy3d_time_series_dataset(X)
+        rs = check_random_state(self.random_state)
+
+        best_correct_centroids = None
+        min_inertia = numpy.inf
+        for trial in range(self.n_init):
+            try:
+                if self.verbose:
+                    print("Init %d" % (trial + 1))
+                self._fit_one_init(X_, rs)
+                if self.inertia_ < min_inertia:
+                    best_correct_centroids = self.cluster_centers_.copy()
+                    min_inertia = self.inertia_
+                n_successful += 1
+            except EmptyClusterError:
+                if self.verbose:
+                    print("Resumed because of empty cluster")
+        if n_successful > 0:
+            self.cluster_centers_ = best_correct_centroids
+            self._assign(X_)
+            self.inertia_ = min_inertia
+        else:
+            raise EmptyClusterError
+        return self
+
+    def fit_predict(self, X, y=None):
+        """Fit k-Shape clustering using X and then predict the closest cluster each time series in X belongs to.
+
+        It is more efficient to use this method than to sequentially call fit and predict.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset to predict.
+
+        Returns
+        -------
+        labels : array of shape=(n_ts, )
+            Index of the cluster each sample belongs to.
+        """
+        return self.fit(X, y).labels_
+
+    def predict(self, X):
+        """Predict the closest cluster each time series in X belongs to.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset to predict.
+
+        Returns
+        -------
+        labels : array of shape=(n_ts, )
+            Index of the cluster each sample belongs to.
+        """
+        X_ = npy3d_time_series_dataset(X)
+        dists = self._cross_dists(X_)
+        return dists.argmin(axis=1)
