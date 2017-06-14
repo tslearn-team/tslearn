@@ -70,3 +70,5 @@ Also, for the whole package to run properly, its base directory should be append
 * Add automatic retrieval of UCR/UEA datasets and 1M remote sensing time series?
 * Add LB_Keogh for nearest neighbor search
 * Add Cost-Aware Early Classification of TS (Tavenard & Malinowski)?
+
+**If you want other ML methods for time series to be added to this TODO list, do not hesitate to open an issue!**
