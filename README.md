@@ -55,6 +55,7 @@ Also, for the whole package to run properly, its base directory should be append
     * Based on `tslearn.barycenters` that offers DBA facility that could be used for other applications than just 
     k-means
   * Global Alignment kernel k-means
+  * KShape clustering from Paparizzos and Gravano
 * A `piecewise` module includes PAA and SAX transformations for time series, as well as the corresponding distances 
 
 # TODO list
@@ -65,7 +66,6 @@ Also, for the whole package to run properly, its base directory should be append
 * Add 1d-SAX transformation? (`TransformerMixin`)
 * Add soft-DTW k-means by Cuturi and Blondel
 * Add metric learning for time series (Garreau _et al._)
-* Add kShape for time series clustering
 * Add automatic retrieval of UCR/UEA datasets and 1M remote sensing time series?
 * Add LB_Keogh for nearest neighbor search
 * Add Cost-Aware Early Classification of TS (Tavenard & Malinowski)?

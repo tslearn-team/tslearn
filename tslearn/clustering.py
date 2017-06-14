@@ -1,15 +1,14 @@
 import numpy
 from sklearn.base import BaseEstimator, ClusterMixin
-from sklearn.cluster import KMeans
 from sklearn.cluster.k_means_ import _k_init
 from sklearn.utils import check_random_state
-from sklearn.utils.validation import check_is_fitted
-from sklearn.metrics import euclidean_distances
 from scipy.spatial.distance import cdist
 
 from tslearn.metrics import cdist_gak, cdist_dtw
 from tslearn.barycenters import EuclideanBarycenter, DTWBarycenterAveraging
+from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.utils import npy3d_time_series_dataset
+from tslearn.cycc import cdist_normalized_cc, y_shifted_sbd_vec
 
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -419,12 +418,33 @@ class KShape(BaseEstimator, ClusterMixin):
         self.inertia_ = None
         self.cluster_centers_ = None
 
+    def _shape_extraction(self, X, k):
+        sz = X.shape[1]
+        Xp = y_shifted_sbd_vec(self.cluster_centers_[k], X[self.labels_ == k], norm_ref=-1,
+                               norms_dataset=numpy.array([-1.]))  # TODO: provide norms
+        S = numpy.dot(Xp[:, :, 0].T, Xp[:, :, 0])
+        Q = numpy.eye(sz) - numpy.ones((sz, sz)) / sz
+        M = numpy.dot(Q.T, numpy.dot(S, Q))
+        _, vec = numpy.linalg.eigh(M)
+        mu_k = vec[:, -1].reshape((sz, 1))
+
+        # The way the optimization problem is (ill-)formulated, both mu_k and -mu_k are candidates for barycenters
+        # In the following, we check which one is best candidate
+        dist_plus_mu = numpy.sum(numpy.linalg.norm(Xp - mu_k, axis=(1, 2)))
+        dist_minus_mu = numpy.sum(numpy.linalg.norm(Xp + mu_k, axis=(1, 2)))
+        if dist_minus_mu < dist_plus_mu:
+            mu_k *= -1
+
+        return mu_k
+
     def _update_centroids(self, X):
         for k in range(self.n_clusters):
-            self.cluster_centers_[k] = numpy.empty((X.shape[1], X.shape[2]))  # TODO: Shape Extraction (Alg. 2 in paper)
+            self.cluster_centers_[k] = self._shape_extraction(X, k)
+        self.cluster_centers_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(self.cluster_centers_)
 
     def _cross_dists(self, X):
-        return numpy.empty((X.shape[0], self.n_clusters))  # TODO using Alg. 1
+        return 1. - cdist_normalized_cc(X, self.cluster_centers_, norms1=numpy.array([-1.]), norms2=numpy.array([-1.]),
+                                        self_similarity=False)  # TODO: provide norms
 
     def _assign(self, X):
         dists = self._cross_dists(X)
@@ -437,17 +457,23 @@ class KShape(BaseEstimator, ClusterMixin):
     def _fit_one_init(self, X, rs):
         n_samples, sz, d = X.shape
         self.labels_ = rs.randint(self.n_clusters, size=n_samples)
-        self.cluster_centers_ = numpy.zeros((self.n_clusters, sz, d))
+        self.cluster_centers_ = numpy.random.randn(self.n_clusters, sz, d)
         old_inertia = numpy.inf
 
         for it in range(self.max_iter):
-            self._assign(X)
+            old_cluster_centers = self.cluster_centers_.copy()
             self._update_centroids(X)
+            self._assign(X)
             if self.verbose:
                 print("%.3f" % self.inertia_, end=" --> ")
 
             if numpy.abs(old_inertia - self.inertia_) < self.tol:
                 break
+            if old_inertia - self.inertia_ < 0:
+                self.cluster_centers_ = old_cluster_centers
+                self._assign(X)
+                break
+
             old_inertia = self.inertia_
         if self.verbose:
             print("")
@@ -465,6 +491,9 @@ class KShape(BaseEstimator, ClusterMixin):
         n_successful = 0
 
         X_ = npy3d_time_series_dataset(X)
+        X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
+        assert X_.shape[-1] == 1, "kShape is supposed to work on monomodal data, provided data has dimension %d" % \
+                                  X_.shape[-1]
         rs = check_random_state(self.random_state)
 
         best_correct_centroids = None
@@ -520,5 +549,26 @@ class KShape(BaseEstimator, ClusterMixin):
             Index of the cluster each sample belongs to.
         """
         X_ = npy3d_time_series_dataset(X)
+        X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
         dists = self._cross_dists(X_)
         return dists.argmin(axis=1)
+
+
+if __name__ == "__main__":
+    import numpy
+    import pylab
+
+    from tslearn.generators import random_walk_blobs
+
+    numpy.random.seed(0)
+    X, y = random_walk_blobs(n_ts_per_blob=50, sz=128, d=1, n_blobs=3)
+    ks = KShape(n_clusters=3, n_init=10, random_state=0)
+    y_pred = ks.fit_predict(X)
+
+    own_colors = ["r", "g", "b"]
+    pylab.figure()
+    for xx, yy in zip(X, y_pred):
+        pylab.plot(numpy.arange(128), xx, own_colors[yy] + "-")
+    pylab.show()
+
+

@@ -37,7 +37,8 @@ Then, you should run the following command for Cython code to compile:
   
   python setup.py build_ext --inplace
 
-Also, for the whole package to run properly, its base directory should be appended to your Python path (you do not have to care about it if you used the PyPI installation alternative).
+Also, for the whole package to run properly, its base directory should be appended to your Python path (you do not have
+to care about it if you used the PyPI installation alternative).
 
 Modules
 -------

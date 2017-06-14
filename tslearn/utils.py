@@ -26,13 +26,14 @@ def npy2d_time_series(ts):
     --------
     npy3d_time_series_dataset : Transforms a dataset of time series
     """
-    if type(ts) != numpy.ndarray:
-        ts = numpy.array(ts)
-    if ts.ndim == 1:
-        ts = ts.reshape((-1, 1))
-    if ts.dtype != numpy.float:
-        ts = ts.astype(numpy.float)
-    return ts
+    ts_out = ts.copy()
+    if type(ts_out) != numpy.ndarray:
+        ts_out = numpy.array(ts_out)
+    if ts_out.ndim == 1:
+        ts_out = ts_out.reshape((-1, 1))
+    if ts_out.dtype != numpy.float:
+        ts_out = ts_out.astype(numpy.float)
+    return ts_out
 
 
 def npy3d_time_series_dataset(dataset):
@@ -41,12 +42,12 @@ def npy3d_time_series_dataset(dataset):
     Parameters
     ----------
     dataset : array-like
-        The dataset of time series to be transformed
+        The dataset of time series to be transformed.
 
     Returns
     -------
     numpy.ndarray of shape (n_ts, sz, d)
-        The transformed dataset of time series
+        The transformed dataset of time series.
     
     Example
     -------
@@ -58,10 +59,11 @@ def npy3d_time_series_dataset(dataset):
     --------
     npy2d_time_series : Transforms a single time series
     """
-    if type(dataset) != numpy.ndarray:
-        dataset = numpy.array(dataset)
-    if dataset.ndim == 2:
-        dataset = dataset.reshape((dataset.shape[0], dataset.shape[1], 1))
-    if dataset.dtype != numpy.float:
-        dataset = dataset.astype(numpy.float)
-    return dataset
+    dataset_out = dataset.copy()
+    if type(dataset_out) != numpy.ndarray:
+        dataset_out = numpy.array(dataset_out)
+    if dataset_out.ndim == 2:
+        dataset_out = dataset_out.reshape((dataset_out.shape[0], dataset_out.shape[1], 1))
+    if dataset_out.dtype != numpy.float:
+        dataset_out = dataset_out.astype(numpy.float)
+    return dataset_out
