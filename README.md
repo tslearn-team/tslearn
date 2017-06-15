@@ -1,5 +1,6 @@
 [![Documentation Status](https://readthedocs.org/projects/tslearn/badge/?version=latest)](http://tslearn.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.org/rtavenar/tslearn.svg?branch=master)](https://travis-ci.org/rtavenar/tslearn)
+[![Code Climate](https://codeclimate.com/github/rtavenar/tslearn/badges/gpa.svg)](https://codeclimate.com/github/rtavenar/tslearn)
 
 `tslearn` is a Python package that provides machine learning tools for the analysis of time series.
 This package builds on `scikit-learn`, `numpy` and `scipy` libraries.
@@ -71,6 +72,7 @@ Also, for the whole package to run properly, its base directory should be append
 * Add metric learning for time series (Garreau _et al._)
 * Add automatic retrieval of UCR/UEA datasets and 1M remote sensing time series?
 * Add LB_Keogh for nearest neighbor search
+* Add Itakura and SakoeChiba variants of DTW
 * Add Cost-Aware Early Classification of TS (Tavenard & Malinowski)?
 
 **If you want other ML methods for time series to be added to this TODO list, do not hesitate to open an issue!**

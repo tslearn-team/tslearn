@@ -3,6 +3,7 @@ from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.cluster.k_means_ import _k_init
 from sklearn.utils import check_random_state
 from scipy.spatial.distance import cdist
+import numpy
 
 from tslearn.metrics import cdist_gak, cdist_dtw
 from tslearn.barycenters import EuclideanBarycenter, DTWBarycenterAveraging
@@ -18,6 +19,11 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 class EmptyClusterError(Exception):
     def __init__(self, message=""):
         super(EmptyClusterError, self).__init__(message)
+
+
+def _compute_inertia(distances, assignments):
+    n_ts = X.shape[0]
+    return numpy.sum(distances[numpy.arange(n_ts), assignments] ** 2) / n_ts
 
 
 class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
@@ -159,8 +165,8 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
             dist[:, j] = 2 - 2 * numpy.sum(sw[mask] * K[:, mask], axis=1) / sw[mask].sum()
 
     @staticmethod
-    def _compute_inertia(dist):
-        return dist.min(axis=1).sum()
+    def _compute_inertia(dist_sq):
+        return dist_sq.min(axis=1).sum()
 
     def fit_predict(self, X, y=None):
         """Fit kernel k-means clustering using X and then predict the closest cluster each time series in X belongs to.
@@ -285,7 +291,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin):
         for k in range(self.n_clusters):
             if numpy.sum(self.labels_ == k) == 0:
                 raise EmptyClusterError
-        self.inertia_ = numpy.sum(dists[numpy.arange(X.shape[0]), self.labels_] ** 2) / X.shape[0]
+        self.inertia_ = _compute_inertia(dists, self.labels_)
 
     def _update_centroids(self, X):
         for k in range(self.n_clusters):
@@ -452,7 +458,7 @@ class KShape(BaseEstimator, ClusterMixin):
         for k in range(self.n_clusters):
             if numpy.sum(self.labels_ == k) == 0:
                 raise EmptyClusterError
-        self.inertia_ = numpy.sum(dists[numpy.arange(X.shape[0]), self.labels_] ** 2) / X.shape[0]
+        self.inertia_ = _compute_inertia(dists, self.labels_)
 
     def _fit_one_init(self, X, rs):
         n_samples, sz, d = X.shape
