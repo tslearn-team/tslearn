@@ -150,12 +150,12 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
     ----------
     n_segments : int
         Number of PAA segments to compute
-    alphabet_size : int
+    alphabet_size_avg : int
         Number of SAX symbols to use
 
     Attributes
     ----------
-    breakpoints_ : numpy.ndarray of shape (alphabet_size - 1, )
+    breakpoints_avg_ : numpy.ndarray of shape (alphabet_size - 1, )
         List of breakpoints used to generate SAX symbols
 
     References
@@ -163,12 +163,12 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
     .. [2] J. Lin, E. Keogh, L. Wei, et al. Experiencing SAX: a novel symbolic representation of time series.
        Data Mining and Knowledge Discovery, 2007. vol. 15(107)
     """
-    def __init__(self, n_segments, alphabet_size):
+    def __init__(self, n_segments, alphabet_size_avg):
         PiecewiseAggregateApproximation.__init__(self, n_segments)
-        self.alphabet_size = alphabet_size
-        self.breakpoints_ = norm.ppf([float(a) / self.alphabet_size for a in range(1, self.alphabet_size)])
-        self.breakpoints_middle_ = norm.ppf([float(a) / (2 * self.alphabet_size)
-                                             for a in range(1, 2 * self.alphabet_size, 2)])
+        self.alphabet_size_avg = alphabet_size_avg
+        self.breakpoints_avg_ = norm.ppf([float(a) / self.alphabet_size_avg for a in range(1, self.alphabet_size_avg)])
+        self.breakpoints_avg_middle_ = norm.ppf([float(a) / (2 * self.alphabet_size_avg)
+                                                 for a in range(1, 2 * self.alphabet_size_avg, 2)])
 
     def fit(self, X, y=None):
         """Fit a SAX representation.
@@ -204,10 +204,10 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
     def _transform(self, X, y=None):
         X_paa = PiecewiseAggregateApproximation._transform(self, X, y)
         X_sax = numpy.zeros(X_paa.shape, dtype=numpy.int) - 1
-        for idx_bp, bp in enumerate(self.breakpoints_):
+        for idx_bp, bp in enumerate(self.breakpoints_avg_):
             indices = numpy.logical_and(X_sax < 0, X_paa < bp)
             X_sax[indices] = idx_bp
-        X_sax[X_sax < 0] = self.alphabet_size - 1
+        X_sax[X_sax < 0] = self.alphabet_size_avg - 1
         return X_sax
 
     def transform(self, X, y=None):
@@ -244,7 +244,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
         if self.size_fitted_ < 0:
             raise ValueError("Model not fitted yet: cannot be used for distance computation.")
         else:
-            return cydist_sax(sax1, sax2, self.breakpoints_, self.size_fitted_)
+            return cydist_sax(sax1, sax2, self.breakpoints_avg_, self.size_fitted_)
 
     def distance(self, ts1, ts2):
         """Compute distance between SAX representations as defined in [2]_.
@@ -278,10 +278,10 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
             A dataset of time series corresponding to the provided representation.
         """
         X_ = npy3d_time_series_dataset(X, dtype=numpy.int)
-        return inv_transform_sax(X_, breakpoints_middle_=self.breakpoints_middle_, original_size=self.size_fitted_)
+        return inv_transform_sax(X_, breakpoints_middle_=self.breakpoints_avg_middle_, original_size=self.size_fitted_)
 
 
-class OneD_SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
+class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
     """One-D Symbolic Aggregate approXimation (1d-SAX) transformation as defined in [3]_.
 
     Parameters
@@ -309,19 +309,15 @@ class OneD_SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
        IDA 2013.
     """
     def __init__(self, n_segments, alphabet_size_avg, alphabet_size_slope, sigma_l=None):
-        PiecewiseAggregateApproximation.__init__(self, n_segments)
-        self.alphabet_size_avg = alphabet_size_avg
+        SymbolicAggregateApproximation.__init__(self, n_segments, alphabet_size_avg=alphabet_size_avg)
         self.alphabet_size_slope = alphabet_size_slope
-        self.breakpoints_avg_ = norm.ppf([float(a) / self.alphabet_size_avg for a in range(1, self.alphabet_size_avg)])
-        self.breakpoints_avg_middle_ = norm.ppf([float(a) / (2 * self.alphabet_size_avg)
-                                                 for a in range(1, 2 * self.alphabet_size_avg, 2)])
         self.sigma_l = sigma_l
 
         self.breakpoints_slope_ = None  # Do that at fit time when we have sigma_l for sure
         self.breakpoints_slope_middle_ = None
 
     def _fit(self, X, y=None):
-        PiecewiseAggregateApproximation._fit(self, X, y)
+        SymbolicAggregateApproximation._fit(self, X, y)
         if self.sigma_l is None:
             self.sigma_l = numpy.sqrt(0.03 / self.size_fitted_)
 
@@ -380,12 +376,7 @@ class OneD_SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
         X_1d_sax = numpy.empty((n_ts, self.n_segments, 2 * d), dtype=numpy.int)
 
         # Average
-        X_paa = PiecewiseAggregateApproximation._transform(self, X, y)
-        X_1d_sax_avg = numpy.zeros((n_ts, self.n_segments, d), dtype=numpy.int) - 1
-        for idx_bp, bp in enumerate(self.breakpoints_avg_):
-            indices = numpy.logical_and(X_1d_sax_avg < 0, X_paa < bp)
-            X_1d_sax_avg[indices] = idx_bp
-        X_1d_sax_avg[X_1d_sax_avg < 0] = self.alphabet_size_avg - 1
+        X_1d_sax_avg = SymbolicAggregateApproximation._transform(self, X, y)
 
         # Slope
         X_slopes = self._get_slopes(X)
