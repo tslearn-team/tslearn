@@ -9,6 +9,16 @@ from tslearn.cysax import cydist_sax, cyslopes, cydist_1d_sax, inv_transform_1d_
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
+def _paa_to_symbols(X_paa, breakpoints):
+    alphabet_size = breakpoints.shape[0] + 1
+    X_symbols = numpy.zeros(X_paa.shape, dtype=numpy.int) - 1
+    for idx_bp, bp in enumerate(breakpoints):
+        indices = numpy.logical_and(X_symbols < 0, X_paa < bp)
+        X_symbols[indices] = idx_bp
+    X_symbols[X_symbols < 0] = alphabet_size - 1
+    return X_symbols
+
+
 class PiecewiseAggregateApproximation(TransformerMixin):
     """Piecewise Aggregate Approximation (PAA) transformation as defined in [1]_.
 
@@ -203,12 +213,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
 
     def _transform(self, X, y=None):
         X_paa = PiecewiseAggregateApproximation._transform(self, X, y)
-        X_sax = numpy.zeros(X_paa.shape, dtype=numpy.int) - 1
-        for idx_bp, bp in enumerate(self.breakpoints_avg_):
-            indices = numpy.logical_and(X_sax < 0, X_paa < bp)
-            X_sax[indices] = idx_bp
-        X_sax[X_sax < 0] = self.alphabet_size_avg - 1
-        return X_sax
+        return _paa_to_symbols(X_paa, self.breakpoints_avg_)
 
     def transform(self, X, y=None):
         """Transform a dataset of time series into its SAX representation.
@@ -376,15 +381,11 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         X_1d_sax = numpy.empty((n_ts, self.n_segments, 2 * d), dtype=numpy.int)
 
         # Average
-        X_1d_sax_avg = SymbolicAggregateApproximation._transform(self, X, y)
+        X_1d_sax_avg = SymbolicAggregateApproximation._transform(self, X)
 
         # Slope
         X_slopes = self._get_slopes(X)
-        X_1d_sax_slope = numpy.zeros((n_ts, self.n_segments, d), dtype=numpy.int) - 1
-        for idx_bp, bp in enumerate(self.breakpoints_slope_):
-            indices = numpy.logical_and(X_1d_sax_slope < 0, X_slopes < bp)
-            X_1d_sax_slope[indices] = idx_bp
-        X_1d_sax_slope[X_1d_sax_slope < 0] = self.alphabet_size_slope - 1
+        X_1d_sax_slope = _paa_to_symbols(X_slopes, self.breakpoints_slope_)
 
         X_1d_sax[:, :, :d] = X_1d_sax_avg
         X_1d_sax[:, :, d:] = X_1d_sax_slope

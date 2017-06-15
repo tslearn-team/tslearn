@@ -16,9 +16,16 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 # Kernel k-means is derived from https://gist.github.com/mblondel/6230787 by Mathieu Blondel
 # License: BSD 3 clause
 
+
 class EmptyClusterError(Exception):
     def __init__(self, message=""):
         super(EmptyClusterError, self).__init__(message)
+
+
+def _check_no_empty_cluster(labels, n_clusters):
+    for k in range(n_clusters):
+        if numpy.sum(labels == k) == 0:
+            raise EmptyClusterError
 
 
 def _compute_inertia(distances, assignments):
@@ -288,9 +295,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin):
         else:
             raise ValueError("Incorrect metric: %s (should be one of 'dtw', 'euclidean')" % self.metric)
         self.labels_ = dists.argmin(axis=1)
-        for k in range(self.n_clusters):
-            if numpy.sum(self.labels_ == k) == 0:
-                raise EmptyClusterError
+        _check_no_empty_cluster(self.labels_, self.n_clusters)
         self.inertia_ = _compute_inertia(dists, self.labels_)
 
     def _update_centroids(self, X):
@@ -455,9 +460,7 @@ class KShape(BaseEstimator, ClusterMixin):
     def _assign(self, X):
         dists = self._cross_dists(X)
         self.labels_ = dists.argmin(axis=1)
-        for k in range(self.n_clusters):
-            if numpy.sum(self.labels_ == k) == 0:
-                raise EmptyClusterError
+        _check_no_empty_cluster(self.labels_, self.n_clusters)
         self.inertia_ = _compute_inertia(dists, self.labels_)
 
     def _fit_one_init(self, X, rs):
