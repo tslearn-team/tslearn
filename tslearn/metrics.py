@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 import numpy
 import os
 from scipy.spatial.distance import pdist
@@ -46,7 +45,7 @@ def dtw_path(s1, s2):
     References
     ----------
     .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for spoken word recognition,"
-       IEEE Transactions on Acoustics, Speech and Signal Processing, vol. 26(1), pp. 43–49, 1978.
+       IEEE Transactions on Acoustics, Speech and Signal Processing, vol. 26(1), pp. 43?49, 1978.
     """
     s1 = npy2d_time_series(s1)
     s2 = npy2d_time_series(s2)

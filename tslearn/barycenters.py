@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 import numpy
 from scipy.interpolate import interp1d
 
@@ -44,7 +43,7 @@ class DTWBarycenterAveraging:
     
     References
     ----------
-    .. [1] F. Petitjean, A. Ketterlin & P. Gançarski. A global averaging method for dynamic time warping, with
+    .. [1] F. Petitjean, A. Ketterlin & P. Gancarski. A global averaging method for dynamic time warping, with
        applications to clustering. Pattern Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
     """
     def __init__(self, n_iter, barycenter_size=None, tol=1e-5, verbose=False):
