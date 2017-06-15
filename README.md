@@ -7,6 +7,7 @@ This package builds on `scikit-learn`, `numpy` and `scipy` libraries.
 # Dependencies
 
 ```
+Cython
 numpy
 scipy
 scikit-learn

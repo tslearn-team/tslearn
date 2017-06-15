@@ -98,4 +98,4 @@ ENV/
 # Own stuff
 .idea/
 .DS_Store
-tslearn/test
+tslearn/examples
