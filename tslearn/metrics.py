@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import numpy
 import os
 from scipy.spatial.distance import pdist

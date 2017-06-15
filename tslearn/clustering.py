@@ -1,4 +1,4 @@
-import numpy
+from __future__ import print_function
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.cluster.k_means_ import _k_init
 from sklearn.utils import check_random_state

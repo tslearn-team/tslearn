@@ -2,7 +2,6 @@ language: python
 python:
   - "2.6"
   - "2.7"
-  - "3.2"
   - "3.3"
   - "3.4"
   - "3.5"
@@ -24,7 +23,7 @@ install:
   # Useful for debugging any issues with conda
   - conda info -a
 
-  # Replace dep1 dep2 ... with your dependencies
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy scipy scikit-learn
   - source activate test-environment
+  - python setup.py build_ext --inplace
 script: nosetests --with-doctest
