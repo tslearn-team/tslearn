@@ -61,7 +61,6 @@ Also, for the whole package to run properly, its base directory should be append
 
 # TODO list
 
-* Continuous integration using travis and nosetests
 * Add soft-DTW to the proposed metrics
 * Implement Learning Shapelets from Grabocka et al. (Conv+L2, + unsupervised)
 * Add local feature extractors (`TransformerMixin`)
