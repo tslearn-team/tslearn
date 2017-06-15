@@ -37,13 +37,15 @@ def npy2d_time_series(ts):
     return ts_out
 
 
-def npy3d_time_series_dataset(dataset):
+def npy3d_time_series_dataset(dataset, dtype=numpy.float):
     """Transforms a time series dataset so that it fits the format used in ``tslearn`` models.
 
     Parameters
     ----------
     dataset : array-like
         The dataset of time series to be transformed.
+    dtype : data type (default: numpy.float)
+        Data type for the returned dataset.
 
     Returns
     -------
@@ -66,6 +68,6 @@ def npy3d_time_series_dataset(dataset):
         dataset_out = dataset.copy()
     if dataset_out.ndim == 2:
         dataset_out = dataset_out.reshape((dataset_out.shape[0], dataset_out.shape[1], 1))
-    if dataset_out.dtype != numpy.float:
-        dataset_out = dataset_out.astype(numpy.float)
+    if dataset_out.dtype != dtype:
+        dataset_out = dataset_out.astype(dtype)
     return dataset_out

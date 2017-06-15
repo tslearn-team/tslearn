@@ -57,14 +57,16 @@ Also, for the whole package to run properly, its base directory should be append
     k-means
   * Global Alignment kernel k-means
   * KShape clustering from Paparizzos and Gravano
-* A `piecewise` module includes PAA and SAX transformations for time series, as well as the corresponding distances 
+* A `piecewise` module includes standard time series transformations, as well as the corresponding distances:
+  * Piecewise Aggregate Approximation (PAA)
+  * Symbolic Aggregate approXimation (SAX)
+  * 1d-Symbolic Aggregate approXimation (1d-SAX)
 
 # TODO list
 
 * Add soft-DTW to the proposed metrics
 * Implement Learning Shapelets from Grabocka et al. (Conv+L2, + unsupervised)
 * Add local feature extractors (`TransformerMixin`)
-* Add 1d-SAX transformation? (`TransformerMixin`)
 * Add soft-DTW k-means by Cuturi and Blondel
 * Add metric learning for time series (Garreau _et al._)
 * Add automatic retrieval of UCR/UEA datasets and 1M remote sensing time series?
