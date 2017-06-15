@@ -1,5 +1,5 @@
 [![Documentation Status](https://readthedocs.org/projects/tslearn/badge/?version=latest)](http://tslearn.readthedocs.io/en/latest/?badge=latest)
-
+[![Build Status](https://travis-ci.org/rtavenar/tslearn.svg?branch=master)](https://travis-ci.org/rtavenar/tslearn)
 
 `tslearn` is a Python package that provides machine learning tools for the analysis of time series.
 This package builds on `scikit-learn`, `numpy` and `scipy` libraries.
