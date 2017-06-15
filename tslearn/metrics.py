@@ -30,8 +30,8 @@ def dtw_path(s1, s2):
     Returns
     -------
     list of integer pairs
-        Matching path represented as a list of index pairs. In each pair, the first index corresponds to ``s1`` and the
-        second one corresponds to ``s2``
+        Matching path represented as a list of index pairs. In each pair, the first index corresponds to s1 and the
+        second one corresponds to s2
     float
         Similarity score
 
