@@ -10,7 +10,9 @@ python:
 virtualenv:
   system_site_packages: true
 before_install:
- - sudo apt-get install -qq python-numpy python-scipy
+  - sudo apt-get install -qq python-numpy python-scipy
+  - SITE_PKG_DIR=$VIRTUAL_ENV/lib/python$TRAVIS_PYTHON_VERSION/site-packages
+  - rm -f $VIRTUAL_ENV/lib/python$TRAVIS_PYTHON_VERSION/no-global-site-packages.txt
 install:
   - pip install -r requirements.txt
   - python setup.py build_ext --inplace
