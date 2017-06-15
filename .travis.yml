@@ -7,9 +7,11 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
+virtualenv:
+  system_site_packages: true
+before_install:
+ - sudo apt-get install -qq python-numpy python-scipy
 install:
-  - pip install scipy
-  - pip install numpy
   - pip install -r requirements.txt
   - python setup.py build_ext --inplace
 script: nosetests --with-doctest
