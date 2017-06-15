@@ -1,5 +1,5 @@
 import numpy
-from sklearn.neighbors import KNeighborsClassifier, RadiusNeighborsClassifier, KNeighborsRegressor, RadiusNeighborsRegressor
+from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 from sklearn.neighbors.base import KNeighborsMixin, _get_weights
 from scipy import stats
 from sklearn.utils.extmath import weighted_mode
@@ -7,8 +7,8 @@ from sklearn.utils.extmath import weighted_mode
 from tslearn.metrics import cdist_dtw, cdist_lr_dtw
 
 
-class KNeighborsTimeSeries(KNeighborsMixin):
-    """Mixin for k-neighbors searches using Dynamic Time Warping as the core metric."""
+class KNeighborsTimeSeriesMixin(KNeighborsMixin):
+    """Mixin for k-neighbors searches on Time Series."""
 
     def kneighbors(self, X=None, n_neighbors=None, return_distance=True):
         """Finds the K-neighbors of a point.
@@ -29,7 +29,7 @@ class KNeighborsTimeSeries(KNeighborsMixin):
         Returns
         -------
         dist : array
-            Array representing the DTW to points, only present if return_distance=True
+            Array representing the distance to points, only present if return_distance=True
         ind : array
             Indices of the nearest points in the population matrix.
         """
@@ -54,7 +54,10 @@ class KNeighborsTimeSeries(KNeighborsMixin):
         if n_neighbors > full_dist_matrix.shape[1]:
             n_neighbors = full_dist_matrix.shape[1]
         ind = ind[:, :n_neighbors]
-        dist = full_dist_matrix[ind]
+
+        n_ts = X.shape[0]
+        sample_range = numpy.arange(n_ts)[:, None]
+        dist = full_dist_matrix[sample_range, ind]
 
         if return_distance:
             return dist, ind
@@ -62,7 +65,60 @@ class KNeighborsTimeSeries(KNeighborsMixin):
             return ind
 
 
-class KNeighborsTimeSeriesClassifier(KNeighborsClassifier, KNeighborsTimeSeries):
+class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
+    """Unsupervised learner for implementing neighbor searches for Time Series.
+
+    Parameters
+    ----------
+    n_neighbors : int (default: 5)
+        Number of nearest neighbors to be considered for the decision.
+    metric : {'dtw' or 'lr_dtw'} (default: 'dtw')
+        Metric to be used at the core of the nearest neighbor procedure
+    metric_params : dict or None (default: None)
+        Dictionnary of metric parameters. Recognized keys are `"gamma"` (which has default value 0.) for LR-DTW.
+    """
+    def __init__(self, n_neighbors=5, metric="dtw", metric_params=None):
+        NearestNeighbors.__init__(self, n_neighbors=n_neighbors, algorithm='brute')
+        self.metric = metric
+        self.metric_params = metric_params
+
+    def fit(self, X, y=None):
+        """Fit the model using X as training data
+
+        Parameters
+        ----------
+        X : array-like, shape (n_ts, sz, d)
+            Training data.
+        """
+        self._fit_X = X
+
+    def kneighbors(self, X=None, n_neighbors=None, return_distance=True):
+        """Finds the K-neighbors of a point.
+
+        Returns indices of and distances to the neighbors of each point.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_ts, sz, d)
+            The query time series.
+            If not provided, neighbors of each indexed point are returned.
+            In this case, the query point is not considered its own neighbor.
+        n_neighbors : int
+            Number of neighbors to get (default is the value passed to the constructor).
+        return_distance : boolean, optional. Defaults to True.
+            If False, distances will not be returned
+
+        Returns
+        -------
+        dist : array
+            Array representing the distance to points, only present if return_distance=True
+        ind : array
+            Indices of the nearest points in the population matrix.
+        """
+        return KNeighborsTimeSeriesMixin.kneighbors(self, X=X, n_neighbors=n_neighbors, return_distance=return_distance)
+
+
+class KNeighborsTimeSeriesClassifier(KNeighborsClassifier, KNeighborsTimeSeriesMixin):
     """Classifier implementing the k-nearest neighbors vote for Time Series.
 
     Parameters
