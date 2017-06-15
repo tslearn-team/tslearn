@@ -3,6 +3,13 @@ import numpy
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
+def _arraylike_copy(arr):
+    if type(arr) != numpy.ndarray:
+        return numpy.array(arr)
+    else:
+        return arr.copy()
+
+
 def npy2d_time_series(ts):
     """Transforms a time series so that it fits the format used in `tslearn` models.
 
@@ -26,10 +33,7 @@ def npy2d_time_series(ts):
     --------
     npy3d_time_series_dataset : Transforms a dataset of time series
     """
-    if type(ts) != numpy.ndarray:
-        ts_out = numpy.array(ts)
-    else:
-        ts_out = ts.copy()
+    ts_out = _arraylike_copy(ts)
     if ts_out.ndim == 1:
         ts_out = ts_out.reshape((-1, 1))
     if ts_out.dtype != numpy.float:
@@ -62,10 +66,7 @@ def npy3d_time_series_dataset(dataset, dtype=numpy.float):
     --------
     npy2d_time_series : Transforms a single time series
     """
-    if type(dataset) != numpy.ndarray:
-        dataset_out = numpy.array(dataset)
-    else:
-        dataset_out = dataset.copy()
+    dataset_out = _arraylike_copy(dataset)
     if dataset_out.ndim == 2:
         dataset_out = dataset_out.reshape((dataset_out.shape[0], dataset_out.shape[1], 1))
     if dataset_out.dtype != dtype:

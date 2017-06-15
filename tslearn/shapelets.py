@@ -14,9 +14,12 @@ class ShapeletModel:
     def fit(self, X, y=None):
         raise NotImplementedError
 
+    def _check_monodim(self, Xi):
+        assert Xi.shape[1] == self.d == 1, "Model not implemented yet for multidimensional time series"
+
     def _idx_match(self, Xi, k):
         shp = self.shapelets_[k]
-        assert Xi.shape[1] == shp.shape[1] ==self.d == 1, "Model not implemented yet for multidimensional time series"
+        self._check_monodim(Xi)
         Xi = Xi.reshape((-1, ))
         shp = shp.reshape((-1, ))
         sz = shp.shape[0]
@@ -48,7 +51,7 @@ class ConvolutionalShapeletModel(ShapeletModel):
 
     def _idx_match(self, Xi, k):
         shp = self.shapelets_[k]
-        assert Xi.shape[1] == shp.shape[1] == self.d == 1, "Model not implemented yet for multidimensional time series"
+        self._check_monodim(Xi)
         convs = numpy.correlate(Xi.reshape((-1, )), shp.reshape((-1, )), mode="valid")
         return numpy.argmax(convs)
 
@@ -62,5 +65,5 @@ class ConvolutionalShapeletModel(ShapeletModel):
         return ret
 
     def _dM_dSkl(self, Xi, ti, Xj, tj, sz):
-        return (Xi[ti:ti+sz] - Xj[tj:tj+sz]) / sz
+        return - ShapeletModel._dM_dSkl(self, Xi, ti, Xj, tj, sz) / 2
 
