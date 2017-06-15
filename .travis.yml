@@ -8,6 +8,8 @@ python:
   - "3.5"
   - "3.6"
 install:
+  - pip install --upgrade pip setuptools wheel
+  - pip install --only-binary=numpy,scipy numpy scipy
   - pip install -r requirements.txt
   - python setup.py build_ext --inplace
 script: nosetests --with-doctest
