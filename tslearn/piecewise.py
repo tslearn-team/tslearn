@@ -19,6 +19,14 @@ def _paa_to_symbols(X_paa, breakpoints):
     return X_symbols
 
 
+def _breakpoints(n_bins, scale=1.):
+    norm.ppf([float(a) / n_bins for a in range(1, n_bins)], scale=scale)
+
+
+def _bin_medians(n_bins, scale=1.):
+    norm.ppf([float(a) / (2 * n_bins) for a in range(1, 2 * n_bins, 2)], scale=scale)
+
+
 class PiecewiseAggregateApproximation(TransformerMixin):
     """Piecewise Aggregate Approximation (PAA) transformation as defined in [1]_.
 
@@ -176,9 +184,8 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
     def __init__(self, n_segments, alphabet_size_avg):
         PiecewiseAggregateApproximation.__init__(self, n_segments)
         self.alphabet_size_avg = alphabet_size_avg
-        self.breakpoints_avg_ = norm.ppf([float(a) / self.alphabet_size_avg for a in range(1, self.alphabet_size_avg)])
-        self.breakpoints_avg_middle_ = norm.ppf([float(a) / (2 * self.alphabet_size_avg)
-                                                 for a in range(1, 2 * self.alphabet_size_avg, 2)])
+        self.breakpoints_avg_ = _breakpoints(self.alphabet_size_avg)
+        self.breakpoints_avg_middle_ = _bin_medians(self.alphabet_size_avg)
 
     def fit(self, X, y=None):
         """Fit a SAX representation.
@@ -326,11 +333,8 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         if self.sigma_l is None:
             self.sigma_l = numpy.sqrt(0.03 / self.size_fitted_)
 
-        self.breakpoints_slope_ = norm.ppf([float(a) / self.alphabet_size_slope
-                                            for a in range(1, self.alphabet_size_slope)], scale=self.sigma_l)
-        self.breakpoints_slope_middle_ = norm.ppf([float(a) / (2 * self.alphabet_size_slope)
-                                                   for a in range(1, 2 * self.alphabet_size_slope, 2)],
-                                                  scale=self.sigma_l)
+        self.breakpoints_slope_ = _breakpoints(self.alphabet_size_slope, scale=self.sigma_l)
+        self.breakpoints_slope_middle_ = _bin_medians(self.alphabet_size_slope, scale=self.sigma_l)
         return self
 
     def fit(self, X, y=None):
