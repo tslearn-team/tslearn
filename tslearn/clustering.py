@@ -103,9 +103,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
             dist.fill(0)
             self._compute_dist(K, dist)
             self.labels_ = dist.argmin(axis=1)
-            for k in range(self.n_clusters):
-                if numpy.sum(self.labels_ == k) == 0:
-                    raise EmptyClusterError
+            _check_no_empty_cluster(self.labels_, self.n_clusters)
             self.inertia_ = self._compute_inertia(dist)
             if self.verbose:
                 print("%.3f" % self.inertia_, end=" --> ")
@@ -119,7 +117,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         return self
 
     def fit(self, X, y=None, sample_weight=None):
-        """Compute k-means clustering.
+        """Compute kernel k-means clustering.
 
         Parameters
         ----------
@@ -337,9 +335,9 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin):
                 if self.verbose:
                     print("Resumed because of empty cluster")
         if n_successful > 0:
-            self.X_fit_ = X_
-            self.cluster_centers_ = best_correct_centroids
-            self._assign(X_)
+            self.X_fit_ = X
+            self.labels_ = last_correct_labels
+            self.inertia_ = min_inertia
         else:
             self.X_fit_ = None
         return self
@@ -519,12 +517,8 @@ class KShape(BaseEstimator, ClusterMixin):
             except EmptyClusterError:
                 if self.verbose:
                     print("Resumed because of empty cluster")
-        if n_successful > 0:
-            self.cluster_centers_ = best_correct_centroids
-            self._assign(X_)
-            self.inertia_ = min_inertia
-        else:
-            raise EmptyClusterError
+        self.cluster_centers_ = best_correct_centroids
+        self._assign(X_)
         return self
 
     def fit_predict(self, X, y=None):
