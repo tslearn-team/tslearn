@@ -1,0 +1,5 @@
+ratings:
+   paths:
+    - "tslearn/"
+exclude_paths:
+- "tslearn/**.c"
