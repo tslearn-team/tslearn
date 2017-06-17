@@ -38,6 +38,6 @@ before_script:
 script: 
   - nosetests --with-doctest --with-coverage --cover-package=tslearn
   - ls -alh .coverage
-  - if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT; fi
+  - if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then ./cc-test-reporter after-build -t coverage.py --exit-code $TRAVIS_TEST_RESULT; fi
 notifications:
   email: false
