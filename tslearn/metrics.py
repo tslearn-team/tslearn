@@ -369,8 +369,8 @@ def lb_keogh(ts_query, ts_candidate=None, radius=1, enveloppe_candidate=None):
     assert ts_query.shape[1] == 1, "LB_Keogh is available only for monodimensional time series"
     indices_up = ts_query[:, 0] > enveloppe_up[:, 0]
     indices_down = ts_query[:, 0] < enveloppe_down[:, 0]
-    return numpy.sum((ts_query[indices_up, 0] - enveloppe_up[indices_up, 0]) ** 2) + \
-           numpy.sum((ts_query[indices_down, 0] - enveloppe_down[indices_down, 0]) ** 2)
+    return numpy.linalg.norm(ts_query[indices_up, 0] - enveloppe_up[indices_up, 0])) ** 2 + \
+           numpy.linalg.norm(ts_query[indices_down, 0] - enveloppe_down[indices_down, 0])) ** 2
 
 
 def lb_enveloppe(ts, radius=1):
