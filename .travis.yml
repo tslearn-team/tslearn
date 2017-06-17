@@ -36,7 +36,7 @@ before_script:
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
 script: 
-  - nosetests --with-doctest --with-coverage --cover-package=tslearn --cover-xml --cover-xml-file=coverage.xml
+  - nosetests --with-doctest --with-coverage --cover-package=tslearn --cover-xml
   - ls -alh tslearn/
   - if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then ./cc-test-reporter after-build -t coverage.py --exit-code $TRAVIS_TEST_RESULT; fi
 notifications:
