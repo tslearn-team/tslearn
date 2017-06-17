@@ -36,6 +36,7 @@ before_script:
   - chmod +x ./cc-test-reporter
 script: 
   - nosetests --with-doctest --with-coverage --cover-package=tslearn
+  - ls -alh .coverage
   - if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT; fi
 notifications:
   email: false
