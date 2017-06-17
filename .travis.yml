@@ -29,12 +29,13 @@ install:
 
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy scipy scikit-learn nose
   - source activate test-environment
+  - pip install coverage
   - python setup.py build_ext --inplace
 before_script:
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
   - chmod +x ./cc-test-reporter
 script: 
-  - nosetests --with-doctest --with-coverage
+  - nosetests --with-doctest --with-coverage --cover-package=tslearn
   - if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT; fi
 notifications:
   email: false
