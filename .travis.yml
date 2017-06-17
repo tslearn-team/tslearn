@@ -37,8 +37,7 @@ before_script:
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
 script: 
-  - nosetests --with-doctest --with-coverage --cover-package=tslearn --cover-xml --cover-xml-file=coverage.xml
-  - ls -alh ./coverage.xml
+  - nosetests --with-doctest --with-coverage --cover-erase --cover-package=tslearn
   - if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then codeclimate-test-reporter; fi
 notifications:
   email: false
