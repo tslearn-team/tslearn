@@ -1,6 +1,6 @@
 env:
   global:
-    - CC_TEST_REPORTER_ID=d8c5ae082832ed947bc6e673ebfbd1592278fa04633401bf7d180687238fa397
+    - CODECLIMATE_REPO_TOKEN=d8c5ae082832ed947bc6e673ebfbd1592278fa04633401bf7d180687238fa397
     - GIT_COMMITTED_AT=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then git log -1 --pretty=format:%ct; else git log -1 --skip 1 --pretty=format:%ct; fi)
 language: python
 python:
@@ -30,6 +30,7 @@ install:
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy scipy scikit-learn nose
   - source activate test-environment
   - pip install coverage==4.3.1
+  - pip install argparse
   - pip install codeclimate-test-reporter
   - python setup.py build_ext --inplace
 before_script:
