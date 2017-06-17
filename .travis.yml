@@ -30,6 +30,7 @@ install:
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy scipy scikit-learn nose
   - source activate test-environment
   - pip install coverage
+  - pip install codeclimate-test-reporter
   - python setup.py build_ext --inplace
 before_script:
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
@@ -38,6 +39,6 @@ before_script:
 script: 
   - nosetests --with-doctest --with-coverage --cover-package=tslearn --cover-xml --cover-xml-file=coverage.xml
   - ls -alh ./coverage.xml
-  - if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then ./cc-test-reporter format-coverage -t coverage.py --output codeclimate.json && ./cc-test-reporter upload-coverage --input=codeclimate.json; fi
+  - if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then codeclimate-test-reporter; fi
 notifications:
   email: false
