@@ -48,7 +48,7 @@ def _compute_inertia(distances, assignments):
     >>> dists = numpy.array([[1., 2., 0.5], [0., 3., 1.]])
     >>> assign = numpy.array([2, 0])
     >>> _compute_inertia(dists, assign)
-    0.25
+    0.125
     """
     n_ts = distances.shape[0]
     return numpy.sum(distances[numpy.arange(n_ts), assignments] ** 2) / n_ts
