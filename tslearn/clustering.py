@@ -19,7 +19,11 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 class EmptyClusterError(Exception):
     def __init__(self, message=""):
-        super(EmptyClusterError, self).__init__(message)
+        super(EmptyClusterError, self).__init__()
+        self.message = message
+
+    def __str__(self):
+        return "Cluster assignments lead to at least one empty cluster"
 
 
 def _check_no_empty_cluster(labels, n_clusters):
@@ -29,8 +33,10 @@ def _check_no_empty_cluster(labels, n_clusters):
     --------
     >>> labels = numpy.array([1, 1, 2, 0, 2])
     >>> _check_no_empty_cluster(labels, 3)
-    >>> _check_no_empty_cluster(labels, 4)  # doctest: +ELLIPSIS
-    Traceback...EmptyClusterError
+    >>> _check_no_empty_cluster(labels, 4)  # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last)
+        ...
+    EmptyClusterError
     """
 
     for k in range(n_clusters):
