@@ -126,7 +126,7 @@ class PiecewiseAggregateApproximation(TransformerMixin):
 
         Example
         -------
-        >>> paa = PiecewiseAggregateApproximation(n_segments=2)
+        >>> paa = PiecewiseAggregateApproximation(n_segments=3)
         >>> paa_data = paa.fit_transform([[-1., 2., 0.1, -1., 1., -1.], [1., 3.2, -1., -3., 1., -1.]])
         >>> paa_data.shape
         (2, 3, 1)
