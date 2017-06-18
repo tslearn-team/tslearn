@@ -41,7 +41,7 @@ def _check_no_empty_cluster(labels, n_clusters):
 
 
 def _compute_inertia(distances, assignments):
-    """Derive inertia (sum of squared distances) from pre-computed distances and assignments.
+    """Derive inertia (average of squared distances) from pre-computed distances and assignments.
 
     Examples
     --------
