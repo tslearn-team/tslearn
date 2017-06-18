@@ -23,13 +23,34 @@ class EmptyClusterError(Exception):
 
 
 def _check_no_empty_cluster(labels, n_clusters):
+    """Check that all clusters have at least one sample assigned.
+
+    Examples
+    --------
+    >>> labels = numpy.array([1, 1, 2, 0, 2])
+    >>> _check_no_empty_cluster(labels, 3)
+    >>> _check_no_empty_cluster(labels, 4)  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+    ...
+    EmptyClusterError...
+    """
+
     for k in range(n_clusters):
         if numpy.sum(labels == k) == 0:
             raise EmptyClusterError
 
 
 def _compute_inertia(distances, assignments):
-    n_ts = X.shape[0]
+    """Derive inertia (sum of squared distances) from pre-computed distances and assignments.
+
+    Examples
+    --------
+    >>> dists = numpy.array([[1., 2., 0.5], [0., 3., 1.]])
+    >>> assign = numpy.array([2, 0])
+    >>> _compute_inertia(dists, assign)
+    0.25
+    """
+    n_ts = distances.shape[0]
     return numpy.sum(distances[numpy.arange(n_ts), assignments] ** 2) / n_ts
 
 
