@@ -63,11 +63,10 @@ class PiecewiseAggregateApproximation(TransformerMixin):
     >>> paa_data = paa.fit_transform(data)
     >>> paa_data.shape
     (2, 3, 1)
-    >>> paa_data  # doctest +ELLIPSIS
+    >>> paa_data  # doctest +NORMALIZE_WHITESPACE
     array([[[ 0.5 ],
             [-0.45],
             [ 0.  ]],
-
            [[ 2.1 ],
             [ -2. ],
             [  0. ]]])
