@@ -34,9 +34,8 @@ def _check_no_empty_cluster(labels, n_clusters):
     >>> labels = numpy.array([1, 1, 2, 0, 2])
     >>> _check_no_empty_cluster(labels, 3)
     >>> _check_no_empty_cluster(labels, 4)  # doctest: +IGNORE_EXCEPTION_DETAIL
-    Traceback (most recent call last)
-        ...
-    EmptyClusterError
+    Traceback (most recent call last):
+    EmptyClusterError: Cluster assignments lead to at least one empty cluster
     """
 
     for k in range(n_clusters):
@@ -580,23 +579,4 @@ class KShape(BaseEstimator, ClusterMixin):
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
         dists = self._cross_dists(X_)
         return dists.argmin(axis=1)
-
-
-if __name__ == "__main__":
-    import numpy
-    import pylab
-
-    from tslearn.generators import random_walk_blobs
-
-    numpy.random.seed(0)
-    X, y = random_walk_blobs(n_ts_per_blob=50, sz=128, d=1, n_blobs=3)
-    ks = KShape(n_clusters=3, n_init=10, random_state=0)
-    y_pred = ks.fit_predict(X)
-
-    own_colors = ["r", "g", "b"]
-    pylab.figure()
-    for xx, yy in zip(X, y_pred):
-        pylab.plot(numpy.arange(128), xx, own_colors[yy] + "-")
-    pylab.show()
-
 
