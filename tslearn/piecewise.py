@@ -27,7 +27,7 @@ def _paa_to_symbols(X_paa, breakpoints):
 
 
 def _breakpoints(n_bins, scale=1.):
-    """Compute breakpoints for a given number of SAX symbols and scale.
+    """Compute breakpoints for a given number of SAX symbols and a given Gaussian scale.
 
     Example
     -------
@@ -38,6 +38,13 @@ def _breakpoints(n_bins, scale=1.):
 
 
 def _bin_medians(n_bins, scale=1.):
+    """Compute median value corresponding to SAX symbols for a given Gaussian scale.
+
+    Example
+    -------
+    >>> _bin_medians(n_bins=2)
+    array([ -0.43, 0.43])
+    """
     return norm.ppf([float(a) / (2 * n_bins) for a in range(1, 2 * n_bins, 2)], scale=scale)
 
 
@@ -116,6 +123,19 @@ class PiecewiseAggregateApproximation(TransformerMixin):
         -------
         numpy.ndarray of shape (n_ts, n_segments, d)
             PAA-Transformed dataset
+
+        Example
+        -------
+        >>> paa = PiecewiseAggregateApproximation(n_segments=2)
+        >>> paa_data = paa.fit_transform([[-1., 2., 0.1, -1.], [1., 3.2, -1., -3.]])
+        array([[[0],
+                [1],
+                [1],
+                [0]],
+               [[1],
+                [1],
+                [0],
+                [0]]])
         """
         X_ = npy3d_time_series_dataset(X)
         return self._fit(X_)._transform(X_)
