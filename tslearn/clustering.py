@@ -30,9 +30,7 @@ def _check_no_empty_cluster(labels, n_clusters):
     >>> labels = numpy.array([1, 1, 2, 0, 2])
     >>> _check_no_empty_cluster(labels, 3)
     >>> _check_no_empty_cluster(labels, 4)  # doctest: +ELLIPSIS
-    Traceback (most recent call last):
-    ...
-    EmptyClusterError...
+    Traceback...EmptyClusterError
     """
 
     for k in range(n_clusters):
