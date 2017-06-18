@@ -72,8 +72,11 @@ def random_walk_blobs(n_ts_per_blob=100, sz=256, d=1, n_blobs=2, noise_level=1.)
 
     Examples
     --------
-    >>> random_walk_blobs(n_ts_per_blob=100, sz=256, d=5, n_blobs=3).shape
+    >>> X, y = random_walk_blobs(n_ts_per_blob=100, sz=256, d=5, n_blobs=3)
+    >>> X.shape
     (300, 256, 5)
+    >>> y.shape
+    (300,)
     """
     base_ts = random_walks(n_ts=n_blobs, sz=sz, d=d, std=1.0)
     rnd = numpy.random.randn(n_ts_per_blob * n_blobs, sz, d) * noise_level

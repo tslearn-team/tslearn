@@ -34,11 +34,11 @@ def _breakpoints(n_bins, scale=1.):
     >>> _breakpoints(n_bins=2)
     array([ 0.])
     """
-    norm.ppf([float(a) / n_bins for a in range(1, n_bins)], scale=scale)
+    return norm.ppf([float(a) / n_bins for a in range(1, n_bins)], scale=scale)
 
 
 def _bin_medians(n_bins, scale=1.):
-    norm.ppf([float(a) / (2 * n_bins) for a in range(1, 2 * n_bins, 2)], scale=scale)
+    return norm.ppf([float(a) / (2 * n_bins) for a in range(1, 2 * n_bins, 2)], scale=scale)
 
 
 class PiecewiseAggregateApproximation(TransformerMixin):
