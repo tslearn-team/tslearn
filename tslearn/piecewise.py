@@ -56,6 +56,28 @@ class PiecewiseAggregateApproximation(TransformerMixin):
     n_segments : int
         Number of PAA segments to compute
 
+    Example
+    -------
+    >>> paa = PiecewiseAggregateApproximation(n_segments=3)
+    >>> data = [[-1., 2., 0.1, -1., 1., -1.], [1., 3.2, -1., -3., 1., -1.]]
+    >>> paa_data = paa.fit_transform(data)
+    >>> paa_data.shape
+    (2, 3, 1)
+    >>> paa_data  # doctest +ELLIPSIS
+    array([[[ 0.5 ],
+            [-0.45],
+            [ 0.  ]],
+
+           [[ 2.1 ],
+            [ -2. ],
+            [  0. ]]])
+    >>> numpy.alltrue(paa_data == paa.fit(data).transform(data))
+    True
+    >>> paa.distance_paa(paa_data[0], paa_data[1])  # doctest: +ELLIPSIS
+    7.01803...
+    >>> paa.distance(data[0], data[1])  # doctest: +ELLIPSIS
+    7.01803...
+
     References
     ----------
     .. [1] E. Keogh & M. Pazzani. Scaling up dynamic time warping for datamining applications. SIGKDD 2000
@@ -123,20 +145,6 @@ class PiecewiseAggregateApproximation(TransformerMixin):
         -------
         numpy.ndarray of shape (n_ts, n_segments, d)
             PAA-Transformed dataset
-
-        Example
-        -------
-        >>> paa = PiecewiseAggregateApproximation(n_segments=3)
-        >>> paa_data = paa.fit_transform([[-1., 2., 0.1, -1., 1., -1.], [1., 3.2, -1., -3., 1., -1.]])
-        >>> paa_data.shape
-        (2, 3, 1)
-        >>> paa_data  # doctest +ELLIPSIS
-        array([[[ 0.5 ],
-                [-0.45],
-                [ 0.  ]],
-               [[ 2.1 ],
-                [ -2. ],
-                [  0. ]]])
         """
         X_ = npy3d_time_series_dataset(X)
         return self._fit(X_)._transform(X_)
