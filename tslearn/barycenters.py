@@ -9,7 +9,20 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 class EuclideanBarycenter:
-    """Standard Euclidean barycenter computed from a set of time series."""
+    """Standard Euclidean barycenter computed from a set of time series.
+
+    Examples
+    --------
+    >>> time_series = [[1, 2, 3, 4], [1, 2, 4, 5]]
+    >>> bar = EuclideanBarycenter().fit(time_series)
+    >>> bar.shape
+    (4, 1)
+    >>> bar  # doctest: +ELLIPSIS
+    array([[ 1. ],
+           [ 2. ],
+           [ 3.5],
+           [ 4.5]])
+    """
     def fit(self, X):
         """Compute the barycenter from a dataset of time series.
 

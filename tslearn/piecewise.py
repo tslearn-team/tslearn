@@ -10,6 +10,13 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 def _paa_to_symbols(X_paa, breakpoints):
+    """Transforms a Piecewise Aggregate Approximation representation into a SAX one given breakpoints.
+
+    Example
+    -------
+    >>> _paa_to_symbols(X_paa=numpy.array([-1., 0.1, 2.]), breakpoints=numpy.array([0.]))
+    array([0, 1, 1])
+    """
     alphabet_size = breakpoints.shape[0] + 1
     X_symbols = numpy.zeros(X_paa.shape, dtype=numpy.int) - 1
     for idx_bp, bp in enumerate(breakpoints):
@@ -20,6 +27,13 @@ def _paa_to_symbols(X_paa, breakpoints):
 
 
 def _breakpoints(n_bins, scale=1.):
+    """Compute breakpoints for a given number of SAX symbols and scale.
+
+    Example
+    -------
+    >>> _breakpoints(n_bins=2)
+    array([ 0.])
+    """
     norm.ppf([float(a) / n_bins for a in range(1, n_bins)], scale=scale)
 
 
