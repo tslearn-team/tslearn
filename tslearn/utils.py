@@ -4,6 +4,18 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 def _arraylike_copy(arr):
+    """Duplicate content of arr into a numpy array.
+
+     Examples
+     --------
+     >>> X_npy = numpy.array([1, 2, 3])
+     >>> numpy.alltrue(_arraylike_copy(X_npy) == X_npy)
+     True
+     >>> _arraylike_copy(X_npy) is X_npy
+     False
+     >>> numpy.alltrue(_arraylike_copy([1, 2, 3]) == X_npy)
+     True
+     """
     if type(arr) != numpy.ndarray:
         return numpy.array(arr)
     else:
