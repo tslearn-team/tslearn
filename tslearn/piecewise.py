@@ -63,19 +63,20 @@ class PiecewiseAggregateApproximation(TransformerMixin):
     >>> paa_data = paa.fit_transform(data)
     >>> paa_data.shape
     (2, 3, 1)
-    >>> paa_data  # doctest +NORMALIZE_WHITESPACE
+    >>> paa_data
     array([[[ 0.5 ],
             [-0.45],
             [ 0.  ]],
+    <BLANKLINE>
            [[ 2.1 ],
             [ -2. ],
             [  0. ]]])
     >>> numpy.alltrue(paa_data == paa.fit(data).transform(data))
     True
     >>> paa.distance_paa(paa_data[0], paa_data[1])  # doctest: +ELLIPSIS
-    7.01803...
+    3.15039...
     >>> paa.distance(data[0], data[1])  # doctest: +ELLIPSIS
-    7.01803...
+    3.15039...
 
     References
     ----------
