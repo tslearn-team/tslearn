@@ -2,6 +2,7 @@ STUFF_cydtw = "cydtw"
 
 import numpy
 from scipy.spatial.distance import cdist
+# from tslearn.metrics import lb_keogh
 
 cimport numpy
 cimport cython
@@ -122,7 +123,7 @@ def cdist_dtw(numpy.ndarray[DTYPE_t, ndim=3] dataset1, numpy.ndarray[DTYPE_t, nd
 
 @cython.boundscheck(False) # turn off bounds-checking for entire function
 @cython.wraparound(False)  # turn off negative index wrapping for entire function
-def lb_enveloppe(numpy.ndarray[DTYPE_t, ndim=2] time_series, int radius):
+def lb_enveloppe(numpy.ndarray[DTYPE_t, ndim=2] time_series, int radius):  # TODO: multidimensional enveloppes???
     assert time_series.dtype == DTYPE and time_series.shape[1] == 1
     cdef int sz = time_series.shape[0]
     cdef int i = 0
@@ -142,3 +143,36 @@ def lb_enveloppe(numpy.ndarray[DTYPE_t, ndim=2] time_series, int radius):
         enveloppe_up[i, 0] = time_series[min_idx:max_idx, 0].max()
 
     return enveloppe_down, enveloppe_up
+
+
+# @cython.boundscheck(False) # turn off bounds-checking for entire function
+# @cython.wraparound(False)  # turn off negative index wrapping for entire function
+# def cdist_lb_keogh(numpy.ndarray[DTYPE_t, ndim=3] dataset_queries, numpy.ndarray[DTYPE_t, ndim=3] dataset_candidates,
+#                    int radius, bool self_similarity):
+#     assert dataset_queries.dtype == DTYPE and dataset_candidates.dtype == DTYPE
+#     cdef int n1 = dataset_queries.shape[0]
+#     cdef int n2 = dataset_candidates.shape[0]
+#     cdef int sz = dataset_candidates.shape[1]
+#     cdef int i = 0
+#     cdef int j = 0
+#     cdef numpy.ndarray[DTYPE_t, ndim=2] cross_dist = numpy.empty((n1, n2), dtype=DTYPE)
+#     cdef numpy.ndarray[DTYPE_t, ndim=2] env_u = numpy.empty((sz, 1), dtype=DTYPE)
+#     cdef numpy.ndarray[DTYPE_t, ndim=2] env_d = numpy.empty((sz, 1), dtype=DTYPE)
+#     cdef numpy.ndarray[DTYPE_t, ndim=3] enveloppes = numpy.empty((n2, sz, 2), dtype=DTYPE)
+#
+#     for j in range(n2):
+#         env_d, env_u = lb_enveloppe(dataset_candidates, radius)
+#         enveloppes[j, :, 0] = env_d
+#         enveloppes[j, :, 1] = env_u
+#
+#     for i in range(n1):
+#         for j in range(n2):
+#             if self_similarity and j < i:
+#                 cross_dist[i, j] = cross_dist[j, i]
+#             elif self_similarity and i == j:
+#                 cross_dist[i, j] = 0.
+#             else:
+#                 cross_dist[i, j] = lb_keogh(dataset_queries[i], (enveloppes[j, :, 0].reshape((-1, 1)),
+#                                                                  enveloppes[j, :, 1].reshape((-1, 1))))
+#
+#     return cross_dist

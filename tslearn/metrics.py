@@ -1,6 +1,7 @@
 import numpy
 import os
 from scipy.spatial.distance import pdist
+from sklearn.utils import check_random_state
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
 if on_rtd:
     import pyximport; pyximport.install()
@@ -34,6 +35,14 @@ def dtw_path(s1, s2):
         second one corresponds to s2
     float
         Similarity score
+
+    Examples
+    --------
+    >>> path, dist = dtw_path([1, 2, 3], [1., 2., 2., 3.])
+    >>> path
+    [(0, 0), (1, 1), (1, 2), (2, 3)]
+    >>> dist
+    0.0
 
     See Also
     --------
@@ -286,6 +295,9 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.):
     >>> cdist_gak([[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     array([[ 1. , 0.656...],
            [ 0.656..., 1. ]])
+    >>> cdist_gak([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    array([[ 1. , 0.656...],
+           [ 0.656..., 1. ]])
 
     See Also
     --------
@@ -301,7 +313,7 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.):
     return cygak.cdist_gak(dataset1, dataset2, sigma, self_similarity=self_similarity)
 
 
-def sigma_gak(dataset, n_samples=100):
+def sigma_gak(dataset, n_samples=100, random_state=None):
     """Compute sigma value to be used for GAK as suggested in [2]_.
 
     Parameters
@@ -310,24 +322,34 @@ def sigma_gak(dataset, n_samples=100):
         A dataset of time series
     n_samples : int (default: 100)
         Number of samples on which median distance should be estimated
+    random_state : integer or numpy.RandomState or None (default: None)
+        The generator used to draw the samples. If an integer is given, it fixes the seed. Defaults to the global
+        numpy random number generator.
 
     Returns
     -------
     float
         Suggested bandwidth (:math:`\\sigma`) for the Global Alignment kernel
 
+    Example
+    -------
+    >>> dataset = [[1, 2, 2, 3], [1., 2., 3., 4.]]
+    >>> sigma_gak(dataset=dataset, n_samples=200, random_state=0)  # doctest: +ELLIPSIS
+    2.0...
+
     See Also
     --------
     gak : Compute Global Alignment kernel
     cdist_gak : Compute cross-similarity matrix using Global Alignment kernel
     """
+    random_state = check_random_state(random_state)
     dataset = npy3d_time_series_dataset(dataset)
     n_ts, sz, d = dataset.shape
     if n_ts * sz < n_samples:
         replace = True
     else:
         replace = False
-    sample_indices = numpy.random.choice(n_ts * sz, size=n_samples, replace=replace)
+    sample_indices = random_state.choice(n_ts * sz, size=n_samples, replace=replace)
     dists = pdist(dataset.reshape((-1, d))[sample_indices], metric="euclidean")
     return numpy.median(dists) * numpy.sqrt(sz)
 
