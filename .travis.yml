@@ -33,10 +33,6 @@ install:
   - pip install argparse
   - pip install codeclimate-test-reporter
   - python setup.py build_ext --inplace
-before_script:
-  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-  - chmod +x ./cc-test-reporter
-  - ./cc-test-reporter before-build
 script: 
   - nosetests --with-doctest --with-coverage --cover-erase --cover-package=tslearn
   - if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then codeclimate-test-reporter; fi
