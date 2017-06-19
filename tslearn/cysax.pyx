@@ -143,7 +143,7 @@ def inv_transform_1d_sax(numpy.ndarray[DTYPE_INT_t, ndim=3] dataset_sax,
     for i in range(n_ts):
         for t in range(sz):
             t0 = t * seg_sz
-            t_middle = float(t0) + .5 * seg_sz
+            t_middle = float(t0) + .5 * (seg_sz - 1)
             for di in range(d):
                 avg = breakpoints_avg_middle_[dataset_sax[i, t, di]]
                 slope = breakpoints_slope_middle_[dataset_sax[i, t, di + d]]

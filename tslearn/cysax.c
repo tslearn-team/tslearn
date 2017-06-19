@@ -4590,7 +4590,7 @@ static PyObject *__pyx_pf_7tslearn_5cysax_10inv_transform_1d_sax(CYTHON_UNUSED P
  *     for i in range(n_ts):
  *         for t in range(sz):             # <<<<<<<<<<<<<<
  *             t0 = t * seg_sz
- *             t_middle = float(t0) + .5 * seg_sz
+ *             t_middle = float(t0) + .5 * (seg_sz - 1)
  */
     __pyx_t_10 = __pyx_v_sz;
     for (__pyx_t_11 = 0; __pyx_t_11 < __pyx_t_10; __pyx_t_11+=1) {
@@ -4600,7 +4600,7 @@ static PyObject *__pyx_pf_7tslearn_5cysax_10inv_transform_1d_sax(CYTHON_UNUSED P
  *     for i in range(n_ts):
  *         for t in range(sz):
  *             t0 = t * seg_sz             # <<<<<<<<<<<<<<
- *             t_middle = float(t0) + .5 * seg_sz
+ *             t_middle = float(t0) + .5 * (seg_sz - 1)
  *             for di in range(d):
  */
       __pyx_v_t0 = (__pyx_v_t * __pyx_v_seg_sz);
@@ -4608,15 +4608,15 @@ static PyObject *__pyx_pf_7tslearn_5cysax_10inv_transform_1d_sax(CYTHON_UNUSED P
       /* "tslearn/cysax.pyx":146
  *         for t in range(sz):
  *             t0 = t * seg_sz
- *             t_middle = float(t0) + .5 * seg_sz             # <<<<<<<<<<<<<<
+ *             t_middle = float(t0) + .5 * (seg_sz - 1)             # <<<<<<<<<<<<<<
  *             for di in range(d):
  *                 avg = breakpoints_avg_middle_[dataset_sax[i, t, di]]
  */
-      __pyx_v_t_middle = (((double)__pyx_v_t0) + (.5 * __pyx_v_seg_sz));
+      __pyx_v_t_middle = (((double)__pyx_v_t0) + (.5 * (__pyx_v_seg_sz - 1)));
 
       /* "tslearn/cysax.pyx":147
  *             t0 = t * seg_sz
- *             t_middle = float(t0) + .5 * seg_sz
+ *             t_middle = float(t0) + .5 * (seg_sz - 1)
  *             for di in range(d):             # <<<<<<<<<<<<<<
  *                 avg = breakpoints_avg_middle_[dataset_sax[i, t, di]]
  *                 slope = breakpoints_slope_middle_[dataset_sax[i, t, di + d]]
@@ -4626,7 +4626,7 @@ static PyObject *__pyx_pf_7tslearn_5cysax_10inv_transform_1d_sax(CYTHON_UNUSED P
         __pyx_v_di = __pyx_t_13;
 
         /* "tslearn/cysax.pyx":148
- *             t_middle = float(t0) + .5 * seg_sz
+ *             t_middle = float(t0) + .5 * (seg_sz - 1)
  *             for di in range(d):
  *                 avg = breakpoints_avg_middle_[dataset_sax[i, t, di]]             # <<<<<<<<<<<<<<
  *                 slope = breakpoints_slope_middle_[dataset_sax[i, t, di + d]]

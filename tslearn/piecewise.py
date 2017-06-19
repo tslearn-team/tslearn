@@ -416,6 +416,46 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
     breakpoints_slope_ : numpy.ndarray of shape (alphabet_size_slope - 1, )
         List of breakpoints used to generate SAX symbols for slopes.
 
+    Example
+    -------
+    >>> one_d_sax = OneD_SymbolicAggregateApproximation(n_segments=3, alphabet_size_avg=2, alphabet_size_slope=2, sigma_l=1.)
+    >>> data = [[-1., 2., 0.1, -1., 1., -1.], [1., 3.2, -1., -3., 1., -1.]]
+    >>> one_d_sax_data = one_d_sax.fit_transform(data)
+    >>> one_d_sax_data.shape
+    (2, 3, 2)
+    >>> one_d_sax_data
+    array([[[1, 1],
+            [0, 0],
+            [1, 0]],
+    <BLANKLINE>
+           [[1, 1],
+            [0, 0],
+            [1, 0]]])
+    >>> numpy.alltrue(one_d_sax_data == one_d_sax.fit(data).transform(data))
+    True
+    >>> one_d_sax.distance_sax(one_d_sax_data[0], one_d_sax_data[1])  # doctest: +ELLIPSIS
+    0.0
+    >>> one_d_sax.distance(data[0], data[1])  # doctest: +ELLIPSIS
+    0.0
+    >>> one_d_sax.inverse_transform(one_d_sax_data)
+    array([[[ 0.33724488],
+            [ 1.01173463],
+            [-0.33724488],
+            [-1.01173463],
+            [ 1.01173463],
+            [ 0.33724488]],
+    <BLANKLINE>
+           [[ 0.33724488],
+            [ 1.01173463],
+            [-0.33724488],
+            [-1.01173463],
+            [ 1.01173463],
+            [ 0.33724488]]])
+    >>> unfitted_1dsax = OneD_SymbolicAggregateApproximation(n_segments=3, alphabet_size_avg=2, alphabet_size_slope=2)
+    >>> unfitted_1dsax.distance(data[0], data[1])  # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+    ValueError: Model not fitted yet: cannot be used for distance computation.
+
     References
     ----------
     .. [3] S. Malinowski, T. Guyet, R. Quiniou, R. Tavenard. 1d-SAX: a Novel Symbolic Representation for Time Series.
@@ -482,6 +522,8 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         return X_slopes
 
     def _transform(self, X, y=None):
+        if self.size_fitted_ < 0:
+            raise ValueError("Model not fitted yet: cannot be used for distance computation.")
         n_ts, sz_raw, d = X.shape
         X_1d_sax = numpy.empty((n_ts, self.n_segments, 2 * d), dtype=numpy.int)
 
