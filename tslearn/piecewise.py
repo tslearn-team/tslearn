@@ -77,6 +77,24 @@ class PiecewiseAggregateApproximation(TransformerMixin):
     3.15039...
     >>> paa.distance(data[0], data[1])  # doctest: +ELLIPSIS
     3.15039...
+    >>> paa.inverse_transform(paa_data)
+    array([[[ 0.5 ],
+            [ 0.5 ],
+            [-0.45],
+            [-0.45],
+            [ 0.  ],
+            [ 0.  ]],
+    <BLANKLINE>
+           [[ 2.1 ],
+            [ 2.1 ],
+            [-2.  ],
+            [-2.  ],
+            [ 0.  ],
+            [ 0.  ]]])
+    >>> unfitted_paa = PiecewiseAggregateApproximation(n_segments=3)
+    >>> unfitted_paa.distance(data[0], data[1])  # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+    ValueError: Model not fitted yet: cannot be used for distance computation.
 
     References
     ----------
@@ -218,6 +236,46 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
     ----------
     breakpoints_avg_ : numpy.ndarray of shape (alphabet_size - 1, )
         List of breakpoints used to generate SAX symbols
+
+    Example
+    -------
+    >>> sax = SymbolicAggregateApproximation(n_segments=3, alphabet_size_avg=2)
+    >>> data = [[-1., 2., 0.1, -1., 1., -1.], [1., 3.2, -1., -3., 1., -1.]]
+    >>> sax_data = sax.fit_transform(data)
+    >>> sax_data.shape
+    (2, 3, 1)
+    >>> sax_data
+    array([[[1],
+            [0],
+            [1]],
+    <BLANKLINE>
+           [[1],
+            [0],
+            [1]]])
+    >>> numpy.alltrue(sax_data == sax.fit(data).transform(data))
+    True
+    >>> sax.distance_sax(sax_data[0], sax_data[1])  # doctest: +ELLIPSIS
+    0.0
+    >>> sax.distance(data[0], data[1])  # doctest: +ELLIPSIS
+    0.0
+    >>> sax.inverse_transform(sax_data)
+    array([[[ 0.67448975],
+            [ 0.67448975],
+            [-0.67448975],
+            [-0.67448975],
+            [ 0.67448975],
+            [ 0.67448975]],
+    <BLANKLINE>
+           [[ 0.67448975],
+            [ 0.67448975],
+            [-0.67448975],
+            [-0.67448975],
+            [ 0.67448975],
+            [ 0.67448975]]])
+    >>> unfitted_sax = SymbolicAggregateApproximation(n_segments=3, alphabet_size_avg=2)
+    >>> unfitted_sax.distance(data[0], data[1])  # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+    ValueError: Model not fitted yet: cannot be used for distance computation.
 
     References
     ----------
