@@ -123,7 +123,7 @@ def cdist_dtw(numpy.ndarray[DTYPE_t, ndim=3] dataset1, numpy.ndarray[DTYPE_t, nd
 
 @cython.boundscheck(False) # turn off bounds-checking for entire function
 @cython.wraparound(False)  # turn off negative index wrapping for entire function
-def lb_enveloppe(numpy.ndarray[DTYPE_t, ndim=2] time_series, int radius):  # TODO: multidimensional enveloppes???
+def lb_envelope(numpy.ndarray[DTYPE_t, ndim=2] time_series, int radius):  # TODO: multidimensional enveloppes???
     assert time_series.dtype == DTYPE and time_series.shape[1] == 1
     cdef int sz = time_series.shape[0]
     cdef int i = 0
