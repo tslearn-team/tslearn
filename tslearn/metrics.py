@@ -454,7 +454,6 @@ def lb_enveloppe(ts, radius=1):
     Examples
     --------
     >>> ts1 = [1, 2, 3, 2, 1]
-    >>> ts2 = [0, 0, 0, 0, 0]
     >>> env_low, env_up = lb_enveloppe(ts1, radius=1)
     >>> env_low
     array([[ 1.],
