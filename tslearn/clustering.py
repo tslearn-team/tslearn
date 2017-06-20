@@ -234,7 +234,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         return dist.argmin(axis=1)
 
 
-class TimeSeriesCentroidBasedClusteringMixin(BaseEstimator, ClusterMixin):
+class TimeSeriesCentroidBasedClusteringMixin:
     """Mixin class for centroid-based clustering of time series."""
     def _post_fit(self, X_fitted, centroids, inertia):
         if numpy.isfinite(inertia) and (centroids is not None):
