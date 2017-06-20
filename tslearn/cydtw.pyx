@@ -134,7 +134,7 @@ def lb_enveloppe(numpy.ndarray[DTYPE_t, ndim=2] time_series, int radius):  # TOD
 
     for i in range(sz):
         min_idx = i - radius
-        max_idx = i + radius
+        max_idx = i + radius + 1
         if min_idx < 0:
             min_idx = 0
         if max_idx > sz:
