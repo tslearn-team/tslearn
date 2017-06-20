@@ -55,6 +55,19 @@ class DTWBarycenterAveraging:
         Tolerance to use for early stopping: if the decrease in cost is lower than this value, the EM procedure stops.
     verbose : boolean (default: False)
         Whether to print information about the cost at each iteration or not.
+
+    Examples
+    --------
+    >>> time_series = [[1, 2, 3, 4], [1, 2, 4, 5]]
+    >>> euc_bar = EuclideanBarycenter().fit(time_series)
+    >>> dba_bar = DTWBarycenterAveraging(n_iter=0).fit(time_series)
+    >>> dba_bar.shape
+    (4, 1)
+    >>> numpy.alltrue(numpy.abs(euc_bar - dba_bar) < 1e-9)
+    True
+    >>> dba_bar = DTWBarycenterAveraging(barycenter_size=5).fit(time_series)
+    >>> dba_bar.shape
+    (5, 1)
     
     References
     ----------
