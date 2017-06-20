@@ -84,8 +84,9 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
     >>> knn = KNeighborsTimeSeries(n_neighbors=1).fit(time_series)
     >>> dist, ind = knn.kneighbors([[1, 1, 2, 2, 2, 3, 4]], return_distance=True)
     >>> dist
+    array([[ 0.]])
     >>> ind
-    array([0])
+    array([[0]])
     """
     def __init__(self, n_neighbors=5, metric="dtw", metric_params=None):
         NearestNeighbors.__init__(self, n_neighbors=n_neighbors, algorithm='brute')
