@@ -5,6 +5,7 @@ from scipy import stats
 from sklearn.utils.extmath import weighted_mode
 
 from tslearn.metrics import cdist_dtw, cdist_lr_dtw
+from tslearn.utils import npy3d_time_series_dataset
 
 
 class KNeighborsTimeSeriesMixin(KNeighborsMixin):
@@ -125,7 +126,11 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
         ind : array
             Indices of the nearest points in the population matrix.
         """
-        return KNeighborsTimeSeriesMixin.kneighbors(self, X=X, n_neighbors=n_neighbors, return_distance=return_distance)
+        X_ = npy3d_time_series_dataset(X)
+        return KNeighborsTimeSeriesMixin.kneighbors(self,
+                                                    X=X_,
+                                                    n_neighbors=n_neighbors,
+                                                    return_distance=return_distance)
 
 
 class KNeighborsTimeSeriesClassifier(KNeighborsClassifier, KNeighborsTimeSeriesMixin):
