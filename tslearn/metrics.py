@@ -401,6 +401,17 @@ def lb_keogh(ts_query, ts_candidate=None, radius=1, enveloppe_candidate=None):
     float
         Distance between the query time series and the enveloppe of the candidate time series.
 
+    Examples
+    --------
+    >>> ts1 = [1, 2, 3, 2, 1]
+    >>> ts2 = [0, 0, 0, 0, 0]
+    >>> env_low, env_up = lb_enveloppe(ts1, radius=1)
+    >>> lb_keogh(ts_query=ts2, enveloppe_candidate=(env_low, env_up))  # doctest: +ELLIPSIS
+    2.8284...
+    >>> lb_keogh(ts_query=ts2, ts_candidate=ts1, radius=1)  # doctest: +ELLIPSIS
+    2.8284...
+
+
     References
     ----------
     .. [1] Keogh, E. Exact indexing of dynamic time warping. In International Conference on Very Large Data Bases, 2002.
@@ -440,9 +451,27 @@ def lb_enveloppe(ts, radius=1):
     array-like
         Upper-side of the enveloppe.
 
+    Examples
+    --------
+    >>> ts1 = [1, 2, 3, 2, 1]
+    >>> ts2 = [0, 0, 0, 0, 0]
+    >>> env_low, env_up = lb_enveloppe(ts1, radius=1)
+    >>> env_low
+    array([[ 1.],
+           [ 1.],
+           [ 2.],
+           [ 1.],
+           [ 1.]])
+    >>> env_up
+    array([[ 2.],
+           [ 3.],
+           [ 3.],
+           [ 3.],
+           [ 2.]])
+
     References
     ----------
     .. [1] Keogh, E. Exact indexing of dynamic time warping. In International Conference on Very Large Data Bases, 2002.
        pp 406-417.
     """
-    return cydtw.lb_enveloppe(ts, radius=radius)
+    return cydtw.lb_enveloppe(npy2d_time_series(ts), radius=radius)
