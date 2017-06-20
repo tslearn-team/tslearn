@@ -1,0 +1,22 @@
+
+
+Examples using ``tslearn.metrics.dtw_path``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example illustrates DTW computation between time series and plots the optimal alignment pa...">
+
+.. only:: html
+
+    .. figure:: /auto_examples/images/thumb/sphx_glr_plot_dtw_thumb.png
+
+        :ref:`sphx_glr_auto_examples_plot_dtw.py`
+
+.. raw:: html
+
+    </div>
+
+.. only:: not html
+
+    * :ref:`sphx_glr_auto_examples_plot_dtw.py`

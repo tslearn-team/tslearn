@@ -99,3 +99,4 @@ ENV/
 .idea/
 .DS_Store
 tslearn/examples
+tslearn/docs/auto_examples

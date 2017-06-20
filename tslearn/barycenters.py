@@ -40,7 +40,9 @@ class EuclideanBarycenter:
 
 
 class DTWBarycenterAveraging:
-    """DBA barycenter as described in [1]_.
+    """DTW Barycenter Averaging (DBA) method.
+
+    DBA was originally presented in [1]_.
 
     Parameters
     ----------

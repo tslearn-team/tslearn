@@ -1,0 +1,22 @@
+
+
+Examples using ``tslearn.clustering.GlobalAlignmentKernelKMeans``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example uses Global Alignment kernel at the core of a kernel :math:`k`-means algorithm to ...">
+
+.. only:: html
+
+    .. figure:: /auto_examples/images/thumb/sphx_glr_plot_kernel_kmeans_thumb.png
+
+        :ref:`sphx_glr_auto_examples_plot_kernel_kmeans.py`
+
+.. raw:: html
+
+    </div>
+
+.. only:: not html
+
+    * :ref:`sphx_glr_auto_examples_plot_kernel_kmeans.py`

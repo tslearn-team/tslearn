@@ -1,0 +1,22 @@
+
+
+Examples using ``tslearn.preprocessing.TimeSeriesScalerMinMax``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example illustrates the use of nearest neighbor methods for database search and classifica...">
+
+.. only:: html
+
+    .. figure:: /auto_examples/images/thumb/sphx_glr_neighbors_thumb.png
+
+        :ref:`sphx_glr_auto_examples_neighbors.py`
+
+.. raw:: html
+
+    </div>
+
+.. only:: not html
+
+    * :ref:`sphx_glr_auto_examples_neighbors.py`

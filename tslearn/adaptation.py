@@ -9,7 +9,9 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 class DTWSampler(BaseEstimator, TransformerMixin):
-    """A class for non-linear DTW-based resampling of time series as described in [1]_.
+    """A class for non-linear DTW-based resampling of time series.
+
+    The method was originally presented in [1]_.
 
     The principle is to use a modality (or a set of modalities) to perform DTW alignment with respect to a reference
     and then resample other modalities using the obtained DTW path.

@@ -1,0 +1,22 @@
+
+
+Examples using ``tslearn.metrics.lb_enveloppe``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example illustrates the principle of time series enveloppe as used in LB_Keogh and estimat...">
+
+.. only:: html
+
+    .. figure:: /auto_examples/images/thumb/sphx_glr_plot_lb_keogh_thumb.png
+
+        :ref:`sphx_glr_auto_examples_plot_lb_keogh.py`
+
+.. raw:: html
+
+    </div>
+
+.. only:: not html
+
+    * :ref:`sphx_glr_auto_examples_plot_lb_keogh.py`

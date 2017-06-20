@@ -15,10 +15,11 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 def dtw_path(s1, s2):
-    """Compute Dynamic Time Warping (DTW) [1]_ similarity measure between (possibly multidimensional) time series and
+    """Compute Dynamic Time Warping (DTW) similarity measure between (possibly multidimensional) time series and
     return both the path and the similarity.
 
     It is not required that both time series share the same size, but they must be the same dimension.
+    DTW was originally presented in [1]_.
 
     Parameters
     ----------
@@ -48,13 +49,11 @@ def dtw_path(s1, s2):
     --------
     dtw : Get only the similarity score for DTW
     cdist_dtw : Cross similarity matrix between time series datasets
-    lr_dtw : Locally_regularized Dynamic Time Warping (LR-DTW) score
-    lr_dtw_path : Get both the matching path and the similarity score for LR-DTW
 
     References
     ----------
     .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for spoken word recognition,"
-       IEEE Transactions on Acoustics, Speech and Signal Processing, vol. 26(1), pp. 43?49, 1978.
+       IEEE Transactions on Acoustics, Speech and Signal Processing, vol. 26(1), pp. 43--49, 1978.
     """
     s1 = npy2d_time_series(s1)
     s2 = npy2d_time_series(s2)
@@ -62,10 +61,11 @@ def dtw_path(s1, s2):
 
 
 def dtw(s1, s2):
-    """Compute Dynamic Time Warping (DTW) [1]_ similarity measure between (possibly multidimensional) time series and
+    """Compute Dynamic Time Warping (DTW) similarity measure between (possibly multidimensional) time series and
     return it.
 
     It is not required that both time series share the same size, but they must be the same dimension.
+    DTW was originally presented in [1]_.
 
     Parameters
     ----------
@@ -90,8 +90,11 @@ def dtw(s1, s2):
     --------
     dtw_path : Get both the matching path and the similarity score for DTW
     cdist_dtw : Cross similarity matrix between time series datasets
-    lr_dtw : Locally_regularized Dynamic Time Warping (LR-DTW) score
-    lr_dtw_path : Get both the matching path and the similarity score for LR-DTW
+
+    References
+    ----------
+    .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for spoken word recognition,"
+       IEEE Transactions on Acoustics, Speech and Signal Processing, vol. 26(1), pp. 43--49, 1978.
     """
     s1 = npy2d_time_series(s1)
     s2 = npy2d_time_series(s2)
@@ -99,7 +102,9 @@ def dtw(s1, s2):
 
 
 def cdist_dtw(dataset1, dataset2=None):
-    """Compute cross-similarity matrix using Dynamic Time Warping (DTW) [1]_ similarity measure.
+    """Compute cross-similarity matrix using Dynamic Time Warping (DTW) similarity measure.
+
+    DTW was originally presented in [1]_.
 
     Parameters
     ----------
@@ -125,6 +130,11 @@ def cdist_dtw(dataset1, dataset2=None):
     See Also
     --------
     dtw : Get DTW similarity score
+
+    References
+    ----------
+    .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for spoken word recognition,"
+       IEEE Transactions on Acoustics, Speech and Signal Processing, vol. 26(1), pp. 43--49, 1978.
     """
     dataset1 = npy3d_time_series_dataset(dataset1)
     self_similarity = False
@@ -235,9 +245,10 @@ def lr_dtw_path(s1, s2, gamma=0.):
 
 
 def gak(s1, s2, sigma=1.):
-    """Compute Global Alignment Kernel (GAK) [2]_ between (possibly multidimensional) time series and return it.
+    """Compute Global Alignment Kernel (GAK) between (possibly multidimensional) time series and return it.
 
-    It is not required that both time series share the same size, but they must be the same dimension.
+    It is not required that both time series share the same size, but they must be the same dimension. GAK was
+    originally presented in [1]_.
 
     Parameters
     ----------
@@ -266,7 +277,7 @@ def gak(s1, s2, sigma=1.):
 
     References
     ----------
-    .. [2] M. Cuturi, "Fast global alignment kernels," ICML 2011.
+    .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """
     s1 = npy2d_time_series(s1)
     s2 = npy2d_time_series(s2)
@@ -274,7 +285,9 @@ def gak(s1, s2, sigma=1.):
 
 
 def cdist_gak(dataset1, dataset2=None, sigma=1.):
-    """Compute cross-similarity matrix using Global Alignment kernel (GAK) [2]_.
+    """Compute cross-similarity matrix using Global Alignment kernel (GAK).
+
+    GAK was originally presented in [1]_.
 
     Parameters
     ----------
@@ -302,6 +315,10 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.):
     See Also
     --------
     gak : Compute Global Alignment kernel
+
+    References
+    ----------
+    .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """
     dataset1 = npy3d_time_series_dataset(dataset1)
     self_similarity = False
@@ -314,7 +331,9 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.):
 
 
 def sigma_gak(dataset, n_samples=100, random_state=None):
-    """Compute sigma value to be used for GAK as suggested in [2]_.
+    """Compute sigma value to be used for GAK.
+
+    This method was originally presented in [1]_.
 
     Parameters
     ----------
@@ -341,6 +360,10 @@ def sigma_gak(dataset, n_samples=100, random_state=None):
     --------
     gak : Compute Global Alignment kernel
     cdist_gak : Compute cross-similarity matrix using Global Alignment kernel
+
+    References
+    ----------
+    .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """
     random_state = check_random_state(random_state)
     dataset = npy3d_time_series_dataset(dataset)
@@ -355,7 +378,9 @@ def sigma_gak(dataset, n_samples=100, random_state=None):
 
 
 def lb_keogh(ts_query, ts_candidate=None, radius=1, enveloppe_candidate=None):
-    """Compute LB_Keogh as defined in [3]_.
+    """Compute LB_Keogh.
+
+    LB_Keogh was originally presented in [1]_.
 
     Parameters
     ----------
@@ -378,7 +403,7 @@ def lb_keogh(ts_query, ts_candidate=None, radius=1, enveloppe_candidate=None):
 
     References
     ----------
-    .. [3] Keogh, E. Exact indexing of dynamic time warping. In International Conference on Very Large Data Bases, 2002.
+    .. [1] Keogh, E. Exact indexing of dynamic time warping. In International Conference on Very Large Data Bases, 2002.
        pp 406-417.
     """
     if ts_candidate is None:
@@ -391,12 +416,14 @@ def lb_keogh(ts_query, ts_candidate=None, radius=1, enveloppe_candidate=None):
     assert ts_query.shape[1] == 1, "LB_Keogh is available only for monodimensional time series"
     indices_up = ts_query[:, 0] > enveloppe_up[:, 0]
     indices_down = ts_query[:, 0] < enveloppe_down[:, 0]
-    return numpy.linalg.norm(ts_query[indices_up, 0] - enveloppe_up[indices_up, 0]) ** 2 + \
-           numpy.linalg.norm(ts_query[indices_down, 0] - enveloppe_down[indices_down, 0]) ** 2
+    return numpy.sqrt(numpy.linalg.norm(ts_query[indices_up, 0] - enveloppe_up[indices_up, 0]) ** 2 + \
+                      numpy.linalg.norm(ts_query[indices_down, 0] - enveloppe_down[indices_down, 0]) ** 2)
 
 
 def lb_enveloppe(ts, radius=1):
-    """Compute time-series enveloppe as required by LB_Keogh [3]_.
+    """Compute time-series enveloppe as required by LB_Keogh.
+
+    LB_Keogh was originally presenetd in [1]_.
 
     Parameters
     ----------
@@ -412,5 +439,10 @@ def lb_enveloppe(ts, radius=1):
         Lower-side of the enveloppe.
     array-like
         Upper-side of the enveloppe.
+
+    References
+    ----------
+    .. [1] Keogh, E. Exact indexing of dynamic time warping. In International Conference on Very Large Data Bases, 2002.
+       pp 406-417.
     """
     return cydtw.lb_enveloppe(ts, radius=radius)

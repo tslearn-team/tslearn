@@ -49,7 +49,9 @@ def _bin_medians(n_bins, scale=1.):
 
 
 class PiecewiseAggregateApproximation(TransformerMixin):
-    """Piecewise Aggregate Approximation (PAA) transformation as defined in [1]_.
+    """Piecewise Aggregate Approximation (PAA) transformation.
+
+    PAA was originally presented in [1]_.
 
     Parameters
     ----------
@@ -98,8 +100,8 @@ class PiecewiseAggregateApproximation(TransformerMixin):
 
     References
     ----------
-    .. [1] E. Keogh & M. Pazzani. Scaling up dynamic time warping for datamining applications. SIGKDD 2000
-       (pp. 285-289).
+    .. [1] E. Keogh & M. Pazzani. Scaling up dynamic time warping for datamining applications. SIGKDD 2000,
+       pp. 285--289.
     """
     def __init__(self, n_segments):
         self.n_segments = n_segments
@@ -181,6 +183,11 @@ class PiecewiseAggregateApproximation(TransformerMixin):
         -------
         float
             PAA distance
+
+        References
+        ----------
+        .. [1] E. Keogh & M. Pazzani. Scaling up dynamic time warping for datamining applications. SIGKDD 2000,
+           pp. 285--289.
         """
         if self.size_fitted_ < 0:
             raise ValueError("Model not fitted yet: cannot be used for distance computation.")
@@ -201,6 +208,11 @@ class PiecewiseAggregateApproximation(TransformerMixin):
         -------
         float
             PAA distance
+
+        References
+        ----------
+        .. [1] E. Keogh & M. Pazzani. Scaling up dynamic time warping for datamining applications. SIGKDD 2000,
+           pp. 285--289.
         """
         paa = self.transform([ts1, ts2])
         return self.distance_paa(paa[0], paa[1])
@@ -223,7 +235,9 @@ class PiecewiseAggregateApproximation(TransformerMixin):
 
 
 class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
-    """Symbolic Aggregate approXimation (SAX) transformation as defined in [2]_.
+    """Symbolic Aggregate approXimation (SAX) transformation.
+
+    SAX was originally presented in [1]_.
 
     Parameters
     ----------
@@ -279,7 +293,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
 
     References
     ----------
-    .. [2] J. Lin, E. Keogh, L. Wei, et al. Experiencing SAX: a novel symbolic representation of time series.
+    .. [1] J. Lin, E. Keogh, L. Wei, et al. Experiencing SAX: a novel symbolic representation of time series.
        Data Mining and Knowledge Discovery, 2007. vol. 15(107)
     """
     def __init__(self, n_segments, alphabet_size_avg):
@@ -340,7 +354,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
         return self._transform(X_, y)
 
     def distance_sax(self, sax1, sax2):
-        """Compute distance between SAX representations as defined in [2]_.
+        """Compute distance between SAX representations as defined in [1]_.
 
         Parameters
         ----------
@@ -353,6 +367,11 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
         -------
         float
             SAX distance
+
+        References
+        ----------
+        .. [1] J. Lin, E. Keogh, L. Wei, et al. Experiencing SAX: a novel symbolic representation of time series.
+           Data Mining and Knowledge Discovery, 2007. vol. 15(107)
         """
         if self.size_fitted_ < 0:
             raise ValueError("Model not fitted yet: cannot be used for distance computation.")
@@ -360,7 +379,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
             return cydist_sax(sax1, sax2, self.breakpoints_avg_, self.size_fitted_)
 
     def distance(self, ts1, ts2):
-        """Compute distance between SAX representations as defined in [2]_.
+        """Compute distance between SAX representations as defined in [1]_.
 
         Parameters
         ----------
@@ -373,6 +392,11 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
         -------
         float
             SAX distance
+
+        References
+        ----------
+        .. [1] J. Lin, E. Keogh, L. Wei, et al. Experiencing SAX: a novel symbolic representation of time series.
+           Data Mining and Knowledge Discovery, 2007. vol. 15(107)
         """
         sax = self.transform([ts1, ts2])
         return self.distance_sax(sax[0], sax[1])
@@ -395,7 +419,9 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
 
 
 class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
-    """One-D Symbolic Aggregate approXimation (1d-SAX) transformation as defined in [3]_.
+    """One-D Symbolic Aggregate approXimation (1d-SAX) transformation.
+
+    1d-SAX was originally presented in [1]_.
 
     Parameters
     ----------
@@ -406,7 +432,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
     alphabet_size_slope : int
         Number of SAX symbols to use to describe slopes.
     sigma_l : float or None (default: None)
-        Scale parameter of the Gaussian distribution used to quantize slopes. If None, the formula given in [3]_ is
+        Scale parameter of the Gaussian distribution used to quantize slopes. If None, the formula given in [1]_ is
         used: :math:`\\sigma_L = \\sqrt{0.03 / L}` where :math:`L` is the length of the considered time series.
 
     Attributes
@@ -456,11 +482,12 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
     Traceback (most recent call last):
     ValueError: Model not fitted yet: cannot be used for distance computation.
     >>> unfitted_1dsax.fit(data).sigma_l  # doctest: +ELLIPSIS
-    0.07071...
+    0.42426
+
 
     References
     ----------
-    .. [3] S. Malinowski, T. Guyet, R. Quiniou, R. Tavenard. 1d-SAX: a Novel Symbolic Representation for Time Series.
+    .. [1] S. Malinowski, T. Guyet, R. Quiniou, R. Tavenard. 1d-SAX: a Novel Symbolic Representation for Time Series.
        IDA 2013.
     """
     def __init__(self, n_segments, alphabet_size_avg, alphabet_size_slope, sigma_l=None):
@@ -558,7 +585,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         return self._transform(X_, y)
 
     def distance_1d_sax(self, sax1, sax2):
-        """Compute distance between 1d-SAX representations as defined in [3]_.
+        """Compute distance between 1d-SAX representations as defined in [1]_.
 
         Parameters
         ----------
@@ -575,6 +602,11 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         Note
         ----
             Unlike SAX distance, 1d-SAX distance does not lower bound Euclidean distance between original time series.
+
+        References
+        ----------
+        .. [1] S. Malinowski, T. Guyet, R. Quiniou, R. Tavenard. 1d-SAX: a Novel Symbolic Representation for Time
+           Series. IDA 2013.
         """
         if self.size_fitted_ < 0:
             raise ValueError("Model not fitted yet: cannot be used for distance computation.")
@@ -583,7 +615,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
                                  self.size_fitted_)
 
     def distance(self, ts1, ts2):
-        """Compute distance between 1d-SAX representations as defined in [3]_.
+        """Compute distance between 1d-SAX representations as defined in [1]_.
 
         Parameters
         ----------
@@ -596,6 +628,11 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         -------
         float
             1d-SAX distance
+
+        References
+        ----------
+        .. [1] S. Malinowski, T. Guyet, R. Quiniou, R. Tavenard. 1d-SAX: a Novel Symbolic Representation for Time
+           Series. IDA 2013.
         """
         sax = self.transform([ts1, ts2])
         return self.distance_1d_sax(sax[0], sax[1])

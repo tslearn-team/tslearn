@@ -40,20 +40,14 @@ Then, you should run the following command for Cython code to compile:
 Also, for the whole package to run properly, its base directory should be appended to your Python path (you do not have
 to care about it if you used the PyPI installation alternative).
 
-Modules
--------
+Navigation
+----------
 
-This documentation provides information about the following ``tslearn`` modules:
+From here, you can navigate to:
 
 .. toctree::
-    :maxdepth: 1
+   :maxdepth: 1
 
-    adaptation
-    barycenters
-    clustering
-    generators
-    metrics
-    neighbors
-    piecewise
-    preprocessing
-    utils
+   reference
+   auto_examples/index
+

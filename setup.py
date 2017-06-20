@@ -1,5 +1,6 @@
 from setuptools import setup, Extension
 import numpy
+import tslearn
 
 have_cython = False
 try:
@@ -22,7 +23,7 @@ setup(
     install_requires=['numpy', 'scipy', 'scikit-learn'],
     ext_modules=ext,
     cmdclass={'build_ext': _build_ext},
-    version="0.0.23",
+    version=tslearn.__version__,
     url="http://tslearn.readthedocs.io/",
     author="Romain Tavenard",
     author_email="romain.tavenard@univ-rennes2.fr"
