@@ -72,10 +72,19 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
     ----------
     n_neighbors : int (default: 5)
         Number of nearest neighbors to be considered for the decision.
-    metric : {'dtw' or 'lr_dtw'} (default: 'dtw')
+    metric : {'dtw'} (default: 'dtw')
         Metric to be used at the core of the nearest neighbor procedure
     metric_params : dict or None (default: None)
-        Dictionnary of metric parameters. Recognized keys are `"gamma"` (which has default value 0.) for LR-DTW.
+        Dictionnary of metric parameters.
+
+    Examples
+    --------
+    >>> time_series = [[1, 2, 3, 4], [3, 3, 2, 0], [1, 2, 2, 4]]
+    >>> knn = KNeighborsTimeSeries(n_neighbors=1).fit(time_series)
+    >>> dist, ind = knn.kneighbors([[1, 1, 2, 2, 2, 3, 4]], return_distance=True)
+    >>> dist
+    >>> ind
+    array([0])
     """
     def __init__(self, n_neighbors=5, metric="dtw", metric_params=None):
         NearestNeighbors.__init__(self, n_neighbors=n_neighbors, algorithm='brute')

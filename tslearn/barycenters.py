@@ -67,7 +67,10 @@ class DTWBarycenterAveraging:
     True
     >>> DTWBarycenterAveraging(n_iter=0, barycenter_size=5).fit(time_series).shape
     (5, 1)
-    >>> DTWBarycenterAveraging(n_iter=30, barycenter_size=5).fit(time_series).shape
+    >>> DTWBarycenterAveraging(n_iter=30, barycenter_size=5, verbose=True).fit(time_series).shape  # doctest: +ELLIPSIS
+    [DBA] epoch 1, cost: ...
+    ...
+    [DBA] epoch 30, cost: ...
     (5, 1)
     
     References
