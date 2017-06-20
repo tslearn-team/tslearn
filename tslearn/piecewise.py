@@ -482,7 +482,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
     Traceback (most recent call last):
     ValueError: Model not fitted yet: cannot be used for distance computation.
     >>> unfitted_1dsax.fit(data).sigma_l  # doctest: +ELLIPSIS
-    0.42426
+    0.07071...
 
 
     References
