@@ -234,7 +234,20 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         return dist.argmin(axis=1)
 
 
-class TimeSeriesKMeans(BaseEstimator, ClusterMixin):
+class TimeSeriesCentroidBasedClusteringMixin(BaseEstimator, ClusterMixin):
+    """Mixin class for centroid-based clustering of time series."""
+    def _post_fit(self, X_fitted, centroids, inertia):
+        if numpy.isfinite(inertia) and (centroids is not None):
+            self.cluster_centers_ = centroids
+            self._assign(X_fitted)
+            self.X_fit_ = X_fitted
+            self.inertia_ = inertia
+        else:
+            self.X_fit_ = None
+
+
+
+class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin):
     """K-means clustering for time-series data.
 
     Parameters
@@ -361,15 +374,6 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin):
         self._post_fit(X_, best_correct_centroids, min_inertia)
         return self
 
-    def _post_fit(self, X_fitted, centroids, inertia):
-        if numpy.isfinite(inertia) and (centroids is not None):
-            self.cluster_centers_ = centroids
-            self._assign(X_fitted)
-            self.X_fit_ = X_fitted
-            self.inertia_ = inertia
-        else:
-            self.X_fit_ = None
-
     def fit_predict(self, X, y=None):
         """Fit k-means clustering using X and then predict the closest cluster each time series in X belongs to.
 
@@ -408,7 +412,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin):
         return dist.argmin(axis=1)
 
 
-class KShape(BaseEstimator, ClusterMixin):
+class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin):
     """KShape clustering for time series.
 
     KShape was originally presented in [1]_.
@@ -547,15 +551,6 @@ class KShape(BaseEstimator, ClusterMixin):
                     print("Resumed because of empty cluster")
         self._post_fit(X_, best_correct_centroids, min_inertia)
         return self
-
-    def _post_fit(self, X_fitted, centroids, inertia):
-        if numpy.isfinite(inertia) and (centroids is not None):
-            self.cluster_centers_ = centroids
-            self._assign(X_fitted)
-            self.X_fit_ = X_fitted
-            self.inertia_ = inertia
-        else:
-            self.X_fit_ = None
 
     def fit_predict(self, X, y=None):
         """Fit k-Shape clustering using X and then predict the closest cluster each time series in X belongs to.
