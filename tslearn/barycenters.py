@@ -46,7 +46,7 @@ class DTWBarycenterAveraging:
 
     Parameters
     ----------
-    n_iter : int
+    n_iter : int (default: 30)
         Number of iterations of the EM procedure.
     barycenter_size : int or None (default: None)
         Size of the barycenter to generate. If None, the size of the barycenter is that of the data provided at fit
@@ -74,7 +74,7 @@ class DTWBarycenterAveraging:
     .. [1] F. Petitjean, A. Ketterlin & P. Gancarski. A global averaging method for dynamic time warping, with
        applications to clustering. Pattern Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
     """
-    def __init__(self, n_iter, barycenter_size=None, tol=1e-5, verbose=False):
+    def __init__(self, n_iter=30, barycenter_size=None, tol=1e-5, verbose=False):
         self.n_iter = n_iter
         self.barycenter_size = barycenter_size
         self.tol = tol
