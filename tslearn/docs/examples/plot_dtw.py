@@ -11,7 +11,6 @@ This example illustrates DTW computation between time series and plots the optim
 
 import numpy
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import GridSpec
 
 from tslearn.generators import random_walks
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
@@ -31,12 +30,11 @@ for i, j in path:
 
 plt.figure()
 
-gs = GridSpec(1, 2, width_ratios=[2, 1], height_ratios=[1, 1])
-ax0 = plt.subplot(gs[0])
-ax0.plot(numpy.arange(sz), dataset_scaled[0, :, 0])
-ax0.plot(numpy.arange(sz), dataset_scaled[1, :, 0])
-ax1 = plt.subplot(gs[1])
-ax1.imshow(matrix_path, cmap="gray_r")
+plt.subplot2grid((1, 3), (0, 0), colspan=2)
+plt.plot(numpy.arange(sz), dataset_scaled[0, :, 0])
+plt.plot(numpy.arange(sz), dataset_scaled[1, :, 0])
+plt.subplot(1, 3, 3)
+plt.imshow(matrix_path, cmap="gray_r")
 
 plt.tight_layout()
 plt.show()
