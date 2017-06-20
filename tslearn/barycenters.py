@@ -117,7 +117,7 @@ class DTWBarycenterAveraging:
         else:
             X_avg = X.mean(axis=0)
             xnew = numpy.linspace(0, 1, self.barycenter_size)
-            f = interp1d(numpy.linspace(0, 1, X_avg.shape[0]), X_avg, kind="linear")
+            f = interp1d(numpy.linspace(0, 1, X_avg.shape[0]), X_avg, kind="linear", axis=0)
             return f(xnew)
 
     def _petitjean_assignment(self, X, barycenter):
