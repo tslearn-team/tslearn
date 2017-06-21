@@ -22,6 +22,29 @@ def _arraylike_copy(arr):
         return arr.copy()
 
 
+def _bit_length(n):
+    """Returns the number of bits necessary to represent an integer in binary, excluding the sign and leading zeros.
+
+    This function is provided for Python 2.6 compatibility.
+
+    Examples
+    --------
+    >>> _bit_length(0)
+    0
+    >>> _bit_length(2)
+    2
+    >>> _bit_length(1)
+    1
+    """
+    k = 0
+    try:
+        if n > 0:
+            k = n.bit_length()
+    except AttributeError:  # In Python2.6, bit_length does not exist
+        k = 1 + int(numpy.log2(abs(n)))
+    return k
+
+
 def npy2d_time_series(ts):
     """Transforms a time series so that it fits the format used in `tslearn` models.
 

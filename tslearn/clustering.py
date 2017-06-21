@@ -8,7 +8,7 @@ import numpy
 from tslearn.metrics import cdist_gak, cdist_dtw
 from tslearn.barycenters import EuclideanBarycenter, DTWBarycenterAveraging
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
-from tslearn.utils import npy3d_time_series_dataset
+from tslearn.utils import npy3d_time_series_dataset, _bit_length
 from tslearn.cycc import cdist_normalized_cc, y_shifted_sbd_vec
 
 
@@ -86,6 +86,16 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         Labels of each point
     inertia_ : float
         Sum of distances of samples to their closest cluster center (computed using the kernel trick).
+
+    Examples
+    --------
+    >>> from tslearn.generators import random_walks
+    >>> X = random_walks(n_ts=100, sz=256, d=1)
+    >>> gak_km = GlobalAlignmentKernelKMeans(n_clusters=3, verbose=False, random_state=0).fit(X)
+    >>> numpy.alltrue(gak_km.labels_ == gak_km.predict(X))
+    True
+    >>> numpy.alltrue(gak_km.fit(X).predict(X) == gak_km.fit_predict(X))
+    True
 
     References
     ----------
@@ -293,6 +303,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
     True
     >>> numpy.alltrue(km.labels_ == km.predict(X))
     True
+    >>> numpy.alltrue(km.fit(X).predict(X) == km.fit_predict(X))
+    True
     >>> km_dba = TimeSeriesKMeans(n_clusters=3, metric="dtw", n_iter_dba=3, verbose=False, random_state=0).fit(X)
     >>> km_dba.cluster_centers_.shape
     (3, 256, 1)
@@ -300,6 +312,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
     >>> numpy.alltrue(km_dba.labels_ == dists.argmin(axis=1))
     True
     >>> numpy.alltrue(km_dba.labels_ == km_dba.predict(X))
+    True
+    >>> numpy.alltrue(km_dba.fit(X).predict(X) == km_dba.fit_predict(X))
     True
     """
 
@@ -476,6 +490,8 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
     True
     >>> numpy.alltrue(ks.labels_ == ks.predict(X))
     True
+    >>> numpy.alltrue(ks.predict(X) == KShape(n_clusters=3, verbose=False, random_state=0).fit_predict(X))
+    True
 
     References
     ----------
@@ -531,7 +547,7 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
     def _fit_one_init(self, X, rs):
         n_samples, sz, d = X.shape
         self.labels_ = rs.randint(self.n_clusters, size=n_samples)
-        self.cluster_centers_ = numpy.random.randn(self.n_clusters, sz, d)
+        self.cluster_centers_ = rs.randn(self.n_clusters, sz, d)
         old_inertia = numpy.inf
 
         for it in range(self.max_iter):
@@ -600,7 +616,7 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
-        return self.fit(X, y).labels_
+        return self.fit(X).labels_
 
     def predict(self, X):
         """Predict the closest cluster each time series in X belongs to.

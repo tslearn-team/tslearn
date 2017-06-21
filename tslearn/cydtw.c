@@ -1556,11 +1556,11 @@ static const char __pyx_k_cross_dist[] = "cross_dist";
 static const char __pyx_k_ImportError[] = "ImportError";
 static const char __pyx_k_STUFF_cydtw[] = "STUFF_cydtw";
 static const char __pyx_k_argmin_pred[] = "argmin_pred";
+static const char __pyx_k_lb_envelope[] = "lb_envelope";
 static const char __pyx_k_sqeuclidean[] = "sqeuclidean";
 static const char __pyx_k_time_series[] = "time_series";
 static const char __pyx_k_RuntimeError[] = "RuntimeError";
 static const char __pyx_k_enveloppe_up[] = "enveloppe_up";
-static const char __pyx_k_lb_enveloppe[] = "lb_enveloppe";
 static const char __pyx_k_predecessors[] = "predecessors";
 static const char __pyx_k_tslearn_cydtw[] = "tslearn.cydtw";
 static const char __pyx_k_enveloppe_down[] = "enveloppe_down";
@@ -1612,7 +1612,7 @@ static PyObject *__pyx_n_s_int;
 static PyObject *__pyx_n_s_j;
 static PyObject *__pyx_n_s_l1;
 static PyObject *__pyx_n_s_l2;
-static PyObject *__pyx_n_s_lb_enveloppe;
+static PyObject *__pyx_n_s_lb_envelope;
 static PyObject *__pyx_n_s_main;
 static PyObject *__pyx_n_s_max;
 static PyObject *__pyx_n_s_max_idx;
@@ -1643,7 +1643,7 @@ static PyObject *__pyx_n_s_zeros;
 static PyObject *__pyx_pf_7tslearn_5cydtw_dtw_path(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_s1, PyArrayObject *__pyx_v_s2); /* proto */
 static PyObject *__pyx_pf_7tslearn_5cydtw_2dtw(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_s1, PyArrayObject *__pyx_v_s2); /* proto */
 static PyObject *__pyx_pf_7tslearn_5cydtw_4cdist_dtw(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_dataset1, PyArrayObject *__pyx_v_dataset2, PyBoolObject *__pyx_v_self_similarity); /* proto */
-static PyObject *__pyx_pf_7tslearn_5cydtw_6lb_enveloppe(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_time_series, int __pyx_v_radius); /* proto */
+static PyObject *__pyx_pf_7tslearn_5cydtw_6lb_envelope(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_time_series, int __pyx_v_radius); /* proto */
 static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info, int __pyx_v_flags); /* proto */
 static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info); /* proto */
 static PyObject *__pyx_int_0;
@@ -3894,20 +3894,20 @@ static PyObject *__pyx_pf_7tslearn_5cydtw_4cdist_dtw(CYTHON_UNUSED PyObject *__p
 /* "tslearn/cydtw.pyx":126
  * @cython.boundscheck(False) # turn off bounds-checking for entire function
  * @cython.wraparound(False)  # turn off negative index wrapping for entire function
- * def lb_enveloppe(numpy.ndarray[DTYPE_t, ndim=2] time_series, int radius):  # TODO: multidimensional enveloppes???             # <<<<<<<<<<<<<<
+ * def lb_envelope(numpy.ndarray[DTYPE_t, ndim=2] time_series, int radius):  # TODO: multidimensional enveloppes???             # <<<<<<<<<<<<<<
  *     assert time_series.dtype == DTYPE and time_series.shape[1] == 1
  *     cdef int sz = time_series.shape[0]
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_7tslearn_5cydtw_7lb_enveloppe(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_7tslearn_5cydtw_7lb_enveloppe = {"lb_enveloppe", (PyCFunction)__pyx_pw_7tslearn_5cydtw_7lb_enveloppe, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_7tslearn_5cydtw_7lb_enveloppe(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_7tslearn_5cydtw_7lb_envelope(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_7tslearn_5cydtw_7lb_envelope = {"lb_envelope", (PyCFunction)__pyx_pw_7tslearn_5cydtw_7lb_envelope, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_7tslearn_5cydtw_7lb_envelope(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyArrayObject *__pyx_v_time_series = 0;
   int __pyx_v_radius;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("lb_enveloppe (wrapper)", 0);
+  __Pyx_RefNannySetupContext("lb_envelope (wrapper)", 0);
   {
     static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_time_series,&__pyx_n_s_radius,0};
     PyObject* values[2] = {0,0};
@@ -3928,11 +3928,11 @@ static PyObject *__pyx_pw_7tslearn_5cydtw_7lb_enveloppe(PyObject *__pyx_self, Py
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_radius)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("lb_enveloppe", 1, 2, 2, 1); __PYX_ERR(0, 126, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("lb_envelope", 1, 2, 2, 1); __PYX_ERR(0, 126, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "lb_enveloppe") < 0)) __PYX_ERR(0, 126, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "lb_envelope") < 0)) __PYX_ERR(0, 126, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
       goto __pyx_L5_argtuple_error;
@@ -3945,14 +3945,14 @@ static PyObject *__pyx_pw_7tslearn_5cydtw_7lb_enveloppe(PyObject *__pyx_self, Py
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("lb_enveloppe", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 126, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("lb_envelope", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 126, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("tslearn.cydtw.lb_enveloppe", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("tslearn.cydtw.lb_envelope", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
   if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_time_series), __pyx_ptype_5numpy_ndarray, 1, "time_series", 0))) __PYX_ERR(0, 126, __pyx_L1_error)
-  __pyx_r = __pyx_pf_7tslearn_5cydtw_6lb_enveloppe(__pyx_self, __pyx_v_time_series, __pyx_v_radius);
+  __pyx_r = __pyx_pf_7tslearn_5cydtw_6lb_envelope(__pyx_self, __pyx_v_time_series, __pyx_v_radius);
 
   /* function exit code */
   goto __pyx_L0;
@@ -3963,7 +3963,7 @@ static PyObject *__pyx_pw_7tslearn_5cydtw_7lb_enveloppe(PyObject *__pyx_self, Py
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_7tslearn_5cydtw_6lb_enveloppe(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_time_series, int __pyx_v_radius) {
+static PyObject *__pyx_pf_7tslearn_5cydtw_6lb_envelope(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_time_series, int __pyx_v_radius) {
   int __pyx_v_sz;
   int __pyx_v_i;
   int __pyx_v_min_idx;
@@ -3993,7 +3993,7 @@ static PyObject *__pyx_pf_7tslearn_5cydtw_6lb_enveloppe(CYTHON_UNUSED PyObject *
   Py_ssize_t __pyx_t_13;
   Py_ssize_t __pyx_t_14;
   Py_ssize_t __pyx_t_15;
-  __Pyx_RefNannySetupContext("lb_enveloppe", 0);
+  __Pyx_RefNannySetupContext("lb_envelope", 0);
   __pyx_pybuffer_enveloppe_up.pybuffer.buf = NULL;
   __pyx_pybuffer_enveloppe_up.refcount = 0;
   __pyx_pybuffernd_enveloppe_up.data = NULL;
@@ -4014,7 +4014,7 @@ static PyObject *__pyx_pf_7tslearn_5cydtw_6lb_enveloppe(CYTHON_UNUSED PyObject *
 
   /* "tslearn/cydtw.pyx":127
  * @cython.wraparound(False)  # turn off negative index wrapping for entire function
- * def lb_enveloppe(numpy.ndarray[DTYPE_t, ndim=2] time_series, int radius):  # TODO: multidimensional enveloppes???
+ * def lb_envelope(numpy.ndarray[DTYPE_t, ndim=2] time_series, int radius):  # TODO: multidimensional enveloppes???
  *     assert time_series.dtype == DTYPE and time_series.shape[1] == 1             # <<<<<<<<<<<<<<
  *     cdef int sz = time_series.shape[0]
  *     cdef int i = 0
@@ -4046,7 +4046,7 @@ static PyObject *__pyx_pf_7tslearn_5cydtw_6lb_enveloppe(CYTHON_UNUSED PyObject *
   #endif
 
   /* "tslearn/cydtw.pyx":128
- * def lb_enveloppe(numpy.ndarray[DTYPE_t, ndim=2] time_series, int radius):  # TODO: multidimensional enveloppes???
+ * def lb_envelope(numpy.ndarray[DTYPE_t, ndim=2] time_series, int radius):  # TODO: multidimensional enveloppes???
  *     assert time_series.dtype == DTYPE and time_series.shape[1] == 1
  *     cdef int sz = time_series.shape[0]             # <<<<<<<<<<<<<<
  *     cdef int i = 0
@@ -4190,7 +4190,7 @@ static PyObject *__pyx_pf_7tslearn_5cydtw_6lb_enveloppe(CYTHON_UNUSED PyObject *
  * 
  *     for i in range(sz):             # <<<<<<<<<<<<<<
  *         min_idx = i - radius
- *         max_idx = i + radius
+ *         max_idx = i + radius + 1
  */
   __pyx_t_9 = __pyx_v_sz;
   for (__pyx_t_10 = 0; __pyx_t_10 < __pyx_t_9; __pyx_t_10+=1) {
@@ -4200,7 +4200,7 @@ static PyObject *__pyx_pf_7tslearn_5cydtw_6lb_enveloppe(CYTHON_UNUSED PyObject *
  * 
  *     for i in range(sz):
  *         min_idx = i - radius             # <<<<<<<<<<<<<<
- *         max_idx = i + radius
+ *         max_idx = i + radius + 1
  *         if min_idx < 0:
  */
     __pyx_v_min_idx = (__pyx_v_i - __pyx_v_radius);
@@ -4208,15 +4208,15 @@ static PyObject *__pyx_pf_7tslearn_5cydtw_6lb_enveloppe(CYTHON_UNUSED PyObject *
     /* "tslearn/cydtw.pyx":137
  *     for i in range(sz):
  *         min_idx = i - radius
- *         max_idx = i + radius             # <<<<<<<<<<<<<<
+ *         max_idx = i + radius + 1             # <<<<<<<<<<<<<<
  *         if min_idx < 0:
  *             min_idx = 0
  */
-    __pyx_v_max_idx = (__pyx_v_i + __pyx_v_radius);
+    __pyx_v_max_idx = ((__pyx_v_i + __pyx_v_radius) + 1);
 
     /* "tslearn/cydtw.pyx":138
  *         min_idx = i - radius
- *         max_idx = i + radius
+ *         max_idx = i + radius + 1
  *         if min_idx < 0:             # <<<<<<<<<<<<<<
  *             min_idx = 0
  *         if max_idx > sz:
@@ -4225,7 +4225,7 @@ static PyObject *__pyx_pf_7tslearn_5cydtw_6lb_enveloppe(CYTHON_UNUSED PyObject *
     if (__pyx_t_1) {
 
       /* "tslearn/cydtw.pyx":139
- *         max_idx = i + radius
+ *         max_idx = i + radius + 1
  *         if min_idx < 0:
  *             min_idx = 0             # <<<<<<<<<<<<<<
  *         if max_idx > sz:
@@ -4235,7 +4235,7 @@ static PyObject *__pyx_pf_7tslearn_5cydtw_6lb_enveloppe(CYTHON_UNUSED PyObject *
 
       /* "tslearn/cydtw.pyx":138
  *         min_idx = i - radius
- *         max_idx = i + radius
+ *         max_idx = i + radius + 1
  *         if min_idx < 0:             # <<<<<<<<<<<<<<
  *             min_idx = 0
  *         if max_idx > sz:
@@ -4400,7 +4400,7 @@ static PyObject *__pyx_pf_7tslearn_5cydtw_6lb_enveloppe(CYTHON_UNUSED PyObject *
   /* "tslearn/cydtw.pyx":126
  * @cython.boundscheck(False) # turn off bounds-checking for entire function
  * @cython.wraparound(False)  # turn off negative index wrapping for entire function
- * def lb_enveloppe(numpy.ndarray[DTYPE_t, ndim=2] time_series, int radius):  # TODO: multidimensional enveloppes???             # <<<<<<<<<<<<<<
+ * def lb_envelope(numpy.ndarray[DTYPE_t, ndim=2] time_series, int radius):  # TODO: multidimensional enveloppes???             # <<<<<<<<<<<<<<
  *     assert time_series.dtype == DTYPE and time_series.shape[1] == 1
  *     cdef int sz = time_series.shape[0]
  */
@@ -4419,7 +4419,7 @@ static PyObject *__pyx_pf_7tslearn_5cydtw_6lb_enveloppe(CYTHON_UNUSED PyObject *
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_enveloppe_up.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_time_series.rcbuffer->pybuffer);
   __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
-  __Pyx_AddTraceback("tslearn.cydtw.lb_enveloppe", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("tslearn.cydtw.lb_envelope", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   goto __pyx_L2;
   __pyx_L0:;
@@ -7007,7 +7007,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_j, __pyx_k_j, sizeof(__pyx_k_j), 0, 0, 1, 1},
   {&__pyx_n_s_l1, __pyx_k_l1, sizeof(__pyx_k_l1), 0, 0, 1, 1},
   {&__pyx_n_s_l2, __pyx_k_l2, sizeof(__pyx_k_l2), 0, 0, 1, 1},
-  {&__pyx_n_s_lb_enveloppe, __pyx_k_lb_enveloppe, sizeof(__pyx_k_lb_enveloppe), 0, 0, 1, 1},
+  {&__pyx_n_s_lb_envelope, __pyx_k_lb_envelope, sizeof(__pyx_k_lb_envelope), 0, 0, 1, 1},
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
   {&__pyx_n_s_max, __pyx_k_max, sizeof(__pyx_k_max), 0, 0, 1, 1},
   {&__pyx_n_s_max_idx, __pyx_k_max_idx, sizeof(__pyx_k_max_idx), 0, 0, 1, 1},
@@ -7257,14 +7257,14 @@ static int __Pyx_InitCachedConstants(void) {
   /* "tslearn/cydtw.pyx":126
  * @cython.boundscheck(False) # turn off bounds-checking for entire function
  * @cython.wraparound(False)  # turn off negative index wrapping for entire function
- * def lb_enveloppe(numpy.ndarray[DTYPE_t, ndim=2] time_series, int radius):  # TODO: multidimensional enveloppes???             # <<<<<<<<<<<<<<
+ * def lb_envelope(numpy.ndarray[DTYPE_t, ndim=2] time_series, int radius):  # TODO: multidimensional enveloppes???             # <<<<<<<<<<<<<<
  *     assert time_series.dtype == DTYPE and time_series.shape[1] == 1
  *     cdef int sz = time_series.shape[0]
  */
   __pyx_tuple__26 = PyTuple_Pack(8, __pyx_n_s_time_series, __pyx_n_s_radius, __pyx_n_s_sz, __pyx_n_s_i, __pyx_n_s_min_idx, __pyx_n_s_max_idx, __pyx_n_s_enveloppe_up, __pyx_n_s_enveloppe_down); if (unlikely(!__pyx_tuple__26)) __PYX_ERR(0, 126, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__26);
   __Pyx_GIVEREF(__pyx_tuple__26);
-  __pyx_codeobj__27 = (PyObject*)__Pyx_PyCode_New(2, 0, 8, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__26, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_tavenard_r_Documents_cost, __pyx_n_s_lb_enveloppe, 126, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__27)) __PYX_ERR(0, 126, __pyx_L1_error)
+  __pyx_codeobj__27 = (PyObject*)__Pyx_PyCode_New(2, 0, 8, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__26, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_tavenard_r_Documents_cost, __pyx_n_s_lb_envelope, 126, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__27)) __PYX_ERR(0, 126, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -7493,13 +7493,13 @@ PyMODINIT_FUNC PyInit_cydtw(void)
   /* "tslearn/cydtw.pyx":126
  * @cython.boundscheck(False) # turn off bounds-checking for entire function
  * @cython.wraparound(False)  # turn off negative index wrapping for entire function
- * def lb_enveloppe(numpy.ndarray[DTYPE_t, ndim=2] time_series, int radius):  # TODO: multidimensional enveloppes???             # <<<<<<<<<<<<<<
+ * def lb_envelope(numpy.ndarray[DTYPE_t, ndim=2] time_series, int radius):  # TODO: multidimensional enveloppes???             # <<<<<<<<<<<<<<
  *     assert time_series.dtype == DTYPE and time_series.shape[1] == 1
  *     cdef int sz = time_series.shape[0]
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_7tslearn_5cydtw_7lb_enveloppe, NULL, __pyx_n_s_tslearn_cydtw); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 126, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_7tslearn_5cydtw_7lb_envelope, NULL, __pyx_n_s_tslearn_cydtw); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 126, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_lb_enveloppe, __pyx_t_1) < 0) __PYX_ERR(0, 126, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_lb_envelope, __pyx_t_1) < 0) __PYX_ERR(0, 126, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "tslearn/cydtw.pyx":1
