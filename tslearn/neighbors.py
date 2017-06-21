@@ -45,8 +45,7 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
         elif self.metric == "lr_dtw":
             cdist_fun = lambda x, y: cdist_lr_dtw(x, y, gamma=self.metric_params.get("gamma", 0.))
         else:
-            raise ValueError("Unrecognized time series metric string: %s (should be one of 'dtw', 'lr_dtw')" %
-                             self.metric)
+            raise ValueError("Unrecognized time series metric string: %s (should be 'dtw')" % self.metric)
         full_dist_matrix = cdist_fun(X, self._fit_X)
         ind = numpy.argsort(full_dist_matrix, axis=1)
 
