@@ -3,7 +3,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from scipy.interpolate import interp1d
 
 from tslearn.metrics import dtw_path, lr_dtw_path
-from tslearn.utils import npy2d_time_series
+from tslearn.utils import npy2d_time_series, npy3d_time_series_dataset
 
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -99,15 +99,7 @@ class DTWSampler(BaseEstimator, TransformerMixin):
             A time series dataset of base modalities of shape (n_ts, sz, d) with
             ``d = self.reference_series_.shape[-1]``
         """
-        if ts_to_be_rescaled.ndim == 1:
-            ts_to_be_rescaled = ts_to_be_rescaled.reshape((1, -1, 1))
-        elif ts_to_be_rescaled.ndim == 2:
-            if ts_to_be_rescaled.shape[1] == self.reference_series_.shape[1]:
-                ts_to_be_rescaled = ts_to_be_rescaled.reshape((1, -1, ts_to_be_rescaled.shape[1]))
-            else:
-                ts_to_be_rescaled = ts_to_be_rescaled.reshape((ts_to_be_rescaled.shape[0], -1, 1))
-        elif ts_to_be_rescaled.ndim >= 4:
-            raise ValueError
+        ts_to_be_rescaled = npy3d_time_series_dataset(ts_to_be_rescaled)
         # Now ts_to_be_rescaled is of shape n_ts, sz, d 
         # with d = self.reference_series.shape[-1]
         self.saved_dtw_paths_ = []

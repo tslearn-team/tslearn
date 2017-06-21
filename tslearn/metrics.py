@@ -1,14 +1,10 @@
 import numpy
-import os
 from scipy.spatial.distance import pdist
 from sklearn.utils import check_random_state
-on_rtd = os.environ.get('READTHEDOCS') == 'True'
-if on_rtd:
-    import pyximport; pyximport.install()
 
-from tslearn import cydtw
-from tslearn import cylrdtw
-from tslearn import cygak
+from tslearn.cydtw import dtw as cydtw, dtw_path as cydtw_path, cdist_dtw as cycdist_dtw, lb_envelope as cylb_envelope
+from tslearn.cylrdtw import lr_dtw as cylr_dtw, lr_dtw_backtrace as cylr_dtw_backtrace, cdist_lr_dtw as cycdist_lr_dtw
+from tslearn.cygak import cdist_gak as cycdist_gak, normalized_gak as cynormalized_gak
 from tslearn.utils import npy2d_time_series, npy3d_time_series_dataset
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -57,7 +53,7 @@ def dtw_path(s1, s2):
     """
     s1 = npy2d_time_series(s1)
     s2 = npy2d_time_series(s2)
-    return cydtw.dtw_path(s1, s2)
+    return cydtw_path(s1, s2)
 
 
 def dtw(s1, s2):
@@ -98,7 +94,7 @@ def dtw(s1, s2):
     """
     s1 = npy2d_time_series(s1)
     s2 = npy2d_time_series(s2)
-    return cydtw.dtw(s1, s2)
+    return cydtw(s1, s2)
 
 
 def cdist_dtw(dataset1, dataset2=None):
@@ -143,7 +139,7 @@ def cdist_dtw(dataset1, dataset2=None):
         self_similarity = True
     else:
         dataset2 = npy3d_time_series_dataset(dataset2)
-    return cydtw.cdist_dtw(dataset1, dataset2, self_similarity=self_similarity)
+    return cycdist_dtw(dataset1, dataset2, self_similarity=self_similarity)
 
 
 def lr_dtw(s1, s2, gamma=0.):
@@ -175,7 +171,7 @@ def lr_dtw(s1, s2, gamma=0.):
     """
     s1 = npy2d_time_series(s1)
     s2 = npy2d_time_series(s2)
-    return cylrdtw.lr_dtw(s1, s2, gamma=gamma)[0]
+    return cylr_dtw(s1, s2, gamma=gamma)[0]
 
 
 def cdist_lr_dtw(dataset1, dataset2=None, gamma=0.):
@@ -206,7 +202,7 @@ def cdist_lr_dtw(dataset1, dataset2=None, gamma=0.):
         self_similarity = True
     else:
         dataset2 = npy3d_time_series_dataset(dataset2)
-    return cylrdtw.cdist_lr_dtw(dataset1, dataset2, gamma=gamma, self_similarity=self_similarity)
+    return cycdist_lr_dtw(dataset1, dataset2, gamma=gamma, self_similarity=self_similarity)
 
 
 def lr_dtw_path(s1, s2, gamma=0.):
@@ -239,8 +235,8 @@ def lr_dtw_path(s1, s2, gamma=0.):
     """
     s1 = npy2d_time_series(s1)
     s2 = npy2d_time_series(s2)
-    sim, probas = cylrdtw.lr_dtw(s1, s2, gamma=gamma)
-    path = cylrdtw.lr_dtw_backtrace(probas)
+    sim, probas = cylr_dtw(s1, s2, gamma=gamma)
+    path = cylr_dtw_backtrace(probas)
     return path, sim
 
 
@@ -281,7 +277,7 @@ def gak(s1, s2, sigma=1.):
     """
     s1 = npy2d_time_series(s1)
     s2 = npy2d_time_series(s2)
-    return cygak.normalized_gak(s1, s2, sigma)
+    return cynormalized_gak(s1, s2, sigma)
 
 
 def cdist_gak(dataset1, dataset2=None, sigma=1.):
@@ -327,7 +323,7 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.):
         self_similarity = True
     else:
         dataset2 = npy3d_time_series_dataset(dataset2)
-    return cygak.cdist_gak(dataset1, dataset2, sigma, self_similarity=self_similarity)
+    return cycdist_gak(dataset1, dataset2, sigma, self_similarity=self_similarity)
 
 
 def sigma_gak(dataset, n_samples=100, random_state=None):
@@ -480,4 +476,4 @@ def lb_envelope(ts, radius=1):
     .. [1] Keogh, E. Exact indexing of dynamic time warping. In International Conference on Very Large Data Bases, 2002.
        pp 406-417.
     """
-    return cydtw.lb_envelope(npy2d_time_series(ts), radius=radius)
+    return cylb_envelope(npy2d_time_series(ts), radius=radius)

@@ -176,3 +176,4 @@ def lb_envelope(numpy.ndarray[DTYPE_t, ndim=2] time_series, int radius):  # TODO
 #                                                                  enveloppes[j, :, 1].reshape((-1, 1))))
 #
 #     return cross_dist
+
