@@ -3,6 +3,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from scipy.interpolate import interp1d
 
 from tslearn.metrics import dtw_path, lr_dtw_path
+from tslearn.utils import npy2d_time_series
 
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -37,6 +38,17 @@ class DTWSampler(BaseEstimator, TransformerMixin):
         Metric to be used for time series alignment.
     gamma_lr_dtw : float (default: 1.)
         Gamma parameter for LR-DTW (only used if metric="lrdtw").
+
+    Examples
+    --------
+    >>> from tslearn.generators import random_walks
+    >>> X = random_walks(n_ts=100, sz=256, d=1)
+    >>> s = DTWSampler(n_samples=200).fit(X[0])
+    >>> s.reference_series_.shape
+    (200, 1)
+    >>> X_transformed = s.transform(X[1:])
+    >>> X_transformed.shape
+    (99, 200, 1)
     
     References
     ----------
@@ -67,15 +79,7 @@ class DTWSampler(BaseEstimator, TransformerMixin):
         DTWSampler
             self
         """
-        if X.ndim == 1:
-            X = X.reshape((-1, 1))
-        elif X.ndim == 2:
-            if X.shape[0] == 1:
-                X = X.reshape((-1, 1))
-        elif X.ndim == 3 and X.shape[0] == 1:
-            X = X.reshape((-1, 1))
-        else:
-            raise ValueError("dimension mismatch")
+        X = npy2d_time_series(X)
 
         end = first_non_finite_index(X)
         self.reference_series_ = _resampled(X[:end], n_samples=self.n_samples, kind=self.interp_kind)
@@ -121,6 +125,9 @@ class DTWSampler(BaseEstimator, TransformerMixin):
     def transform(self, X):
         """Resample time series from dataset X according to resampling computed at the prepare_transform stage.
 
+        If no prepare_transform stage was perform before the call to transform, both stages are performed during the
+        transform call.
+
         Parameters
         ----------
         X : numpy.ndarray
@@ -131,6 +138,8 @@ class DTWSampler(BaseEstimator, TransformerMixin):
         numpy.ndarray
             The transformed time series dataset
         """
+        if self.saved_dtw_paths_ is None:
+            self.prepare_transform(X)
         assert X.shape[0] == len(self.saved_dtw_paths_) or len(self.saved_dtw_paths_) == 1
         X_resampled = numpy.zeros((X.shape[0], self.n_samples, X.shape[2]))
         for i in range(X.shape[0]):

@@ -23,7 +23,11 @@ class EmptyClusterError(Exception):
         self.message = message
 
     def __str__(self):
-        return "Cluster assignments lead to at least one empty cluster"
+        if len(self.message) > 0:
+            suffix = " (%s)" % self.message
+        else:
+            suffix = ""
+        return "Cluster assignments lead to at least one empty cluster" + suffix
 
 
 def _check_no_empty_cluster(labels, n_clusters):
@@ -95,6 +99,8 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
     >>> numpy.alltrue(gak_km.labels_ == gak_km.predict(X))
     True
     >>> numpy.alltrue(gak_km.fit(X).predict(X) == gak_km.fit_predict(X))
+    True
+    >>> GlobalAlignmentKernelKMeans(n_clusters=101, verbose=False, random_state=0).fit(X).X_fit_ is None
     True
 
     References
@@ -195,10 +201,10 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         sw = self.sample_weight_
 
         for j in range(self.n_clusters):
-            mask = self.labels_ == j
+            mask = (self.labels_ == j)
 
             if numpy.sum(mask) == 0:
-                raise ValueError("Empty cluster found, try smaller n_cluster or better kernel parameters.")
+                raise EmptyClusterError("try smaller n_cluster or better kernel parameters")
 
             # NB: we use a normalized kernel so k(x,x) = 1 for all x (including the centroid)
             dist[:, j] = 2 - 2 * numpy.sum(sw[mask] * K[:, mask], axis=1) / sw[mask].sum()
@@ -314,6 +320,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
     >>> numpy.alltrue(km_dba.labels_ == km_dba.predict(X))
     True
     >>> numpy.alltrue(km_dba.fit(X).predict(X) == km_dba.fit_predict(X))
+    True
+    >>> TimeSeriesKMeans(n_clusters=101, verbose=False, random_state=0).fit(X).X_fit_ is None
     True
     """
 
@@ -482,7 +490,9 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
     >>> from tslearn.generators import random_walks
     >>> X = random_walks(n_ts=100, sz=256, d=1)
     >>> X = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X)
-    >>> ks = KShape(n_clusters=3, verbose=False, random_state=0).fit(X)
+    >>> ks = KShape(n_clusters=3, n_init=1, verbose=True, random_state=0).fit(X)  # doctest: +ELLIPSIS
+    Init 1
+    ... --> ...
     >>> ks.cluster_centers_.shape
     (3, 256, 1)
     >>> dists = ks._cross_dists(X)
@@ -490,7 +500,9 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
     True
     >>> numpy.alltrue(ks.labels_ == ks.predict(X))
     True
-    >>> numpy.alltrue(ks.predict(X) == KShape(n_clusters=3, verbose=False, random_state=0).fit_predict(X))
+    >>> numpy.alltrue(ks.predict(X) == KShape(n_clusters=3, n_init=1, verbose=False, random_state=0).fit_predict(X))
+    True
+    >>> KShape(n_clusters=101, verbose=False, random_state=0).fit(X).X_fit_ is None
     True
 
     References
@@ -636,3 +648,8 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         dists = self._cross_dists(X_)
         return dists.argmin(axis=1)
 
+if __name__ == "__main__":
+    from tslearn.generators import random_walks
+    X = random_walks(n_ts=100, sz=256, d=1)
+    km = TimeSeriesKMeans(n_clusters=101, verbose=False, random_state=0).fit(X)  # doctest: +IGNORE_EXCEPTION_DETAIL
+    print(km.labels_)
