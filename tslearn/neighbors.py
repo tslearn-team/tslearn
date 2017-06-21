@@ -42,8 +42,6 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
             self_neighbors = True
         if self.metric == "dtw":
             cdist_fun = cdist_dtw
-        elif self.metric == "lr_dtw":
-            cdist_fun = lambda x, y: cdist_lr_dtw(x, y, gamma=self.metric_params.get("gamma", 0.))
         else:
             raise ValueError("Unrecognized time series metric string: %s (should be 'dtw')" % self.metric)
         full_dist_matrix = cdist_fun(X, self._fit_X)
