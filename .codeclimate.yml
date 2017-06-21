@@ -10,3 +10,4 @@ ratings:
     - "tslearn/"
 exclude_paths:
 - "tslearn/**.c"
+- "tslearn/docs/**"

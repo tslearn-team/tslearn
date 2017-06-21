@@ -246,7 +246,6 @@ class TimeSeriesCentroidBasedClusteringMixin:
             self.X_fit_ = None
 
 
-
 class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin):
     """K-means clustering for time-series data.
 
@@ -281,6 +280,27 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         Cluster centers.
     inertia_ : float
         Sum of distances of samples to their closest cluster center.
+
+    Examples
+    --------
+    >>> from tslearn.generators import random_walks
+    >>> X = random_walks(n_ts=100, sz=256, d=1)
+    >>> km = TimeSeriesKMeans(n_clusters=3, metric="euclidean", verbose=False, random_state=0).fit(X)
+    >>> km.cluster_centers_.shape
+    (3, 256, 1)
+    >>> dists = cdist(X.reshape((100, 256)), km.cluster_centers_.reshape((3, 256)))
+    >>> numpy.alltrue(km.labels_ == dists.argmin(axis=1))
+    True
+    >>> numpy.alltrue(km.labels_ == km.predict(X))
+    True
+    >>> km_dba = TimeSeriesKMeans(n_clusters=3, metric="dtw", n_iter_dba=3, verbose=False, random_state=0).fit(X)
+    >>> km_dba.cluster_centers_.shape
+    (3, 256, 1)
+    >>> dists = cdist_dtw(X, km_dba.cluster_centers_)
+    >>> numpy.alltrue(km_dba.labels_ == dists.argmin(axis=1))
+    True
+    >>> numpy.alltrue(km_dba.labels_ == km_dba.predict(X))
+    True
     """
 
     def __init__(self, n_clusters=3, max_iter=50, tol=1e-6, n_init=1, metric="euclidean", n_iter_dba=100, verbose=True,
@@ -321,7 +341,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
 
         return self
 
-    def _assign(self, X):
+    def _assign(self, X, update_class_attributes=True):
         if self.metric == "euclidean":
             dists = cdist(X.reshape((X.shape[0], -1)), self.cluster_centers_.reshape((self.n_clusters, -1)),
                           metric="euclidean")
@@ -329,9 +349,12 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
             dists = cdist_dtw(X, self.cluster_centers_)
         else:
             raise ValueError("Incorrect metric: %s (should be one of 'dtw', 'euclidean')" % self.metric)
-        self.labels_ = dists.argmin(axis=1)
-        _check_no_empty_cluster(self.labels_, self.n_clusters)
-        self.inertia_ = _compute_inertia(dists, self.labels_)
+        matched_labels = dists.argmin(axis=1)
+        if update_class_attributes:
+            self.labels_ = matched_labels
+            _check_no_empty_cluster(self.labels_, self.n_clusters)
+            self.inertia_ = _compute_inertia(dists, self.labels_)
+        return matched_labels
 
     def _update_centroids(self, X):
         for k in range(self.n_clusters):
@@ -405,11 +428,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
             Index of the cluster each sample belongs to.
         """
         X_ = npy3d_time_series_dataset(X)
-        K = self._get_kernel(X_, self.X_fit_)
-        n_samples = X_.shape[0]
-        dist = numpy.zeros((n_samples, self.n_clusters))
-        self._compute_dist(K, dist)
-        return dist.argmin(axis=1)
+        return self._assign(X_, update_class_attributes=False)
 
 
 class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin):
@@ -443,6 +462,20 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         Labels of each point
     inertia_ : float
         Sum of distances of samples to their closest cluster center.
+
+    Examples
+    --------
+    >>> from tslearn.generators import random_walks
+    >>> X = random_walks(n_ts=100, sz=256, d=1)
+    >>> X = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X)
+    >>> ks = KShape(n_clusters=3, verbose=False, random_state=0).fit(X)
+    >>> ks.cluster_centers_.shape
+    (3, 256, 1)
+    >>> dists = ks._cross_dists(X)
+    >>> numpy.alltrue(ks.labels_ == dists.argmin(axis=1))
+    True
+    >>> numpy.alltrue(ks.labels_ == ks.predict(X))
+    True
 
     References
     ----------
