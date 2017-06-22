@@ -30,6 +30,16 @@ class ShapeletModel:
         return numpy.argmin(distances)
 
     def _shapelet_transform(self, Xi):
+        """
+        Examples
+        --------
+        >>> from tslearn.utils import npy2d_time_series
+        >>> sh = ShapeletModel(shapelet_lengths={5: 1})
+        >>> sh.shapelets_ = [numpy.array([1, 2, 3, 4, 5]).reshape((5, 1))]
+        >>> ts = npy2d_time_series(numpy.arange(100))
+        >>> sh._shapelet_transform(ts)
+        array([ 0.])
+        """
         ret = numpy.empty((self.n_shapelets, ))
         for k in range(self.n_shapelets):
             shp = self.shapelets_[k]
@@ -56,6 +66,16 @@ class ConvolutionalShapeletModel(ShapeletModel):
         return numpy.argmax(convs)
 
     def _shapelet_transform(self, Xi):
+        """
+        Examples
+        --------
+        >>> from tslearn.utils import npy2d_time_series
+        >>> sh = ConvolutionalShapeletModel(shapelet_lengths={5: 1})
+        >>> sh.shapelets_ = [numpy.array([1, 2, 3, 4, 5]).reshape((5, 1))]
+        >>> ts = npy2d_time_series(numpy.arange(100))
+        >>> sh._shapelet_transform(ts)
+        array([ 293.])
+        """
         ret = numpy.empty((self.n_shapelets, ))
         for k in range(self.n_shapelets):
             shp = self.shapelets_[k]
