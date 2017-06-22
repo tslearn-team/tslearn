@@ -304,7 +304,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
     --------
     >>> from tslearn.generators import random_walks
     >>> X = random_walks(n_ts=100, sz=256, d=1)
-    >>> km = TimeSeriesKMeans(n_clusters=3, metric="euclidean", verbose=False, random_state=0).fit(X)
+    >>> km = TimeSeriesKMeans(n_clusters=3, metric="euclidean", max_iter=5, verbose=False, random_state=0).fit(X)
     >>> km.cluster_centers_.shape
     (3, 256, 1)
     >>> dists = cdist(X.reshape((100, 256)), km.cluster_centers_.reshape((3, 256)))
@@ -314,7 +314,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
     True
     >>> numpy.alltrue(km.fit(X).predict(X) == km.fit_predict(X))
     True
-    >>> km_dba = TimeSeriesKMeans(n_clusters=3, metric="dtw", max_iter_barycenter=10, verbose=False, \
+    >>> km_dba = TimeSeriesKMeans(n_clusters=3, metric="dtw", max_iter=5, max_iter_barycenter=5, verbose=False, \
                                   random_state=0).fit(X)
     >>> km_dba.cluster_centers_.shape
     (3, 256, 1)
@@ -325,7 +325,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
     True
     >>> numpy.alltrue(km_dba.fit(X).predict(X) == km_dba.fit_predict(X))
     True
-    >>> km_sdtw = TimeSeriesKMeans(n_clusters=3, metric="softdtw", max_iter_barycenter=10, \
+    >>> km_sdtw = TimeSeriesKMeans(n_clusters=3, metric="softdtw", max_iter=5, max_iter_barycenter=5, \
                                    metric_params={"gamma_sdtw": .5}, verbose=False, random_state=0).fit(X)
     >>> km_sdtw.cluster_centers_.shape
     (3, 256, 1)
