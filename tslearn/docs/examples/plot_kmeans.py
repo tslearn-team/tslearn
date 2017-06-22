@@ -27,7 +27,7 @@ y_pred = km.fit_predict(X)
 own_colors = ["r", "g", "b"]
 
 plt.figure()
-plt.subplot(2, 1, 1)
+plt.subplot(3, 1, 1)
 for xx, yy in zip(X, y_pred):
     plt.plot(numpy.arange(128), xx, own_colors[yy] + "-")
 plt.title("Euclidean $k$-means")
@@ -36,9 +36,19 @@ plt.title("Euclidean $k$-means")
 dba_km = TimeSeriesKMeans(n_clusters=3, n_init=5, metric="dtw", verbose=False)
 y_pred = dba_km.fit_predict(X)
 
-plt.subplot(2, 1, 2)
+plt.subplot(3, 1, 2)
 for xx, yy in zip(X, y_pred):
-    plt.plot(numpy.arange(128), xx, own_colors[yy] + "-")
+    plt.plot(xx, own_colors[yy] + "-")
 plt.title("DBA $k$-means")
 
+# DBA-k-means
+sdtw_km = TimeSeriesKMeans(n_clusters=3, n_init=5, metric="softdtw", metric_params={"gamma_sdtw": 2.}, verbose=False)
+y_pred = sdtw_km.fit_predict(X)
+
+plt.subplot(3, 1, 3)
+for xx, yy in zip(X, y_pred):
+    plt.plot(xx, own_colors[yy] + "-")
+plt.title("Soft-DTW $k$-means")
+
+plt.tight_layout()
 plt.show()

@@ -1,6 +1,8 @@
 import numpy
 from scipy.spatial.distance import pdist
 from sklearn.utils import check_random_state
+from tslearn.soft_dtw_fast import _soft_dtw, _soft_dtw_grad, _jacobian_product_sq_euc
+from sklearn.metrics.pairwise import euclidean_distances
 
 from tslearn.cydtw import dtw as cydtw, dtw_path as cydtw_path, cdist_dtw as cycdist_dtw, lb_envelope as cylb_envelope
 from tslearn.cylrdtw import lr_dtw as cylr_dtw, lr_dtw_backtrace as cylr_dtw_backtrace, cdist_lr_dtw as cycdist_lr_dtw
@@ -477,3 +479,209 @@ def lb_envelope(ts, radius=1):
        pp 406-417.
     """
     return cylb_envelope(npy2d_time_series(ts), radius=radius)
+
+
+def soft_dtw(ts1, ts2, gamma=1.):
+    """Compute Soft-DTW metric between two time series.
+
+    Soft-DTW was originally presented in [1]_.
+
+    Parameters
+    ----------
+    s1
+        A time series
+    s2
+        Another time series
+    gamma : float (default 1.)
+        Gamma paraneter for Soft-DTW
+
+    Returns
+    -------
+    float
+        Similarity
+
+    Examples
+    --------
+    >>> cdist_soft_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], gamma=1.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    array([[ 0.,  1.],
+           [ 1.,  0.]])
+    >>> cdist_soft_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 2, 3], [1., 2., 3., 4.]], gamma=1.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    array([[ 0.,  1.],
+           [ 1.,  0.]])
+
+    See Also
+    --------
+    cdist_soft_dtw : Cross similarity matrix between time series datasets
+
+    References
+    ----------
+    .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for Time-Series," ICML 2017.
+    """
+    return SoftDTW(SquaredEuclidean(ts1, ts2), gamma=gamma).compute()
+
+
+def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
+    """Compute cross-similarity matrix using Soft-DTW metric.
+
+    Soft-DTW was originally presented in [1]_.
+
+    Parameters
+    ----------
+    dataset1
+        A dataset of time series
+    dataset2
+        Another dataset of time series
+    gamma : float (default 1.)
+        Gamma paraneter for Soft-DTW
+
+    Returns
+    -------
+    numpy.ndarray
+        Cross-similarity matrix
+
+    Examples
+    --------
+    >>> cdist_soft_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], gamma=1.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    array([[ 0.,  1.],
+           [ 1.,  0.]])
+    >>> cdist_soft_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 2, 3], [1., 2., 3., 4.]], gamma=1.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    array([[ 0.,  1.],
+           [ 1.,  0.]])
+
+    See Also
+    --------
+    soft_dtw : Compute Soft-DTW
+
+    References
+    ----------
+    .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for Time-Series," ICML 2017.
+    """
+    dataset1 = npy3d_time_series_dataset(dataset1)
+    self_similarity = False
+    if dataset2 is None:
+        dataset2 = dataset1
+        self_similarity = True
+    else:
+        dataset2 = npy3d_time_series_dataset(dataset2)
+    dists = numpy.empty((dataset1.shape[0], dataset2.shape[0]))
+    for i, ts1 in enumerate(dataset1):
+        for j, ts2 in enumerate(dataset2):
+            if self_similarity and j < i:
+                dists[i, j] = dists[j, i]
+            else:
+                dists[i, j] = soft_dtw(ts1, ts2, gamma=gamma)
+
+    return dists
+
+
+class SoftDTW(object):
+    def __init__(self, D, gamma=1.):
+        """
+        Parameters
+        ----------
+        gamma: float
+            Regularization parameter.
+            Lower is less smoothed (closer to true DTW).
+
+        Attributes
+        ----------
+        self.R_: array, shape = [m + 2, n + 2]
+            Accumulated cost matrix (stored after calling `compute`).
+        """
+        if hasattr(D, "compute"):
+            self.D = D.compute()
+        else:
+            self.D = D
+
+        self.gamma = gamma
+
+    def compute(self):
+        """
+        Compute soft-DTW by dynamic programming.
+        Returns
+        -------
+        sdtw: float
+            soft-DTW discrepancy.
+        """
+        m, n = self.D.shape
+
+        # Allocate memory.
+        # We need +2 because we use indices starting from 1
+        # and to deal with edge cases in the backward recursion.
+        self.R_ = numpy.zeros((m+2, n+2))
+
+        _soft_dtw(self.D, self.R_, gamma=self.gamma)
+
+        return self.R_[m, n]
+
+    def grad(self):
+        """
+        Compute gradient of soft-DTW w.r.t. D by dynamic programming.
+        Returns
+        -------
+        grad: array, shape = [m, n]
+            Gradient w.r.t. D.
+        """
+        if not hasattr(self, "R_"):
+            raise ValueError("Needs to call compute() first.")
+
+        m, n = self.D.shape
+
+        # Add an extra row and an extra column to D.
+        # Needed to deal with edge cases in the recursion.
+        D = numpy.vstack((self.D, numpy.zeros(n)))
+        D = numpy.hstack((D, numpy.zeros((m+1, 1))))
+
+        # Allocate memory.
+        # We need +2 because we use indices starting from 1
+        # and to deal with edge cases in the recursion.
+        E = numpy.zeros((m+2, n+2))
+
+        _soft_dtw_grad(D, self.R_, E, gamma=self.gamma)
+
+        return E[1:-1, 1:-1]
+
+
+class SquaredEuclidean(object):
+
+    def __init__(self, X, Y):
+        """
+        Parameters
+        ----------
+        X: array, shape = [m, d]
+            First time series.
+        Y: array, shape = [n, d]
+            Second time series.
+        """
+        self.X = X
+        self.Y = Y
+
+    def compute(self):
+        """
+        Compute distance matrix.
+        Returns
+        -------
+        D: array, shape = [m, n]
+            Distance matrix.
+        """
+        return euclidean_distances(self.X, self.Y, squared=True)
+
+    def jacobian_product(self, E):
+        """
+        Compute the product between the Jacobian
+        (a linear map from m x d to m x n) and a matrix E.
+        Parameters
+        ----------
+        E: array, shape = [m, n]
+            Second time series.
+        Returns
+        -------
+        G: array, shape = [m, d]
+            Product with Jacobian
+            ([m x d, m x n] * [m x n] = [m x d]).
+        """
+        G = numpy.zeros_like(self.X)
+
+        _jacobian_product_sq_euc(self.X, self.Y, E, G)
+
+        return G

@@ -35,7 +35,8 @@ In the implementation included in ``tslearn``, standard transition steps are use
       dtw
       dtw_path
       gak
-      lb_enveloppe
+      soft_dtw
+      lb_envelope
       lb_keogh
       sigma_gak
    

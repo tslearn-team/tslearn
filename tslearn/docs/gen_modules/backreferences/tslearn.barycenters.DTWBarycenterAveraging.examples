@@ -5,7 +5,7 @@ Examples using ``tslearn.barycenters.DTWBarycenterAveraging``
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Computing barycenters is a key operation for several ML techniques (e.g. clustering, ...). This...">
+    <div class="sphx-glr-thumbcontainer" tooltip="This example shows three methods to compute barycenters of time series. ">
 
 .. only:: html
 

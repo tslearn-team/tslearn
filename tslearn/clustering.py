@@ -5,10 +5,10 @@ from sklearn.utils import check_random_state
 from scipy.spatial.distance import cdist
 import numpy
 
-from tslearn.metrics import cdist_gak, cdist_dtw
-from tslearn.barycenters import EuclideanBarycenter, DTWBarycenterAveraging
+from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw
+from tslearn.barycenters import EuclideanBarycenter, DTWBarycenterAveraging, SoftDTWBarycenter
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
-from tslearn.utils import npy3d_time_series_dataset, _bit_length
+from tslearn.utils import npy3d_time_series_dataset
 from tslearn.cycc import cdist_normalized_cc, y_shifted_sbd_vec
 
 
@@ -277,11 +277,14 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
     n_init : int (default: 1)
         Number of time the k-means algorithm will be run with different centroid seeds. The final results will be the
         best output of n_init consecutive runs in terms of inertia.
-    metric : {"euclidean", "dtw"} (default: "euclidean")
+    metric : {"euclidean", "dtw", "softdtw"} (default: "euclidean")
         Metric to be used for both cluster assignment and barycenter computation. If "dtw", DBA is used for barycenter
         computation.
-    n_iter_dba : int (default: 100)
-        Number of iterations for the DBA barycenter computation process. Only used if `metric="dtw"`.
+    max_iter_barycenter : int (default: 100)
+        Number of iterations for the barycenter computation process. Only used if `metric="dtw"` or `metric="softdtw"`.
+    metric_params : dict or None
+        Parameter values for the chosen metric. Value associated to the `"gamma_sdtw"` key corresponds to the gamma
+        parameter in Soft-DTW.
     verbose : bool (default: True)
         Whether or not to print information about the inertia while learning the model.
     random_state : integer or numpy.RandomState, optional
@@ -311,7 +314,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
     True
     >>> numpy.alltrue(km.fit(X).predict(X) == km.fit_predict(X))
     True
-    >>> km_dba = TimeSeriesKMeans(n_clusters=3, metric="dtw", n_iter_dba=3, verbose=False, random_state=0).fit(X)
+    >>> km_dba = TimeSeriesKMeans(n_clusters=3, metric="dtw", max_iter_barycenter=10, verbose=False, \
+                                  random_state=0).fit(X)
     >>> km_dba.cluster_centers_.shape
     (3, 256, 1)
     >>> dists = cdist_dtw(X, km_dba.cluster_centers_)
@@ -321,12 +325,23 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
     True
     >>> numpy.alltrue(km_dba.fit(X).predict(X) == km_dba.fit_predict(X))
     True
+    >>> km_sdtw = TimeSeriesKMeans(n_clusters=3, metric="softdtw", max_iter_barycenter=10, \
+                                   metric_params={"gamma_sdtw": .5}, verbose=False, random_state=0).fit(X)
+    >>> km_sdtw.cluster_centers_.shape
+    (3, 256, 1)
+    >>> dists = cdist_soft_dtw(X, km_sdtw.cluster_centers_)
+    >>> numpy.alltrue(km_sdtw.labels_ == dists.argmin(axis=1))
+    True
+    >>> numpy.alltrue(km_sdtw.labels_ == km_sdtw.predict(X))
+    True
+    >>> numpy.alltrue(km_sdtw.fit(X).predict(X) == km_sdtw.fit_predict(X))
+    True
     >>> TimeSeriesKMeans(n_clusters=101, verbose=False, random_state=0).fit(X).X_fit_ is None
     True
     """
 
-    def __init__(self, n_clusters=3, max_iter=50, tol=1e-6, n_init=1, metric="euclidean", n_iter_dba=100, verbose=True,
-                 random_state=None):
+    def __init__(self, n_clusters=3, max_iter=50, tol=1e-6, n_init=1, metric="euclidean", max_iter_barycenter=100,
+                 metric_params=None, verbose=True, random_state=None):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
         self.tol = tol
@@ -340,8 +355,17 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         self.cluster_centers_ = None
         self.X_fit_ = None
 
+        if metric_params is None:
+            metric_params = {}
+
         if self.metric == "dtw":
-            self.dba_ = DTWBarycenterAveraging(n_iter=n_iter_dba, barycenter_size=None, verbose=False)
+            self.barycenter_instance = DTWBarycenterAveraging(max_iter=max_iter_barycenter, barycenter_size=None,
+                                                              verbose=False)
+        elif self.metric == "softdtw":
+            self.barycenter_instance = SoftDTWBarycenter(max_iter=max_iter_barycenter)
+            self.gamma_sdtw = metric_params.get("gamma_sdtw", 1.)
+        else:
+            self.barycenter_instance = EuclideanBarycenter()
 
     def _fit_one_init(self, X, x_squared_norms, rs):
         n_samples, sz, d = X.shape
@@ -369,8 +393,10 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
                           metric="euclidean")
         elif self.metric == "dtw":
             dists = cdist_dtw(X, self.cluster_centers_)
+        elif self.metric == "softdtw":
+            dists = cdist_soft_dtw(X, self.cluster_centers_, gamma=self.gamma_sdtw)
         else:
-            raise ValueError("Incorrect metric: %s (should be one of 'dtw', 'euclidean')" % self.metric)
+            raise ValueError("Incorrect metric: %s (should be one of 'dtw', 'softdtw', 'euclidean')" % self.metric)
         matched_labels = dists.argmin(axis=1)
         if update_class_attributes:
             self.labels_ = matched_labels
@@ -380,12 +406,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
 
     def _update_centroids(self, X):
         for k in range(self.n_clusters):
-            if self.metric == "euclidean":
-                self.cluster_centers_[k] = EuclideanBarycenter().fit(X[self.labels_ == k])
-            elif self.metric == "dtw":
-                self.cluster_centers_[k] = self.dba_.fit(X[self.labels_ == k])
-            else:
-                raise ValueError("Incorrect metric: %s (should be one of 'dtw', 'euclidean')" % self.metric)
+            self.cluster_centers_[k] = self.barycenter_instance.fit(X[self.labels_ == k])
 
     def fit(self, X, y=None):
         """Compute k-means clustering.
@@ -647,9 +668,3 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
         dists = self._cross_dists(X_)
         return dists.argmin(axis=1)
-
-if __name__ == "__main__":
-    from tslearn.generators import random_walks
-    X = random_walks(n_ts=100, sz=256, d=1)
-    km = TimeSeriesKMeans(n_clusters=101, verbose=False, random_state=0).fit(X)  # doctest: +IGNORE_EXCEPTION_DETAIL
-    print(km.labels_)

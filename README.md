@@ -75,3 +75,9 @@ Also, for the whole package to run properly, its base directory should be append
 * Add Itakura and SakoeChiba variants of DTW
 
 **If you want other ML methods for time series to be added to this TODO list, do not hesitate to open an issue!**
+
+# Acknowledgments
+
+Authors would like to thank Mathieu Blondel for providing code for 
+[Kernel k-means](https://gist.github.com/mblondel/6230787) and [Soft-DTW](https://github.com/mblondel/soft-dtw) (both 
+distributed under BSD license) that is used in the clustering module of this library.

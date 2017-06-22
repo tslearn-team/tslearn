@@ -14,6 +14,7 @@ The complete tslearn project is automatically documented for every module.
    tslearn.adaptation
    tslearn.barycenters
    tslearn.clustering
+   tslearn.datasets
    tslearn.generators
    tslearn.metrics
    tslearn.neighbors

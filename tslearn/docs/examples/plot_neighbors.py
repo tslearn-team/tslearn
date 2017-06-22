@@ -4,34 +4,6 @@ Nearest neighbors
 =================
 
 This example illustrates the use of nearest neighbor methods for database search and classification tasks.
-
-Script output::
-    1. Nearest neighbour search
-    Computed nearest neighbor indices (wrt DTW)
-     [[10 12  2]
-     [ 0 13  5]
-     [ 0  1 13]
-     [ 0 11  5]
-     [16 18 12]
-     [ 3 17  9]
-     [12  2 16]
-     [ 7  3 17]
-     [12  2 10]
-     [12  2 18]
-     [12  8  2]
-     [ 3 17  7]
-     [18 19  2]
-     [ 0 17 13]
-     [ 9  3  7]
-     [12  2  8]
-     [ 3  7  9]
-     [ 0  1 13]
-     [18 10  2]
-     [10 12  2]]
-    First nearest neighbor class: [0 0 0 0 1 1 0 1 0 0 0 1 0 0 0 0 1 0 0 0]
-
-    2. Nearest neighbour classification
-    Correct classification rate: 1.0
 """
 
 # Code source: Romain Tavenard

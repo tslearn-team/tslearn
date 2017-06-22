@@ -1,7 +1,7 @@
 tslearn.barycenters
 ===================
 
-.. automodule:: tslearn.barycenters
+.. automodule:: tslearn.datasets
    
    
 
@@ -10,12 +10,11 @@ tslearn.barycenters
    .. rubric:: Classes
 
    .. autosummary::
-      :toctree: barycenters
+      :toctree: datasets
       :template: class.rst
    
-      DTWBarycenterAveraging
-      SoftDTWBarycenter
-      EuclideanBarycenter
+      UCR_UEA_datasets
+      CachedDatasets
    
    
 

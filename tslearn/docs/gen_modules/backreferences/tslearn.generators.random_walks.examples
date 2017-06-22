@@ -23,7 +23,7 @@ Examples using ``tslearn.generators.random_walks``
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="This example illustrates the principle of time series enveloppe as used in LB_Keogh and estimat...">
+    <div class="sphx-glr-thumbcontainer" tooltip="This example illustrates the principle of time series envelope as used in LB_Keogh and estimate...">
 
 .. only:: html
 

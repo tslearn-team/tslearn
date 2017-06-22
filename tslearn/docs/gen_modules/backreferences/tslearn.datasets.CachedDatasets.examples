@@ -1,7 +1,7 @@
 
 
-Examples using ``tslearn.barycenters.EuclideanBarycenter``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Examples using ``tslearn.datasets.CachedDatasets``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. raw:: html
 

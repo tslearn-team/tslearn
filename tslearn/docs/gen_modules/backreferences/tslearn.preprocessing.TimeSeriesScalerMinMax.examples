@@ -9,9 +9,9 @@ Examples using ``tslearn.preprocessing.TimeSeriesScalerMinMax``
 
 .. only:: html
 
-    .. figure:: /auto_examples/images/thumb/sphx_glr_neighbors_thumb.png
+    .. figure:: /auto_examples/images/thumb/sphx_glr_plot_neighbors_thumb.png
 
-        :ref:`sphx_glr_auto_examples_neighbors.py`
+        :ref:`sphx_glr_auto_examples_plot_neighbors.py`
 
 .. raw:: html
 
@@ -19,4 +19,4 @@ Examples using ``tslearn.preprocessing.TimeSeriesScalerMinMax``
 
 .. only:: not html
 
-    * :ref:`sphx_glr_auto_examples_neighbors.py`
+    * :ref:`sphx_glr_auto_examples_plot_neighbors.py`

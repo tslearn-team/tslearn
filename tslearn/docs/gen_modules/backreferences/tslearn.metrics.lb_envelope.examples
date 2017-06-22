@@ -1,7 +1,7 @@
 
 
-Examples using ``tslearn.metrics.lb_keogh``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Examples using ``tslearn.metrics.lb_envelope``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. raw:: html
 

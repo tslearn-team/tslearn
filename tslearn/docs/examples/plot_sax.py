@@ -43,24 +43,25 @@ one_d_sax_dataset_inv = one_d_sax.inverse_transform(one_d_sax.fit_transform(data
 
 plt.figure()
 plt.subplot(2, 2, 1)  # First, raw time series
-plt.plot(numpy.arange(sz), dataset[0, :, 0], "b-")
+plt.plot(dataset[0].ravel(), "b-")
 plt.title("Raw time series")
 
 plt.subplot(2, 2, 2)  # Second, PAA
-plt.plot(numpy.arange(sz), dataset[0, :, 0], "b-", alpha=0.4)
-plt.plot(numpy.arange(sz), paa_dataset_inv[0], "b-")
+plt.plot(dataset[0].ravel(), "b-", alpha=0.4)
+plt.plot(paa_dataset_inv[0].ravel(), "b-")
 plt.title("PAA")
 
 plt.subplot(2, 2, 3)  # Then SAX
-plt.plot(numpy.arange(sz), dataset[0, :, 0], "b-", alpha=0.4)
-plt.plot(numpy.arange(sz), sax_dataset_inv[0], "b-")
+plt.plot(dataset[0].ravel(), "b-", alpha=0.4)
+plt.plot(sax_dataset_inv[0].ravel(), "b-")
 plt.title("SAX, %d symbols" % n_sax_symbols)
 
 plt.subplot(2, 2, 4)  # Finally, 1d-SAX
-plt.plot(numpy.arange(sz), dataset[0, :, 0], "b-", alpha=0.4)
-plt.plot(numpy.arange(sz), one_d_sax_dataset_inv[0], "b-")
+plt.plot(dataset[0].ravel(), "b-", alpha=0.4)
+plt.plot(one_d_sax_dataset_inv[0].ravel(), "b-")
 plt.title("1d-SAX, %d symbols (%dx%d)" % (n_sax_symbols_avg * n_sax_symbols_slope,
                                           n_sax_symbols_avg,
                                           n_sax_symbols_slope))
 
+plt.tight_layout()
 plt.show()
