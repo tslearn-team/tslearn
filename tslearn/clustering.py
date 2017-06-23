@@ -17,8 +17,7 @@ from tslearn.cycc import cdist_normalized_cc, y_shifted_sbd_vec
 
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
-# Kernel k-means is derived from https://gist.github.com/mblondel/6230787 by Mathieu Blondel
-# License: BSD 3 clause
+# Kernel k-means is derived from https://gist.github.com/mblondel/6230787 by Mathieu Blondel, under BSD 3 clause license
 
 
 class EmptyClusterError(Exception):
