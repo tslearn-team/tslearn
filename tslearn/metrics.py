@@ -567,6 +567,8 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
         self_similarity = True
     else:
         dataset2 = to_time_series_dataset(dataset2)
+    print(dataset1)
+    print(dataset2)
     dists = numpy.empty((dataset1.shape[0], dataset2.shape[0]))
     for i, ts1 in enumerate(dataset1):
         for j, ts2 in enumerate(dataset2):
