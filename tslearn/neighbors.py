@@ -155,6 +155,13 @@ class KNeighborsTimeSeriesClassifier(KNeighborsClassifier, KNeighborsTimeSeriesM
         Metric to be used at the core of the nearest neighbor procedure
     metric_params : dict or None (default: None)
         Dictionnary of metric parameters. Recognized keys are `"gamma"` (which has default value 0.) for LR-DTW.
+
+    Examples
+    --------
+    >>> clf = KNeighborsTimeSeriesClassifier(n_neighbors=2, metric="dtw")
+    >>> clf.fit([[1, 2, 3], [1, 1.2, 3.2], [3, 2, 1]], y=[0, 0, 1])
+    >>> clf.predict([1, 2.2, 3.5])
+    array([0])
     """
     def __init__(self, n_neighbors=5, weights='uniform', metric="dtw", metric_params=None):
         KNeighborsClassifier.__init__(self, n_neighbors=n_neighbors, weights=weights, algorithm='brute')
@@ -171,8 +178,8 @@ class KNeighborsTimeSeriesClassifier(KNeighborsClassifier, KNeighborsTimeSeriesM
         y : array-like, shape (n_ts, )
             Target values.
         """
-        self._fit_X = X
-        self._fit_y = y
+        self._fit_X = to_time_series_dataset(X)
+        self._fit_y = numpy.array(y)
 
     def predict(self, X):
         """Predict the class labels for the provided data
@@ -182,7 +189,8 @@ class KNeighborsTimeSeriesClassifier(KNeighborsClassifier, KNeighborsTimeSeriesM
         X : array-like, shape (n_ts, sz, d)
             Test samples.
         """
-        neigh_dist, neigh_ind = self.kneighbors(X)
+        X_ = to_time_series_dataset(X)
+        neigh_dist, neigh_ind = self.kneighbors(X_)
 
         weights = _get_weights(neigh_dist, self.weights)
 

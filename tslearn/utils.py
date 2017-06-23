@@ -70,7 +70,7 @@ def to_time_series(ts):
     
     See Also
     --------
-    npy3d_time_series_dataset : Transforms a dataset of time series
+    to_time_series_dataset : Transforms a dataset of time series
     """
     ts_out = _arraylike_copy(ts)
     if ts_out.ndim == 1:
@@ -110,13 +110,15 @@ def to_time_series_dataset(dataset, dtype=numpy.float, equal_size=True):
     
     See Also
     --------
-    npy2d_time_series : Transforms a single time series
+    to_time_series : Transforms a single time series
     """
     if not equal_size:
         dataset_out = [to_time_series(ts) for ts in dataset]
     else:
         dataset_out = _arraylike_copy(dataset)
-        if dataset_out.ndim == 2:
+        if dataset_out.ndim == 1:
+            dataset_out = dataset_out.reshape((1, dataset_out.shape[0], 1))
+        elif dataset_out.ndim == 2:
             dataset_out = dataset_out.reshape((dataset_out.shape[0], dataset_out.shape[1], 1))
         if dataset_out.dtype != dtype:
             dataset_out = dataset_out.astype(dtype)
