@@ -1,3 +1,7 @@
+"""
+The :mod:`tslearn.utils` module includes various utilities.
+"""
+
 import numpy
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -45,7 +49,7 @@ def _bit_length(n):
     return k
 
 
-def npy2d_time_series(ts):
+def to_time_series(ts):
     """Transforms a time series so that it fits the format used in `tslearn` models.
 
     Parameters
@@ -60,7 +64,7 @@ def npy2d_time_series(ts):
     
     Example
     -------
-    >>> npy2d_time_series([1, 2]) # doctest: +NORMALIZE_WHITESPACE
+    >>> to_time_series([1, 2]) # doctest: +NORMALIZE_WHITESPACE
     array([[ 1.],
            [ 2.]])
     
@@ -76,7 +80,7 @@ def npy2d_time_series(ts):
     return ts_out
 
 
-def npy3d_time_series_dataset(dataset, dtype=numpy.float):
+def to_time_series_dataset(dataset, dtype=numpy.float, equal_size=True):
     """Transforms a time series dataset so that it fits the format used in ``tslearn`` models.
 
     Parameters
@@ -85,25 +89,35 @@ def npy3d_time_series_dataset(dataset, dtype=numpy.float):
         The dataset of time series to be transformed.
     dtype : data type (default: numpy.float)
         Data type for the returned dataset.
+    equal_size : bool (default: True)
+        Whether generated time series are all supposed to be of the same size.
 
     Returns
     -------
-    numpy.ndarray of shape (n_ts, sz, d)
-        The transformed dataset of time series.
+    numpy.ndarray of shape (n_ts, sz, d) or list of numpy.ndarray of shape (sz_i, d)
+        The transformed dataset of time series. Represented as a list of numpy arrays if equal_size is False.
     
     Example
     -------
-    >>> npy3d_time_series_dataset([[1, 2]]) # doctest: +NORMALIZE_WHITESPACE
+    >>> to_time_series_dataset([[1, 2]]) # doctest: +NORMALIZE_WHITESPACE
     array([[[ 1.],
             [ 2.]]])
+    >>> to_time_series_dataset([[1, 2], [1, 4, 3]], equal_size=False) # doctest: +NORMALIZE_WHITESPACE
+    [array([[ 1.],
+           [ 2.]]), array([[ 1.],
+           [ 4.],
+           [ 3.]])]
     
     See Also
     --------
     npy2d_time_series : Transforms a single time series
     """
-    dataset_out = _arraylike_copy(dataset)
-    if dataset_out.ndim == 2:
-        dataset_out = dataset_out.reshape((dataset_out.shape[0], dataset_out.shape[1], 1))
-    if dataset_out.dtype != dtype:
-        dataset_out = dataset_out.astype(dtype)
+    if not equal_size:
+        dataset_out = [to_time_series(ts) for ts in dataset]
+    else:
+        dataset_out = _arraylike_copy(dataset)
+        if dataset_out.ndim == 2:
+            dataset_out = dataset_out.reshape((dataset_out.shape[0], dataset_out.shape[1], 1))
+        if dataset_out.dtype != dtype:
+            dataset_out = dataset_out.astype(dtype)
     return dataset_out
