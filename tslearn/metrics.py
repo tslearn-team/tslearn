@@ -510,7 +510,7 @@ def soft_dtw(ts1, ts2, gamma=1.):
     1.0
     >>> soft_dtw([1, 2, 2, 3], [1., 2., 3., 4.], gamma=0.1)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     1.0
-    >>> soft_dtw([1, 2, 2, 3], [1., 2., 3., 4.], gamma=0.01)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    >>> soft_dtw([1, 2, 3, 3], [1., 2., 2.1, 3.2.], gamma=0.01)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     1.0
 
     See Also
