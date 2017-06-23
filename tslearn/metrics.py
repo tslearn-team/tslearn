@@ -1,3 +1,7 @@
+"""
+The :mod:`tslearn.metrics` module gathers time series similarity metrics.
+"""
+
 import numpy
 from scipy.spatial.distance import pdist
 from sklearn.utils import check_random_state
@@ -7,7 +11,7 @@ from sklearn.metrics.pairwise import euclidean_distances
 from tslearn.cydtw import dtw as cydtw, dtw_path as cydtw_path, cdist_dtw as cycdist_dtw, lb_envelope as cylb_envelope
 from tslearn.cylrdtw import lr_dtw as cylr_dtw, lr_dtw_backtrace as cylr_dtw_backtrace, cdist_lr_dtw as cycdist_lr_dtw
 from tslearn.cygak import cdist_gak as cycdist_gak, normalized_gak as cynormalized_gak
-from tslearn.utils import npy2d_time_series, npy3d_time_series_dataset
+from tslearn.utils import to_time_series, to_time_series_dataset
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -53,8 +57,8 @@ def dtw_path(s1, s2):
     .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for spoken word recognition,"
        IEEE Transactions on Acoustics, Speech and Signal Processing, vol. 26(1), pp. 43--49, 1978.
     """
-    s1 = npy2d_time_series(s1)
-    s2 = npy2d_time_series(s2)
+    s1 = to_time_series(s1)
+    s2 = to_time_series(s2)
     return cydtw_path(s1, s2)
 
 
@@ -94,8 +98,8 @@ def dtw(s1, s2):
     .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for spoken word recognition,"
        IEEE Transactions on Acoustics, Speech and Signal Processing, vol. 26(1), pp. 43--49, 1978.
     """
-    s1 = npy2d_time_series(s1)
-    s2 = npy2d_time_series(s2)
+    s1 = to_time_series(s1)
+    s2 = to_time_series(s2)
     return cydtw(s1, s2)
 
 
@@ -134,13 +138,13 @@ def cdist_dtw(dataset1, dataset2=None):
     .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for spoken word recognition,"
        IEEE Transactions on Acoustics, Speech and Signal Processing, vol. 26(1), pp. 43--49, 1978.
     """
-    dataset1 = npy3d_time_series_dataset(dataset1)
+    dataset1 = to_time_series_dataset(dataset1)
     self_similarity = False
     if dataset2 is None:
         dataset2 = dataset1
         self_similarity = True
     else:
-        dataset2 = npy3d_time_series_dataset(dataset2)
+        dataset2 = to_time_series_dataset(dataset2)
     return cycdist_dtw(dataset1, dataset2, self_similarity=self_similarity)
 
 
@@ -171,8 +175,8 @@ def lr_dtw(s1, s2, gamma=0.):
     dtw : Dynamic Time Warping score
     dtw_path : Get both the matching path and the similarity score for DTW
     """
-    s1 = npy2d_time_series(s1)
-    s2 = npy2d_time_series(s2)
+    s1 = to_time_series(s1)
+    s2 = to_time_series(s2)
     return cylr_dtw(s1, s2, gamma=gamma)[0]
 
 
@@ -197,13 +201,13 @@ def cdist_lr_dtw(dataset1, dataset2=None, gamma=0.):
     --------
     lr_dtw : Get LR-DTW similarity score
     """
-    dataset1 = npy3d_time_series_dataset(dataset1)
+    dataset1 = to_time_series_dataset(dataset1)
     self_similarity = False
     if dataset2 is None:
         dataset2 = dataset1
         self_similarity = True
     else:
-        dataset2 = npy3d_time_series_dataset(dataset2)
+        dataset2 = to_time_series_dataset(dataset2)
     return cycdist_lr_dtw(dataset1, dataset2, gamma=gamma, self_similarity=self_similarity)
 
 
@@ -235,8 +239,8 @@ def lr_dtw_path(s1, s2, gamma=0.):
     dtw : Dynamic Time Warping (DTW) score
     dtw_path : Get both the matching path and the similarity score for DTW
     """
-    s1 = npy2d_time_series(s1)
-    s2 = npy2d_time_series(s2)
+    s1 = to_time_series(s1)
+    s2 = to_time_series(s2)
     sim, probas = cylr_dtw(s1, s2, gamma=gamma)
     path = cylr_dtw_backtrace(probas)
     return path, sim
@@ -277,8 +281,8 @@ def gak(s1, s2, sigma=1.):
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """
-    s1 = npy2d_time_series(s1)
-    s2 = npy2d_time_series(s2)
+    s1 = to_time_series(s1)
+    s2 = to_time_series(s2)
     return cynormalized_gak(s1, s2, sigma)
 
 
@@ -318,13 +322,13 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.):
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """
-    dataset1 = npy3d_time_series_dataset(dataset1)
+    dataset1 = to_time_series_dataset(dataset1)
     self_similarity = False
     if dataset2 is None:
         dataset2 = dataset1
         self_similarity = True
     else:
-        dataset2 = npy3d_time_series_dataset(dataset2)
+        dataset2 = to_time_series_dataset(dataset2)
     return cycdist_gak(dataset1, dataset2, sigma, self_similarity=self_similarity)
 
 
@@ -364,7 +368,7 @@ def sigma_gak(dataset, n_samples=100, random_state=None):
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """
     random_state = check_random_state(random_state)
-    dataset = npy3d_time_series_dataset(dataset)
+    dataset = to_time_series_dataset(dataset)
     n_ts, sz, d = dataset.shape
     if n_ts * sz < n_samples:
         replace = True
@@ -421,10 +425,10 @@ def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
     if ts_candidate is None:
         envelope_down, envelope_up = envelope_candidate
     else:
-        ts_candidate = npy2d_time_series(ts_candidate)
+        ts_candidate = to_time_series(ts_candidate)
         assert ts_candidate.shape[1] == 1, "LB_Keogh is available only for monodimensional time series"
         envelope_down, envelope_up = lb_envelope(ts_candidate, radius)
-    ts_query = npy2d_time_series(ts_query)
+    ts_query = to_time_series(ts_query)
     assert ts_query.shape[1] == 1, "LB_Keogh is available only for monodimensional time series"
     indices_up = ts_query[:, 0] > envelope_up[:, 0]
     indices_down = ts_query[:, 0] < envelope_down[:, 0]
@@ -478,7 +482,7 @@ def lb_envelope(ts, radius=1):
     .. [1] Keogh, E. Exact indexing of dynamic time warping. In International Conference on Very Large Data Bases, 2002.
        pp 406-417.
     """
-    return cylb_envelope(npy2d_time_series(ts), radius=radius)
+    return cylb_envelope(to_time_series(ts), radius=radius)
 
 
 def soft_dtw(ts1, ts2, gamma=1.):
@@ -556,13 +560,13 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
     ----------
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for Time-Series," ICML 2017.
     """
-    dataset1 = npy3d_time_series_dataset(dataset1)
+    dataset1 = to_time_series_dataset(dataset1)
     self_similarity = False
     if dataset2 is None:
         dataset2 = dataset1
         self_similarity = True
     else:
-        dataset2 = npy3d_time_series_dataset(dataset2)
+        dataset2 = to_time_series_dataset(dataset2)
     dists = numpy.empty((dataset1.shape[0], dataset2.shape[0]))
     for i, ts1 in enumerate(dataset1):
         for j, ts2 in enumerate(dataset2):

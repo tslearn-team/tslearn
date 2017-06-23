@@ -1,3 +1,7 @@
+"""
+The :mod:`tslearn.shapelets` module gathers Shapelet-based algorithms.
+"""
+
 import numpy
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -33,10 +37,10 @@ class ShapeletModel:
         """
         Examples
         --------
-        >>> from tslearn.utils import npy2d_time_series
+        >>> from tslearn.utils import to_time_series
         >>> sh = ShapeletModel(shapelet_lengths={5: 1})
         >>> sh.shapelets_ = [numpy.array([1, 2, 3, 4, 5]).reshape((5, 1))]
-        >>> ts = npy2d_time_series(numpy.arange(100))
+        >>> ts = to_time_series(numpy.arange(100))
         >>> sh._shapelet_transform(ts)
         array([ 0.])
         """
@@ -69,10 +73,10 @@ class ConvolutionalShapeletModel(ShapeletModel):
         """
         Examples
         --------
-        >>> from tslearn.utils import npy2d_time_series
+        >>> from tslearn.utils import to_time_series
         >>> sh = ConvolutionalShapeletModel(shapelet_lengths={5: 1})
         >>> sh.shapelets_ = [numpy.array([1, 2, 3, 4, 5]).reshape((5, 1))]
-        >>> ts = npy2d_time_series(numpy.arange(100))
+        >>> ts = to_time_series(numpy.arange(100))
         >>> sh._shapelet_transform(ts)
         array([ 293.])
         """

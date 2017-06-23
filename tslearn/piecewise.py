@@ -1,8 +1,12 @@
+"""
+The :mod:`tslearn.piecewise` module gathers time series piecewise approximation algorithms.
+"""
+
 import numpy
 from scipy.stats import norm
 from sklearn.base import TransformerMixin
 
-from tslearn.utils import npy3d_time_series_dataset
+from tslearn.utils import to_time_series_dataset
 from tslearn.cysax import cydist_sax, cyslopes, cydist_1d_sax, inv_transform_1d_sax, inv_transform_sax, inv_transform_paa
 
 
@@ -124,7 +128,7 @@ class PiecewiseAggregateApproximation(TransformerMixin):
         PiecewiseAggregateApproximation
             self
         """
-        X_ = npy3d_time_series_dataset(X)
+        X_ = to_time_series_dataset(X)
         return self._fit(X_, y)
 
     def _transform(self, X, y=None):
@@ -150,7 +154,7 @@ class PiecewiseAggregateApproximation(TransformerMixin):
         numpy.ndarray of shape (n_ts, n_segments, d)
             PAA-Transformed dataset
         """
-        X_ = npy3d_time_series_dataset(X)
+        X_ = to_time_series_dataset(X)
         return self._transform(X_, y)
 
     def fit_transform(self, X, y=None, **fit_params):
@@ -166,7 +170,7 @@ class PiecewiseAggregateApproximation(TransformerMixin):
         numpy.ndarray of shape (n_ts, n_segments, d)
             PAA-Transformed dataset
         """
-        X_ = npy3d_time_series_dataset(X)
+        X_ = to_time_series_dataset(X)
         return self._fit(X_)._transform(X_)
 
     def distance_paa(self, paa1, paa2):
@@ -230,7 +234,7 @@ class PiecewiseAggregateApproximation(TransformerMixin):
         numpy.ndarray of shape (n_ts, sz_original_ts, d)
             A dataset of time series corresponding to the provided representation.
         """
-        X_ = npy3d_time_series_dataset(X)
+        X_ = to_time_series_dataset(X)
         return inv_transform_paa(X_, original_size=self.size_fitted_)
 
 
@@ -330,7 +334,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
         numpy.ndarray of integers with shape (n_ts, n_segments, d)
             SAX-Transformed dataset
         """
-        X_ = npy3d_time_series_dataset(X)
+        X_ = to_time_series_dataset(X)
         return self._fit(X_)._transform(X_)
 
     def _transform(self, X, y=None):
@@ -350,7 +354,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
         numpy.ndarray of integers with shape (n_ts, n_segments, d)
             SAX-Transformed dataset
         """
-        X_ = npy3d_time_series_dataset(X)
+        X_ = to_time_series_dataset(X)
         return self._transform(X_, y)
 
     def distance_sax(self, sax1, sax2):
@@ -414,7 +418,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
         numpy.ndarray of shape (n_ts, sz_original_ts, d)
             A dataset of time series corresponding to the provided representation.
         """
-        X_ = npy3d_time_series_dataset(X, dtype=numpy.int)
+        X_ = to_time_series_dataset(X, dtype=numpy.int)
         return inv_transform_sax(X_, breakpoints_middle_=self.breakpoints_avg_middle_, original_size=self.size_fitted_)
 
 
@@ -520,7 +524,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         OneD_SymbolicAggregateApproximation
             self
         """
-        X_ = npy3d_time_series_dataset(X)
+        X_ = to_time_series_dataset(X)
         return self._fit(X_)
 
     def fit_transform(self, X, y=None, **fit_params):
@@ -537,7 +541,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
             1d-SAX-Transformed dataset. The order of the last dimension is: first d elements represent average values
             (standard SAX symbols) and the last d are for slopes
         """
-        X_ = npy3d_time_series_dataset(X)
+        X_ = to_time_series_dataset(X)
         return self._fit(X_)._transform(X_)
 
     def _get_slopes(self, X):
@@ -581,7 +585,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         numpy.ndarray of integers with shape (n_ts, n_segments, 2 * d)
             1d-SAX-Transformed dataset
         """
-        X_ = npy3d_time_series_dataset(X)
+        X_ = to_time_series_dataset(X)
         return self._transform(X_, y)
 
     def distance_1d_sax(self, sax1, sax2):
@@ -650,7 +654,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         numpy.ndarray of shape (n_ts, sz_original_ts, d)
             A dataset of time series corresponding to the provided representation.
         """
-        X_ = npy3d_time_series_dataset(X, dtype=numpy.int)
+        X_ = to_time_series_dataset(X, dtype=numpy.int)
         return inv_transform_1d_sax(X_,
                                     breakpoints_avg_middle_=self.breakpoints_avg_middle_,
                                     breakpoints_slope_middle_=self.breakpoints_slope_middle_,

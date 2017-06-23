@@ -1,7 +1,7 @@
 .. _tslearn_api_reference:
 
-``tslearn`` API Reference
-=========================
+API Reference
+=============
 
 The complete tslearn project is automatically documented for every module.
 

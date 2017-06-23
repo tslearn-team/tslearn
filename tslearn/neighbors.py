@@ -1,3 +1,7 @@
+"""
+The :mod:`tslearn.neighbors` module gathers nearest neighbor algorithms using time series metrics.
+"""
+
 import numpy
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 from sklearn.neighbors.base import KNeighborsMixin, _get_weights
@@ -5,7 +9,7 @@ from scipy import stats
 from sklearn.utils.extmath import weighted_mode
 
 from tslearn.metrics import cdist_dtw, cdist_lr_dtw
-from tslearn.utils import npy3d_time_series_dataset
+from tslearn.utils import to_time_series_dataset
 
 
 class KNeighborsTimeSeriesMixin(KNeighborsMixin):
@@ -125,7 +129,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
         ind : array
             Indices of the nearest points in the population matrix.
         """
-        X_ = npy3d_time_series_dataset(X)
+        X_ = to_time_series_dataset(X)
         return KNeighborsTimeSeriesMixin.kneighbors(self,
                                                     X=X_,
                                                     n_neighbors=n_neighbors,

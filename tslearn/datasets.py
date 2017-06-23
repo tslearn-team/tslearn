@@ -1,3 +1,7 @@
+"""
+The :mod:`tslearn.datasets` module provides simplified access to standard time series datasets.
+"""
+
 import numpy
 import zipfile
 import os
@@ -6,7 +10,7 @@ try:
 except:
     from urllib.request import urlretrieve
 
-from tslearn.utils import npy3d_time_series_dataset
+from tslearn.utils import to_time_series_dataset
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -141,9 +145,9 @@ class UCR_UEA_datasets(object):
                 fname_test = self._filenames.get(dataset_name, dataset_name) + "_TEST.txt"
                 data_train = numpy.loadtxt(os.path.join(full_path, fname_train), delimiter=",")
                 data_test = numpy.loadtxt(os.path.join(full_path, fname_test), delimiter=",")
-                X_train = npy3d_time_series_dataset(data_train[:, 1:])
+                X_train = to_time_series_dataset(data_train[:, 1:])
                 y_train = data_train[:, 0].astype(numpy.int)
-                X_test = npy3d_time_series_dataset(data_test[:, 1:])
+                X_test = to_time_series_dataset(data_test[:, 1:])
                 y_test = data_test[:, 0].astype(numpy.int)
                 return X_train, y_train, X_test, y_test
         return None, None, None, None

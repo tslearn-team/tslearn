@@ -1,3 +1,7 @@
+"""
+The :mod:`tslearn.generators` module gathers synthetic time series dataset generation routines.
+"""
+
 import numpy
 from sklearn.utils import check_random_state
 

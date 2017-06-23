@@ -1,3 +1,7 @@
+"""
+The :mod:`tslearn.clustering` module gathers time series specific clustering algorithms.
+"""
+
 from __future__ import print_function
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.cluster.k_means_ import _k_init
@@ -8,7 +12,7 @@ import numpy
 from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw
 from tslearn.barycenters import EuclideanBarycenter, DTWBarycenterAveraging, SoftDTWBarycenter
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
-from tslearn.utils import npy3d_time_series_dataset
+from tslearn.utils import to_time_series_dataset
 from tslearn.cycc import cdist_normalized_cc, y_shifted_sbd_vec
 
 
@@ -418,7 +422,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         """
         n_successful = 0
 
-        X_ = npy3d_time_series_dataset(X)
+        X_ = to_time_series_dataset(X)
         rs = check_random_state(self.random_state)
         x_squared_norms = cdist(X_.reshape((X_.shape[0], -1)), numpy.zeros((1, X_.shape[1] * X_.shape[2])),
                                 metric="sqeuclidean").reshape((1, -1))
@@ -470,7 +474,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
-        X_ = npy3d_time_series_dataset(X)
+        X_ = to_time_series_dataset(X)
         return self._assign(X_, update_class_attributes=False)
 
 
@@ -612,7 +616,7 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
             Time series dataset.
         """
 
-        X_ = npy3d_time_series_dataset(X)
+        X_ = to_time_series_dataset(X)
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
         assert X_.shape[-1] == 1, "kShape is supposed to work on monomodal data, provided data has dimension %d" % \
                                   X_.shape[-1]
@@ -664,7 +668,7 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
-        X_ = npy3d_time_series_dataset(X)
+        X_ = to_time_series_dataset(X)
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
         dists = self._cross_dists(X_)
         return dists.argmin(axis=1)

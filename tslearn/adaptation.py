@@ -1,9 +1,13 @@
+"""
+The :mod:`tslearn.adaptation` module includes temporal domain adaptation algorithms.
+"""
+
 import numpy
 from sklearn.base import BaseEstimator, TransformerMixin
 from scipy.interpolate import interp1d
 
 from tslearn.metrics import dtw_path, lr_dtw_path
-from tslearn.utils import npy2d_time_series, npy3d_time_series_dataset
+from tslearn.utils import to_time_series, to_time_series_dataset
 
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -79,7 +83,7 @@ class DTWSampler(BaseEstimator, TransformerMixin):
         DTWSampler
             self
         """
-        X = npy2d_time_series(X)
+        X = to_time_series(X)
 
         end = first_non_finite_index(X)
         self.reference_series_ = _resampled(X[:end], n_samples=self.n_samples, kind=self.interp_kind)
@@ -99,7 +103,7 @@ class DTWSampler(BaseEstimator, TransformerMixin):
             A time series dataset of base modalities of shape (n_ts, sz, d) with
             ``d = self.reference_series_.shape[-1]``
         """
-        ts_to_be_rescaled = npy3d_time_series_dataset(ts_to_be_rescaled)
+        ts_to_be_rescaled = to_time_series_dataset(ts_to_be_rescaled)
         # Now ts_to_be_rescaled is of shape n_ts, sz, d 
         # with d = self.reference_series.shape[-1]
         self.saved_dtw_paths_ = []

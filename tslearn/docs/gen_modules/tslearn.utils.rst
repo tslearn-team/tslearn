@@ -11,8 +11,8 @@ tslearn.utils
       :toctree: utils
       :template: function.rst
    
-      npy2d_time_series
-      npy3d_time_series_dataset
+      to_time_series
+      to_time_series_dataset
    
    
 

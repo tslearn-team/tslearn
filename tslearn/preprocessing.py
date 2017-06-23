@@ -1,6 +1,10 @@
+"""
+The :mod:`tslearn.preprocessing` module gathers time series scalers.
+"""
+
 from sklearn.base import TransformerMixin
 
-from tslearn.utils import npy3d_time_series_dataset
+from tslearn.utils import to_time_series_dataset
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -39,7 +43,7 @@ class TimeSeriesScalerMinMax(TransformerMixin):
         numpy.ndarray
             Rescaled time series dataset
         """
-        X_ = npy3d_time_series_dataset(X)
+        X_ = to_time_series_dataset(X)
         for i in range(X_.shape[0]):
             for d in range(X_.shape[2]):
                 cur_min = X_[i, :, d].min()
@@ -84,7 +88,7 @@ class TimeSeriesScalerMeanVariance(TransformerMixin):
         numpy.ndarray
             Rescaled time series dataset
         """
-        X_ = npy3d_time_series_dataset(X)
+        X_ = to_time_series_dataset(X)
         for i in range(X_.shape[0]):
             for d in range(X_.shape[2]):
                 cur_mean = X_[i, :, d].mean()

@@ -1,10 +1,14 @@
+"""
+The :mod:`tslearn.barycenters` module gathers algorithms for time series barycenter computation.
+"""
+
 # Code for soft DTW is by Mathieu Blondel under Simplified BSD license
 
 import numpy
 from scipy.interpolate import interp1d
 from scipy.optimize import minimize
 
-from tslearn.utils import npy3d_time_series_dataset
+from tslearn.utils import to_time_series_dataset
 from tslearn.metrics import dtw_path, SquaredEuclidean, SoftDTW
 
 
@@ -39,7 +43,7 @@ class EuclideanBarycenter:
         numpy.array of shape (sz, d)
             Barycenter of the provided time series dataset.
         """
-        return npy3d_time_series_dataset(X).mean(axis=0)
+        return to_time_series_dataset(X).mean(axis=0)
 
 
 class DTWBarycenterAveraging:
@@ -98,7 +102,7 @@ class DTWBarycenterAveraging:
         numpy.array of shape (barycenter_size, d) or (sz, d) if barycenter_size is None
             DBA barycenter of the provided time series dataset.
         """
-        X_ = npy3d_time_series_dataset(X)
+        X_ = to_time_series_dataset(X)
         if self.barycenter_size is None:
             self.barycenter_size = X_.shape[1]
         barycenter = self._init_avg(X_)
@@ -199,7 +203,7 @@ class SoftDTWBarycenter(EuclideanBarycenter):
         return obj, G.ravel()
 
     def fit(self, X):
-        self._X_fit = npy3d_time_series_dataset(X)
+        self._X_fit = to_time_series_dataset(X)
         if self.weights is None or len(self.weights) < len(X):
             self.weights = numpy.ones((self._X_fit.shape[0], ))
         self.barycenter_ = EuclideanBarycenter.fit(self, self._X_fit)
