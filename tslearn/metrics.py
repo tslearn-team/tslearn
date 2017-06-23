@@ -506,12 +506,12 @@ def soft_dtw(ts1, ts2, gamma=1.):
 
     Examples
     --------
-    >>> cdist_soft_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], gamma=1.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    array([[ 0.,  1.],
-           [ 1.,  0.]])
-    >>> cdist_soft_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 2, 3], [1., 2., 3., 4.]], gamma=1.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    array([[ 0.,  1.],
-           [ 1.,  0.]])
+    >>> soft_dtw([1, 2, 2, 3], [1., 2., 3., 4.], gamma=1.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    1.0
+    >>> soft_dtw([1, 2, 2, 3], [1., 2., 3., 4.], gamma=0.1)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    1.0
+    >>> soft_dtw([1, 2, 2, 3], [1., 2., 3., 4.], gamma=0.01)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    1.0
 
     See Also
     --------
