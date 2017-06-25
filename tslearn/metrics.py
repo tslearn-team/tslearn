@@ -598,6 +598,7 @@ class SoftDTW(object):
             self.D = D.compute()
         else:
             self.D = D
+        self.D = self.D.astype(numpy.float64)
 
         self.gamma = gamma
 

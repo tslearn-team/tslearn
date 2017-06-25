@@ -43,6 +43,8 @@ def _soft_dtw(np.ndarray[double, ndim=2] D,
 
     cdef int i, j
 
+    print(D)
+
     # Initialization.
     memset(<void*>R.data, 0, (m+1) * (n+1) * sizeof(double))
 
