@@ -403,7 +403,7 @@ def gamma_soft_dtw(dataset, n_samples=100, random_state=None):
     -------
     >>> dataset = [[1, 2, 2, 3], [1., 2., 3., 4.]]
     >>> gamma_soft_dtw(dataset=dataset, n_samples=200, random_state=0)  # doctest: +ELLIPSIS
-    0.25...
+    8.0...
 
     See Also
     --------
@@ -544,9 +544,9 @@ def soft_dtw(ts1, ts2, gamma=1.):
     Examples
     --------
     >>> soft_dtw([1, 2, 2, 3], [1., 2., 3., 4.], gamma=1.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    1.0
+    -0.89...
     >>> soft_dtw([1, 2, 3, 3], [1., 2., 2.1, 3.2], gamma=0.01)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    1.0
+    0.089...
 
     See Also
     --------
@@ -581,11 +581,11 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
     Examples
     --------
     >>> cdist_soft_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], gamma=.01)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    array([[ 0.,  1.],
-           [ 1.,  0.]])
+    array([[-0.01...,  1. ],
+           [ 1.,  0. ]])
     >>> cdist_soft_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 2, 3], [1., 2., 3., 4.]], gamma=.01)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    array([[ 0.,  1.],
-           [ 1.,  0.]])
+    array([[-0.01...,  1. ],
+           [ 1.,  0. ]])
 
     See Also
     --------
