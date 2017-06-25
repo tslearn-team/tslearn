@@ -6,11 +6,12 @@
 # cython: boundscheck=False
 # cython: wraparound=False
 
-DTYPE = numpy.float64
-ctypedef numpy.float64_t DTYPE_t
 import numpy as np
 cimport numpy as np
 np.import_array()
+
+DTYPE = numpy.float64
+ctypedef numpy.float64_t DTYPE_t
 
 
 from libc.float cimport DBL_MAX
