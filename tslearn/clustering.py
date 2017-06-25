@@ -328,6 +328,17 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
     True
     >>> numpy.alltrue(km_dba.fit(X).predict(X) == km_dba.fit_predict(X))
     True
+    >>> km_sdtw = TimeSeriesKMeans(n_clusters=3, metric="softdtw", max_iter=5, max_iter_barycenter=5, \
+                                   metric_params={"gamma_sdtw": .5}, verbose=False, random_state=0).fit(X)
+    >>> km_sdtw.cluster_centers_.shape
+    (3, 256, 1)
+    >>> dists = cdist_soft_dtw(X, km_sdtw.cluster_centers_)
+    >>> numpy.alltrue(km_sdtw.labels_ == dists.argmin(axis=1))
+    True
+    >>> numpy.alltrue(km_sdtw.labels_ == km_sdtw.predict(X))
+    True
+    >>> numpy.alltrue(km_sdtw.fit(X).predict(X) == km_sdtw.fit_predict(X))
+    True
     >>> TimeSeriesKMeans(n_clusters=101, verbose=False, random_state=0).fit(X).X_fit_ is None
     True
     """

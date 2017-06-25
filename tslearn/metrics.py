@@ -379,6 +379,43 @@ def sigma_gak(dataset, n_samples=100, random_state=None):
     return numpy.median(dists) * numpy.sqrt(sz)
 
 
+def gamma_soft_dtw(dataset, n_samples=100, random_state=None):
+    """Compute gamma value to be used for GAK/Soft-DTW.
+
+    This method was originally presented in [1]_.
+
+    Parameters
+    ----------
+    dataset
+        A dataset of time series
+    n_samples : int (default: 100)
+        Number of samples on which median distance should be estimated
+    random_state : integer or numpy.RandomState or None (default: None)
+        The generator used to draw the samples. If an integer is given, it fixes the seed. Defaults to the global
+        numpy random number generator.
+
+    Returns
+    -------
+    float
+        Suggested :math:`\\gamma` parameter for the Soft-DTW
+
+    Example
+    -------
+    >>> dataset = [[1, 2, 2, 3], [1., 2., 3., 4.]]
+    >>> gamma_soft_dtw(dataset=dataset, n_samples=200, random_state=0)  # doctest: +ELLIPSIS
+    0.25...
+
+    See Also
+    --------
+    sigma_gak : Compute sigma parameter for Global Alignment kernel
+
+    References
+    ----------
+    .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
+    """
+    return 2. * sigma_gak(dataset=dataset, n_samples=n_samples, random_state=random_state) ** 2
+
+
 def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
     """Compute LB_Keogh.
 
@@ -508,8 +545,6 @@ def soft_dtw(ts1, ts2, gamma=1.):
     --------
     >>> soft_dtw([1, 2, 2, 3], [1., 2., 3., 4.], gamma=1.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     1.0
-    >>> soft_dtw([1, 2, 2, 3], [1., 2., 3., 4.], gamma=0.1)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    1.0
     >>> soft_dtw([1, 2, 3, 3], [1., 2., 2.1, 3.2], gamma=0.01)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     1.0
 
@@ -545,10 +580,10 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
 
     Examples
     --------
-    >>> cdist_soft_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], gamma=1.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    >>> cdist_soft_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], gamma=.01)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     array([[ 0.,  1.],
            [ 1.,  0.]])
-    >>> cdist_soft_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 2, 3], [1., 2., 3., 4.]], gamma=1.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    >>> cdist_soft_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 2, 3], [1., 2., 3., 4.]], gamma=.01)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     array([[ 0.,  1.],
            [ 1.,  0.]])
 
@@ -567,8 +602,6 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
         self_similarity = True
     else:
         dataset2 = to_time_series_dataset(dataset2, dtype=numpy.float64)
-    print(dataset1)
-    print(dataset2)
     dists = numpy.empty((dataset1.shape[0], dataset2.shape[0]))
     for i, ts1 in enumerate(dataset1):
         for j, ts2 in enumerate(dataset2):
@@ -638,7 +671,6 @@ class SoftDTW(object):
         # Needed to deal with edge cases in the recursion.
         D = numpy.vstack((self.D, numpy.zeros(n)))
         D = numpy.hstack((D, numpy.zeros((m+1, 1))))
-        print(D.dtype)
 
         # Allocate memory.
         # We need +2 because we use indices starting from 1
