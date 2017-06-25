@@ -10,8 +10,8 @@ import numpy as np
 cimport numpy as np
 np.import_array()
 
-DTYPE = numpy.float64
-ctypedef numpy.float64_t DTYPE_t
+DTYPE = np.float64
+ctypedef np.float64_t DTYPE_t
 
 
 from libc.float cimport DBL_MAX
