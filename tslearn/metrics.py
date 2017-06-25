@@ -582,10 +582,10 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
     --------
     >>> cdist_soft_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], gamma=.01)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     array([[-0.01...,  1. ],
-           [ 1.,  0. ]])
+           [ 1.     ,  0. ]])
     >>> cdist_soft_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 2, 3], [1., 2., 3., 4.]], gamma=.01)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     array([[-0.01...,  1. ],
-           [ 1.,  0. ]])
+           [ 1.     ,  0. ]])
 
     See Also
     --------
