@@ -521,7 +521,7 @@ def soft_dtw(ts1, ts2, gamma=1.):
     ----------
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for Time-Series," ICML 2017.
     """
-    return SoftDTW(SquaredEuclidean(ts1, ts2), gamma=gamma).compute()
+    return SoftDTW(SquaredEuclidean(ts1, ts2), gamma=numpy.float64(gamma)).compute()
 
 
 def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
@@ -560,13 +560,13 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
     ----------
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for Time-Series," ICML 2017.
     """
-    dataset1 = to_time_series_dataset(dataset1)
+    dataset1 = to_time_series_dataset(dataset1, dtype=numpy.float64)
     self_similarity = False
     if dataset2 is None:
         dataset2 = dataset1
         self_similarity = True
     else:
-        dataset2 = to_time_series_dataset(dataset2)
+        dataset2 = to_time_series_dataset(dataset2, dtype=numpy.float64)
     print(dataset1)
     print(dataset2)
     dists = numpy.empty((dataset1.shape[0], dataset2.shape[0]))
@@ -600,7 +600,7 @@ class SoftDTW(object):
             self.D = D
         self.D = self.D.astype(numpy.float64)
 
-        self.gamma = gamma
+        self.gamma = numpy.float64(gamma)
 
     def compute(self):
         """
@@ -615,7 +615,7 @@ class SoftDTW(object):
         # Allocate memory.
         # We need +2 because we use indices starting from 1
         # and to deal with edge cases in the backward recursion.
-        self.R_ = numpy.zeros((m+2, n+2))
+        self.R_ = numpy.zeros((m+2, n+2), dtype=numpy.float64)
 
         _soft_dtw(self.D, self.R_, gamma=self.gamma)
 
@@ -638,11 +638,12 @@ class SoftDTW(object):
         # Needed to deal with edge cases in the recursion.
         D = numpy.vstack((self.D, numpy.zeros(n)))
         D = numpy.hstack((D, numpy.zeros((m+1, 1))))
+        print(D.dtype)
 
         # Allocate memory.
         # We need +2 because we use indices starting from 1
         # and to deal with edge cases in the recursion.
-        E = numpy.zeros((m+2, n+2))
+        E = numpy.zeros((m+2, n+2), dtype=numpy.float64)
 
         _soft_dtw_grad(D, self.R_, E, gamma=self.gamma)
 
@@ -660,8 +661,8 @@ class SquaredEuclidean(object):
         Y: array, shape = [n, d]
             Second time series.
         """
-        self.X = X
-        self.Y = Y
+        self.X = to_time_series(X).astype(numpy.float64)
+        self.Y = to_time_series(Y).astype(numpy.float64)
 
     def compute(self):
         """
@@ -687,8 +688,8 @@ class SquaredEuclidean(object):
             Product with Jacobian
             ([m x d, m x n] * [m x n] = [m x d]).
         """
-        G = numpy.zeros_like(self.X)
+        G = numpy.zeros_like(self.X, dtype=numpy.float64)
 
-        _jacobian_product_sq_euc(self.X, self.Y, E, G)
+        _jacobian_product_sq_euc(self.X, self.Y, E.astype(numpy.float64), G)
 
         return G
