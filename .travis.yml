@@ -1,41 +1,44 @@
 env:
   global:
-    - CODECLIMATE_REPO_TOKEN=d8c5ae082832ed947bc6e673ebfbd1592278fa04633401bf7d180687238fa397
-    - GIT_COMMITTED_AT=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then git log -1 --pretty=format:%ct; else git log -1 --skip 1 --pretty=format:%ct; fi)
+  - CODECLIMATE_REPO_TOKEN=d8c5ae082832ed947bc6e673ebfbd1592278fa04633401bf7d180687238fa397
+  - GIT_COMMITTED_AT=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then git log -1 --pretty=format:%ct;
+    else git log -1 --skip 1 --pretty=format:%ct; fi)
 language: python
 python:
-  - "2.6"
-  - "2.7"
-  - "3.3"
-  - "3.4"
-  - "3.5"
-  - "3.6"
+- '2.6'
+- '2.7'
+- '3.3'
+- '3.4'
+- '3.5'
+- '3.6'
 install:
-  - sudo apt-get update
-  # We do this conditionally because it saves us some downloading if the
-  # version is the same.
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
-    else
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-    fi
-  - bash miniconda.sh -b -p $HOME/miniconda
-  - export PATH="$HOME/miniconda/bin:$PATH"
-  - hash -r
-  - conda config --set always_yes yes --set changeps1 no
-  - conda update -q conda
-  # Useful for debugging any issues with conda
-  - conda info -a
-
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy scipy scikit-learn nose
-  - source activate test-environment
-  - pip install coverage==4.3.1
-  - pip install argparse
-  - pip install codeclimate-test-reporter
-  - rm -f tslearn/*.c
-  - python setup.py build_ext --inplace
-script: 
-  - nosetests --with-doctest --with-coverage --cover-erase --cover-package=tslearn
-  - if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then codeclimate-test-reporter; fi
+- sudo apt-get update
+- if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
+  -O miniconda.sh; else wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+  -O miniconda.sh; fi
+- bash miniconda.sh -b -p $HOME/miniconda
+- export PATH="$HOME/miniconda/bin:$PATH"
+- hash -r
+- conda config --set always_yes yes --set changeps1 no
+- conda update -q conda
+- conda info -a
+- conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy scipy
+  scikit-learn nose
+- source activate test-environment
+- pip install coverage==4.3.1
+- pip install argparse
+- pip install codeclimate-test-reporter
+- rm -f tslearn/*.c
+- python setup.py build_ext --inplace
+script:
+- nosetests --with-doctest --with-coverage --cover-erase --cover-package=tslearn
+- if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then codeclimate-test-reporter; fi
 notifications:
   email: false
+deploy:
+  provider: pypi
+  user: rtavenar
+  password:
+    secure: "EcciNmNTVwgoCW2qXh1D4tw4URgYL26R5nZ+Ob+jHb5q9twLW4nd9b6a/gwGmf3cv4dtGHlxUQKC7O6KoXTGujwQLKxebsxQm4weSlR7VDrkXQA5afxaJ4/RX/OfKPjPer/blxHnqIpCVLOI3JHChKgz52R9TLyCcMRQzUwQ8a77tytxwTW8xb0iy55StwoHx/mFn0+6hMpIL026Tt5BOKsDIPdy57/KYenQ0FZKVEJtRsq16/lslFiza5Mwe1LXYaufgg0kp6f5zXeN+SwfVRxgqi/TVKlsJHu1vno1GQ9WxdS061Z1mInRbpyGFKcaQXD1eocPdVjmlZGEoOCWOmAdQCZT4mGFFWzofGHnnPn+9y5+RTigSHjZNTaGIKhv5nVmaglbI8MIr7dWHNnAs7euPHMcjnnc6LTDlrR07Nq6CTb83PqWimYEQ1LpYaCjHMw5qayFPz55C2VWVhOPTKphbvO0v8cOlHVZNhZcA7rx/WeQECBnRHc8o4ASVP+zLl4cHA20KAhPvQuiAwWH5Vs06U6Hi6btwdQpyKpcVbhezqhIP1U5tQRQRvRfX4wW1CABjWxARUZrTOrW9qHn9U0NLclgdQ2Fv+gRiUDzdC72weUhVyu4Afb5p9wmQy91In6zN+ph6cJpVbmPRmXnYbVe0mcJ19TuO+HqUpTde28="
+  on:
+    tags: true
