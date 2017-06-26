@@ -20,7 +20,7 @@ setup(
     description="A machine learning toolkit dedicated to time-series data",
     include_dirs=[numpy.get_include()],
     packages=['tslearn'],
-    package_data={"tslearn": ".cached_datasets/Trace.npz"},
+    package_data={"tslearn": [".cached_datasets/Trace.npz"]},
     install_requires=['numpy', 'scipy', 'scikit-learn'],
     ext_modules=ext,
     cmdclass={'build_ext': _build_ext},
