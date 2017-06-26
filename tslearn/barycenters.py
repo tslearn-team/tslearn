@@ -16,7 +16,7 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 def _set_weights(w, X):
-    if w is None or len(w) < len(X):
+    if w is None or len(w) != len(X):
         w = numpy.ones((X.shape[0],))
     return w
 
