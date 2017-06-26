@@ -1,3 +1,5 @@
+.. _mod-generators:
+
 tslearn.generators
 ==================
 

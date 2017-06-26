@@ -1,3 +1,5 @@
+.. _mod-neighbors:
+
 tslearn.neighbors
 =================
 

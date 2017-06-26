@@ -1,5 +1,7 @@
-tslearn.barycenters
-===================
+.. _mod-datasets:
+
+tslearn.datasets
+================
 
 .. automodule:: tslearn.datasets
    

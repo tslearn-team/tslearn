@@ -1,3 +1,5 @@
+.. _mod-metrics:
+
 tslearn.metrics
 ===============
 

@@ -1,3 +1,5 @@
+.. _mod-clustering:
+
 tslearn.clustering
 ==================
 

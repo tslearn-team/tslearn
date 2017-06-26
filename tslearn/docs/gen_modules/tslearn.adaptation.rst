@@ -1,3 +1,5 @@
+.. _mod-adaptation:
+
 tslearn.adaptation
 ==================
 

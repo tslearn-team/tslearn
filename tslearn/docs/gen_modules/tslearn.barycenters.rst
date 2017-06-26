@@ -1,3 +1,5 @@
+.. _mod-barycenters:
+
 tslearn.barycenters
 ===================
 

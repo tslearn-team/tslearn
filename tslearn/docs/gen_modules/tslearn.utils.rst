@@ -1,3 +1,5 @@
+.. _mod-utils:
+
 tslearn.utils
 =============
 

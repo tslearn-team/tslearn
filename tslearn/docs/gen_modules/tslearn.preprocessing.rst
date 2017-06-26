@@ -1,3 +1,5 @@
+.. _mod-preprocessing:
+
 tslearn.preprocessing
 =====================
 
