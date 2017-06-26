@@ -4,6 +4,9 @@ Soft-DTW weighted barycenters
 =============================
 
 This example presents the weighted Soft-DTW time series barycenter method.
+
+:math:`X_0, X_1, X_2` and :math:`X_3` are time series from 4 different classes in the Trace dataset.
+Other time series are weighted barycenters.
 """
 
 # Code source: Romain Tavenard
@@ -49,10 +52,14 @@ for i, pos in enumerate([1, 5, 21, 25]):
     plt.plot(X_out[i].ravel(),
              color=matplotlib.colors.rgb2hex(get_color(w)),
              linewidth=2)
+    plt.text(X_out[i].shape[0], 0., "$X_%d$" % i,
+             horizontalalignment="right",
+             verticalalignment="baseline",
+             fontsize=24)
     plt.xticks([])
     plt.yticks([])
 
-for pos in range(2, 26):
+for pos in range(2, 25):
     if pos in [1, 5, 21, 25]:
         continue
     plt.subplot(5, 5, pos)
