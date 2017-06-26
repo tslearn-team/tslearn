@@ -42,11 +42,13 @@ Also, for the whole package to run properly, its base directory should be append
 # Already available
 
 * A `generators` module provides Random Walks generators
+* A `datasets` module provides access to the famous UCR/UEA datasets through the `UCR_UEA_datasets` class 
 * A `preprocessing` module provides standard time series scalers
 * A `metrics` module provides:
   * Dynamic Time Warping (DTW) (derived from `cydtw` code)
   * LB_Keogh
   * Global Alignment Kernel
+  * Soft-DTW from Cuturi and Blondel
 * A domain adaptation for time series module named `adaptation` contains:
   * a method for DTW-based non linear resampling that was previously released in `dtw_resample` repo
 * A `neighbors` module includes nearest neighbor algorithms to be used with time series
@@ -58,6 +60,8 @@ Also, for the whole package to run properly, its base directory should be append
     k-means
   * Global Alignment kernel k-means
   * KShape clustering from Paparizzos and Gravano
+  * Soft-DTW k-means from Cuturi and Blondel
+    * Based on `tslearn.barycenters` that offers Soft-DTW barycenter computation 
 * A `piecewise` module includes standard time series transformations, as well as the corresponding distances:
   * Piecewise Aggregate Approximation (PAA)
   * Symbolic Aggregate approXimation (SAX)
@@ -65,12 +69,9 @@ Also, for the whole package to run properly, its base directory should be append
 
 # TODO list
 
-* Add soft-DTW to the proposed metrics
 * Implement Learning Shapelets from Grabocka et al. (Conv+L2, + unsupervised)
 * Add local feature extractors (`TransformerMixin`)
-* Add soft-DTW k-means by Cuturi and Blondel
 * Add metric learning for time series (Garreau _et al._)
-* Add automatic retrieval of UCR/UEA datasets and 1M remote sensing time series?
 * Add LB_Keogh for nearest neighbor search
 * Add Itakura and SakoeChiba variants of DTW
 
@@ -78,6 +79,6 @@ Also, for the whole package to run properly, its base directory should be append
 
 # Acknowledgments
 
-Authors would like to thank Mathieu Blondel for providing code for 
+Author would like to thank Mathieu Blondel for providing code for 
 [Kernel k-means](https://gist.github.com/mblondel/6230787) and [Soft-DTW](https://github.com/mblondel/soft-dtw) (both 
 distributed under BSD license) that is used in the clustering module of this library.

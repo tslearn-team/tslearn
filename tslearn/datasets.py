@@ -79,8 +79,8 @@ class UCR_UEA_datasets(object):
 
     Note
     ----
-        Downloading the main file is rather time-consuming, hence it is recommended using `use_cache=True` in order to
-        only experience long downloading time once and work on a cached version of the datasets after it.
+        Downloading the main file can be time-consuming, it is recommended using `use_cache=True` (default) in order to
+        only experience downloading time once and work on a cached version of the datasets after it.
 
     References
     ----------
