@@ -506,12 +506,10 @@ def soft_dtw(ts1, ts2, gamma=1.):
 
     Examples
     --------
-    >>> cdist_soft_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], gamma=1.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    array([[ 0.,  1.],
-           [ 1.,  0.]])
-    >>> cdist_soft_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 2, 3], [1., 2., 3., 4.]], gamma=1.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    array([[ 0.,  1.],
-           [ 1.,  0.]])
+    >>> soft_dtw([1, 2, 2, 3], [1., 2., 3., 4.], gamma=1.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    1.0
+    >>> soft_dtw([1, 2, 2, 3], [1., 2., 3., 4.], gamma=0.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    1.0
 
     See Also
     --------
@@ -521,6 +519,8 @@ def soft_dtw(ts1, ts2, gamma=1.):
     ----------
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for Time-Series," ICML 2017.
     """
+    if gamma == 0.:
+        return dtw(ts1, ts2)
     return SoftDTW(SquaredEuclidean(ts1, ts2), gamma=gamma).compute()
 
 
@@ -656,9 +656,17 @@ class SquaredEuclidean(object):
             First time series.
         Y: array, shape = [n, d]
             Second time series.
+
+        Examples
+        --------
+        >>> SquaredEuclidean([1, 2, 2, 3], [1, 2, 3, 4]).compute()
+        array([[ 0.,  1.,  4.,  9.],
+               [ 1.,  0.,  1.,  4.],
+               [ 1.,  0.,  1.,  4.],
+               [ 4.,  1.,  0.,  1.]])
         """
-        self.X = X
-        self.Y = Y
+        self.X = to_time_series(X)
+        self.Y = to_time_series(Y)
 
     def compute(self):
         """
