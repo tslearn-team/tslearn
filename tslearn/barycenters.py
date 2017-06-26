@@ -18,6 +18,11 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 class EuclideanBarycenter:
     """Standard Euclidean barycenter computed from a set of time series.
 
+    Parameters
+    ----------
+    weights: None or array
+        Weights of each X[i]. Must be the same size as len(X).
+
     Examples
     --------
     >>> time_series = [[1, 2, 3, 4], [1, 2, 4, 5]]
@@ -30,6 +35,9 @@ class EuclideanBarycenter:
            [ 3.5],
            [ 4.5]])
     """
+    def __init__(self, weights=None):
+        self.weights = weights
+
     def fit(self, X):
         """Compute the barycenter from a dataset of time series.
 
@@ -43,16 +51,18 @@ class EuclideanBarycenter:
         numpy.array of shape (sz, d)
             Barycenter of the provided time series dataset.
         """
-        return to_time_series_dataset(X).mean(axis=0)
+        return numpy.average(to_time_series_dataset(X), axis=0, weights=self.weights)
 
 
-class DTWBarycenterAveraging:
+class DTWBarycenterAveraging(EuclideanBarycenter):
     """DTW Barycenter Averaging (DBA) method.
 
     DBA was originally presented in [1]_.
 
     Parameters
     ----------
+    weights: None or array
+        Weights of each X[i]. Must be the same size as len(X).
     max_iter : int (default: 30)
         Number of iterations of the EM procedure.
     barycenter_size : int or None (default: None)
@@ -83,7 +93,8 @@ class DTWBarycenterAveraging:
     .. [1] F. Petitjean, A. Ketterlin & P. Gancarski. A global averaging method for dynamic time warping, with
        applications to clustering. Pattern Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
     """
-    def __init__(self, max_iter=30, barycenter_size=None, tol=1e-5, verbose=False):
+    def __init__(self, weights=None, max_iter=30, barycenter_size=None, tol=1e-5, verbose=False):
+        EuclideanBarycenter.__init__(self, weights=weights)
         self.max_iter = max_iter
         self.barycenter_size = barycenter_size
         self.tol = tol
@@ -105,6 +116,8 @@ class DTWBarycenterAveraging:
         X_ = to_time_series_dataset(X)
         if self.barycenter_size is None:
             self.barycenter_size = X_.shape[1]
+        if self.weights is None or len(self.weights) < len(X_):
+            self.weights = numpy.ones((X_.shape[0], ))
         barycenter = self._init_avg(X_)
         cost_prev, cost = numpy.inf, numpy.inf
         for it in range(self.max_iter):
@@ -141,7 +154,7 @@ class DTWBarycenterAveraging:
     def _petitjean_update_barycenter(self, X, assign):
         barycenter = numpy.zeros((self.barycenter_size, X.shape[-1]))
         for t in range(self.barycenter_size):
-            barycenter[t] = X[assign[0][t], assign[1][t]].mean(axis=0)
+            barycenter[t] = numpy.average(X[assign[0][t], assign[1][t]], axis=0, weights=self.weights[assign[0][t]])
         return barycenter
 
     def _petitjean_cost(self, X, barycenter, assign):
@@ -157,8 +170,6 @@ class SoftDTWBarycenter(EuclideanBarycenter):
 
     Parameters
     ----------
-    X: list
-        List of time series, numpy arrays of shape [len(X[i]), d].
     gamma: float
         Regularization parameter.
         Lower is less smoothed (closer to true DTW).
@@ -171,9 +182,21 @@ class SoftDTWBarycenter(EuclideanBarycenter):
         Tolerance of the method used.
     max_iter: int
         Maximum number of iterations.
+
+    Examples
+    --------
+    >>> time_series = [[1, 2, 3, 4], [1, 2, 4, 5]]
+    >>> euc_bar = EuclideanBarycenter().fit(time_series)
+    >>> stdw_bar = SoftDTWBarycenter(max_iter=0).fit(time_series)
+    >>> stdw_bar.shape
+    (4, 1)
+    >>> numpy.alltrue(numpy.abs(euc_bar - stdw_bar) < 1e-9)
+    True
+    >>> SoftDTWBarycenter(max_iter=5).fit(time_series).shape
+    (4, 1)
     """
     def __init__(self, gamma=1.0, weights=None, method="L-BFGS-B", tol=1e-3, max_iter=50):
-        self.weights = weights
+        EuclideanBarycenter.__init__(self, weights=weights)
         self.method = method
         self.tol = tol
         self.gamma = gamma
@@ -208,8 +231,10 @@ class SoftDTWBarycenter(EuclideanBarycenter):
             self.weights = numpy.ones((self._X_fit.shape[0], ))
         self.barycenter_ = EuclideanBarycenter.fit(self, self._X_fit)
 
-        # The function works with vectors so we need to vectorize barycenter_.
-        res = minimize(self._func, self.barycenter_.ravel(), method=self.method, jac=True, tol=self.tol,
-                       options=dict(maxiter=self.max_iter, disp=False))
-
-        return res.x.reshape(self.barycenter_.shape)
+        if self.max_iter > 0:
+            # The function works with vectors so we need to vectorize barycenter_.
+            res = minimize(self._func, self.barycenter_.ravel(), method=self.method, jac=True, tol=self.tol,
+                           options=dict(maxiter=self.max_iter, disp=False))
+            return res.x.reshape(self.barycenter_.shape)
+        else:
+            return self.barycenter_
