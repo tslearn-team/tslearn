@@ -352,6 +352,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         self.metric = metric
         self.n_init = n_init
         self.verbose = verbose
+        self.max_iter_barycenter = max_iter_barycenter
 
         self.labels_ = None
         self.inertia_ = numpy.inf

@@ -15,6 +15,12 @@ from tslearn.metrics import dtw_path, SquaredEuclidean, SoftDTW
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
+def _set_weights(w, X):
+    if w is None or len(w) < len(X):
+        w = numpy.ones((X.shape[0],))
+    return w
+
+
 class EuclideanBarycenter:
     """Standard Euclidean barycenter computed from a set of time series.
 
@@ -51,7 +57,9 @@ class EuclideanBarycenter:
         numpy.array of shape (sz, d)
             Barycenter of the provided time series dataset.
         """
-        return numpy.average(to_time_series_dataset(X), axis=0, weights=self.weights)
+        X_ = to_time_series_dataset(X)
+        self.weights = _set_weights(self.weights, X_)
+        return numpy.average(X_, axis=0, weights=self.weights)
 
 
 class DTWBarycenterAveraging(EuclideanBarycenter):
@@ -116,8 +124,7 @@ class DTWBarycenterAveraging(EuclideanBarycenter):
         X_ = to_time_series_dataset(X)
         if self.barycenter_size is None:
             self.barycenter_size = X_.shape[1]
-        if self.weights is None or len(self.weights) < len(X_):
-            self.weights = numpy.ones((X_.shape[0], ))
+        self.weights = _set_weights(self.weights, X_)
         barycenter = self._init_avg(X_)
         cost_prev, cost = numpy.inf, numpy.inf
         for it in range(self.max_iter):
@@ -227,8 +234,7 @@ class SoftDTWBarycenter(EuclideanBarycenter):
 
     def fit(self, X):
         self._X_fit = to_time_series_dataset(X)
-        if self.weights is None or len(self.weights) < len(X):
-            self.weights = numpy.ones((self._X_fit.shape[0], ))
+        self.weights = _set_weights(self.weights, self._X_fit)
         self.barycenter_ = EuclideanBarycenter.fit(self, self._X_fit)
 
         if self.max_iter > 0:
