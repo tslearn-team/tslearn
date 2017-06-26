@@ -6,7 +6,7 @@ Barycenters
 This example shows three methods to compute barycenters of time series.
 """
 
-# Code source: Romain Tavenard
+# Author: Romain Tavenard
 # License: BSD 3 clause
 
 import numpy

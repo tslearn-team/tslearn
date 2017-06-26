@@ -6,7 +6,7 @@ PAA and SAX features
 This example presents a comparison between PAA, SAX and 1d-SAX features.
 """
 
-# Code source: Romain Tavenard
+# Author: Romain Tavenard
 # License: BSD 3 clause
 
 import numpy

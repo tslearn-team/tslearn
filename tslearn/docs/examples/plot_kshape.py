@@ -6,7 +6,7 @@ KShape
 This example uses the KShape clustering method that is based on cross-correlation to cluster time series.
 """
 
-# Code source: Romain Tavenard
+# Author: Romain Tavenard
 # License: BSD 3 clause
 
 import numpy

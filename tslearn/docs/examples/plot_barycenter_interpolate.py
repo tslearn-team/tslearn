@@ -9,7 +9,7 @@ This example presents the weighted Soft-DTW time series barycenter method.
 Other time series are weighted barycenters.
 """
 
-# Code source: Romain Tavenard
+# Author: Romain Tavenard
 # License: BSD 3 clause
 
 import numpy

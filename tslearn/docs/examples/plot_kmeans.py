@@ -8,7 +8,7 @@ Euclidean :math:`k`-means and DBA-:math:`k`-means (for DTW Barycenter Averaging)
 
 """
 
-# Code source: Romain Tavenard
+# Author: Romain Tavenard
 # License: BSD 3 clause
 
 import numpy

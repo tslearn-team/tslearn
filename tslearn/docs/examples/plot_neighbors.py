@@ -6,7 +6,7 @@ Nearest neighbors
 This example illustrates the use of nearest neighbor methods for database search and classification tasks.
 """
 
-# Code source: Romain Tavenard
+# Author: Romain Tavenard
 # License: BSD 3 clause
 
 from __future__ import print_function

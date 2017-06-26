@@ -6,7 +6,7 @@ DTW computation
 This example illustrates DTW computation between time series and plots the optimal alignment path.
 """
 
-# Code source: Romain Tavenard
+# Author: Romain Tavenard
 # License: BSD 3 clause
 
 import numpy

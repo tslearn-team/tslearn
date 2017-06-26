@@ -7,7 +7,7 @@ This example illustrates the principle of time series envelope as used in LB_Keo
 time series using LB_Keogh.
 """
 
-# Code source: Romain Tavenard
+# Author: Romain Tavenard
 # License: BSD 3 clause
 
 import numpy
