@@ -1,3 +1,4 @@
+[![PyPI version](https://badge.fury.io/py/tslearn.svg)](https://badge.fury.io/py/tslearn)
 [![Documentation Status](https://readthedocs.org/projects/tslearn/badge/?version=latest)](http://tslearn.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.org/rtavenar/tslearn.svg?branch=master)](https://travis-ci.org/rtavenar/tslearn)
 [![Code Climate](https://codeclimate.com/github/rtavenar/tslearn/badges/gpa.svg)](https://codeclimate.com/github/rtavenar/tslearn)
