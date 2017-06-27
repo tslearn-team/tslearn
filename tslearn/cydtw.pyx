@@ -16,6 +16,47 @@ ctypedef numpy.float_t DTYPE_t
 # arguments for a "def" function is checked at run-time when entering the
 # function.
 
+
+@cython.boundscheck(False) # turn off bounds-checking for entire function
+@cython.wraparound(False)  # turn off negative index wrapping for entire function
+def sakoe_chiba_mask(int sz1, int sz2, int radius):
+    cdef int i = 0
+    cdef int j = 0
+    cdef DTYPE_t expected_j = 0.
+    cdef DTYPE_t ratio = float(sz2 - 1) / (sz1 - 1)
+    cdef numpy.ndarray[DTYPE_t, ndim=2] mask = numpy.zeros((sz1, sz2), dtype=DTYPE)
+
+    for i in range(sz1):
+        for j in range(sz2):
+            expected_j = float(i) * ratio
+            if abs(expected_j - j) > radius:
+                mask[i, j] = numpy.inf
+    return mask
+
+
+@cython.boundscheck(False) # turn off bounds-checking for entire function
+@cython.wraparound(False)  # turn off negative index wrapping for entire function
+def itakura_mask(int sz1, int sz2):
+    cdef int i = 0
+    cdef int j = 0
+    cdef numpy.ndarray[DTYPE_t, ndim=2] mask = numpy.zeros((sz1, sz2), dtype=DTYPE)
+    cdef numpy.ndarray[DTYPE_t, ndim=2] mask_out = numpy.zeros((sz1, sz2), dtype=DTYPE)
+    mask[:, 0:2] = numpy.inf
+    mask[0:2, :] = numpy.inf
+    mask[0, 0] = 0.
+    mask[1, 1] = 0.
+    mask[1, 2] = 0.
+    mask[2, 1] = 0.
+
+    for i in range(2, sz1):
+        for j in range(2, sz2):
+            if numpy.alltrue(~numpy.isfinite([mask[i-1, j-1], mask[i-2, j-1], mask[i-1, j-1]])):
+                mask[i, j] = numpy.inf
+
+    mask_out[~numpy.logical_and(numpy.isfinite(mask), numpy.isfinite(mask[::-1, ::-1]))] = numpy.inf
+    return mask_out
+
+
 @cython.boundscheck(False) # turn off bounds-checking for entire function
 @cython.wraparound(False)  # turn off negative index wrapping for entire function
 def dtw_path(numpy.ndarray[DTYPE_t, ndim=2] s1, numpy.ndarray[DTYPE_t, ndim=2] s2):

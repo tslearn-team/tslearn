@@ -8,7 +8,9 @@ from sklearn.utils import check_random_state
 from tslearn.soft_dtw_fast import _soft_dtw, _soft_dtw_grad, _jacobian_product_sq_euc
 from sklearn.metrics.pairwise import euclidean_distances
 
-from tslearn.cydtw import dtw as cydtw, dtw_path as cydtw_path, cdist_dtw as cycdist_dtw, lb_envelope as cylb_envelope
+from tslearn.cydtw import dtw as cydtw, dtw_path as cydtw_path, cdist_dtw as cycdist_dtw
+from tslearn.cydtw import lb_envelope as cylb_envelope
+from tslearn.cydtw import sakoe_chiba_mask as cysakoe_chiba_mask, itakura_mask as cyitakura_mask
 from tslearn.cylrdtw import lr_dtw as cylr_dtw, lr_dtw_backtrace as cylr_dtw_backtrace, cdist_lr_dtw as cycdist_lr_dtw
 from tslearn.cygak import cdist_gak as cycdist_gak, normalized_gak as cynormalized_gak
 from tslearn.utils import to_time_series, to_time_series_dataset
@@ -101,6 +103,42 @@ def dtw(s1, s2):
     s1 = to_time_series(s1)
     s2 = to_time_series(s2)
     return cydtw(s1, s2)
+
+
+def sakoe_chiba_mask(sz1, sz2, radius=1):
+    """
+    Examples
+    --------
+    >>> sakoe_chiba_mask(4, 4, 1)  # doctest: +NORMALIZE_WHITESPACE
+    array([[  0.,  0., inf, inf],
+           [  0.,  0.,  0., inf],
+           [ inf,  0.,  0.,  0.],
+           [ inf, inf,  0.,  0.]])
+    >>> sakoe_chiba_mask(7, 3, 1)  # doctest: +NORMALIZE_WHITESPACE
+    array([[  0., 0., inf],
+           [  0., 0., inf],
+           [  0., 0., inf],
+           [  0., 0.,  0.],
+           [ inf, 0.,  0.],
+           [ inf, 0.,  0.],
+           [ inf, 0.,  0.]])
+    """
+    return cysakoe_chiba_mask(sz1, sz2, radius)
+
+
+def itakura_mask(sz1, sz2):
+    """
+    Examples
+    --------
+    >>> itakura_mask(6, 6)  # doctest: +NORMALIZE_WHITESPACE
+    array([[  0., inf, inf, inf, inf, inf],
+           [ inf,  0.,  0., inf, inf, inf],
+           [ inf,  0.,  0.,  0., inf, inf],
+           [ inf, inf,  0.,  0.,  0., inf],
+           [ inf, inf, inf,  0.,  0., inf],
+           [ inf, inf, inf, inf, inf,  0.]])
+    """
+    return cyitakura_mask(sz1, sz2)
 
 
 def cdist_dtw(dataset1, dataset2=None):

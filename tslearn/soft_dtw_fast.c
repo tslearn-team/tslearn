@@ -873,6 +873,15 @@ typedef npy_double __pyx_t_5numpy_double_t;
  * ctypedef npy_cfloat      cfloat_t
  */
 typedef npy_longdouble __pyx_t_5numpy_longdouble_t;
+
+/* "tslearn/soft_dtw_fast.pyx":14
+ * 
+ * DTYPE = np.float64
+ * ctypedef np.float64_t DTYPE_t             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+typedef __pyx_t_5numpy_float64_t __pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t;
 /* Declarations.proto */
 #if CYTHON_CCOMPLEX
   #ifdef __cplusplus
@@ -1142,6 +1151,9 @@ static int __Pyx_GetException(PyObject **type, PyObject **value, PyObject **tb);
 /* Import.proto */
 static PyObject *__Pyx_Import(PyObject *name, PyObject *from_list, int level);
 
+/* GetModuleGlobalName.proto */
+static CYTHON_INLINE PyObject *__Pyx_GetModuleGlobalName(PyObject *name);
+
 /* CodeObjectCache.proto */
 typedef struct {
     PyCodeObject* code_object;
@@ -1358,8 +1370,8 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void); /*proto*/
 /* Module declarations from 'libc.math' */
 
 /* Module declarations from 'tslearn.soft_dtw_fast' */
-static CYTHON_INLINE double __pyx_f_7tslearn_13soft_dtw_fast__softmin3(double, double, double, double); /*proto*/
-static __Pyx_TypeInfo __Pyx_TypeInfo_double = { "double", NULL, sizeof(double), { 0 }, 0, 'R', 0, 0 };
+static CYTHON_INLINE double __pyx_f_7tslearn_13soft_dtw_fast__softmin3(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t, __pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t, __pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t, __pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t); /*proto*/
+static __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t = { "DTYPE_t", NULL, sizeof(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t), { 0 }, 0, 'R', 0, 0 };
 #define __Pyx_MODULE_NAME "tslearn.soft_dtw_fast"
 int __pyx_module_is_main_tslearn__soft_dtw_fast = 0;
 
@@ -1387,10 +1399,12 @@ static const char __pyx_k_n[] = "n";
 static const char __pyx_k_np[] = "np";
 static const char __pyx_k_main[] = "__main__";
 static const char __pyx_k_test[] = "__test__";
+static const char __pyx_k_DTYPE[] = "DTYPE";
 static const char __pyx_k_gamma[] = "gamma";
 static const char __pyx_k_numpy[] = "numpy";
 static const char __pyx_k_range[] = "range";
 static const char __pyx_k_import[] = "__import__";
+static const char __pyx_k_float64[] = "float64";
 static const char __pyx_k_reversed[] = "reversed";
 static const char __pyx_k_soft_dtw[] = "_soft_dtw";
 static const char __pyx_k_ValueError[] = "ValueError";
@@ -1409,6 +1423,7 @@ static const char __pyx_k_ndarray_is_not_Fortran_contiguou[] = "ndarray is not F
 static const char __pyx_k_numpy_core_umath_failed_to_impor[] = "numpy.core.umath failed to import";
 static const char __pyx_k_Format_string_allocated_too_shor_2[] = "Format string allocated too short.";
 static PyObject *__pyx_n_s_D;
+static PyObject *__pyx_n_s_DTYPE;
 static PyObject *__pyx_n_s_E;
 static PyObject *__pyx_kp_u_Format_string_allocated_too_shor;
 static PyObject *__pyx_kp_u_Format_string_allocated_too_shor_2;
@@ -1425,6 +1440,7 @@ static PyObject *__pyx_n_s_a;
 static PyObject *__pyx_n_s_b;
 static PyObject *__pyx_n_s_c;
 static PyObject *__pyx_n_s_d;
+static PyObject *__pyx_n_s_float64;
 static PyObject *__pyx_n_s_gamma;
 static PyObject *__pyx_n_s_i;
 static PyObject *__pyx_n_s_import;
@@ -1447,8 +1463,8 @@ static PyObject *__pyx_n_s_soft_dtw_grad;
 static PyObject *__pyx_n_s_test;
 static PyObject *__pyx_n_s_tslearn_soft_dtw_fast;
 static PyObject *__pyx_kp_u_unknown_dtype_code_in_numpy_pxd;
-static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast__soft_dtw(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_D, PyArrayObject *__pyx_v_R, double __pyx_v_gamma); /* proto */
-static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_2_soft_dtw_grad(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_D, PyArrayObject *__pyx_v_R, PyArrayObject *__pyx_v_E, double __pyx_v_gamma); /* proto */
+static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast__soft_dtw(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_D, PyArrayObject *__pyx_v_R, __pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t __pyx_v_gamma); /* proto */
+static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_2_soft_dtw_grad(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_D, PyArrayObject *__pyx_v_R, PyArrayObject *__pyx_v_E, __pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t __pyx_v_gamma); /* proto */
 static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_4_jacobian_product_sq_euc(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_X, PyArrayObject *__pyx_v_Y, PyArrayObject *__pyx_v_E, PyArrayObject *__pyx_v_G); /* proto */
 static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info, int __pyx_v_flags); /* proto */
 static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info); /* proto */
@@ -1468,36 +1484,36 @@ static PyObject *__pyx_codeobj__11;
 static PyObject *__pyx_codeobj__13;
 static PyObject *__pyx_codeobj__15;
 
-/* "tslearn/soft_dtw_fast.pyx":19
+/* "tslearn/soft_dtw_fast.pyx":22
  * 
  * 
- * cdef inline double _softmin3(double a,             # <<<<<<<<<<<<<<
- *                              double b,
- *                              double c,
+ * cdef inline double _softmin3(DTYPE_t a,             # <<<<<<<<<<<<<<
+ *                              DTYPE_t b,
+ *                              DTYPE_t c,
  */
 
-static CYTHON_INLINE double __pyx_f_7tslearn_13soft_dtw_fast__softmin3(double __pyx_v_a, double __pyx_v_b, double __pyx_v_c, double __pyx_v_gamma) {
-  double __pyx_v_max_val;
-  double __pyx_v_tmp;
+static CYTHON_INLINE double __pyx_f_7tslearn_13soft_dtw_fast__softmin3(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t __pyx_v_a, __pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t __pyx_v_b, __pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t __pyx_v_c, __pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t __pyx_v_gamma) {
+  __pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t __pyx_v_max_val;
+  __pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t __pyx_v_tmp;
   double __pyx_r;
   __Pyx_RefNannyDeclarations
-  double __pyx_t_1;
-  double __pyx_t_2;
-  double __pyx_t_3;
-  double __pyx_t_4;
+  __pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t __pyx_t_1;
+  __pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t __pyx_t_2;
+  __pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t __pyx_t_3;
+  __pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t __pyx_t_4;
   __Pyx_RefNannySetupContext("_softmin3", 0);
 
-  /* "tslearn/soft_dtw_fast.pyx":23
- *                              double c,
- *                              double gamma):
+  /* "tslearn/soft_dtw_fast.pyx":26
+ *                              DTYPE_t c,
+ *                              DTYPE_t gamma):
  *     a /= -gamma             # <<<<<<<<<<<<<<
  *     b /= -gamma
  *     c /= -gamma
  */
   __pyx_v_a = (__pyx_v_a / (-__pyx_v_gamma));
 
-  /* "tslearn/soft_dtw_fast.pyx":24
- *                              double gamma):
+  /* "tslearn/soft_dtw_fast.pyx":27
+ *                              DTYPE_t gamma):
  *     a /= -gamma
  *     b /= -gamma             # <<<<<<<<<<<<<<
  *     c /= -gamma
@@ -1505,21 +1521,21 @@ static CYTHON_INLINE double __pyx_f_7tslearn_13soft_dtw_fast__softmin3(double __
  */
   __pyx_v_b = (__pyx_v_b / (-__pyx_v_gamma));
 
-  /* "tslearn/soft_dtw_fast.pyx":25
+  /* "tslearn/soft_dtw_fast.pyx":28
  *     a /= -gamma
  *     b /= -gamma
  *     c /= -gamma             # <<<<<<<<<<<<<<
  * 
- *     cdef double max_val = max(max(a, b), c)
+ *     cdef DTYPE_t max_val = max(max(a, b), c)
  */
   __pyx_v_c = (__pyx_v_c / (-__pyx_v_gamma));
 
-  /* "tslearn/soft_dtw_fast.pyx":27
+  /* "tslearn/soft_dtw_fast.pyx":30
  *     c /= -gamma
  * 
- *     cdef double max_val = max(max(a, b), c)             # <<<<<<<<<<<<<<
+ *     cdef DTYPE_t max_val = max(max(a, b), c)             # <<<<<<<<<<<<<<
  * 
- *     cdef double tmp = 0
+ *     cdef DTYPE_t tmp = 0
  */
   __pyx_t_1 = __pyx_v_c;
   __pyx_t_2 = __pyx_v_b;
@@ -1537,26 +1553,26 @@ static CYTHON_INLINE double __pyx_f_7tslearn_13soft_dtw_fast__softmin3(double __
   }
   __pyx_v_max_val = __pyx_t_4;
 
-  /* "tslearn/soft_dtw_fast.pyx":29
- *     cdef double max_val = max(max(a, b), c)
+  /* "tslearn/soft_dtw_fast.pyx":32
+ *     cdef DTYPE_t max_val = max(max(a, b), c)
  * 
- *     cdef double tmp = 0             # <<<<<<<<<<<<<<
+ *     cdef DTYPE_t tmp = 0             # <<<<<<<<<<<<<<
  *     tmp += exp(a - max_val)
  *     tmp += exp(b - max_val)
  */
   __pyx_v_tmp = 0.0;
 
-  /* "tslearn/soft_dtw_fast.pyx":30
+  /* "tslearn/soft_dtw_fast.pyx":33
  * 
- *     cdef double tmp = 0
+ *     cdef DTYPE_t tmp = 0
  *     tmp += exp(a - max_val)             # <<<<<<<<<<<<<<
  *     tmp += exp(b - max_val)
  *     tmp += exp(c - max_val)
  */
   __pyx_v_tmp = (__pyx_v_tmp + exp((__pyx_v_a - __pyx_v_max_val)));
 
-  /* "tslearn/soft_dtw_fast.pyx":31
- *     cdef double tmp = 0
+  /* "tslearn/soft_dtw_fast.pyx":34
+ *     cdef DTYPE_t tmp = 0
  *     tmp += exp(a - max_val)
  *     tmp += exp(b - max_val)             # <<<<<<<<<<<<<<
  *     tmp += exp(c - max_val)
@@ -1564,7 +1580,7 @@ static CYTHON_INLINE double __pyx_f_7tslearn_13soft_dtw_fast__softmin3(double __
  */
   __pyx_v_tmp = (__pyx_v_tmp + exp((__pyx_v_b - __pyx_v_max_val)));
 
-  /* "tslearn/soft_dtw_fast.pyx":32
+  /* "tslearn/soft_dtw_fast.pyx":35
  *     tmp += exp(a - max_val)
  *     tmp += exp(b - max_val)
  *     tmp += exp(c - max_val)             # <<<<<<<<<<<<<<
@@ -1573,7 +1589,7 @@ static CYTHON_INLINE double __pyx_f_7tslearn_13soft_dtw_fast__softmin3(double __
  */
   __pyx_v_tmp = (__pyx_v_tmp + exp((__pyx_v_c - __pyx_v_max_val)));
 
-  /* "tslearn/soft_dtw_fast.pyx":34
+  /* "tslearn/soft_dtw_fast.pyx":37
  *     tmp += exp(c - max_val)
  * 
  *     return -gamma * (log(tmp) + max_val)             # <<<<<<<<<<<<<<
@@ -1583,12 +1599,12 @@ static CYTHON_INLINE double __pyx_f_7tslearn_13soft_dtw_fast__softmin3(double __
   __pyx_r = ((-__pyx_v_gamma) * (log(__pyx_v_tmp) + __pyx_v_max_val));
   goto __pyx_L0;
 
-  /* "tslearn/soft_dtw_fast.pyx":19
+  /* "tslearn/soft_dtw_fast.pyx":22
  * 
  * 
- * cdef inline double _softmin3(double a,             # <<<<<<<<<<<<<<
- *                              double b,
- *                              double c,
+ * cdef inline double _softmin3(DTYPE_t a,             # <<<<<<<<<<<<<<
+ *                              DTYPE_t b,
+ *                              DTYPE_t c,
  */
 
   /* function exit code */
@@ -1597,12 +1613,12 @@ static CYTHON_INLINE double __pyx_f_7tslearn_13soft_dtw_fast__softmin3(double __
   return __pyx_r;
 }
 
-/* "tslearn/soft_dtw_fast.pyx":37
+/* "tslearn/soft_dtw_fast.pyx":40
  * 
  * 
- * def _soft_dtw(np.ndarray[double, ndim=2] D,             # <<<<<<<<<<<<<<
- *               np.ndarray[double, ndim=2] R,
- *               double gamma):
+ * def _soft_dtw(np.ndarray[DTYPE_t, ndim=2] D,             # <<<<<<<<<<<<<<
+ *               np.ndarray[DTYPE_t, ndim=2] R,
+ *               DTYPE_t gamma):
  */
 
 /* Python wrapper */
@@ -1611,7 +1627,7 @@ static PyMethodDef __pyx_mdef_7tslearn_13soft_dtw_fast_1_soft_dtw = {"_soft_dtw"
 static PyObject *__pyx_pw_7tslearn_13soft_dtw_fast_1_soft_dtw(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyArrayObject *__pyx_v_D = 0;
   PyArrayObject *__pyx_v_R = 0;
-  double __pyx_v_gamma;
+  __pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t __pyx_v_gamma;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("_soft_dtw (wrapper)", 0);
@@ -1636,16 +1652,16 @@ static PyObject *__pyx_pw_7tslearn_13soft_dtw_fast_1_soft_dtw(PyObject *__pyx_se
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_R)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_soft_dtw", 1, 3, 3, 1); __PYX_ERR(0, 37, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_soft_dtw", 1, 3, 3, 1); __PYX_ERR(0, 40, __pyx_L3_error)
         }
         case  2:
         if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_gamma)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_soft_dtw", 1, 3, 3, 2); __PYX_ERR(0, 37, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_soft_dtw", 1, 3, 3, 2); __PYX_ERR(0, 40, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_soft_dtw") < 0)) __PYX_ERR(0, 37, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_soft_dtw") < 0)) __PYX_ERR(0, 40, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 3) {
       goto __pyx_L5_argtuple_error;
@@ -1656,18 +1672,18 @@ static PyObject *__pyx_pw_7tslearn_13soft_dtw_fast_1_soft_dtw(PyObject *__pyx_se
     }
     __pyx_v_D = ((PyArrayObject *)values[0]);
     __pyx_v_R = ((PyArrayObject *)values[1]);
-    __pyx_v_gamma = __pyx_PyFloat_AsDouble(values[2]); if (unlikely((__pyx_v_gamma == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 39, __pyx_L3_error)
+    __pyx_v_gamma = __pyx_PyFloat_AsDouble(values[2]); if (unlikely((__pyx_v_gamma == ((npy_float64)-1)) && PyErr_Occurred())) __PYX_ERR(0, 42, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("_soft_dtw", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 37, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("_soft_dtw", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 40, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("tslearn.soft_dtw_fast._soft_dtw", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_D), __pyx_ptype_5numpy_ndarray, 1, "D", 0))) __PYX_ERR(0, 37, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_R), __pyx_ptype_5numpy_ndarray, 1, "R", 0))) __PYX_ERR(0, 38, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_D), __pyx_ptype_5numpy_ndarray, 1, "D", 0))) __PYX_ERR(0, 40, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_R), __pyx_ptype_5numpy_ndarray, 1, "R", 0))) __PYX_ERR(0, 41, __pyx_L1_error)
   __pyx_r = __pyx_pf_7tslearn_13soft_dtw_fast__soft_dtw(__pyx_self, __pyx_v_D, __pyx_v_R, __pyx_v_gamma);
 
   /* function exit code */
@@ -1679,7 +1695,7 @@ static PyObject *__pyx_pw_7tslearn_13soft_dtw_fast_1_soft_dtw(PyObject *__pyx_se
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast__soft_dtw(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_D, PyArrayObject *__pyx_v_R, double __pyx_v_gamma) {
+static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast__soft_dtw(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_D, PyArrayObject *__pyx_v_R, __pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t __pyx_v_gamma) {
   int __pyx_v_m;
   int __pyx_v_n;
   int __pyx_v_i;
@@ -1721,17 +1737,17 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast__soft_dtw(CYTHON_UNUSED PyObj
   __pyx_pybuffernd_R.rcbuffer = &__pyx_pybuffer_R;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_D.rcbuffer->pybuffer, (PyObject*)__pyx_v_D, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 37, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_D.rcbuffer->pybuffer, (PyObject*)__pyx_v_D, &__Pyx_TypeInfo_nn___pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 40, __pyx_L1_error)
   }
   __pyx_pybuffernd_D.diminfo[0].strides = __pyx_pybuffernd_D.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_D.diminfo[0].shape = __pyx_pybuffernd_D.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_D.diminfo[1].strides = __pyx_pybuffernd_D.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_D.diminfo[1].shape = __pyx_pybuffernd_D.rcbuffer->pybuffer.shape[1];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_R.rcbuffer->pybuffer, (PyObject*)__pyx_v_R, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 37, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_R.rcbuffer->pybuffer, (PyObject*)__pyx_v_R, &__Pyx_TypeInfo_nn___pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 40, __pyx_L1_error)
   }
   __pyx_pybuffernd_R.diminfo[0].strides = __pyx_pybuffernd_R.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_R.diminfo[0].shape = __pyx_pybuffernd_R.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_R.diminfo[1].strides = __pyx_pybuffernd_R.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_R.diminfo[1].shape = __pyx_pybuffernd_R.rcbuffer->pybuffer.shape[1];
 
-  /* "tslearn/soft_dtw_fast.pyx":41
- *               double gamma):
+  /* "tslearn/soft_dtw_fast.pyx":44
+ *               DTYPE_t gamma):
  * 
  *     cdef int m = D.shape[0]             # <<<<<<<<<<<<<<
  *     cdef int n = D.shape[1]
@@ -1739,7 +1755,7 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast__soft_dtw(CYTHON_UNUSED PyObj
  */
   __pyx_v_m = (__pyx_v_D->dimensions[0]);
 
-  /* "tslearn/soft_dtw_fast.pyx":42
+  /* "tslearn/soft_dtw_fast.pyx":45
  * 
  *     cdef int m = D.shape[0]
  *     cdef int n = D.shape[1]             # <<<<<<<<<<<<<<
@@ -1748,17 +1764,17 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast__soft_dtw(CYTHON_UNUSED PyObj
  */
   __pyx_v_n = (__pyx_v_D->dimensions[1]);
 
-  /* "tslearn/soft_dtw_fast.pyx":47
+  /* "tslearn/soft_dtw_fast.pyx":50
  * 
  *     # Initialization.
- *     memset(<void*>R.data, 0, (m+1) * (n+1) * sizeof(double))             # <<<<<<<<<<<<<<
+ *     memset(<void*>R.data, 0, (m+1) * (n+1) * sizeof(DTYPE_t))             # <<<<<<<<<<<<<<
  * 
  *     for i in range(m + 1):
  */
-  memset(((void *)__pyx_v_R->data), 0, (((__pyx_v_m + 1) * (__pyx_v_n + 1)) * (sizeof(double))));
+  memset(((void *)__pyx_v_R->data), 0, (((__pyx_v_m + 1) * (__pyx_v_n + 1)) * (sizeof(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t))));
 
-  /* "tslearn/soft_dtw_fast.pyx":49
- *     memset(<void*>R.data, 0, (m+1) * (n+1) * sizeof(double))
+  /* "tslearn/soft_dtw_fast.pyx":52
+ *     memset(<void*>R.data, 0, (m+1) * (n+1) * sizeof(DTYPE_t))
  * 
  *     for i in range(m + 1):             # <<<<<<<<<<<<<<
  *         R[i, 0] = DBL_MAX
@@ -1768,7 +1784,7 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast__soft_dtw(CYTHON_UNUSED PyObj
   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "tslearn/soft_dtw_fast.pyx":50
+    /* "tslearn/soft_dtw_fast.pyx":53
  * 
  *     for i in range(m + 1):
  *         R[i, 0] = DBL_MAX             # <<<<<<<<<<<<<<
@@ -1777,10 +1793,10 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast__soft_dtw(CYTHON_UNUSED PyObj
  */
     __pyx_t_3 = __pyx_v_i;
     __pyx_t_4 = 0;
-    *__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_3, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_4, __pyx_pybuffernd_R.diminfo[1].strides) = DBL_MAX;
+    *__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_3, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_4, __pyx_pybuffernd_R.diminfo[1].strides) = DBL_MAX;
   }
 
-  /* "tslearn/soft_dtw_fast.pyx":52
+  /* "tslearn/soft_dtw_fast.pyx":55
  *         R[i, 0] = DBL_MAX
  * 
  *     for j in range(n + 1):             # <<<<<<<<<<<<<<
@@ -1791,7 +1807,7 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast__soft_dtw(CYTHON_UNUSED PyObj
   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_j = __pyx_t_2;
 
-    /* "tslearn/soft_dtw_fast.pyx":53
+    /* "tslearn/soft_dtw_fast.pyx":56
  * 
  *     for j in range(n + 1):
  *         R[0, j] = DBL_MAX             # <<<<<<<<<<<<<<
@@ -1800,10 +1816,10 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast__soft_dtw(CYTHON_UNUSED PyObj
  */
     __pyx_t_5 = 0;
     __pyx_t_6 = __pyx_v_j;
-    *__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_5, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_6, __pyx_pybuffernd_R.diminfo[1].strides) = DBL_MAX;
+    *__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_5, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_6, __pyx_pybuffernd_R.diminfo[1].strides) = DBL_MAX;
   }
 
-  /* "tslearn/soft_dtw_fast.pyx":55
+  /* "tslearn/soft_dtw_fast.pyx":58
  *         R[0, j] = DBL_MAX
  * 
  *     R[0, 0] = 0             # <<<<<<<<<<<<<<
@@ -1812,9 +1828,9 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast__soft_dtw(CYTHON_UNUSED PyObj
  */
   __pyx_t_7 = 0;
   __pyx_t_8 = 0;
-  *__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_7, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_8, __pyx_pybuffernd_R.diminfo[1].strides) = 0.0;
+  *__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_7, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_8, __pyx_pybuffernd_R.diminfo[1].strides) = 0.0;
 
-  /* "tslearn/soft_dtw_fast.pyx":58
+  /* "tslearn/soft_dtw_fast.pyx":61
  * 
  *     # DP recursion.
  *     for i in range(1, m + 1):             # <<<<<<<<<<<<<<
@@ -1825,7 +1841,7 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast__soft_dtw(CYTHON_UNUSED PyObj
   for (__pyx_t_2 = 1; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "tslearn/soft_dtw_fast.pyx":59
+    /* "tslearn/soft_dtw_fast.pyx":62
  *     # DP recursion.
  *     for i in range(1, m + 1):
  *         for j in range(1, n + 1):             # <<<<<<<<<<<<<<
@@ -1836,7 +1852,7 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast__soft_dtw(CYTHON_UNUSED PyObj
     for (__pyx_t_10 = 1; __pyx_t_10 < __pyx_t_9; __pyx_t_10+=1) {
       __pyx_v_j = __pyx_t_10;
 
-      /* "tslearn/soft_dtw_fast.pyx":61
+      /* "tslearn/soft_dtw_fast.pyx":64
  *         for j in range(1, n + 1):
  *             # D is indexed starting from 0.
  *             R[i, j] = D[i-1, j-1] + _softmin3(R[i-1, j],             # <<<<<<<<<<<<<<
@@ -1848,7 +1864,7 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast__soft_dtw(CYTHON_UNUSED PyObj
       __pyx_t_13 = (__pyx_v_i - 1);
       __pyx_t_14 = __pyx_v_j;
 
-      /* "tslearn/soft_dtw_fast.pyx":62
+      /* "tslearn/soft_dtw_fast.pyx":65
  *             # D is indexed starting from 0.
  *             R[i, j] = D[i-1, j-1] + _softmin3(R[i-1, j],
  *                                               R[i-1, j-1],             # <<<<<<<<<<<<<<
@@ -1858,7 +1874,7 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast__soft_dtw(CYTHON_UNUSED PyObj
       __pyx_t_15 = (__pyx_v_i - 1);
       __pyx_t_16 = (__pyx_v_j - 1);
 
-      /* "tslearn/soft_dtw_fast.pyx":63
+      /* "tslearn/soft_dtw_fast.pyx":66
  *             R[i, j] = D[i-1, j-1] + _softmin3(R[i-1, j],
  *                                               R[i-1, j-1],
  *                                               R[i, j-1],             # <<<<<<<<<<<<<<
@@ -1868,7 +1884,7 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast__soft_dtw(CYTHON_UNUSED PyObj
       __pyx_t_17 = __pyx_v_i;
       __pyx_t_18 = (__pyx_v_j - 1);
 
-      /* "tslearn/soft_dtw_fast.pyx":61
+      /* "tslearn/soft_dtw_fast.pyx":64
  *         for j in range(1, n + 1):
  *             # D is indexed starting from 0.
  *             R[i, j] = D[i-1, j-1] + _softmin3(R[i-1, j],             # <<<<<<<<<<<<<<
@@ -1877,16 +1893,16 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast__soft_dtw(CYTHON_UNUSED PyObj
  */
       __pyx_t_19 = __pyx_v_i;
       __pyx_t_20 = __pyx_v_j;
-      *__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_19, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_20, __pyx_pybuffernd_R.diminfo[1].strides) = ((*__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_D.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_D.diminfo[0].strides, __pyx_t_12, __pyx_pybuffernd_D.diminfo[1].strides)) + __pyx_f_7tslearn_13soft_dtw_fast__softmin3((*__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_14, __pyx_pybuffernd_R.diminfo[1].strides)), (*__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_15, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_16, __pyx_pybuffernd_R.diminfo[1].strides)), (*__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_17, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_18, __pyx_pybuffernd_R.diminfo[1].strides)), __pyx_v_gamma));
+      *__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_19, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_20, __pyx_pybuffernd_R.diminfo[1].strides) = ((*__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_D.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_D.diminfo[0].strides, __pyx_t_12, __pyx_pybuffernd_D.diminfo[1].strides)) + __pyx_f_7tslearn_13soft_dtw_fast__softmin3((*__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_14, __pyx_pybuffernd_R.diminfo[1].strides)), (*__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_15, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_16, __pyx_pybuffernd_R.diminfo[1].strides)), (*__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_17, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_18, __pyx_pybuffernd_R.diminfo[1].strides)), __pyx_v_gamma));
     }
   }
 
-  /* "tslearn/soft_dtw_fast.pyx":37
+  /* "tslearn/soft_dtw_fast.pyx":40
  * 
  * 
- * def _soft_dtw(np.ndarray[double, ndim=2] D,             # <<<<<<<<<<<<<<
- *               np.ndarray[double, ndim=2] R,
- *               double gamma):
+ * def _soft_dtw(np.ndarray[DTYPE_t, ndim=2] D,             # <<<<<<<<<<<<<<
+ *               np.ndarray[DTYPE_t, ndim=2] R,
+ *               DTYPE_t gamma):
  */
 
   /* function exit code */
@@ -1912,12 +1928,12 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast__soft_dtw(CYTHON_UNUSED PyObj
   return __pyx_r;
 }
 
-/* "tslearn/soft_dtw_fast.pyx":67
+/* "tslearn/soft_dtw_fast.pyx":70
  * 
  * 
- * def _soft_dtw_grad(np.ndarray[double, ndim=2] D,             # <<<<<<<<<<<<<<
- *                    np.ndarray[double, ndim=2] R,
- *                    np.ndarray[double, ndim=2] E,
+ * def _soft_dtw_grad(np.ndarray[DTYPE_t, ndim=2] D,             # <<<<<<<<<<<<<<
+ *                    np.ndarray[DTYPE_t, ndim=2] R,
+ *                    np.ndarray[DTYPE_t, ndim=2] E,
  */
 
 /* Python wrapper */
@@ -1927,7 +1943,7 @@ static PyObject *__pyx_pw_7tslearn_13soft_dtw_fast_3_soft_dtw_grad(PyObject *__p
   PyArrayObject *__pyx_v_D = 0;
   PyArrayObject *__pyx_v_R = 0;
   PyArrayObject *__pyx_v_E = 0;
-  double __pyx_v_gamma;
+  __pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t __pyx_v_gamma;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("_soft_dtw_grad (wrapper)", 0);
@@ -1953,21 +1969,21 @@ static PyObject *__pyx_pw_7tslearn_13soft_dtw_fast_3_soft_dtw_grad(PyObject *__p
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_R)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_soft_dtw_grad", 1, 4, 4, 1); __PYX_ERR(0, 67, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_soft_dtw_grad", 1, 4, 4, 1); __PYX_ERR(0, 70, __pyx_L3_error)
         }
         case  2:
         if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_E)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_soft_dtw_grad", 1, 4, 4, 2); __PYX_ERR(0, 67, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_soft_dtw_grad", 1, 4, 4, 2); __PYX_ERR(0, 70, __pyx_L3_error)
         }
         case  3:
         if (likely((values[3] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_gamma)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_soft_dtw_grad", 1, 4, 4, 3); __PYX_ERR(0, 67, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_soft_dtw_grad", 1, 4, 4, 3); __PYX_ERR(0, 70, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_soft_dtw_grad") < 0)) __PYX_ERR(0, 67, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_soft_dtw_grad") < 0)) __PYX_ERR(0, 70, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 4) {
       goto __pyx_L5_argtuple_error;
@@ -1980,19 +1996,19 @@ static PyObject *__pyx_pw_7tslearn_13soft_dtw_fast_3_soft_dtw_grad(PyObject *__p
     __pyx_v_D = ((PyArrayObject *)values[0]);
     __pyx_v_R = ((PyArrayObject *)values[1]);
     __pyx_v_E = ((PyArrayObject *)values[2]);
-    __pyx_v_gamma = __pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_gamma == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 70, __pyx_L3_error)
+    __pyx_v_gamma = __pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_gamma == ((npy_float64)-1)) && PyErr_Occurred())) __PYX_ERR(0, 73, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("_soft_dtw_grad", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 67, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("_soft_dtw_grad", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 70, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("tslearn.soft_dtw_fast._soft_dtw_grad", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_D), __pyx_ptype_5numpy_ndarray, 1, "D", 0))) __PYX_ERR(0, 67, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_R), __pyx_ptype_5numpy_ndarray, 1, "R", 0))) __PYX_ERR(0, 68, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_E), __pyx_ptype_5numpy_ndarray, 1, "E", 0))) __PYX_ERR(0, 69, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_D), __pyx_ptype_5numpy_ndarray, 1, "D", 0))) __PYX_ERR(0, 70, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_R), __pyx_ptype_5numpy_ndarray, 1, "R", 0))) __PYX_ERR(0, 71, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_E), __pyx_ptype_5numpy_ndarray, 1, "E", 0))) __PYX_ERR(0, 72, __pyx_L1_error)
   __pyx_r = __pyx_pf_7tslearn_13soft_dtw_fast_2_soft_dtw_grad(__pyx_self, __pyx_v_D, __pyx_v_R, __pyx_v_E, __pyx_v_gamma);
 
   /* function exit code */
@@ -2004,14 +2020,14 @@ static PyObject *__pyx_pw_7tslearn_13soft_dtw_fast_3_soft_dtw_grad(PyObject *__p
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_2_soft_dtw_grad(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_D, PyArrayObject *__pyx_v_R, PyArrayObject *__pyx_v_E, double __pyx_v_gamma) {
+static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_2_soft_dtw_grad(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_D, PyArrayObject *__pyx_v_R, PyArrayObject *__pyx_v_E, __pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t __pyx_v_gamma) {
   int __pyx_v_m;
   int __pyx_v_n;
   int __pyx_v_i;
   int __pyx_v_j;
-  double __pyx_v_a;
-  double __pyx_v_b;
-  double __pyx_v_c;
+  __pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t __pyx_v_a;
+  __pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t __pyx_v_b;
+  __pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t __pyx_v_c;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_D;
   __Pyx_Buffer __pyx_pybuffer_D;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_E;
@@ -2080,21 +2096,21 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_2_soft_dtw_grad(CYTHON_UNUSED
   __pyx_pybuffernd_E.rcbuffer = &__pyx_pybuffer_E;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_D.rcbuffer->pybuffer, (PyObject*)__pyx_v_D, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 67, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_D.rcbuffer->pybuffer, (PyObject*)__pyx_v_D, &__Pyx_TypeInfo_nn___pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 70, __pyx_L1_error)
   }
   __pyx_pybuffernd_D.diminfo[0].strides = __pyx_pybuffernd_D.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_D.diminfo[0].shape = __pyx_pybuffernd_D.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_D.diminfo[1].strides = __pyx_pybuffernd_D.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_D.diminfo[1].shape = __pyx_pybuffernd_D.rcbuffer->pybuffer.shape[1];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_R.rcbuffer->pybuffer, (PyObject*)__pyx_v_R, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 67, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_R.rcbuffer->pybuffer, (PyObject*)__pyx_v_R, &__Pyx_TypeInfo_nn___pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 70, __pyx_L1_error)
   }
   __pyx_pybuffernd_R.diminfo[0].strides = __pyx_pybuffernd_R.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_R.diminfo[0].shape = __pyx_pybuffernd_R.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_R.diminfo[1].strides = __pyx_pybuffernd_R.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_R.diminfo[1].shape = __pyx_pybuffernd_R.rcbuffer->pybuffer.shape[1];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_E.rcbuffer->pybuffer, (PyObject*)__pyx_v_E, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 67, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_E.rcbuffer->pybuffer, (PyObject*)__pyx_v_E, &__Pyx_TypeInfo_nn___pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 70, __pyx_L1_error)
   }
   __pyx_pybuffernd_E.diminfo[0].strides = __pyx_pybuffernd_E.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_E.diminfo[0].shape = __pyx_pybuffernd_E.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_E.diminfo[1].strides = __pyx_pybuffernd_E.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_E.diminfo[1].shape = __pyx_pybuffernd_E.rcbuffer->pybuffer.shape[1];
 
-  /* "tslearn/soft_dtw_fast.pyx":73
+  /* "tslearn/soft_dtw_fast.pyx":76
  * 
  *     # We added an extra row and an extra column on the Python side.
  *     cdef int m = D.shape[0] - 1             # <<<<<<<<<<<<<<
@@ -2103,7 +2119,7 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_2_soft_dtw_grad(CYTHON_UNUSED
  */
   __pyx_v_m = ((__pyx_v_D->dimensions[0]) - 1);
 
-  /* "tslearn/soft_dtw_fast.pyx":74
+  /* "tslearn/soft_dtw_fast.pyx":77
  *     # We added an extra row and an extra column on the Python side.
  *     cdef int m = D.shape[0] - 1
  *     cdef int n = D.shape[1] - 1             # <<<<<<<<<<<<<<
@@ -2112,17 +2128,17 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_2_soft_dtw_grad(CYTHON_UNUSED
  */
   __pyx_v_n = ((__pyx_v_D->dimensions[1]) - 1);
 
-  /* "tslearn/soft_dtw_fast.pyx":80
+  /* "tslearn/soft_dtw_fast.pyx":83
  * 
  *     # Initialization.
- *     memset(<void*>E.data, 0, (m+2) * (n+2) * sizeof(double))             # <<<<<<<<<<<<<<
+ *     memset(<void*>E.data, 0, (m+2) * (n+2) * sizeof(DTYPE_t))             # <<<<<<<<<<<<<<
  * 
  *     for i in range(1, m+1):
  */
-  memset(((void *)__pyx_v_E->data), 0, (((__pyx_v_m + 2) * (__pyx_v_n + 2)) * (sizeof(double))));
+  memset(((void *)__pyx_v_E->data), 0, (((__pyx_v_m + 2) * (__pyx_v_n + 2)) * (sizeof(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t))));
 
-  /* "tslearn/soft_dtw_fast.pyx":82
- *     memset(<void*>E.data, 0, (m+2) * (n+2) * sizeof(double))
+  /* "tslearn/soft_dtw_fast.pyx":85
+ *     memset(<void*>E.data, 0, (m+2) * (n+2) * sizeof(DTYPE_t))
  * 
  *     for i in range(1, m+1):             # <<<<<<<<<<<<<<
  *         # For D, indices start from 0 throughout.
@@ -2132,7 +2148,7 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_2_soft_dtw_grad(CYTHON_UNUSED
   for (__pyx_t_2 = 1; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "tslearn/soft_dtw_fast.pyx":84
+    /* "tslearn/soft_dtw_fast.pyx":87
  *     for i in range(1, m+1):
  *         # For D, indices start from 0 throughout.
  *         D[i-1, n] = 0             # <<<<<<<<<<<<<<
@@ -2141,9 +2157,9 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_2_soft_dtw_grad(CYTHON_UNUSED
  */
     __pyx_t_3 = (__pyx_v_i - 1);
     __pyx_t_4 = __pyx_v_n;
-    *__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_D.rcbuffer->pybuffer.buf, __pyx_t_3, __pyx_pybuffernd_D.diminfo[0].strides, __pyx_t_4, __pyx_pybuffernd_D.diminfo[1].strides) = 0.0;
+    *__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_D.rcbuffer->pybuffer.buf, __pyx_t_3, __pyx_pybuffernd_D.diminfo[0].strides, __pyx_t_4, __pyx_pybuffernd_D.diminfo[1].strides) = 0.0;
 
-    /* "tslearn/soft_dtw_fast.pyx":85
+    /* "tslearn/soft_dtw_fast.pyx":88
  *         # For D, indices start from 0 throughout.
  *         D[i-1, n] = 0
  *         R[i, n+1] = -DBL_MAX             # <<<<<<<<<<<<<<
@@ -2152,10 +2168,10 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_2_soft_dtw_grad(CYTHON_UNUSED
  */
     __pyx_t_5 = __pyx_v_i;
     __pyx_t_6 = (__pyx_v_n + 1);
-    *__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_5, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_6, __pyx_pybuffernd_R.diminfo[1].strides) = (-DBL_MAX);
+    *__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_5, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_6, __pyx_pybuffernd_R.diminfo[1].strides) = (-DBL_MAX);
   }
 
-  /* "tslearn/soft_dtw_fast.pyx":87
+  /* "tslearn/soft_dtw_fast.pyx":90
  *         R[i, n+1] = -DBL_MAX
  * 
  *     for j in range(1, n+1):             # <<<<<<<<<<<<<<
@@ -2166,7 +2182,7 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_2_soft_dtw_grad(CYTHON_UNUSED
   for (__pyx_t_2 = 1; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_j = __pyx_t_2;
 
-    /* "tslearn/soft_dtw_fast.pyx":88
+    /* "tslearn/soft_dtw_fast.pyx":91
  * 
  *     for j in range(1, n+1):
  *         D[m, j-1] = 0             # <<<<<<<<<<<<<<
@@ -2175,9 +2191,9 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_2_soft_dtw_grad(CYTHON_UNUSED
  */
     __pyx_t_7 = __pyx_v_m;
     __pyx_t_8 = (__pyx_v_j - 1);
-    *__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_D.rcbuffer->pybuffer.buf, __pyx_t_7, __pyx_pybuffernd_D.diminfo[0].strides, __pyx_t_8, __pyx_pybuffernd_D.diminfo[1].strides) = 0.0;
+    *__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_D.rcbuffer->pybuffer.buf, __pyx_t_7, __pyx_pybuffernd_D.diminfo[0].strides, __pyx_t_8, __pyx_pybuffernd_D.diminfo[1].strides) = 0.0;
 
-    /* "tslearn/soft_dtw_fast.pyx":89
+    /* "tslearn/soft_dtw_fast.pyx":92
  *     for j in range(1, n+1):
  *         D[m, j-1] = 0
  *         R[m+1, j] = -DBL_MAX             # <<<<<<<<<<<<<<
@@ -2186,10 +2202,10 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_2_soft_dtw_grad(CYTHON_UNUSED
  */
     __pyx_t_9 = (__pyx_v_m + 1);
     __pyx_t_10 = __pyx_v_j;
-    *__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_9, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_10, __pyx_pybuffernd_R.diminfo[1].strides) = (-DBL_MAX);
+    *__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_9, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_10, __pyx_pybuffernd_R.diminfo[1].strides) = (-DBL_MAX);
   }
 
-  /* "tslearn/soft_dtw_fast.pyx":91
+  /* "tslearn/soft_dtw_fast.pyx":94
  *         R[m+1, j] = -DBL_MAX
  * 
  *     E[m+1, n+1] = 1             # <<<<<<<<<<<<<<
@@ -2198,9 +2214,9 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_2_soft_dtw_grad(CYTHON_UNUSED
  */
   __pyx_t_11 = (__pyx_v_m + 1);
   __pyx_t_12 = (__pyx_v_n + 1);
-  *__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_E.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_E.diminfo[0].strides, __pyx_t_12, __pyx_pybuffernd_E.diminfo[1].strides) = 1.0;
+  *__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_E.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_E.diminfo[0].strides, __pyx_t_12, __pyx_pybuffernd_E.diminfo[1].strides) = 1.0;
 
-  /* "tslearn/soft_dtw_fast.pyx":92
+  /* "tslearn/soft_dtw_fast.pyx":95
  * 
  *     E[m+1, n+1] = 1
  *     R[m+1, n+1] = R[m, n]             # <<<<<<<<<<<<<<
@@ -2211,9 +2227,9 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_2_soft_dtw_grad(CYTHON_UNUSED
   __pyx_t_14 = __pyx_v_n;
   __pyx_t_15 = (__pyx_v_m + 1);
   __pyx_t_16 = (__pyx_v_n + 1);
-  *__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_15, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_16, __pyx_pybuffernd_R.diminfo[1].strides) = (*__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_14, __pyx_pybuffernd_R.diminfo[1].strides));
+  *__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_15, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_16, __pyx_pybuffernd_R.diminfo[1].strides) = (*__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_14, __pyx_pybuffernd_R.diminfo[1].strides));
 
-  /* "tslearn/soft_dtw_fast.pyx":93
+  /* "tslearn/soft_dtw_fast.pyx":96
  *     E[m+1, n+1] = 1
  *     R[m+1, n+1] = R[m, n]
  *     D[m, n] = 0             # <<<<<<<<<<<<<<
@@ -2222,9 +2238,9 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_2_soft_dtw_grad(CYTHON_UNUSED
  */
   __pyx_t_17 = __pyx_v_m;
   __pyx_t_18 = __pyx_v_n;
-  *__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_D.rcbuffer->pybuffer.buf, __pyx_t_17, __pyx_pybuffernd_D.diminfo[0].strides, __pyx_t_18, __pyx_pybuffernd_D.diminfo[1].strides) = 0.0;
+  *__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_D.rcbuffer->pybuffer.buf, __pyx_t_17, __pyx_pybuffernd_D.diminfo[0].strides, __pyx_t_18, __pyx_pybuffernd_D.diminfo[1].strides) = 0.0;
 
-  /* "tslearn/soft_dtw_fast.pyx":96
+  /* "tslearn/soft_dtw_fast.pyx":99
  * 
  *     # DP recursion.
  *     for j in reversed(range(1, n+1)):  # ranges from n to 1             # <<<<<<<<<<<<<<
@@ -2234,7 +2250,7 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_2_soft_dtw_grad(CYTHON_UNUSED
   for (__pyx_t_2 = (__pyx_v_n + 1)-1; __pyx_t_2 >= 1; __pyx_t_2-=1) {
     __pyx_v_j = __pyx_t_2;
 
-    /* "tslearn/soft_dtw_fast.pyx":97
+    /* "tslearn/soft_dtw_fast.pyx":100
  *     # DP recursion.
  *     for j in reversed(range(1, n+1)):  # ranges from n to 1
  *         for i in reversed(range(1, m+1)):  # ranges from m to 1             # <<<<<<<<<<<<<<
@@ -2244,7 +2260,7 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_2_soft_dtw_grad(CYTHON_UNUSED
     for (__pyx_t_19 = (__pyx_v_m + 1)-1; __pyx_t_19 >= 1; __pyx_t_19-=1) {
       __pyx_v_i = __pyx_t_19;
 
-      /* "tslearn/soft_dtw_fast.pyx":98
+      /* "tslearn/soft_dtw_fast.pyx":101
  *     for j in reversed(range(1, n+1)):  # ranges from n to 1
  *         for i in reversed(range(1, m+1)):  # ranges from m to 1
  *             a = exp((R[i+1, j] - R[i, j] - D[i, j-1]) / gamma)             # <<<<<<<<<<<<<<
@@ -2257,9 +2273,9 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_2_soft_dtw_grad(CYTHON_UNUSED
       __pyx_t_23 = __pyx_v_j;
       __pyx_t_24 = __pyx_v_i;
       __pyx_t_25 = (__pyx_v_j - 1);
-      __pyx_v_a = exp(((((*__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_20, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_21, __pyx_pybuffernd_R.diminfo[1].strides)) - (*__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_22, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_23, __pyx_pybuffernd_R.diminfo[1].strides))) - (*__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_D.rcbuffer->pybuffer.buf, __pyx_t_24, __pyx_pybuffernd_D.diminfo[0].strides, __pyx_t_25, __pyx_pybuffernd_D.diminfo[1].strides))) / __pyx_v_gamma));
+      __pyx_v_a = exp(((((*__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_20, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_21, __pyx_pybuffernd_R.diminfo[1].strides)) - (*__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_22, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_23, __pyx_pybuffernd_R.diminfo[1].strides))) - (*__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_D.rcbuffer->pybuffer.buf, __pyx_t_24, __pyx_pybuffernd_D.diminfo[0].strides, __pyx_t_25, __pyx_pybuffernd_D.diminfo[1].strides))) / __pyx_v_gamma));
 
-      /* "tslearn/soft_dtw_fast.pyx":99
+      /* "tslearn/soft_dtw_fast.pyx":102
  *         for i in reversed(range(1, m+1)):  # ranges from m to 1
  *             a = exp((R[i+1, j] - R[i, j] - D[i, j-1]) / gamma)
  *             b = exp((R[i, j+1] - R[i, j] - D[i-1, j]) / gamma)             # <<<<<<<<<<<<<<
@@ -2272,9 +2288,9 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_2_soft_dtw_grad(CYTHON_UNUSED
       __pyx_t_29 = __pyx_v_j;
       __pyx_t_30 = (__pyx_v_i - 1);
       __pyx_t_31 = __pyx_v_j;
-      __pyx_v_b = exp(((((*__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_26, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_27, __pyx_pybuffernd_R.diminfo[1].strides)) - (*__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_28, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_29, __pyx_pybuffernd_R.diminfo[1].strides))) - (*__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_D.rcbuffer->pybuffer.buf, __pyx_t_30, __pyx_pybuffernd_D.diminfo[0].strides, __pyx_t_31, __pyx_pybuffernd_D.diminfo[1].strides))) / __pyx_v_gamma));
+      __pyx_v_b = exp(((((*__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_26, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_27, __pyx_pybuffernd_R.diminfo[1].strides)) - (*__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_28, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_29, __pyx_pybuffernd_R.diminfo[1].strides))) - (*__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_D.rcbuffer->pybuffer.buf, __pyx_t_30, __pyx_pybuffernd_D.diminfo[0].strides, __pyx_t_31, __pyx_pybuffernd_D.diminfo[1].strides))) / __pyx_v_gamma));
 
-      /* "tslearn/soft_dtw_fast.pyx":100
+      /* "tslearn/soft_dtw_fast.pyx":103
  *             a = exp((R[i+1, j] - R[i, j] - D[i, j-1]) / gamma)
  *             b = exp((R[i, j+1] - R[i, j] - D[i-1, j]) / gamma)
  *             c = exp((R[i+1, j+1] - R[i, j] - D[i, j]) / gamma)             # <<<<<<<<<<<<<<
@@ -2287,9 +2303,9 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_2_soft_dtw_grad(CYTHON_UNUSED
       __pyx_t_35 = __pyx_v_j;
       __pyx_t_36 = __pyx_v_i;
       __pyx_t_37 = __pyx_v_j;
-      __pyx_v_c = exp(((((*__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_32, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_33, __pyx_pybuffernd_R.diminfo[1].strides)) - (*__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_34, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_35, __pyx_pybuffernd_R.diminfo[1].strides))) - (*__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_D.rcbuffer->pybuffer.buf, __pyx_t_36, __pyx_pybuffernd_D.diminfo[0].strides, __pyx_t_37, __pyx_pybuffernd_D.diminfo[1].strides))) / __pyx_v_gamma));
+      __pyx_v_c = exp(((((*__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_32, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_33, __pyx_pybuffernd_R.diminfo[1].strides)) - (*__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_R.rcbuffer->pybuffer.buf, __pyx_t_34, __pyx_pybuffernd_R.diminfo[0].strides, __pyx_t_35, __pyx_pybuffernd_R.diminfo[1].strides))) - (*__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_D.rcbuffer->pybuffer.buf, __pyx_t_36, __pyx_pybuffernd_D.diminfo[0].strides, __pyx_t_37, __pyx_pybuffernd_D.diminfo[1].strides))) / __pyx_v_gamma));
 
-      /* "tslearn/soft_dtw_fast.pyx":101
+      /* "tslearn/soft_dtw_fast.pyx":104
  *             b = exp((R[i, j+1] - R[i, j] - D[i-1, j]) / gamma)
  *             c = exp((R[i+1, j+1] - R[i, j] - D[i, j]) / gamma)
  *             E[i, j] = E[i+1, j] * a + E[i, j+1] * b + E[i+1,j+1] * c             # <<<<<<<<<<<<<<
@@ -2304,16 +2320,16 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_2_soft_dtw_grad(CYTHON_UNUSED
       __pyx_t_43 = (__pyx_v_j + 1);
       __pyx_t_44 = __pyx_v_i;
       __pyx_t_45 = __pyx_v_j;
-      *__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_E.rcbuffer->pybuffer.buf, __pyx_t_44, __pyx_pybuffernd_E.diminfo[0].strides, __pyx_t_45, __pyx_pybuffernd_E.diminfo[1].strides) = ((((*__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_E.rcbuffer->pybuffer.buf, __pyx_t_38, __pyx_pybuffernd_E.diminfo[0].strides, __pyx_t_39, __pyx_pybuffernd_E.diminfo[1].strides)) * __pyx_v_a) + ((*__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_E.rcbuffer->pybuffer.buf, __pyx_t_40, __pyx_pybuffernd_E.diminfo[0].strides, __pyx_t_41, __pyx_pybuffernd_E.diminfo[1].strides)) * __pyx_v_b)) + ((*__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_E.rcbuffer->pybuffer.buf, __pyx_t_42, __pyx_pybuffernd_E.diminfo[0].strides, __pyx_t_43, __pyx_pybuffernd_E.diminfo[1].strides)) * __pyx_v_c));
+      *__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_E.rcbuffer->pybuffer.buf, __pyx_t_44, __pyx_pybuffernd_E.diminfo[0].strides, __pyx_t_45, __pyx_pybuffernd_E.diminfo[1].strides) = ((((*__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_E.rcbuffer->pybuffer.buf, __pyx_t_38, __pyx_pybuffernd_E.diminfo[0].strides, __pyx_t_39, __pyx_pybuffernd_E.diminfo[1].strides)) * __pyx_v_a) + ((*__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_E.rcbuffer->pybuffer.buf, __pyx_t_40, __pyx_pybuffernd_E.diminfo[0].strides, __pyx_t_41, __pyx_pybuffernd_E.diminfo[1].strides)) * __pyx_v_b)) + ((*__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_E.rcbuffer->pybuffer.buf, __pyx_t_42, __pyx_pybuffernd_E.diminfo[0].strides, __pyx_t_43, __pyx_pybuffernd_E.diminfo[1].strides)) * __pyx_v_c));
     }
   }
 
-  /* "tslearn/soft_dtw_fast.pyx":67
+  /* "tslearn/soft_dtw_fast.pyx":70
  * 
  * 
- * def _soft_dtw_grad(np.ndarray[double, ndim=2] D,             # <<<<<<<<<<<<<<
- *                    np.ndarray[double, ndim=2] R,
- *                    np.ndarray[double, ndim=2] E,
+ * def _soft_dtw_grad(np.ndarray[DTYPE_t, ndim=2] D,             # <<<<<<<<<<<<<<
+ *                    np.ndarray[DTYPE_t, ndim=2] R,
+ *                    np.ndarray[DTYPE_t, ndim=2] E,
  */
 
   /* function exit code */
@@ -2341,12 +2357,12 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_2_soft_dtw_grad(CYTHON_UNUSED
   return __pyx_r;
 }
 
-/* "tslearn/soft_dtw_fast.pyx":104
+/* "tslearn/soft_dtw_fast.pyx":107
  * 
  * 
- * def _jacobian_product_sq_euc(np.ndarray[double, ndim=2] X,             # <<<<<<<<<<<<<<
- *                              np.ndarray[double, ndim=2] Y,
- *                              np.ndarray[double, ndim=2] E,
+ * def _jacobian_product_sq_euc(np.ndarray[DTYPE_t, ndim=2] X,             # <<<<<<<<<<<<<<
+ *                              np.ndarray[DTYPE_t, ndim=2] Y,
+ *                              np.ndarray[DTYPE_t, ndim=2] E,
  */
 
 /* Python wrapper */
@@ -2382,21 +2398,21 @@ static PyObject *__pyx_pw_7tslearn_13soft_dtw_fast_5_jacobian_product_sq_euc(PyO
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_Y)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_jacobian_product_sq_euc", 1, 4, 4, 1); __PYX_ERR(0, 104, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_jacobian_product_sq_euc", 1, 4, 4, 1); __PYX_ERR(0, 107, __pyx_L3_error)
         }
         case  2:
         if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_E)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_jacobian_product_sq_euc", 1, 4, 4, 2); __PYX_ERR(0, 104, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_jacobian_product_sq_euc", 1, 4, 4, 2); __PYX_ERR(0, 107, __pyx_L3_error)
         }
         case  3:
         if (likely((values[3] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_G)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_jacobian_product_sq_euc", 1, 4, 4, 3); __PYX_ERR(0, 104, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_jacobian_product_sq_euc", 1, 4, 4, 3); __PYX_ERR(0, 107, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_jacobian_product_sq_euc") < 0)) __PYX_ERR(0, 104, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_jacobian_product_sq_euc") < 0)) __PYX_ERR(0, 107, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 4) {
       goto __pyx_L5_argtuple_error;
@@ -2413,16 +2429,16 @@ static PyObject *__pyx_pw_7tslearn_13soft_dtw_fast_5_jacobian_product_sq_euc(PyO
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("_jacobian_product_sq_euc", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 104, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("_jacobian_product_sq_euc", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 107, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("tslearn.soft_dtw_fast._jacobian_product_sq_euc", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_X), __pyx_ptype_5numpy_ndarray, 1, "X", 0))) __PYX_ERR(0, 104, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_Y), __pyx_ptype_5numpy_ndarray, 1, "Y", 0))) __PYX_ERR(0, 105, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_E), __pyx_ptype_5numpy_ndarray, 1, "E", 0))) __PYX_ERR(0, 106, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_G), __pyx_ptype_5numpy_ndarray, 1, "G", 0))) __PYX_ERR(0, 107, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_X), __pyx_ptype_5numpy_ndarray, 1, "X", 0))) __PYX_ERR(0, 107, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_Y), __pyx_ptype_5numpy_ndarray, 1, "Y", 0))) __PYX_ERR(0, 108, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_E), __pyx_ptype_5numpy_ndarray, 1, "E", 0))) __PYX_ERR(0, 109, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_G), __pyx_ptype_5numpy_ndarray, 1, "G", 0))) __PYX_ERR(0, 110, __pyx_L1_error)
   __pyx_r = __pyx_pf_7tslearn_13soft_dtw_fast_4_jacobian_product_sq_euc(__pyx_self, __pyx_v_X, __pyx_v_Y, __pyx_v_E, __pyx_v_G);
 
   /* function exit code */
@@ -2484,36 +2500,36 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_4_jacobian_product_sq_euc(CYT
   __pyx_pybuffernd_G.rcbuffer = &__pyx_pybuffer_G;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_X.rcbuffer->pybuffer, (PyObject*)__pyx_v_X, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 104, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_X.rcbuffer->pybuffer, (PyObject*)__pyx_v_X, &__Pyx_TypeInfo_nn___pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 107, __pyx_L1_error)
   }
   __pyx_pybuffernd_X.diminfo[0].strides = __pyx_pybuffernd_X.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_X.diminfo[0].shape = __pyx_pybuffernd_X.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_X.diminfo[1].strides = __pyx_pybuffernd_X.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_X.diminfo[1].shape = __pyx_pybuffernd_X.rcbuffer->pybuffer.shape[1];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_Y.rcbuffer->pybuffer, (PyObject*)__pyx_v_Y, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 104, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_Y.rcbuffer->pybuffer, (PyObject*)__pyx_v_Y, &__Pyx_TypeInfo_nn___pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 107, __pyx_L1_error)
   }
   __pyx_pybuffernd_Y.diminfo[0].strides = __pyx_pybuffernd_Y.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_Y.diminfo[0].shape = __pyx_pybuffernd_Y.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_Y.diminfo[1].strides = __pyx_pybuffernd_Y.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_Y.diminfo[1].shape = __pyx_pybuffernd_Y.rcbuffer->pybuffer.shape[1];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_E.rcbuffer->pybuffer, (PyObject*)__pyx_v_E, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 104, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_E.rcbuffer->pybuffer, (PyObject*)__pyx_v_E, &__Pyx_TypeInfo_nn___pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 107, __pyx_L1_error)
   }
   __pyx_pybuffernd_E.diminfo[0].strides = __pyx_pybuffernd_E.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_E.diminfo[0].shape = __pyx_pybuffernd_E.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_E.diminfo[1].strides = __pyx_pybuffernd_E.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_E.diminfo[1].shape = __pyx_pybuffernd_E.rcbuffer->pybuffer.shape[1];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_G.rcbuffer->pybuffer, (PyObject*)__pyx_v_G, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 104, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_G.rcbuffer->pybuffer, (PyObject*)__pyx_v_G, &__Pyx_TypeInfo_nn___pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 107, __pyx_L1_error)
   }
   __pyx_pybuffernd_G.diminfo[0].strides = __pyx_pybuffernd_G.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_G.diminfo[0].shape = __pyx_pybuffernd_G.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_G.diminfo[1].strides = __pyx_pybuffernd_G.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_G.diminfo[1].shape = __pyx_pybuffernd_G.rcbuffer->pybuffer.shape[1];
 
-  /* "tslearn/soft_dtw_fast.pyx":108
- *                              np.ndarray[double, ndim=2] E,
- *                              np.ndarray[double, ndim=2] G):
+  /* "tslearn/soft_dtw_fast.pyx":111
+ *                              np.ndarray[DTYPE_t, ndim=2] E,
+ *                              np.ndarray[DTYPE_t, ndim=2] G):
  *     cdef int m = X.shape[0]             # <<<<<<<<<<<<<<
  *     cdef int n = Y.shape[0]
  *     cdef int d = X.shape[1]
  */
   __pyx_v_m = (__pyx_v_X->dimensions[0]);
 
-  /* "tslearn/soft_dtw_fast.pyx":109
- *                              np.ndarray[double, ndim=2] G):
+  /* "tslearn/soft_dtw_fast.pyx":112
+ *                              np.ndarray[DTYPE_t, ndim=2] G):
  *     cdef int m = X.shape[0]
  *     cdef int n = Y.shape[0]             # <<<<<<<<<<<<<<
  *     cdef int d = X.shape[1]
@@ -2521,7 +2537,7 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_4_jacobian_product_sq_euc(CYT
  */
   __pyx_v_n = (__pyx_v_Y->dimensions[0]);
 
-  /* "tslearn/soft_dtw_fast.pyx":110
+  /* "tslearn/soft_dtw_fast.pyx":113
  *     cdef int m = X.shape[0]
  *     cdef int n = Y.shape[0]
  *     cdef int d = X.shape[1]             # <<<<<<<<<<<<<<
@@ -2530,7 +2546,7 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_4_jacobian_product_sq_euc(CYT
  */
   __pyx_v_d = (__pyx_v_X->dimensions[1]);
 
-  /* "tslearn/soft_dtw_fast.pyx":112
+  /* "tslearn/soft_dtw_fast.pyx":115
  *     cdef int d = X.shape[1]
  * 
  *     for i in range(m):             # <<<<<<<<<<<<<<
@@ -2541,7 +2557,7 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_4_jacobian_product_sq_euc(CYT
   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "tslearn/soft_dtw_fast.pyx":113
+    /* "tslearn/soft_dtw_fast.pyx":116
  * 
  *     for i in range(m):
  *         for j in range(n):             # <<<<<<<<<<<<<<
@@ -2552,7 +2568,7 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_4_jacobian_product_sq_euc(CYT
     for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
       __pyx_v_j = __pyx_t_4;
 
-      /* "tslearn/soft_dtw_fast.pyx":114
+      /* "tslearn/soft_dtw_fast.pyx":117
  *     for i in range(m):
  *         for j in range(n):
  *             for k in range(d):             # <<<<<<<<<<<<<<
@@ -2562,7 +2578,7 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_4_jacobian_product_sq_euc(CYT
       for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
         __pyx_v_k = __pyx_t_6;
 
-        /* "tslearn/soft_dtw_fast.pyx":115
+        /* "tslearn/soft_dtw_fast.pyx":118
  *         for j in range(n):
  *             for k in range(d):
  *                 G[i, k] += E[i,j] * 2 * (X[i, k] - Y[j, k])             # <<<<<<<<<<<<<<
@@ -2575,17 +2591,17 @@ static PyObject *__pyx_pf_7tslearn_13soft_dtw_fast_4_jacobian_product_sq_euc(CYT
         __pyx_t_12 = __pyx_v_k;
         __pyx_t_13 = __pyx_v_i;
         __pyx_t_14 = __pyx_v_k;
-        *__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_G.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_G.diminfo[0].strides, __pyx_t_14, __pyx_pybuffernd_G.diminfo[1].strides) += (((*__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_E.rcbuffer->pybuffer.buf, __pyx_t_7, __pyx_pybuffernd_E.diminfo[0].strides, __pyx_t_8, __pyx_pybuffernd_E.diminfo[1].strides)) * 2.0) * ((*__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_X.rcbuffer->pybuffer.buf, __pyx_t_9, __pyx_pybuffernd_X.diminfo[0].strides, __pyx_t_10, __pyx_pybuffernd_X.diminfo[1].strides)) - (*__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_Y.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_Y.diminfo[0].strides, __pyx_t_12, __pyx_pybuffernd_Y.diminfo[1].strides))));
+        *__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_G.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_G.diminfo[0].strides, __pyx_t_14, __pyx_pybuffernd_G.diminfo[1].strides) += (((*__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_E.rcbuffer->pybuffer.buf, __pyx_t_7, __pyx_pybuffernd_E.diminfo[0].strides, __pyx_t_8, __pyx_pybuffernd_E.diminfo[1].strides)) * 2.0) * ((*__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_X.rcbuffer->pybuffer.buf, __pyx_t_9, __pyx_pybuffernd_X.diminfo[0].strides, __pyx_t_10, __pyx_pybuffernd_X.diminfo[1].strides)) - (*__Pyx_BufPtrStrided2d(__pyx_t_7tslearn_13soft_dtw_fast_DTYPE_t *, __pyx_pybuffernd_Y.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_Y.diminfo[0].strides, __pyx_t_12, __pyx_pybuffernd_Y.diminfo[1].strides))));
       }
     }
   }
 
-  /* "tslearn/soft_dtw_fast.pyx":104
+  /* "tslearn/soft_dtw_fast.pyx":107
  * 
  * 
- * def _jacobian_product_sq_euc(np.ndarray[double, ndim=2] X,             # <<<<<<<<<<<<<<
- *                              np.ndarray[double, ndim=2] Y,
- *                              np.ndarray[double, ndim=2] E,
+ * def _jacobian_product_sq_euc(np.ndarray[DTYPE_t, ndim=2] X,             # <<<<<<<<<<<<<<
+ *                              np.ndarray[DTYPE_t, ndim=2] Y,
+ *                              np.ndarray[DTYPE_t, ndim=2] E,
  */
 
   /* function exit code */
@@ -5153,6 +5169,7 @@ static struct PyModuleDef __pyx_moduledef = {
 
 static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_D, __pyx_k_D, sizeof(__pyx_k_D), 0, 0, 1, 1},
+  {&__pyx_n_s_DTYPE, __pyx_k_DTYPE, sizeof(__pyx_k_DTYPE), 0, 0, 1, 1},
   {&__pyx_n_s_E, __pyx_k_E, sizeof(__pyx_k_E), 0, 0, 1, 1},
   {&__pyx_kp_u_Format_string_allocated_too_shor, __pyx_k_Format_string_allocated_too_shor, sizeof(__pyx_k_Format_string_allocated_too_shor), 0, 1, 0, 0},
   {&__pyx_kp_u_Format_string_allocated_too_shor_2, __pyx_k_Format_string_allocated_too_shor_2, sizeof(__pyx_k_Format_string_allocated_too_shor_2), 0, 1, 0, 0},
@@ -5169,6 +5186,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_b, __pyx_k_b, sizeof(__pyx_k_b), 0, 0, 1, 1},
   {&__pyx_n_s_c, __pyx_k_c, sizeof(__pyx_k_c), 0, 0, 1, 1},
   {&__pyx_n_s_d, __pyx_k_d, sizeof(__pyx_k_d), 0, 0, 1, 1},
+  {&__pyx_n_s_float64, __pyx_k_float64, sizeof(__pyx_k_float64), 0, 0, 1, 1},
   {&__pyx_n_s_gamma, __pyx_k_gamma, sizeof(__pyx_k_gamma), 0, 0, 1, 1},
   {&__pyx_n_s_i, __pyx_k_i, sizeof(__pyx_k_i), 0, 0, 1, 1},
   {&__pyx_n_s_import, __pyx_k_import, sizeof(__pyx_k_import), 0, 0, 1, 1},
@@ -5194,8 +5212,8 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 49, __pyx_L1_error)
-  __pyx_builtin_reversed = __Pyx_GetBuiltinName(__pyx_n_s_reversed); if (!__pyx_builtin_reversed) __PYX_ERR(0, 96, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 52, __pyx_L1_error)
+  __pyx_builtin_reversed = __Pyx_GetBuiltinName(__pyx_n_s_reversed); if (!__pyx_builtin_reversed) __PYX_ERR(0, 99, __pyx_L1_error)
   __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(1, 218, __pyx_L1_error)
   __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) __PYX_ERR(1, 799, __pyx_L1_error)
   __pyx_builtin_ImportError = __Pyx_GetBuiltinName(__pyx_n_s_ImportError); if (!__pyx_builtin_ImportError) __PYX_ERR(1, 989, __pyx_L1_error)
@@ -5305,41 +5323,41 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__9);
   __Pyx_GIVEREF(__pyx_tuple__9);
 
-  /* "tslearn/soft_dtw_fast.pyx":37
+  /* "tslearn/soft_dtw_fast.pyx":40
  * 
  * 
- * def _soft_dtw(np.ndarray[double, ndim=2] D,             # <<<<<<<<<<<<<<
- *               np.ndarray[double, ndim=2] R,
- *               double gamma):
+ * def _soft_dtw(np.ndarray[DTYPE_t, ndim=2] D,             # <<<<<<<<<<<<<<
+ *               np.ndarray[DTYPE_t, ndim=2] R,
+ *               DTYPE_t gamma):
  */
-  __pyx_tuple__10 = PyTuple_Pack(7, __pyx_n_s_D, __pyx_n_s_R, __pyx_n_s_gamma, __pyx_n_s_m, __pyx_n_s_n, __pyx_n_s_i, __pyx_n_s_j); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(0, 37, __pyx_L1_error)
+  __pyx_tuple__10 = PyTuple_Pack(7, __pyx_n_s_D, __pyx_n_s_R, __pyx_n_s_gamma, __pyx_n_s_m, __pyx_n_s_n, __pyx_n_s_i, __pyx_n_s_j); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(0, 40, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__10);
   __Pyx_GIVEREF(__pyx_tuple__10);
-  __pyx_codeobj__11 = (PyObject*)__Pyx_PyCode_New(3, 0, 7, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__10, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_tavenard_r_Documents_cost, __pyx_n_s_soft_dtw, 37, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__11)) __PYX_ERR(0, 37, __pyx_L1_error)
+  __pyx_codeobj__11 = (PyObject*)__Pyx_PyCode_New(3, 0, 7, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__10, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_tavenard_r_Documents_cost, __pyx_n_s_soft_dtw, 40, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__11)) __PYX_ERR(0, 40, __pyx_L1_error)
 
-  /* "tslearn/soft_dtw_fast.pyx":67
+  /* "tslearn/soft_dtw_fast.pyx":70
  * 
  * 
- * def _soft_dtw_grad(np.ndarray[double, ndim=2] D,             # <<<<<<<<<<<<<<
- *                    np.ndarray[double, ndim=2] R,
- *                    np.ndarray[double, ndim=2] E,
+ * def _soft_dtw_grad(np.ndarray[DTYPE_t, ndim=2] D,             # <<<<<<<<<<<<<<
+ *                    np.ndarray[DTYPE_t, ndim=2] R,
+ *                    np.ndarray[DTYPE_t, ndim=2] E,
  */
-  __pyx_tuple__12 = PyTuple_Pack(11, __pyx_n_s_D, __pyx_n_s_R, __pyx_n_s_E, __pyx_n_s_gamma, __pyx_n_s_m, __pyx_n_s_n, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_a, __pyx_n_s_b, __pyx_n_s_c); if (unlikely(!__pyx_tuple__12)) __PYX_ERR(0, 67, __pyx_L1_error)
+  __pyx_tuple__12 = PyTuple_Pack(11, __pyx_n_s_D, __pyx_n_s_R, __pyx_n_s_E, __pyx_n_s_gamma, __pyx_n_s_m, __pyx_n_s_n, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_a, __pyx_n_s_b, __pyx_n_s_c); if (unlikely(!__pyx_tuple__12)) __PYX_ERR(0, 70, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__12);
   __Pyx_GIVEREF(__pyx_tuple__12);
-  __pyx_codeobj__13 = (PyObject*)__Pyx_PyCode_New(4, 0, 11, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__12, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_tavenard_r_Documents_cost, __pyx_n_s_soft_dtw_grad, 67, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__13)) __PYX_ERR(0, 67, __pyx_L1_error)
+  __pyx_codeobj__13 = (PyObject*)__Pyx_PyCode_New(4, 0, 11, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__12, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_tavenard_r_Documents_cost, __pyx_n_s_soft_dtw_grad, 70, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__13)) __PYX_ERR(0, 70, __pyx_L1_error)
 
-  /* "tslearn/soft_dtw_fast.pyx":104
+  /* "tslearn/soft_dtw_fast.pyx":107
  * 
  * 
- * def _jacobian_product_sq_euc(np.ndarray[double, ndim=2] X,             # <<<<<<<<<<<<<<
- *                              np.ndarray[double, ndim=2] Y,
- *                              np.ndarray[double, ndim=2] E,
+ * def _jacobian_product_sq_euc(np.ndarray[DTYPE_t, ndim=2] X,             # <<<<<<<<<<<<<<
+ *                              np.ndarray[DTYPE_t, ndim=2] Y,
+ *                              np.ndarray[DTYPE_t, ndim=2] E,
  */
-  __pyx_tuple__14 = PyTuple_Pack(10, __pyx_n_s_X, __pyx_n_s_Y, __pyx_n_s_E, __pyx_n_s_G, __pyx_n_s_m, __pyx_n_s_n, __pyx_n_s_d, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k); if (unlikely(!__pyx_tuple__14)) __PYX_ERR(0, 104, __pyx_L1_error)
+  __pyx_tuple__14 = PyTuple_Pack(10, __pyx_n_s_X, __pyx_n_s_Y, __pyx_n_s_E, __pyx_n_s_G, __pyx_n_s_m, __pyx_n_s_n, __pyx_n_s_d, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k); if (unlikely(!__pyx_tuple__14)) __PYX_ERR(0, 107, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__14);
   __Pyx_GIVEREF(__pyx_tuple__14);
-  __pyx_codeobj__15 = (PyObject*)__Pyx_PyCode_New(4, 0, 10, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__14, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_tavenard_r_Documents_cost, __pyx_n_s_jacobian_product_sq_euc, 104, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__15)) __PYX_ERR(0, 104, __pyx_L1_error)
+  __pyx_codeobj__15 = (PyObject*)__Pyx_PyCode_New(4, 0, 10, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__14, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_tavenard_r_Documents_cost, __pyx_n_s_jacobian_product_sq_euc, 107, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__15)) __PYX_ERR(0, 107, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -5364,6 +5382,7 @@ PyMODINIT_FUNC PyInit_soft_dtw_fast(void)
 {
   PyObject *__pyx_t_1 = NULL;
   int __pyx_t_2;
+  PyObject *__pyx_t_3 = NULL;
   __Pyx_RefNannyDeclarations
   #if CYTHON_REFNANNY
   __Pyx_RefNanny = __Pyx_RefNannyImportAPI("refnanny");
@@ -5476,55 +5495,70 @@ PyMODINIT_FUNC PyInit_soft_dtw_fast(void)
  * cimport numpy as np
  * np.import_array()             # <<<<<<<<<<<<<<
  * 
- * 
+ * DTYPE = np.float64
  */
   __pyx_t_2 = __pyx_f_5numpy_import_array(); if (unlikely(__pyx_t_2 == -1)) __PYX_ERR(0, 11, __pyx_L1_error)
 
-  /* "tslearn/soft_dtw_fast.pyx":37
+  /* "tslearn/soft_dtw_fast.pyx":13
+ * np.import_array()
  * 
+ * DTYPE = np.float64             # <<<<<<<<<<<<<<
+ * ctypedef np.float64_t DTYPE_t
  * 
- * def _soft_dtw(np.ndarray[double, ndim=2] D,             # <<<<<<<<<<<<<<
- *               np.ndarray[double, ndim=2] R,
- *               double gamma):
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_7tslearn_13soft_dtw_fast_1_soft_dtw, NULL, __pyx_n_s_tslearn_soft_dtw_fast); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 37, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 13, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_soft_dtw, __pyx_t_1) < 0) __PYX_ERR(0, 37, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float64); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 13, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_DTYPE, __pyx_t_3) < 0) __PYX_ERR(0, 13, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "tslearn/soft_dtw_fast.pyx":67
+  /* "tslearn/soft_dtw_fast.pyx":40
  * 
  * 
- * def _soft_dtw_grad(np.ndarray[double, ndim=2] D,             # <<<<<<<<<<<<<<
- *                    np.ndarray[double, ndim=2] R,
- *                    np.ndarray[double, ndim=2] E,
+ * def _soft_dtw(np.ndarray[DTYPE_t, ndim=2] D,             # <<<<<<<<<<<<<<
+ *               np.ndarray[DTYPE_t, ndim=2] R,
+ *               DTYPE_t gamma):
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_7tslearn_13soft_dtw_fast_3_soft_dtw_grad, NULL, __pyx_n_s_tslearn_soft_dtw_fast); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 67, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_soft_dtw_grad, __pyx_t_1) < 0) __PYX_ERR(0, 67, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_3 = PyCFunction_NewEx(&__pyx_mdef_7tslearn_13soft_dtw_fast_1_soft_dtw, NULL, __pyx_n_s_tslearn_soft_dtw_fast); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 40, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_soft_dtw, __pyx_t_3) < 0) __PYX_ERR(0, 40, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "tslearn/soft_dtw_fast.pyx":104
+  /* "tslearn/soft_dtw_fast.pyx":70
  * 
  * 
- * def _jacobian_product_sq_euc(np.ndarray[double, ndim=2] X,             # <<<<<<<<<<<<<<
- *                              np.ndarray[double, ndim=2] Y,
- *                              np.ndarray[double, ndim=2] E,
+ * def _soft_dtw_grad(np.ndarray[DTYPE_t, ndim=2] D,             # <<<<<<<<<<<<<<
+ *                    np.ndarray[DTYPE_t, ndim=2] R,
+ *                    np.ndarray[DTYPE_t, ndim=2] E,
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_7tslearn_13soft_dtw_fast_5_jacobian_product_sq_euc, NULL, __pyx_n_s_tslearn_soft_dtw_fast); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 104, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_jacobian_product_sq_euc, __pyx_t_1) < 0) __PYX_ERR(0, 104, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_3 = PyCFunction_NewEx(&__pyx_mdef_7tslearn_13soft_dtw_fast_3_soft_dtw_grad, NULL, __pyx_n_s_tslearn_soft_dtw_fast); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 70, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_soft_dtw_grad, __pyx_t_3) < 0) __PYX_ERR(0, 70, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+
+  /* "tslearn/soft_dtw_fast.pyx":107
+ * 
+ * 
+ * def _jacobian_product_sq_euc(np.ndarray[DTYPE_t, ndim=2] X,             # <<<<<<<<<<<<<<
+ *                              np.ndarray[DTYPE_t, ndim=2] Y,
+ *                              np.ndarray[DTYPE_t, ndim=2] E,
+ */
+  __pyx_t_3 = PyCFunction_NewEx(&__pyx_mdef_7tslearn_13soft_dtw_fast_5_jacobian_product_sq_euc, NULL, __pyx_n_s_tslearn_soft_dtw_fast); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 107, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_jacobian_product_sq_euc, __pyx_t_3) < 0) __PYX_ERR(0, 107, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
   /* "tslearn/soft_dtw_fast.pyx":1
  * # Author: Mathieu Blondel             # <<<<<<<<<<<<<<
  * # License: Simplified BSD
  * 
  */
-  __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_test, __pyx_t_1) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_3 = PyDict_New(); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 1, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_test, __pyx_t_3) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
   /* "../../../../Py34_standard_maths/lib/python3.4/site-packages/Cython/Includes/numpy/__init__.pxd":997
  *         raise ImportError("numpy.core.umath failed to import")
@@ -5539,6 +5573,7 @@ PyMODINIT_FUNC PyInit_soft_dtw_fast(void)
   goto __pyx_L0;
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_3);
   if (__pyx_m) {
     if (__pyx_d) {
       __Pyx_AddTraceback("init tslearn.soft_dtw_fast", __pyx_clineno, __pyx_lineno, __pyx_filename);
@@ -6714,8 +6749,26 @@ bad:
     return module;
 }
 
+/* GetModuleGlobalName */
+      static CYTHON_INLINE PyObject *__Pyx_GetModuleGlobalName(PyObject *name) {
+    PyObject *result;
+#if !CYTHON_AVOID_BORROWED_REFS
+    result = PyDict_GetItem(__pyx_d, name);
+    if (likely(result)) {
+        Py_INCREF(result);
+    } else {
+#else
+    result = PyObject_GetItem(__pyx_d, name);
+    if (!result) {
+        PyErr_Clear();
+#endif
+        result = __Pyx_GetBuiltinName(name);
+    }
+    return result;
+}
+
 /* CodeObjectCache */
-      static int __pyx_bisect_code_objects(__Pyx_CodeObjectCacheEntry* entries, int count, int code_line) {
+        static int __pyx_bisect_code_objects(__Pyx_CodeObjectCacheEntry* entries, int count, int code_line) {
     int start = 0, mid = 0, end = count - 1;
     if (end >= 0 && code_line > entries[end].code_line) {
         return count;
@@ -6795,7 +6848,7 @@ static void __pyx_insert_code_object(int code_line, PyCodeObject* code_object) {
 }
 
 /* AddTraceback */
-      #include "compile.h"
+        #include "compile.h"
 #include "frameobject.h"
 #include "traceback.h"
 static PyCodeObject* __Pyx_CreateCodeObjectForTraceback(
@@ -6896,8 +6949,8 @@ static void __Pyx_ReleaseBuffer(Py_buffer *view) {
 #endif
 
 
-      /* CIntToPy */
-      static CYTHON_INLINE PyObject* __Pyx_PyInt_From_long(long value) {
+        /* CIntToPy */
+        static CYTHON_INLINE PyObject* __Pyx_PyInt_From_long(long value) {
     const long neg_one = (long) -1, const_zero = (long) 0;
     const int is_unsigned = neg_one > const_zero;
     if (is_unsigned) {
@@ -6928,7 +6981,7 @@ static void __Pyx_ReleaseBuffer(Py_buffer *view) {
 }
 
 /* CIntFromPyVerify */
-      #define __PYX_VERIFY_RETURN_INT(target_type, func_type, func_value)\
+        #define __PYX_VERIFY_RETURN_INT(target_type, func_type, func_value)\
     __PYX__VERIFY_RETURN_INT(target_type, func_type, func_value, 0)
 #define __PYX_VERIFY_RETURN_INT_EXC(target_type, func_type, func_value)\
     __PYX__VERIFY_RETURN_INT(target_type, func_type, func_value, 1)
@@ -6950,7 +7003,7 @@ static void __Pyx_ReleaseBuffer(Py_buffer *view) {
     }
 
 /* CIntToPy */
-      static CYTHON_INLINE PyObject* __Pyx_PyInt_From_int(int value) {
+        static CYTHON_INLINE PyObject* __Pyx_PyInt_From_int(int value) {
     const int neg_one = (int) -1, const_zero = (int) 0;
     const int is_unsigned = neg_one > const_zero;
     if (is_unsigned) {
@@ -6981,7 +7034,7 @@ static void __Pyx_ReleaseBuffer(Py_buffer *view) {
 }
 
 /* Declarations */
-      #if CYTHON_CCOMPLEX
+        #if CYTHON_CCOMPLEX
   #ifdef __cplusplus
     static CYTHON_INLINE __pyx_t_float_complex __pyx_t_float_complex_from_parts(float x, float y) {
       return ::std::complex< float >(x, y);
@@ -7001,7 +7054,7 @@ static void __Pyx_ReleaseBuffer(Py_buffer *view) {
 #endif
 
 /* Arithmetic */
-      #if CYTHON_CCOMPLEX
+        #if CYTHON_CCOMPLEX
 #else
     static CYTHON_INLINE int __Pyx_c_eq_float(__pyx_t_float_complex a, __pyx_t_float_complex b) {
        return (a.real == b.real) && (a.imag == b.imag);
@@ -7128,7 +7181,7 @@ static void __Pyx_ReleaseBuffer(Py_buffer *view) {
 #endif
 
 /* Declarations */
-      #if CYTHON_CCOMPLEX
+        #if CYTHON_CCOMPLEX
   #ifdef __cplusplus
     static CYTHON_INLINE __pyx_t_double_complex __pyx_t_double_complex_from_parts(double x, double y) {
       return ::std::complex< double >(x, y);
@@ -7148,7 +7201,7 @@ static void __Pyx_ReleaseBuffer(Py_buffer *view) {
 #endif
 
 /* Arithmetic */
-      #if CYTHON_CCOMPLEX
+        #if CYTHON_CCOMPLEX
 #else
     static CYTHON_INLINE int __Pyx_c_eq_double(__pyx_t_double_complex a, __pyx_t_double_complex b) {
        return (a.real == b.real) && (a.imag == b.imag);
@@ -7275,7 +7328,7 @@ static void __Pyx_ReleaseBuffer(Py_buffer *view) {
 #endif
 
 /* CIntToPy */
-      static CYTHON_INLINE PyObject* __Pyx_PyInt_From_enum__NPY_TYPES(enum NPY_TYPES value) {
+        static CYTHON_INLINE PyObject* __Pyx_PyInt_From_enum__NPY_TYPES(enum NPY_TYPES value) {
     const enum NPY_TYPES neg_one = (enum NPY_TYPES) -1, const_zero = (enum NPY_TYPES) 0;
     const int is_unsigned = neg_one > const_zero;
     if (is_unsigned) {
@@ -7306,7 +7359,7 @@ static void __Pyx_ReleaseBuffer(Py_buffer *view) {
 }
 
 /* CIntFromPy */
-      static CYTHON_INLINE int __Pyx_PyInt_As_int(PyObject *x) {
+        static CYTHON_INLINE int __Pyx_PyInt_As_int(PyObject *x) {
     const int neg_one = (int) -1, const_zero = (int) 0;
     const int is_unsigned = neg_one > const_zero;
 #if PY_MAJOR_VERSION < 3
@@ -7495,7 +7548,7 @@ raise_neg_overflow:
 }
 
 /* CIntFromPy */
-      static CYTHON_INLINE long __Pyx_PyInt_As_long(PyObject *x) {
+        static CYTHON_INLINE long __Pyx_PyInt_As_long(PyObject *x) {
     const long neg_one = (long) -1, const_zero = (long) 0;
     const int is_unsigned = neg_one > const_zero;
 #if PY_MAJOR_VERSION < 3
@@ -7684,7 +7737,7 @@ raise_neg_overflow:
 }
 
 /* CheckBinaryVersion */
-      static int __Pyx_check_binary_version(void) {
+        static int __Pyx_check_binary_version(void) {
     char ctversion[4], rtversion[4];
     PyOS_snprintf(ctversion, 4, "%d.%d", PY_MAJOR_VERSION, PY_MINOR_VERSION);
     PyOS_snprintf(rtversion, 4, "%s", Py_GetVersion());
@@ -7700,7 +7753,7 @@ raise_neg_overflow:
 }
 
 /* ModuleImport */
-      #ifndef __PYX_HAVE_RT_ImportModule
+        #ifndef __PYX_HAVE_RT_ImportModule
 #define __PYX_HAVE_RT_ImportModule
 static PyObject *__Pyx_ImportModule(const char *name) {
     PyObject *py_name = 0;
@@ -7718,7 +7771,7 @@ bad:
 #endif
 
 /* TypeImport */
-      #ifndef __PYX_HAVE_RT_ImportType
+        #ifndef __PYX_HAVE_RT_ImportType
 #define __PYX_HAVE_RT_ImportType
 static PyTypeObject *__Pyx_ImportType(const char *module_name, const char *class_name,
     size_t size, int strict)
@@ -7783,7 +7836,7 @@ bad:
 #endif
 
 /* InitStrings */
-      static int __Pyx_InitStrings(__Pyx_StringTabEntry *t) {
+        static int __Pyx_InitStrings(__Pyx_StringTabEntry *t) {
     while (t->p) {
         #if PY_MAJOR_VERSION < 3
         if (t->is_unicode) {
