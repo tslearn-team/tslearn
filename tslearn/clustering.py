@@ -100,7 +100,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
     Examples
     --------
     >>> from tslearn.generators import random_walks
-    >>> X = random_walks(n_ts=100, sz=256, d=1)
+    >>> X = random_walks(n_ts=50, sz=32, d=1)
     >>> gak_km = GlobalAlignmentKernelKMeans(n_clusters=3, verbose=False, random_state=0).fit(X)
     >>> numpy.alltrue(gak_km.labels_ == gak_km.predict(X))
     True
@@ -187,7 +187,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         while n_successful < self.n_init and n_attempts < self.max_attempts:
             try:
                 if self.verbose and self.n_init > 1:
-                    print("Init %d" % (n_attempts + 1))
+                    print("Init %d" % (n_successful + 1))
                 n_attempts += 1
                 self._fit_one_init(K, rs)
                 if self.inertia_ < min_inertia:
@@ -312,11 +312,11 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
     Examples
     --------
     >>> from tslearn.generators import random_walks
-    >>> X = random_walks(n_ts=100, sz=256, d=1)
+    >>> X = random_walks(n_ts=50, sz=32, d=1)
     >>> km = TimeSeriesKMeans(n_clusters=3, metric="euclidean", max_iter=5, verbose=False, random_state=0).fit(X)
     >>> km.cluster_centers_.shape
-    (3, 256, 1)
-    >>> dists = cdist(X.reshape((100, 256)), km.cluster_centers_.reshape((3, 256)))
+    (3, 32, 1)
+    >>> dists = cdist(X.reshape((50, 32)), km.cluster_centers_.reshape((3, 32)))
     >>> numpy.alltrue(km.labels_ == dists.argmin(axis=1))
     True
     >>> numpy.alltrue(km.labels_ == km.predict(X))
@@ -326,7 +326,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
     >>> km_dba = TimeSeriesKMeans(n_clusters=3, metric="dtw", max_iter=5, max_iter_barycenter=5, verbose=False, \
                                   random_state=0).fit(X)
     >>> km_dba.cluster_centers_.shape
-    (3, 256, 1)
+    (3, 32, 1)
     >>> dists = cdist_dtw(X, km_dba.cluster_centers_)
     >>> numpy.alltrue(km_dba.labels_ == dists.argmin(axis=1))
     True
@@ -337,7 +337,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
     >>> km_sdtw = TimeSeriesKMeans(n_clusters=3, metric="softdtw", max_iter=5, max_iter_barycenter=5, \
                                    metric_params={"gamma_sdtw": .5}, verbose=False, random_state=0).fit(X)
     >>> km_sdtw.cluster_centers_.shape
-    (3, 256, 1)
+    (3, 32, 1)
     >>> dists = cdist_soft_dtw(X, km_sdtw.cluster_centers_, gamma=.5)
     >>> numpy.alltrue(km_sdtw.labels_ == dists.argmin(axis=1))
     True
@@ -359,6 +359,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         self.n_init = n_init
         self.verbose = verbose
         self.max_iter_barycenter = max_iter_barycenter
+        self.max_attempts = max(self.n_init, 10)
 
         self.labels_ = None
         self.inertia_ = numpy.inf
@@ -437,17 +438,19 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
 
         best_correct_centroids = None
         min_inertia = numpy.inf
-        trial = 0
-        while trial < self.n_init:
+        n_successful = 0
+        n_attempts = 0
+        while n_successful < self.n_init and n_attempts < self.max_attempts:
             try:
                 if self.verbose and self.n_init > 1:
-                    print("Init %d" % (trial + 1))
+                    print("Init %d" % (n_successful + 1))
+                n_attempts += 1
                 self._fit_one_init(X_, x_squared_norms, rs)
                 if self.inertia_ < min_inertia:
                     best_correct_centroids = self.cluster_centers_.copy()
                     min_inertia = self.inertia_
                 n_successful += 1
-                trial += 1
+                n_successful += 1
             except EmptyClusterError:
                 if self.verbose:
                     print("Resumed because of empty cluster")
@@ -523,13 +526,11 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
     Examples
     --------
     >>> from tslearn.generators import random_walks
-    >>> X = random_walks(n_ts=100, sz=256, d=1)
+    >>> X = random_walks(n_ts=50, sz=32, d=1)
     >>> X = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X)
-    >>> ks = KShape(n_clusters=3, n_init=1, verbose=True, random_state=0).fit(X)  # doctest: +ELLIPSIS
-    Init 1
-    ... --> ...
+    >>> ks = KShape(n_clusters=3, n_init=1, verbose=False, random_state=0).fit(X)
     >>> ks.cluster_centers_.shape
-    (3, 256, 1)
+    (3, 32, 1)
     >>> dists = ks._cross_dists(X)
     >>> numpy.alltrue(ks.labels_ == dists.argmin(axis=1))
     True
@@ -552,6 +553,7 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         self.random_state = random_state
         self.n_init = n_init
         self.verbose = verbose
+        self.max_attempts = max(self.n_init, 10)
 
         self.labels_ = None
         self.inertia_ = numpy.inf
@@ -634,16 +636,18 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
 
         best_correct_centroids = None
         min_inertia = numpy.inf
-        trial = 0
-        while trial < self.n_init:
+        n_successful = 0
+        n_attempts = 0
+        while n_successful < self.n_init and n_attempts < self.max_attempts:
             try:
                 if self.verbose and self.n_init > 1:
-                    print("Init %d" % (trial + 1))
+                    print("Init %d" % (n_successful + 1))
+                n_attempts += 1
                 self._fit_one_init(X_, rs)
                 if self.inertia_ < min_inertia:
                     best_correct_centroids = self.cluster_centers_.copy()
                     min_inertia = self.inertia_
-                trial += 1
+                n_successful += 1
             except EmptyClusterError:
                 if self.verbose:
                     print("Resumed because of empty cluster")
