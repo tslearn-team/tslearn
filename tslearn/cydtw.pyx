@@ -57,18 +57,12 @@ def itakura_mask(int sz1, int sz2):
     return mask_out
 
 
-@cython.boundscheck(False) # turn off bounds-checking for entire function
-@cython.wraparound(False)  # turn off negative index wrapping for entire function
-def dtw_path(numpy.ndarray[DTYPE_t, ndim=2] s1, numpy.ndarray[DTYPE_t, ndim=2] s2):
-    """path, sim = dtw_path(s1, s2)
-    Compute DTW similarity measure between (possibly multidimensional) time series and return both the path and the similarity.
-    Time series must be 2d numpy arrays of shape (size, dim). It is not required that both time series share the same
-    length, but they must be the same dimension. dtype of the arrays must be numpy.float."""
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def dtw_path(numpy.ndarray[DTYPE_t, ndim=2] s1, numpy.ndarray[DTYPE_t, ndim=2] s2, numpy.ndarray[DTYPE_t, ndim=2] mask):
     assert s1.dtype == DTYPE and s2.dtype == DTYPE
-    # The "cdef" keyword is also used within functions to type variables. It
-    # can only be used at the top indentation level (there are non-trivial
-    # problems with allowing them in other places, though we'd love to see
-    # good and thought out proposals for it).
+    assert s1.shape[0] == mask.shape[0] and s2.shape[0] == mask.shape[1]
+
     cdef int l1 = s1.shape[0]
     cdef int l2 = s2.shape[0]
     cdef int i = 0
@@ -82,28 +76,33 @@ def dtw_path(numpy.ndarray[DTYPE_t, ndim=2] s1, numpy.ndarray[DTYPE_t, ndim=2] s
     cdef numpy.ndarray[DTYPE_t, ndim=1] candidates = numpy.zeros((3, ), dtype=DTYPE)
     cdef list best_path
 
+    cross_dist[~numpy.isfinite(mask)] = numpy.inf
+
     for i in range(l1):
         for j in range(l2):
-            candidates[0] = cum_sum[i, j + 1]
-            candidates[1] = cum_sum[i + 1, j]
-            candidates[2] = cum_sum[i, j]
-            if candidates[0] <= candidates[1] and candidates[0] <= candidates[2]:
-                argmin_pred = 0
-            elif candidates[1] <= candidates[2]:
-                argmin_pred = 1
-            else:
-                argmin_pred = 2
-            cum_sum[i + 1, j + 1] = candidates[argmin_pred] + cross_dist[i, j]
-            if i + j > 0:
-                if argmin_pred == 0:
-                    predecessors[i, j, 0] = i - 1
-                    predecessors[i, j, 1] = j
-                elif argmin_pred == 1:
-                    predecessors[i, j, 0] = i
-                    predecessors[i, j, 1] = j - 1
+            cum_sum[i + 1, j + 1] = cross_dist[i, j]
+            if numpy.isfinite(cum_sum[i + 1, j + 1]):
+                cum_sum[i + 1, j + 1] += min(cum_sum[i, j + 1], cum_sum[i + 1, j], cum_sum[i, j])
+                candidates[0] = cum_sum[i, j + 1]
+                candidates[1] = cum_sum[i + 1, j]
+                candidates[2] = cum_sum[i, j]
+                if candidates[0] <= candidates[1] and candidates[0] <= candidates[2]:
+                    argmin_pred = 0
+                elif candidates[1] <= candidates[2]:
+                    argmin_pred = 1
                 else:
-                    predecessors[i, j, 0] = i - 1
-                    predecessors[i, j, 1] = j - 1
+                    argmin_pred = 2
+                cum_sum[i + 1, j + 1] += candidates[argmin_pred]
+                if i + j > 0:
+                    if argmin_pred == 0:
+                        predecessors[i, j, 0] = i - 1
+                        predecessors[i, j, 1] = j
+                    elif argmin_pred == 1:
+                        predecessors[i, j, 0] = i
+                        predecessors[i, j, 1] = j - 1
+                    else:
+                        predecessors[i, j, 0] = i - 1
+                        predecessors[i, j, 1] = j - 1
 
     i = l1 - 1
     j = l2 - 1
@@ -114,18 +113,12 @@ def dtw_path(numpy.ndarray[DTYPE_t, ndim=2] s1, numpy.ndarray[DTYPE_t, ndim=2] s
 
     return best_path, numpy.sqrt(cum_sum[l1, l2])
 
-@cython.boundscheck(False) # turn off bounds-checking for entire function
-@cython.wraparound(False)  # turn off negative index wrapping for entire function
-def dtw(numpy.ndarray[DTYPE_t, ndim=2] s1, numpy.ndarray[DTYPE_t, ndim=2] s2):
-    """sim = dtw(s1, s2)
-    Compute DTW similarity measure between (possibly multidimensional) time series and return it.
-    Time series must be 2d numpy arrays of shape (size, dim). It is not required that both time series share the same
-    length, but they must be the same dimension. dtype of the arrays must be numpy.float."""
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def dtw(numpy.ndarray[DTYPE_t, ndim=2] s1, numpy.ndarray[DTYPE_t, ndim=2] s2, numpy.ndarray[DTYPE_t, ndim=2] mask):
     assert s1.dtype == DTYPE and s2.dtype == DTYPE
-    # The "cdef" keyword is also used within functions to type variables. It
-    # can only be used at the top indentation level (there are non-trivial
-    # problems with allowing them in other places, though we'd love to see
-    # good and thought out proposals for it).
+    assert s1.shape[0] == mask.shape[0] and s2.shape[0] == mask.shape[1]
+
     cdef int l1 = s1.shape[0]
     cdef int l2 = s2.shape[0]
     cdef int i = 0
@@ -135,15 +128,22 @@ def dtw(numpy.ndarray[DTYPE_t, ndim=2] s1, numpy.ndarray[DTYPE_t, ndim=2] s2):
     cum_sum[1:, 0] = numpy.inf
     cum_sum[0, 1:] = numpy.inf
 
+    cross_dist[~numpy.isfinite(mask)] = numpy.inf
+
     for i in range(l1):
         for j in range(l2):
-            cum_sum[i + 1, j + 1] = min(cum_sum[i, j + 1], cum_sum[i + 1, j], cum_sum[i, j]) + cross_dist[i, j]
+            cum_sum[i + 1, j + 1] = cross_dist[i, j]
+            if numpy.isfinite(cum_sum[i + 1, j + 1]):
+                cum_sum[i + 1, j + 1] += min(cum_sum[i, j + 1], cum_sum[i + 1, j], cum_sum[i, j])
 
     return numpy.sqrt(cum_sum[l1, l2])
 
 @cython.boundscheck(False) # turn off bounds-checking for entire function
 @cython.wraparound(False)  # turn off negative index wrapping for entire function
-def cdist_dtw(numpy.ndarray[DTYPE_t, ndim=3] dataset1, numpy.ndarray[DTYPE_t, ndim=3] dataset2, bool self_similarity):
+def cdist_dtw(numpy.ndarray[DTYPE_t, ndim=3] dataset1,
+              numpy.ndarray[DTYPE_t, ndim=3] dataset2,
+              numpy.ndarray[DTYPE_t, ndim=2] mask,
+              bool self_similarity):
     assert dataset1.dtype == DTYPE and dataset2.dtype == DTYPE
     cdef int n1 = dataset1.shape[0]
     cdef int n2 = dataset2.shape[0]
@@ -158,7 +158,7 @@ def cdist_dtw(numpy.ndarray[DTYPE_t, ndim=3] dataset1, numpy.ndarray[DTYPE_t, nd
             elif self_similarity and i == j:
                 cross_dist[i, j] = 0.
             else:
-                cross_dist[i, j] = dtw(dataset1[i], dataset2[j])
+                cross_dist[i, j] = dtw(dataset1[i], dataset2[j], mask)
 
     return cross_dist
 

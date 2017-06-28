@@ -46,7 +46,7 @@ Also, for the whole package to run properly, its base directory should be append
 * A `datasets` module provides access to the famous UCR/UEA datasets through the `UCR_UEA_datasets` class 
 * A `preprocessing` module provides standard time series scalers
 * A `metrics` module provides:
-  * Dynamic Time Warping (DTW) (derived from `cydtw` code)
+  * Dynamic Time Warping (DTW) (with Sakoe-Chiba band and Itakura parallelogram variants)
   * LB_Keogh
   * Global Alignment Kernel
   * Soft-DTW from Cuturi and Blondel
@@ -70,11 +70,10 @@ Also, for the whole package to run properly, its base directory should be append
 
 # TODO list
 
-* Implement Learning Shapelets from Grabocka et al. (Conv+L2, + unsupervised)
-* Add local feature extractors (`TransformerMixin`)
+* Implement Learning Shapelets from Grabocka et al.
+* Add local feature extractors (`TransformerMixin`) and Bag-of-Word models
 * Add metric learning for time series (Garreau _et al._)
 * Add LB_Keogh for nearest neighbor search
-* Add Itakura and SakoeChiba variants of DTW
 
 **If you want other ML methods for time series to be added to this TODO list, do not hesitate to open an issue!**
 

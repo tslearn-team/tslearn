@@ -1519,6 +1519,7 @@ static const char __pyx_k_n1[] = "n1";
 static const char __pyx_k_n2[] = "n2";
 static const char __pyx_k_s1[] = "s1";
 static const char __pyx_k_s2[] = "s2";
+static const char __pyx_k_up[] = "up";
 static const char __pyx_k_main[] = "__main__";
 static const char __pyx_k_p_up[] = "p_up";
 static const char __pyx_k_sqrt[] = "sqrt";
@@ -1532,6 +1533,7 @@ static const char __pyx_k_float[] = "float";
 static const char __pyx_k_gamma[] = "gamma";
 static const char __pyx_k_numpy[] = "numpy";
 static const char __pyx_k_range[] = "range";
+static const char __pyx_k_right[] = "right";
 static const char __pyx_k_zeros[] = "zeros";
 static const char __pyx_k_astype[] = "astype";
 static const char __pyx_k_author[] = "__author__";
@@ -1546,6 +1548,7 @@ static const char __pyx_k_p_right[] = "p_right";
 static const char __pyx_k_DIAGONAL[] = "DIAGONAL";
 static const char __pyx_k_dataset1[] = "dataset1";
 static const char __pyx_k_dataset2[] = "dataset2";
+static const char __pyx_k_diagonal[] = "diagonal";
 static const char __pyx_k_mat_cost[] = "mat_cost";
 static const char __pyx_k_mat_dist[] = "mat_dist";
 static const char __pyx_k_ValueError[] = "ValueError";
@@ -1597,6 +1600,7 @@ static PyObject *__pyx_n_s_cross_dist;
 static PyObject *__pyx_n_s_cylrdtw;
 static PyObject *__pyx_n_s_dataset1;
 static PyObject *__pyx_n_s_dataset2;
+static PyObject *__pyx_n_s_diagonal;
 static PyObject *__pyx_n_s_dtype;
 static PyObject *__pyx_n_s_empty;
 static PyObject *__pyx_n_s_float;
@@ -1626,6 +1630,7 @@ static PyObject *__pyx_n_s_p_right;
 static PyObject *__pyx_n_s_p_up;
 static PyObject *__pyx_n_s_probas;
 static PyObject *__pyx_n_s_range;
+static PyObject *__pyx_n_s_right;
 static PyObject *__pyx_n_s_s;
 static PyObject *__pyx_n_s_s1;
 static PyObject *__pyx_n_s_s2;
@@ -1636,6 +1641,7 @@ static PyObject *__pyx_n_s_sqrt;
 static PyObject *__pyx_n_s_test;
 static PyObject *__pyx_n_s_tslearn_cylrdtw;
 static PyObject *__pyx_kp_u_unknown_dtype_code_in_numpy_pxd;
+static PyObject *__pyx_n_s_up;
 static PyObject *__pyx_n_s_zeros;
 static PyObject *__pyx_pf_7tslearn_7cylrdtw_get_probas_formula(CYTHON_UNUSED PyObject *__pyx_self, __pyx_t_7tslearn_7cylrdtw_DTYPE_t __pyx_v_cost_up, __pyx_t_7tslearn_7cylrdtw_DTYPE_t __pyx_v_cost_right, __pyx_t_7tslearn_7cylrdtw_DTYPE_t __pyx_v_cost_diagonal, __pyx_t_7tslearn_7cylrdtw_DTYPE_t __pyx_v_gamma); /* proto */
 static PyObject *__pyx_pf_7tslearn_7cylrdtw_2lr_dtw(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_s1, PyArrayObject *__pyx_v_s2, __pyx_t_7tslearn_7cylrdtw_DTYPE_t __pyx_v_gamma); /* proto */
@@ -2561,9 +2567,9 @@ static PyObject *__pyx_pf_7tslearn_7cylrdtw_2lr_dtw(CYTHON_UNUSED PyObject *__py
   PyArrayObject *__pyx_v_probas = 0;
   int __pyx_v_i;
   int __pyx_v_j;
-  int __pyx_v_UP;
-  int __pyx_v_RIGHT;
-  int __pyx_v_DIAGONAL;
+  int __pyx_v_up;
+  int __pyx_v_right;
+  int __pyx_v_diagonal;
   __pyx_t_7tslearn_7cylrdtw_DTYPE_t __pyx_v_p_up;
   __pyx_t_7tslearn_7cylrdtw_DTYPE_t __pyx_v_p_right;
   __pyx_t_7tslearn_7cylrdtw_DTYPE_t __pyx_v_p_diag;
@@ -2933,38 +2939,38 @@ static PyObject *__pyx_pf_7tslearn_7cylrdtw_2lr_dtw(CYTHON_UNUSED PyObject *__py
   /* "tslearn/cylrdtw.pyx":82
  *     cdef int i
  *     cdef int j
- *     cdef int UP = 0             # <<<<<<<<<<<<<<
- *     cdef int RIGHT = 1
- *     cdef int DIAGONAL = 2
+ *     cdef int up = 0             # <<<<<<<<<<<<<<
+ *     cdef int right = 1
+ *     cdef int diagonal = 2
  */
-  __pyx_v_UP = 0;
+  __pyx_v_up = 0;
 
   /* "tslearn/cylrdtw.pyx":83
  *     cdef int j
- *     cdef int UP = 0
- *     cdef int RIGHT = 1             # <<<<<<<<<<<<<<
- *     cdef int DIAGONAL = 2
+ *     cdef int up = 0
+ *     cdef int right = 1             # <<<<<<<<<<<<<<
+ *     cdef int diagonal = 2
  *     cdef DTYPE_t p_up
  */
-  __pyx_v_RIGHT = 1;
+  __pyx_v_right = 1;
 
   /* "tslearn/cylrdtw.pyx":84
- *     cdef int UP = 0
- *     cdef int RIGHT = 1
- *     cdef int DIAGONAL = 2             # <<<<<<<<<<<<<<
+ *     cdef int up = 0
+ *     cdef int right = 1
+ *     cdef int diagonal = 2             # <<<<<<<<<<<<<<
  *     cdef DTYPE_t p_up
  *     cdef DTYPE_t p_right
  */
-  __pyx_v_DIAGONAL = 2;
+  __pyx_v_diagonal = 2;
 
   /* "tslearn/cylrdtw.pyx":89
  *     cdef DTYPE_t p_diag
  * 
- *     probas[1:, 0, UP] = 1.             # <<<<<<<<<<<<<<
- *     probas[0, 1:, RIGHT] = 1.
+ *     probas[1:, 0, up] = 1.             # <<<<<<<<<<<<<<
+ *     probas[0, 1:, right] = 1.
  *     for i in range(1, n):
  */
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_UP); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 89, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_up); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 89, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_t_3 = PyTuple_New(3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 89, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
@@ -2982,12 +2988,12 @@ static PyObject *__pyx_pf_7tslearn_7cylrdtw_2lr_dtw(CYTHON_UNUSED PyObject *__py
 
   /* "tslearn/cylrdtw.pyx":90
  * 
- *     probas[1:, 0, UP] = 1.
- *     probas[0, 1:, RIGHT] = 1.             # <<<<<<<<<<<<<<
+ *     probas[1:, 0, up] = 1.
+ *     probas[0, 1:, right] = 1.             # <<<<<<<<<<<<<<
  *     for i in range(1, n):
  *         mat_cost[i, 0] = mat_cost[i - 1, 0] + mat_dist[i, 0]
  */
-  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_RIGHT); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 90, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_right); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 90, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_t_1 = PyTuple_New(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 90, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
@@ -3004,8 +3010,8 @@ static PyObject *__pyx_pf_7tslearn_7cylrdtw_2lr_dtw(CYTHON_UNUSED PyObject *__py
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "tslearn/cylrdtw.pyx":91
- *     probas[1:, 0, UP] = 1.
- *     probas[0, 1:, RIGHT] = 1.
+ *     probas[1:, 0, up] = 1.
+ *     probas[0, 1:, right] = 1.
  *     for i in range(1, n):             # <<<<<<<<<<<<<<
  *         mat_cost[i, 0] = mat_cost[i - 1, 0] + mat_dist[i, 0]
  *     for j in range(1, m):
@@ -3015,7 +3021,7 @@ static PyObject *__pyx_pf_7tslearn_7cylrdtw_2lr_dtw(CYTHON_UNUSED PyObject *__py
     __pyx_v_i = __pyx_t_10;
 
     /* "tslearn/cylrdtw.pyx":92
- *     probas[0, 1:, RIGHT] = 1.
+ *     probas[0, 1:, right] = 1.
  *     for i in range(1, n):
  *         mat_cost[i, 0] = mat_cost[i - 1, 0] + mat_dist[i, 0]             # <<<<<<<<<<<<<<
  *     for j in range(1, m):
@@ -3084,7 +3090,7 @@ static PyObject *__pyx_pf_7tslearn_7cylrdtw_2lr_dtw(CYTHON_UNUSED PyObject *__py
  *         for j in range(1, m):
  *             p_up, p_right, p_diag = get_probas_formula(mat_cost[i - 1, j], mat_cost[i, j - 1], mat_cost[i - 1, j - 1],             # <<<<<<<<<<<<<<
  *                                                        gamma)
- *             probas[i, j, UP] = p_up
+ *             probas[i, j, up] = p_up
  */
       __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_get_probas_formula); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 97, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
@@ -3105,8 +3111,8 @@ static PyObject *__pyx_pf_7tslearn_7cylrdtw_2lr_dtw(CYTHON_UNUSED PyObject *__py
  *         for j in range(1, m):
  *             p_up, p_right, p_diag = get_probas_formula(mat_cost[i - 1, j], mat_cost[i, j - 1], mat_cost[i - 1, j - 1],
  *                                                        gamma)             # <<<<<<<<<<<<<<
- *             probas[i, j, UP] = p_up
- *             probas[i, j, RIGHT] = p_right
+ *             probas[i, j, up] = p_up
+ *             probas[i, j, right] = p_right
  */
       __pyx_t_31 = PyFloat_FromDouble(__pyx_v_gamma); if (unlikely(!__pyx_t_31)) __PYX_ERR(0, 98, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_31);
@@ -3232,7 +3238,7 @@ static PyObject *__pyx_pf_7tslearn_7cylrdtw_2lr_dtw(CYTHON_UNUSED PyObject *__py
  *         for j in range(1, m):
  *             p_up, p_right, p_diag = get_probas_formula(mat_cost[i - 1, j], mat_cost[i, j - 1], mat_cost[i - 1, j - 1],             # <<<<<<<<<<<<<<
  *                                                        gamma)
- *             probas[i, j, UP] = p_up
+ *             probas[i, j, up] = p_up
  */
       __pyx_t_36 = __pyx_PyFloat_AsDouble(__pyx_t_3); if (unlikely((__pyx_t_36 == ((npy_double)-1)) && PyErr_Occurred())) __PYX_ERR(0, 97, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -3247,81 +3253,81 @@ static PyObject *__pyx_pf_7tslearn_7cylrdtw_2lr_dtw(CYTHON_UNUSED PyObject *__py
       /* "tslearn/cylrdtw.pyx":99
  *             p_up, p_right, p_diag = get_probas_formula(mat_cost[i - 1, j], mat_cost[i, j - 1], mat_cost[i - 1, j - 1],
  *                                                        gamma)
- *             probas[i, j, UP] = p_up             # <<<<<<<<<<<<<<
- *             probas[i, j, RIGHT] = p_right
- *             probas[i, j, DIAGONAL] = p_diag
+ *             probas[i, j, up] = p_up             # <<<<<<<<<<<<<<
+ *             probas[i, j, right] = p_right
+ *             probas[i, j, diagonal] = p_diag
  */
       __pyx_t_39 = __pyx_v_i;
       __pyx_t_40 = __pyx_v_j;
-      __pyx_t_41 = __pyx_v_UP;
+      __pyx_t_41 = __pyx_v_up;
       *__Pyx_BufPtrStrided3d(__pyx_t_7tslearn_7cylrdtw_DTYPE_t *, __pyx_pybuffernd_probas.rcbuffer->pybuffer.buf, __pyx_t_39, __pyx_pybuffernd_probas.diminfo[0].strides, __pyx_t_40, __pyx_pybuffernd_probas.diminfo[1].strides, __pyx_t_41, __pyx_pybuffernd_probas.diminfo[2].strides) = __pyx_v_p_up;
 
       /* "tslearn/cylrdtw.pyx":100
  *                                                        gamma)
- *             probas[i, j, UP] = p_up
- *             probas[i, j, RIGHT] = p_right             # <<<<<<<<<<<<<<
- *             probas[i, j, DIAGONAL] = p_diag
- *             mat_cost[i, j] = (probas[i, j, UP] * mat_cost[i - 1, j]
+ *             probas[i, j, up] = p_up
+ *             probas[i, j, right] = p_right             # <<<<<<<<<<<<<<
+ *             probas[i, j, diagonal] = p_diag
+ *             mat_cost[i, j] = (probas[i, j, up] * mat_cost[i - 1, j]
  */
       __pyx_t_42 = __pyx_v_i;
       __pyx_t_43 = __pyx_v_j;
-      __pyx_t_44 = __pyx_v_RIGHT;
+      __pyx_t_44 = __pyx_v_right;
       *__Pyx_BufPtrStrided3d(__pyx_t_7tslearn_7cylrdtw_DTYPE_t *, __pyx_pybuffernd_probas.rcbuffer->pybuffer.buf, __pyx_t_42, __pyx_pybuffernd_probas.diminfo[0].strides, __pyx_t_43, __pyx_pybuffernd_probas.diminfo[1].strides, __pyx_t_44, __pyx_pybuffernd_probas.diminfo[2].strides) = __pyx_v_p_right;
 
       /* "tslearn/cylrdtw.pyx":101
- *             probas[i, j, UP] = p_up
- *             probas[i, j, RIGHT] = p_right
- *             probas[i, j, DIAGONAL] = p_diag             # <<<<<<<<<<<<<<
- *             mat_cost[i, j] = (probas[i, j, UP] * mat_cost[i - 1, j]
- *                               + probas[i, j, RIGHT] * mat_cost[i, j - 1]
+ *             probas[i, j, up] = p_up
+ *             probas[i, j, right] = p_right
+ *             probas[i, j, diagonal] = p_diag             # <<<<<<<<<<<<<<
+ *             mat_cost[i, j] = (probas[i, j, up] * mat_cost[i - 1, j]
+ *                               + probas[i, j, right] * mat_cost[i, j - 1]
  */
       __pyx_t_45 = __pyx_v_i;
       __pyx_t_46 = __pyx_v_j;
-      __pyx_t_47 = __pyx_v_DIAGONAL;
+      __pyx_t_47 = __pyx_v_diagonal;
       *__Pyx_BufPtrStrided3d(__pyx_t_7tslearn_7cylrdtw_DTYPE_t *, __pyx_pybuffernd_probas.rcbuffer->pybuffer.buf, __pyx_t_45, __pyx_pybuffernd_probas.diminfo[0].strides, __pyx_t_46, __pyx_pybuffernd_probas.diminfo[1].strides, __pyx_t_47, __pyx_pybuffernd_probas.diminfo[2].strides) = __pyx_v_p_diag;
 
       /* "tslearn/cylrdtw.pyx":102
- *             probas[i, j, RIGHT] = p_right
- *             probas[i, j, DIAGONAL] = p_diag
- *             mat_cost[i, j] = (probas[i, j, UP] * mat_cost[i - 1, j]             # <<<<<<<<<<<<<<
- *                               + probas[i, j, RIGHT] * mat_cost[i, j - 1]
- *                               + probas[i, j, DIAGONAL] * mat_cost[i - 1, j - 1]
+ *             probas[i, j, right] = p_right
+ *             probas[i, j, diagonal] = p_diag
+ *             mat_cost[i, j] = (probas[i, j, up] * mat_cost[i - 1, j]             # <<<<<<<<<<<<<<
+ *                               + probas[i, j, right] * mat_cost[i, j - 1]
+ *                               + probas[i, j, diagonal] * mat_cost[i - 1, j - 1]
  */
       __pyx_t_48 = __pyx_v_i;
       __pyx_t_49 = __pyx_v_j;
-      __pyx_t_50 = __pyx_v_UP;
+      __pyx_t_50 = __pyx_v_up;
       __pyx_t_51 = (__pyx_v_i - 1);
       __pyx_t_52 = __pyx_v_j;
 
       /* "tslearn/cylrdtw.pyx":103
- *             probas[i, j, DIAGONAL] = p_diag
- *             mat_cost[i, j] = (probas[i, j, UP] * mat_cost[i - 1, j]
- *                               + probas[i, j, RIGHT] * mat_cost[i, j - 1]             # <<<<<<<<<<<<<<
- *                               + probas[i, j, DIAGONAL] * mat_cost[i - 1, j - 1]
+ *             probas[i, j, diagonal] = p_diag
+ *             mat_cost[i, j] = (probas[i, j, up] * mat_cost[i - 1, j]
+ *                               + probas[i, j, right] * mat_cost[i, j - 1]             # <<<<<<<<<<<<<<
+ *                               + probas[i, j, diagonal] * mat_cost[i - 1, j - 1]
  *                               + mat_dist[i, j])
  */
       __pyx_t_53 = __pyx_v_i;
       __pyx_t_54 = __pyx_v_j;
-      __pyx_t_55 = __pyx_v_RIGHT;
+      __pyx_t_55 = __pyx_v_right;
       __pyx_t_56 = __pyx_v_i;
       __pyx_t_57 = (__pyx_v_j - 1);
 
       /* "tslearn/cylrdtw.pyx":104
- *             mat_cost[i, j] = (probas[i, j, UP] * mat_cost[i - 1, j]
- *                               + probas[i, j, RIGHT] * mat_cost[i, j - 1]
- *                               + probas[i, j, DIAGONAL] * mat_cost[i - 1, j - 1]             # <<<<<<<<<<<<<<
+ *             mat_cost[i, j] = (probas[i, j, up] * mat_cost[i - 1, j]
+ *                               + probas[i, j, right] * mat_cost[i, j - 1]
+ *                               + probas[i, j, diagonal] * mat_cost[i - 1, j - 1]             # <<<<<<<<<<<<<<
  *                               + mat_dist[i, j])
  *     return numpy.sqrt(mat_cost[n - 1, m - 1]), probas
  */
       __pyx_t_58 = __pyx_v_i;
       __pyx_t_59 = __pyx_v_j;
-      __pyx_t_60 = __pyx_v_DIAGONAL;
+      __pyx_t_60 = __pyx_v_diagonal;
       __pyx_t_61 = (__pyx_v_i - 1);
       __pyx_t_62 = (__pyx_v_j - 1);
 
       /* "tslearn/cylrdtw.pyx":105
- *                               + probas[i, j, RIGHT] * mat_cost[i, j - 1]
- *                               + probas[i, j, DIAGONAL] * mat_cost[i - 1, j - 1]
+ *                               + probas[i, j, right] * mat_cost[i, j - 1]
+ *                               + probas[i, j, diagonal] * mat_cost[i - 1, j - 1]
  *                               + mat_dist[i, j])             # <<<<<<<<<<<<<<
  *     return numpy.sqrt(mat_cost[n - 1, m - 1]), probas
  * 
@@ -3330,11 +3336,11 @@ static PyObject *__pyx_pf_7tslearn_7cylrdtw_2lr_dtw(CYTHON_UNUSED PyObject *__py
       __pyx_t_64 = __pyx_v_j;
 
       /* "tslearn/cylrdtw.pyx":102
- *             probas[i, j, RIGHT] = p_right
- *             probas[i, j, DIAGONAL] = p_diag
- *             mat_cost[i, j] = (probas[i, j, UP] * mat_cost[i - 1, j]             # <<<<<<<<<<<<<<
- *                               + probas[i, j, RIGHT] * mat_cost[i, j - 1]
- *                               + probas[i, j, DIAGONAL] * mat_cost[i - 1, j - 1]
+ *             probas[i, j, right] = p_right
+ *             probas[i, j, diagonal] = p_diag
+ *             mat_cost[i, j] = (probas[i, j, up] * mat_cost[i - 1, j]             # <<<<<<<<<<<<<<
+ *                               + probas[i, j, right] * mat_cost[i, j - 1]
+ *                               + probas[i, j, diagonal] * mat_cost[i - 1, j - 1]
  */
       __pyx_t_65 = __pyx_v_i;
       __pyx_t_66 = __pyx_v_j;
@@ -3343,7 +3349,7 @@ static PyObject *__pyx_pf_7tslearn_7cylrdtw_2lr_dtw(CYTHON_UNUSED PyObject *__py
   }
 
   /* "tslearn/cylrdtw.pyx":106
- *                               + probas[i, j, DIAGONAL] * mat_cost[i - 1, j - 1]
+ *                               + probas[i, j, diagonal] * mat_cost[i - 1, j - 1]
  *                               + mat_dist[i, j])
  *     return numpy.sqrt(mat_cost[n - 1, m - 1]), probas             # <<<<<<<<<<<<<<
  * 
@@ -7377,6 +7383,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_cylrdtw, __pyx_k_cylrdtw, sizeof(__pyx_k_cylrdtw), 0, 0, 1, 1},
   {&__pyx_n_s_dataset1, __pyx_k_dataset1, sizeof(__pyx_k_dataset1), 0, 0, 1, 1},
   {&__pyx_n_s_dataset2, __pyx_k_dataset2, sizeof(__pyx_k_dataset2), 0, 0, 1, 1},
+  {&__pyx_n_s_diagonal, __pyx_k_diagonal, sizeof(__pyx_k_diagonal), 0, 0, 1, 1},
   {&__pyx_n_s_dtype, __pyx_k_dtype, sizeof(__pyx_k_dtype), 0, 0, 1, 1},
   {&__pyx_n_s_empty, __pyx_k_empty, sizeof(__pyx_k_empty), 0, 0, 1, 1},
   {&__pyx_n_s_float, __pyx_k_float, sizeof(__pyx_k_float), 0, 0, 1, 1},
@@ -7406,6 +7413,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_p_up, __pyx_k_p_up, sizeof(__pyx_k_p_up), 0, 0, 1, 1},
   {&__pyx_n_s_probas, __pyx_k_probas, sizeof(__pyx_k_probas), 0, 0, 1, 1},
   {&__pyx_n_s_range, __pyx_k_range, sizeof(__pyx_k_range), 0, 0, 1, 1},
+  {&__pyx_n_s_right, __pyx_k_right, sizeof(__pyx_k_right), 0, 0, 1, 1},
   {&__pyx_n_s_s, __pyx_k_s, sizeof(__pyx_k_s), 0, 0, 1, 1},
   {&__pyx_n_s_s1, __pyx_k_s1, sizeof(__pyx_k_s1), 0, 0, 1, 1},
   {&__pyx_n_s_s2, __pyx_k_s2, sizeof(__pyx_k_s2), 0, 0, 1, 1},
@@ -7416,6 +7424,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_test, __pyx_k_test, sizeof(__pyx_k_test), 0, 0, 1, 1},
   {&__pyx_n_s_tslearn_cylrdtw, __pyx_k_tslearn_cylrdtw, sizeof(__pyx_k_tslearn_cylrdtw), 0, 0, 1, 1},
   {&__pyx_kp_u_unknown_dtype_code_in_numpy_pxd, __pyx_k_unknown_dtype_code_in_numpy_pxd, sizeof(__pyx_k_unknown_dtype_code_in_numpy_pxd), 0, 1, 0, 0},
+  {&__pyx_n_s_up, __pyx_k_up, sizeof(__pyx_k_up), 0, 0, 1, 1},
   {&__pyx_n_s_zeros, __pyx_k_zeros, sizeof(__pyx_k_zeros), 0, 0, 1, 1},
   {0, 0, 0, 0, 0, 0, 0}
 };
@@ -7436,8 +7445,8 @@ static int __Pyx_InitCachedConstants(void) {
   /* "tslearn/cylrdtw.pyx":89
  *     cdef DTYPE_t p_diag
  * 
- *     probas[1:, 0, UP] = 1.             # <<<<<<<<<<<<<<
- *     probas[0, 1:, RIGHT] = 1.
+ *     probas[1:, 0, up] = 1.             # <<<<<<<<<<<<<<
+ *     probas[0, 1:, right] = 1.
  *     for i in range(1, n):
  */
   __pyx_slice_ = PySlice_New(__pyx_int_1, Py_None, Py_None); if (unlikely(!__pyx_slice_)) __PYX_ERR(0, 89, __pyx_L1_error)
@@ -7446,8 +7455,8 @@ static int __Pyx_InitCachedConstants(void) {
 
   /* "tslearn/cylrdtw.pyx":90
  * 
- *     probas[1:, 0, UP] = 1.
- *     probas[0, 1:, RIGHT] = 1.             # <<<<<<<<<<<<<<
+ *     probas[1:, 0, up] = 1.
+ *     probas[0, 1:, right] = 1.             # <<<<<<<<<<<<<<
  *     for i in range(1, n):
  *         mat_cost[i, 0] = mat_cost[i - 1, 0] + mat_dist[i, 0]
  */
@@ -7571,7 +7580,7 @@ static int __Pyx_InitCachedConstants(void) {
  *     cdef numpy.ndarray[DTYPE_t, ndim=2] mat_dist = cdist(s1, s2, "sqeuclidean").astype(DTYPE)
  *     cdef int n = mat_dist.shape[0]
  */
-  __pyx_tuple__14 = PyTuple_Pack(16, __pyx_n_s_s1, __pyx_n_s_s2, __pyx_n_s_gamma, __pyx_n_s_mat_dist, __pyx_n_s_n, __pyx_n_s_m, __pyx_n_s_mat_cost, __pyx_n_s_probas, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_UP, __pyx_n_s_RIGHT, __pyx_n_s_DIAGONAL, __pyx_n_s_p_up, __pyx_n_s_p_right, __pyx_n_s_p_diag); if (unlikely(!__pyx_tuple__14)) __PYX_ERR(0, 74, __pyx_L1_error)
+  __pyx_tuple__14 = PyTuple_Pack(16, __pyx_n_s_s1, __pyx_n_s_s2, __pyx_n_s_gamma, __pyx_n_s_mat_dist, __pyx_n_s_n, __pyx_n_s_m, __pyx_n_s_mat_cost, __pyx_n_s_probas, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_up, __pyx_n_s_right, __pyx_n_s_diagonal, __pyx_n_s_p_up, __pyx_n_s_p_right, __pyx_n_s_p_diag); if (unlikely(!__pyx_tuple__14)) __PYX_ERR(0, 74, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__14);
   __Pyx_GIVEREF(__pyx_tuple__14);
   __pyx_codeobj__15 = (PyObject*)__Pyx_PyCode_New(3, 0, 16, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__14, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_tavenard_r_Documents_cost, __pyx_n_s_lr_dtw, 74, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__15)) __PYX_ERR(0, 74, __pyx_L1_error)

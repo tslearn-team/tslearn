@@ -1573,7 +1573,7 @@ static const char __pyx_k_dataset2[] = "dataset2";
 static const char __pyx_k_norm_ref[] = "norm_ref";
 static const char __pyx_k_STUFF_cycc[] = "STUFF_cycc";
 static const char __pyx_k_ValueError[] = "ValueError";
-static const char __pyx_k_bit_length[] = "_bit_length";
+static const char __pyx_k_bit_length[] = "bit_length";
 static const char __pyx_k_ImportError[] = "ImportError";
 static const char __pyx_k_RuntimeError[] = "RuntimeError";
 static const char __pyx_k_tslearn_cycc[] = "tslearn.cycc";
@@ -1940,7 +1940,7 @@ static PyObject *__pyx_pf_7tslearn_4cycc_normalized_cc(CYTHON_UNUSED PyObject *_
   /* "tslearn/cycc.pyx":26
  *     # Compute fft size based on tip from
  *     # https://stackoverflow.com/questions/14267555/how-can-i-find-the-smallest-power-of-2-greater-than-n-in-python
- *     cdef int fft_sz = 1 << _bit_length(2 * sz - 1)             # <<<<<<<<<<<<<<
+ *     cdef int fft_sz = 1 << bit_length(2 * sz - 1)             # <<<<<<<<<<<<<<
  *     cdef float denom = 0.
  *     cdef numpy.ndarray[DTYPE_t, ndim=2] cc
  */
@@ -2003,7 +2003,7 @@ static PyObject *__pyx_pf_7tslearn_4cycc_normalized_cc(CYTHON_UNUSED PyObject *_
 
   /* "tslearn/cycc.pyx":27
  *     # https://stackoverflow.com/questions/14267555/how-can-i-find-the-smallest-power-of-2-greater-than-n-in-python
- *     cdef int fft_sz = 1 << _bit_length(2 * sz - 1)
+ *     cdef int fft_sz = 1 << bit_length(2 * sz - 1)
  *     cdef float denom = 0.             # <<<<<<<<<<<<<<
  *     cdef numpy.ndarray[DTYPE_t, ndim=2] cc
  * 
@@ -7219,7 +7219,7 @@ PyMODINIT_FUNC PyInit_cycc(void)
  * STUFF_cycc = "cycc"
  * 
  * import numpy             # <<<<<<<<<<<<<<
- * from tslearn.utils import _bit_length
+ * from tslearn.utils import bit_length
  * 
  */
   __pyx_t_1 = __Pyx_Import(__pyx_n_s_numpy, 0, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 3, __pyx_L1_error)
@@ -7230,7 +7230,7 @@ PyMODINIT_FUNC PyInit_cycc(void)
   /* "tslearn/cycc.pyx":4
  * 
  * import numpy
- * from tslearn.utils import _bit_length             # <<<<<<<<<<<<<<
+ * from tslearn.utils import bit_length             # <<<<<<<<<<<<<<
  * 
  * cimport numpy
  */

@@ -79,15 +79,15 @@ def lr_dtw(numpy.ndarray[DTYPE_t, ndim=2] s1, numpy.ndarray[DTYPE_t, ndim=2] s2,
     cdef numpy.ndarray[DTYPE_t, ndim=3] probas = numpy.zeros((n, m, 3), dtype=DTYPE)
     cdef int i
     cdef int j
-    cdef int UP = 0
-    cdef int RIGHT = 1
-    cdef int DIAGONAL = 2
+    cdef int up = 0
+    cdef int right = 1
+    cdef int diagonal = 2
     cdef DTYPE_t p_up
     cdef DTYPE_t p_right
     cdef DTYPE_t p_diag
 
-    probas[1:, 0, UP] = 1.
-    probas[0, 1:, RIGHT] = 1.
+    probas[1:, 0, up] = 1.
+    probas[0, 1:, right] = 1.
     for i in range(1, n):
         mat_cost[i, 0] = mat_cost[i - 1, 0] + mat_dist[i, 0]
     for j in range(1, m):
@@ -96,12 +96,12 @@ def lr_dtw(numpy.ndarray[DTYPE_t, ndim=2] s1, numpy.ndarray[DTYPE_t, ndim=2] s2,
         for j in range(1, m):
             p_up, p_right, p_diag = get_probas_formula(mat_cost[i - 1, j], mat_cost[i, j - 1], mat_cost[i - 1, j - 1],
                                                        gamma)
-            probas[i, j, UP] = p_up
-            probas[i, j, RIGHT] = p_right
-            probas[i, j, DIAGONAL] = p_diag
-            mat_cost[i, j] = (probas[i, j, UP] * mat_cost[i - 1, j]
-                              + probas[i, j, RIGHT] * mat_cost[i, j - 1]
-                              + probas[i, j, DIAGONAL] * mat_cost[i - 1, j - 1]
+            probas[i, j, up] = p_up
+            probas[i, j, right] = p_right
+            probas[i, j, diagonal] = p_diag
+            mat_cost[i, j] = (probas[i, j, up] * mat_cost[i - 1, j]
+                              + probas[i, j, right] * mat_cost[i, j - 1]
+                              + probas[i, j, diagonal] * mat_cost[i - 1, j - 1]
                               + mat_dist[i, j])
     return numpy.sqrt(mat_cost[n - 1, m - 1]), probas
 

@@ -16,24 +16,28 @@ import matplotlib.pyplot as plt
 
 from tslearn.clustering import GlobalAlignmentKernelKMeans
 from tslearn.metrics import sigma_gak, cdist_gak
-from tslearn.generators import random_walk_blobs
+from tslearn.datasets import CachedDatasets
+from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 
-numpy.random.seed(0)
-X, y = random_walk_blobs(n_ts_per_blob=50, sz=128, d=1, n_blobs=3)
+seed = 0
+numpy.random.seed(seed)
+X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")
+X_train = X_train[y_train < 4]  # Keep first 3 classes
+numpy.random.shuffle(X_train)
+X_train = TimeSeriesScalerMeanVariance().fit_transform(X_train[:50])  # Keep only 50 time series
+sz = X_train.shape[1]
 
-sigma = sigma_gak(X)
+gak_km = GlobalAlignmentKernelKMeans(n_clusters=3, sigma=sigma_gak(X_train), n_init=20, verbose=True, random_state=seed)
+y_pred = gak_km.fit_predict(X_train)
 
 plt.figure()
-for i, sigma in enumerate([sigma / 100, sigma, 100 * sigma]):
-    plt.subplot(2, 3, i + 1)
-    plt.imshow(cdist_gak(X, sigma=sigma))
-    plt.title("Gram matrix\n($\sigma = %.2f$)" % sigma)
+for yi in range(3):
+    plt.subplot(3, 1, 1 + yi)
+    for xx in X_train[y_pred == yi]:
+        plt.plot(xx.ravel(), "k-")
+    plt.xlim(0, sz)
+    plt.ylim(-4, 4)
+    plt.title("Cluster %d" % (yi + 1))
 
-plt.subplot2grid((2, 3), (1, 0), colspan=3)
-gak_km = GlobalAlignmentKernelKMeans(n_clusters=3, sigma=sigma, n_init=20, verbose=False, random_state=0)
-y_pred = gak_km.fit_predict(X)
-if gak_km.X_fit_ is not None:
-    own_colors = ["r", "g", "b"]
-    for xx, yy in zip(X, y_pred):
-        plt.plot(numpy.arange(128), xx, own_colors[yy] + "-")
+plt.tight_layout()
 plt.show()

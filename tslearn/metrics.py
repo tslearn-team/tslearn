@@ -18,7 +18,7 @@ from tslearn.utils import to_time_series, to_time_series_dataset
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
-def dtw_path(s1, s2):
+def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=1):
     """Compute Dynamic Time Warping (DTW) similarity measure between (possibly multidimensional) time series and
     return both the path and the similarity.
 
@@ -28,10 +28,14 @@ def dtw_path(s1, s2):
     Parameters
     ----------
     s1
-        A time series
+        A time series.
     s2
-        Another dataset of time series
-        If not given, self-similarity of dataset1 is returned
+        Another time series.
+        If not given, self-similarity of dataset1 is returned.
+    global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
+        Global constraint to restrict admissible paths for DTW.
+    sakoe_chiba_radius : int (default: 1)
+        Radius to be used for Sakoe-Chiba band global constraint. Used only if global_constraint is "sakoe_chiba".
 
     Returns
     -------
@@ -61,10 +65,16 @@ def dtw_path(s1, s2):
     """
     s1 = to_time_series(s1)
     s2 = to_time_series(s2)
-    return cydtw_path(s1, s2)
+    sz1 = s1.shape[0]
+    sz2 = s2.shape[0]
+    if global_constraint == "sakoe_chiba":
+        return cydtw_path(s1, s2, mask=sakoe_chiba_mask(sz1, sz2, radius=sakoe_chiba_radius))
+    elif global_constraint == "itakura":
+        return cydtw_path(s1, s2, mask=itakura_mask(sz1, sz2))
+    return cydtw_path(s1, s2, mask=numpy.zeros((sz1, sz2)))
 
 
-def dtw(s1, s2):
+def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=1):
     """Compute Dynamic Time Warping (DTW) similarity measure between (possibly multidimensional) time series and
     return it.
 
@@ -74,9 +84,13 @@ def dtw(s1, s2):
     Parameters
     ----------
     s1
-        A time series
+        A time series.
     s2
-        Another time series
+        Another time series.
+    global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
+        Global constraint to restrict admissible paths for DTW.
+    sakoe_chiba_radius : int (default: 1)
+        Radius to be used for Sakoe-Chiba band global constraint. Used only if global_constraint is "sakoe_chiba".
 
     Returns
     -------
@@ -102,7 +116,13 @@ def dtw(s1, s2):
     """
     s1 = to_time_series(s1)
     s2 = to_time_series(s2)
-    return cydtw(s1, s2)
+    sz1 = s1.shape[0]
+    sz2 = s2.shape[0]
+    if global_constraint == "sakoe_chiba":
+        return cydtw(s1, s2, mask=sakoe_chiba_mask(sz1, sz2, radius=sakoe_chiba_radius))
+    elif global_constraint == "itakura":
+        return cydtw(s1, s2, mask=itakura_mask(sz1, sz2))
+    return cydtw(s1, s2, mask=numpy.zeros((sz1, sz2)))
 
 
 def sakoe_chiba_mask(sz1, sz2, radius=1):
@@ -141,7 +161,7 @@ def itakura_mask(sz1, sz2):
     return cyitakura_mask(sz1, sz2)
 
 
-def cdist_dtw(dataset1, dataset2=None):
+def cdist_dtw(dataset1, dataset2=None, global_constraint=None, sakoe_chiba_radius=1):
     """Compute cross-similarity matrix using Dynamic Time Warping (DTW) similarity measure.
 
     DTW was originally presented in [1]_.
@@ -152,6 +172,10 @@ def cdist_dtw(dataset1, dataset2=None):
         A dataset of time series
     dataset2 : array-like (default: None)
         Another dataset of time series. If `None`, self-similarity of `dataset1` is returned.
+    global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
+        Global constraint to restrict admissible paths for DTW.
+    sakoe_chiba_radius : int (default: 1)
+        Radius to be used for Sakoe-Chiba band global constraint. Used only if global_constraint is "sakoe_chiba".
 
     Returns
     -------
@@ -183,7 +207,14 @@ def cdist_dtw(dataset1, dataset2=None):
         self_similarity = True
     else:
         dataset2 = to_time_series_dataset(dataset2)
-    return cycdist_dtw(dataset1, dataset2, self_similarity=self_similarity)
+    sz1 = dataset1.shape[1]
+    sz2 = dataset2.shape[1]
+    if global_constraint == "sakoe_chiba":
+        return cycdist_dtw(dataset1, dataset2, self_similarity=self_similarity,
+                           mask=sakoe_chiba_mask(sz1, sz2, radius=sakoe_chiba_radius))
+    elif global_constraint == "itakura":
+        return cycdist_dtw(dataset1, dataset2, self_similarity=self_similarity, mask=itakura_mask(sz1, sz2))
+    return cycdist_dtw(dataset1, dataset2, self_similarity=self_similarity, mask=numpy.zeros((sz1, sz2)))
 
 
 def lr_dtw(s1, s2, gamma=0.):
@@ -567,9 +598,9 @@ def soft_dtw(ts1, ts2, gamma=1.):
 
     Parameters
     ----------
-    s1
+    ts1
         A time series
-    s2
+    ts2
         Another time series
     gamma : float (default 1.)
         Gamma paraneter for Soft-DTW
@@ -673,6 +704,13 @@ class SoftDTW(object):
             self.D = D
         self.D = self.D.astype(numpy.float64)
 
+        # Allocate memory.
+        # We need +2 because we use indices starting from 1
+        # and to deal with edge cases in the backward recursion.
+        m, n = self.D.shape
+        self.R_ = numpy.zeros((m+2, n+2), dtype=numpy.float64)
+        self.computed = False
+
         self.gamma = numpy.float64(gamma)
 
     def compute(self):
@@ -685,12 +723,9 @@ class SoftDTW(object):
         """
         m, n = self.D.shape
 
-        # Allocate memory.
-        # We need +2 because we use indices starting from 1
-        # and to deal with edge cases in the backward recursion.
-        self.R_ = numpy.zeros((m+2, n+2), dtype=numpy.float64)
-
         _soft_dtw(self.D, self.R_, gamma=self.gamma)
+
+        self.computed = True
 
         return self.R_[m, n]
 
@@ -702,7 +737,7 @@ class SoftDTW(object):
         grad: array, shape = [m, n]
             Gradient w.r.t. D.
         """
-        if not hasattr(self, "R_"):
+        if not self.computed:
             raise ValueError("Needs to call compute() first.")
 
         m, n = self.D.shape

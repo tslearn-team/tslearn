@@ -6,4 +6,5 @@ __version__ = "0.0.27"
 
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
 if on_rtd:
-    import pyximport; pyximport.install()
+    import pyximport
+    pyximport.install()

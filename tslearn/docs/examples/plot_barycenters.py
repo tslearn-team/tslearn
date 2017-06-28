@@ -15,8 +15,6 @@ import matplotlib.pyplot as plt
 from tslearn.barycenters import EuclideanBarycenter, DTWBarycenterAveraging, SoftDTWBarycenter
 from tslearn.datasets import CachedDatasets
 
-n_ts, sz, d = 20, 128, 1
-
 numpy.random.seed(0)
 X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")
 X = X_train[y_train == 2]

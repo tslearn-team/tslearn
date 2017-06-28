@@ -19,7 +19,7 @@ from tslearn.neighbors import KNeighborsTimeSeriesClassifier, KNeighborsTimeSeri
 
 numpy.random.seed(0)
 n_ts_per_blob, sz, d, n_blobs = 20, 100, 1, 2
-color_list=["r", "g"]
+color_list = ["r", "g"]
 
 # Prepare data
 X, y = random_walk_blobs(n_ts_per_blob=n_ts_per_blob, sz=sz, d=d, n_blobs=n_blobs)

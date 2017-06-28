@@ -7,7 +7,7 @@ import zipfile
 import os
 try:
     from urllib import urlretrieve
-except:
+except ImportError:
     from urllib.request import urlretrieve
 
 from tslearn.utils import to_time_series_dataset
@@ -169,7 +169,7 @@ class CachedDatasets(object):
     def list_datasets(self):
         """List cached datasets."""
         return [fname[:fname.rfind(".")]
-                for fname in os.listdir()
+                for fname in os.listdir(self.path)
                 if fname.endswith(".npz")]
 
     def load_dataset(self, dataset_name):

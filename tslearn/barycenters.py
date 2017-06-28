@@ -202,21 +202,23 @@ class SoftDTWBarycenter(EuclideanBarycenter):
     >>> SoftDTWBarycenter(max_iter=5).fit(time_series).shape
     (4, 1)
     """
-    def __init__(self, gamma=1.0, weights=None, method="L-BFGS-B", tol=1e-3, max_iter=50):
+    def __init__(self, gamma=1.0, weights=None, method="L-BFGS-B", tol=1e-3, max_iter=50, init=None):
         EuclideanBarycenter.__init__(self, weights=weights)
         self.method = method
         self.tol = tol
         self.gamma = gamma
         self.max_iter = max_iter
         self._X_fit = None
-        self.barycenter_ = None
+        if init is None:
+            self.barycenter_ = None
+        else:
+            self.barycenter_ = init
 
     def _func(self, Z):
         # Compute objective value and grad at Z.
 
         Z = Z.reshape(self.barycenter_.shape)
 
-        m = Z.shape[0]
         G = numpy.zeros_like(Z)
 
         obj = 0
@@ -235,7 +237,8 @@ class SoftDTWBarycenter(EuclideanBarycenter):
     def fit(self, X):
         self._X_fit = to_time_series_dataset(X)
         self.weights = _set_weights(self.weights, self._X_fit)
-        self.barycenter_ = EuclideanBarycenter.fit(self, self._X_fit)
+        if self.barycenter_ is None:
+            self.barycenter_ = EuclideanBarycenter.fit(self, self._X_fit)
 
         if self.max_iter > 0:
             # The function works with vectors so we need to vectorize barycenter_.

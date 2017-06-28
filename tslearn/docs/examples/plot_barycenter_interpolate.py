@@ -21,9 +21,9 @@ from tslearn.barycenters import SoftDTWBarycenter
 from tslearn.datasets import CachedDatasets
 
 
-def row_col(pos, n_cols=5):
-    idx_row = (pos - 1) // n_cols
-    idx_col = pos - n_cols * idx_row - 1
+def row_col(position, n_cols=5):
+    idx_row = (position - 1) // n_cols
+    idx_col = position - n_cols * idx_row - 1
     return idx_row, idx_col
 
 
@@ -33,8 +33,6 @@ def get_color(weights):
     for i, c in enumerate(["r", "g", "b", "y"]):
         baselines[i] = matplotlib.colors.ColorConverter().to_rgb(c)
     return numpy.dot(weights, baselines).ravel()
-
-n_ts, sz, d = 20, 128, 1
 
 numpy.random.seed(0)
 X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")
@@ -64,7 +62,7 @@ for pos in range(2, 25):
         continue
     plt.subplot(5, 5, pos)
     idxr, idxc = row_col(pos, 5)
-    w = [0.] * 4
+    w = numpy.array([0.] * 4)
     w[0] = (4 - idxr) * (4 - idxc) / 16
     w[1] = (4 - idxr) * idxc / 16
     w[2] = idxr * (4 - idxc) / 16
