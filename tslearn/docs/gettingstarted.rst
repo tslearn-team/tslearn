@@ -63,7 +63,7 @@ If you aim at experimenting with standard time series datasets, you should have 
     >>> print(y_train.shape)
     (1000,)
 
-When working with time series datasets, it is can be useful to rescale time series using tools from the
+When working with time series datasets, it can be useful to rescale time series using tools from the
 :ref:`tslearn.preprocessing <mod-preprocessing>` module.
 
 Playing with your data
