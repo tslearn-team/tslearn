@@ -17,6 +17,7 @@ tslearn.preprocessing
    
       TimeSeriesScalerMeanVariance
       TimeSeriesScalerMinMax
+      TimeSeriesResampler
    
    
 

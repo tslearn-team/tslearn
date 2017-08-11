@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 
 from tslearn.clustering import TimeSeriesKMeans
 from tslearn.datasets import CachedDatasets
-from tslearn.preprocessing import TimeSeriesScalerMeanVariance
+from tslearn.preprocessing import TimeSeriesScalerMeanVariance, TimeSeriesResampler
 
 seed = 0
 numpy.random.seed(seed)
@@ -24,6 +24,7 @@ X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")
 X_train = X_train[y_train < 4]  # Keep first 3 classes
 numpy.random.shuffle(X_train)
 X_train = TimeSeriesScalerMeanVariance().fit_transform(X_train[:50])  # Keep only 50 time series
+X_train = TimeSeriesResampler(sz=40).fit_transform(X_train)  # Make time series shorter
 sz = X_train.shape[1]
 
 # Euclidean k-means
@@ -44,7 +45,7 @@ for yi in range(3):
 
 # DBA-k-means
 print("DBA k-means")
-dba_km = TimeSeriesKMeans(n_clusters=3, n_init=2, metric="dtw", verbose=True, random_state=seed)
+dba_km = TimeSeriesKMeans(n_clusters=3, n_init=2, metric="dtw", verbose=True, max_iter_barycenter=3, random_state=seed)
 y_pred = dba_km.fit_predict(X_train)
 
 for yi in range(3):

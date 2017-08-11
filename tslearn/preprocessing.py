@@ -2,11 +2,57 @@
 The :mod:`tslearn.preprocessing` module gathers time series scalers.
 """
 
+import numpy
 from sklearn.base import TransformerMixin
+from scipy.interpolate import interp1d
 
 from tslearn.utils import to_time_series_dataset
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
+
+
+class TimeSeriesResampler(TransformerMixin):
+    """Resampler for time series. Resample time series so that they reach the target size.
+
+    Parameters
+    ----------
+    sz : int
+        Size of the output time series.
+
+    Example
+    -------
+    >>> TimeSeriesResampler(sz=5).fit_transform([[0, 3, 6]]) # doctest: +NORMALIZE_WHITESPACE
+    array([[[ 0. ],
+            [ 1.5],
+            [ 3. ],
+            [ 4.5],
+            [ 6. ]]])
+    """
+    def __init__(self, sz):
+        self.sz_ = sz
+
+    def fit_transform(self, X, **kwargs):
+        """Fit to data, then transform it.
+
+        Parameters
+        ----------
+        X : array-like
+            Time series dataset to be resampled
+
+        Returns
+        -------
+        numpy.ndarray
+            Resampled time series dataset
+        """
+        X_ = to_time_series_dataset(X)
+        n_ts, sz, d = X_.shape
+        X_out = numpy.empty((n_ts, self.sz_, d))
+        for i in range(X_.shape[0]):
+            xnew = numpy.linspace(0, 1, self.sz_)
+            for di in range(d):
+                f = interp1d(numpy.linspace(0, 1, sz), X_[i, :, di], kind="slinear")
+                X_out[i, :, di] = f(xnew)
+        return X_out
 
 
 class TimeSeriesScalerMinMax(TransformerMixin):
