@@ -3,8 +3,8 @@
 k-means
 =======
 
-This example uses :math:`k`-means clustering for time series. Two variants of the algorithm are available: standard
-Euclidean :math:`k`-means and DBA-:math:`k`-means (for DTW Barycenter Averaging).
+This example uses :math:`k`-means clustering for time series. Three variants of the algorithm are available: standard
+Euclidean :math:`k`-means, DBA-:math:`k`-means (for DTW Barycenter Averaging) and Soft-DTW :math:`k`-means.
 
 """
 
