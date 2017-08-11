@@ -39,6 +39,9 @@ python setup.py build_ext --inplace
 
 Also, for the whole package to run properly, its base directory should be appended to your Python path.
 
+# Documentation and API reference
+
+The documentation, including a gallery of examples, is hosted at [readthedocs](http://tslearn.readthedocs.io/en/latest/index.html).
 
 # Already available
 
