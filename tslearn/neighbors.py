@@ -8,7 +8,7 @@ from sklearn.neighbors.base import KNeighborsMixin, _get_weights
 from scipy import stats
 from sklearn.utils.extmath import weighted_mode
 
-from tslearn.metrics import cdist_dtw, cdist_lr_dtw
+from tslearn.metrics import cdist_dtw
 from tslearn.utils import to_time_series_dataset
 
 
@@ -151,7 +151,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsClassifier, KNeighborsTimeSeriesM
           will have a greater influence than neighbors which are further away.
         - [callable] : a user-defined function which accepts an array of distances, and returns an array of the same
           shape containing the weights.
-    metric : {'dtw' or 'lr_dtw'} (default: 'dtw')
+    metric : {'dtw'} (default: 'dtw')
         Metric to be used at the core of the nearest neighbor procedure
     metric_params : dict or None (default: None)
         Dictionnary of metric parameters. Recognized keys are `"gamma"` (which has default value 0.) for LR-DTW.
