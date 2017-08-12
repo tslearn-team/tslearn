@@ -12,4 +12,5 @@ We are welcoming contributions in the following forms:
   1. fork the project;
   2. implement your bugfix;
   3. submit a pull request referencing the ID of the issue in which the bug was reported;
-When doing so, please think about code quality, adding proper docstrings including doctests with high code coverage.
+
+When submitting code, please think about code quality, adding proper docstrings including doctests with high code coverage.
