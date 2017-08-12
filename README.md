@@ -53,8 +53,6 @@ The documentation, including a gallery of examples, is hosted at [readthedocs](h
   * LB_Keogh
   * Global Alignment Kernel
   * Soft-DTW from Cuturi and Blondel
-* A domain adaptation for time series module named `adaptation` contains:
-  * a method for DTW-based non linear resampling that was previously released in `dtw_resample` repo
 * A `neighbors` module includes nearest neighbor algorithms to be used with time series
 * A `clustering` module includes the following time series clustering algorithms:
   * Standard Euclidean k-means (with adequate array reshaping done for you)
