@@ -9,7 +9,7 @@ try:
 except ImportError:
     from distutils.command.build_ext import build_ext as _build_ext
 
-list_pyx = ['cydtw', 'cygak', 'cylrdtw', 'cysax', 'cycc', 'soft_dtw_fast']
+list_pyx = ['cydtw', 'cygak', 'cysax', 'cycc', 'soft_dtw_fast']
 if have_cython:
     ext = [Extension('tslearn.%s' % s, ['tslearn/%s.pyx' % s]) for s in list_pyx]
 else:
