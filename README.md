@@ -73,12 +73,8 @@ The documentation, including a gallery of examples, is hosted at [readthedocs](h
 
 # TODO list
 
-* Implement Learning Shapelets from Grabocka et al.
-* Add local feature extractors (`TransformerMixin`) and Bag-of-Word models
-* Add metric learning for time series (Garreau _et al._)
-* Add LB_Keogh for nearest neighbor search
-
-**If you want other ML methods for time series to be added to this TODO list, do not hesitate to open an issue!**
+Have a look [there](https://github.com/rtavenar/tslearn/issues?utf8=✓&q=is%3Aissue%20is%3Aopen%20label%3A%22new%20feature%22%20) for a list of suggested features.
+**If you want other ML methods for time series to be added to this TODO list, do not hesitate to open an issue!** See [our contribution guidelines](CONTRIBUTING.md) for more information about how to proceed.
 
 # Acknowledgments
 
