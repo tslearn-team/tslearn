@@ -11,6 +11,6 @@ We are welcoming contributions in the following forms:
 * **Bugfixes and new feature implementations**: if you feel you can fix a reported bug/implement a suggested feature yourself, do not hesitate to:
   1. fork the project;
   2. implement your bugfix;
-  3. submit a pull request referencing the ID of the issue in which the bug was reported;
+  3. submit a pull request referencing the ID of the issue in which the bug was reported / the feature was suggested;
 
 When submitting code, please think about code quality, adding proper docstrings including doctests with high code coverage.
