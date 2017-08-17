@@ -82,7 +82,6 @@ def dtw_path(numpy.ndarray[DTYPE_t, ndim=2] s1, numpy.ndarray[DTYPE_t, ndim=2] s
         for j in range(l2):
             cum_sum[i + 1, j + 1] = cross_dist[i, j]
             if numpy.isfinite(cum_sum[i + 1, j + 1]):
-                cum_sum[i + 1, j + 1] += min(cum_sum[i, j + 1], cum_sum[i + 1, j], cum_sum[i, j])
                 candidates[0] = cum_sum[i, j + 1]
                 candidates[1] = cum_sum[i + 1, j]
                 candidates[2] = cum_sum[i, j]

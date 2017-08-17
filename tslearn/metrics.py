@@ -51,6 +51,8 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=1):
     [(0, 0), (1, 1), (1, 2), (2, 3)]
     >>> dist
     0.0
+    >>> dtw_path([1, 2, 3], [1., 2., 2., 3., 4.])[1]
+    1.0
 
     See Also
     --------

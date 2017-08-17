@@ -45,7 +45,7 @@ for yi in range(3):
 
 # DBA-k-means
 print("DBA k-means")
-dba_km = TimeSeriesKMeans(n_clusters=3, n_init=2, metric="dtw", verbose=True, max_iter_barycenter=3, random_state=seed)
+dba_km = TimeSeriesKMeans(n_clusters=3, n_init=2, metric="dtw", verbose=True, max_iter_barycenter=10, random_state=seed)
 y_pred = dba_km.fit_predict(X_train)
 
 for yi in range(3):

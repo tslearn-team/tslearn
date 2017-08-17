@@ -9,7 +9,7 @@ from sklearn.utils import check_random_state
 from scipy.spatial.distance import cdist
 import numpy
 
-from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw
+from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw, dtw
 from tslearn.barycenters import EuclideanBarycenter, DTWBarycenterAveraging, SoftDTWBarycenter
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.utils import to_time_series_dataset
@@ -370,27 +370,20 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         if metric_params is None:
             metric_params = {}
 
-        if self.metric == "dtw":
-            self.barycenter_instance = DTWBarycenterAveraging(max_iter=max_iter_barycenter, barycenter_size=None,
-                                                              verbose=False)
-        elif self.metric == "softdtw":
-            self.barycenter_instance = SoftDTWBarycenter(max_iter=max_iter_barycenter)
+        if self.metric == "softdtw":
             self.gamma_sdtw = metric_params.get("gamma_sdtw", 1.)
-            self._squared_inertia = False
-        else:
-            self.barycenter_instance = EuclideanBarycenter()
 
     def _fit_one_init(self, X, x_squared_norms, rs):
-        n_samples, sz, d = X.shape
-        self.cluster_centers_ = _k_init(X.reshape((n_samples, -1)),
+        n_ts, sz, d = X.shape
+        self.cluster_centers_ = _k_init(X.reshape((n_ts, -1)),
                                         self.n_clusters, x_squared_norms, rs).reshape((-1, sz, d))
         old_inertia = numpy.inf
 
         for it in range(self.max_iter):
             self._assign(X)
-            self._update_centroids(X)
             if self.verbose:
                 print("%.3f" % self.inertia_, end=" --> ")
+            self._update_centroids(X)
 
             if numpy.abs(old_inertia - self.inertia_) < self.tol:
                 break
@@ -419,7 +412,16 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
 
     def _update_centroids(self, X):
         for k in range(self.n_clusters):
-            self.cluster_centers_[k] = self.barycenter_instance.fit(X[self.labels_ == k])
+            if self.metric == "dtw":
+                self.cluster_centers_[k] = DTWBarycenterAveraging(max_iter=self.max_iter_barycenter,
+                                                                  barycenter_size=None,
+                                                                  init_barycenter=self.cluster_centers_[k],
+                                                                  verbose=False).fit(X[self.labels_ == k])
+            elif self.metric == "softdtw":
+                self.cluster_centers_[k] = SoftDTWBarycenter(max_iter=self.max_iter_barycenter,
+                                                             gamma=self.gamma_sdtw).fit(X[self.labels_ == k])
+            else:
+                self.cluster_centers_[k] = EuclideanBarycenter().fit(X[self.labels_ == k])
 
     def fit(self, X, y=None):
         """Compute k-means clustering.
