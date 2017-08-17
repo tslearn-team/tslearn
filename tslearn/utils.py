@@ -125,6 +125,75 @@ def to_time_series_dataset(dataset, dtype=numpy.float, equal_size=True):
     return dataset_out
 
 
+def timeseries_to_str(ts):
+    """Transforms a time series to its representation as a string (used when saving time series to disk).
+
+    Parameters
+    ----------
+    ts : array-like
+        Time series to be represented.
+
+    Returns
+    -------
+    string
+        String representation of the time-series.
+
+    Examples
+    --------
+    >>> timeseries_to_str([1, 2, 3, 4])  # doctest: +NORMALIZE_WHITESPACE
+    '1.0 2.0 3.0 4.0'
+    >>> timeseries_to_str([[1, 3], [2, 4]])  # doctest: +NORMALIZE_WHITESPACE
+    '1.0 2.0|3.0 4.0'
+
+    See Also
+    --------
+    load_timeseries_txt : Load time series from disk
+    str_to_timeseries : Transform a string into a time series
+    """
+    ts_ = to_time_series(ts)
+    dim = ts_.shape[1]
+    s = ""
+    for d in range(dim):
+        s += " ".join([str(v) for v in ts_[:, d]])
+        if d < dim - 1:
+            s += "|"
+    return s
+
+
+def str_to_timeseries(ts_str):
+    """Transforms a time series to its representation as a string (used when saving time series to disk).
+
+    Parameters
+    ----------
+    ts_str : string
+        String representation of the time-series.
+
+    Returns
+    -------
+    array
+        Represented time-series.
+
+    Examples
+    --------
+    >>> str_to_timeseries("1 2 3 4")  # doctest: +NORMALIZE_WHITESPACE
+    array([[ 1.],
+           [ 2.],
+           [ 3.],
+           [ 4.]])
+    >>> str_to_timeseries("1 2|3 4")  # doctest: +NORMALIZE_WHITESPACE
+    array([[ 1., 3.],
+           [ 2., 4.]])
+
+    See Also
+    --------
+    load_timeseries_txt : Load time series from disk
+    timeseries_to_str : Transform a time series into a string
+    """
+    dimensions = ts_str.split("|")
+    ts = [dim_str.split(" ") for dim_str in dimensions]
+    return to_time_series(numpy.transpose(ts))
+
+
 def save_timeseries_txt(fname, dataset):
     """Writes a time series dataset to disk.
 
@@ -141,9 +210,7 @@ def save_timeseries_txt(fname, dataset):
     """
     fp = open(fname, "wt")
     for ts in dataset:
-        ts_ = to_time_series(ts)
-        assert ts_.shape[1] == 1, "Saving of multidimensional time series not implemented yet"
-        fp.write(" ".join(ts_[:, 0]) + "\n")
+        fp.write(timeseries_to_str(ts) + "\n")
     fp.close()
 
 
@@ -169,11 +236,11 @@ def load_timeseries_txt(fname):
     equal_size = True
     fp = open(fname, "rt")
     for row in fp.readlines():
-        ts_ = to_time_series([numpy.float(s) for s in row.split(" ")])
-        if sz >= 0 and ts_.shape[0] != sz:
+        ts = str_to_timeseries(row)
+        if sz >= 0 and ts.shape[0] != sz:
             equal_size = False
-        sz = ts_.shape[0]
-        dataset.append(ts_)
+        sz = ts.shape[0]
+        dataset.append(ts)
     fp.close()
     if equal_size:
         return to_time_series_dataset(dataset, equal_size=True)
