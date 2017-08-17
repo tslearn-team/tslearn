@@ -123,3 +123,59 @@ def to_time_series_dataset(dataset, dtype=numpy.float, equal_size=True):
         if dataset_out.dtype != dtype:
             dataset_out = dataset_out.astype(dtype)
     return dataset_out
+
+
+def save_timeseries_txt(fname, dataset):
+    """Writes a time series dataset to disk.
+
+    Parameters
+    ----------
+    fname : string
+        Path to the file in which time setries should be written.
+    dataset : array-like
+        The dataset of time series to be saved.
+
+    See Also
+    --------
+    load_timeseries_txt : Load time series from disk
+    """
+    fp = open(fname, "wt")
+    for ts in dataset:
+        ts_ = to_time_series(ts)
+        assert ts_.shape[1] == 1, "Saving of multidimensional time series not implemented yet"
+        fp.write(" ".join(ts_[:, 0]) + "\n")
+    fp.close()
+
+
+def load_timeseries_txt(fname):
+    """Loads a time series dataset from disk.
+
+    Parameters
+    ----------
+    fname : string
+        Path to the file from which time setries should be read.
+
+    Returns
+    -------
+    array or list of arrays
+        The dataset of time series.
+
+    See Also
+    --------
+    save_timeseries_txt : Save time series to disk
+    """
+    dataset = []
+    sz = -1
+    equal_size = True
+    fp = open(fname, "rt")
+    for row in fp.readlines():
+        ts_ = to_time_series([numpy.float(s) for s in row.split(" ")])
+        if sz >= 0 and ts_.shape[0] != sz:
+            equal_size = False
+        sz = ts_.shape[0]
+        dataset.append(ts_)
+    fp.close()
+    if equal_size:
+        return to_time_series_dataset(dataset, equal_size=True)
+    else:
+        return dataset
