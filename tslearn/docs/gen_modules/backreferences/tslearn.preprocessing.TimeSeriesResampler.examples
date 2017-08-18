@@ -5,7 +5,7 @@ Examples using ``tslearn.preprocessing.TimeSeriesResampler``
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="This example uses :math:`k`-means clustering for time series. Two variants of the algorithm are...">
+    <div class="sphx-glr-thumbcontainer" tooltip="This example uses :math:`k`-means clustering for time series. Three variants of the algorithm a...">
 
 .. only:: html
 

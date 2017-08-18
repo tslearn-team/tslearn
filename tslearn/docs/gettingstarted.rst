@@ -63,8 +63,30 @@ If you aim at experimenting with standard time series datasets, you should have 
     >>> print(y_train.shape)
     (1000,)
 
-When working with time series datasets, it can be useful to rescale time series using tools from the
+Note that when working with time series datasets, it can be useful to rescale time series using tools from the
 :ref:`tslearn.preprocessing <mod-preprocessing>` module.
+
+If you want to import other time series from text files, the expected format is:
+
+* each line represents a single time series (and time series from a dataset are not forced to be the same length);
+* in each line, modalities are separated by a `|` character (useless if you only have one modality in your data);
+* in each modality, observations are sparated by a space character.
+
+Here is an example of such a file storing two time series of dimension 2 (the first time series is of length 3 and
+the second one is of length 2).
+
+.. code-block:: csv
+
+   1.0 0.0 2.5|3.0 2.0 1.0
+   1.0 2.0|4.333 2.12
+
+To read from / write to this format, have a look at the :ref:`tslearn.utils <mod-utils>` module:
+
+.. code-block:: python
+
+    >>> from tslearn.utils import save_timeseries_txt, load_timeseries_txt
+    >>> time_series_dataset = load_timeseries_txt("path/to/your/file.txt")
+    >>> save_timeseries_txt("path/to/another/file.txt", dataset_to_be_saved)
 
 Playing with your data
 ----------------------

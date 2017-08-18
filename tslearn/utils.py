@@ -125,13 +125,15 @@ def to_time_series_dataset(dataset, dtype=numpy.float, equal_size=True):
     return dataset_out
 
 
-def timeseries_to_str(ts):
+def timeseries_to_str(ts, fmt="%.18e"):
     """Transforms a time series to its representation as a string (used when saving time series to disk).
 
     Parameters
     ----------
     ts : array-like
         Time series to be represented.
+    fmt : string (default: "%.18e")
+        Format to be used to write each value.
 
     Returns
     -------
@@ -140,9 +142,9 @@ def timeseries_to_str(ts):
 
     Examples
     --------
-    >>> timeseries_to_str([1, 2, 3, 4])  # doctest: +NORMALIZE_WHITESPACE
+    >>> timeseries_to_str([1, 2, 3, 4], fmt="%.1f")  # doctest: +NORMALIZE_WHITESPACE
     '1.0 2.0 3.0 4.0'
-    >>> timeseries_to_str([[1, 3], [2, 4]])  # doctest: +NORMALIZE_WHITESPACE
+    >>> timeseries_to_str([[1, 3], [2, 4]], fmt="%.1f")  # doctest: +NORMALIZE_WHITESPACE
     '1.0 2.0|3.0 4.0'
 
     See Also
@@ -154,7 +156,7 @@ def timeseries_to_str(ts):
     dim = ts_.shape[1]
     s = ""
     for d in range(dim):
-        s += " ".join([str(v) for v in ts_[:, d]])
+        s += " ".join([fmt % v for v in ts_[:, d]])
         if d < dim - 1:
             s += "|"
     return s
@@ -194,7 +196,7 @@ def str_to_timeseries(ts_str):
     return to_time_series(numpy.transpose(ts))
 
 
-def save_timeseries_txt(fname, dataset):
+def save_timeseries_txt(fname, dataset, fmt="%.18e"):
     """Writes a time series dataset to disk.
 
     Parameters
@@ -203,6 +205,8 @@ def save_timeseries_txt(fname, dataset):
         Path to the file in which time setries should be written.
     dataset : array-like
         The dataset of time series to be saved.
+    fmt : string (default: "%.18e")
+        Format to be used to write each value.
 
     See Also
     --------
@@ -210,7 +214,7 @@ def save_timeseries_txt(fname, dataset):
     """
     fp = open(fname, "wt")
     for ts in dataset:
-        fp.write(timeseries_to_str(ts) + "\n")
+        fp.write(timeseries_to_str(ts, fmt=fmt) + "\n")
     fp.close()
 
 
