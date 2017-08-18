@@ -170,7 +170,7 @@ def str_to_timeseries(ts_str):
 
     Returns
     -------
-    array
+    numpy.ndarray
         Represented time-series.
 
     Examples
@@ -224,7 +224,7 @@ def load_timeseries_txt(fname):
 
     Returns
     -------
-    array or list of arrays
+    numpy.ndarray or list of arrays
         The dataset of time series.
 
     See Also
