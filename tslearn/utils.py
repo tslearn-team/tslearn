@@ -231,9 +231,14 @@ def load_timeseries_txt(fname):
     numpy.ndarray or list of arrays
         The dataset of time series.
 
-    Example
-    -------
+    Examples
+    --------
     >>> dataset = to_time_series_dataset([[1, 2, 3, 4], [1, 2, 3]], equal_size=False)
+    >>> save_timeseries_txt("tmp-tslearn-test.txt", dataset)
+    >>> reloaded_dataset = load_timeseries_txt("tmp-tslearn-test.txt")
+    >>> [numpy.alltrue((ts0 - ts1) < 1e-6) for ts0, ts1 in zip(dataset, reloaded_dataset)]
+    [True, True]
+    >>> dataset = to_time_series_dataset([[1, 2, 4], [1, 2, 3]])
     >>> save_timeseries_txt("tmp-tslearn-test.txt", dataset)
     >>> reloaded_dataset = load_timeseries_txt("tmp-tslearn-test.txt")
     >>> [numpy.alltrue((ts0 - ts1) < 1e-6) for ts0, ts1 in zip(dataset, reloaded_dataset)]
