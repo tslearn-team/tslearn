@@ -250,3 +250,34 @@ def load_timeseries_txt(fname):
         return to_time_series_dataset(dataset, equal_size=True)
     else:
         return dataset
+
+
+def check_equal_size(dataset):
+    """Check if all time series in the dataset have the same size.
+
+    Parameters
+    ----------
+    dataset: array-like or list of arrays
+        The dataset to check.
+
+    Returns
+    -------
+    bool
+        Whether all time series in the dataset have the same size.
+
+    Examples
+    --------
+    >>> check_equal_size([[1, 2, 3], [4, 5, 6], [5, 3, 2]])
+    True
+    >>> check_equal_size([[1, 2, 3, 4], [4, 5, 6], [5, 3, 2]])
+    False
+    """
+    dataset_ = to_time_series_dataset(dataset, equal_size=False)  # Do not force equal size while casting!
+    sz = -1
+    for ts in dataset_:
+        if sz < 0:
+            sz = ts.shape[0]
+        else:
+            if sz != ts.shape[0]:
+                return False
+    return True
