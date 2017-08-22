@@ -36,10 +36,8 @@ are the same length) or a list of time series, using ``to_time_series_dataset``.
     >>> formatted_dataset = to_time_series_dataset([my_first_time_series,
                                                     my_second_time_series,
                                                     my_third_time_series], equal_size=False)
-    >>> print(type(formatted_dataset))
-    list
-    >>> print(len(formatted_dataset))
-    3
+    >>> print(formatted_dataset.shape)
+    (3, )
     >>> print(formatted_dataset[0].shape)
     (4, 1)
     >>> print(formatted_dataset[1].shape)

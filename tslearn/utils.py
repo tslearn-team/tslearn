@@ -94,7 +94,7 @@ def to_time_series_dataset(dataset, dtype=numpy.float, equal_size=True):
 
     Returns
     -------
-    numpy.ndarray of shape (n_ts, sz, d) or list of numpy.ndarray of shape (sz_i, d)
+    numpy.ndarray of shape (n_ts, sz, d) or array of numpy.ndarray of shape (sz_i, d)
         The transformed dataset of time series. Represented as a list of numpy arrays if equal_size is False.
     
     Example
@@ -103,17 +103,20 @@ def to_time_series_dataset(dataset, dtype=numpy.float, equal_size=True):
     array([[[ 1.],
             [ 2.]]])
     >>> to_time_series_dataset([[1, 2], [1, 4, 3]], equal_size=False) # doctest: +NORMALIZE_WHITESPACE
-    [array([[ 1.],
+    array([array([[ 1.],
            [ 2.]]), array([[ 1.],
            [ 4.],
-           [ 3.]])]
+           [ 3.]])], dtype=object)
     
     See Also
     --------
     to_time_series : Transforms a single time series
     """
     if not equal_size:
-        dataset_out = [to_time_series(ts) for ts in dataset]
+        n_ts = len(dataset)
+        dataset_out = numpy.empty((n_ts, ), dtype=object)
+        for i in range(n_ts):
+            dataset_out[i] = to_time_series(dataset[i])
     else:
         dataset_out = _arraylike_copy(dataset)
         if dataset_out.ndim == 1:
@@ -228,7 +231,7 @@ def load_timeseries_txt(fname):
 
     Returns
     -------
-    numpy.ndarray or list of arrays
+    numpy.ndarray or array of numpy.ndarray
         The dataset of time series.
 
     Examples
@@ -270,7 +273,7 @@ def check_equal_size(dataset):
 
     Parameters
     ----------
-    dataset: array-like or list of arrays
+    dataset: array-like
         The dataset to check.
 
     Returns
