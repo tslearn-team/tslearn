@@ -2,18 +2,10 @@ from setuptools import setup, Extension
 import numpy
 import tslearn
 
-have_cython = False
-try:
-    from Cython.Distutils import build_ext as _build_ext
-    have_cython = True
-except ImportError:
-    from distutils.command.build_ext import build_ext as _build_ext
+from Cython.Distutils import build_ext as _build_ext
 
 list_pyx = ['cydtw', 'cygak', 'cysax', 'cycc', 'soft_dtw_fast']
-if have_cython:
-    ext = [Extension('tslearn.%s' % s, ['tslearn/%s.pyx' % s]) for s in list_pyx]
-else:
-    ext = [Extension('tslearn.%s' % s, ['tslearn/%s.c' % s]) for s in list_pyx]
+ext = [Extension('tslearn.%s' % s, ['tslearn/%s.c' % s]) for s in list_pyx]
 
 setup(
     name="tslearn",
@@ -21,7 +13,7 @@ setup(
     include_dirs=[numpy.get_include()],
     packages=['tslearn'],
     package_data={"tslearn": [".cached_datasets/Trace.npz"]},
-    install_requires=['numpy', 'scipy', 'scikit-learn'],
+    install_requires=['numpy', 'scipy', 'scikit-learn', 'Cython'],
     ext_modules=ext,
     cmdclass={'build_ext': _build_ext},
     version=tslearn.__version__,
