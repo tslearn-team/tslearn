@@ -69,7 +69,7 @@ The documentation, including a gallery of examples, is hosted at [readthedocs](h
   * Soft-DTW k-means from Cuturi and Blondel
     * Based on `tslearn.barycenters` that offers Soft-DTW barycenter computation
 * A `shapelets` module includes an efficient implementation of the Learning Time-Series method from Grabocka _et al._
-  * **Caution:** to use the shapelets module, an extra dependency is required: `keras`
+  * **Warning:** to use the shapelets module, an extra dependency is required: `keras`
 * A `piecewise` module includes standard time series transformations, as well as the corresponding distances:
   * Piecewise Aggregate Approximation (PAA)
   * Symbolic Aggregate approXimation (SAX)
