@@ -6,3 +6,5 @@ sphinx>=1.4
 ipykernel
 nbsphinx
 sphinx-gallery
+tensorflow
+keras

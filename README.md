@@ -18,6 +18,8 @@ scipy
 scikit-learn
 ```
 
+If you plan to use the `shapelets` module, `keras` should also be installed.
+
 # Installation
 
 ## Using PyPI
@@ -65,7 +67,9 @@ The documentation, including a gallery of examples, is hosted at [readthedocs](h
   * Global Alignment kernel k-means
   * KShape clustering from Paparizzos and Gravano
   * Soft-DTW k-means from Cuturi and Blondel
-    * Based on `tslearn.barycenters` that offers Soft-DTW barycenter computation 
+    * Based on `tslearn.barycenters` that offers Soft-DTW barycenter computation
+* A `shapelets` module includes an efficient implementation of the Learning Time-Series method from Grabocka _et al._
+  * **Caution:** to use the shapelets module, an extra dependency is required: `keras`
 * A `piecewise` module includes standard time series transformations, as well as the corresponding distances:
   * Piecewise Aggregate Approximation (PAA)
   * Symbolic Aggregate approXimation (SAX)

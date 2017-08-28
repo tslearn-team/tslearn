@@ -19,4 +19,5 @@ The complete tslearn project is automatically documented for every module.
    tslearn.neighbors
    tslearn.piecewise
    tslearn.preprocessing
+   tslearn.shapelets
    tslearn.utils

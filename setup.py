@@ -20,4 +20,4 @@ setup(
     url="http://tslearn.readthedocs.io/",
     author="Romain Tavenard",
     author_email="romain.tavenard@univ-rennes2.fr"
-)  # TODO: test package_data option on PyPI deployment
+)
