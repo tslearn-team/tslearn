@@ -22,14 +22,12 @@ install:
 - conda config --set always_yes yes --set changeps1 no
 - conda update -q conda
 - conda info -a
-- conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy scipy
+- conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy scipy tensorflow keras
   scikit-learn nose
 - source activate test-environment
 - pip install coverage==4.3.1
 - pip install argparse
 - pip install codeclimate-test-reporter
-- pip install tensorflow
-- pip install keras
 - rm -f tslearn/*.c
 - python setup.py build_ext --inplace
 script:
