@@ -5,7 +5,7 @@ It depends on the `keras` library for optimization.
 """
 
 from keras.models import Model
-from keras.layers import Dense, Conv1D, Layer, Input, Concatenate
+from keras.layers import Dense, Conv1D, Layer, Input, concatenate
 from keras.metrics import categorical_accuracy, categorical_crossentropy
 from keras.utils import to_categorical
 from keras.regularizers import l2
@@ -262,7 +262,7 @@ class ShapeletModel:
                                                        name="shapelets_%d" % i)(transformer_layer)
             pool_layers.append(GlobalMinPooling1D(name="min_pooling_%d" % i)(shapelet_layer))
         if len(shapelet_sizes) > 1:
-            concatenated_features = Concatenate()(pool_layers)
+            concatenated_features = concatenate(pool_layers)
         else:
             concatenated_features = pool_layers[0]
         if self.weight_regularizer > 0.:
