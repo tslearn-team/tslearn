@@ -7,13 +7,13 @@ language: python
 matrix:
   include:
     - python: '2.7'
-    - env: KERAS_BACKEND=tensorflow
+      env: KERAS_BACKEND=tensorflow
     - python: '3.4'
-    - env: KERAS_BACKEND=tensorflow
+      env: KERAS_BACKEND=tensorflow
     - python: '3.5'
-    - env: KERAS_BACKEND=tensorflow
+      env: KERAS_BACKEND=tensorflow
     - python: '3.6'
-    - env: KERAS_BACKEND=tensorflow
+      env: KERAS_BACKEND=tensorflow
 install:
 - sudo apt-get update
 - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
