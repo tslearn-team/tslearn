@@ -51,7 +51,6 @@ script:
 - if [[ -z ${KERAS_IGNORE+x} ]]; then python -c "import keras.backend";
   sed -i -e 's/"backend":[[:space:]]*"[^"]*/"backend":\ "'$KERAS_BACKEND'/g' ~/.keras/keras.json;
   echo -e "Running tests with the following config:\n$(cat ~/.keras/keras.json)"; fi
-- nosetests --help
 - nosetests $KERAS_IGNORE --with-doctest --with-coverage --cover-erase --cover-package=tslearn
 - if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then codeclimate-test-reporter; fi
 notifications:
