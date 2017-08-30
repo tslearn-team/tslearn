@@ -24,19 +24,21 @@ matrix:
       env: KERAS_IGNORE="-I tslearn/shapelets.py"
 install:
 - sudo apt-get update
-- if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
-  -O miniconda.sh; else wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
-  -O miniconda.sh; fi
+- if [[ "$TRAVIS_PYTHON_VERSION" == 2.* ]];
+  then wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
+  else wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh; fi
 - bash miniconda.sh -b -p $HOME/miniconda
 - export PATH="$HOME/miniconda/bin:$PATH"
 - hash -r
 - conda config --set always_yes yes --set changeps1 no
 - conda update -q conda
 - conda info -a
-- conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy scipy tensorflow keras
-  scikit-learn nose
+- if [[ -z ${KERAS_IGNORE+x} ]];
+  then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy scipy scikit-learn nose;
+  else conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy scipy tensorflow keras
+  scikit-learn nose; fi
 - source activate test-environment
-- pip install git+git://github.com/Theano/Theano.git
+- if [[ ! -z ${KERAS_IGNORE+x} ]]; then pip install git+git://github.com/Theano/Theano.git; fi
 - pip install coverage==4.3.1
 - pip install argparse
 - pip install codeclimate-test-reporter
