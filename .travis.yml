@@ -40,7 +40,7 @@ install:
   scikit-learn nose;
   else conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy scipy scikit-learn nose; fi
 - source activate test-environment
-- if [[ ! -z ${KERAS_IGNORE+x} ]]; then pip install git+git://github.com/Theano/Theano.git; fi
+- if [[ -z ${KERAS_IGNORE+x} ]]; then pip install git+git://github.com/Theano/Theano.git; fi
 - pip install coverage==4.3.1
 - pip install argparse
 - pip install codeclimate-test-reporter
@@ -48,7 +48,7 @@ install:
 - python setup.py build_ext --inplace
 script:
 # run keras backend init to initialize backend config
-- if [[ ! -z ${KERAS_IGNORE+x} ]]; then python -c "import keras.backend";
+- if [[ -z ${KERAS_IGNORE+x} ]]; then python -c "import keras.backend";
   sed -i -e 's/"backend":[[:space:]]*"[^"]*/"backend":\ "'$KERAS_BACKEND'/g' ~/.keras/keras.json;
   echo -e "Running tests with the following config:\n$(cat ~/.keras/keras.json)"; fi
 - nosetests $KERAS_IGNORE --with-doctest --with-coverage --cover-erase --cover-package=tslearn
