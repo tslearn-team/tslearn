@@ -18,6 +18,10 @@ matrix:
       env: KERAS_BACKEND=theano
     - python: '3.6'
       env: KERAS_BACKEND=theano
+    - python: '2.6'
+      env: KERAS_IGNORE="-I tslearn/shapelets.py"
+    - python: '3.4'
+      env: KERAS_IGNORE="-I tslearn/shapelets.py"
 install:
 - sudo apt-get update
 - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
@@ -44,7 +48,7 @@ script:
 # set up keras backend
 - sed -i -e 's/"backend":[[:space:]]*"[^"]*/"backend":\ "'$KERAS_BACKEND'/g' ~/.keras/keras.json;
 - echo -e "Running tests with the following config:\n$(cat ~/.keras/keras.json)"
-- nosetests --with-doctest --with-coverage --cover-erase --cover-package=tslearn
+- nosetests $KERAS_IGNORE --with-doctest --with-coverage --cover-erase --cover-package=tslearn
 - if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then codeclimate-test-reporter; fi
 notifications:
   email: false
