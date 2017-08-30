@@ -7,11 +7,11 @@ language: python
 matrix:
   include:
     - python: '2.6'
-      env: KERAS_IGNORE="-I tslearn/shapelets.py -I setup.py"
+      env: KERAS_IGNORE="--exclude-path=tslearn/shapelets.py"
     - python: '3.3'
-      env: KERAS_IGNORE="-I tslearn/shapelets.py -I setup.py"
+      env: KERAS_IGNORE="--exclude-path=tslearn/shapelets.py"
     - python: '3.4'
-      env: KERAS_IGNORE="-I tslearn/shapelets.py -I setup.py"
+      env: KERAS_IGNORE="--exclude-path=tslearn/shapelets.py"
     - python: '2.7'
       env: KERAS_BACKEND=tensorflow
     - python: '3.5'
@@ -50,7 +50,8 @@ script:
 # run keras backend init to initialize backend config
 - if [[ -z ${KERAS_IGNORE+x} ]]; then python -c "import keras.backend";
   sed -i -e 's/"backend":[[:space:]]*"[^"]*/"backend":\ "'$KERAS_BACKEND'/g' ~/.keras/keras.json;
-  echo -e "Running tests with the following config:\n$(cat ~/.keras/keras.json)"; fi
+  echo -e "Running tests with the following config:\n$(cat ~/.keras/keras.json)";
+  else pip install nose-pattern-exclude; fi
 - nosetests $KERAS_IGNORE --with-doctest --with-coverage --cover-erase --cover-package=tslearn
 - if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then codeclimate-test-reporter; fi
 notifications:
