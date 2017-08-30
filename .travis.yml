@@ -6,6 +6,17 @@ env:
 language: python
 matrix:
   include:
+      env: KERAS_BACKEND=tensorflow
+    - python: '3.5'
+      env: KERAS_BACKEND=tensorflow
+    - python: '3.6'
+      env: KERAS_BACKEND=tensorflow
+    - python: '2.7'
+      env: KERAS_BACKEND=theano
+    - python: '3.5'
+      env: KERAS_BACKEND=theano
+    - python: '3.6'
+      env: KERAS_BACKEND=theano
     - python: '2.6'
       env: KERAS_IGNORE="--exclude-path=tslearn/shapelets.py"
     - python: '3.3'
@@ -13,17 +24,6 @@ matrix:
     - python: '3.4'
       env: KERAS_IGNORE="--exclude-path=tslearn/shapelets.py"
     - python: '2.7'
-      env: KERAS_BACKEND=tensorflow
-    - python: '3.5'
-      env: KERAS_BACKEND=tensorflow
-    - python: '3.6'
-      env: KERAS_BACKEND=tensorflow
-    - python: '2.7'
-      env: KERAS_BACKEND=theano
-    - python: '3.5'
-      env: KERAS_BACKEND=theano
-    - python: '3.6'
-      env: KERAS_BACKEND=theano
 install:
 - sudo apt-get update
 - if [[ "$TRAVIS_PYTHON_VERSION" == 2.* ]];
