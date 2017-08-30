@@ -19,9 +19,11 @@ matrix:
     - python: '3.6'
       env: KERAS_BACKEND=theano
     - python: '2.6'
-      env: KERAS_IGNORE="-I tslearn/shapelets.py"
+      env: KERAS_IGNORE="-I=tslearn/shapelets.py"
+    - python: '3.3'
+      env: KERAS_IGNORE="-I=tslearn/shapelets.py"
     - python: '3.4'
-      env: KERAS_IGNORE="-I tslearn/shapelets.py"
+      env: KERAS_IGNORE="-I=tslearn/shapelets.py"
 install:
 - sudo apt-get update
 - if [[ "$TRAVIS_PYTHON_VERSION" == 2.* ]];
@@ -34,9 +36,9 @@ install:
 - conda update -q conda
 - conda info -a
 - if [[ -z ${KERAS_IGNORE+x} ]];
-  then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy scipy scikit-learn nose;
-  else conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy scipy tensorflow keras
-  scikit-learn nose; fi
+  then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy scipy tensorflow keras
+  scikit-learn nose;
+  else conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy scipy scikit-learn nose; fi
 - source activate test-environment
 - if [[ ! -z ${KERAS_IGNORE+x} ]]; then pip install git+git://github.com/Theano/Theano.git; fi
 - pip install coverage==4.3.1
