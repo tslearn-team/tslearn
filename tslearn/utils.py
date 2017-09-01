@@ -80,7 +80,7 @@ def to_time_series(ts):
     return ts_out
 
 
-def to_time_series_dataset(dataset, dtype=numpy.float, equal_size=True):
+def to_time_series_dataset(dataset, dtype=numpy.float):
     """Transforms a time series dataset so that it fits the format used in ``tslearn`` models.
 
     Parameters
@@ -102,29 +102,28 @@ def to_time_series_dataset(dataset, dtype=numpy.float, equal_size=True):
     >>> to_time_series_dataset([[1, 2]]) # doctest: +NORMALIZE_WHITESPACE
     array([[[ 1.],
             [ 2.]]])
-    >>> to_time_series_dataset([[1, 2], [1, 4, 3]], equal_size=False) # doctest: +NORMALIZE_WHITESPACE
-    array([array([[ 1.],
-           [ 2.]]), array([[ 1.],
-           [ 4.],
-           [ 3.]])], dtype=object)
+    >>> to_time_series_dataset([[1, 2], [1, 4, 3]]) # doctest: +NORMALIZE_WHITESPACE
+    array([[[  1.],
+            [  2.],
+            [ nan]],
+    <BLANKLINE>
+           [[  1.],
+            [  4.],
+            [  3.]]])
     
     See Also
     --------
     to_time_series : Transforms a single time series
     """
-    if not equal_size:
-        n_ts = len(dataset)
-        dataset_out = numpy.empty((n_ts, ), dtype=object)
-        for i in range(n_ts):
-            dataset_out[i] = to_time_series(dataset[i])
-    else:
-        dataset_out = _arraylike_copy(dataset)
-        if dataset_out.ndim == 1:
-            dataset_out = dataset_out.reshape((1, dataset_out.shape[0], 1))
-        elif dataset_out.ndim == 2:
-            dataset_out = dataset_out.reshape((dataset_out.shape[0], dataset_out.shape[1], 1))
-        if dataset_out.dtype != dtype:
-            dataset_out = dataset_out.astype(dtype)
+    if numpy.array(dataset[0]).ndim == 0:
+        dataset = [dataset]
+    n_ts = len(dataset)
+    max_sz = max([ts_size(to_time_series(ts)) for ts in dataset])
+    d = to_time_series(dataset[0]).shape[1]
+    dataset_out = numpy.zeros((n_ts, max_sz, d), dtype=dtype) + numpy.nan
+    for i in range(n_ts):
+        ts = to_time_series(dataset[i])
+        dataset_out[i, :ts.shape[0]] = ts
     return dataset_out
 
 
@@ -236,10 +235,10 @@ def load_timeseries_txt(fname):
 
     Examples
     --------
-    >>> dataset = to_time_series_dataset([[1, 2, 3, 4], [1, 2, 3]], equal_size=False)
+    >>> dataset = to_time_series_dataset([[1, 2, 3, 4], [1, 2, 3]])
     >>> save_timeseries_txt("tmp-tslearn-test.txt", dataset)
     >>> reloaded_dataset = load_timeseries_txt("tmp-tslearn-test.txt")
-    >>> [numpy.alltrue((ts0 - ts1) < 1e-6) for ts0, ts1 in zip(dataset, reloaded_dataset)]
+    >>> [numpy.alltrue((ts0[:ts_size(ts0)] - ts1[:ts_size(ts1)]) < 1e-6) for ts0, ts1 in zip(dataset, reloaded_dataset)]
     [True, True]
     >>> dataset = to_time_series_dataset([[1, 2, 4], [1, 2, 3]])
     >>> save_timeseries_txt("tmp-tslearn-test.txt", dataset)
@@ -252,20 +251,12 @@ def load_timeseries_txt(fname):
     save_timeseries_txt : Save time series to disk
     """
     dataset = []
-    sz = -1
-    equal_size = True
     fp = open(fname, "rt")
     for row in fp.readlines():
         ts = str_to_timeseries(row)
-        if sz >= 0 and ts.shape[0] != sz:
-            equal_size = False
-        sz = ts.shape[0]
         dataset.append(ts)
     fp.close()
-    if equal_size:
-        return to_time_series_dataset(dataset, equal_size=True)
-    else:
-        return dataset
+    return to_time_series_dataset(dataset)
 
 
 def check_equal_size(dataset):
@@ -288,12 +279,41 @@ def check_equal_size(dataset):
     >>> check_equal_size([[1, 2, 3, 4], [4, 5, 6], [5, 3, 2]])
     False
     """
-    dataset_ = to_time_series_dataset(dataset, equal_size=False)  # Do not force equal size while casting!
+    dataset_ = to_time_series_dataset(dataset)
     sz = -1
     for ts in dataset_:
         if sz < 0:
-            sz = ts.shape[0]
+            sz = ts_size(ts)
         else:
-            if sz != ts.shape[0]:
+            if sz != ts_size(ts):
                 return False
     return True
+
+
+def ts_size(ts):
+    """Returns actual time series size.
+
+    Final timesteps that have NaN values for all dimensions will be removed from the count.
+
+    Parameters
+    ----------
+    dataset: array-like
+        The dataset to check.
+
+    Returns
+    -------
+    bool
+        Whether all time series in the dataset have the same size.
+
+    Examples
+    --------
+    >>> ts_size([1, 2, 3, numpy.nan])
+    3
+    >>> ts_size([[1, 2], [2, 3], [3, 4], [numpy.nan, 2], [numpy.nan, numpy.nan]])
+    4
+    """
+    ts_ = to_time_series(ts)
+    sz = ts_.shape[0]
+    while not numpy.any(numpy.isfinite(ts_[sz - 1])):
+        sz -= 1
+    return sz

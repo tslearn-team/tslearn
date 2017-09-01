@@ -188,9 +188,9 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None, sakoe_chiba_radiu
     >>> cdist_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]])  # doctest: +NORMALIZE_WHITESPACE
     array([[ 0., 1.],
            [ 1., 0.]])
-    >>> cdist_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 3], [2, 3, 4]])  # doctest: +NORMALIZE_WHITESPACE
-    array([[ 0. ,  1.41421356],
-           [ 1. ,  1. ]])
+    >>> cdist_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 3], [2, 3, 4, 5]])  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    array([[ 0. ,  2.449...],
+           [ 1. ,  1.414...]])
 
     See Also
     --------
@@ -282,9 +282,9 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.):
     >>> cdist_gak([[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     array([[ 1. , 0.656...],
            [ 0.656..., 1. ]])
-    >>> cdist_gak([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    array([[ 1. , 0.656...],
-           [ 0.656..., 1. ]])
+    >>> cdist_gak([[1, 2, 2], [1., 2., 3., 4.]], [[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    array([[ 0.710...,  0.297...],
+           [ 0.656...,  1.        ]])
 
     See Also
     --------

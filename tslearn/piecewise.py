@@ -418,7 +418,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
         numpy.ndarray of shape (n_ts, sz_original_ts, d)
             A dataset of time series corresponding to the provided representation.
         """
-        X_ = to_time_series_dataset(X, dtype=numpy.int)
+        X_ = numpy.array(X, dtype=numpy.int)
         return inv_transform_sax(X_, breakpoints_middle_=self.breakpoints_avg_middle_, original_size=self.size_fitted_)
 
 
@@ -654,7 +654,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         numpy.ndarray of shape (n_ts, sz_original_ts, d)
             A dataset of time series corresponding to the provided representation.
         """
-        X_ = to_time_series_dataset(X, dtype=numpy.int)
+        X_ = numpy.array(X, dtype=numpy.int)
         return inv_transform_1d_sax(X_,
                                     breakpoints_avg_middle_=self.breakpoints_avg_middle_,
                                     breakpoints_slope_middle_=self.breakpoints_slope_middle_,

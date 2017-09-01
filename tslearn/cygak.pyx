@@ -17,17 +17,25 @@ ctypedef numpy.float_t DTYPE_t
 
 @cython.boundscheck(False) # turn off bounds-checking for entire function
 @cython.wraparound(False)  # turn off negative index wrapping for entire function
+def ts_size(numpy.ndarray[DTYPE_t, ndim=2] ts):
+    cdef int sz = ts.shape[0]
+    while not numpy.any(numpy.isfinite(ts[sz - 1])):
+        sz -= 1
+    return sz
+
+@cython.boundscheck(False) # turn off bounds-checking for entire function
+@cython.wraparound(False)  # turn off negative index wrapping for entire function
 def gak(numpy.ndarray[DTYPE_t, ndim=2] s1, numpy.ndarray[DTYPE_t, ndim=2] s2, DTYPE_t sigma):
     """k = gak(s1, s2, sigma)
     Compute Global Alignment Kernel between (possibly multidimensional) time series and return it.
     Time series must be 2d numpy arrays of shape (size, dim). It is not required that both time series share the same
     length, but they must be the same dimension. dtype of the arrays must be numpy.float."""
     assert s1.dtype == DTYPE and s2.dtype == DTYPE
-    cdef int l1 = s1.shape[0]
-    cdef int l2 = s2.shape[0]
+    cdef int l1 = ts_size(s1)
+    cdef int l2 = ts_size(s2)
     cdef int i = 0
     cdef int j = 0
-    cdef numpy.ndarray[DTYPE_t, ndim=2] gram = - cdist(s1, s2, "sqeuclidean").astype(DTYPE) / (2 * sigma ** 2)
+    cdef numpy.ndarray[DTYPE_t, ndim=2] gram = - cdist(s1[:l1], s2[:l2], "sqeuclidean").astype(DTYPE) / (2 * sigma ** 2)
     cdef numpy.ndarray[DTYPE_t, ndim=2] cum_sum = numpy.zeros((l1 + 1, l2 + 1), dtype=DTYPE)
 
     cum_sum[0, 0] = 1.

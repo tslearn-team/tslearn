@@ -21,8 +21,10 @@ from ``tslearn.utils`` module:
 In `tslearn`, a time series is nothing more than a two-dimensional `numpy` array with its first dimension corresponding
 to the time axis and the second one being the feature dimensionality (1 by default).
 
-Then, if we want to manipulate sets of time series, we can cast them to three-dimensional arrays (if all time series
-are the same length) or a list of time series, using ``to_time_series_dataset``.
+Then, if we want to manipulate sets of time series, we can cast them to three-dimensional arrays, using
+``to_time_series_dataset``. If time series from the set are not equal-sized, NaN values are appended to the shorter
+ones and the shape of the resulting array is ``(n_ts, max_sz, d)`` where ``max_sz`` is the maximum of sizes for time
+series in the set.
 
 .. code-block:: python
 
@@ -35,15 +37,9 @@ are the same length) or a list of time series, using ``to_time_series_dataset``.
     >>> my_third_time_series = [1, 2, 4, 2, 2]
     >>> formatted_dataset = to_time_series_dataset([my_first_time_series,
                                                     my_second_time_series,
-                                                    my_third_time_series], equal_size=False)
+                                                    my_third_time_series])
     >>> print(formatted_dataset.shape)
-    (3, )
-    >>> print(formatted_dataset[0].shape)
-    (4, 1)
-    >>> print(formatted_dataset[1].shape)
-    (4, 1)
-    >>> print(formatted_dataset[2].shape)
-    (5, 1)
+    (3, 5, 1)
 
 
 Importing standard time series datasets

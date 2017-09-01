@@ -56,19 +56,28 @@ def itakura_mask(int sz1, int sz2):
     mask_out[~numpy.logical_and(numpy.isfinite(mask), numpy.isfinite(mask[::-1, ::-1]))] = numpy.inf
     return mask_out
 
+@cython.boundscheck(False) # turn off bounds-checking for entire function
+@cython.wraparound(False)  # turn off negative index wrapping for entire function
+def ts_size(numpy.ndarray[DTYPE_t, ndim=2] ts):
+    cdef int sz = ts.shape[0]
+    while not numpy.any(numpy.isfinite(ts[sz - 1])):
+        sz -= 1
+    return sz
+
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def dtw_path(numpy.ndarray[DTYPE_t, ndim=2] s1, numpy.ndarray[DTYPE_t, ndim=2] s2, numpy.ndarray[DTYPE_t, ndim=2] mask):
     assert s1.dtype == DTYPE and s2.dtype == DTYPE
-    assert s1.shape[0] == mask.shape[0] and s2.shape[0] == mask.shape[1]
 
-    cdef int l1 = s1.shape[0]
-    cdef int l2 = s2.shape[0]
+    cdef int l1 = ts_size(s1)
+    cdef int l2 = ts_size(s2)
+    assert l1 <= mask.shape[0] and l2 <= mask.shape[1]
+
     cdef int i = 0
     cdef int j = 0
     cdef int argmin_pred = -1
-    cdef numpy.ndarray[DTYPE_t, ndim=2] cross_dist = cdist(s1, s2, "sqeuclidean").astype(DTYPE)
+    cdef numpy.ndarray[DTYPE_t, ndim=2] cross_dist = cdist(s1[:l1], s2[:l2], "sqeuclidean").astype(DTYPE)
     cdef numpy.ndarray[DTYPE_t, ndim=2] cum_sum = numpy.zeros((l1 + 1, l2 + 1), dtype=DTYPE)
     cum_sum[1:, 0] = numpy.inf
     cum_sum[0, 1:] = numpy.inf
@@ -116,13 +125,14 @@ def dtw_path(numpy.ndarray[DTYPE_t, ndim=2] s1, numpy.ndarray[DTYPE_t, ndim=2] s
 @cython.wraparound(False)
 def dtw(numpy.ndarray[DTYPE_t, ndim=2] s1, numpy.ndarray[DTYPE_t, ndim=2] s2, numpy.ndarray[DTYPE_t, ndim=2] mask):
     assert s1.dtype == DTYPE and s2.dtype == DTYPE
-    assert s1.shape[0] == mask.shape[0] and s2.shape[0] == mask.shape[1]
 
-    cdef int l1 = s1.shape[0]
-    cdef int l2 = s2.shape[0]
+    cdef int l1 = ts_size(s1)
+    cdef int l2 = ts_size(s2)
+    assert l1 <= mask.shape[0] and l2 <= mask.shape[1]
+
     cdef int i = 0
     cdef int j = 0
-    cdef numpy.ndarray[DTYPE_t, ndim=2] cross_dist = cdist(s1, s2, "sqeuclidean").astype(DTYPE)
+    cdef numpy.ndarray[DTYPE_t, ndim=2] cross_dist = cdist(s1[:l1], s2[:l2], "sqeuclidean").astype(DTYPE)
     cdef numpy.ndarray[DTYPE_t, ndim=2] cum_sum = numpy.zeros((l1 + 1, l2 + 1), dtype=DTYPE)
     cum_sum[1:, 0] = numpy.inf
     cum_sum[0, 1:] = numpy.inf
