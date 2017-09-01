@@ -85,7 +85,7 @@ def dtw_path(numpy.ndarray[DTYPE_t, ndim=2] s1, numpy.ndarray[DTYPE_t, ndim=2] s
     cdef numpy.ndarray[DTYPE_t, ndim=1] candidates = numpy.zeros((3, ), dtype=DTYPE)
     cdef list best_path
 
-    cross_dist[~numpy.isfinite(mask)] = numpy.inf
+    cross_dist[~numpy.isfinite(mask[:l1, :l2])] = numpy.inf
 
     for i in range(l1):
         for j in range(l2):
@@ -137,7 +137,7 @@ def dtw(numpy.ndarray[DTYPE_t, ndim=2] s1, numpy.ndarray[DTYPE_t, ndim=2] s2, nu
     cum_sum[1:, 0] = numpy.inf
     cum_sum[0, 1:] = numpy.inf
 
-    cross_dist[~numpy.isfinite(mask)] = numpy.inf
+    cross_dist[~numpy.isfinite(mask[:l1, :l2])] = numpy.inf
 
     for i in range(l1):
         for j in range(l2):
