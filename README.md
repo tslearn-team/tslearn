@@ -33,15 +33,8 @@ pip install tslearn
 
 If you want to get `tslearn`'s latest version, you can `git clone` the repository hosted at github:
 ```bash
-git clone https://github.com/rtavenar/tslearn.git
+pip install git+https://github.com/rtavenar/tslearn.git
 ```
-
-Then, you should run the following command for Cython code to compile:
-```bash
-python setup.py build_ext --inplace
-```
-
-Also, for the whole package to run properly, its base directory should be appended to your Python path.
 
 # Documentation and API reference
 
