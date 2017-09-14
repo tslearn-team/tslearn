@@ -24,13 +24,14 @@ X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")
 X_train = TimeSeriesScalerMinMax().fit_transform(X_train)
 X_test = TimeSeriesScalerMinMax().fit_transform(X_test)
 
+# Set the number of shapelets per size as done in the original paper
 shapelet_sizes = grabocka_params_to_shapelet_size_dict(ts_sz=X_train.shape[1],
                                                        n_classes=len(set(y_train)),
                                                        l=0.1,
                                                        r=2)
 
 
-# Nearest neighbor classification
+# Define the model using parameters provided by the authors (except that we use fewer iterations here)
 shp_clf = ShapeletModel(n_shapelets_per_size=shapelet_sizes,
                         optimizer=Adagrad(lr=.1),
                         weight_regularizer=.01,
