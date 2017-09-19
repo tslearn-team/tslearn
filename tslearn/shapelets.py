@@ -70,7 +70,9 @@ class LocalSquaredDistanceLayer(Layer):
 
 
 def grabocka_params_to_shapelet_size_dict(ts_sz, n_classes, l, r):
-    """Compute number and length of shapelets the way it is done in [1]_.
+    """Compute number and length of shapelets.
+
+     This function uses the heuristic from [1]_.
 
     Parameters
     ----------
@@ -112,9 +114,10 @@ def grabocka_params_to_shapelet_size_dict(ts_sz, n_classes, l, r):
 
 
 class ShapeletModel:
-    """Learning Time-Series Shapelets model as presented in [1]_.
+    """Learning Time-Series Shapelets model.
 
-    This implementation only accepts mono-dimensional time series as inputs.
+
+    Learning Time-Series Shapelets was originally presented in [1]_.
 
     Parameters
     ----------
@@ -135,8 +138,11 @@ class ShapeletModel:
 
     Attributes
     ----------
-    shapelets: numpy.ndarray
+    shapelets_: numpy.ndarray of objects, each object being a time series
         Set of time-series shapelets
+    shapelets_as_time_series_: numpy.ndarray of shape (n_shapelets, sz_shp, d) where \
+    sz_shp is the maximum of all shapelet sizes
+        Set of time-series shapelets formatted as a ``tslearn`` time series dataset
 
     Examples
     --------
@@ -163,6 +169,9 @@ class ShapeletModel:
     >>> clf2.transform(X).shape
     (300, 15, 1)
 
+    Notes
+    -----
+        This implementation only accepts mono-dimensional time series as inputs.
 
     References
     ----------
@@ -201,7 +210,28 @@ class ShapeletModel:
         assert idx == total_n_shp
         return shapelets
 
+    @property
+    def shapelets_as_time_series_(self):
+        total_n_shp = sum(self.n_shapelets_per_size.values())
+        shp_sz = max(self.n_shapelets_per_size.keys())
+        non_formatted_shapelets = self.shapelets_
+        d = non_formatted_shapelets[0].shape[1]
+        shapelets = numpy.zeros((total_n_shp, shp_sz, d)) + numpy.nan
+        for i in range(self._n_shapelet_sizes):
+            sz = non_formatted_shapelets[i].shape[0]
+            shapelets[i, :sz, :] = non_formatted_shapelets[i]
+        return shapelets
+
     def fit(self, X, y):
+        """Learn time-series shapelets.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset.
+        y : array-like of shape=(n_ts, )
+            Time series labels.
+        """
         n_ts, sz, d = X.shape
         assert(d == 1)
         if y.ndim == 1:
@@ -225,6 +255,20 @@ class ShapeletModel:
         return self
 
     def predict(self, X):
+        """Predict class probability for a given set of time series.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset.
+
+        Returns
+        -------
+        array of shape=(n_ts, ) or (n_ts, n_classes), depending on the shape of the \
+        label vector provided at training time.
+            Index of the cluster each sample belongs to or class probability matrix, depending on
+            what was provided at training time.
+        """
         categorical_preds = self.model.predict(X,
                                                batch_size=self.batch_size,
                                                verbose=self.verbose_level)
@@ -234,6 +278,18 @@ class ShapeletModel:
             return categorical_preds.argmax(axis=1)
 
     def transform(self, X):
+        """Generate shapelet transform for a set of time series.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset.
+
+        Returns
+        -------
+        array of shape=(n_ts, n_shapelets)
+            Shapelet-Transform of the provided time series.
+        """
         pred = self.transformer_model.predict(X,
                                               batch_size=self.batch_size,
                                               verbose=self.verbose_level)

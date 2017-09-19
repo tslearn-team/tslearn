@@ -21,17 +21,6 @@ tslearn.shapelets.ShapeletModel
    
    
 
-   
-   
-   .. rubric:: Attributes
-
-   .. autosummary::
-      :toctree: ShapeletModel
-   
-      ~ShapeletModel.shapelets_
-   
-   
-
 .. include:: ../backreferences/tslearn.shapelets.ShapeletModel.examples
 
 .. raw:: html
