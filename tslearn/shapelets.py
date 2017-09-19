@@ -164,6 +164,8 @@ class ShapeletModel:
     (10, 1)
     >>> clf2.shapelets_[5].shape
     (20, 1)
+    >>> clf2.shapelets_as_time_series_.shape
+    (15, 20, 1)
     >>> clf2.predict(X).shape
     (300,)
     >>> clf2.transform(X).shape
