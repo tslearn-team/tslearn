@@ -5,7 +5,7 @@ Learning Shapelets
 
 This example illustrates the use of the "Learning Shapelets" method for a time series classification task.
 
-More information on the method can be found at: <http://fs.ismll.de/publicspace/LearningShapelets/>.
+More information on the method can be found at: http://fs.ismll.de/publicspace/LearningShapelets/.
 """
 
 # Author: Romain Tavenard
