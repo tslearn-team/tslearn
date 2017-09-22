@@ -5,7 +5,7 @@ It depends on the `keras` library for optimization.
 """
 
 from keras.models import Model
-from keras.layers import Dense, Conv1D, Layer, Input, concatenate
+from keras.layers import Dense, Conv1D, Layer, Input, concatenate, add
 from keras.metrics import categorical_accuracy, categorical_crossentropy
 from keras.utils import to_categorical
 from keras.regularizers import l2
@@ -146,18 +146,17 @@ class ShapeletModel:
 
     Note
     ----
-        1. This implementation only accepts mono-dimensional time series as inputs.
-        2. This implementation requires a dataset of equal-sized time series.
+        This implementation requires a dataset of equal-sized time series.
 
     Examples
     --------
     >>> from tslearn.generators import random_walk_blobs
-    >>> X, y = random_walk_blobs(n_ts_per_blob=100, sz=256, d=1, n_blobs=3)
+    >>> X, y = random_walk_blobs(n_ts_per_blob=100, sz=256, d=2, n_blobs=3)
     >>> clf = ShapeletModel(n_shapelets_per_size={10: 5}, max_iter=1, verbose_level=0)
     >>> clf.fit(X, y).shapelets_.shape
     (5,)
     >>> clf.shapelets_[0].shape
-    (10, 1)
+    (10, 2)
     >>> clf.predict(X).shape
     (300,)
     >>> clf.transform(X).shape
@@ -166,11 +165,11 @@ class ShapeletModel:
     >>> clf2.fit(X, y).shapelets_.shape
     (15,)
     >>> clf2.shapelets_[0].shape
-    (10, 1)
+    (10, 2)
     >>> clf2.shapelets_[5].shape
-    (20, 1)
+    (20, 2)
     >>> clf2.shapelets_as_time_series_.shape
-    (15, 20, 1)
+    (15, 20, 2)
     >>> clf2.predict(X).shape
     (300,)
     >>> clf2.transform(X).shape
@@ -197,6 +196,8 @@ class ShapeletModel:
         self.verbose_level = verbose_level
         self.categorical_y = False
 
+        self.d = None
+
     @property
     def _n_shapelet_sizes(self):
         return len(self.n_shapelets_per_size)
@@ -206,10 +207,14 @@ class ShapeletModel:
         total_n_shp = sum(self.n_shapelets_per_size.values())
         shapelets = numpy.empty((total_n_shp, ), dtype=object)
         idx = 0
-        for i in range(self._n_shapelet_sizes):
-            for shp in self.model.get_layer("shapelets_%d" % i).get_weights()[0]:
-                shapelets[idx] = to_time_series(shp)
-                idx += 1
+        for i, shp_sz in enumerate(sorted(self.n_shapelets_per_size.keys())):
+            n_shp = self.n_shapelets_per_size[shp_sz]
+            for idx_shp in range(idx, idx + n_shp):
+                shapelets[idx_shp] = numpy.zeros((shp_sz, self.d))
+            for di in range(self.d):
+                for inc, shp in enumerate(self.model.get_layer("shapelets_%d_%d" % (i, di)).get_weights()[0]):
+                    shapelets[idx + inc][:, di] = shp
+            idx += n_shp
         assert idx == total_n_shp
         return shapelets
 
@@ -236,7 +241,7 @@ class ShapeletModel:
             Time series labels.
         """
         n_ts, sz, d = X.shape
-        assert(d == 1)
+        self.d = d
         if y.ndim == 1:
             y_ = to_categorical(y)
         else:
@@ -251,7 +256,8 @@ class ShapeletModel:
         self.transformer_model.compile(loss="mean_squared_error",
                                        optimizer=self.optimizer)
         self._set_weights_false_conv(d=d)
-        self.model.fit(X, y_,
+        self.model.fit([X[:, :, di].reshape((n_ts, sz, 1)) for di in range(d)],
+                       y_,
                        batch_size=self.batch_size,
                        epochs=self.epochs,
                        verbose=self.verbose_level)
@@ -272,7 +278,9 @@ class ShapeletModel:
             Index of the cluster each sample belongs to or class probability matrix, depending on
             what was provided at training time.
         """
-        categorical_preds = self.model.predict(X,
+        X_ = to_time_series_dataset(X)
+        n_ts, sz, d = X_.shape
+        categorical_preds = self.model.predict([X_[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d)],
                                                batch_size=self.batch_size,
                                                verbose=self.verbose_level)
         if self.categorical_y:
@@ -293,33 +301,37 @@ class ShapeletModel:
         array of shape=(n_ts, n_shapelets)
             Shapelet-Transform of the provided time series.
         """
-        pred = self.transformer_model.predict(X,
+        X_ = to_time_series_dataset(X)
+        n_ts, sz, d = X_.shape
+        pred = self.transformer_model.predict([X_[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d)],
                                               batch_size=self.batch_size,
                                               verbose=self.verbose_level)
         return to_time_series_dataset(pred)
 
     def _set_weights_false_conv(self, d):
         shapelet_sizes = sorted(self.n_shapelets_per_size.keys())
-        for i, sz in enumerate(sorted(shapelet_sizes)):
-            weights_false_conv = numpy.empty((sz, d, sz))
+        for i, sz in enumerate(shapelet_sizes):
             for di in range(d):
-                weights_false_conv[:, di, :] = numpy.eye(sz)
-            layer = self.model.get_layer("false_conv_%d" % i)
-            layer.set_weights([weights_false_conv])
+                self.model.get_layer("false_conv_%d_%d" % (i, di)).set_weights([numpy.eye(sz).reshape((sz, 1, sz))])
 
     def _set_model_layers(self, ts_sz, d, n_classes):
-        inputs = Input(shape=(ts_sz, d), name="input")
+        inputs = [Input(shape=(ts_sz, 1), name="input_%d" % di) for di in range(d)]
         shapelet_sizes = sorted(self.n_shapelets_per_size.keys())
         pool_layers = []
         for i, sz in enumerate(sorted(shapelet_sizes)):
-            transformer_layer = Conv1D(filters=sz,
-                                       kernel_size=sz,
-                                       trainable=False,
-                                       use_bias=False,
-                                       name="false_conv_%d" % i)(inputs)
-            shapelet_layer = LocalSquaredDistanceLayer(self.n_shapelets_per_size[sz],
-                                                       name="shapelets_%d" % i)(transformer_layer)
-            pool_layers.append(GlobalMinPooling1D(name="min_pooling_%d" % i)(shapelet_layer))
+            transformer_layers = [Conv1D(filters=sz,
+                                         kernel_size=sz,
+                                         trainable=False,
+                                         use_bias=False,
+                                         name="false_conv_%d_%d" % (i, di))(inputs[di]) for di in range(d)]
+            shapelet_layers = [LocalSquaredDistanceLayer(self.n_shapelets_per_size[sz],
+                                                         name="shapelets_%d_%d" % (i, di))(transformer_layers[di])
+                               for di in range(d)]
+            if d == 1:
+                summed_shapelet_layer = shapelet_layers[0]
+            else:
+                summed_shapelet_layer = add(shapelet_layers)
+            pool_layers.append(GlobalMinPooling1D(name="min_pooling_%d" % i)(summed_shapelet_layer))
         if len(shapelet_sizes) > 1:
             concatenated_features = concatenate(pool_layers)
         else:
@@ -345,8 +357,7 @@ class ShapeletModel:
             Name of the layer for which  weights should be returned.
             If None, all model weights are returned.
             Available layer names with weights are:
-            - "shapelets_i" with i an integer for the sets of shapelets
-              corresponding to each shapelet size (sorted in ascending order)
+            - "shapelets_i_j" with i an integer for the shapelet id and j an integer for the dimension
             - "softmax" for the final classification layer
 
         Returns
