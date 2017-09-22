@@ -36,6 +36,17 @@ If you want to get `tslearn`'s latest version, you can `git clone` the repositor
 pip install git+https://github.com/rtavenar/tslearn.git
 ```
 
+## Troubleshooting
+
+It seems on some platforms `Cython` dependency does not install properly.
+If you experiment such an issue, try installing it with the following command:
+
+```bash 
+pip install cython
+```
+
+before you start installing `tslearn`.
+
 # Documentation and API reference
 
 The documentation, including a gallery of examples, is hosted at [readthedocs](http://tslearn.readthedocs.io/en/latest/index.html).
