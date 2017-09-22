@@ -16,6 +16,7 @@ tslearn.datasets.UCR_UEA_datasets
       ~UCR_UEA_datasets.__init__
       ~UCR_UEA_datasets.list_datasets
       ~UCR_UEA_datasets.load_dataset
+      ~UCR_UEA_datasets.baseline_accuracy
    
    
 
