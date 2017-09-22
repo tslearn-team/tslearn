@@ -294,6 +294,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
     metric_params : dict or None
         Parameter values for the chosen metric. Value associated to the `"gamma_sdtw"` key corresponds to the gamma
         parameter in Soft-DTW.
+    dtw_inertia: bool
+        Whether to compute DTW inertia even if DTW is not the chosen metric.
     verbose : bool (default: True)
         Whether or not to print information about the inertia while learning the model.
     random_state : integer or numpy.RandomState, optional
@@ -354,7 +356,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
     """
 
     def __init__(self, n_clusters=3, max_iter=50, tol=1e-6, n_init=1, metric="euclidean", max_iter_barycenter=100,
-                 metric_params=None, verbose=True, random_state=None):
+                 metric_params=None, dtw_inertia=False, verbose=True, random_state=None):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
         self.tol = tol
@@ -364,6 +366,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         self.verbose = verbose
         self.max_iter_barycenter = max_iter_barycenter
         self.max_attempts = max(self.n_init, 10)
+        self.dtw_inertia = dtw_inertia
 
         self.labels_ = None
         self.inertia_ = numpy.inf
@@ -411,7 +414,11 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         if update_class_attributes:
             self.labels_ = matched_labels
             _check_no_empty_cluster(self.labels_, self.n_clusters)
-            self.inertia_ = _compute_inertia(dists, self.labels_, self._squared_inertia)
+            if self.dtw_inertia and self.metric != "dtw":
+                inertia_dists = cdist_dtw(X, self.cluster_centers_)
+            else:
+                inertia_dists = dists
+            self.inertia_ = _compute_inertia(inertia_dists, self.labels_, self._squared_inertia)
         return matched_labels
 
     def _update_centroids(self, X):
