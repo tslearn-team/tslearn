@@ -61,7 +61,7 @@ def normalized_gak(numpy.ndarray[DTYPE_t, ndim=2] s1, numpy.ndarray[DTYPE_t, ndi
     cdef DTYPE_t kii = gak(s1, s1, sigma)
     cdef DTYPE_t kjj = gak(s2, s2, sigma)
 
-    return kij / numpy.sqrt(kii * kjj)  # TODO: deal with divide by 0 issue
+    return kij / numpy.sqrt(kii * kjj)
 
 @cython.boundscheck(False) # turn off bounds-checking for entire function
 @cython.wraparound(False)  # turn off negative index wrapping for entire function
@@ -91,6 +91,6 @@ def cdist_gak(numpy.ndarray[DTYPE_t, ndim=3] dataset1, numpy.ndarray[DTYPE_t, nd
             elif self_similarity and i == j:
                 cross_dist[i, j] = 1.
             else:
-                cross_dist[i, j] = gak(dataset1[i], dataset2[j], sigma) / (kiis[i] * kjjs[j])  # TODO: deal with divide by 0 issue
+                cross_dist[i, j] = gak(dataset1[i], dataset2[j], sigma) / (kiis[i] * kjjs[j])
 
     return cross_dist
