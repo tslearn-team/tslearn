@@ -561,10 +561,13 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         self.inertia_ = numpy.inf
         self.cluster_centers_ = None
 
+        self._norms = 0.
+        self._norms_centroids = 0.
+
     def _shape_extraction(self, X, k):
         sz = X.shape[1]
         Xp = y_shifted_sbd_vec(self.cluster_centers_[k], X[self.labels_ == k], norm_ref=-1,
-                               norms_dataset=numpy.array([-1.]))  # TODO: provide norms
+                               norms_dataset=self._norms[self.labels_ == k])
         S = numpy.dot(Xp[:, :, 0].T, Xp[:, :, 0])
         Q = numpy.eye(sz) - numpy.ones((sz, sz)) / sz
         M = numpy.dot(Q.T, numpy.dot(S, Q))
@@ -584,10 +587,11 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         for k in range(self.n_clusters):
             self.cluster_centers_[k] = self._shape_extraction(X, k)
         self.cluster_centers_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(self.cluster_centers_)
+        self._norms_centroids = numpy.linalg.norm(self.cluster_centers_, axis=(1, 2))
 
     def _cross_dists(self, X):
-        return 1. - cdist_normalized_cc(X, self.cluster_centers_, norms1=numpy.array([-1.]), norms2=numpy.array([-1.]),
-                                        self_similarity=False)  # TODO: provide norms
+        return 1. - cdist_normalized_cc(X, self.cluster_centers_, norms1=self._norms,
+                                        norms2=self._norms_centroids, self_similarity=False)
 
     def _assign(self, X):
         dists = self._cross_dists(X)
@@ -599,6 +603,7 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         n_samples, sz, d = X.shape
         self.labels_ = rs.randint(self.n_clusters, size=n_samples)
         self.cluster_centers_ = rs.randn(self.n_clusters, sz, d)
+        self._norms_centroids = numpy.linalg.norm(self.cluster_centers_, axis=(1, 2))
         old_inertia = numpy.inf
 
         for it in range(self.max_iter):
@@ -631,6 +636,7 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         """
 
         X_ = to_time_series_dataset(X)
+        self._norms = numpy.linalg.norm(X_, axis=(1, 2))
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
         assert X_.shape[-1] == 1, "kShape is supposed to work on monomodal data, provided data has dimension %d" % \
                                   X_.shape[-1]
@@ -654,6 +660,7 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
                 if self.verbose:
                     print("Resumed because of empty cluster")
         self._post_fit(X_, best_correct_centroids, min_inertia)
+        self._norms_centroids = numpy.linalg.norm(self.cluster_centers_, axis=(1, 2))
         return self
 
     def fit_predict(self, X, y=None):

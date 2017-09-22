@@ -173,14 +173,15 @@ def cdist_dtw(numpy.ndarray[DTYPE_t, ndim=3] dataset1,
 
 @cython.boundscheck(False) # turn off bounds-checking for entire function
 @cython.wraparound(False)  # turn off negative index wrapping for entire function
-def lb_envelope(numpy.ndarray[DTYPE_t, ndim=2] time_series, int radius):  # TODO: multidimensional enveloppes???
-    assert time_series.dtype == DTYPE and time_series.shape[1] == 1
+def lb_envelope(numpy.ndarray[DTYPE_t, ndim=2] time_series, int radius):
+    assert time_series.dtype == DTYPE
+    cdef d = time_series.shape[1]
     cdef int sz = time_series.shape[0]
     cdef int i = 0
     cdef int min_idx = 0
     cdef int max_idx = 0
-    cdef numpy.ndarray[DTYPE_t, ndim=2] enveloppe_up = numpy.empty((sz, 1), dtype=DTYPE)
-    cdef numpy.ndarray[DTYPE_t, ndim=2] enveloppe_down = numpy.empty((sz, 1), dtype=DTYPE)
+    cdef numpy.ndarray[DTYPE_t, ndim=2] enveloppe_up = numpy.empty((sz, d), dtype=DTYPE)
+    cdef numpy.ndarray[DTYPE_t, ndim=2] enveloppe_down = numpy.empty((sz, d), dtype=DTYPE)
 
     for i in range(sz):
         min_idx = i - radius
@@ -189,8 +190,8 @@ def lb_envelope(numpy.ndarray[DTYPE_t, ndim=2] time_series, int radius):  # TODO
             min_idx = 0
         if max_idx > sz:
             max_idx = sz
-        enveloppe_down[i, 0] = time_series[min_idx:max_idx, 0].min()
-        enveloppe_up[i, 0] = time_series[min_idx:max_idx, 0].max()
+        enveloppe_down[i, :] = time_series[min_idx:max_idx, :].min(axis=0)
+        enveloppe_up[i, :] = time_series[min_idx:max_idx, :].max(axis=0)
 
     return enveloppe_down, enveloppe_up
 
