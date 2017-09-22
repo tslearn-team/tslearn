@@ -5,6 +5,7 @@ The :mod:`tslearn.datasets` module provides simplified access to standard time s
 import numpy
 import zipfile
 import os
+import csv
 try:
     from urllib import urlretrieve
 except ImportError:
@@ -92,8 +93,15 @@ class UCR_UEA_datasets(object):
                                     verbose=False)
         if path is None:
             raise ValueError("Dataset could not be loaded properly."
-                             "Using cache to re-download it once might fix the issue")
+                             "Using cache=False to re-download it once might fix the issue")
         self._data_dir = os.path.join(path, "TSC Problems")
+        try:
+            url_baseline = "http://www.timeseriesclassification.com/singleTrainTest.csv"
+            self._baseline_scores_filename = os.path.join(self._data_dir, os.path.basename(url_baseline))
+            urlretrieve(url_baseline, self._baseline_scores_filename)
+        except:
+            self._baseline_scores_filename = None
+
         self._ignore_list = ["Data Descriptions"]
         # File names for datasets for which it is not obvious
         self._filenames = {"CinCECGtorso": "CinC_ECG_torso", "CricketX": "Cricket_X", "CricketY": "Cricket_Y",
@@ -105,6 +113,43 @@ class UCR_UEA_datasets(object):
                            "TwoPatterns": "Two_Patterns", "UWaveGestureLibraryX": "UWaveGestureLibrary_X",
                            "UWaveGestureLibraryY": "UWaveGestureLibrary_Y",
                            "UWaveGestureLibraryZ": "UWaveGestureLibrary_Z", "WordSynonyms": "WordsSynonyms"}
+
+    def baseline_accuracy(self, list_datasets=None, list_methods=None):
+        """Report baseline performances as provided by UEA/UCR website.
+
+        Parameters
+        ----------
+        list_datasets: list or None (default: None)
+            A list of strings indicating for which datasets performance should be reported.
+            If None, performance is reported for all datasets.
+        list_methods: list or None (default: None)
+            A list of baselines methods for which performance should be reported.
+            If None, performance for all baseline methods is reported.
+
+        Returns
+        -------
+        dict
+            A dictionary in which keys are dataset names and associated values are themselves
+            dictionaries that provide accuracy scores for the requested methods.
+
+        Examples
+        --------
+        >>> uea_ucr = UCR_UEA_datasets()
+        >>> dict_acc = uea_ucr.baseline_accuracy(list_datasets=["Adiac", "ChlorineConcentration"], \
+                                                 list_methods=["C45"])
+        >>> len(dict_acc)
+        2
+        >>> dict_acc["Adiac"]  # doctest: +ELLIPSIS
+        {'C45': 0.542199...}
+        """
+        d_out = {}
+        for perfs_dict in csv.DictReader(open(self._baseline_scores_filename, "r"), delimiter=","):
+            if list_datasets is None or perfs_dict[""] in list_datasets:
+                d_out[perfs_dict[""]] = {}
+                for m in perfs_dict.keys():
+                    if m != "" and (list_methods is None or m in list_methods):
+                        d_out[perfs_dict[""]][m] = float(perfs_dict[m])
+        return d_out
 
     def list_datasets(self):
         """List datasets in the UCR/UEA archive."""
