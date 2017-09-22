@@ -295,13 +295,13 @@ def ts_size(ts):
 
     Parameters
     ----------
-    dataset: array-like
-        The dataset to check.
+    ts : array-like
+        A time series.
 
     Returns
     -------
-    bool
-        Whether all time series in the dataset have the same size.
+    int
+        Actual size of the time series.
 
     Examples
     --------
