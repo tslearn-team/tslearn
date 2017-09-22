@@ -139,10 +139,15 @@ class ShapeletModel:
     Attributes
     ----------
     shapelets_: numpy.ndarray of objects, each object being a time series
-        Set of time-series shapelets
+        Set of time-series shapelets.
     shapelets_as_time_series_: numpy.ndarray of shape (n_shapelets, sz_shp, d) where \
     sz_shp is the maximum of all shapelet sizes
-        Set of time-series shapelets formatted as a ``tslearn`` time series dataset
+        Set of time-series shapelets formatted as a ``tslearn`` time series dataset.
+
+    Note
+    ----
+        1. This implementation only accepts mono-dimensional time series as inputs.
+        2. This implementation requires a dataset of equal-sized time series.
 
     Examples
     --------
@@ -170,10 +175,6 @@ class ShapeletModel:
     (300,)
     >>> clf2.transform(X).shape
     (300, 15, 1)
-
-    Notes
-    -----
-        This implementation only accepts mono-dimensional time series as inputs.
 
     References
     ----------

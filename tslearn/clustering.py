@@ -309,6 +309,10 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
     inertia_ : float
         Sum of distances of samples to their closest cluster center.
 
+    Note
+    ----
+        If `metric` is set to `"euclidean"`, the algorithm expects a dataset of equal-sized time series.
+
     Examples
     --------
     >>> from tslearn.generators import random_walks
@@ -524,6 +528,10 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         Labels of each point
     inertia_ : float
         Sum of distances of samples to their closest cluster center.
+
+    Note
+    ----
+        This method requires a dataset of equal-sized time series.
 
     Examples
     --------

@@ -8,7 +8,8 @@ import numpy
 from scipy.interpolate import interp1d
 from scipy.optimize import minimize
 
-from tslearn.utils import to_time_series_dataset
+from tslearn.utils import to_time_series_dataset, check_equal_size
+from tslearn.preprocessing import TimeSeriesResampler
 from tslearn.metrics import dtw_path, SquaredEuclidean, SoftDTW
 
 
@@ -28,6 +29,10 @@ class EuclideanBarycenter:
     ----------
     weights: None or array
         Weights of each X[i]. Must be the same size as len(X).
+
+    Note
+    ----
+        This method requires a dataset of equal-sized time series
 
     Examples
     --------
@@ -249,7 +254,11 @@ class SoftDTWBarycenter(EuclideanBarycenter):
         self._X_fit = to_time_series_dataset(X)
         self.weights = _set_weights(self.weights, self._X_fit)
         if self.barycenter_ is None:
-            self.barycenter_ = EuclideanBarycenter.fit(self, self._X_fit)
+            if check_equal_size(self._X_fit):
+                self.barycenter_ = EuclideanBarycenter.fit(self, self._X_fit)
+            else:
+                resampled_X = TimeSeriesResampler(sz=self._X_fit.shape[1]).fit_transform(self._X_fit)
+                self.barycenter_ = EuclideanBarycenter.fit(self, resampled_X)
 
         if self.max_iter > 0:
             # The function works with vectors so we need to vectorize barycenter_.

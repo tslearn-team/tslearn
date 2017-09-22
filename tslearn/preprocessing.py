@@ -6,7 +6,7 @@ import numpy
 from sklearn.base import TransformerMixin
 from scipy.interpolate import interp1d
 
-from tslearn.utils import to_time_series_dataset
+from tslearn.utils import to_time_series_dataset, check_equal_size, ts_size
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -37,20 +37,23 @@ class TimeSeriesResampler(TransformerMixin):
         Parameters
         ----------
         X : array-like
-            Time series dataset to be resampled
+            Time series dataset to be resampled.
 
         Returns
         -------
         numpy.ndarray
-            Resampled time series dataset
+            Resampled time series dataset.
         """
         X_ = to_time_series_dataset(X)
         n_ts, sz, d = X_.shape
+        equal_size = check_equal_size(X_)
         X_out = numpy.empty((n_ts, self.sz_, d))
         for i in range(X_.shape[0]):
             xnew = numpy.linspace(0, 1, self.sz_)
+            if not equal_size:
+                sz = ts_size(X_[i])
             for di in range(d):
-                f = interp1d(numpy.linspace(0, 1, sz), X_[i, :, di], kind="slinear")
+                f = interp1d(numpy.linspace(0, 1, sz), X_[i, :sz, di], kind="slinear")
                 X_out[i, :, di] = f(xnew)
         return X_out
 
@@ -64,6 +67,10 @@ class TimeSeriesScalerMinMax(TransformerMixin):
         Minimum value for output time series.
     max : float (default: 1.)
         Maximum value for output time series.
+
+    Note
+    ----
+        This method requires a dataset of equal-sized time series.
     
     Example
     -------
@@ -82,12 +89,12 @@ class TimeSeriesScalerMinMax(TransformerMixin):
         Parameters
         ----------
         X : array-like
-            Time series dataset to be rescaled
+            Time series dataset to be rescaled.
 
         Returns
         -------
         numpy.ndarray
-            Rescaled time series dataset
+            Rescaled time series dataset.
         """
         X_ = to_time_series_dataset(X)
         for i in range(X_.shape[0]):
@@ -106,9 +113,13 @@ class TimeSeriesScalerMeanVariance(TransformerMixin):
     Parameters
     ----------
     mu : float (default: 0.)
-        Mean of the output time series
+        Mean of the output time series.
     std : float (default: 1.)
-        Standard deviation of the output time series
+        Standard deviation of the output time series.
+
+    Note
+    ----
+        This method requires a dataset of equal-sized time series.
     
     Example
     -------

@@ -62,6 +62,10 @@ class PiecewiseAggregateApproximation(TransformerMixin):
     n_segments : int
         Number of PAA segments to compute
 
+    Note
+    ----
+        This method requires a dataset of equal-sized time series.
+
     Example
     -------
     >>> paa = PiecewiseAggregateApproximation(n_segments=3)
@@ -255,6 +259,10 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
     breakpoints_avg_ : numpy.ndarray of shape (alphabet_size - 1, )
         List of breakpoints used to generate SAX symbols
 
+    Note
+    ----
+        This method requires a dataset of equal-sized time series.
+
     Example
     -------
     >>> sax = SymbolicAggregateApproximation(n_segments=3, alphabet_size_avg=2)
@@ -445,6 +453,10 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         List of breakpoints used to generate SAX symbols for average values.
     breakpoints_slope_ : numpy.ndarray of shape (alphabet_size_slope - 1, )
         List of breakpoints used to generate SAX symbols for slopes.
+
+    Note
+    ----
+        This method requires a dataset of equal-sized time series.
 
     Example
     -------

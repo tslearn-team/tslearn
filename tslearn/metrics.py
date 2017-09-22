@@ -12,7 +12,7 @@ from tslearn.cydtw import dtw as cydtw, dtw_path as cydtw_path, cdist_dtw as cyc
 from tslearn.cydtw import lb_envelope as cylb_envelope
 from tslearn.cydtw import sakoe_chiba_mask as cysakoe_chiba_mask, itakura_mask as cyitakura_mask
 from tslearn.cygak import cdist_gak as cycdist_gak, normalized_gak as cynormalized_gak
-from tslearn.utils import to_time_series, to_time_series_dataset
+from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, check_equal_size
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -407,6 +407,11 @@ def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
     envelope_candidate: pair of array-like (envelope_down, envelope_up) or None (default: None)
         Pre-computed envelope of the candidate time series. If set to None, it is computed based on `ts_candidate`.
 
+    Note
+    ----
+        This method requires a `ts_query` and `ts_candidate` (or `envelope_candidate`, depending on the call)
+        to be of equal size.
+
     Returns
     -------
     float
@@ -577,12 +582,22 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
     else:
         dataset2 = to_time_series_dataset(dataset2, dtype=numpy.float64)
     dists = numpy.empty((dataset1.shape[0], dataset2.shape[0]))
+    equal_size_ds1 = check_equal_size(dataset1)
+    equal_size_ds2 = check_equal_size(dataset2)
     for i, ts1 in enumerate(dataset1):
+        if equal_size_ds1:
+            ts1_short = ts1
+        else:
+            ts1_short = ts1[:ts_size(ts1)]
         for j, ts2 in enumerate(dataset2):
+            if equal_size_ds2:
+                ts2_short = ts2
+            else:
+                ts2_short = ts2[:ts_size(ts2)]
             if self_similarity and j < i:
                 dists[i, j] = dists[j, i]
             else:
-                dists[i, j] = soft_dtw(ts1, ts2, gamma=gamma)
+                dists[i, j] = soft_dtw(ts1_short, ts2_short, gamma=gamma)
 
     return dists
 

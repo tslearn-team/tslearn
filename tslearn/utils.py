@@ -50,17 +50,17 @@ def bit_length(n):
 
 
 def to_time_series(ts):
-    """Transforms a time series so that it fits the format used in `tslearn` models.
+    """Transforms a time series so that it fits the format used in ``tslearn`` models.
 
     Parameters
     ----------
     ts : array-like
-        The time series to be transformed
+        The time series to be transformed.
 
     Returns
     -------
     numpy.ndarray of shape (sz, d)
-        The transformed time series
+        The transformed time series.
     
     Example
     -------
@@ -89,8 +89,6 @@ def to_time_series_dataset(dataset, dtype=numpy.float):
         The dataset of time series to be transformed.
     dtype : data type (default: numpy.float)
         Data type for the returned dataset.
-    equal_size : bool (default: True)
-        Whether generated time series are all supposed to be of the same size.
 
     Returns
     -------
@@ -165,7 +163,7 @@ def timeseries_to_str(ts, fmt="%.18e"):
 
 
 def str_to_timeseries(ts_str):
-    """Transforms a time series to its representation as a string (used when saving time series to disk).
+    """Reads a time series from its string representation (used when loading time series from disk).
 
     Parameters
     ----------
@@ -204,7 +202,7 @@ def save_timeseries_txt(fname, dataset, fmt="%.18e"):
     Parameters
     ----------
     fname : string
-        Path to the file in which time setries should be written.
+        Path to the file in which time series should be written.
     dataset : array-like
         The dataset of time series to be saved.
     fmt : string (default: "%.18e")
@@ -226,7 +224,7 @@ def load_timeseries_txt(fname):
     Parameters
     ----------
     fname : string
-        Path to the file from which time setries should be read.
+        Path to the file from which time series should be read.
 
     Returns
     -------
