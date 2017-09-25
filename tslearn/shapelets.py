@@ -160,7 +160,7 @@ class ShapeletModel:
     >>> clf.predict(X).shape
     (300,)
     >>> clf.transform(X).shape
-    (300, 5, 1)
+    (300, 5)
     >>> clf2 = ShapeletModel(n_shapelets_per_size={10: 5, 20: 10}, max_iter=1, verbose_level=0)
     >>> clf2.fit(X, y).shapelets_.shape
     (15,)
@@ -173,7 +173,7 @@ class ShapeletModel:
     >>> clf2.predict(X).shape
     (300,)
     >>> clf2.transform(X).shape
-    (300, 15, 1)
+    (300, 15)
 
     References
     ----------
@@ -306,7 +306,7 @@ class ShapeletModel:
         pred = self.transformer_model.predict([X_[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d)],
                                               batch_size=self.batch_size,
                                               verbose=self.verbose_level)
-        return to_time_series_dataset(pred)
+        return pred
 
     def _set_weights_false_conv(self, d):
         shapelet_sizes = sorted(self.n_shapelets_per_size.keys())
