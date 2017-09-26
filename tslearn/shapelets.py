@@ -38,6 +38,26 @@ class GlobalMinPooling1D(Layer):
         return K.min(inputs, axis=1)
 
 
+class GlobalArgminPooling1D(Layer):
+    """Global min pooling operation for temporal data.
+    # Input shape
+        3D tensor with shape: `(batch_size, steps, features)`.
+    # Output shape
+        2D tensor with shape:
+        `(batch_size, features)`
+    """
+
+    def __init__(self, **kwargs):
+        super(GlobalArgminPooling1D, self).__init__(**kwargs)
+        self.input_spec = InputSpec(ndim=3)
+
+    def compute_output_shape(self, input_shape):
+        return input_shape[0], input_shape[2]
+
+    def call(self, inputs, **kwargs):
+        return K.cast(K.argmin(inputs, axis=1), dtype=K.floatx())
+
+
 class LocalSquaredDistanceLayer(Layer):
     """Pairwise (squared) distance computation between local patches and shapelets
     # Input shape
@@ -174,6 +194,8 @@ class ShapeletModel:
     (300,)
     >>> clf2.transform(X).shape
     (300, 15)
+    >>> clf2.locate(X).shape
+    (300, 15)
 
     References
     ----------
@@ -192,6 +214,7 @@ class ShapeletModel:
         self.weight_regularizer = weight_regularizer
         self.model = None
         self.transformer_model = None
+        self.locator_model = None
         self.batch_size = batch_size
         self.verbose_level = verbose_level
         self.categorical_y = False
@@ -255,6 +278,8 @@ class ShapeletModel:
                                     categorical_crossentropy])
         self.transformer_model.compile(loss="mean_squared_error",
                                        optimizer=self.optimizer)
+        self.locator_model.compile(loss="mean_squared_error",
+                                       optimizer=self.optimizer)
         self._set_weights_false_conv(d=d)
         self.model.fit([X[:, :, di].reshape((n_ts, sz, 1)) for di in range(d)],
                        y_,
@@ -308,6 +333,26 @@ class ShapeletModel:
                                               verbose=self.verbose_level)
         return pred
 
+    def locate(self, X):
+        """Compute shapelet match location for a set of time series.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset.
+
+        Returns
+        -------
+        array of shape=(n_ts, n_shapelets)
+            Location of the shapelet matches for the provided time series.
+        """
+        X_ = to_time_series_dataset(X)
+        n_ts, sz, d = X_.shape
+        locations = self.locator_model.predict([X_[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d)],
+                                          batch_size=self.batch_size,
+                                          verbose=self.verbose_level)
+        return locations.astype(numpy.int)
+
     def _set_weights_false_conv(self, d):
         shapelet_sizes = sorted(self.n_shapelets_per_size.keys())
         for i, sz in enumerate(shapelet_sizes):
@@ -318,6 +363,7 @@ class ShapeletModel:
         inputs = [Input(shape=(ts_sz, 1), name="input_%d" % di) for di in range(d)]
         shapelet_sizes = sorted(self.n_shapelets_per_size.keys())
         pool_layers = []
+        pool_layers_locations = []
         for i, sz in enumerate(sorted(shapelet_sizes)):
             transformer_layers = [Conv1D(filters=sz,
                                          kernel_size=sz,
@@ -332,10 +378,13 @@ class ShapeletModel:
             else:
                 summed_shapelet_layer = add(shapelet_layers)
             pool_layers.append(GlobalMinPooling1D(name="min_pooling_%d" % i)(summed_shapelet_layer))
+            pool_layers_locations.append(GlobalArgminPooling1D(name="min_pooling_%d" % i)(summed_shapelet_layer))
         if len(shapelet_sizes) > 1:
             concatenated_features = concatenate(pool_layers)
+            concatenated_locations = concatenate(pool_layers_locations)
         else:
             concatenated_features = pool_layers[0]
+            concatenated_locations = pool_layers_locations[0]
         if self.weight_regularizer > 0.:
             outputs = Dense(units=n_classes,
                             activation="softmax",
@@ -347,6 +396,7 @@ class ShapeletModel:
                             name="softmax")(concatenated_features)
         self.model = Model(inputs=inputs, outputs=outputs)
         self.transformer_model = Model(inputs=inputs, outputs=concatenated_features)
+        self.locator_model = Model(inputs=inputs, outputs=concatenated_locations)
 
     def get_weights(self, layer_name=None):
         """Return model weights (or weights for a given layer if `layer_name` is provided).
