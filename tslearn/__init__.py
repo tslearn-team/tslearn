@@ -1,7 +1,7 @@
 import os
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 
 
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
