@@ -31,7 +31,7 @@ pip install tslearn
 
 ## Using latest github-hosted version
 
-If you want to get `tslearn`'s latest version, you can `git clone` the repository hosted at github:
+If you want to get `tslearn`'s latest version, you can refer to the repository hosted at github:
 ```bash
 pip install git+https://github.com/rtavenar/tslearn.git
 ```

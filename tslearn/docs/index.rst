@@ -27,7 +27,7 @@ The easiest way to install ``tslearn`` is probably via ``pip``:
 Using latest github-hosted version
 ``````````````````````````````````
 
-If you want to get ``tslearn``'s latest version, you can ``git clone`` the repository hosted at github:
+If you want to get ``tslearn``'s latest version, you can refer to the repository hosted at github:
 
 .. code-block:: bash
   
