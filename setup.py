@@ -5,7 +5,7 @@ import tslearn
 from Cython.Distutils import build_ext as _build_ext
 
 list_pyx = ['cydtw', 'cygak', 'cysax', 'cycc', 'soft_dtw_fast']
-ext = [Extension('tslearn.%s' % s, ['tslearn/%s.pyx' % s]) for s in list_pyx]
+ext = [Extension('tslearn.%s' % s, ['tslearn/%s.pyx' % s], include_dirs=[numpy.get_include()]) for s in list_pyx]
 
 setup(
     name="tslearn",
