@@ -13,14 +13,12 @@ More information on the method can be found at: http://fs.ismll.de/publicspace/L
 # License: BSD 3 clause
 
 import numpy
-from sklearn.metrics import accuracy_score
 from keras.optimizers import Adagrad
 import matplotlib.pyplot as plt
 
 from tslearn.datasets import CachedDatasets
 from tslearn.preprocessing import TimeSeriesScalerMinMax
-from tslearn.shapelets import ShapeletModel, grabocka_params_to_shapelet_size_dict
-from tslearn.utils import ts_size
+from tslearn.shapelets import ShapeletModel
 
 numpy.random.seed(0)
 X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")

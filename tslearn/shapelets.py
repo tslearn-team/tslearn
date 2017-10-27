@@ -7,7 +7,7 @@ It depends on the `keras` library for optimization.
 from keras.models import Model
 from keras.layers import Dense, Conv1D, Layer, Input, concatenate, add
 from keras.metrics import categorical_accuracy, categorical_crossentropy
-from keras.utils import to_categorical
+from sklearn.preprocessing import LabelBinarizer
 from keras.regularizers import l2
 import keras.backend as K
 from keras.engine import InputSpec
@@ -218,6 +218,7 @@ class ShapeletModel:
         self.batch_size = batch_size
         self.verbose_level = verbose_level
         self.categorical_y = False
+        self.label_binarizer = None
 
         self.d = None
 
@@ -266,7 +267,8 @@ class ShapeletModel:
         n_ts, sz, d = X.shape
         self.d = d
         if y.ndim == 1:
-            y_ = to_categorical(y)
+            self.label_binarizer = LabelBinarizer().fit(y)
+            y_ = self.label_binarizer.transform(y)
         else:
             y_ = y
             self.categorical_y = True
@@ -311,7 +313,7 @@ class ShapeletModel:
         if self.categorical_y:
             return categorical_preds
         else:
-            return categorical_preds.argmax(axis=1)
+            return self.label_binarizer.inverse_transform(categorical_preds)
 
     def transform(self, X):
         """Generate shapelet transform for a set of time series.
