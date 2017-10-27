@@ -171,16 +171,16 @@ class ShapeletModel:
     Examples
     --------
     >>> from tslearn.generators import random_walk_blobs
-    >>> X, y = random_walk_blobs(n_ts_per_blob=100, sz=256, d=2, n_blobs=3)
+    >>> X, y = random_walk_blobs(n_ts_per_blob=100, sz=256, d=2, n_blobs=2)
     >>> clf = ShapeletModel(n_shapelets_per_size={10: 5}, max_iter=1, verbose_level=0)
     >>> clf.fit(X, y).shapelets_.shape
     (5,)
     >>> clf.shapelets_[0].shape
     (10, 2)
     >>> clf.predict(X).shape
-    (300,)
+    (200,)
     >>> clf.transform(X).shape
-    (300, 5)
+    (200, 5)
     >>> clf2 = ShapeletModel(n_shapelets_per_size={10: 5, 20: 10}, max_iter=1, verbose_level=0)
     >>> clf2.fit(X, y).shapelets_.shape
     (15,)
@@ -191,11 +191,11 @@ class ShapeletModel:
     >>> clf2.shapelets_as_time_series_.shape
     (15, 20, 2)
     >>> clf2.predict(X).shape
-    (300,)
+    (200,)
     >>> clf2.transform(X).shape
-    (300, 15)
+    (200, 15)
     >>> clf2.locate(X).shape
-    (300, 15)
+    (200, 15)
 
     References
     ----------
@@ -269,6 +269,8 @@ class ShapeletModel:
         if y.ndim == 1:
             self.label_binarizer = LabelBinarizer().fit(y)
             y_ = self.label_binarizer.transform(y)
+            if y_.shape[1] == 1:
+                y_ = numpy.hstack((y_, 1 - y_))
         else:
             y_ = y
             self.categorical_y = True
@@ -313,6 +315,8 @@ class ShapeletModel:
         if self.categorical_y:
             return categorical_preds
         else:
+            if categorical_preds.shape[1] == 2:
+                categorical_preds = categorical_preds[:, 0]
             return self.label_binarizer.inverse_transform(categorical_preds)
 
     def transform(self, X):
