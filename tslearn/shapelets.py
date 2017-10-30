@@ -219,6 +219,7 @@ class ShapeletModel:
         self.verbose_level = verbose_level
         self.categorical_y = False
         self.label_binarizer = None
+        self.binary_problem = False
 
         self.d = None
 
@@ -270,13 +271,17 @@ class ShapeletModel:
             self.label_binarizer = LabelBinarizer().fit(y)
             y_ = self.label_binarizer.transform(y)
             if y_.shape[1] == 1:
-                y_ = numpy.hstack((y_, 1 - y_))
+                self.binary_problem = True
         else:
             y_ = y
             self.categorical_y = True
         n_classes = y_.shape[1]
         self._set_model_layers(ts_sz=sz, d=d, n_classes=n_classes)
-        self.model.compile(loss="categorical_crossentropy",
+        if self.binary_problem:
+        	loss = "binary_crossentropy"
+        else:
+        	loss = "categorical_crossentropy"
+        self.model.compile(loss=loss,
                            optimizer=self.optimizer,
                            metrics=[categorical_accuracy,
                                     categorical_crossentropy])
@@ -315,8 +320,6 @@ class ShapeletModel:
         if self.categorical_y:
             return categorical_preds
         else:
-            if categorical_preds.shape[1] == 2:
-                categorical_preds = categorical_preds[:, 0]
             return self.label_binarizer.inverse_transform(categorical_preds)
 
     def transform(self, X):
