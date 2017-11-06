@@ -9,11 +9,13 @@ from keras.layers import Dense, Conv1D, Layer, Input, concatenate, add
 from keras.metrics import categorical_accuracy, categorical_crossentropy
 from sklearn.preprocessing import LabelBinarizer
 from keras.regularizers import l2
+from keras.initializers import Initializer
 import keras.backend as K
 from keras.engine import InputSpec
 import numpy
 
 from tslearn.utils import to_time_series, to_time_series_dataset
+from tslearn.clustering import TimeSeriesKMeans
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -58,6 +60,33 @@ class GlobalArgminPooling1D(Layer):
         return K.cast(K.argmin(inputs, axis=1), dtype=K.floatx())
 
 
+def _kmeans_init_shapelets(X, n_shapelets, shp_len, n_draw=10000):
+    n_ts, sz, d = X.shape
+    indices_ts = numpy.random.choice(n_ts, size=n_draw, replace=True)
+    indices_time = numpy.random.choice(sz - shp_len + 1, size=n_draw, replace=True)
+    subseries = numpy.zeros((n_draw, shp_len, d))
+    for i in range(n_draw):
+        subseries[i] = X[indices_ts[i], indices_time[i]:indices_time[i] + shp_len]
+    return TimeSeriesKMeans(n_clusters=n_shapelets, metric="euclidean", verbose=False).fit(subseries).cluster_centers_
+
+
+class KMeansShapeletInitializer(Initializer):
+    """Initializer that generates shapelet tensors based on a clustering of time series snippets.
+    # Arguments
+        dataset: a dataset of time series.
+    """
+    def __init__(self, X):
+        self.X_ = to_time_series_dataset(X)
+
+    def __call__(self, shape, dtype=None):
+        n_shapelets, shp_len = shape
+        shapelets = _kmeans_init_shapelets(self.X_, n_shapelets, shp_len)[:, :, 0]
+        return K.tensorflow_backend._to_tensor(x=shapelets, dtype=K.floatx())
+
+    def get_config(self):
+        return {'data': self.X_}
+
+
 class LocalSquaredDistanceLayer(Layer):
     """Pairwise (squared) distance computation between local patches and shapelets
     # Input shape
@@ -66,15 +95,19 @@ class LocalSquaredDistanceLayer(Layer):
         3D tensor with shape:
         `(batch_size, steps, n_shapelets)`
     """
-    def __init__(self, n_shapelets, **kwargs):
+    def __init__(self, n_shapelets, X=None, **kwargs):
         self.n_shapelets = n_shapelets
+        if X is None or K._BACKEND != "tensorflow":
+            self.initializer = "uniform"
+        else:
+            self.initializer = KMeansShapeletInitializer(X)
         super(LocalSquaredDistanceLayer, self).__init__(**kwargs)
         self.input_spec = InputSpec(ndim=3)
 
     def build(self, input_shape):
         self.kernel = self.add_weight(name='kernel',
                                       shape=(self.n_shapelets, input_shape[2]),
-                                      initializer='uniform',
+                                      initializer=self.initializer,
                                       trainable=True)
         super(LocalSquaredDistanceLayer, self).build(input_shape)
 
@@ -276,11 +309,11 @@ class ShapeletModel:
             y_ = y
             self.categorical_y = True
         n_classes = y_.shape[1]
-        self._set_model_layers(ts_sz=sz, d=d, n_classes=n_classes)
+        self._set_model_layers(X=X, ts_sz=sz, d=d, n_classes=n_classes)
         if self.binary_problem:
-        	loss = "binary_crossentropy"
+            loss = "binary_crossentropy"
         else:
-        	loss = "categorical_crossentropy"
+            loss = "categorical_crossentropy"
         self.model.compile(loss=loss,
                            optimizer=self.optimizer,
                            metrics=[categorical_accuracy,
@@ -368,7 +401,7 @@ class ShapeletModel:
             for di in range(d):
                 self.model.get_layer("false_conv_%d_%d" % (i, di)).set_weights([numpy.eye(sz).reshape((sz, 1, sz))])
 
-    def _set_model_layers(self, ts_sz, d, n_classes):
+    def _set_model_layers(self, X, ts_sz, d, n_classes):
         inputs = [Input(shape=(ts_sz, 1), name="input_%d" % di) for di in range(d)]
         shapelet_sizes = sorted(self.n_shapelets_per_size.keys())
         pool_layers = []
@@ -380,6 +413,7 @@ class ShapeletModel:
                                          use_bias=False,
                                          name="false_conv_%d_%d" % (i, di))(inputs[di]) for di in range(d)]
             shapelet_layers = [LocalSquaredDistanceLayer(self.n_shapelets_per_size[sz],
+                                                         X=X,
                                                          name="shapelets_%d_%d" % (i, di))(transformer_layers[di])
                                for di in range(d)]
             if d == 1:
