@@ -1,3 +1,5 @@
+.. _class-shapeletmodel:
+
 tslearn.shapelets.ShapeletModel
 ===============================
 

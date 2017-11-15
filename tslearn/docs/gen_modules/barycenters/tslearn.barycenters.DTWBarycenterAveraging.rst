@@ -1,3 +1,5 @@
+.. _class-dba:
+
 tslearn.barycenters.DTWBarycenterAveraging
 ==========================================
 

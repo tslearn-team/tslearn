@@ -42,6 +42,7 @@ From here, you can navigate to:
     :maxdepth: 1
 
     gettingstarted
+    variablelength
     reference
     auto_examples/index
 

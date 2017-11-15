@@ -1,3 +1,5 @@
+.. _class-gakkmeans:
+
 tslearn.clustering.GlobalAlignmentKernelKMeans
 ==============================================
 

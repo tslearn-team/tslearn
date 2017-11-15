@@ -1,3 +1,5 @@
+.. _class-softdtw:
+
 tslearn.barycenters.SoftDTWBarycenter
 =====================================
 

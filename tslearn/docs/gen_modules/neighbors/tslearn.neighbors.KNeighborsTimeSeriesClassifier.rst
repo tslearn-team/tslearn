@@ -1,3 +1,5 @@
+.. _knn-clf:
+
 tslearn.neighbors.KNeighborsTimeSeriesClassifier
 ================================================
 

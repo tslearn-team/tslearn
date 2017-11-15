@@ -1,3 +1,5 @@
+.. _class-dbakmeans:
+
 tslearn.clustering.TimeSeriesKMeans
 ===================================
 
