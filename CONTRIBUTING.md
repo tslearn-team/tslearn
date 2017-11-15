@@ -12,5 +12,7 @@ We are welcoming contributions in the following forms:
   1. fork the project;
   2. implement your bugfix;
   3. submit a pull request referencing the ID of the issue in which the bug was reported / the feature was suggested;
+  
+If you would like to contribute by implementing a new feature reported in the Issues, maybe starting with [Issues that are attached the "good first issue" label](https://github.com/rtavenar/tslearn/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) would be a good idea.
 
 When submitting code, please think about code quality, adding proper docstrings including doctests with high code coverage.
