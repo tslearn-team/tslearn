@@ -5,6 +5,7 @@ The :mod:`tslearn.clustering` module gathers time series specific clustering alg
 from __future__ import print_function
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.cluster.k_means_ import _k_init
+from sklearn.metrics.cluster import silhouette_score as sklearn_silhouette_score
 from sklearn.utils import check_random_state
 from scipy.spatial.distance import cdist
 import numpy
@@ -65,6 +66,75 @@ def _compute_inertia(distances, assignments, squared=True):
         return numpy.sum(distances[numpy.arange(n_ts), assignments] ** 2) / n_ts
     else:
         return numpy.sum(distances[numpy.arange(n_ts), assignments]) / n_ts
+
+
+def silhouette_score(X, labels, metric=None, sample_size=None,
+                     random_state=None, **kwds):
+    """Compute the mean Silhouette Coefficient of all samples.
+
+    Read more in the `scikit-learn documentation
+    <http://scikit-learn.org/stable/modules/clustering.html#silhouette-coefficient>`_.
+
+    Parameters
+    ----------
+    X : array [n_ts, n_ts] if metric == "precomputed", or, \
+             [n_ts, sz, d] otherwise
+        Array of pairwise distances between time series, or a time series dataset.
+    labels : array, shape = [n_ts]
+         Predicted labels for each time series.
+    metric : string, or callable
+        The metric to use when calculating distance between time series.
+        Should be a metric from :ref:`tslearn.metrics <mod-metrics>` If X is the distance
+        array itself, use ``metric="precomputed"``.
+    sample_size : int or None
+        The size of the sample to use when computing the Silhouette Coefficient
+        on a random subset of the data.
+        If ``sample_size is None``, no sampling is used.
+    random_state : int, RandomState instance or None, optional (default=None)
+        The generator used to randomly select a subset of samples.  If int,
+        random_state is the seed used by the random number generator; If
+        RandomState instance, random_state is the random number generator; If
+        None, the random number generator is the RandomState instance used by
+        `np.random`. Used when ``sample_size is not None``.
+    **kwds : optional keyword parameters
+        Any further parameters are passed directly to the distance function.
+    Returns
+    -------
+    silhouette : float
+        Mean Silhouette Coefficient for all samples.
+    References
+    ----------
+    .. [1] `Peter J. Rousseeuw (1987). "Silhouettes: a Graphical Aid to the
+       Interpretation and Validation of Cluster Analysis". Computational
+       and Applied Mathematics 20: 53-65.
+       <http://www.sciencedirect.com/science/article/pii/0377042787901257>`_
+    .. [2] `Wikipedia entry on the Silhouette Coefficient
+           <https://en.wikipedia.org/wiki/Silhouette_(clustering)>`_
+    Examples
+    --------
+    >>> from tslearn.generators import random_walks
+    >>> from tslearn.metrics import soft_dtw
+    >>> X = random_walks(n_ts=50, sz=32, d=1)
+    >>> labels = numpy.random.randint(2, size=50)
+    >>> s_sc = silhouette_score(X, labels, metric=dtw)
+    >>> s_sc2 = silhouette_score(X, labels, metric=soft_dtw)
+    >>> s_sc3 = silhouette_score(cdist_dtw(X), labels, metric="precomputed")
+    """
+    if metric == "precomputed":
+        sklearn_X = X
+        sklearn_metric = metric
+    else:
+        X_ = to_time_series_dataset(X)
+        n, sz, d = X_.shape
+        sklearn_X = X_.reshape((n, -1))
+        if metric is None:
+            metric = dtw
+        sklearn_metric = lambda x, y: metric(x.reshape((sz, d)), y.reshape((sz, d)))
+    return sklearn_silhouette_score(X=sklearn_X,
+                                    labels=labels,
+                                    metric=sklearn_metric,
+                                    sample_size=sample_size,
+                                    random_state=random_state, **kwds)
 
 
 class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):

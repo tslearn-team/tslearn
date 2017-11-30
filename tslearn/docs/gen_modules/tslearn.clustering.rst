@@ -20,6 +20,13 @@ tslearn.clustering
       TimeSeriesKMeans
    
    
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree: clustering
+      :template: function.rst
+
+      silhouette_score
 
    
    
