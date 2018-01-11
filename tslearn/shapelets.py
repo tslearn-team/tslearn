@@ -116,7 +116,6 @@ class LocalSquaredDistanceLayer(Layer):
         x_sq = K.expand_dims(K.sum(x ** 2, axis=2), axis=-1)
         y_sq = K.reshape(K.sum(self.kernel ** 2, axis=1), (1, 1, self.n_shapelets))
         xy = K.dot(x, K.transpose(self.kernel))
-        print(K.int_shape(self.kernel))
         return (x_sq + y_sq - 2 * xy) / K.int_shape(self.kernel)[1]
 
     def compute_output_shape(self, input_shape):
