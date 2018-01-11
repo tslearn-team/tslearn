@@ -27,7 +27,8 @@ X_train = TimeSeriesScalerMinMax().fit_transform(X_train)
 X_test = TimeSeriesScalerMinMax().fit_transform(X_test)
 
 # Set the number of shapelets per size as done in the original paper
-shapelet_sizes = grabocka_params_to_shapelet_size_dict(ts_sz=X_train.shape[1],
+shapelet_sizes = grabocka_params_to_shapelet_size_dict(n_ts=X_train.shape[0],
+                                                       ts_sz=X_train.shape[1],
                                                        n_classes=len(set(y_train)),
                                                        l=0.1,
                                                        r=2)
@@ -36,7 +37,7 @@ shapelet_sizes = grabocka_params_to_shapelet_size_dict(ts_sz=X_train.shape[1],
 shp_clf = ShapeletModel(n_shapelets_per_size=shapelet_sizes,
                         optimizer=Adagrad(lr=.1),
                         weight_regularizer=.01,
-                        max_iter=300,
+                        max_iter=200,
                         verbose_level=0)
 shp_clf.fit(X_train, y_train)
 predicted_labels = shp_clf.predict(X_test)

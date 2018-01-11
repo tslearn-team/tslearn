@@ -116,19 +116,22 @@ class LocalSquaredDistanceLayer(Layer):
         x_sq = K.expand_dims(K.sum(x ** 2, axis=2), axis=-1)
         y_sq = K.reshape(K.sum(self.kernel ** 2, axis=1), (1, 1, self.n_shapelets))
         xy = K.dot(x, K.transpose(self.kernel))
-        return x_sq + y_sq - 2 * xy / K.int_shape(self.kernel)[1]
+        print(K.int_shape(self.kernel))
+        return (x_sq + y_sq - 2 * xy) / K.int_shape(self.kernel)[1]
 
     def compute_output_shape(self, input_shape):
         return input_shape[0], input_shape[1], self.n_shapelets
 
 
-def grabocka_params_to_shapelet_size_dict(ts_sz, n_classes, l, r):
+def grabocka_params_to_shapelet_size_dict(n_ts, ts_sz, n_classes, l, r):
     """Compute number and length of shapelets.
 
      This function uses the heuristic from [1]_.
 
     Parameters
     ----------
+    n_ts: int
+        Number of time series in the dataset
     ts_sz: int
         Length of time series in the dataset
     n_classes: int
@@ -145,12 +148,12 @@ def grabocka_params_to_shapelet_size_dict(ts_sz, n_classes, l, r):
 
     Examples
     --------
-    >>> d = grabocka_params_to_shapelet_size_dict(ts_sz=100, n_classes=3, l=0.1, r=2)
+    >>> d = grabocka_params_to_shapelet_size_dict(n_ts=100, ts_sz=100, n_classes=3, l=0.1, r=2)
     >>> keys = sorted(d.keys())
     >>> print(keys)
     [10, 20]
     >>> print([d[k] for k in keys])
-    [3, 3]
+    [4, 4]
 
 
     References
@@ -161,7 +164,7 @@ def grabocka_params_to_shapelet_size_dict(ts_sz, n_classes, l, r):
     d = {}
     for sz_idx in range(r):
         shp_sz = base_size * (sz_idx + 1)
-        n_shapelets = int(numpy.log10(ts_sz - shp_sz + 1) * (n_classes - 1))
+        n_shapelets = int(numpy.log10(n_ts * (ts_sz - shp_sz + 1) * (n_classes - 1)))
         d[shp_sz] = n_shapelets
     return d
 
