@@ -31,13 +31,12 @@ print("Correct classification rate:", clf.score(X_test, y_test))
 n_classes = len(set(y_train))
 
 plt.figure()
-idx_start = 0
+support_vectors = clf.support_vectors_time_series_(X_train)
 for i, cl in enumerate(set(y_train)):
     plt.subplot(n_classes, 1, i + 1)
     plt.title("Support vectors for class %d" % (cl))
-    for idx in clf.support_[idx_start:idx_start+clf.n_support_[i]]:
-        plt.plot(X_train[idx].ravel())
-    idx_start += clf.n_support_[i]
+    for ts in support_vectors[i]:
+        plt.plot(ts.ravel())
 
 plt.tight_layout()
 plt.show()

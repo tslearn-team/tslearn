@@ -141,6 +141,7 @@ class TimeSeriesSVC(BaseSVC):
         for cl in range(len(self.n_support_)):
             indices = self.support_[idx_start:idx_start + self.n_support_[cl]]
             sv.append(to_time_series_dataset(X_[indices]))
+            idx_start += self.n_support_[cl]
         return sv
 
     def fit(self, X, y, sample_weight=None):
