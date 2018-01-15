@@ -20,4 +20,5 @@ The complete tslearn project is automatically documented for every module.
    tslearn.piecewise
    tslearn.preprocessing
    tslearn.shapelets
+   tslearn.svm
    tslearn.utils
