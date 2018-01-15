@@ -3,7 +3,6 @@ The :mod:`tslearn.svm` module contains Support Vector Classifier (SVC) and Suppo
 for time series.
 """
 
-from __future__ import print_function
 from sklearn.svm import SVC as BaseSVC, SVR as BaseSVR
 import numpy
 
@@ -100,7 +99,20 @@ class TimeSeriesSVC(BaseSVC):
 
     Examples
     --------
-    TODO
+    >>> from tslearn.generators import random_walk_blobs
+    >>> X, y = random_walk_blobs(n_ts_per_blob=20, sz=256, d=2, n_blobs=2)
+    >>> clf = TimeSeriesSVC(kernel="gak", gamma=.3, sz=256, d=2)
+    >>> clf.fit(X, y).predict(X).shape
+    (40,)
+    >>> sv = clf.support_vectors_time_series_(X)
+    >>> len(sv)
+    2
+    >>> sv[0].shape  # doctest: +ELLIPSIS
+    (..., 256, 2)
+    >>> sv[1].shape  # doctest: +ELLIPSIS
+    (..., 256, 2)
+    >>> sum([sv_i.shape[0] for sv_i in sv]) == clf.n_support_.sum()
+    True
 
     References
     ----------
@@ -122,9 +134,14 @@ class TimeSeriesSVC(BaseSVC):
                                             max_iter=max_iter, decision_function_shape=decision_function_shape,
                                             random_state=random_state)
 
-    @property
-    def support_vectors_time_series_(self):  # TODO
-        return to_time_series_dataset([sv.reshape(self, (-1, self.sz, self.d)) for sv in self.support_vectors_])
+    def support_vectors_time_series_(self, X):
+        X_ = to_time_series_dataset(X)
+        sv = []
+        idx_start = 0
+        for cl in range(len(self.n_support_)):
+            indices = self.support_[idx_start:idx_start + self.n_support_[cl]]
+            sv.append(to_time_series_dataset(X_[indices]))
+        return sv
 
     def fit(self, X, y, sample_weight=None):
         sklearn_X = _prepare_ts_datasets_sklearn(X)
