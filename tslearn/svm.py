@@ -14,6 +14,14 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 def _prepare_ts_datasets_sklearn(X):
+    """Prepare time series datasets for sklearn.
+
+    Examples
+    --------
+    >>> X = to_time_series_dataset([[1, 2, 3], [2, 2, 3]])
+    >>> _prepare_ts_datasets_sklearn(X).shape
+    (2, 3)
+    """
     sklearn_X = to_time_series_dataset(X)
     n_ts, sz, d = sklearn_X.shape
     return sklearn_X.reshape((n_ts, -1))
@@ -101,7 +109,7 @@ class TimeSeriesSVC(BaseSVC):
     --------
     >>> from tslearn.generators import random_walk_blobs
     >>> X, y = random_walk_blobs(n_ts_per_blob=20, sz=256, d=2, n_blobs=2)
-    >>> clf = TimeSeriesSVC(kernel="gak", gamma=.3, sz=256, d=2)
+    >>> clf = TimeSeriesSVC(kernel="gak", gamma=.3, sz=256, d=2, probability=True)
     >>> clf.fit(X, y).predict(X).shape
     (40,)
     >>> sv = clf.support_vectors_time_series_(X)
@@ -113,6 +121,12 @@ class TimeSeriesSVC(BaseSVC):
     (..., 256, 2)
     >>> sum([sv_i.shape[0] for sv_i in sv]) == clf.n_support_.sum()
     True
+    >>> clf.decision_function(X).shape
+    (40,)
+    >>> clf.predict_log_proba(X).shape
+    (40, 2)
+    >>> clf.predict_proba(X).shape
+    (40, 2)
 
     References
     ----------
