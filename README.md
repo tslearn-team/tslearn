@@ -62,6 +62,9 @@ The documentation, including a gallery of examples, is hosted at [readthedocs](h
   * Global Alignment Kernel
   * Soft-DTW from Cuturi and Blondel
 * A `neighbors` module includes nearest neighbor algorithms to be used with time series
+* An `svm` module includes Support Vector Machine algorithms with:
+  * Standard kernels offered in `sklearn` (with adequate array reshaping done for you)
+  * Global Alignment Kernel
 * A `clustering` module includes the following time series clustering algorithms:
   * Standard Euclidean k-means (with adequate array reshaping done for you)
     * Based on `tslearn.barycenters`
