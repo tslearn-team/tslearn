@@ -20,6 +20,8 @@ tslearn.svm.TimeSeriesSVC
       ~TimeSeriesSVC.predict
       ~TimeSeriesSVC.score
       ~TimeSeriesSVC.set_params
+      ~TimeSeriesSVC.predict_log_proba
+      ~TimeSeriesSVC.predict_proba
    
    
 
@@ -31,8 +33,6 @@ tslearn.svm.TimeSeriesSVC
       :toctree: TimeSeriesSVC
    
       ~TimeSeriesSVC.coef_
-      ~TimeSeriesSVC.predict_log_proba
-      ~TimeSeriesSVC.predict_proba
    
    
 
