@@ -32,6 +32,10 @@ class TimeSeriesSVC(BaseSVC):
 
     Parameters
     ----------
+    sz : int
+        Time series length
+    d : int
+        Time series dimensionality
     C : float, optional (default=1.0)
         Penalty parameter C of the error term.
     kernel : string, optional (default='gak')
@@ -87,8 +91,6 @@ class TimeSeriesSVC(BaseSVC):
     ----------
     support_ : array-like, shape = [n_SV]
         Indices of support vectors.
-    support_vectors_time_series_ : array-like, shape = [n_SV, sz, d]
-        Support vectors.
     n_support_ : array-like, dtype=int32, shape = [n_class]
         Number of support vectors for each class.
     dual_coef_ : array, shape = [n_class-1, n_SV]
@@ -96,7 +98,7 @@ class TimeSeriesSVC(BaseSVC):
         For multiclass, coefficient for all 1-vs-1 classifiers.
         The layout of the coefficients in the multiclass case is somewhat
         non-trivial. See the section about multi-class classification in the
-        SVM section of the User Guide for details.
+        SVM section of the User Guide of ``sklearn`` for details.
     coef_ : array, shape = [n_class-1, n_features]
         Weights assigned to the features (coefficients in the primal
         problem). This is only available in the case of a linear kernel.
@@ -109,7 +111,7 @@ class TimeSeriesSVC(BaseSVC):
     --------
     >>> from tslearn.generators import random_walk_blobs
     >>> X, y = random_walk_blobs(n_ts_per_blob=20, sz=256, d=2, n_blobs=2)
-    >>> clf = TimeSeriesSVC(kernel="gak", gamma=.3, sz=256, d=2, probability=True)
+    >>> clf = TimeSeriesSVC(sz=256, d=2, kernel="gak", gamma=.3, probability=True)
     >>> clf.fit(X, y).predict(X).shape
     (40,)
     >>> sv = clf.support_vectors_time_series_(X)
@@ -134,7 +136,7 @@ class TimeSeriesSVC(BaseSVC):
     Marco Cuturi.
     ICML 2011.
     """
-    def __init__(self, C=1.0, kernel="gak", sz=None, d=None, degree=3, gamma="auto", coef0=0.0, shrinking=True,
+    def __init__(self, sz, d, C=1.0, kernel="gak", degree=3, gamma="auto", coef0=0.0, shrinking=True,
                  probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1,
                  decision_function_shape="ovr", random_state=None):  # TODO: gamma auto
         self.sz = sz
@@ -154,7 +156,7 @@ class TimeSeriesSVC(BaseSVC):
         idx_start = 0
         for cl in range(len(self.n_support_)):
             indices = self.support_[idx_start:idx_start + self.n_support_[cl]]
-            sv.append(to_time_series_dataset(X_[indices]))
+            sv.append(X_[indices])
             idx_start += self.n_support_[cl]
         return sv
 
@@ -177,3 +179,115 @@ class TimeSeriesSVC(BaseSVC):
     def predict_proba(self, X):
         sklearn_X = _prepare_ts_datasets_sklearn(X)
         return super(TimeSeriesSVC, self).predict_proba(sklearn_X)
+
+    def score(self, X, y, sample_weight=None):
+        return super(TimeSeriesSVC, self).score(X, y, sample_weight=sample_weight)
+
+
+class TimeSeriesSVR(BaseSVR):
+    """Time-series specific Support Vector Regressor.
+
+    Parameters
+    ----------
+    sz : int
+        Time series length
+    d : int
+        Time series dimensionality
+    C : float, optional (default=1.0)
+        Penalty parameter C of the error term.
+    epsilon : float, optional (default=0.1)
+         Epsilon in the epsilon-SVR model. It specifies the epsilon-tube
+         within which no penalty is associated in the training loss function
+         with points predicted within a distance epsilon from the actual
+         value.
+    kernel : string, optional (default='gak')
+         Specifies the kernel type to be used in the algorithm.
+         It must be one of 'gak' or a kernel accepted by ``sklearn.svm.SVC``.
+         If none is given, 'gak' will be used. If a callable is given it is
+         used to pre-compute the kernel matrix from data matrices; that matrix
+         should be an array of shape ``(n_samples, n_samples)``.
+    degree : int, optional (default=3)
+        Degree of the polynomial kernel function ('poly').
+        Ignored by all other kernels.
+    gamma : float, optional (default='auto')
+        Kernel coefficient for 'gak', 'rbf', 'poly' and 'sigmoid'.
+        If gamma is 'auto' then 1/n_features will be used instead.
+    coef0 : float, optional (default=0.0)
+        Independent term in kernel function.
+        It is only significant in 'poly' and 'sigmoid'.
+    shrinking : boolean, optional (default=True)
+        Whether to use the shrinking heuristic.
+    tol : float, optional (default=1e-3)
+        Tolerance for stopping criterion.
+    cache_size : float, optional
+        Specify the size of the kernel cache (in MB).
+    verbose : bool, default: False
+        Enable verbose output. Note that this setting takes advantage of a
+        per-process runtime setting in libsvm that, if enabled, may not work
+        properly in a multithreaded context.
+    max_iter : int, optional (default=-1)
+        Hard limit on iterations within solver, or -1 for no limit.
+
+    Attributes
+    ----------
+    support_ : array-like, shape = [n_SV]
+        Indices of support vectors.
+    dual_coef_ : array, shape = [1, n_SV]
+        Coefficients of the support vector in the decision function.
+    coef_ : array, shape = [1, n_features]
+        Weights assigned to the features (coefficients in the primal
+        problem). This is only available in the case of a linear kernel.
+        `coef_` is readonly property derived from `dual_coef_` and
+        `support_vectors_`.
+    intercept_ : array, shape = [1]
+        Constants in decision function.
+    sample_weight : array-like, shape = [n_samples]
+        Individual weights for each sample
+
+    Examples
+    --------
+    >>> from tslearn.generators import random_walk_blobs
+    >>> X, y = random_walk_blobs(n_ts_per_blob=20, sz=256, d=2, n_blobs=2)
+    >>> import numpy
+    >>> y = y.astype(numpy.float) + numpy.random.randn(40) * .1
+    >>> reg = TimeSeriesSVR(sz=256, d=2, kernel="gak", gamma=.3)
+    >>> reg.fit(X, y).predict(X).shape
+    (40,)
+    >>> sv = reg.support_vectors_time_series_(X)
+    >>> sv.shape  # doctest: +ELLIPSIS
+    (..., 256, 2)
+    >>> sv.shape[0] <= 40
+    True
+
+
+    References
+    ----------
+    Fast Global Alignment Kernels.
+    Marco Cuturi.
+    ICML 2011.
+    """
+    def __init__(self, sz, d, kernel="gak", degree=3, gamma="auto", coef0=0.0, tol=0.001, C=1.0, epsilon=0.1,
+                 shrinking=True, cache_size=200, verbose=False, max_iter=-1):  # TODO: gamma auto
+        self.sz = sz
+        self.d = d
+        if kernel == "gak":
+            kernel = lambda x, y: cdist_gak(x.reshape((-1, sz, d)), y.reshape((-1, sz, d)),
+                                            sigma=numpy.sqrt(gamma / 2.))
+        super(TimeSeriesSVR, self).__init__(C=C, kernel=kernel, degree=degree, gamma=gamma, coef0=coef0,
+                                            shrinking=shrinking, tol=tol, cache_size=cache_size, epsilon=epsilon,
+                                            verbose=verbose, max_iter=max_iter)
+
+    def support_vectors_time_series_(self, X):
+        X_ = to_time_series_dataset(X)
+        return X_[self.support_]
+
+    def fit(self, X, y, sample_weight=None):
+        sklearn_X = _prepare_ts_datasets_sklearn(X)
+        return super(TimeSeriesSVR, self).fit(sklearn_X, y, sample_weight=sample_weight)
+
+    def predict(self, X):
+        sklearn_X = _prepare_ts_datasets_sklearn(X)
+        return super(TimeSeriesSVR, self).predict(sklearn_X)
+
+    def score(self, X, y, sample_weight=None):
+        return super(TimeSeriesSVR, self).score(X, y, sample_weight=sample_weight)

@@ -10,7 +10,8 @@ tslearn.svm
       :template: class.rst
    
       TimeSeriesSVC
-   
+      TimeSeriesSVR
+
    
 
    
