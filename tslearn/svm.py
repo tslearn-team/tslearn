@@ -6,7 +6,7 @@ for time series.
 from sklearn.svm import SVC as BaseSVC, SVR as BaseSVR
 import numpy
 
-from tslearn.metrics import cdist_gak
+from tslearn.metrics import cdist_gak, gamma_soft_dtw
 from tslearn.utils import to_time_series_dataset
 
 
@@ -25,6 +25,12 @@ def _prepare_ts_datasets_sklearn(X):
     sklearn_X = to_time_series_dataset(X)
     n_ts, sz, d = sklearn_X.shape
     return sklearn_X.reshape((n_ts, -1))
+
+
+def _kernel_func_gak(sz, d, gamma):
+    if gamma == "auto":
+        gamma = 1.
+    return lambda x, y: cdist_gak(x.reshape((-1, sz, d)), y.reshape((-1, sz, d)), sigma=numpy.sqrt(gamma / 2.))
 
 
 class TimeSeriesSVC(BaseSVC):
@@ -49,7 +55,9 @@ class TimeSeriesSVC(BaseSVC):
         Ignored by all other kernels.
     gamma : float, optional (default='auto')
         Kernel coefficient for 'gak', 'rbf', 'poly' and 'sigmoid'.
-        If gamma is 'auto' then 1/n_features will be used instead.
+        If gamma is 'auto' then:
+        - for 'gak' kernel, it is computed based on a sampling of the training set (cf `tslearn.metrics.gamma_soft_dtw`)
+        - for other kernels (eg. 'rbf'), 1/n_features will be used.
     coef0 : float, optional (default=0.0)
         Independent term in kernel function.
         It is only significant in 'poly' and 'sigmoid'.
@@ -111,7 +119,7 @@ class TimeSeriesSVC(BaseSVC):
     --------
     >>> from tslearn.generators import random_walk_blobs
     >>> X, y = random_walk_blobs(n_ts_per_blob=20, sz=256, d=2, n_blobs=2)
-    >>> clf = TimeSeriesSVC(sz=256, d=2, kernel="gak", gamma=.3, probability=True)
+    >>> clf = TimeSeriesSVC(sz=256, d=2, kernel="gak", gamma="auto", probability=True)
     >>> clf.fit(X, y).predict(X).shape
     (40,)
     >>> sv = clf.support_vectors_time_series_(X)
@@ -138,12 +146,11 @@ class TimeSeriesSVC(BaseSVC):
     """
     def __init__(self, sz, d, C=1.0, kernel="gak", degree=3, gamma="auto", coef0=0.0, shrinking=True,
                  probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1,
-                 decision_function_shape="ovr", random_state=None):  # TODO: gamma auto
+                 decision_function_shape="ovr", random_state=None):
         self.sz = sz
         self.d = d
         if kernel == "gak":
-            kernel = lambda x, y: cdist_gak(x.reshape((-1, sz, d)), y.reshape((-1, sz, d)),
-                                            sigma=numpy.sqrt(gamma / 2.))
+            kernel = _kernel_func_gak(sz=sz, d=d, gamma=gamma)
         super(TimeSeriesSVC, self).__init__(C=C, kernel=kernel, degree=degree, gamma=gamma, coef0=coef0,
                                             shrinking=shrinking, probability=probability, tol=tol,
                                             cache_size=cache_size, class_weight=class_weight, verbose=verbose,
@@ -162,6 +169,9 @@ class TimeSeriesSVC(BaseSVC):
 
     def fit(self, X, y, sample_weight=None):
         sklearn_X = _prepare_ts_datasets_sklearn(X)
+        if self.kernel == "gak" and self.gamma == "auto":
+            self.gamma = gamma_soft_dtw(to_time_series_dataset(X))
+            self.kernel = _kernel_func_gak(sz=self.sz, d=self.d, gamma=self.gamma)
         return super(TimeSeriesSVC, self).fit(sklearn_X, y, sample_weight=sample_weight)
 
     def predict(self, X):
@@ -211,7 +221,9 @@ class TimeSeriesSVR(BaseSVR):
         Ignored by all other kernels.
     gamma : float, optional (default='auto')
         Kernel coefficient for 'gak', 'rbf', 'poly' and 'sigmoid'.
-        If gamma is 'auto' then 1/n_features will be used instead.
+        If gamma is 'auto' then:
+        - for 'gak' kernel, it is computed based on a sampling of the training set (cf `tslearn.metrics.gamma_soft_dtw`)
+        - for other kernels (eg. 'rbf'), 1/n_features will be used.
     coef0 : float, optional (default=0.0)
         Independent term in kernel function.
         It is only significant in 'poly' and 'sigmoid'.
@@ -250,7 +262,7 @@ class TimeSeriesSVR(BaseSVR):
     >>> X, y = random_walk_blobs(n_ts_per_blob=20, sz=256, d=2, n_blobs=2)
     >>> import numpy
     >>> y = y.astype(numpy.float) + numpy.random.randn(40) * .1
-    >>> reg = TimeSeriesSVR(sz=256, d=2, kernel="gak", gamma=.3)
+    >>> reg = TimeSeriesSVR(sz=256, d=2, kernel="gak", gamma="auto")
     >>> reg.fit(X, y).predict(X).shape
     (40,)
     >>> sv = reg.support_vectors_time_series_(X)
@@ -267,12 +279,11 @@ class TimeSeriesSVR(BaseSVR):
     ICML 2011.
     """
     def __init__(self, sz, d, kernel="gak", degree=3, gamma="auto", coef0=0.0, tol=0.001, C=1.0, epsilon=0.1,
-                 shrinking=True, cache_size=200, verbose=False, max_iter=-1):  # TODO: gamma auto
+                 shrinking=True, cache_size=200, verbose=False, max_iter=-1):
         self.sz = sz
         self.d = d
         if kernel == "gak":
-            kernel = lambda x, y: cdist_gak(x.reshape((-1, sz, d)), y.reshape((-1, sz, d)),
-                                            sigma=numpy.sqrt(gamma / 2.))
+            kernel = _kernel_func_gak(sz=sz, d=d, gamma=gamma)
         super(TimeSeriesSVR, self).__init__(C=C, kernel=kernel, degree=degree, gamma=gamma, coef0=coef0,
                                             shrinking=shrinking, tol=tol, cache_size=cache_size, epsilon=epsilon,
                                             verbose=verbose, max_iter=max_iter)
@@ -283,6 +294,9 @@ class TimeSeriesSVR(BaseSVR):
 
     def fit(self, X, y, sample_weight=None):
         sklearn_X = _prepare_ts_datasets_sklearn(X)
+        if self.kernel == "gak" and self.gamma == "auto":
+            self.gamma = gamma_soft_dtw(to_time_series_dataset(X))
+            self.kernel = _kernel_func_gak(sz=self.sz, d=self.d, gamma=self.gamma)
         return super(TimeSeriesSVR, self).fit(sklearn_X, y, sample_weight=sample_weight)
 
     def predict(self, X):
