@@ -36,9 +36,9 @@ install:
 - conda update -q conda
 - conda info -a
 - if [[ -z ${KERAS_IGNORE+x} ]];
-  then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy==1.13 scipy tensorflow keras
+  then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy=1.13 scipy tensorflow keras
   scikit-learn nose;
-  else conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy==1.13 scipy scikit-learn nose; fi
+  else conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy=1.13 scipy scikit-learn nose; fi
 - source activate test-environment
 - if [[ -z ${KERAS_IGNORE+x} ]];
   then pip install git+git://github.com/Theano/Theano.git; conda install mkl-service && export MKL_THREADING_LAYER=GNU;
