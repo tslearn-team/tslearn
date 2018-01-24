@@ -44,6 +44,7 @@ install:
   then pip install git+git://github.com/Theano/Theano.git; conda install mkl-service && export MKL_THREADING_LAYER=GNU;
   fi
 - pip install coverage==4.3.1
+- pip install -r requirements-test.txt
 - pip install argparse
 - pip install codeclimate-test-reporter
 - rm -f tslearn/*.c
