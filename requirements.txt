@@ -1,5 +1,6 @@
 Cython
 numpy
+matplotlib
 scipy
 scikit-learn
 sphinx>=1.4
