@@ -55,8 +55,7 @@ script:
   sed -i -e 's/"backend":[[:space:]]*"[^"]*/"backend":\ "'$KERAS_BACKEND'/g' ~/.keras/keras.json;
   echo -e "Running tests with the following config:\n$(cat ~/.keras/keras.json)";
   else pip install nose-pattern-exclude; fi
-- nosetests --exclude-dir=tests
-- nosetests $KERAS_IGNORE --with-doctest --with-coverage --cover-erase --cover-package=tslearn
+- py.test $KERAS_IGNORE tslearn  --doctest-modules --cov-report term --cov=tslearn
 - if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then codeclimate-test-reporter; fi
 notifications:
   email: false
