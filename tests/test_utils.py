@@ -14,7 +14,7 @@ def test_arraylike_copy(test_array, expected_output):
 	#check array type
 	assert isinstance(_arraylike_copy(test_array), np.ndarray)
 	#check deep copy for numpy array input
-	assert not np.may_share_memory(test_array, _arraylike_copy(test_array))
+	assert not np.shares_memory(test_array, _arraylike_copy(test_array))
 
 
 
