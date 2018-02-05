@@ -255,7 +255,8 @@ def gak(s1, s2, sigma=1.):
     """
     s1 = to_time_series(s1)
     s2 = to_time_series(s2)
-    return cynormalized_gak(s1, s2, sigma)
+    gamma = 1. / (2 * sigma ** 2)
+    return numpy.exp(-soft_dtw(s1, s2, gamma=gamma) / gamma)  #cynormalized_gak(s1, s2, sigma)
 
 
 def cdist_gak(dataset1, dataset2=None, sigma=1.):
@@ -301,7 +302,7 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.):
         self_similarity = True
     else:
         dataset2 = to_time_series_dataset(dataset2)
-    return cycdist_gak(dataset1, dataset2, sigma, self_similarity=self_similarity)
+    return numpy.array([[gak(s1, s2, sigma=sigma) for s2 in dataset2] for s1 in dataset1])# cycdist_gak(dataset1, dataset2, sigma, self_similarity=self_similarity)
 
 
 def sigma_gak(dataset, n_samples=100, random_state=None):
@@ -342,12 +343,14 @@ def sigma_gak(dataset, n_samples=100, random_state=None):
     random_state = check_random_state(random_state)
     dataset = to_time_series_dataset(dataset)
     n_ts, sz, d = dataset.shape
+    if not check_equal_size(dataset):
+        sz = numpy.min([ts_size(ts) for ts in dataset])
     if n_ts * sz < n_samples:
         replace = True
     else:
         replace = False
     sample_indices = random_state.choice(n_ts * sz, size=n_samples, replace=replace)
-    dists = pdist(dataset.reshape((-1, d))[sample_indices], metric="euclidean")
+    dists = pdist(dataset[:, :sz, :].reshape((-1, d))[sample_indices], metric="euclidean")
     return numpy.median(dists) * numpy.sqrt(sz)
 
 
@@ -535,7 +538,7 @@ def soft_dtw(ts1, ts2, gamma=1.):
     """
     if gamma == 0.:
         return dtw(ts1, ts2)
-    return SoftDTW(SquaredEuclidean(ts1, ts2), gamma=numpy.float64(gamma)).compute()
+    return SoftDTW(SquaredEuclidean(ts1[:ts_size(ts1)], ts2[:ts_size(ts2)]), gamma=numpy.float64(gamma)).compute()
 
 
 def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
