@@ -255,7 +255,7 @@ def gak(s1, s2, sigma=1.):
     """
     s1 = to_time_series(s1)
     s2 = to_time_series(s2)
-    gamma = 1. / (2 * sigma ** 2)
+    gamma = 2 * sigma ** 2
     return numpy.exp(-soft_dtw(s1, s2, gamma=gamma) / gamma)  #cynormalized_gak(s1, s2, sigma)
 
 
@@ -303,6 +303,62 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.):
     else:
         dataset2 = to_time_series_dataset(dataset2)
     return numpy.array([[gak(s1, s2, sigma=sigma) for s2 in dataset2] for s1 in dataset1])# cycdist_gak(dataset1, dataset2, sigma, self_similarity=self_similarity)
+
+
+def cdist_gak_normalized(dataset1, dataset2=None, sigma=1.):
+    """Compute normalized cross-similarity matrix using Global Alignment kernel (GAK).
+
+    Normalized means that any kij element in the returned matrix is between 0 and 1 and self-similarity is 1.
+
+    GAK was originally presented in [1]_.
+
+    Parameters
+    ----------
+    dataset1
+        A dataset of time series
+    dataset2
+        Another dataset of time series
+    sigma : float (default 1.)
+        Bandwidth of the internal gaussian kernel used for GAK
+
+    Returns
+    -------
+    numpy.ndarray
+        Normalized cross-similarity matrix (has ones on the diagonal is `dataset2` is `None`).
+
+    Examples
+    --------
+    >>> cdist_gak_normalized([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 2, 3]], sigma=2.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    array([[ 1. ],
+           [ 0.656... ]])
+    >>> cdist_gak_normalized([[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    array([[ 1. , 0.656...],
+           [ 0.656..., 1. ]])
+
+    See Also
+    --------
+    gak : Compute Global Alignment kernel
+
+    References
+    ----------
+    .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
+    """
+    dataset1 = to_time_series_dataset(dataset1)
+    self_similarity = False
+    if dataset2 is None:
+        dataset2 = dataset1
+        self_similarity = True
+    else:
+        dataset2 = to_time_series_dataset(dataset2)
+    mat = numpy.array([[gak(s1, s2, sigma=sigma) for s2 in dataset2] for s1 in dataset1])
+    if self_similarity:
+        normalizer = numpy.sqrt(numpy.diag(mat))
+        mat_normalizer = numpy.dot(normalizer.reshape((-1, 1)), normalizer.reshape((1, -1)))
+    else:
+        row_normalizer = numpy.sqrt(numpy.array([gak(s2, s2, sigma=sigma) for s2 in dataset2]))
+        column_normalizer = numpy.sqrt(numpy.array([gak(s1, s1, sigma=sigma) for s1 in dataset1]))
+        mat_normalizer = numpy.dot(column_normalizer.reshape((-1, 1)), row_normalizer.reshape((1, -1)))
+    return mat / mat_normalizer
 
 
 def sigma_gak(dataset, n_samples=100, random_state=None):
@@ -538,7 +594,7 @@ def soft_dtw(ts1, ts2, gamma=1.):
     """
     if gamma == 0.:
         return dtw(ts1, ts2)
-    return SoftDTW(SquaredEuclidean(ts1[:ts_size(ts1)], ts2[:ts_size(ts2)]), gamma=numpy.float64(gamma)).compute()
+    return SoftDTW(SquaredEuclidean(ts1[:ts_size(ts1)], ts2[:ts_size(ts2)]), gamma=gamma).compute()
 
 
 def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):

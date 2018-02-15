@@ -13,7 +13,7 @@ import numpy
 from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw, dtw
 from tslearn.barycenters import EuclideanBarycenter, DTWBarycenterAveraging, SoftDTWBarycenter
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
-from tslearn.utils import to_time_series_dataset
+from tslearn.utils import to_time_series_dataset, check_equal_size, ts_size
 from tslearn.cycc import cdist_normalized_cc, y_shifted_sbd_vec
 
 
@@ -449,8 +449,9 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         self.gamma_sdtw = metric_params.get("gamma_sdtw", 1.)
 
     def _fit_one_init(self, X, x_squared_norms, rs):
-        n_ts, sz, d = X.shape
-        self.cluster_centers_ = _k_init(X.reshape((n_ts, -1)),
+        n_ts, _, d = X.shape
+        sz = min([ts_size(ts) for ts in X])
+        self.cluster_centers_ = _k_init(X[:, :sz, :].reshape((n_ts, -1)),
                                         self.n_clusters, x_squared_norms, rs).reshape((-1, sz, d))
         old_inertia = numpy.inf
 
