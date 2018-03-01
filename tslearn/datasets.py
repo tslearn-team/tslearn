@@ -141,14 +141,21 @@ class UCR_UEA_datasets(object):
         2
         >>> dict_acc["Adiac"]  # doctest: +ELLIPSIS
         {'C45': 0.542199...}
+        >>> dict_acc = uea_ucr.baseline_accuracy()
+        >>> len(dict_acc)
+        85
         """
         d_out = {}
         for perfs_dict in csv.DictReader(open(self._baseline_scores_filename, "r"), delimiter=","):
-            if list_datasets is None or perfs_dict[""] in list_datasets:
-                d_out[perfs_dict[""]] = {}
+            dataset_name = perfs_dict[""]
+            if list_datasets is None or dataset_name in list_datasets:
+                d_out[dataset_name] = {}
                 for m in perfs_dict.keys():
                     if m != "" and (list_methods is None or m in list_methods):
-                        d_out[perfs_dict[""]][m] = float(perfs_dict[m])
+                        try:
+                            d_out[dataset_name][m] = float(perfs_dict[m])
+                        except ValueError:  # Missing score case (score is then "")
+                            pass
         return d_out
 
     def list_datasets(self):
