@@ -13,6 +13,7 @@ setup(
     include_dirs=[numpy.get_include()],
     packages=['tslearn'],
     package_data={"tslearn": [".cached_datasets/Trace.npz"]},
+    data_files = [("", ["LICENSE"])],
     install_requires=['numpy', 'scipy', 'scikit-learn', 'Cython'],
     ext_modules=ext,
     cmdclass={'build_ext': _build_ext},
