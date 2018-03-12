@@ -428,15 +428,10 @@ class ShapeletModel:
         else:
             concatenated_features = pool_layers[0]
             concatenated_locations = pool_layers_locations[0]
-        if self.weight_regularizer > 0.:
-            outputs = Dense(units=n_classes,
-                            activation="softmax",
-                            kernel_regularizer=l2(self.weight_regularizer),
-                            name="softmax")(concatenated_features)
-        else:
-            outputs = Dense(units=n_classes,
-                            activation="softmax",
-                            name="softmax")(concatenated_features)
+        outputs = Dense(units=n_classes,
+                        activation="softmax",
+                        kernel_regularizer=l2(self.weight_regularizer) if self.weight_regularizer > 0 else None,
+                        name="softmax")(concatenated_features)
         self.model = Model(inputs=inputs, outputs=outputs)
         self.transformer_model = Model(inputs=inputs, outputs=concatenated_features)
         self.locator_model = Model(inputs=inputs, outputs=concatenated_locations)
