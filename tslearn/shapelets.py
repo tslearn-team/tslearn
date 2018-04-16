@@ -305,14 +305,18 @@ class ShapeletModel:
         if y.ndim == 1:
             self.label_binarizer = LabelBinarizer().fit(y)
             y_ = self.label_binarizer.transform(y)
-            if y_.shape[1] == 1:
-                y_ = numpy.hstack((y_, 1 - y_))
+            # if y_.shape[1] == 1:
+            #     y_ = numpy.hstack((y_, 1 - y_))
         else:
             y_ = y
             self.categorical_y = True
-        n_classes = y_.shape[1]
+            assert y_.shape[1] != 2, "Binary classification case, mondodimensional y should be passed."
+        if y_.ndim == 1:
+            n_classes = 2
+        else:
+            n_classes = y_.shape[1]
         self._set_model_layers(X=X, ts_sz=sz, d=d, n_classes=n_classes)
-        self.model.compile(loss="categorical_crossentropy",
+        self.model.compile(loss="categorical_crossentropy" if n_classes > 2 else "binary_crossentropy",
                            optimizer=self.optimizer,
                            metrics=[categorical_accuracy,
                                     categorical_crossentropy])
@@ -428,10 +432,10 @@ class ShapeletModel:
         else:
             concatenated_features = pool_layers[0]
             concatenated_locations = pool_layers_locations[0]
-        outputs = Dense(units=n_classes,
-                        activation="softmax",
+        outputs = Dense(units=n_classes if n_classes > 2 else 1,
+                        activation="softmax" if n_classes > 2 else "sigmoid",
                         kernel_regularizer=l2(self.weight_regularizer) if self.weight_regularizer > 0 else None,
-                        name="softmax")(concatenated_features)
+                        name="classification")(concatenated_features)
         self.model = Model(inputs=inputs, outputs=outputs)
         self.transformer_model = Model(inputs=inputs, outputs=concatenated_features)
         self.locator_model = Model(inputs=inputs, outputs=concatenated_locations)
@@ -446,7 +450,7 @@ class ShapeletModel:
             If None, all model weights are returned.
             Available layer names with weights are:
             - "shapelets_i_j" with i an integer for the shapelet id and j an integer for the dimension
-            - "softmax" for the final classification layer
+            - "classification" for the final classification layer
 
         Returns
         -------
@@ -457,8 +461,8 @@ class ShapeletModel:
         --------
         >>> from tslearn.generators import random_walk_blobs
         >>> X, y = random_walk_blobs(n_ts_per_blob=100, sz=256, d=1, n_blobs=3)
-        >>> clf = ShapeletModel(n_shapelets_per_size={10: 5}, max_iter=1, verbose_level=0)
-        >>> clf.fit(X, y).get_weights("softmax")[0].shape
+        >>> clf = ShapeletModel(n_shapelets_per_size={10: 5}, max_iter=0, verbose_level=0)
+        >>> clf.fit(X, y).get_weights("classification")[0].shape
         (5, 3)
         """
         if layer_name is None:
