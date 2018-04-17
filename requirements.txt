@@ -1,5 +1,5 @@
 Cython
-numpy==1.13
+numpy
 scipy
 scikit-learn
 sphinx>=1.4
