@@ -6,5 +6,6 @@ sphinx>=1.4
 ipykernel
 nbsphinx
 sphinx-gallery
-tensorflow==1.6
+pillow
+tensorflow
 keras

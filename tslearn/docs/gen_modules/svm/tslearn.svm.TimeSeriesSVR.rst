@@ -19,7 +19,6 @@ tslearn.svm.TimeSeriesSVR
       ~TimeSeriesSVR.predict
       ~TimeSeriesSVR.score
       ~TimeSeriesSVR.set_params
-      ~TimeSeriesSVR.support_vectors_time_series_
    
    
 
@@ -31,6 +30,7 @@ tslearn.svm.TimeSeriesSVR
       :toctree: TimeSeriesSVR
    
       ~TimeSeriesSVR.coef_
+      ~TimeSeriesSVR.support_vectors_time_series_
    
    
 

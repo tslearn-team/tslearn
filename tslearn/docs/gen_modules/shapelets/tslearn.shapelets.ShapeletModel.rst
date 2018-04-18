@@ -21,6 +21,17 @@ tslearn.shapelets.ShapeletModel
       ~ShapeletModel.predict
       ~ShapeletModel.transform
       ~ShapeletModel.locate
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+      :toctree: ShapeletModel
+
+      ~ShapeletModel.shapelets_
    
    
 
