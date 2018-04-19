@@ -22,18 +22,6 @@ tslearn.svm.TimeSeriesSVR
    
    
 
-   
-   
-   .. rubric:: Attributes
-
-   .. autosummary::
-      :toctree: TimeSeriesSVR
-   
-      ~TimeSeriesSVR.coef_
-      ~TimeSeriesSVR.support_vectors_time_series_
-   
-   
-
 .. include:: ../backreferences/tslearn.svm.TimeSeriesSVR.examples
 
 .. raw:: html

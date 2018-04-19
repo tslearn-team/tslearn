@@ -74,3 +74,39 @@ Examples using ``tslearn.preprocessing.TimeSeriesScalerMeanVariance``
 .. only:: not html
 
     * :ref:`sphx_glr_auto_examples_plot_kernel_kmeans.py`
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example uses :math:`k`-means clustering for time series. Three variants of the algorithm a...">
+
+.. only:: html
+
+    .. figure:: /auto_examples/images/thumb/sphx_glr_plot_kmeans_thumb.png
+
+        :ref:`sphx_glr_auto_examples_plot_kmeans.py`
+
+.. raw:: html
+
+    </div>
+
+.. only:: not html
+
+    * :ref:`sphx_glr_auto_examples_plot_kmeans.py`
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example presents a comparison between PAA, SAX and 1d-SAX features. ">
+
+.. only:: html
+
+    .. figure:: /auto_examples/images/thumb/sphx_glr_plot_sax_thumb.png
+
+        :ref:`sphx_glr_auto_examples_plot_sax.py`
+
+.. raw:: html
+
+    </div>
+
+.. only:: not html
+
+    * :ref:`sphx_glr_auto_examples_plot_sax.py`

@@ -22,17 +22,6 @@ tslearn.svm.TimeSeriesSVC
       ~TimeSeriesSVC.set_params
       ~TimeSeriesSVC.predict_log_proba
       ~TimeSeriesSVC.predict_proba
-   
-   
-
-   
-   
-   .. rubric:: Attributes
-
-   .. autosummary::
-      :toctree: TimeSeriesSVC
-   
-      ~TimeSeriesSVC.coef_
       ~TimeSeriesSVC.support_vectors_time_series_
    
    
