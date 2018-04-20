@@ -26,7 +26,7 @@ The easiest way to install ``tslearn`` is probably via ``conda``:
 Using PyPI
 ``````````
 
-The easiest way to install ``tslearn`` is probably via ``pip``:
+Using ``pip`` should also work fine:
 
 .. code-block:: bash
   

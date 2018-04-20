@@ -31,7 +31,7 @@ conda install -c conda-forge tslearn
 
 ## Using PyPI
 
-Using `pip` should work fine also:
+Using `pip` should also work fine:
 ```bash
 pip install tslearn
 ```
