@@ -14,6 +14,15 @@ If you plan to use the ``shapelets`` module from ``tslearn``, ``keras`` should a
 Installation
 ------------
 
+Using conda
+```````````
+
+The easiest way to install ``tslearn`` is probably via ``conda``:
+
+.. code-block:: bash
+
+    conda install -c conda-forge tslearn
+
 Using PyPI
 ``````````
 
@@ -32,6 +41,28 @@ If you want to get ``tslearn``'s latest version, you can refer to the repository
 .. code-block:: bash
   
     pip install git+https://github.com/rtavenar/tslearn.git
+
+
+Troubleshooting
+```````````````
+
+It seems on some platforms ``Cython`` dependency does not install properly.
+If you experiment such an issue, try installing it with the following command:
+
+.. code-block:: bash
+
+    pip install cython
+
+
+or (depending on your preferred python package manager):
+
+.. code-block:: bash
+
+    conda install -c anaconda cython
+
+
+before you start installing ``tslearn``.
+
 
 Navigation
 ----------

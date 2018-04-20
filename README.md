@@ -22,9 +22,16 @@ If you plan to use the `shapelets` module, `keras` should also be installed.
 
 # Installation
 
+## Using conda
+
+The easiest way to install `tslearn` is probably via `conda`:
+```bash
+conda install -c conda-forge tslearn
+```
+
 ## Using PyPI
 
-The easiest way to install `tslearn` is probably via `pip`:
+Using `pip` should work fine also:
 ```bash
 pip install tslearn
 ```
@@ -43,6 +50,11 @@ If you experiment such an issue, try installing it with the following command:
 
 ```bash 
 pip install cython
+```
+
+or (depending on your preferred python package manager):
+```bash
+conda install -c anaconda cython
 ```
 
 before you start installing `tslearn`.
