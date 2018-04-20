@@ -12,10 +12,12 @@ This example illustrates the use of nearest neighbor methods for database search
 from __future__ import print_function
 import numpy
 from sklearn.metrics import accuracy_score
+from sklearn.pipeline import Pipeline
 
 from tslearn.generators import random_walk_blobs
 from tslearn.preprocessing import TimeSeriesScalerMinMax
 from tslearn.neighbors import KNeighborsTimeSeriesClassifier, KNeighborsTimeSeries
+from tslearn.piecewise import SymbolicAggregateApproximation
 
 numpy.random.seed(0)
 n_ts_per_blob, sz, d, n_blobs = 20, 100, 1, 2
@@ -55,4 +57,13 @@ knn_clf = KNeighborsTimeSeriesClassifier(n_neighbors=3, metric="euclidean")
 knn_clf.fit(X_train, y_train)
 predicted_labels = knn_clf.predict(X_test)
 print("\n3. Nearest neighbour classification using L2")
+print("Correct classification rate:", accuracy_score(y_test, predicted_labels))
+
+# Nearest neigbhor classification  based on SAX representation
+sax_trans = SymbolicAggregateApproximation(n_segments=10, alphabet_size_avg=5)
+knn_clf = KNeighborsTimeSeriesClassifier(n_neighbors=3, metric="euclidean")
+pipeline_model = Pipeline(steps=[('sax', sax_trans), ('knn', knn_clf)])
+pipeline_model.fit(X_train, y_train)
+predicted_labels = pipeline_model.predict(X_test)
+print("\n3. Nearest neighbour classification using SAX+L2")
 print("Correct classification rate:", accuracy_score(y_test, predicted_labels))
