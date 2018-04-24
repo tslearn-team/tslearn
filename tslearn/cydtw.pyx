@@ -171,6 +171,62 @@ def cdist_dtw(numpy.ndarray[DTYPE_t, ndim=3] dataset1,
 
     return cross_dist
 
+
+
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def dtw_subsequence_path(numpy.ndarray[DTYPE_t, ndim=2] subseq, numpy.ndarray[DTYPE_t, ndim=2] longseq):
+    assert subseq.dtype == DTYPE and longseq.dtype == DTYPE
+
+    cdef int lsub = ts_size(subseq)
+    cdef int llong = ts_size(longseq)
+
+    cdef int i = 0
+    cdef int j = 0
+    cdef int argmin_pred = -1
+    cdef numpy.ndarray[DTYPE_t, ndim=2] cross_dist = cdist(subseq[:lsub], longseq[:llong], "sqeuclidean").astype(DTYPE)
+    cdef numpy.ndarray[DTYPE_t, ndim=2] cum_sum = numpy.zeros((lsub + 1, llong + 1), dtype=DTYPE)
+    cum_sum[1:, 0] = numpy.inf
+    cdef numpy.ndarray[numpy.int_t, ndim=3] predecessors = numpy.zeros((lsub, llong, 2), dtype=numpy.int) - 1
+    cdef numpy.ndarray[DTYPE_t, ndim=1] candidates = numpy.zeros((3, ), dtype=DTYPE)
+    cdef list best_path
+
+    for i in range(lsub):
+        for j in range(llong):
+            cum_sum[i + 1, j + 1] = cross_dist[i, j]
+            candidates[0] = cum_sum[i, j + 1]
+            candidates[1] = cum_sum[i + 1, j]
+            candidates[2] = cum_sum[i, j]
+            if candidates[0] <= candidates[1] and candidates[0] <= candidates[2]:
+                argmin_pred = 0
+            elif candidates[1] <= candidates[2]:
+                argmin_pred = 1
+            else:
+                argmin_pred = 2
+            cum_sum[i + 1, j + 1] += candidates[argmin_pred]
+            if i > 0:
+                if argmin_pred == 0:
+                    predecessors[i, j, 0] = i - 1
+                    predecessors[i, j, 1] = j
+                elif argmin_pred == 1:
+                    predecessors[i, j, 0] = i
+                    predecessors[i, j, 1] = j - 1
+                else:
+                    predecessors[i, j, 0] = i - 1
+                    predecessors[i, j, 1] = j - 1
+
+    i = lsub - 1
+    j = numpy.argmin(cum_sum[lsub, :]) - 1
+    best_path = [(i, j)]
+    while predecessors[i, j, 0] >= 0 and predecessors[i, j, 1] >= 0:
+        i, j = predecessors[i, j, 0], predecessors[i, j, 1]
+        best_path.insert(0, (i, j))
+
+    return best_path, numpy.sqrt(cum_sum[lsub, best_path[len(best_path) - 1][1] + 1])
+
+
 @cython.boundscheck(False) # turn off bounds-checking for entire function
 @cython.wraparound(False)  # turn off negative index wrapping for entire function
 def lb_envelope(numpy.ndarray[DTYPE_t, ndim=2] time_series, int radius):

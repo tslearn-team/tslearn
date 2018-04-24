@@ -8,7 +8,8 @@ from sklearn.utils import check_random_state
 from tslearn.soft_dtw_fast import _soft_dtw, _soft_dtw_grad, _jacobian_product_sq_euc
 from sklearn.metrics.pairwise import euclidean_distances
 
-from tslearn.cydtw import dtw as cydtw, dtw_path as cydtw_path, cdist_dtw as cycdist_dtw
+from tslearn.cydtw import dtw as cydtw, dtw_path as cydtw_path, cdist_dtw as cycdist_dtw, \
+    dtw_subsequence_path as cydtw_subsequence_path
 from tslearn.cydtw import lb_envelope as cylb_envelope
 from tslearn.cydtw import sakoe_chiba_mask as cysakoe_chiba_mask, itakura_mask as cyitakura_mask
 from tslearn.cygak import cdist_gak as cycdist_gak, normalized_gak as cynormalized_gak
@@ -124,6 +125,45 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=1):
     elif global_constraint == "itakura":
         return cydtw(s1, s2, mask=itakura_mask(sz1, sz2))
     return cydtw(s1, s2, mask=numpy.zeros((sz1, sz2)))
+
+
+def dtw_subsequence_path(subseq, longseq):
+    """Compute sub-sequence Dynamic Time Warping (DTW) similarity measure between a (possibly multidimensional)
+    query and a long time series and return both the path and the similarity.
+
+    It is not required that both time series share the same size, but they must be the same dimension.
+    This implementation finds the best matching starting and ending positions for `subseq` inside `longseq`.
+
+    Parameters
+    ----------
+    subseq
+        A query time series.
+    longseq
+        A reference (supposed to be longer than `subseq`) time series.
+
+    Returns
+    -------
+    list of integer pairs
+        Matching path represented as a list of index pairs. In each pair, the first index corresponds to `subseq` and
+        the second one corresponds to `longseq`
+    float
+        Similarity score
+
+    Examples
+    --------
+    >>> path, dist = dtw_subsequence_path([2, 3], [1., 2., 2., 3., 4.])
+    >>> path
+    [(0, 2), (1, 3)]
+    >>> dist
+    0.0
+
+    See Also
+    --------
+    dtw : Get the similarity score for DTW
+    """
+    subseq = to_time_series(subseq)
+    longseq = to_time_series(longseq)
+    return cydtw_subsequence_path(subseq=subseq, longseq=longseq)
 
 
 def sakoe_chiba_mask(sz1, sz2, radius=1):
