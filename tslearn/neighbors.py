@@ -80,7 +80,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
     ----------
     n_neighbors : int (default: 5)
         Number of nearest neighbors to be considered for the decision.
-    metric : {'dtw', 'eucidean', 'sqeuclidean', 'cityblock'} (default: 'dtw')
+    metric : {'dtw', 'euclidean', 'sqeuclidean', 'cityblock'} (default: 'dtw')
         Metric to be used at the core of the nearest neighbor procedure
     metric_params : dict or None (default: None)
         Dictionnary of metric parameters.
@@ -157,7 +157,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsClassifier, KNeighborsTimeSeriesM
           will have a greater influence than neighbors which are further away.
         - [callable] : a user-defined function which accepts an array of distances, and returns an array of the same
           shape containing the weights.
-    metric : {'dtw'} (default: 'dtw')
+    metric : one of the metrics allowed for class :class:`.KNeighborsTimeSeries` (default: 'dtw')
         Metric to be used at the core of the nearest neighbor procedure
     metric_params : dict or None (default: None)
         Dictionnary of metric parameters. Recognized keys are `"gamma"` (which has default value 0.) for LR-DTW.
