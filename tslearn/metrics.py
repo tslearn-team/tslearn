@@ -295,8 +295,7 @@ def gak(s1, s2, sigma=1.):
     """
     s1 = to_time_series(s1)
     s2 = to_time_series(s2)
-    gamma = 2 * sigma ** 2
-    return numpy.exp(-soft_dtw(s1, s2, gamma=gamma) / gamma)  #cynormalized_gak(s1, s2, sigma)
+    return cynormalized_gak(s1, s2, sigma)
 
 
 def cdist_gak(dataset1, dataset2=None, sigma=1.):
