@@ -71,6 +71,10 @@ def to_time_series(ts, remove_nans=False):
            [ 2.]])
     >>> to_time_series([1, 2, numpy.nan]) # doctest: +NORMALIZE_WHITESPACE
     array([[ 1.],
+           [ 2.],
+           [ nan]])
+    >>> to_time_series([1, 2, numpy.nan], remove_nans=True) # doctest: +NORMALIZE_WHITESPACE
+    array([[ 1.],
            [ 2.]])
     
     See Also

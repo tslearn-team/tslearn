@@ -341,7 +341,7 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.):
         self_similarity = True
     else:
         dataset2 = to_time_series_dataset(dataset2)
-    return numpy.array([[gak(s1, s2, sigma=sigma) for s2 in dataset2] for s1 in dataset1])# cycdist_gak(dataset1, dataset2, sigma, self_similarity=self_similarity)
+    return cycdist_gak(dataset1, dataset2, sigma, self_similarity=self_similarity)
 
 
 def cdist_gak_normalized(dataset1, dataset2=None, sigma=1.):
@@ -369,7 +369,7 @@ def cdist_gak_normalized(dataset1, dataset2=None, sigma=1.):
     --------
     >>> cdist_gak_normalized([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 2, 3]], sigma=2.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     array([[ 1. ],
-           [ 0.656... ]])
+           [ 0.656...]])
     >>> cdist_gak_normalized([[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     array([[ 1. , 0.656...],
            [ 0.656..., 1. ]])
