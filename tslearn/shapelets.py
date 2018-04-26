@@ -8,6 +8,7 @@ from keras.models import Model
 from keras.layers import Dense, Conv1D, Layer, Input, concatenate, add
 from keras.metrics import categorical_accuracy, categorical_crossentropy
 from sklearn.preprocessing import LabelBinarizer
+from sklearn.base import BaseEstimator, ClassifierMixin
 from keras.regularizers import l2
 from keras.initializers import Initializer
 import keras.backend as K
@@ -168,7 +169,7 @@ def grabocka_params_to_shapelet_size_dict(n_ts, ts_sz, n_classes, l, r):
     return d
 
 
-class ShapeletModel:
+class ShapeletModel(BaseEstimator, ClassifierMixin):
     """Learning Time-Series Shapelets model.
 
 
@@ -206,16 +207,22 @@ class ShapeletModel:
     Examples
     --------
     >>> from tslearn.generators import random_walk_blobs
-    >>> X, y = random_walk_blobs(n_ts_per_blob=100, sz=256, d=2, n_blobs=2)
+    >>> X, y = random_walk_blobs(n_ts_per_blob=20, sz=64, d=2, n_blobs=2)
     >>> clf = ShapeletModel(n_shapelets_per_size={10: 5}, max_iter=1, verbose_level=0)
     >>> clf.fit(X, y).shapelets_.shape
     (5,)
     >>> clf.shapelets_[0].shape
     (10, 2)
     >>> clf.predict(X).shape
-    (200,)
+    (40,)
     >>> clf.transform(X).shape
-    (200, 5)
+    (40, 5)
+    >>> params = clf.get_params(deep=True)
+    >>> sorted(params.keys())
+    ['batch_size', 'max_iter', 'n_shapelets_per_size', 'optimizer', 'verbose_level', 'weight_regularizer']
+    >>> clf.set_params(batch_size=128)  # doctest: +NORMALIZE_WHITESPACE
+    ShapeletModel(batch_size=128, max_iter=None, n_shapelets_per_size={10: 5},
+           optimizer='sgd', verbose_level=0, weight_regularizer=0.0)
     >>> clf2 = ShapeletModel(n_shapelets_per_size={10: 5, 20: 10}, max_iter=1, verbose_level=0)
     >>> clf2.fit(X, y).shapelets_.shape
     (15,)
@@ -226,11 +233,11 @@ class ShapeletModel:
     >>> clf2.shapelets_as_time_series_.shape
     (15, 20, 2)
     >>> clf2.predict(X).shape
-    (200,)
+    (40,)
     >>> clf2.transform(X).shape
-    (200, 15)
+    (40, 15)
     >>> clf2.locate(X).shape
-    (200, 15)
+    (40, 15)
 
     References
     ----------
