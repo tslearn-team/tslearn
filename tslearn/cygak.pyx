@@ -73,6 +73,26 @@ def cdist_gak(numpy.ndarray[DTYPE_t, ndim=3] dataset1, numpy.ndarray[DTYPE_t, nd
     cdef int i = 0
     cdef int j = 0
     cdef numpy.ndarray[DTYPE_t, ndim=2] cross_dist = numpy.empty((n1, n2), dtype=DTYPE)
+
+    for i in range(n1):
+        for j in range(n2):
+            if self_similarity and j < i:
+                cross_dist[i, j] = cross_dist[j, i]
+            else:
+                cross_dist[i, j] = gak(dataset1[i], dataset2[j], sigma)
+
+    return cross_dist
+
+@cython.boundscheck(False) # turn off bounds-checking for entire function
+@cython.wraparound(False)  # turn off negative index wrapping for entire function
+def cdist_normalized_gak(numpy.ndarray[DTYPE_t, ndim=3] dataset1, numpy.ndarray[DTYPE_t, ndim=3] dataset2, DTYPE_t sigma,
+              bool self_similarity):
+    assert dataset1.dtype == DTYPE and dataset2.dtype == DTYPE
+    cdef int n1 = dataset1.shape[0]
+    cdef int n2 = dataset2.shape[0]
+    cdef int i = 0
+    cdef int j = 0
+    cdef numpy.ndarray[DTYPE_t, ndim=2] cross_dist = numpy.empty((n1, n2), dtype=DTYPE)
     cdef numpy.ndarray[DTYPE_t, ndim=1] kiis = numpy.empty((n1, ), dtype=DTYPE)
     cdef numpy.ndarray[DTYPE_t, ndim=1] kjjs = numpy.empty((n2, ), dtype=DTYPE)
 

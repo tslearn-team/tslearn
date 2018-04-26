@@ -12,7 +12,8 @@ from tslearn.cydtw import dtw as cydtw, dtw_path as cydtw_path, cdist_dtw as cyc
     dtw_subsequence_path as cydtw_subsequence_path
 from tslearn.cydtw import lb_envelope as cylb_envelope
 from tslearn.cydtw import sakoe_chiba_mask as cysakoe_chiba_mask, itakura_mask as cyitakura_mask
-from tslearn.cygak import cdist_gak as cycdist_gak, normalized_gak as cynormalized_gak
+from tslearn.cygak import cdist_gak as cycdist_gak, cdist_normalized_gak as cycdist_normalized_gak, \
+    normalized_gak as cynormalized_gak, gak as cygak
 from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, check_equal_size
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -263,6 +264,7 @@ def gak(s1, s2, sigma=1.):
 
     It is not required that both time series share the same size, but they must be the same dimension. GAK was
     originally presented in [1]_.
+    This is a normalized version that ensures that $k(x,x)=1$ for all $x$ and $k(x,y) \in [0, 1]$ for all $x, y$.
 
     Parameters
     ----------
@@ -341,63 +343,7 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.):
         self_similarity = True
     else:
         dataset2 = to_time_series_dataset(dataset2)
-    return cycdist_gak(dataset1, dataset2, sigma, self_similarity=self_similarity)
-
-
-def cdist_gak_normalized(dataset1, dataset2=None, sigma=1.):
-    """Compute normalized cross-similarity matrix using Global Alignment kernel (GAK).
-
-    Normalized means that any kij element in the returned matrix is between 0 and 1 and self-similarity is 1.
-
-    GAK was originally presented in [1]_.
-
-    Parameters
-    ----------
-    dataset1
-        A dataset of time series
-    dataset2
-        Another dataset of time series
-    sigma : float (default 1.)
-        Bandwidth of the internal gaussian kernel used for GAK
-
-    Returns
-    -------
-    numpy.ndarray
-        Normalized cross-similarity matrix (has ones on the diagonal is `dataset2` is `None`).
-
-    Examples
-    --------
-    >>> cdist_gak_normalized([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 2, 3]], sigma=2.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    array([[ 1. ],
-           [ 0.656...]])
-    >>> cdist_gak_normalized([[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    array([[ 1. , 0.656...],
-           [ 0.656..., 1. ]])
-
-    See Also
-    --------
-    gak : Compute Global Alignment kernel
-
-    References
-    ----------
-    .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
-    """
-    dataset1 = to_time_series_dataset(dataset1)
-    self_similarity = False
-    if dataset2 is None:
-        dataset2 = dataset1
-        self_similarity = True
-    else:
-        dataset2 = to_time_series_dataset(dataset2)
-    mat = numpy.array([[gak(s1, s2, sigma=sigma) for s2 in dataset2] for s1 in dataset1])
-    if self_similarity:
-        normalizer = numpy.sqrt(numpy.diag(mat))
-        mat_normalizer = numpy.dot(normalizer.reshape((-1, 1)), normalizer.reshape((1, -1)))
-    else:
-        row_normalizer = numpy.sqrt(numpy.array([gak(s2, s2, sigma=sigma) for s2 in dataset2]))
-        column_normalizer = numpy.sqrt(numpy.array([gak(s1, s1, sigma=sigma) for s1 in dataset1]))
-        mat_normalizer = numpy.dot(column_normalizer.reshape((-1, 1)), row_normalizer.reshape((1, -1)))
-    return mat / mat_normalizer
+    return cycdist_normalized_gak(dataset1, dataset2, sigma, self_similarity=self_similarity)
 
 
 def sigma_gak(dataset, n_samples=100, random_state=None):
