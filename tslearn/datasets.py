@@ -75,7 +75,8 @@ class UCR_UEA_datasets(object):
         self.use_cache = use_cache
         base_dir = os.path.expanduser(os.path.join("~", ".tslearn", "datasets", "UCR_UEA"))
         self._data_dir = base_dir
-        os.makedirs(self._data_dir, exist_ok=True)
+        if not os.path.exists(self._data_dir):
+            os.makedirs(self._data_dir)
         try:
             url_baseline = "http://www.timeseriesclassification.com/singleTrainTest.csv"
             self._baseline_scores_filename = os.path.join(self._data_dir, os.path.basename(url_baseline))
