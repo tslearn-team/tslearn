@@ -104,7 +104,7 @@ Have a look [there](https://github.com/rtavenar/tslearn/issues?utf8=✓&q=is%3Ai
 
 Authors would like to thank Mathieu Blondel for providing code for 
 [Kernel k-means](https://gist.github.com/mblondel/6230787) and [Soft-DTW](https://github.com/mblondel/soft-dtw) (both 
-distributed under BSD license) that is used in the `clustering` module of this library.
+distributed under BSD license) that are used in the `clustering` and `metrics` modules of this library.
 
 # Referencing `tslearn`
 

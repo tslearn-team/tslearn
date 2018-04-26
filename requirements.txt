@@ -7,5 +7,5 @@ ipykernel
 nbsphinx
 sphinx-gallery
 pillow
-tensorflow==1.4.1
+tensorflow
 keras

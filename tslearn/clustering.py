@@ -70,7 +70,7 @@ def _compute_inertia(distances, assignments, squared=True):
 
 def silhouette_score(X, labels, metric=None, sample_size=None,
                      random_state=None, **kwds):
-    """Compute the mean Silhouette Coefficient of all samples.
+    """Compute the mean Silhouette Coefficient of all samples (cf.  [1]_ and  [2]_).
 
     Read more in the `scikit-learn documentation
     <http://scikit-learn.org/stable/modules/clustering.html#silhouette-coefficient>`_.

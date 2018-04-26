@@ -42,6 +42,7 @@ In the implementation included in ``tslearn``, standard transition steps are use
       lb_envelope
       lb_keogh
       sigma_gak
+      gamma_soft_dtw
    
    
 
