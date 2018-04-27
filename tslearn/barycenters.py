@@ -7,6 +7,8 @@ The :mod:`tslearn.barycenters` module gathers algorithms for time series barycen
 import numpy
 from scipy.interpolate import interp1d
 from scipy.optimize import minimize
+from sklearn.exceptions import ConvergenceWarning
+import warnings
 
 from tslearn.utils import to_time_series_dataset, check_equal_size
 from tslearn.preprocessing import TimeSeriesResampler
@@ -77,14 +79,15 @@ class DTWBarycenterAveraging(EuclideanBarycenter):
     weights: None or array
         Weights of each X[i]. Must be the same size as len(X).
     max_iter : int (default: 30)
-        Number of iterations of the EM procedure.
+        Number of iterations of the Expectation-Maximization optimization procedure.
     barycenter_size : int or None (default: None)
         Size of the barycenter to generate. If None, the size of the barycenter is that of the data provided at fit
         time or that of the initial barycenter if specified.
     init_barycenter : array or None (default: None)
-        Initial barycenter to start from for the EM process.
+        Initial barycenter to start from for the optimization process.
     tol : float (default: 1e-5)
-        Tolerance to use for early stopping: if the decrease in cost is lower than this value, the EM procedure stops.
+        Tolerance to use for early stopping: if the decrease in cost is lower than this value, the
+        Expectation-Maximization procedure stops.
     verbose : boolean (default: False)
         Whether to print information about the cost at each iteration or not.
 
@@ -147,10 +150,10 @@ class DTWBarycenterAveraging(EuclideanBarycenter):
             if self.verbose:
                 print("[DBA] epoch %d, cost: %.3f" % (it + 1, cost))
             barycenter = self._petitjean_update_barycenter(X_, assign)
-            if cost_prev < cost:
-                raise ValueError
-            if cost_prev - cost < self.tol:
+            if abs(cost_prev - cost) < self.tol:
                 break
+            elif cost_prev < cost:
+                warnings.warn("DBA loss is increasing while it should not be.", ConvergenceWarning)
             else:
                 cost_prev = cost
         return barycenter
