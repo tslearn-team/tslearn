@@ -371,6 +371,10 @@ class SoftDTWBarycenter(EuclideanBarycenter):
             self.barycenter_ = None
         else:
             self.barycenter_ = init
+        warnings.warn('The use of estimators to compute barycenters was '
+                      'deprecated in version 0.1.14 and will be removed '
+                      'in version 0.2. use "softdtw_barycenter()"'
+                      'function instead.', DeprecationWarning)
 
     def _func(self, Z):
         # Compute objective value and grad at Z.
