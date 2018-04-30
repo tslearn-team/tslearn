@@ -209,25 +209,12 @@ class UCR_UEA_datasets(object):
         y_test = data_test[:, 0].astype(numpy.int)
         return X_train, y_train, X_test, y_test
 
-    def cache_all(self, verbose=False):
+    def cache_all(self):
         """Cache all datasets from the UCR/UEA archive for later use.
         """
         for dataset_name in self.list_datasets():
-            full_path = os.path.join(self._data_dir, dataset_name)
-            fname_train = self._filenames.get(dataset_name, dataset_name) + "_TRAIN.txt"
-            fname_test = self._filenames.get(dataset_name, dataset_name) + "_TEST.txt"
             try:
-                numpy.loadtxt(os.path.join(full_path, fname_train), delimiter=",")
-                numpy.loadtxt(os.path.join(full_path, fname_test), delimiter=",")
-            except:
-                url = "http://www.timeseriesclassification.com/Downloads/%s.zip" % dataset_name
-                for fname in [fname_train, fname_test]:
-                    if os.path.exists(os.path.join(full_path, fname)):
-                        os.remove(os.path.join(full_path, fname))
-                extract_from_zip_url(url, target_dir=self._data_dir, verbose=False)
-            try:
-                numpy.loadtxt(os.path.join(full_path, fname_train), delimiter=",")
-                numpy.loadtxt(os.path.join(full_path, fname_test), delimiter=",")
+                self.load_dataset(dataset_name)
             except:
                 sys.stderr.write("Could not cache dataset %s properly.\n" % dataset_name)
 
