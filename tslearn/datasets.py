@@ -5,6 +5,7 @@ The :mod:`tslearn.datasets` module provides simplified access to standard time s
 import numpy
 import zipfile
 import os
+import sys
 import csv
 try:
     from urllib import urlretrieve
@@ -36,18 +37,18 @@ def extract_from_zip_url(url, target_dir=None, verbose=False):
     fname = os.path.basename(url)
     local_zip_fname = os.path.join("/tmp/", fname)  # TODO: not great
     urlretrieve(url, local_zip_fname)
-    extract_dir = os.path.join(target_dir)
     try:
-        if not os.path.exists(extract_dir):
-            os.makedirs(extract_dir)
-        zipfile.ZipFile(local_zip_fname, "r").extractall(path=extract_dir)
+        if not os.path.exists(target_dir):
+            os.makedirs(target_dir)
+        zipfile.ZipFile(local_zip_fname, "r").extractall(path=target_dir)
         if verbose:
-            print("Successfully extracted file %s to path %s" % (local_zip_fname, extract_dir))
+            print("Successfully extracted file %s to path %s" % (local_zip_fname, target_dir))
         os.remove(local_zip_fname)
-        return extract_dir
+        return target_dir
     except zipfile.BadZipFile:
-        os.rmdir(extract_dir)
-        print("Corrupted zip file encountered, aborting.")
+        os.remove(local_zip_fname)
+        if verbose:
+            sys.stderr.write("Corrupted zip file encountered, aborting.\n")
         return None
 
 
@@ -86,15 +87,24 @@ class UCR_UEA_datasets(object):
 
         self._ignore_list = ["Data Descriptions"]
         # File names for datasets for which it is not obvious
-        self._filenames = {"CinCECGtorso": "CinC_ECG_torso", "CricketX": "Cricket_X", "CricketY": "Cricket_Y",
-                           "CricketZ": "Cricket_Z", "FiftyWords": "50words", "Lightning2": "Lighting2",
-                           "Lightning7": "Lighting7", "NonInvasiveFetalECGThorax1": "NonInvasiveFetalECG_Thorax1",
-                           "NonInvasiveFetalECGThorax2": "NonInvasiveFetalECG_Thorax2",
-                           "GunPoint": "Gun_Point", "SonyAIBORobotSurface1": "SonyAIBORobotSurface",
-                           "SonyAIBORobotSurface2": "SonyAIBORobotSurfaceII", "SyntheticControl": "synthetic_control",
-                           "TwoPatterns": "Two_Patterns", "UWaveGestureLibraryX": "UWaveGestureLibrary_X",
+        self._filenames = {"CinCECGtorso": "CinC_ECG_torso",
+                           "CricketX": "Cricket_X",
+                           "CricketY": "Cricket_Y",
+                           "CricketZ": "Cricket_Z",
+                           "FiftyWords": "50words",
+                           "Lightning2": "Lighting2",
+                           "Lightning7": "Lighting7",
+                           "NonInvasiveFatalECGThorax1": "NonInvasiveFetalECG_Thorax1",
+                           "NonInvasiveFatalECGThorax2": "NonInvasiveFetalECG_Thorax2",
+                           "GunPoint": "Gun_Point",
+                           "SonyAIBORobotSurface1": "SonyAIBORobotSurface",
+                           "SonyAIBORobotSurface2": "SonyAIBORobotSurfaceII",
+                           "SyntheticControl": "synthetic_control",
+                           "TwoPatterns": "Two_Patterns",
+                           "UWaveGestureLibraryX": "UWaveGestureLibrary_X",
                            "UWaveGestureLibraryY": "UWaveGestureLibrary_Y",
-                           "UWaveGestureLibraryZ": "UWaveGestureLibrary_Z", "WordSynonyms": "WordsSynonyms"}
+                           "UWaveGestureLibraryZ": "UWaveGestureLibrary_Z",
+                           "WordSynonyms": "WordsSynonyms"}
 
     def baseline_accuracy(self, list_datasets=None, list_methods=None):
         """Report baseline performances as provided by UEA/UCR website.
@@ -198,6 +208,28 @@ class UCR_UEA_datasets(object):
         X_test = to_time_series_dataset(data_test[:, 1:])
         y_test = data_test[:, 0].astype(numpy.int)
         return X_train, y_train, X_test, y_test
+
+    def cache_all(self, verbose=False):
+        """Cache all datasets from the UCR/UEA archive for later use.
+        """
+        for dataset_name in self.list_datasets():
+            full_path = os.path.join(self._data_dir, dataset_name)
+            fname_train = self._filenames.get(dataset_name, dataset_name) + "_TRAIN.txt"
+            fname_test = self._filenames.get(dataset_name, dataset_name) + "_TEST.txt"
+            try:
+                numpy.loadtxt(os.path.join(full_path, fname_train), delimiter=",")
+                numpy.loadtxt(os.path.join(full_path, fname_test), delimiter=",")
+            except:
+                url = "http://www.timeseriesclassification.com/Downloads/%s.zip" % dataset_name
+                for fname in [fname_train, fname_test]:
+                    if os.path.exists(os.path.join(full_path, fname)):
+                        os.remove(os.path.join(full_path, fname))
+                extract_from_zip_url(url, target_dir=self._data_dir, verbose=False)
+            try:
+                numpy.loadtxt(os.path.join(full_path, fname_train), delimiter=",")
+                numpy.loadtxt(os.path.join(full_path, fname_test), delimiter=",")
+            except:
+                sys.stderr.write("Could not cache dataset %s properly.\n" % dataset_name)
 
 
 class CachedDatasets(object):
