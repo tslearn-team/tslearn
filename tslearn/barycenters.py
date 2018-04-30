@@ -329,7 +329,8 @@ def dtw_barycenter_averaging(X, barycenter_size=None, init_barycenter=None, max_
         if abs(cost_prev - cost) < tol:
             break
         elif cost_prev < cost:
-            warnings.warn("DBA loss is increasing while it should not be.", ConvergenceWarning)
+            warnings.warn("DBA loss is increasing while it should not be. Stopping optimization.", ConvergenceWarning)
+            break
         else:
             cost_prev = cost
     return barycenter
