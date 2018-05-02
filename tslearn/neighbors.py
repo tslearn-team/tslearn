@@ -45,6 +45,8 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
         if X is None:
             X = self._fit_X
             self_neighbors = True
+        else:
+            X = to_time_series_dataset(X)
         if self.metric == "dtw":
             cdist_fun = cdist_dtw
         elif self.metric in ["euclidean", "sqeuclidean", "cityblock"]:
@@ -94,7 +96,10 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
     array([[ 0.]])
     >>> ind
     array([[0]])
-
+    >>> knn2 = KNeighborsTimeSeries(n_neighbors=10, metric="euclidean").fit(time_series)
+    >>> ind = knn2.kneighbors(return_distance=False)
+    >>> ind.shape
+    (3, 2)
     """
     def __init__(self, n_neighbors=5, metric="dtw", metric_params=None):
         NearestNeighbors.__init__(self, n_neighbors=n_neighbors, algorithm='brute')
@@ -109,7 +114,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
         X : array-like, shape (n_ts, sz, d)
             Training data.
         """
-        self._fit_X = X
+        self._fit_X = to_time_series_dataset(X)
         return self
 
     def kneighbors(self, X=None, n_neighbors=None, return_distance=True):
@@ -135,9 +140,8 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
         ind : array
             Indices of the nearest points in the population matrix.
         """
-        X_ = to_time_series_dataset(X)
         return KNeighborsTimeSeriesMixin.kneighbors(self,
-                                                    X=X_,
+                                                    X=X,
                                                     n_neighbors=n_neighbors,
                                                     return_distance=return_distance)
 

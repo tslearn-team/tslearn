@@ -151,14 +151,28 @@ class UCR_UEA_datasets(object):
         return d_out
 
     def list_datasets(self):
-        """List datasets in the UCR/UEA archive."""
+        """List datasets in the UCR/UEA archive.
+
+        Examples
+        --------
+        >>> l = UCR_UEA_datasets().list_datasets()
+        >>> len(l)
+        85
+        """
         datasets = []
         for perfs_dict in csv.DictReader(open(self._baseline_scores_filename, "r"), delimiter=","):
             datasets.append(perfs_dict[""])
         return datasets
 
     def list_cached_datasets(self):
-        """List datasets from the UCR/UEA archive that are avilable in cache."""
+        """List datasets from the UCR/UEA archive that are avilable in cache.
+
+        Examples
+        --------
+        >>> l = UCR_UEA_datasets().list_cached_datasets()
+        >>> len(l) >= 0 and len(l) <= len(UCR_UEA_datasets().list_datasets())
+        True
+        """
         return [path for path in os.listdir(self._data_dir)
                 if os.path.isdir(os.path.join(self._data_dir, path)) and path not in self._ignore_list]
 
