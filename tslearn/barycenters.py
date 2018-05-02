@@ -260,7 +260,7 @@ def _petitjean_cost(X, barycenter, assign, weights):
     return cost / weights.sum()
 
 
-def dtw_barycenter_averaging(X, barycenter_size=None, init_barycenter=None, max_iter=None, tol=1e-5, weights=None,
+def dtw_barycenter_averaging(X, barycenter_size=None, init_barycenter=None, max_iter=30, tol=1e-5, weights=None,
                              verbose=False):
     """DTW Barycenter Averaging (DBA) method.
 
@@ -304,6 +304,7 @@ def dtw_barycenter_averaging(X, barycenter_size=None, init_barycenter=None, max_
     >>> dtw_barycenter_averaging(time_series, max_iter=5, barycenter_size=5, verbose=True).shape  # doctest: +ELLIPSIS
     [DBA] epoch 1, cost: ...
     (5, 1)
+    >>> dba_bar = dtw_barycenter_averaging(time_series)  # doctest: +ELLIPSIS
 
     References
     ----------
