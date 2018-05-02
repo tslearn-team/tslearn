@@ -207,7 +207,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
     Examples
     --------
     >>> from tslearn.generators import random_walk_blobs
-    >>> X, y = random_walk_blobs(n_ts_per_blob=20, sz=64, d=2, n_blobs=2)
+    >>> X, y = random_walk_blobs(n_ts_per_blob=20, sz=64, d=2, n_blobs=2, random_state=42)
     >>> clf = ShapeletModel(n_shapelets_per_size={10: 5}, max_iter=1, verbose_level=0)
     >>> clf.fit(X, y).shapelets_.shape
     (5,)
@@ -238,6 +238,12 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
     (40, 15)
     >>> clf2.locate(X).shape
     (40, 15)
+    >>> import sklearn
+    >>> cv = sklearn.model_selection.StratifiedKFold(n_splits=3, shuffle=False, random_state=42)
+    >>> sklearn.model_selection.cross_validate(clf, X, y)
+    {'fit_time': array([ 8.43734384, 13.28068519,  7.62833428]),
+     'score_time': array([0.2350235 , 0.22300911, 0.2600081 ]),
+     'test_score': array([0.78571429, 0.5       , 0.        ])}
 
     References
     ----------
@@ -252,7 +258,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         self.n_shapelets_per_size = n_shapelets_per_size
         self.n_classes = None
         self.optimizer = optimizer
-        self.epochs = max_iter
+        self.max_iter = max_iter
         self.weight_regularizer = weight_regularizer
         self.model = None
         self.transformer_model = None
@@ -335,7 +341,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         self.model.fit([X[:, :, di].reshape((n_ts, sz, 1)) for di in range(d)],
                        y_,
                        batch_size=self.batch_size,
-                       epochs=self.epochs,
+                       epochs=self.max_iter,
                        verbose=self.verbose_level)
         return self
 
