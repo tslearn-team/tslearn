@@ -221,7 +221,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
     >>> sorted(params.keys())
     ['batch_size', 'max_iter', 'n_shapelets_per_size', 'optimizer', 'verbose_level', 'weight_regularizer']
     >>> clf.set_params(batch_size=128)  # doctest: +NORMALIZE_WHITESPACE
-    ShapeletModel(batch_size=128, max_iter=None, n_shapelets_per_size={10: 5},
+    ShapeletModel(batch_size=128, max_iter=1, n_shapelets_per_size={10: 5},
            optimizer='sgd', verbose_level=0, weight_regularizer=0.0)
     >>> clf2 = ShapeletModel(n_shapelets_per_size={10: 5, 20: 10}, max_iter=1, verbose_level=0)
     >>> clf2.fit(X, y).shapelets_.shape
