@@ -43,8 +43,8 @@ autosummary_generate = True
 # autodoc_default_flags = ['members', 'inherited-members']
 
 sphinx_gallery_conf = {
-    'examples_dirs': './examples',
-    'gallery_dirs': './auto_examples',
+    'examples_dirs': ['./examples'],
+    'gallery_dirs': ['./auto_examples'],
     'reference_url':  {'tslearn': None,
                        'matplotlib': 'http://matplotlib.org',
                        'numpy': 'http://docs.scipy.org/doc/numpy-1.9.1'},

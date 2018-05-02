@@ -118,25 +118,23 @@ class TimeSeriesSVC(BaseSVC):
     Examples
     --------
     >>> from tslearn.generators import random_walk_blobs
-    >>> X, y = random_walk_blobs(n_ts_per_blob=20, sz=256, d=2, n_blobs=2)
-    >>> clf = TimeSeriesSVC(sz=256, d=2, kernel="gak", gamma="auto", probability=True)
+    >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=64, d=2, n_blobs=2)
+    >>> clf = TimeSeriesSVC(sz=64, d=2, kernel="gak", gamma="auto", probability=True)
     >>> clf.fit(X, y).predict(X).shape
-    (40,)
+    (20,)
     >>> sv = clf.support_vectors_time_series_(X)
-    >>> len(sv)
+    >>> len(sv)  # should be equal to the number of classes in the classification problem
     2
     >>> sv[0].shape  # doctest: +ELLIPSIS
-    (..., 256, 2)
-    >>> sv[1].shape  # doctest: +ELLIPSIS
-    (..., 256, 2)
+    (..., 64, 2)
     >>> sum([sv_i.shape[0] for sv_i in sv]) == clf.n_support_.sum()
     True
     >>> clf.decision_function(X).shape
-    (40,)
+    (20,)
     >>> clf.predict_log_proba(X).shape
-    (40, 2)
+    (20, 2)
     >>> clf.predict_proba(X).shape
-    (40, 2)
+    (20, 2)
 
     References
     ----------
@@ -259,16 +257,16 @@ class TimeSeriesSVR(BaseSVR):
     Examples
     --------
     >>> from tslearn.generators import random_walk_blobs
-    >>> X, y = random_walk_blobs(n_ts_per_blob=20, sz=256, d=2, n_blobs=2)
+    >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=64, d=2, n_blobs=2)
     >>> import numpy
-    >>> y = y.astype(numpy.float) + numpy.random.randn(40) * .1
-    >>> reg = TimeSeriesSVR(sz=256, d=2, kernel="gak", gamma="auto")
+    >>> y = y.astype(numpy.float) + numpy.random.randn(20) * .1
+    >>> reg = TimeSeriesSVR(sz=64, d=2, kernel="gak", gamma="auto")
     >>> reg.fit(X, y).predict(X).shape
-    (40,)
+    (20,)
     >>> sv = reg.support_vectors_time_series_(X)
     >>> sv.shape  # doctest: +ELLIPSIS
-    (..., 256, 2)
-    >>> sv.shape[0] <= 40
+    (..., 64, 2)
+    >>> sv.shape[0] <= 20
     True
 
 

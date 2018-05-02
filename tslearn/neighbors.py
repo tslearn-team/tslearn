@@ -6,6 +6,7 @@ import numpy
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 from sklearn.neighbors.base import KNeighborsMixin, _get_weights
 from scipy import stats
+from scipy.spatial.distance import cdist as scipy_cdist
 from sklearn.utils.extmath import weighted_mode
 
 from tslearn.metrics import cdist_dtw
@@ -46,8 +47,13 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
             self_neighbors = True
         if self.metric == "dtw":
             cdist_fun = cdist_dtw
+        elif self.metric in ["euclidean", "sqeuclidean", "cityblock"]:
+            cdist_fun = lambda X, Xp: scipy_cdist(X.reshape((X.shape[0], -1)),
+                                                  Xp.reshape((Xp.shape[0], -1)),
+                                                  metric=self.metric)
         else:
-            raise ValueError("Unrecognized time series metric string: %s (should be 'dtw')" % self.metric)
+            raise ValueError("Unrecognized time series metric string: %s (should be one of 'dtw', 'euclidean', "
+                             "'sqeuclidean' or 'cityblock')" % self.metric)
         full_dist_matrix = cdist_fun(X, self._fit_X)
         ind = numpy.argsort(full_dist_matrix, axis=1)
 
@@ -74,7 +80,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
     ----------
     n_neighbors : int (default: 5)
         Number of nearest neighbors to be considered for the decision.
-    metric : {'dtw'} (default: 'dtw')
+    metric : {'dtw', 'euclidean', 'sqeuclidean', 'cityblock'} (default: 'dtw')
         Metric to be used at the core of the nearest neighbor procedure
     metric_params : dict or None (default: None)
         Dictionnary of metric parameters.
@@ -151,7 +157,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsClassifier, KNeighborsTimeSeriesM
           will have a greater influence than neighbors which are further away.
         - [callable] : a user-defined function which accepts an array of distances, and returns an array of the same
           shape containing the weights.
-    metric : {'dtw'} (default: 'dtw')
+    metric : one of the metrics allowed for class :class:`.KNeighborsTimeSeries` (default: 'dtw')
         Metric to be used at the core of the nearest neighbor procedure
     metric_params : dict or None (default: None)
         Dictionnary of metric parameters. Recognized keys are `"gamma"` (which has default value 0.) for LR-DTW.

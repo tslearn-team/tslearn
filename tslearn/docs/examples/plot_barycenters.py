@@ -12,7 +12,7 @@ This example shows three methods to compute barycenters of time series.
 import numpy
 import matplotlib.pyplot as plt
 
-from tslearn.barycenters import EuclideanBarycenter, DTWBarycenterAveraging, SoftDTWBarycenter
+from tslearn.barycenters import euclidean_barycenter, dtw_barycenter_averaging, softdtw_barycenter
 from tslearn.datasets import CachedDatasets
 
 numpy.random.seed(0)
@@ -23,20 +23,18 @@ plt.figure()
 plt.subplot(3, 1, 1)
 for ts in X:
     plt.plot(ts.ravel(), "k-", alpha=.2)
-plt.plot(EuclideanBarycenter().fit(X).ravel(), "r-", linewidth=2)
+plt.plot(euclidean_barycenter(X).ravel(), "r-", linewidth=2)
 plt.title("Euclidean barycenter")
 
 plt.subplot(3, 1, 2)
-dba = DTWBarycenterAveraging(max_iter=100, verbose=False)
-dba_bar = dba.fit(X)
+dba_bar = dtw_barycenter_averaging(X, max_iter=100, verbose=False)
 for ts in X:
     plt.plot(ts.ravel(), "k-", alpha=.2)
 plt.plot(dba_bar.ravel(), "r-", linewidth=2)
 plt.title("DBA")
 
 plt.subplot(3, 1, 3)
-sdtw = SoftDTWBarycenter(gamma=1., max_iter=100)
-sdtw_bar = sdtw.fit(X)
+sdtw_bar = softdtw_barycenter(X, gamma=1., max_iter=100)
 for ts in X:
     plt.plot(ts.ravel(), "k-", alpha=.2)
 plt.plot(sdtw_bar.ravel(), "r-", linewidth=2)

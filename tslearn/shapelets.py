@@ -8,6 +8,7 @@ from keras.models import Model
 from keras.layers import Dense, Conv1D, Layer, Input, concatenate, add
 from keras.metrics import categorical_accuracy, categorical_crossentropy
 from sklearn.preprocessing import LabelBinarizer
+from sklearn.base import BaseEstimator, ClassifierMixin
 from keras.regularizers import l2
 from keras.initializers import Initializer
 import keras.backend as K
@@ -168,7 +169,7 @@ def grabocka_params_to_shapelet_size_dict(n_ts, ts_sz, n_classes, l, r):
     return d
 
 
-class ShapeletModel:
+class ShapeletModel(BaseEstimator, ClassifierMixin):
     """Learning Time-Series Shapelets model.
 
 
@@ -206,16 +207,22 @@ class ShapeletModel:
     Examples
     --------
     >>> from tslearn.generators import random_walk_blobs
-    >>> X, y = random_walk_blobs(n_ts_per_blob=100, sz=256, d=2, n_blobs=2)
+    >>> X, y = random_walk_blobs(n_ts_per_blob=20, sz=64, d=2, n_blobs=2)
     >>> clf = ShapeletModel(n_shapelets_per_size={10: 5}, max_iter=1, verbose_level=0)
     >>> clf.fit(X, y).shapelets_.shape
     (5,)
     >>> clf.shapelets_[0].shape
     (10, 2)
     >>> clf.predict(X).shape
-    (200,)
+    (40,)
     >>> clf.transform(X).shape
-    (200, 5)
+    (40, 5)
+    >>> params = clf.get_params(deep=True)
+    >>> sorted(params.keys())
+    ['batch_size', 'max_iter', 'n_shapelets_per_size', 'optimizer', 'verbose_level', 'weight_regularizer']
+    >>> clf.set_params(batch_size=128)  # doctest: +NORMALIZE_WHITESPACE
+    ShapeletModel(batch_size=128, max_iter=None, n_shapelets_per_size={10: 5},
+           optimizer='sgd', verbose_level=0, weight_regularizer=0.0)
     >>> clf2 = ShapeletModel(n_shapelets_per_size={10: 5, 20: 10}, max_iter=1, verbose_level=0)
     >>> clf2.fit(X, y).shapelets_.shape
     (15,)
@@ -226,11 +233,11 @@ class ShapeletModel:
     >>> clf2.shapelets_as_time_series_.shape
     (15, 20, 2)
     >>> clf2.predict(X).shape
-    (200,)
+    (40,)
     >>> clf2.transform(X).shape
-    (200, 15)
+    (40, 15)
     >>> clf2.locate(X).shape
-    (200, 15)
+    (40, 15)
 
     References
     ----------
@@ -305,14 +312,18 @@ class ShapeletModel:
         if y.ndim == 1:
             self.label_binarizer = LabelBinarizer().fit(y)
             y_ = self.label_binarizer.transform(y)
-            if y_.shape[1] == 1:
-                y_ = numpy.hstack((y_, 1 - y_))
+            # if y_.shape[1] == 1:
+            #     y_ = numpy.hstack((y_, 1 - y_))
         else:
             y_ = y
             self.categorical_y = True
-        n_classes = y_.shape[1]
+            assert y_.shape[1] != 2, "Binary classification case, mondodimensional y should be passed."
+        if y_.ndim == 1:
+            n_classes = 2
+        else:
+            n_classes = y_.shape[1]
         self._set_model_layers(X=X, ts_sz=sz, d=d, n_classes=n_classes)
-        self.model.compile(loss="categorical_crossentropy",
+        self.model.compile(loss="categorical_crossentropy" if n_classes > 2 else "binary_crossentropy",
                            optimizer=self.optimizer,
                            metrics=[categorical_accuracy,
                                     categorical_crossentropy])
@@ -428,15 +439,10 @@ class ShapeletModel:
         else:
             concatenated_features = pool_layers[0]
             concatenated_locations = pool_layers_locations[0]
-        if self.weight_regularizer > 0.:
-            outputs = Dense(units=n_classes,
-                            activation="softmax",
-                            kernel_regularizer=l2(self.weight_regularizer),
-                            name="softmax")(concatenated_features)
-        else:
-            outputs = Dense(units=n_classes,
-                            activation="softmax",
-                            name="softmax")(concatenated_features)
+        outputs = Dense(units=n_classes if n_classes > 2 else 1,
+                        activation="softmax" if n_classes > 2 else "sigmoid",
+                        kernel_regularizer=l2(self.weight_regularizer) if self.weight_regularizer > 0 else None,
+                        name="classification")(concatenated_features)
         self.model = Model(inputs=inputs, outputs=outputs)
         self.transformer_model = Model(inputs=inputs, outputs=concatenated_features)
         self.locator_model = Model(inputs=inputs, outputs=concatenated_locations)
@@ -451,7 +457,7 @@ class ShapeletModel:
             If None, all model weights are returned.
             Available layer names with weights are:
             - "shapelets_i_j" with i an integer for the shapelet id and j an integer for the dimension
-            - "softmax" for the final classification layer
+            - "classification" for the final classification layer
 
         Returns
         -------
@@ -462,8 +468,8 @@ class ShapeletModel:
         --------
         >>> from tslearn.generators import random_walk_blobs
         >>> X, y = random_walk_blobs(n_ts_per_blob=100, sz=256, d=1, n_blobs=3)
-        >>> clf = ShapeletModel(n_shapelets_per_size={10: 5}, max_iter=1, verbose_level=0)
-        >>> clf.fit(X, y).get_weights("softmax")[0].shape
+        >>> clf = ShapeletModel(n_shapelets_per_size={10: 5}, max_iter=0, verbose_level=0)
+        >>> clf.fit(X, y).get_weights("classification")[0].shape
         (5, 3)
         """
         if layer_name is None:

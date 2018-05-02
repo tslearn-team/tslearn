@@ -19,18 +19,6 @@ tslearn.svm.TimeSeriesSVR
       ~TimeSeriesSVR.predict
       ~TimeSeriesSVR.score
       ~TimeSeriesSVR.set_params
-      ~TimeSeriesSVR.support_vectors_time_series_
-   
-   
-
-   
-   
-   .. rubric:: Attributes
-
-   .. autosummary::
-      :toctree: TimeSeriesSVR
-   
-      ~TimeSeriesSVR.coef_
    
    
 

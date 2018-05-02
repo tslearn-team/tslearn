@@ -49,13 +49,15 @@ def bit_length(n):
     return k
 
 
-def to_time_series(ts):
+def to_time_series(ts, remove_nans=False):
     """Transforms a time series so that it fits the format used in ``tslearn`` models.
 
     Parameters
     ----------
     ts : array-like
         The time series to be transformed.
+    remove_nans : bool (default: False)
+        Whether trailing NaNs at the end of the time series should be removed or not
 
     Returns
     -------
@@ -65,6 +67,13 @@ def to_time_series(ts):
     Example
     -------
     >>> to_time_series([1, 2]) # doctest: +NORMALIZE_WHITESPACE
+    array([[ 1.],
+           [ 2.]])
+    >>> to_time_series([1, 2, numpy.nan]) # doctest: +NORMALIZE_WHITESPACE
+    array([[ 1.],
+           [ 2.],
+           [ nan]])
+    >>> to_time_series([1, 2, numpy.nan], remove_nans=True) # doctest: +NORMALIZE_WHITESPACE
     array([[ 1.],
            [ 2.]])
     
@@ -77,6 +86,8 @@ def to_time_series(ts):
         ts_out = ts_out.reshape((-1, 1))
     if ts_out.dtype != numpy.float:
         ts_out = ts_out.astype(numpy.float)
+    if remove_nans:
+        ts_out = ts_out[:ts_size(ts_out)]
     return ts_out
 
 
@@ -120,7 +131,7 @@ def to_time_series_dataset(dataset, dtype=numpy.float):
     d = to_time_series(dataset[0]).shape[1]
     dataset_out = numpy.zeros((n_ts, max_sz, d), dtype=dtype) + numpy.nan
     for i in range(n_ts):
-        ts = to_time_series(dataset[i])
+        ts = to_time_series(dataset[i], remove_nans=True)
         dataset_out[i, :ts.shape[0]] = ts
     return dataset_out
 

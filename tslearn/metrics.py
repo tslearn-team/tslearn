@@ -8,10 +8,12 @@ from sklearn.utils import check_random_state
 from tslearn.soft_dtw_fast import _soft_dtw, _soft_dtw_grad, _jacobian_product_sq_euc
 from sklearn.metrics.pairwise import euclidean_distances
 
-from tslearn.cydtw import dtw as cydtw, dtw_path as cydtw_path, cdist_dtw as cycdist_dtw
+from tslearn.cydtw import dtw as cydtw, dtw_path as cydtw_path, cdist_dtw as cycdist_dtw, \
+    dtw_subsequence_path as cydtw_subsequence_path
 from tslearn.cydtw import lb_envelope as cylb_envelope
 from tslearn.cydtw import sakoe_chiba_mask as cysakoe_chiba_mask, itakura_mask as cyitakura_mask
-from tslearn.cygak import cdist_gak as cycdist_gak, normalized_gak as cynormalized_gak
+from tslearn.cygak import cdist_gak as cycdist_gak, cdist_normalized_gak as cycdist_normalized_gak, \
+    normalized_gak as cynormalized_gak, gak as cygak
 from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, check_equal_size
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -126,6 +128,45 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=1):
     return cydtw(s1, s2, mask=numpy.zeros((sz1, sz2)))
 
 
+def dtw_subsequence_path(subseq, longseq):
+    """Compute sub-sequence Dynamic Time Warping (DTW) similarity measure between a (possibly multidimensional)
+    query and a long time series and return both the path and the similarity.
+
+    It is not required that both time series share the same size, but they must be the same dimension.
+    This implementation finds the best matching starting and ending positions for `subseq` inside `longseq`.
+
+    Parameters
+    ----------
+    subseq
+        A query time series.
+    longseq
+        A reference (supposed to be longer than `subseq`) time series.
+
+    Returns
+    -------
+    list of integer pairs
+        Matching path represented as a list of index pairs. In each pair, the first index corresponds to `subseq` and
+        the second one corresponds to `longseq`
+    float
+        Similarity score
+
+    Examples
+    --------
+    >>> path, dist = dtw_subsequence_path([2, 3], [1., 2., 2., 3., 4.])
+    >>> path
+    [(0, 2), (1, 3)]
+    >>> dist
+    0.0
+
+    See Also
+    --------
+    dtw : Get the similarity score for DTW
+    """
+    subseq = to_time_series(subseq)
+    longseq = to_time_series(longseq)
+    return cydtw_subsequence_path(subseq=subseq, longseq=longseq)
+
+
 def sakoe_chiba_mask(sz1, sz2, radius=1):
     """
     Examples
@@ -223,6 +264,7 @@ def gak(s1, s2, sigma=1.):
 
     It is not required that both time series share the same size, but they must be the same dimension. GAK was
     originally presented in [1]_.
+    This is a normalized version that ensures that $k(x,x)=1$ for all $x$ and $k(x,y) \in [0, 1]$ for all $x, y$.
 
     Parameters
     ----------
@@ -255,8 +297,7 @@ def gak(s1, s2, sigma=1.):
     """
     s1 = to_time_series(s1)
     s2 = to_time_series(s2)
-    gamma = 1. / (2 * sigma ** 2)
-    return numpy.exp(-soft_dtw(s1, s2, gamma=gamma) / gamma)  #cynormalized_gak(s1, s2, sigma)
+    return cynormalized_gak(s1, s2, sigma)
 
 
 def cdist_gak(dataset1, dataset2=None, sigma=1.):
@@ -302,7 +343,7 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.):
         self_similarity = True
     else:
         dataset2 = to_time_series_dataset(dataset2)
-    return numpy.array([[gak(s1, s2, sigma=sigma) for s2 in dataset2] for s1 in dataset1])# cycdist_gak(dataset1, dataset2, sigma, self_similarity=self_similarity)
+    return cycdist_normalized_gak(dataset1, dataset2, sigma, self_similarity=self_similarity)
 
 
 def sigma_gak(dataset, n_samples=100, random_state=None):
@@ -538,7 +579,7 @@ def soft_dtw(ts1, ts2, gamma=1.):
     """
     if gamma == 0.:
         return dtw(ts1, ts2)
-    return SoftDTW(SquaredEuclidean(ts1[:ts_size(ts1)], ts2[:ts_size(ts2)]), gamma=numpy.float64(gamma)).compute()
+    return SoftDTW(SquaredEuclidean(ts1[:ts_size(ts1)], ts2[:ts_size(ts2)]), gamma=gamma).compute()
 
 
 def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
