@@ -572,6 +572,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         X_ = to_time_series_dataset(X)
         return self._assign(X_, update_class_attributes=False)
 
+
 class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin):
     """KShape clustering for time series.
 
