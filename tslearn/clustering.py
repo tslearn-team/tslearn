@@ -499,7 +499,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
                                                                   verbose=False).fit(X[self.labels_ == k])
             elif self.metric == "softdtw":
                 self.cluster_centers_[k] = SoftDTWBarycenter(max_iter=self.max_iter_barycenter,
-                                                             gamma=self.gamma_sdtw).fit(X[self.labels_ == k])
+                                                             gamma=self.gamma_sdtw,
+                                                             init=self.cluster_centers_[k]).fit(X[self.labels_ == k])
             else:
                 self.cluster_centers_[k] = EuclideanBarycenter().fit(X[self.labels_ == k])
 

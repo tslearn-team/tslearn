@@ -10,7 +10,7 @@ from scipy.optimize import minimize
 from sklearn.exceptions import ConvergenceWarning
 import warnings
 
-from tslearn.utils import to_time_series_dataset, check_equal_size
+from tslearn.utils import to_time_series_dataset, check_equal_size, to_time_series
 from tslearn.preprocessing import TimeSeriesResampler
 from tslearn.metrics import dtw_path, SquaredEuclidean, SoftDTW
 
@@ -388,7 +388,7 @@ class SoftDTWBarycenter(EuclideanBarycenter):
         obj = 0
 
         for i in range(len(self._X_fit)):
-            D = SquaredEuclidean(Z, self._X_fit[i])
+            D = SquaredEuclidean(Z, to_time_series(self._X_fit[i], remove_nans=True))
             sdtw = SoftDTW(D, gamma=self.gamma)
             value = sdtw.compute()
             E = sdtw.grad()
