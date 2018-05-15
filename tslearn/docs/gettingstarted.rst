@@ -69,7 +69,7 @@ If you want to import other time series from text files, the expected format is:
 Here is an example of such a file storing two time series of dimension 2 (the first time series is of length 3 and
 the second one is of length 2).
 
-.. code-block:: csv
+.. code-block:: text
 
    1.0 0.0 2.5|3.0 2.0 1.0
    1.0 2.0|4.333 2.12
