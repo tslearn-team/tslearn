@@ -321,7 +321,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         else:
             y_ = y
             self.categorical_y = True
-            assert y_.shape[1] != 2, "Binary classification case, mondodimensional y should be passed."
+            assert y_.shape[1] != 2, "Binary classification case, monodimensional y should be passed."
         if y_.ndim == 1:
             n_classes = 2
         else:

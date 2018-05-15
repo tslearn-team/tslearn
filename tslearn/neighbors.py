@@ -164,7 +164,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsClassifier, KNeighborsTimeSeriesM
     metric : one of the metrics allowed for class :class:`.KNeighborsTimeSeries` (default: 'dtw')
         Metric to be used at the core of the nearest neighbor procedure
     metric_params : dict or None (default: None)
-        Dictionnary of metric parameters. Recognized keys are `"gamma"` (which has default value 0.) for LR-DTW.
+        Dictionnary of metric parameters.
 
     Examples
     --------

@@ -26,6 +26,11 @@ X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")
 X_train = TimeSeriesScalerMinMax().fit_transform(X_train)
 X_test = TimeSeriesScalerMinMax().fit_transform(X_test)
 
+X_train = X_train[y_train<=2]
+y_train = y_train[y_train<=2]
+X_test = X_test[y_test<=2]
+y_test = y_test[y_test<=2]
+
 # Set the number of shapelets per size as done in the original paper
 shapelet_sizes = grabocka_params_to_shapelet_size_dict(n_ts=X_train.shape[0],
                                                        ts_sz=X_train.shape[1],
@@ -42,6 +47,7 @@ shp_clf = ShapeletModel(n_shapelets_per_size=shapelet_sizes,
 shp_clf.fit(X_train, y_train)
 predicted_labels = shp_clf.predict(X_test)
 print("Correct classification rate:", accuracy_score(y_test, predicted_labels))
+print(shp_clf.model.loss)
 
 plt.figure()
 for i, sz in enumerate(shapelet_sizes.keys()):
