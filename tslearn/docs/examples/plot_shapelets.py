@@ -26,11 +26,6 @@ X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")
 X_train = TimeSeriesScalerMinMax().fit_transform(X_train)
 X_test = TimeSeriesScalerMinMax().fit_transform(X_test)
 
-X_train = X_train[y_train<=2]
-y_train = y_train[y_train<=2]
-X_test = X_test[y_test<=2]
-y_test = y_test[y_test<=2]
-
 # Set the number of shapelets per size as done in the original paper
 shapelet_sizes = grabocka_params_to_shapelet_size_dict(n_ts=X_train.shape[0],
                                                        ts_sz=X_train.shape[1],

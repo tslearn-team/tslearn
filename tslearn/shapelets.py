@@ -6,7 +6,7 @@ It depends on the `keras` library for optimization.
 
 from keras.models import Model
 from keras.layers import Dense, Conv1D, Layer, Input, concatenate, add
-from keras.metrics import categorical_accuracy, categorical_crossentropy
+from keras.metrics import categorical_accuracy, categorical_crossentropy, binary_accuracy, binary_crossentropy
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.base import BaseEstimator, ClassifierMixin
 from keras.regularizers import l2
@@ -329,8 +329,8 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         self._set_model_layers(X=X, ts_sz=sz, d=d, n_classes=n_classes)
         self.model.compile(loss="categorical_crossentropy" if n_classes > 2 else "binary_crossentropy",
                            optimizer=self.optimizer,
-                           metrics=[categorical_accuracy,
-                                    categorical_crossentropy])
+                           metrics=[categorical_accuracy, categorical_crossentropy] if n_classes > 2
+                           else [binary_accuracy, binary_crossentropy])
         self.transformer_model.compile(loss="mean_squared_error",
                                        optimizer=self.optimizer)
         self.locator_model.compile(loss="mean_squared_error",
