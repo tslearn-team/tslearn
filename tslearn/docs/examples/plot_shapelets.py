@@ -42,7 +42,6 @@ shp_clf = ShapeletModel(n_shapelets_per_size=shapelet_sizes,
 shp_clf.fit(X_train, y_train)
 predicted_labels = shp_clf.predict(X_test)
 print("Correct classification rate:", accuracy_score(y_test, predicted_labels))
-print(shp_clf.model.loss)
 
 plt.figure()
 for i, sz in enumerate(shapelet_sizes.keys()):
