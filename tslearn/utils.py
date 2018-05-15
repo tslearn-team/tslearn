@@ -326,3 +326,7 @@ def ts_size(ts):
     while not numpy.any(numpy.isfinite(ts_[sz - 1])):
         sz -= 1
     return sz
+
+
+def ts_zeros(sz, d=1):
+    return numpy.zeros((sz, d))
