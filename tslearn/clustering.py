@@ -423,6 +423,9 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
     True
     >>> TimeSeriesKMeans(n_clusters=101, verbose=False, random_state=0).fit(X).X_fit_ is None
     True
+    >>> X_bis = to_time_series_dataset([[1, 2, 3, 4], [1, 2, 3], [2, 5, 6, 7, 8, 9]])
+    >>> km = TimeSeriesKMeans(n_clusters=2, verbose=False, max_iter=5, metric="dtw", random_state=0).fit(X_bis)
+    >>> km_bis = TimeSeriesKMeans(n_clusters=2, verbose=False, max_iter=5, metric="softdtw", random_state=0).fit(X_bis)
     """
 
     def __init__(self, n_clusters=3, max_iter=50, tol=1e-6, n_init=1, metric="euclidean", max_iter_barycenter=100,
