@@ -41,24 +41,6 @@ Examples using ``tslearn.datasets.CachedDatasets``
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="This example uses Global Alignment kernel at the core of a kernel :math:`k`-means algorithm to ...">
-
-.. only:: html
-
-    .. figure:: /auto_examples/images/thumb/sphx_glr_plot_kernel_kmeans_thumb.png
-
-        :ref:`sphx_glr_auto_examples_plot_kernel_kmeans.py`
-
-.. raw:: html
-
-    </div>
-
-.. only:: not html
-
-    * :ref:`sphx_glr_auto_examples_plot_kernel_kmeans.py`
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="This example shows three methods to compute barycenters of time series. ">
 
 .. only:: html
@@ -74,6 +56,24 @@ Examples using ``tslearn.datasets.CachedDatasets``
 .. only:: not html
 
     * :ref:`sphx_glr_auto_examples_plot_barycenters.py`
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example uses Global Alignment kernel at the core of a kernel :math:`k`-means algorithm to ...">
+
+.. only:: html
+
+    .. figure:: /auto_examples/images/thumb/sphx_glr_plot_kernel_kmeans_thumb.png
+
+        :ref:`sphx_glr_auto_examples_plot_kernel_kmeans.py`
+
+.. raw:: html
+
+    </div>
+
+.. only:: not html
+
+    * :ref:`sphx_glr_auto_examples_plot_kernel_kmeans.py`
 
 .. raw:: html
 
@@ -95,24 +95,6 @@ Examples using ``tslearn.datasets.CachedDatasets``
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="This example presents the weighted Soft-DTW time series barycenter method.">
-
-.. only:: html
-
-    .. figure:: /auto_examples/images/thumb/sphx_glr_plot_barycenter_interpolate_thumb.png
-
-        :ref:`sphx_glr_auto_examples_plot_barycenter_interpolate.py`
-
-.. raw:: html
-
-    </div>
-
-.. only:: not html
-
-    * :ref:`sphx_glr_auto_examples_plot_barycenter_interpolate.py`
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="This example illustrates the use of the &quot;Learning Shapelets&quot; method for a time series classific...">
 
 .. only:: html
@@ -128,6 +110,24 @@ Examples using ``tslearn.datasets.CachedDatasets``
 .. only:: not html
 
     * :ref:`sphx_glr_auto_examples_plot_shapelets.py`
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example presents the weighted Soft-DTW time series barycenter method.">
+
+.. only:: html
+
+    .. figure:: /auto_examples/images/thumb/sphx_glr_plot_barycenter_interpolate_thumb.png
+
+        :ref:`sphx_glr_auto_examples_plot_barycenter_interpolate.py`
+
+.. raw:: html
+
+    </div>
+
+.. only:: not html
+
+    * :ref:`sphx_glr_auto_examples_plot_barycenter_interpolate.py`
 
 .. raw:: html
 

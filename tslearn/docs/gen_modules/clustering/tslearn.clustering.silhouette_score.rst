@@ -1,3 +1,5 @@
+.. _fun-silhouette:
+
 tslearn.clustering.silhouette_score
 ===================================
 

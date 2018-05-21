@@ -14,6 +14,7 @@ Clustering
 
 * :ref:`GlobalAlignmentKernelKMeans <class-gakkmeans>`
 * :ref:`TimeSeriesKMeans <class-dbakmeans>`
+* :ref:`silhouette_score <fun-silhouette>`
 
 Examples
 ~~~~~~~~
@@ -31,6 +32,13 @@ Examples
     labels = km.fit_predict(X)
     km_bis = TimeSeriesKMeans(n_clusters=2, metric="softdtw")
     labels_bis = km_bis.fit_predict(X)
+
+.. code-block:: python
+
+    from tslearn.clustering import TimeSeriesKMeans
+    km = TimeSeriesKMeans(n_clusters=2, metric="dtw")
+    labels = km.fit_predict(X)
+    silhouette_score(X, labels, metric="dtw")
 
 Supervised classification
 -------------------------
