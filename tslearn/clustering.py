@@ -13,7 +13,7 @@ import numpy
 from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw, dtw
 from tslearn.barycenters import EuclideanBarycenter, DTWBarycenterAveraging, SoftDTWBarycenter
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
-from tslearn.utils import to_time_series_dataset, check_equal_size, ts_size
+from tslearn.utils import to_time_series_dataset, to_time_series, ts_size
 from tslearn.cycc import cdist_normalized_cc, y_shifted_sbd_vec
 
 
@@ -84,8 +84,9 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
          Predicted labels for each time series.
     metric : string, or callable
         The metric to use when calculating distance between time series.
-        Should be a metric from :ref:`tslearn.metrics <mod-metrics>` If X is the distance
-        array itself, use ``metric="precomputed"``.
+        Should be one of {'dtw', 'softdtw', 'euclidean'} or a callable distance
+        function.
+        If X is the distance array itself, use ``metric="precomputed"``.
     sample_size : int or None
         The size of the sample to use when computing the Silhouette Coefficient
         on a random subset of the data.
@@ -113,28 +114,36 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
     Examples
     --------
     >>> from tslearn.generators import random_walks
-    >>> from tslearn.metrics import soft_dtw
+    >>> from tslearn.metrics import cdist_dtw
     >>> X = random_walks(n_ts=50, sz=32, d=1)
     >>> labels = numpy.random.randint(2, size=50)
-    >>> s_sc = silhouette_score(X, labels, metric=dtw)
-    >>> s_sc2 = silhouette_score(X, labels, metric=soft_dtw)
+    >>> s_sc = silhouette_score(X, labels, metric="dtw")
+    >>> s_sc2 = silhouette_score(X, labels, metric="softdtw")
     >>> s_sc3 = silhouette_score(cdist_dtw(X), labels, metric="precomputed")
     """
+    sklearn_metric = None
     if metric == "precomputed":
         sklearn_X = X
-        sklearn_metric = metric
+    elif metric == "dtw":
+        sklearn_X = cdist_dtw(X)
+    elif metric == "softdtw":
+        sklearn_X = cdist_soft_dtw(X)  # TODO: gamma
+    elif metric == "euclidean":
+        sklearn_X = cdist(X, X, metric="euclidean")
     else:
         X_ = to_time_series_dataset(X)
         n, sz, d = X_.shape
         sklearn_X = X_.reshape((n, -1))
         if metric is None:
             metric = dtw
-        sklearn_metric = lambda x, y: metric(x.reshape((sz, d)), y.reshape((sz, d)))
+        sklearn_metric = lambda x, y: metric(to_time_series(x.reshape((sz, d)), remove_nans=True),
+                                             to_time_series(y.reshape((sz, d)), remove_nans=True))
     return sklearn_silhouette_score(X=sklearn_X,
                                     labels=labels,
-                                    metric=sklearn_metric,
+                                    metric="precomputed" if sklearn_metric is None else sklearn_metric,
                                     sample_size=sample_size,
-                                    random_state=random_state, **kwds)
+                                    random_state=random_state,
+                                    **kwds)
 
 
 class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
