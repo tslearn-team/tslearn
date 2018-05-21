@@ -10,10 +10,10 @@ import sys
 import csv
 try:
     from urllib import urlretrieve
-    import zipfile.BadZipFile as BadZipFile
+    from zipfile import BadZipFile as BadZipFile
 except ImportError:
     from urllib.request import urlretrieve
-    import zipfile.BadZipfile as BadZipFile
+    from zipfile import BadZipfile as BadZipFile
 
 from tslearn.utils import to_time_series_dataset
 
