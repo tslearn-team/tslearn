@@ -40,20 +40,22 @@ def extract_from_zip_url(url, target_dir=None, verbose=False):
         Directory in which the zip file has been extracted if the process was successful, None otherwise
     """
     fname = os.path.basename(url)
-    with tempfile.TemporaryDirectory() as tmpdir:
-        local_zip_fname = os.path.join(tmpdir, fname)
-        urlretrieve(url, local_zip_fname)
-        try:
-            if not os.path.exists(target_dir):
-                os.makedirs(target_dir)
-            zipfile.ZipFile(local_zip_fname, "r").extractall(path=target_dir)
-            if verbose:
-                print("Successfully extracted file %s to path %s" % (local_zip_fname, target_dir))
-            return target_dir
-        except BadZipFile:
-            if verbose:
-                sys.stderr.write("Corrupted zip file encountered, aborting.\n")
-            return None
+    tmpdir = tempfile.mkdtemp()
+    local_zip_fname = os.path.join(tmpdir, fname)
+    urlretrieve(url, local_zip_fname)
+    try:
+        if not os.path.exists(target_dir):
+            os.makedirs(target_dir)
+        zipfile.ZipFile(local_zip_fname, "r").extractall(path=target_dir)
+        os.rmdir(tmpdir)
+        if verbose:
+            print("Successfully extracted file %s to path %s" % (local_zip_fname, target_dir))
+        return target_dir
+    except BadZipFile:
+        os.rmdir(tmpdir)
+        if verbose:
+            sys.stderr.write("Corrupted zip file encountered, aborting.\n")
+        return None
 
 
 class UCR_UEA_datasets(object):
