@@ -68,7 +68,7 @@ def _compute_inertia(distances, assignments, squared=True):
         return numpy.sum(distances[numpy.arange(n_ts), assignments]) / n_ts
 
 
-def silhouette_score(X, labels, metric=None, sample_size=None,
+def silhouette_score(X, labels, metric=None, sample_size=None, metric_params=None,
                      random_state=None, **kwds):
     """Compute the mean Silhouette Coefficient of all samples (cf.  [1]_ and  [2]_).
 
@@ -91,6 +91,9 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
         The size of the sample to use when computing the Silhouette Coefficient
         on a random subset of the data.
         If ``sample_size is None``, no sampling is used.
+    metric_params : dict or None
+        Parameter values for the chosen metric. Value associated to the `"gamma_sdtw"` key corresponds to the gamma
+        parameter in Soft-DTW.
     random_state : int, RandomState instance or None, optional (default=None)
         The generator used to randomly select a subset of samples.  If int,
         random_state is the seed used by the random number generator; If
@@ -119,15 +122,22 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
     >>> labels = numpy.random.randint(2, size=50)
     >>> s_sc = silhouette_score(X, labels, metric="dtw")
     >>> s_sc2 = silhouette_score(X, labels, metric="softdtw")
+    >>> s_sc2b = silhouette_score(X, labels, metric="softdtw", metric_params={"gamma_sdtw": 2.})
     >>> s_sc3 = silhouette_score(cdist_dtw(X), labels, metric="precomputed")
     """
     sklearn_metric = None
+    if metric_params is None:
+        metric_params = {}
     if metric == "precomputed":
         sklearn_X = X
     elif metric == "dtw":
         sklearn_X = cdist_dtw(X)
     elif metric == "softdtw":
-        sklearn_X = cdist_soft_dtw(X)  # TODO: gamma
+        gamma = metric_params.get("gamma_sdtw", None)
+        if gamma is not None:
+            sklearn_X = cdist_soft_dtw(X, gamma=gamma)
+        else:
+            sklearn_X = cdist_soft_dtw(X)
     elif metric == "euclidean":
         sklearn_X = cdist(X, X, metric="euclidean")
     else:
