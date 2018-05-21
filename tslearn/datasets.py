@@ -202,21 +202,25 @@ class UCR_UEA_datasets(object):
         (1000, 128, 1)
         >>> print(y_train.shape)
         (1000,)
+        >>> X_train, y_train, X_test, y_test = UCR_UEA_datasets().load_dataset("DatasetThatDoesNotExist")
+        >>> print(X_train)
+        None
         """
         full_path = os.path.join(self._data_dir, dataset_name)
         fname_train = self._filenames.get(dataset_name, dataset_name) + "_TRAIN.txt"
         fname_test = self._filenames.get(dataset_name, dataset_name) + "_TEST.txt"
-        try:
-            data_train = numpy.loadtxt(os.path.join(full_path, fname_train), delimiter=",")
-            data_test = numpy.loadtxt(os.path.join(full_path, fname_test), delimiter=",")
-        except:
+        if not os.path.exists(os.path.join(full_path, fname_train)) or \
+            not os.path.exists(os.path.join(full_path, fname_test)):
             url = "http://www.timeseriesclassification.com/Downloads/%s.zip" % dataset_name
             for fname in [fname_train, fname_test]:
                 if os.path.exists(os.path.join(full_path, fname)):
                     os.remove(os.path.join(full_path, fname))
             extract_from_zip_url(url, target_dir=self._data_dir, verbose=False)
+        try:
             data_train = numpy.loadtxt(os.path.join(full_path, fname_train), delimiter=",")
             data_test = numpy.loadtxt(os.path.join(full_path, fname_test), delimiter=",")
+        except:
+            return None, None, None, None
         X_train = to_time_series_dataset(data_train[:, 1:])
         y_train = data_train[:, 0].astype(numpy.int)
         X_test = to_time_series_dataset(data_test[:, 1:])
