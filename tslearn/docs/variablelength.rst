@@ -35,7 +35,7 @@ Examples
 
 .. code-block:: python
 
-    from tslearn.clustering import TimeSeriesKMeans
+    from tslearn.clustering import TimeSeriesKMeans, silhouette_score
     km = TimeSeriesKMeans(n_clusters=2, metric="dtw")
     labels = km.fit_predict(X)
     silhouette_score(X, labels, metric="dtw")
