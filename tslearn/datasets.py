@@ -5,6 +5,7 @@ The :mod:`tslearn.datasets` module provides simplified access to standard time s
 import numpy
 import zipfile
 import tempfile
+import shutil
 import os
 import sys
 import csv
@@ -47,12 +48,12 @@ def extract_from_zip_url(url, target_dir=None, verbose=False):
         if not os.path.exists(target_dir):
             os.makedirs(target_dir)
         zipfile.ZipFile(local_zip_fname, "r").extractall(path=target_dir)
-        os.rmdir(tmpdir)
+        shutil.rmtree(tmpdir)
         if verbose:
             print("Successfully extracted file %s to path %s" % (local_zip_fname, target_dir))
         return target_dir
     except BadZipFile:
-        os.rmdir(tmpdir)
+        shutil.rmtree(tmpdir)
         if verbose:
             sys.stderr.write("Corrupted zip file encountered, aborting.\n")
         return None
