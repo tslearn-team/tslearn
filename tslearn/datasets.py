@@ -4,13 +4,16 @@ The :mod:`tslearn.datasets` module provides simplified access to standard time s
 
 import numpy
 import zipfile
+import tempfile
 import os
 import sys
 import csv
 try:
     from urllib import urlretrieve
+    import zipfile.BadZipFile as BadZipFile
 except ImportError:
     from urllib.request import urlretrieve
+    import zipfile.BadZipfile as BadZipFile
 
 from tslearn.utils import to_time_series_dataset
 
@@ -35,21 +38,20 @@ def extract_from_zip_url(url, target_dir=None, verbose=False):
         Directory in which the zip file has been extracted if the process was successful, None otherwise
     """
     fname = os.path.basename(url)
-    local_zip_fname = os.path.join("/tmp/", fname)  # TODO: not great
-    urlretrieve(url, local_zip_fname)
-    try:
-        if not os.path.exists(target_dir):
-            os.makedirs(target_dir)
-        zipfile.ZipFile(local_zip_fname, "r").extractall(path=target_dir)
-        if verbose:
-            print("Successfully extracted file %s to path %s" % (local_zip_fname, target_dir))
-        os.remove(local_zip_fname)
-        return target_dir
-    except zipfile.BadZipFile:
-        os.remove(local_zip_fname)
-        if verbose:
-            sys.stderr.write("Corrupted zip file encountered, aborting.\n")
-        return None
+    with tempfile.TemporaryDirectory() as tmpdir:
+        local_zip_fname = os.path.join(tmpdir, fname)
+        urlretrieve(url, local_zip_fname)
+        try:
+            if not os.path.exists(target_dir):
+                os.makedirs(target_dir)
+            zipfile.ZipFile(local_zip_fname, "r").extractall(path=target_dir)
+            if verbose:
+                print("Successfully extracted file %s to path %s" % (local_zip_fname, target_dir))
+            return target_dir
+        except BadZipFile:
+            if verbose:
+                sys.stderr.write("Corrupted zip file encountered, aborting.\n")
+            return None
 
 
 class UCR_UEA_datasets(object):
