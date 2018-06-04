@@ -354,6 +354,9 @@ class SoftDTWBarycenter(EuclideanBarycenter):
         Tolerance of the method used.
     max_iter: int
         Maximum number of iterations.
+    init: array or None (default: None)
+        Initial barycenter to start from for the optimization process.
+        If `None`, euclidean barycenter is used as a starting point.
 
 
     .. deprecated:: 0.1.15
@@ -455,6 +458,9 @@ def softdtw_barycenter(X, gamma=1.0, weights=None, method="L-BFGS-B", tol=1e-3, 
         Tolerance of the method used.
     max_iter: int
         Maximum number of iterations.
+    init: array or None (default: None)
+        Initial barycenter to start from for the optimization process.
+        If `None`, euclidean barycenter is used as a starting point.
 
     Examples
     --------
