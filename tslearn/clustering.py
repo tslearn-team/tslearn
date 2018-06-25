@@ -534,8 +534,6 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset.
         """
-        n_successful = 0
-
         X_ = to_time_series_dataset(X)
         rs = check_random_state(self.random_state)
         x_squared_norms = cdist(X_.reshape((X_.shape[0], -1)), numpy.zeros((1, X_.shape[1] * X_.shape[2])),
