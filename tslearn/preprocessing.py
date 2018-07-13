@@ -150,5 +150,7 @@ class TimeSeriesScalerMeanVariance(TransformerMixin):
             for d in range(X_.shape[2]):
                 cur_mean = X_[i, :, d].mean()
                 cur_std = X_[i, :, d].std()
+                if cur_std == 0.:
+                    cur_std = 1.
                 X_[i, :, d] = (X_[i, :, d] - cur_mean) * self.std_ / cur_std + self.mu_
         return X_
