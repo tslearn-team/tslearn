@@ -82,6 +82,7 @@ class TimeSeriesScalerMinMax(TransformerMixin):
     def __init__(self, min=0., max=1.):
         self.min_ = min
         self.max_ = max
+        self.params = []
 
     def fit_transform(self, X, **kwargs):
         """Fit to data, then transform it.
@@ -102,9 +103,30 @@ class TimeSeriesScalerMinMax(TransformerMixin):
                 cur_min = X_[i, :, d].min()
                 cur_max = X_[i, :, d].max()
                 cur_range = cur_max - cur_min
+                self.params.append((cur_min, cur_max))
                 X_[i, :, d] = (X_[i, :, d] - cur_min) * (self.max_ - self.min_) / cur_range + self.min_
         return X_
 
+    def inverse_transform(self, X, **kwargs):
+        """Inverse to the original series
+
+        Parameters
+        ----------
+        X : array-like
+            Time series dataset to be scaled back.
+
+        Returns
+        -------
+        numpy.ndarray
+            Original time series dataset.
+        """
+        X_ = to_time_series_dataset(X)
+        for i in range(X_.shape[0]):
+            for d in range(X_.shape[2]):
+                cur_min, cur_max = self.params[i]
+                cur_range = cur_max - cur_min
+                X_[i, :, d] = (X_[i, :, d] - self.min_) * cur_range / (self.max_ - self.min_) + cur_min
+        return X_
 
 class TimeSeriesScalerMeanVariance(TransformerMixin):
     """Scaler for time series. Scales time series so that their mean (resp. standard deviation) in each dimension is
@@ -131,6 +153,7 @@ class TimeSeriesScalerMeanVariance(TransformerMixin):
     def __init__(self, mu=0., std=1.):
         self.mu_ = mu
         self.std_ = std
+        self.params = []
 
     def fit_transform(self, X, **kwargs):
         """Fit to data, then transform it.
@@ -152,5 +175,26 @@ class TimeSeriesScalerMeanVariance(TransformerMixin):
                 cur_std = X_[i, :, d].std()
                 if cur_std == 0.:
                     cur_std = 1.
+                self.params.append((cur_mean, cur_std))
                 X_[i, :, d] = (X_[i, :, d] - cur_mean) * self.std_ / cur_std + self.mu_
+        return X_
+
+    def inverse_transform(self, X, **kwargs):
+        """Inverse to the original series
+
+        Parameters
+        ----------
+        X : array-like
+            Time series dataset to be scaled back.
+
+        Returns
+        -------
+        numpy.ndarray
+            Original time series dataset.
+        """
+        X_ = to_time_series_dataset(X)
+        for i in range(X_.shape[0]):
+            for d in range(X_.shape[2]):
+                cur_mean, cur_std = self.params[i]
+                X_[i, :, d] = (X_[i, :, d] - self.mu_) * cur_std / self.std_ + cur_mean
         return X_
