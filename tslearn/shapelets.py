@@ -187,7 +187,9 @@ def load_model(filename):
     filename: name of the file with trained model.
 
     """
-    return keras.models.load_model(filename)
+    return keras.models.load_model(filename,
+                                   custom_objects={'GlobalMinPooling1D': GlobalMinPooling1D,
+                                                   'LocalSquaredDistanceLayer': LocalSquaredDistanceLayer})
 
 
 class ShapeletModel(BaseEstimator, ClassifierMixin):
