@@ -5,6 +5,7 @@ It depends on the `keras` library for optimization.
 """
 
 from keras.models import Model
+import keras.models
 from keras.layers import Dense, Conv1D, Layer, Input, concatenate, add
 from keras.metrics import categorical_accuracy, categorical_crossentropy, binary_accuracy, binary_crossentropy
 from sklearn.preprocessing import LabelBinarizer
@@ -112,6 +113,10 @@ class LocalSquaredDistanceLayer(Layer):
                                       trainable=True)
         super(LocalSquaredDistanceLayer, self).build(input_shape)
 
+    def get_config(self):
+        return {'n_shapelets': self.n_shapelets}
+
+
     def call(self, x, **kwargs):
         # (x - y)^2 = x^2 + y^2 - 2 * x * y
         x_sq = K.expand_dims(K.sum(x ** 2, axis=2), axis=-1)
@@ -167,6 +172,22 @@ def grabocka_params_to_shapelet_size_dict(n_ts, ts_sz, n_classes, l, r):
         n_shapelets = int(numpy.log10(n_ts * (ts_sz - shp_sz + 1) * (n_classes - 1)))
         d[shp_sz] = n_shapelets
     return d
+
+
+def load_model(filename):
+    """Load model from file with HDF5 format.
+
+    This is just a wrapper for keras' load functionality.
+    Bare in mind this only loads the complete model (i.e.,
+    transformer_model and locator_model are not saved) so you won't be able
+    to use the transform() nor locate() methods in loaded model.
+
+    Parameters
+    ----------
+    filename: name of the file with trained model.
+
+    """
+    return keras.models.load_model(filename)
 
 
 class ShapeletModel(BaseEstimator, ClassifierMixin):
@@ -410,6 +431,52 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
                                           verbose=self.verbose_level)
         return locations.astype(numpy.int)
 
+    def get_weights(self, layer_name=None):
+        """Return model weights (or weights for a given layer if `layer_name` is provided).
+
+        Parameters
+        ----------
+        layer_name: str or None (default: None)
+            Name of the layer for which  weights should be returned.
+            If None, all model weights are returned.
+            Available layer names with weights are:
+            - "shapelets_i_j" with i an integer for the shapelet id and j an integer for the dimension
+            - "classification" for the final classification layer
+
+        Returns
+        -------
+        list
+            list of model (or layer) weights
+
+        Examples
+        --------
+        >>> from tslearn.generators import random_walk_blobs
+        >>> X, y = random_walk_blobs(n_ts_per_blob=100, sz=256, d=1, n_blobs=3)
+        >>> clf = ShapeletModel(n_shapelets_per_size={10: 5}, max_iter=0, verbose_level=0)
+        >>> clf.fit(X, y).get_weights("classification")[0].shape
+        (5, 3)
+        """
+        if layer_name is None:
+            return self.model.get_weights()
+        else:
+            return self.model.get_layer(layer_name).get_weights()
+
+    def save(self, filename):
+        """Save model to filename with HDF5 format.
+
+        This is just a wrapper for keras' save functionality.
+        Bare in mind this only saves the complete model (i.e.,
+        transformer_model and locator_model are not saved) so you won't be able
+        to use the transform() nor locate() methods in loaded model.
+
+        Parameters
+        ----------
+        filename: name of the file where to save the model.
+
+        """
+        self.model.save(filename)
+
+
     def _set_weights_false_conv(self, d):
         shapelet_sizes = sorted(self.n_shapelets_per_size.keys())
         for i, sz in enumerate(shapelet_sizes):
@@ -451,32 +518,3 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         self.transformer_model = Model(inputs=inputs, outputs=concatenated_features)
         self.locator_model = Model(inputs=inputs, outputs=concatenated_locations)
 
-    def get_weights(self, layer_name=None):
-        """Return model weights (or weights for a given layer if `layer_name` is provided).
-
-        Parameters
-        ----------
-        layer_name: str or None (default: None)
-            Name of the layer for which  weights should be returned.
-            If None, all model weights are returned.
-            Available layer names with weights are:
-            - "shapelets_i_j" with i an integer for the shapelet id and j an integer for the dimension
-            - "classification" for the final classification layer
-
-        Returns
-        -------
-        list
-            list of model (or layer) weights
-
-        Examples
-        --------
-        >>> from tslearn.generators import random_walk_blobs
-        >>> X, y = random_walk_blobs(n_ts_per_blob=100, sz=256, d=1, n_blobs=3)
-        >>> clf = ShapeletModel(n_shapelets_per_size={10: 5}, max_iter=0, verbose_level=0)
-        >>> clf.fit(X, y).get_weights("classification")[0].shape
-        (5, 3)
-        """
-        if layer_name is None:
-            return self.model.get_weights()
-        else:
-            return self.model.get_layer(layer_name).get_weights()
