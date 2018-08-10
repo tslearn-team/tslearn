@@ -71,7 +71,7 @@ class TimeSeriesScalerMinMax(TransformerMixin):
     Note
     ----
         This method requires a dataset of equal-sized time series.
-    
+
     Example
     -------
     >>> TimeSeriesScalerMinMax(min=1., max=2.).fit_transform([[0, 3, 6]]) # doctest: +NORMALIZE_WHITESPACE
@@ -97,12 +97,11 @@ class TimeSeriesScalerMinMax(TransformerMixin):
             Rescaled time series dataset.
         """
         X_ = to_time_series_dataset(X)
-        for i in range(X_.shape[0]):
-            for d in range(X_.shape[2]):
-                cur_min = X_[i, :, d].min()
-                cur_max = X_[i, :, d].max()
-                cur_range = cur_max - cur_min
-                X_[i, :, d] = (X_[i, :, d] - cur_min) * (self.max_ - self.min_) / cur_range + self.min_
+        min_t = numpy.min(X_, axis=1)[:, numpy.newaxis, :]
+        max_t = numpy.max(X_, axis=1)[:, numpy.newaxis, :]
+        range_t = max_t - min_t
+
+        X_ = (X_ - min_t) * (self.max_ - self.min_) / range_t + self.min_
         return X_
 
 
@@ -120,7 +119,7 @@ class TimeSeriesScalerMeanVariance(TransformerMixin):
     Note
     ----
         This method requires a dataset of equal-sized time series.
-    
+
     Example
     -------
     >>> TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform([[0, 3, 6]]) # doctest: +NORMALIZE_WHITESPACE
@@ -131,10 +130,12 @@ class TimeSeriesScalerMeanVariance(TransformerMixin):
     def __init__(self, mu=0., std=1.):
         self.mu_ = mu
         self.std_ = std
+        self.global_mean = None
+        self.global_std = None
 
-    def fit_transform(self, X, **kwargs):
+    def fit_transform(self, X, global_stats=False, **kwargs):
         """Fit to data, then transform it.
-        
+
         Parameters
         ----------
         X
@@ -146,11 +147,10 @@ class TimeSeriesScalerMeanVariance(TransformerMixin):
             Rescaled time series dataset
         """
         X_ = to_time_series_dataset(X)
-        for i in range(X_.shape[0]):
-            for d in range(X_.shape[2]):
-                cur_mean = X_[i, :, d].mean()
-                cur_std = X_[i, :, d].std()
-                if cur_std == 0.:
-                    cur_std = 1.
-                X_[i, :, d] = (X_[i, :, d] - cur_mean) * self.std_ / cur_std + self.mu_
+        mean_t = numpy.mean(X_, axis=1)[:, numpy.newaxis, :]
+        std_t = numpy.std(X_, axis=1)[:, numpy.newaxis, :]
+        std_t[std_t == 0.] = 1.
+
+        X_ = (X_ - mean_t) * self.std_ / std_t + self.mu_
+
         return X_
