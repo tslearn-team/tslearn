@@ -23,6 +23,9 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=1):
     """Compute Dynamic Time Warping (DTW) similarity measure between (possibly multidimensional) time series and
     return both the path and the similarity.
 
+    DTW is computed as the Euclidean distance between aligned time series, i.e., if :math:`P` is the alignment path:
+    $$DTW(X, Y) = \\\sqrt{\\\sum_{(i, j) \\\in P} (X_{i} - Y_{j})^2}$$
+
     It is not required that both time series share the same size, but they must be the same dimension.
     DTW was originally presented in [1]_.
 
@@ -81,6 +84,9 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=1):
     """Compute Dynamic Time Warping (DTW) similarity measure between (possibly multidimensional) time series and
     return it.
 
+    DTW is computed as the Euclidean distance between aligned time series, i.e., if :math:`P` is the alignment path:
+    $$DTW(X, Y) = \\\sqrt{\\\sum_{(i, j) \\\in P} (X_{i} - Y_{j})^2}$$
+
     It is not required that both time series share the same size, but they must be the same dimension.
     DTW was originally presented in [1]_.
 
@@ -131,6 +137,9 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=1):
 def dtw_subsequence_path(subseq, longseq):
     """Compute sub-sequence Dynamic Time Warping (DTW) similarity measure between a (possibly multidimensional)
     query and a long time series and return both the path and the similarity.
+
+    DTW is computed as the Euclidean distance between aligned time series, i.e., if :math:`P` is the alignment path:
+    $$DTW(X, Y) = \\\sqrt{\\\sum_{(i, j) \\\in P} (X_{i} - Y_{j})^2}$$
 
     It is not required that both time series share the same size, but they must be the same dimension.
     This implementation finds the best matching starting and ending positions for `subseq` inside `longseq`.
@@ -205,6 +214,9 @@ def itakura_mask(sz1, sz2):
 
 def cdist_dtw(dataset1, dataset2=None, global_constraint=None, sakoe_chiba_radius=1):
     """Compute cross-similarity matrix using Dynamic Time Warping (DTW) similarity measure.
+
+    DTW is computed as the Euclidean distance between aligned time series, i.e., if :math:`P` is the alignment path:
+    $$DTW(X, Y) = \\\sqrt{\\\sum_{(i, j) \\\in P} (X_{i} - Y_{j})^2}$$
 
     DTW was originally presented in [1]_.
 
