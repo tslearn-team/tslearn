@@ -224,9 +224,9 @@ class DTWBarycenterAveraging(EuclideanBarycenter):
 
 def _init_avg(X, barycenter_size):
     if X.shape[1] == barycenter_size:
-        return X.mean(axis=0)
+        return numpy.nanmean(X, axis=0)
     else:
-        X_avg = X.mean(axis=0)
+        X_avg = numpy.nanmean(X, axis=0)
         xnew = numpy.linspace(0, 1, barycenter_size)
         f = interp1d(numpy.linspace(0, 1, X_avg.shape[0]), X_avg, kind="linear", axis=0)
         return f(xnew)
@@ -305,6 +305,8 @@ def dtw_barycenter_averaging(X, barycenter_size=None, init_barycenter=None, max_
     [DBA] epoch 1, cost: ...
     (5, 1)
     >>> dba_bar = dtw_barycenter_averaging(time_series)  # doctest: +ELLIPSIS
+    >>> X = to_time_series_dataset([[1, 2, 3, 4], [1, 2, 3], [2, 5, 6, 7, 8, 9]])
+    >>> bar = dtw_barycenter_averaging(X, barycenter_size=3)
 
     References
     ----------
