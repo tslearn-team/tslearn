@@ -320,6 +320,8 @@ def ts_size(ts):
     3
     >>> ts_size([[1, 2], [2, 3], [3, 4], [numpy.nan, 2], [numpy.nan, numpy.nan]])
     4
+    >>> ts_size([[numpy.nan, numpy.nan], [3, 4]])
+    1
     """
     ts_ = to_time_series(ts)
     return sum(numpy.any(numpy.isfinite(ts_), axis=1))
