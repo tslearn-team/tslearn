@@ -121,9 +121,10 @@ def silhouette_score(X, labels, metric=None, sample_size=None, metric_params=Non
     >>> X = random_walks(n_ts=50, sz=32, d=1)
     >>> labels = numpy.random.randint(2, size=50)
     >>> s_sc = silhouette_score(X, labels, metric="dtw")
-    >>> s_sc2 = silhouette_score(X, labels, metric="softdtw")
-    >>> s_sc2b = silhouette_score(X, labels, metric="softdtw", metric_params={"gamma_sdtw": 2.})
-    >>> s_sc3 = silhouette_score(cdist_dtw(X), labels, metric="precomputed")
+    >>> s_sc2 = silhouette_score(X, labels, metric="euclidean")
+    >>> s_sc3 = silhouette_score(X, labels, metric="softdtw")
+    >>> s_sc3b = silhouette_score(X, labels, metric="softdtw", metric_params={"gamma_sdtw": 2.})
+    >>> s_sc4 = silhouette_score(cdist_dtw(X), labels, metric="precomputed")
     """
     sklearn_metric = None
     if metric_params is None:
@@ -139,7 +140,9 @@ def silhouette_score(X, labels, metric=None, sample_size=None, metric_params=Non
         else:
             sklearn_X = cdist_soft_dtw(X)
     elif metric == "euclidean":
-        sklearn_X = cdist(X, X, metric="euclidean")
+        X_ = to_time_series_dataset(X)
+        X_ = X_.reshape((X.shape[0], -1))
+        sklearn_X = cdist(X_, X_, metric="euclidean")
     else:
         X_ = to_time_series_dataset(X)
         n, sz, d = X_.shape
