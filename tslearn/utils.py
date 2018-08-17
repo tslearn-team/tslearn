@@ -318,12 +318,16 @@ def ts_size(ts):
     --------
     >>> ts_size([1, 2, 3, numpy.nan])
     3
+    >>> ts_size([1, numpy.nan])
+    1
+    >>> ts_size([numpy.nan])
+    0
     >>> ts_size([[1, 2], [2, 3], [3, 4], [numpy.nan, 2], [numpy.nan, numpy.nan]])
     4
     """
     ts_ = to_time_series(ts)
     sz = ts_.shape[0]
-    while not numpy.any(numpy.isfinite(ts_[sz - 1])):
+    while sz > 0 and not numpy.any(numpy.isfinite(ts_[sz - 1])):
         sz -= 1
     return sz
 
