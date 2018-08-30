@@ -368,13 +368,13 @@ class LabelCategorizer(BaseEstimator, TransformerMixin):
     >>> y = numpy.array([-1, 2, 1, 1, 2])
     >>> lc = LabelCategorizer()
     >>> lc.fit_transform(y)
-    array([[1., 0., 0.],
-           [0., 0., 1.],
-           [0., 1., 0.],
-           [0., 1., 0.],
-           [0., 0., 1.]])
+    array([[ 1., 0., 0.],
+           [ 0., 0., 1.],
+           [ 0., 1., 0.],
+           [ 0., 1., 0.],
+           [ 0., 0., 1.]])
     >>> lc.inverse_transform([[0, 1, 0], [0, 0, 1], [1, 0, 0]])
-    array([1., 2., -1.])
+    array([ 1., 2., -1.])
 
     References
     ----------
