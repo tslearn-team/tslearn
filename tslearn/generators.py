@@ -81,6 +81,8 @@ def random_walk_blobs(n_ts_per_blob=100, sz=256, d=1, n_blobs=2, noise_level=1.,
     -------
     numpy.ndarray
         A dataset of random walk time series
+    numpy.ndarray
+        Labels associated to random walk time series (blob id)
 
     Examples
     --------
