@@ -3,6 +3,7 @@ The :mod:`tslearn.utils` module includes various utilities.
 """
 
 import numpy
+from sklearn.base import BaseEstimator, TransformerMixin
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -333,4 +334,79 @@ def ts_size(ts):
 
 
 def ts_zeros(sz, d=1):
+    """Returns a time series made of zero values.
+
+    Parameters
+    ----------
+    sz : int
+        Time series size.
+    d : int (optional, default: 1)
+        Time series dimensionality.
+
+    Returns
+    -------
+    numpy.ndarray
+        A time series made of zeros.
+
+    Examples
+    --------
+    >>> ts_zeros(3, 2)  # doctest: +NORMALIZE_WHITESPACE
+    array([[ 0., 0.],
+           [ 0., 0.],
+           [ 0., 0.]])
+    >>> ts_zeros(5).shape
+    (5, 1)
+    """
     return numpy.zeros((sz, d))
+
+
+class LabelCategorizer(BaseEstimator, TransformerMixin):
+    """Transformer to transform indicator-based labels to categorical ones.
+
+    Examples
+    --------
+    >>> y = numpy.array([-1, 2, 1, 1, 2])
+    >>> lc = LabelCategorizer()
+    >>> lc.fit_transform(y)
+    array([[1., 0., 0.],
+           [0., 0., 1.],
+           [0., 1., 0.],
+           [0., 1., 0.],
+           [0., 0., 1.]])
+    >>> lc.inverse_transform([[0, 1, 0], [0, 0, 1], [1, 0, 0]])
+    array([1., 2., -1.])
+
+    References
+    ----------
+    .. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
+    """
+    def __init__(self):
+        self._init()
+
+    def _init(self):
+        self.forward_match = {}
+        self.backward_match = []
+
+    def fit(self, y):
+        self._init()
+        values = sorted(set(y))
+        for i, v in enumerate(values):
+            self.forward_match[v] = i
+            self.backward_match.append(v)
+        return self
+
+    def transform(self, y):
+        n_classes = len(self.backward_match)
+        n = y.shape[0]
+        y_out = numpy.zeros((n, n_classes))
+        for i in range(n):
+            y_out[i, self.forward_match[y[i]]] = 1
+        return y_out
+
+    def inverse_transform(self, y):
+        y_ = numpy.array(y)
+        n = y_.shape[0]
+        y_out = numpy.zeros((n, ))
+        for i in range(n):
+            y_out[i] = self.backward_match[y_[i].argmax()]
+        return y_out
