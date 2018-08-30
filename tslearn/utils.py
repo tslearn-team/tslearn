@@ -367,13 +367,13 @@ class LabelCategorizer(BaseEstimator, TransformerMixin):
     --------
     >>> y = numpy.array([-1, 2, 1, 1, 2])
     >>> lc = LabelCategorizer()
-    >>> lc.fit_transform(y)
+    >>> lc.fit_transform(y)  # doctest: +NORMALIZE_WHITESPACE
     array([[ 1., 0., 0.],
            [ 0., 0., 1.],
            [ 0., 1., 0.],
            [ 0., 1., 0.],
            [ 0., 0., 1.]])
-    >>> lc.inverse_transform([[0, 1, 0], [0, 0, 1], [1, 0, 0]])
+    >>> lc.inverse_transform([[0, 1, 0], [0, 0, 1], [1, 0, 0]])  # doctest: +NORMALIZE_WHITESPACE
     array([ 1., 2., -1.])
 
     References
