@@ -361,7 +361,7 @@ def ts_zeros(sz, d=1):
 
 
 class LabelCategorizer(BaseEstimator, TransformerMixin):
-    """Transformer to transform indicator-based labels to categorical ones.
+    """Transformer to transform indicator-based labels into categorical ones.
 
     Examples
     --------
@@ -374,6 +374,11 @@ class LabelCategorizer(BaseEstimator, TransformerMixin):
            [ 0., 1., 0.],
            [ 0., 0., 1.]])
     >>> lc.inverse_transform([[0, 1, 0], [0, 0, 1], [1, 0, 0]])  # doctest: +NORMALIZE_WHITESPACE
+    array([ 1., 2., -1.])
+    >>> import pickle
+    >>> s = pickle.dumps(lc)
+    >>> lc2 = pickle.loads(s)
+    >>> lc2.inverse_transform([[0, 1, 0], [0, 0, 1], [1, 0, 0]])  # doctest: +NORMALIZE_WHITESPACE
     array([ 1., 2., -1.])
 
     References
@@ -410,3 +415,19 @@ class LabelCategorizer(BaseEstimator, TransformerMixin):
         for i in range(n):
             y_out[i] = self.backward_match[y_[i].argmax()]
         return y_out
+
+    def get_params(self, deep=True):
+        """Get parameters for this estimator.
+        Parameters
+        ----------
+        deep : boolean, optional
+            If True, will return the parameters for this estimator and
+            contained subobjects that are estimators.
+        Returns
+        -------
+        params : mapping of string to any
+            Parameter names mapped to their values.
+        """
+        out = BaseEstimator.get_params(self, deep=deep)
+        out["forward_match"] = self.forward_match
+        out["backward_match"] = self.backward_match
