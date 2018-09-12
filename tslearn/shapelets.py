@@ -14,8 +14,9 @@ from keras.initializers import Initializer
 import keras.backend as K
 from keras.engine import InputSpec
 import numpy
+from tensorflow import set_random_seed
 
-from tslearn.utils import to_time_series, to_time_series_dataset
+from tslearn.utils import to_time_series_dataset
 from tslearn.clustering import TimeSeriesKMeans
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -68,7 +69,9 @@ def _kmeans_init_shapelets(X, n_shapelets, shp_len, n_draw=10000):
     subseries = numpy.zeros((n_draw, shp_len, d))
     for i in range(n_draw):
         subseries[i] = X[indices_ts[i], indices_time[i]:indices_time[i] + shp_len]
-    return TimeSeriesKMeans(n_clusters=n_shapelets, metric="euclidean", verbose=False).fit(subseries).cluster_centers_
+    return TimeSeriesKMeans(n_clusters=n_shapelets,
+                            metric="euclidean",
+                            verbose=False).fit(subseries).cluster_centers_
 
 
 class KMeansShapeletInitializer(Initializer):
@@ -81,7 +84,9 @@ class KMeansShapeletInitializer(Initializer):
 
     def __call__(self, shape, dtype=None):
         n_shapelets, shp_len = shape
-        shapelets = _kmeans_init_shapelets(self.X_, n_shapelets, shp_len)[:, :, 0]
+        shapelets = _kmeans_init_shapelets(self.X_,
+                                           n_shapelets,
+                                           shp_len)[:, :, 0]
         return K.tensorflow_backend._to_tensor(x=shapelets, dtype=K.floatx())
 
     def get_config(self):
@@ -191,6 +196,11 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
     weight_regularizer: float or None (default: None)
         `keras` regularizer to use for training the classification (softmax) layer.
         If None, no regularization is performed.
+    random_state : int or None, optional (default: None)
+        The seed of the pseudo random number generator to use when shuffling
+        the data.  If int, random_state is the seed used by the random number
+        generator; If None, the random number generator is the RandomState
+        instance used by `np.random`.
 
     Attributes
     ----------
@@ -219,10 +229,11 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
     (40, 5)
     >>> params = clf.get_params(deep=True)
     >>> sorted(params.keys())
-    ['batch_size', 'max_iter', 'n_shapelets_per_size', 'optimizer', 'verbose_level', 'weight_regularizer']
+    ['batch_size', 'max_iter', 'n_shapelets_per_size', 'optimizer', 'random_state', 'verbose_level', 'weight_regularizer']
     >>> clf.set_params(batch_size=128)  # doctest: +NORMALIZE_WHITESPACE
     ShapeletModel(batch_size=128, max_iter=1, n_shapelets_per_size={10: 5},
-           optimizer='sgd', verbose_level=0, weight_regularizer=0.0)
+           optimizer='sgd', random_state=None, verbose_level=0,
+           weight_regularizer=0.0)
     >>> clf2 = ShapeletModel(n_shapelets_per_size={10: 5, 20: 10}, max_iter=1, verbose_level=0)
     >>> clf2.fit(X, y).shapelets_.shape
     (15,)
@@ -252,12 +263,14 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
                  batch_size=256,
                  verbose_level=2,
                  optimizer="sgd",
-                 weight_regularizer=0.):
+                 weight_regularizer=0.,
+                 random_state=None):
         self.n_shapelets_per_size = n_shapelets_per_size
         self.n_classes = None
         self.optimizer = optimizer
         self.max_iter = max_iter
         self.weight_regularizer = weight_regularizer
+        self.random_state = random_state
         self.model = None
         self.transformer_model = None
         self.locator_model = None
@@ -311,6 +324,8 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         y : array-like of shape=(n_ts, )
             Time series labels.
         """
+        set_random_seed(seed=self.random_state)
+        numpy.random.seed(seed=self.random_state)
         n_ts, sz, d = X.shape
         self.d = d
         if y.ndim == 1:

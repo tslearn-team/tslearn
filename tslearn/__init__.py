@@ -1,7 +1,7 @@
 import os
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
-__version__ = "0.1.20"
+__version__ = "0.1.21"
 __bibtex__ = """@misc{tslearn,
  title={tslearn: A machine learning toolkit dedicated to time-series data},
  author={Tavenard, Romain},
