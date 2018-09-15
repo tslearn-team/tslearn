@@ -402,7 +402,7 @@ class LabelCategorizer(BaseEstimator, TransformerMixin):
 
     def transform(self, y):
         n_classes = len(self.backward_match)
-        n = y.shape[0]
+        n = len(y)
         y_out = numpy.zeros((n, n_classes))
         for i in range(n):
             y_out[i, self.forward_match[y[i]]] = 1
