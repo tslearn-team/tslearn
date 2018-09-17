@@ -1,5 +1,6 @@
 """
-The :mod:`tslearn.neighbors` module gathers nearest neighbor algorithms using time series metrics.
+The :mod:`tslearn.neighbors` module gathers nearest neighbor algorithms using
+time series metrics.
 """
 
 import numpy
@@ -28,14 +29,16 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
             If not provided, neighbors of each indexed point are returned.
             In this case, the query point is not considered its own neighbor.
         n_neighbors : int
-            Number of neighbors to get (default is the value passed to the constructor).
+            Number of neighbors to get (default is the value passed to the
+            constructor).
         return_distance : boolean, optional. Defaults to True.
             If False, distances will not be returned
 
         Returns
         -------
         dist : array
-            Array representing the distance to points, only present if return_distance=True
+            Array representing the distance to points, only present if
+            return_distance=True
         ind : array
             Indices of the nearest points in the population matrix.
         """
@@ -54,7 +57,8 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
                                                   Xp.reshape((Xp.shape[0], -1)),
                                                   metric=self.metric)
         else:
-            raise ValueError("Unrecognized time series metric string: %s (should be one of 'dtw', 'euclidean', "
+            raise ValueError("Unrecognized time series metric string: %s "
+                             "(should be one of 'dtw', 'euclidean', "
                              "'sqeuclidean' or 'cityblock')" % self.metric)
         full_dist_matrix = cdist_fun(X, self._fit_X)
         ind = numpy.argsort(full_dist_matrix, axis=1)
@@ -83,7 +87,10 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
     n_neighbors : int (default: 5)
         Number of nearest neighbors to be considered for the decision.
     metric : {'dtw', 'euclidean', 'sqeuclidean', 'cityblock'} (default: 'dtw')
-        Metric to be used at the core of the nearest neighbor procedure
+        Metric to be used at the core of the nearest neighbor procedure.
+        DTW is described in more details in :mod:`tslearn.metrics`.
+        Other metrics are described in `scipy.spatial.distance doc
+        <https://docs.scipy.org/doc/scipy/reference/spatial.distance.html>`_.
     metric_params : dict or None (default: None)
         Dictionnary of metric parameters.
 
@@ -102,7 +109,9 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
     (3, 2)
     """
     def __init__(self, n_neighbors=5, metric="dtw", metric_params=None):
-        NearestNeighbors.__init__(self, n_neighbors=n_neighbors, algorithm='brute')
+        NearestNeighbors.__init__(self,
+                                  n_neighbors=n_neighbors,
+                                  algorithm='brute')
         self.metric = metric
         self.metric_params = metric_params
 
@@ -129,14 +138,16 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
             If not provided, neighbors of each indexed point are returned.
             In this case, the query point is not considered its own neighbor.
         n_neighbors : int
-            Number of neighbors to get (default is the value passed to the constructor).
+            Number of neighbors to get (default is the value passed to the
+            constructor).
         return_distance : boolean, optional. Defaults to True.
             If False, distances will not be returned
 
         Returns
         -------
         dist : array
-            Array representing the distance to points, only present if return_distance=True
+            Array representing the distance to points, only present if
+            return_distance=True
         ind : array
             Indices of the nearest points in the population matrix.
         """
@@ -146,7 +157,8 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
                                                     return_distance=return_distance)
 
 
-class KNeighborsTimeSeriesClassifier(KNeighborsClassifier, KNeighborsTimeSeriesMixin):
+class KNeighborsTimeSeriesClassifier(KNeighborsClassifier,
+                                     KNeighborsTimeSeriesMixin):
     """Classifier implementing the k-nearest neighbors vote for Time Series.
 
     Parameters
@@ -156,12 +168,16 @@ class KNeighborsTimeSeriesClassifier(KNeighborsClassifier, KNeighborsTimeSeriesM
     weights : str or callable, optional (default: 'uniform')
         Weight function used in prediction. Possible values:
 
-        - 'uniform' : uniform weights. All points in each neighborhood are weighted equally.
-        - 'distance' : weight points by the inverse of their distance. in this case, closer neighbors of a query point
+        - 'uniform' : uniform weights. All points in each neighborhood are
+          weighted equally.
+        - 'distance' : weight points by the inverse of their distance. in this
+          case, closer neighbors of a query point
           will have a greater influence than neighbors which are further away.
-        - [callable] : a user-defined function which accepts an array of distances, and returns an array of the same
+        - [callable] : a user-defined function which accepts an array of
+          distances, and returns an array of the same
           shape containing the weights.
-    metric : one of the metrics allowed for class :class:`.KNeighborsTimeSeries` (default: 'dtw')
+    metric : one of the metrics allowed for class :class:`.KNeighborsTimeSeries`
+        (default: 'dtw')
         Metric to be used at the core of the nearest neighbor procedure
     metric_params : dict or None (default: None)
         Dictionnary of metric parameters.
@@ -173,8 +189,15 @@ class KNeighborsTimeSeriesClassifier(KNeighborsClassifier, KNeighborsTimeSeriesM
     >>> clf.predict([1, 2.2, 3.5])
     array([0])
     """
-    def __init__(self, n_neighbors=5, weights='uniform', metric="dtw", metric_params=None):
-        KNeighborsClassifier.__init__(self, n_neighbors=n_neighbors, weights=weights, algorithm='brute')
+    def __init__(self,
+                 n_neighbors=5,
+                 weights='uniform',
+                 metric="dtw",
+                 metric_params=None):
+        KNeighborsClassifier.__init__(self,
+                                      n_neighbors=n_neighbors,
+                                      weights=weights,
+                                      algorithm='brute')
         self.metric = metric
         self.metric_params = metric_params
 
