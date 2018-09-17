@@ -363,6 +363,13 @@ def ts_zeros(sz, d=1):
 class LabelCategorizer(BaseEstimator, TransformerMixin):
     """Transformer to transform indicator-based labels into categorical ones.
 
+    Attributes
+    ----------
+    single_column_if_binary : boolean (optional, default: False)
+        If true, generate a single column for binary classification case.
+        Otherwise, will generate 2.
+        If there are more than 2 labels, thie option will not change anything.
+
     Examples
     --------
     >>> y = numpy.array([-1, 2, 1, 1, 2])
@@ -380,12 +387,23 @@ class LabelCategorizer(BaseEstimator, TransformerMixin):
     >>> lc2 = pickle.loads(s)
     >>> lc2.inverse_transform([[0, 1, 0], [0, 0, 1], [1, 0, 0]])  # doctest: +NORMALIZE_WHITESPACE
     array([ 1., 2., -1.])
+    >>> y = numpy.array([-1, 2, -1, -1, 2])
+    >>> lc = LabelCategorizer(single_column_if_binary=True)
+    >>> lc.fit_transform(y)  # doctest: +NORMALIZE_WHITESPACE
+    array([[ 1.],
+           [ 0.],
+           [ 1.],
+           [ 1.],
+           [ 0.]])
+    >>> lc.inverse_transform(lc.transform(y))  # doctest: +NORMALIZE_WHITESPACE
+    array([ -1., 2., -1., -1., 2.])
 
     References
     ----------
     .. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
     """
-    def __init__(self):
+    def __init__(self, single_column_if_binary=False):
+        self.single_column_if_binary = single_column_if_binary
         self._init()
 
     def _init(self):
@@ -406,11 +424,16 @@ class LabelCategorizer(BaseEstimator, TransformerMixin):
         y_out = numpy.zeros((n, n_classes))
         for i in range(n):
             y_out[i, self.forward_match[y[i]]] = 1
-        return y_out
+        if n_classes == 2 and self.single_column_if_binary:
+            return y_out[:, 0].reshape((-1, 1))
+        else:
+            return y_out
 
     def inverse_transform(self, y):
         y_ = numpy.array(y)
-        n = y_.shape[0]
+        n, n_c = y_.shape
+        if n_c == 1 and self.single_column_if_binary:
+            y_ = numpy.hstack((y_, 1 - y_))
         y_out = numpy.zeros((n, ))
         for i in range(n):
             y_out[i] = self.backward_match[y_[i].argmax()]
