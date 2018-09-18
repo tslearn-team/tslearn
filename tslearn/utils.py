@@ -396,7 +396,7 @@ class LabelCategorizer(BaseEstimator, TransformerMixin):
            [ 1.],
            [ 0.]])
     >>> lc.inverse_transform(lc.transform(y))  # doctest: +NORMALIZE_WHITESPACE
-    array([ -1., 2., -1., -1., 2.])
+    array([-1.,  2., -1., -1.,  2.])
 
     References
     ----------
