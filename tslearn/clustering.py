@@ -79,7 +79,8 @@ def silhouette_score(X, labels, metric=None, sample_size=None, metric_params=Non
     ----------
     X : array [n_ts, n_ts] if metric == "precomputed", or, \
              [n_ts, sz, d] otherwise
-        Array of pairwise distances between time series, or a time series dataset.
+        Array of pairwise distances between time series, or a time series
+        dataset.
     labels : array, shape = [n_ts]
          Predicted labels for each time series.
     metric : string, or callable
@@ -87,15 +88,15 @@ def silhouette_score(X, labels, metric=None, sample_size=None, metric_params=Non
         Should be one of {'dtw', 'softdtw', 'euclidean'} or a callable distance
         function.
         If 'softdtw' is passed, a normalized version of Soft-DTW is used that
-        is defined as `sdtw_(x,y) := sdtw(x,y) - 1/2(sdtw(x,x)+sdtw(y,y))`
+        is defined as `sdtw_(x,y) := sdtw(x,y) - 1/2(sdtw(x,x)+sdtw(y,y))`.
         If X is the distance array itself, use ``metric="precomputed"``.
     sample_size : int or None
         The size of the sample to use when computing the Silhouette Coefficient
         on a random subset of the data.
         If ``sample_size is None``, no sampling is used.
     metric_params : dict or None
-        Parameter values for the chosen metric. Value associated to the `"gamma_sdtw"` key corresponds to the gamma
-        parameter in Soft-DTW.
+        Parameter values for the chosen metric. Value associated to the
+        `"gamma_sdtw"` key corresponds to the gamma parameter in Soft-DTW.
     random_state : int, RandomState instance or None, optional (default=None)
         The generator used to randomly select a subset of samples.  If int,
         random_state is the seed used by the random number generator; If
@@ -138,12 +139,9 @@ def silhouette_score(X, labels, metric=None, sample_size=None, metric_params=Non
     elif metric == "softdtw":
         gamma = metric_params.get("gamma_sdtw", None)
         if gamma is not None:
-            sklearn_X = cdist_soft_dtw(X, gamma=gamma)
+            sklearn_X = cdist_soft_dtw_normalized(X, gamma=gamma)
         else:
-            sklearn_X = cdist_soft_dtw(X)
-        # Normalize for sklearn_X to be all >=0 and have zero diagonal
-        d_ii = numpy.diag(sklearn_X)
-        sklearn_X -= .5 * (d_ii.reshape((-1, 1)) + d_ii.reshape((1, -1)))
+            sklearn_X = cdist_soft_dtw_normalized(X)
     elif metric == "euclidean":
         X_ = to_time_series_dataset(X)
         X_ = X_.reshape((X.shape[0], -1))

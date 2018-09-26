@@ -625,6 +625,8 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
     See Also
     --------
     soft_dtw : Compute Soft-DTW
+    cdist_soft_dtw_normalized : Cross similarity matrix between time series
+    datasets using a normalized version of Soft-DTW
 
     References
     ----------
@@ -655,6 +657,53 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
             else:
                 dists[i, j] = soft_dtw(ts1_short, ts2_short, gamma=gamma)
 
+    return dists
+
+
+def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.):
+    """Compute cross-similarity matrix using a normalized version of the
+    Soft-DTW metric.
+
+    Soft-DTW was originally presented in [1]_.
+    This normalized version is defined as:
+    `sdtw_(x,y) := sdtw(x,y) - 1/2(sdtw(x,x)+sdtw(y,y))`
+    and ensures that all returned values are positive and that
+    `sdtw_(x,x) == 0`.
+
+    Parameters
+    ----------
+    dataset1
+        A dataset of time series
+    dataset2
+        Another dataset of time series
+    gamma : float (default 1.)
+        Gamma paraneter for Soft-DTW
+
+    Returns
+    -------
+    numpy.ndarray
+        Cross-similarity matrix
+
+    Examples
+    --------
+    >>> time_series = numpy.random.randn(10, 15, 1)
+    >>> numpy.alltrue(cdist_soft_dtw_normalized(time_series) >= 0.)
+    True
+
+    See Also
+    --------
+    soft_dtw : Compute Soft-DTW
+    cdist_soft_dtw : Cross similarity matrix between time series
+    datasets using the unnormalized version of Soft-DTW
+
+    References
+    ----------
+    .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
+       Time-Series," ICML 2017.
+    """
+    dists = cdist_soft_dtw(dataset1, dataset2=dataset2, gamma=gamma)
+    d_ii = numpy.diag(dists)
+    dists -= .5 * (d_ii.reshape((-1, 1)) + d_ii.reshape((1, -1)))
     return dists
 
 

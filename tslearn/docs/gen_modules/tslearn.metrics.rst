@@ -25,14 +25,14 @@ and DTW is computed as the Euclidean distance along the optimal path.
 
 .. automodule:: tslearn.metrics
 
-   
-   
+
+
    .. rubric:: Functions
 
    .. autosummary::
       :toctree: metrics
       :template: function.rst
-   
+
       cdist_dtw
       cdist_gak
       dtw
@@ -40,17 +40,9 @@ and DTW is computed as the Euclidean distance along the optimal path.
       dtw_subsequence_path
       gak
       soft_dtw
+      cdist_soft_dtw
+      cdist_soft_dtw_normalized
       lb_envelope
       lb_keogh
       sigma_gak
       gamma_soft_dtw
-   
-   
-
-   
-   
-   
-
-   
-   
-   
