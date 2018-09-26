@@ -86,6 +86,8 @@ def silhouette_score(X, labels, metric=None, sample_size=None, metric_params=Non
         The metric to use when calculating distance between time series.
         Should be one of {'dtw', 'softdtw', 'euclidean'} or a callable distance
         function.
+        If 'softdtw' is passed, a normalized version of Soft-DTW is used that
+        is defined as `sdtw_(x,y) := sdtw(x,y) - 1/2(sdtw(x,x)+sdtw(y,y))`
         If X is the distance array itself, use ``metric="precomputed"``.
     sample_size : int or None
         The size of the sample to use when computing the Silhouette Coefficient
@@ -139,6 +141,9 @@ def silhouette_score(X, labels, metric=None, sample_size=None, metric_params=Non
             sklearn_X = cdist_soft_dtw(X, gamma=gamma)
         else:
             sklearn_X = cdist_soft_dtw(X)
+        # Normalize for sklearn_X to be all >=0 and have zero diagonal
+        d_ii = numpy.diag(sklearn_X)
+        sklearn_X -= .5 * (d_ii.reshape((-1, 1)) + d_ii.reshape((1, -1)))
     elif metric == "euclidean":
         X_ = to_time_series_dataset(X)
         X_ = X_.reshape((X.shape[0], -1))
