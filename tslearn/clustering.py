@@ -10,7 +10,7 @@ from sklearn.utils import check_random_state
 from scipy.spatial.distance import cdist
 import numpy
 
-from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw, dtw
+from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw, cdist_soft_dtw_normalized, dtw
 from tslearn.barycenters import EuclideanBarycenter, DTWBarycenterAveraging, SoftDTWBarycenter
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.utils import to_time_series_dataset, to_time_series, ts_size
