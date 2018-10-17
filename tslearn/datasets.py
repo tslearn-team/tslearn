@@ -22,6 +22,32 @@ from tslearn.utils import to_time_series_dataset
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
+def harmonize_dataset_filenames(folder, verbose=False):
+    """
+    Checks if tilename corresponds to the dataset name format and deletes .DS_Store files if exists
+
+        <UCR_cache>/
+            <datasetname>/
+                <datasetname>_TRAIN.txt
+                <datasetname>_TEST.txt
+                ...
+
+    :param folder: unzipped dataset folder
+    :return: None
+    """
+    dataset_name = os.path.basename(folder)
+
+    # delete hidden .DS_Store directory if exists
+    if os.path.exists(os.path.join(folder, ".DS_Store")):
+        os.remove(os.path.join(folder, ".DS_Store"))
+
+    for f in os.listdir(folder):
+        if not f.startswith(dataset_name):
+            new_f = dataset_name + "_" + f.split("_")[-1]
+
+            os.rename(os.path.join(folder,f), os.path.join(folder,new_f))
+            if verbose: print("fixed " + os.path.join(folder, f) + "->" + os.path.join(folder, new_f))
+
 
 def extract_from_zip_url(url, target_dir=None, verbose=False):
     """Download a zip file from its URL and unzip it.
@@ -48,6 +74,8 @@ def extract_from_zip_url(url, target_dir=None, verbose=False):
         if not os.path.exists(target_dir):
             os.makedirs(target_dir)
         zipfile.ZipFile(local_zip_fname, "r").extractall(path=target_dir)
+        datasetfolder = os.path.join(target_dir, os.path.splitext(fname)[0])
+        harmonize_dataset_filenames(datasetfolder)
         shutil.rmtree(tmpdir)
         if verbose:
             print("Successfully extracted file %s to path %s" % (local_zip_fname, target_dir))
@@ -57,6 +85,29 @@ def extract_from_zip_url(url, target_dir=None, verbose=False):
         if verbose:
             sys.stderr.write("Corrupted zip file encountered, aborting.\n")
         return None
+
+def inplace_change(filename, old_string, new_string):
+    """
+    Replaces string in text file
+
+    used to fix typos in NonInvasiveFetalECGThorax1, NonInvasiveFetalECGThorax2 dataset names
+    (Fatal instead of Fetal)
+
+    code from "https://stackoverflow.com/questions/4128144/replace-string-within-file-contents"
+
+    :param filename:
+    :param old_string:
+    :param new_string:
+    :return:
+    """
+    # Safely read the input filename using 'with'
+    with open(filename) as f:
+        s = f.read()
+
+    # Safely write the changed content, if found in the file
+    with open(filename, 'w') as f:
+        s = s.replace(old_string, new_string)
+        f.write(s)
 
 
 class UCR_UEA_datasets(object):
@@ -89,29 +140,16 @@ class UCR_UEA_datasets(object):
             url_baseline = "http://www.timeseriesclassification.com/singleTrainTest.csv"
             self._baseline_scores_filename = os.path.join(self._data_dir, os.path.basename(url_baseline))
             urlretrieve(url_baseline, self._baseline_scores_filename)
+
+            # fix typos in that CSV
+            inplace_change(self._baseline_scores_filename, "NonInvasiveFatalECGThorax1", "NonInvasiveFetalECGThorax1")
+            inplace_change(self._baseline_scores_filename, "NonInvasiveFatalECGThorax2", "NonInvasiveFetalECGThorax2")
         except:
             self._baseline_scores_filename = None
 
+        if self._baseline_scores_filename is not None:
+
         self._ignore_list = ["Data Descriptions"]
-        # File names for datasets for which it is not obvious
-        self._filenames = {"CinCECGtorso": "CinC_ECG_torso",
-                           "CricketX": "Cricket_X",
-                           "CricketY": "Cricket_Y",
-                           "CricketZ": "Cricket_Z",
-                           "FiftyWords": "50words",
-                           "Lightning2": "Lighting2",
-                           "Lightning7": "Lighting7",
-                           "NonInvasiveFatalECGThorax1": "NonInvasiveFetalECG_Thorax1",
-                           "NonInvasiveFatalECGThorax2": "NonInvasiveFetalECG_Thorax2",
-                           "GunPoint": "Gun_Point",
-                           "SonyAIBORobotSurface1": "SonyAIBORobotSurface",
-                           "SonyAIBORobotSurface2": "SonyAIBORobotSurfaceII",
-                           "SyntheticControl": "synthetic_control",
-                           "TwoPatterns": "Two_Patterns",
-                           "UWaveGestureLibraryX": "UWaveGestureLibrary_X",
-                           "UWaveGestureLibraryY": "UWaveGestureLibrary_Y",
-                           "UWaveGestureLibraryZ": "UWaveGestureLibrary_Z",
-                           "WordSynonyms": "WordsSynonyms"}
 
     def baseline_accuracy(self, list_datasets=None, list_methods=None):
         """Report baseline performances as provided by UEA/UCR website.
@@ -214,8 +252,8 @@ class UCR_UEA_datasets(object):
         None
         """
         full_path = os.path.join(self._data_dir, dataset_name)
-        fname_train = self._filenames.get(dataset_name, dataset_name) + "_TRAIN.txt"
-        fname_test = self._filenames.get(dataset_name, dataset_name) + "_TEST.txt"
+        fname_train = dataset_name + "_TRAIN.txt"
+        fname_test = dataset_name + "_TEST.txt"
         if not os.path.exists(os.path.join(full_path, fname_train)) or \
             not os.path.exists(os.path.join(full_path, fname_test)):
             url = "http://www.timeseriesclassification.com/Downloads/%s.zip" % dataset_name
@@ -223,11 +261,10 @@ class UCR_UEA_datasets(object):
                 if os.path.exists(os.path.join(full_path, fname)):
                     os.remove(os.path.join(full_path, fname))
             extract_from_zip_url(url, target_dir=self._data_dir, verbose=False)
-        try:
-            data_train = numpy.loadtxt(os.path.join(full_path, fname_train), delimiter=",")
-            data_test = numpy.loadtxt(os.path.join(full_path, fname_test), delimiter=",")
-        except:
-            return None, None, None, None
+
+	data_train = numpy.loadtxt(os.path.join(full_path, fname_train), delimiter=",")
+        data_test = numpy.loadtxt(os.path.join(full_path, fname_test), delimiter=",")
+
         X_train = to_time_series_dataset(data_train[:, 1:])
         y_train = data_train[:, 0].astype(numpy.int)
         X_test = to_time_series_dataset(data_test[:, 1:])
