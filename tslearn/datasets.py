@@ -147,8 +147,6 @@ class UCR_UEA_datasets(object):
         except:
             self._baseline_scores_filename = None
 
-        if self._baseline_scores_filename is not None:
-
         self._ignore_list = ["Data Descriptions"]
 
     def baseline_accuracy(self, list_datasets=None, list_methods=None):
@@ -262,7 +260,7 @@ class UCR_UEA_datasets(object):
                     os.remove(os.path.join(full_path, fname))
             extract_from_zip_url(url, target_dir=self._data_dir, verbose=False)
 
-	data_train = numpy.loadtxt(os.path.join(full_path, fname_train), delimiter=",")
+        data_train = numpy.loadtxt(os.path.join(full_path, fname_train), delimiter=",")
         data_test = numpy.loadtxt(os.path.join(full_path, fname_test), delimiter=",")
 
         X_train = to_time_series_dataset(data_train[:, 1:])
