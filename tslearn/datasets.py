@@ -331,3 +331,13 @@ class CachedDatasets(object):
         y_train = npzfile["y_train"]
         y_test = npzfile["y_test"]
         return X_train, y_train, X_test, y_test
+
+if __name__ == "__main__":
+    # test load all datasets
+    dataset = UCR_UEA_datasets()
+    for dataset_name in dataset.list_datasets():
+        X_train, y_train, X_test, y_test = dataset.load_dataset(dataset_name)
+        if (X_train is None) or (X_test is None) or (y_train is None) or (y_test is None):
+            print("Dataset {0: <40}: failure!".format(dataset_name))
+        else:
+            print("Dataset {0: <40}: success!".format(dataset_name))
