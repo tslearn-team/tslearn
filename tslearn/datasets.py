@@ -24,8 +24,7 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 def harmonize_dataset_filenames(folder, verbose=False):
     """This function ensures that the dataset name and prefix of the filename are equal.
-    This is expected by UCR_UEA_datasets.load_dataset() function.
-    It also removes temporary files in the dataset (e.g., .DS_Store in uWaveGestureLibrary_Y)
+    This property is expected later by load dataset function.
 
     Parameters
     ----------
