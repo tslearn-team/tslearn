@@ -23,21 +23,20 @@ from tslearn.utils import to_time_series_dataset
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 def harmonize_dataset_filenames(folder, verbose=False):
-    """
-    Checks if tilename corresponds to the dataset name format and deletes .DS_Store files if exists
+    """Makes sure that dataset name and filename-prefix are the same, as expected by UCR_UEA_datasets.load_dataset()
+    Also removes .DS_Store files if exist (e.g., in uWaveGestureLibrary_Y)
 
-        <UCR_cache>/
-            <datasetname>/
-                <datasetname>_TRAIN.txt
-                <datasetname>_TEST.txt
-                ...
+    Parameters
+    ----------
+    folder : string
+        path pointing to the unzipped dataset. The last folder is assumed to be the dataset name
+    verbose : bool (default: False)
+        prints statement when files have been renamed
 
-    :param folder: unzipped dataset folder
-    :return: None
     """
     dataset_name = os.path.basename(folder)
 
-    # delete hidden .DS_Store directory if exists
+    # delete hidden .DS_Store file if exists (was present in uWaveGestureLibrary_Y)
     if os.path.exists(os.path.join(folder, ".DS_Store")):
         os.remove(os.path.join(folder, ".DS_Store"))
 
@@ -87,24 +86,22 @@ def extract_from_zip_url(url, target_dir=None, verbose=False):
         return None
 
 def inplace_change(filename, old_string, new_string):
+    """ String replacement within a text file. It is used to fix typos in downloaded csv file.
+    The code was modified from "https://stackoverflow.com/questions/4128144/replace-string-within-file-contents"
+
+    Parameters
+    ----------
+    filename : string
+        Path to the file where strings should be replaced
+    old_string : str
+        The string to be replaced in the file.
+    new_string : str
+        The new string that will replace old_string
+
     """
-    Replaces string in text file
-
-    used to fix typos in NonInvasiveFetalECGThorax1, NonInvasiveFetalECGThorax2 dataset names
-    (Fatal instead of Fetal)
-
-    code from "https://stackoverflow.com/questions/4128144/replace-string-within-file-contents"
-
-    :param filename:
-    :param old_string:
-    :param new_string:
-    :return:
-    """
-    # Safely read the input filename using 'with'
     with open(filename) as f:
         s = f.read()
 
-    # Safely write the changed content, if found in the file
     with open(filename, 'w') as f:
         s = s.replace(old_string, new_string)
         f.write(s)
@@ -245,6 +242,12 @@ class UCR_UEA_datasets(object):
         (1000, 128, 1)
         >>> print(y_train.shape)
         (1000,)
+        >>> X_train, y_train, X_test, y_test = UCR_UEA_datasets().load_dataset("NonInvasiveFetalECGThorax1")
+        >>> print(X_train.shape)
+        (1800, 750, 1)
+        >>> X_train, y_train, X_test, y_test = UCR_UEA_datasets().load_dataset("Fish")
+        >>> print(X_train.shape)
+        (175, 463, 1)
         >>> X_train, y_train, X_test, y_test = UCR_UEA_datasets().load_dataset("DatasetThatDoesNotExist")
         >>> print(X_train)
         None
@@ -259,9 +262,11 @@ class UCR_UEA_datasets(object):
                 if os.path.exists(os.path.join(full_path, fname)):
                     os.remove(os.path.join(full_path, fname))
             extract_from_zip_url(url, target_dir=self._data_dir, verbose=False)
-
-        data_train = numpy.loadtxt(os.path.join(full_path, fname_train), delimiter=",")
-        data_test = numpy.loadtxt(os.path.join(full_path, fname_test), delimiter=",")
+        try:
+            data_train = numpy.loadtxt(os.path.join(full_path, fname_train), delimiter=",")
+            data_test = numpy.loadtxt(os.path.join(full_path, fname_test), delimiter=",")
+        except:
+            return None, None, None, None
 
         X_train = to_time_series_dataset(data_train[:, 1:])
         y_train = data_train[:, 0].astype(numpy.int)
@@ -331,13 +336,3 @@ class CachedDatasets(object):
         y_train = npzfile["y_train"]
         y_test = npzfile["y_test"]
         return X_train, y_train, X_test, y_test
-
-if __name__ == "__main__":
-    # test load all datasets
-    dataset = UCR_UEA_datasets()
-    for dataset_name in dataset.list_datasets():
-        X_train, y_train, X_test, y_test = dataset.load_dataset(dataset_name)
-        if (X_train is None) or (X_test is None) or (y_train is None) or (y_test is None):
-            print("Dataset {0: <40}: failure!".format(dataset_name))
-        else:
-            print("Dataset {0: <40}: success!".format(dataset_name))
