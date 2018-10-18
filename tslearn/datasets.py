@@ -23,8 +23,9 @@ from tslearn.utils import to_time_series_dataset
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 def harmonize_dataset_filenames(folder, verbose=False):
-    """Makes sure that dataset name and filename-prefix are the same, as expected by UCR_UEA_datasets.load_dataset()
-    Also removes .DS_Store files if exist (e.g., in uWaveGestureLibrary_Y)
+    """This function ensures that the dataset name and prefix of the filename are equal.
+    This is expected by UCR_UEA_datasets.load_dataset() function.
+    It also removes temporary files in the dataset (e.g., .DS_Store in uWaveGestureLibrary_Y)
 
     Parameters
     ----------
@@ -40,12 +41,20 @@ def harmonize_dataset_filenames(folder, verbose=False):
     if os.path.exists(os.path.join(folder, ".DS_Store")):
         os.remove(os.path.join(folder, ".DS_Store"))
 
-    for f in os.listdir(folder):
-        if not f.startswith(dataset_name):
-            new_f = dataset_name + "_" + f.split("_")[-1]
+    for filename in os.listdir(folder):
 
-            os.rename(os.path.join(folder,f), os.path.join(folder,new_f))
-            if verbose: print("fixed " + os.path.join(folder, f) + "->" + os.path.join(folder, new_f))
+        # test if prefix separated by "_" is equal to dataset name
+        if not filename.startswith(dataset_name):
+
+            # parse correct dataset name
+            suffix = filename.split("_")[-1] # e.g. TRAIN.txt
+            new_filename = dataset_name + "_" + suffix
+
+            # rename file
+            os.rename(os.path.join(folder,filename), os.path.join(folder,new_filename))
+
+            if verbose:
+                print("fixed " + os.path.join(folder, filename) + "->" + os.path.join(folder, new_filename))
 
 
 def extract_from_zip_url(url, target_dir=None, verbose=False):
