@@ -671,13 +671,21 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
 
     def _shape_extraction(self, X, k):
         sz = X.shape[1]
-        Xp = y_shifted_sbd_vec(self.cluster_centers_[k], X[self.labels_ == k], norm_ref=-1,
+        Xp, mean_shift = y_shifted_sbd_vec(self.cluster_centers_[k], X[self.labels_ == k], norm_ref=-1,
                                norms_dataset=self._norms[self.labels_ == k])
         S = numpy.dot(Xp[:, :, 0].T, Xp[:, :, 0])
         Q = numpy.eye(sz) - numpy.ones((sz, sz)) / sz
         M = numpy.dot(Q.T, numpy.dot(S, Q))
         _, vec = numpy.linalg.eigh(M)
-        mu_k = vec[:, -1].reshape((sz, 1))
+        mu_k = numpy.zeros((sz,1))
+        mean_shift = -mean_shift
+
+        if mean_shift > 0:
+            mu_k[mean_shift:] = vec[:-mean_shift, -1].reshape((sz - mean_shift, 1))
+        elif mean_shift < 0:
+            mu_k[:mean_shift] = vec[-mean_shift:, -1].reshape((sz + mean_shift, 1)) 
+        else:
+            mu_k = vec[:, -1].reshape((sz, 1))
 
         # The way the optimization problem is (ill-)formulated, both mu_k and -mu_k are candidates for barycenters
         # In the following, we check which one is best candidate
