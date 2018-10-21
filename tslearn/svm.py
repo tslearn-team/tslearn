@@ -173,7 +173,6 @@ class TimeSeriesSVC(BaseSVC):
         self.d = d
         if kernel == "gak":
             kernel = _sparse_kernel_func_gak(sz=sz, d=d, gamma=gamma)
-            # kernel = _kernel_func_gak(sz=sz, d=d, gamma=gamma)
         super(TimeSeriesSVC, self).__init__(C=C, kernel=kernel, degree=degree, gamma=gamma, coef0=coef0,
                                             shrinking=shrinking, probability=probability, tol=tol,
                                             cache_size=cache_size, class_weight=class_weight, verbose=verbose,
@@ -194,10 +193,8 @@ class TimeSeriesSVC(BaseSVC):
         sklearn_X = _prepare_ts_datasets_sklearn(X)
         if self.kernel == "gak" and self.gamma == "auto":
             self.gamma = gamma_soft_dtw(to_time_series_dataset(X))
-            # self.kernel = _kernel_func_gak(sz=self.sz, d=self.d, gamma=self.gamma)
             self.kernel = _sparse_kernel_func_gak(sz=self.sz, d=self.d, gamma=self.gamma)
         _self = super(TimeSeriesSVC, self).fit(sklearn_X, y, sample_weight=sample_weight)
-        # self.kernel = _kernel_func_gak(sz=self.sz, d=self.d, gamma=self.gamma)
         self.kernel = _sparse_kernel_func_gak(sz=self.sz, d=self.d, gamma=self.gamma, slice_support_vectors=self.support_)
         return _self
 
