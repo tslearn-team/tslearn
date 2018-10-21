@@ -39,8 +39,7 @@ def _sparse_kernel_func_gak(sz, d, gamma, slice_support_vectors=None):
     def sparse_gak(X, X_fit):
         
         if X is X_fit:
-            X = X.reshape((-1, sz, d))
-            return cdist_gak(X, None, sigma=numpy.sqrt(gamma / 2.))
+            return cdist_gak(X.reshape((-1, sz, d)), None, sigma=numpy.sqrt(gamma / 2.))
         
         if slice_support_vectors is not None:
             # slice out support vectors
