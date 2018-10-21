@@ -43,7 +43,7 @@ def _sparse_kernel_func_gak(sz, d, gamma, slice_support_vectors=None):
             return cdist_gak(X, None, sigma=numpy.sqrt(gamma / 2.))
         
         if slice_support_vectors is not None:
-            # slice out support vectors and only compute cross sim with them
+            # slice out support vectors
             sliced_X_fit = X_fit[slice_support_vectors]
             gak_sim_dense = cdist_gak(X.reshape((-1, sz, d)), sliced_X_fit.reshape((-1, sz, d)), sigma=numpy.sqrt(gamma / 2.))
 
