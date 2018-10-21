@@ -40,7 +40,7 @@ def _sparse_kernel_func_gak(sz, d, gamma, slice_support_vectors=None):
         
         if X is X_fit:
             X = X.reshape((-1, sz, d))
-            return cdist_gak(X, X, sigma=numpy.sqrt(gamma / 2.))
+            return cdist_gak(X, None, sigma=numpy.sqrt(gamma / 2.))
         
         if slice_support_vectors is not None:
             # slice out support vectors and only compute cross sim with them
@@ -173,6 +173,7 @@ class TimeSeriesSVC(BaseSVC):
         self.d = d
         if kernel == "gak":
             kernel = _sparse_kernel_func_gak(sz=sz, d=d, gamma=gamma)
+            # kernel = _kernel_func_gak(sz=sz, d=d, gamma=gamma)
         super(TimeSeriesSVC, self).__init__(C=C, kernel=kernel, degree=degree, gamma=gamma, coef0=coef0,
                                             shrinking=shrinking, probability=probability, tol=tol,
                                             cache_size=cache_size, class_weight=class_weight, verbose=verbose,
@@ -193,8 +194,10 @@ class TimeSeriesSVC(BaseSVC):
         sklearn_X = _prepare_ts_datasets_sklearn(X)
         if self.kernel == "gak" and self.gamma == "auto":
             self.gamma = gamma_soft_dtw(to_time_series_dataset(X))
+            # self.kernel = _kernel_func_gak(sz=self.sz, d=self.d, gamma=self.gamma)
             self.kernel = _sparse_kernel_func_gak(sz=self.sz, d=self.d, gamma=self.gamma)
         _self = super(TimeSeriesSVC, self).fit(sklearn_X, y, sample_weight=sample_weight)
+        # self.kernel = _kernel_func_gak(sz=self.sz, d=self.d, gamma=self.gamma)
         self.kernel = _sparse_kernel_func_gak(sz=self.sz, d=self.d, gamma=self.gamma, slice_support_vectors=self.support_)
         return _self
 
