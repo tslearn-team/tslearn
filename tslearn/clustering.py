@@ -470,11 +470,14 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
             metric_params = {}
         self.gamma_sdtw = metric_params.get("gamma_sdtw", 1.)
 
-    def _fit_one_init(self, X, x_squared_norms, rs):
+    def _fit_one_init(self, X, x_squared_norms, initial_centroids, rs):
         n_ts, _, d = X.shape
         sz = min([ts_size(ts) for ts in X])
-        self.cluster_centers_ = _k_init(X[:, :sz, :].reshape((n_ts, -1)),
-                                        self.n_clusters, x_squared_norms, rs).reshape((-1, sz, d))
+        if initial_centroids is not None:
+            self.cluster_centers_ = initial_centroids.copy()
+        else:
+            self.cluster_centers_ = _k_init(X[:, :sz, :].reshape((n_ts, -1)),
+                                            self.n_clusters, x_squared_norms, rs).reshape((-1, sz, d))
         old_inertia = numpy.inf
 
         for it in range(self.max_iter):
@@ -526,18 +529,27 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
             else:
                 self.cluster_centers_[k] = EuclideanBarycenter().fit(X[self.labels_ == k])
 
-    def fit(self, X, y=None):
+    def fit(self, X, initial_centroids=None, y=None):
         """Compute k-means clustering.
 
         Parameters
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset.
+        initial_centroids: array-like of shape=(n_clusters, sz, d) of initial centroids
+            Time series dataset.
         """
         X_ = to_time_series_dataset(X)
         rs = check_random_state(self.random_state)
         x_squared_norms = cdist(X_.reshape((X_.shape[0], -1)), numpy.zeros((1, X_.shape[1] * X_.shape[2])),
                                 metric="sqeuclidean").reshape((1, -1))
+
+        if initial_centroids is not None:
+            assert initial_centroids.shape[-1] == 1, "kMeans is supposed to work on monomodal data, " \
+                                                     "provided data has dimension {}".format(X_.shape[-1])
+            assert initial_centroids.shape[0] == self.n_clusters, "Initial guess index array must contain {} samples," \
+                                                                  " {} given".format(self.n_clusters,
+                                                                                     initial_centroids.shape[0])
 
         best_correct_centroids = None
         min_inertia = numpy.inf
@@ -548,7 +560,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
                 if self.verbose and self.n_init > 1:
                     print("Init %d" % (n_successful + 1))
                 n_attempts += 1
-                self._fit_one_init(X_, x_squared_norms, rs)
+                self._fit_one_init(X_, x_squared_norms, initial_centroids, rs)
                 if self.inertia_ < min_inertia:
                     best_correct_centroids = self.cluster_centers_.copy()
                     min_inertia = self.inertia_
@@ -560,7 +572,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         self._post_fit(X_, best_correct_centroids, min_inertia)
         return self
 
-    def fit_predict(self, X, y=None):
+    def fit_predict(self, X, initial_centroids=None, y=None):
         """Fit k-means clustering using X and then predict the closest cluster each time series in X belongs to.
 
         It is more efficient to use this method than to sequentially call fit and predict.
@@ -569,13 +581,15 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset to predict.
+        initial_centroids: array-like of shape=(n_clusters, sz, d) of initial centroids
+            Time series dataset.
 
         Returns
         -------
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
-        return self.fit(X, y).labels_
+        return self.fit(X, initial_centroids, y).labels_
 
     def predict(self, X):
         """Predict the closest cluster each time series in X belongs to.
@@ -672,7 +686,7 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
     def _shape_extraction(self, X, k):
         sz = X.shape[1]
         Xp, mean_shift = y_shifted_sbd_vec(self.cluster_centers_[k], X[self.labels_ == k], norm_ref=-1,
-                               norms_dataset=self._norms[self.labels_ == k])
+                                           norms_dataset=self._norms[self.labels_ == k])
         S = numpy.dot(Xp[:, :, 0].T, Xp[:, :, 0])
         Q = numpy.eye(sz) - numpy.ones((sz, sz)) / sz
         M = numpy.dot(Q.T, numpy.dot(S, Q))
@@ -756,12 +770,14 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         X_ = to_time_series_dataset(X)
         self._norms = numpy.linalg.norm(X_, axis=(1, 2))
 
-        assert X_.shape[-1] == 1, "kShape is supposed to work on monomodal data, provided data has dimension %d" % \
-                                  X_.shape[-1]
+        assert X_.shape[-1] == 1, "kShape is supposed to work on monomodal data, provided data has " \
+                                  "dimension {}".format(X_.shape[-1])
         if initial_centroids is not None:
-            assert initial_centroids.shape[-1] == 1, "kShape is supposed to work on monomodal data, provided data has dimension %d" % \
-                                      X_.shape[-1]
-            assert initial_centroids.shape[0] == self.n_clusters, "Initial guess index array must contain {}, {} given".format(self.n_clusters, initial_centroids.shape[0])
+            assert initial_centroids.shape[-1] == 1, "kShape is supposed to work on monomodal data, provided data " \
+                                                     "has dimension {}".format(X_.shape[-1])
+            assert initial_centroids.shape[0] == self.n_clusters, "Initial guess index array must contain {}, " \
+                                                                  "{} given".format(self.n_clusters,
+                                                                                    initial_centroids.shape[0])
 
         rs = check_random_state(self.random_state)
 
@@ -803,7 +819,7 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
-        return self.fit(X, initial_centroids).labels_
+        return self.fit(X, initial_centroids, y).labels_
 
     def predict(self, X):
         """Predict the closest cluster each time series in X belongs to.
