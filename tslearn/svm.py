@@ -193,9 +193,9 @@ class TimeSeriesSVC(BaseSVC):
         if self.kernel == "gak" and self.gamma == "auto":
             self.gamma = gamma_soft_dtw(to_time_series_dataset(X))
             self.kernel = _sparse_kernel_func_gak(sz=self.sz, d=self.d, gamma=self.gamma)
-        _self = super(TimeSeriesSVC, self).fit(sklearn_X, y, sample_weight=sample_weight)
+        super(TimeSeriesSVC, self).fit(sklearn_X, y, sample_weight=sample_weight)
         self.kernel = _sparse_kernel_func_gak(sz=self.sz, d=self.d, gamma=self.gamma, slice_support_vectors=self.support_)
-        return _self
+        return self
 
     def predict(self, X):
         sklearn_X = _prepare_ts_datasets_sklearn(X)
