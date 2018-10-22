@@ -133,7 +133,7 @@ class TimeSeriesScalerMeanVariance(TransformerMixin):
         self.global_mean = None
         self.global_std = None
 
-    def fit_transform(self, X, global_stats=False, **kwargs):
+    def fit_transform(self, X, **kwargs):
         """Fit to data, then transform it.
 
         Parameters
