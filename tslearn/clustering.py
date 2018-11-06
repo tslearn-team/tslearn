@@ -701,7 +701,7 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         if mean_shift > 0:
             mu_k[mean_shift:] = vec[:-mean_shift, -1].reshape((sz - mean_shift, 1))
         elif mean_shift < 0:
-            mu_k[:mean_shift] = vec[-mean_shift:, -1].reshape((sz + mean_shift, 1)) 
+            mu_k[:mean_shift] = vec[-mean_shift:, -1].reshape((sz + mean_shift, 1))
         else:
             mu_k = vec[:, -1].reshape((sz, 1))
 
@@ -732,12 +732,15 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
 
     def _fit_one_init(self, X, rs):
         n_samples, sz, d = X.shape
-        self.labels_ = rs.randint(self.n_clusters, size=n_samples)
         if hasattr(self.init, '__array__'):
             self.cluster_centers_ = self.init.copy()
         else:
             self.cluster_centers_ = rs.randn(self.n_clusters, sz, d)
         self._norms_centroids = numpy.linalg.norm(self.cluster_centers_, axis=(1, 2))
+        if hasattr(self.init, '__array__'):
+            self._assign(X)
+        else:
+            self.labels_ = rs.randint(self.n_clusters, size=n_samples)
         old_inertia = numpy.inf
 
         for it in range(self.max_iter):
