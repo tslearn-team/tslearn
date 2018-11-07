@@ -156,6 +156,14 @@ def silhouette_score(X, labels, metric=None, sample_size=None, metric_params=Non
                                     **kwds)
 
 
+def _check_initial_guess(init, X, n_clusters):
+    if hasattr(init, '__array__'):
+        assert init.shape[-1] == 1, "kMeans is supposed to work on monomodal data, " \
+                                    "provided data has dimension {}".format(X.shape[-1])
+        assert init.shape[0] == n_clusters, "Initial guess index array must contain {} samples," \
+                                            " {} given".format(n_clusters, init.shape[0])
+
+
 class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
     """Global Alignment Kernel K-means.
 
@@ -545,13 +553,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         rs = check_random_state(self.random_state)
         x_squared_norms = cdist(X_.reshape((X_.shape[0], -1)), numpy.zeros((1, X_.shape[1] * X_.shape[2])),
                                 metric="sqeuclidean").reshape((1, -1))
-
-        if hasattr(self.init, '__array__'):
-            assert self.init.shape[-1] == 1, "kMeans is supposed to work on monomodal data, " \
-                                             "provided data has dimension {}".format(X_.shape[-1])
-            assert self.init.shape[0] == self.n_clusters, "Initial guess index array must contain {} samples," \
-                                                          " {} given".format(self.n_clusters,
-                                                                             self.init.shape[0])
+        _check_initial_guess(self.init, X_, self.n_clusters)
 
         best_correct_centroids = None
         min_inertia = numpy.inf
@@ -777,12 +779,7 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
 
         assert X_.shape[-1] == 1, "kShape is supposed to work on monomodal data, provided data has " \
                                   "dimension {}".format(X_.shape[-1])
-        if hasattr(self.init, '__array__'):
-            assert self.init.shape[-1] == 1, "kShape is supposed to work on monomodal data, provided data " \
-                                             "has dimension {}".format(X_.shape[-1])
-            assert self.init.shape[0] == self.n_clusters, "Initial guess index array must contain {}, " \
-                                                          "{} given".format(self.n_clusters,
-                                                                            self.init.shape[0])
+        _check_initial_guess(self.init, X_, self.n_clusters)
 
         rs = check_random_state(self.random_state)
 
