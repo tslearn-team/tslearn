@@ -236,9 +236,11 @@ class UCR_UEA_datasets(object):
                     os.remove(os.path.join(full_path, fname))
             extract_from_zip_url(url, target_dir=full_path, verbose=False)
         try:
-            data_train = numpy.loadtxt(os.path.join(full_path, fname_train), delimiter=None)
-            data_test = numpy.loadtxt(os.path.join(full_path, fname_test), delimiter=None)
+            data_train = numpy.loadtxt(os.path.join(self._data_dir, fname_train), delimiter=None)
+            data_test = numpy.loadtxt(os.path.join(self._data_dir, fname_test), delimiter=None)
         except:
+            import traceback
+            traceback.print_exc()
             return None, None, None, None
         X_train = to_time_series_dataset(data_train[:, 1:])
         y_train = data_train[:, 0].astype(numpy.int)
