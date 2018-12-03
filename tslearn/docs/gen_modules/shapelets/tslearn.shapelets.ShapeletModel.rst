@@ -19,6 +19,7 @@ tslearn.shapelets.ShapeletModel
       ~ShapeletModel.fit
       ~ShapeletModel.get_weights
       ~ShapeletModel.predict
+      ~ShapeletModel.predict_proba
       ~ShapeletModel.transform
       ~ShapeletModel.locate
    
