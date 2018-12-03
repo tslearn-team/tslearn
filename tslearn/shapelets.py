@@ -217,16 +217,18 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
     Examples
     --------
     >>> from tslearn.generators import random_walk_blobs
-    >>> X, y = random_walk_blobs(n_ts_per_blob=20, sz=64, d=2, n_blobs=2)
+    >>> X, y = random_walk_blobs(n_ts_per_blob=20, sz=64, d=2, n_blobs=3)
     >>> clf = ShapeletModel(n_shapelets_per_size={10: 5}, max_iter=1, verbose_level=0)
     >>> clf.fit(X, y).shapelets_.shape
     (5,)
     >>> clf.shapelets_[0].shape
     (10, 2)
     >>> clf.predict(X).shape
-    (40,)
+    (60,)
+    >>> clf.predict_proba(X).shape
+    (60, 3)
     >>> clf.transform(X).shape
-    (40, 5)
+    (60, 5)
     >>> params = clf.get_params(deep=True)
     >>> sorted(params.keys())
     ['batch_size', 'max_iter', 'n_shapelets_per_size', 'optimizer', 'random_state', 'verbose_level', 'weight_regularizer']
@@ -244,11 +246,11 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
     >>> clf2.shapelets_as_time_series_.shape
     (15, 20, 2)
     >>> clf2.predict(X).shape
-    (40,)
+    (60,)
     >>> clf2.transform(X).shape
-    (40, 15)
+    (60, 15)
     >>> clf2.locate(X).shape
-    (40, 15)
+    (60, 15)
     >>> import sklearn
     >>> cv_results = sklearn.model_selection.cross_validate(clf, X, y, return_train_score=False)
     >>> cv_results['test_score'].shape
@@ -331,8 +333,6 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         if y.ndim == 1:
             self.label_binarizer = LabelBinarizer().fit(y)
             y_ = self.label_binarizer.transform(y)
-            # if y_.shape[1] == 1:
-            #     y_ = numpy.hstack((y_, 1 - y_))
         else:
             y_ = y
             self.categorical_y = True
@@ -349,7 +349,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         self.transformer_model.compile(loss="mean_squared_error",
                                        optimizer=self.optimizer)
         self.locator_model.compile(loss="mean_squared_error",
-                                       optimizer=self.optimizer)
+                                   optimizer=self.optimizer)
         self._set_weights_false_conv(d=d)
         self.model.fit([X[:, :, di].reshape((n_ts, sz, 1)) for di in range(d)],
                        y_,
