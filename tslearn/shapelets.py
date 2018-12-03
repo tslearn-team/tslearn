@@ -359,7 +359,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         return self
 
     def predict(self, X):
-        """Predict class probability for a given set of time series.
+        """Predict class for a given set of time series.
 
         Parameters
         ----------
@@ -373,17 +373,33 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
             Index of the cluster each sample belongs to or class probability matrix, depending on
             what was provided at training time.
         """
-        X_ = to_time_series_dataset(X)
-        n_ts, sz, d = X_.shape
-        categorical_preds = self.model.predict([X_[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d)],
-                                               batch_size=self.batch_size,
-                                               verbose=self.verbose_level)
+        categorical_preds = self.predict_proba(X)
         if self.categorical_y:
             return categorical_preds
         else:
             if categorical_preds.shape[1] == 2:
                 categorical_preds = categorical_preds[:, 0]
             return self.label_binarizer.inverse_transform(categorical_preds)
+
+    def predict_proba(self, X):
+        """Predict class probability for a given set of time series.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset.
+
+        Returns
+        -------
+        array of shape=(n_ts, n_classes),
+            Class probability matrix.
+        """
+        X_ = to_time_series_dataset(X)
+        n_ts, sz, d = X_.shape
+        categorical_preds = self.model.predict([X_[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d)],
+                                               batch_size=self.batch_size,
+                                               verbose=self.verbose_level)
+        return categorical_preds
 
     def transform(self, X):
         """Generate shapelet transform for a set of time series.
