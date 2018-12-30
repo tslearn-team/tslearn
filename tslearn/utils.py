@@ -104,8 +104,8 @@ def to_time_series_dataset(dataset, dtype=numpy.float):
 
     Returns
     -------
-    numpy.ndarray of shape (n_ts, sz, d) or array of numpy.ndarray of shape (sz_i, d)
-        The transformed dataset of time series. Represented as a list of numpy arrays if equal_size is False.
+    numpy.ndarray of shape (n_ts, sz, d)
+        The transformed dataset of time series.
     
     Example
     -------
@@ -135,6 +135,40 @@ def to_time_series_dataset(dataset, dtype=numpy.float):
         ts = to_time_series(dataset[i], remove_nans=True)
         dataset_out[i, :ts.shape[0]] = ts
     return dataset_out
+
+
+def to_sklearn_dataset(dataset, dtype=numpy.float):
+    """Transforms a time series dataset so that it fits the format used in
+    ``sklearn`` estimators.
+
+    Parameters
+    ----------
+    dataset : array-like
+        The dataset of time series to be transformed.
+    dtype : data type (default: numpy.float)
+        Data type for the returned dataset.
+
+    Returns
+    -------
+    numpy.ndarray of shape (n_ts, sz * d)
+        The transformed dataset of time series.
+
+    Example
+    -------
+    >>> to_sklearn_dataset([[1, 2]]) # doctest: +NORMALIZE_WHITESPACE
+    array([[ 1., 2.]])
+    >>> to_sklearn_dataset([[1, 2], [1, 4, 3]]) # doctest: +NORMALIZE_WHITESPACE
+    array([[ 1.,  2., nan],
+           [ 1.,  4., 3.]])
+
+    See Also
+    --------
+    to_time_series_dataset : Transforms a time series dataset to ``tslearn``
+    format.
+    """
+    tslearn_dataset = to_time_series_dataset(dataset, dtype=dtype)
+    n_ts = tslearn_dataset.shape[0]
+    return tslearn_dataset.reshape((n_ts, -1))
 
 
 def timeseries_to_str(ts, fmt="%.18e"):
