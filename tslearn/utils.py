@@ -137,7 +137,7 @@ def to_time_series_dataset(dataset, dtype=numpy.float):
     return dataset_out
 
 
-def to_sklearn_dataset(dataset, dtype=numpy.float):
+def to_sklearn_dataset(dataset, dtype=numpy.float, return_dim=False):
     """Transforms a time series dataset so that it fits the format used in
     ``sklearn`` estimators.
 
@@ -155,8 +155,8 @@ def to_sklearn_dataset(dataset, dtype=numpy.float):
 
     Example
     -------
-    >>> to_sklearn_dataset([[1, 2]]) # doctest: +NORMALIZE_WHITESPACE
-    array([[ 1., 2.]])
+    >>> to_sklearn_dataset([[1, 2]], return_dim=True) # doctest: +NORMALIZE_WHITESPACE
+    (array([[ 1., 2.]]), 1)
     >>> to_sklearn_dataset([[1, 2], [1, 4, 3]]) # doctest: +NORMALIZE_WHITESPACE
     array([[ 1.,  2., nan],
            [ 1.,  4., 3.]])
@@ -168,7 +168,11 @@ def to_sklearn_dataset(dataset, dtype=numpy.float):
     """
     tslearn_dataset = to_time_series_dataset(dataset, dtype=dtype)
     n_ts = tslearn_dataset.shape[0]
-    return tslearn_dataset.reshape((n_ts, -1))
+    d = tslearn_dataset.shape[2]
+    if return_dim:
+        return tslearn_dataset.reshape((n_ts, -1)), d
+    else:
+        return tslearn_dataset.reshape((n_ts, -1))
 
 
 def timeseries_to_str(ts, fmt="%.18e"):

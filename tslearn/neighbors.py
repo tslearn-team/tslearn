@@ -5,17 +5,22 @@ time series metrics.
 
 import numpy
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
-from sklearn.neighbors.base import KNeighborsMixin, _get_weights
-from scipy import stats
+from sklearn.neighbors.base import KNeighborsMixin
 from scipy.spatial.distance import cdist as scipy_cdist
-from sklearn.utils.extmath import weighted_mode
 
 from tslearn.metrics import cdist_dtw
-from tslearn.utils import to_time_series_dataset
+from tslearn.utils import to_time_series_dataset, to_sklearn_dataset
 
 
 class KNeighborsTimeSeriesMixin(KNeighborsMixin):
     """Mixin for k-neighbors searches on Time Series."""
+
+    def _set_metric(self, metric, metric_params):
+        if metric == "dtw":
+            self.metric = cdist_dtw
+        else:
+            self.metric = metric
+        self.metric_params = metric_params
 
     def kneighbors(self, X=None, n_neighbors=None, return_distance=True):
         """Finds the K-neighbors of a point.
@@ -48,9 +53,7 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
         if X is None:
             X = self._fit_X
             self_neighbors = True
-        else:
-            X = to_time_series_dataset(X)
-        if self.metric == "dtw":
+        if self.metric == "dtw" or self.metric == cdist_dtw:
             cdist_fun = cdist_dtw
         elif self.metric in ["euclidean", "sqeuclidean", "cityblock"]:
             cdist_fun = lambda X, Xp: scipy_cdist(X.reshape((X.shape[0], -1)),
@@ -60,7 +63,14 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
             raise ValueError("Unrecognized time series metric string: %s "
                              "(should be one of 'dtw', 'euclidean', "
                              "'sqeuclidean' or 'cityblock')" % self.metric)
-        full_dist_matrix = cdist_fun(X, self._fit_X)
+
+        if X.ndim == 2:  # sklearn-format case
+            X = X.reshape((X.shape[0], -1, self.d))
+            fit_X = self._fit_X.reshape((self._fit_X.shape[0], -1, self.d))
+        else:
+            fit_X = self._fit_X
+
+        full_dist_matrix = cdist_fun(X, fit_X)
         ind = numpy.argsort(full_dist_matrix, axis=1)
 
         if self_neighbors:
@@ -96,9 +106,9 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
 
     Examples
     --------
-    >>> time_series = [[1, 2, 3, 4], [3, 3, 2, 0], [1, 2, 2, 4]]
+    >>> time_series = to_time_series_dataset([[1, 2, 3, 4], [3, 3, 2, 0], [1, 2, 2, 4]])
     >>> knn = KNeighborsTimeSeries(n_neighbors=1).fit(time_series)
-    >>> dist, ind = knn.kneighbors([[1, 1, 2, 2, 2, 3, 4]], return_distance=True)
+    >>> dist, ind = knn.kneighbors(to_time_series_dataset([[1, 1, 2, 2, 2, 3, 4]]), return_distance=True)
     >>> dist
     array([[ 0.]])
     >>> ind
@@ -112,8 +122,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
         NearestNeighbors.__init__(self,
                                   n_neighbors=n_neighbors,
                                   algorithm='brute')
-        self.metric = metric
-        self.metric_params = metric_params
+        self._set_metric(metric, metric_params)
 
     def fit(self, X, y=None):
         """Fit the model using X as training data
@@ -185,21 +194,21 @@ class KNeighborsTimeSeriesClassifier(KNeighborsClassifier,
     Examples
     --------
     >>> clf = KNeighborsTimeSeriesClassifier(n_neighbors=2, metric="dtw")
-    >>> clf.fit([[1, 2, 3], [1, 1.2, 3.2], [3, 2, 1]], y=[0, 0, 1])
-    >>> clf.predict([1, 2.2, 3.5])
+    >>> clf.fit([[1, 2, 3], [1, 1.2, 3.2], [3, 2, 1]], y=[0, 0, 1]).predict([1, 2.2, 3.5])
     array([0])
     """
     def __init__(self,
                  n_neighbors=5,
                  weights='uniform',
                  metric="dtw",
-                 metric_params=None):
+                 metric_params=None,
+                 d=None):
         KNeighborsClassifier.__init__(self,
                                       n_neighbors=n_neighbors,
                                       weights=weights,
                                       algorithm='brute')
-        self.metric = metric
-        self.metric_params = metric_params
+        self._set_metric(metric, metric_params)
+        self.d = d
 
     def fit(self, X, y):
         """Fit the model using X as training data and y as target values
@@ -211,8 +220,8 @@ class KNeighborsTimeSeriesClassifier(KNeighborsClassifier,
         y : array-like, shape (n_ts, )
             Target values.
         """
-        self._fit_X = to_time_series_dataset(X)
-        self._fit_y = numpy.array(y)
+        X_, self.d = to_sklearn_dataset(X, return_dim=True)
+        return super(KNeighborsTimeSeriesClassifier, self).fit(X_, y)
 
     def predict(self, X):
         """Predict the class labels for the provided data
@@ -222,14 +231,16 @@ class KNeighborsTimeSeriesClassifier(KNeighborsClassifier,
         X : array-like, shape (n_ts, sz, d)
             Test samples.
         """
-        X_ = to_time_series_dataset(X)
-        neigh_dist, neigh_ind = self.kneighbors(X_)
+        X_ = to_sklearn_dataset(X)
+        return super(KNeighborsTimeSeriesClassifier, self).predict(X_)
 
-        weights = _get_weights(neigh_dist, self.weights)
+    def predict_proba(self, X):
+        """Predict the class probabilities for the provided data
 
-        if weights is None:
-            mode, _ = stats.mode(self._fit_y[neigh_ind], axis=1)
-        else:
-            mode, _ = weighted_mode(self._fit_y[neigh_ind], weights, axis=1)
-
-        return mode[:, 0]
+        Parameters
+        ----------
+        X : array-like, shape (n_ts, sz, d)
+            Test samples.
+        """
+        X_ = to_sklearn_dataset(X)
+        return super(KNeighborsTimeSeriesClassifier, self).predict_proba(X_)
