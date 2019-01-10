@@ -18,7 +18,7 @@ scipy
 scikit-learn
 ```
 
-If you plan to use the `shapelets` module, `keras` should also be installed.
+If you plan to use the `shapelets` module, `keras` and `tensorflow` should also be installed.
 
 # Installation
 
@@ -89,7 +89,7 @@ The documentation, including a gallery of examples, is hosted at [readthedocs](h
     * Based on `tslearn.barycenters` that offers Soft-DTW barycenter computation
   * It also provides a way to compute the silhouette coefficient for given clustering and metric
 * A `shapelets` module includes an efficient implementation of the Learning Time-Series method from Grabocka _et al._
-  * **Warning:** to use the `shapelets` module, an extra dependency is required: `keras`
+  * **Warning:** to use the `shapelets` module, two extra dependencies are required: `keras` and `tensorflow`
 * A `piecewise` module includes standard time series transformations, as well as the corresponding distances:
   * Piecewise Aggregate Approximation (PAA)
   * Symbolic Aggregate approXimation (SAX)

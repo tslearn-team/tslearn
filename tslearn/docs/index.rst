@@ -9,7 +9,7 @@
 ``tslearn`` is a Python package that provides machine learning tools for the analysis of time series.
 This package builds on (and hence depends on) ``scikit-learn``, ``numpy`` and ``scipy`` libraries.
 
-If you plan to use the ``shapelets`` module from ``tslearn``, ``keras`` should also be installed.
+If you plan to use the ``shapelets`` module from ``tslearn``, ``keras`` and ``tensorflow`` should also be installed.
 
 Installation
 ------------
