@@ -194,7 +194,8 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
     optimizer: str or keras.optimizers.Optimizer (default: "sgd")
         `keras` optimizer to use for training.
     weight_regularizer: float or None (default: None)
-        `keras` regularizer to use for training the classification (softmax) layer.
+        Strength of the L2 regularizer to use for training the classification
+        (softmax) layer.
         If None, no regularization is performed.
     random_state : int or None, optional (default: None)
         The seed of the pseudo random number generator to use when shuffling
@@ -342,10 +343,6 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         else:
             n_classes = y_.shape[1]
         self._set_model_layers(X=X, ts_sz=sz, d=d, n_classes=n_classes)
-        self.model.compile(loss="categorical_crossentropy" if n_classes > 2 else "binary_crossentropy",
-                           optimizer=self.optimizer,
-                           metrics=[categorical_accuracy, categorical_crossentropy] if n_classes > 2
-                           else [binary_accuracy, binary_crossentropy])
         self.transformer_model.compile(loss="mean_squared_error",
                                        optimizer=self.optimizer)
         self.locator_model.compile(loss="mean_squared_error",
@@ -481,6 +478,10 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         self.model = Model(inputs=inputs, outputs=outputs)
         self.transformer_model = Model(inputs=inputs, outputs=concatenated_features)
         self.locator_model = Model(inputs=inputs, outputs=concatenated_locations)
+        self.model.compile(loss="categorical_crossentropy" if n_classes > 2 else "binary_crossentropy",
+                           optimizer=self.optimizer,
+                           metrics=[categorical_accuracy, categorical_crossentropy] if n_classes > 2
+                           else [binary_accuracy, binary_crossentropy])
 
     def get_weights(self, layer_name=None):
         """Return model weights (or weights for a given layer if `layer_name` is provided).
@@ -511,3 +512,103 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
             return self.model.get_weights()
         else:
             return self.model.get_layer(layer_name).get_weights()
+
+
+class SerializableShapeletModel(ShapeletModel):
+    """Serializable variant of the Learning Time-Series Shapelets model.
+
+
+    Learning Time-Series Shapelets was originally presented in [1]_.
+
+    Parameters
+    ----------
+    n_shapelets_per_size: dict
+        Dictionary giving, for each shapelet size (key),
+        the number of such shapelets to be trained (value)
+    max_iter: int (default: 1000)
+        Number of training epochs.
+    batch_size: int (default:256)
+        Batch size to be used.
+    verbose_level: {0, 1, 2} (default: 2)
+        `keras` verbose level.
+    learning_rate: float (default: 0.01)
+        Learning rate to be used for the SGD optimizer.
+    weight_regularizer: float or None (default: None)
+        Strength of the L2 regularizer to use for training the classification
+        (softmax) layer.
+        If None, no regularization is performed.
+    random_state : int or None, optional (default: None)
+        The seed of the pseudo random number generator to use when shuffling
+        the data.  If int, random_state is the seed used by the random number
+        generator; If None, the random number generator is the RandomState
+        instance used by `np.random`.
+
+    Attributes
+    ----------
+    shapelets_: numpy.ndarray of objects, each object being a time series
+        Set of time-series shapelets.
+    shapelets_as_time_series_: numpy.ndarray of shape (n_shapelets, sz_shp, d) where \
+    sz_shp is the maximum of all shapelet sizes
+        Set of time-series shapelets formatted as a ``tslearn`` time series dataset.
+
+    Note
+    ----
+        This implementation requires a dataset of equal-sized time series.
+
+    Examples
+    --------
+    >>> from tslearn.generators import random_walk_blobs
+    >>> X, y = random_walk_blobs(n_ts_per_blob=20, sz=64, d=2, n_blobs=3)
+    >>> clf = SerializableShapeletModel(n_shapelets_per_size={10: 5}, max_iter=1, verbose_level=0, learning_rate=0.01)
+    >>> clf.fit(X, y).shapelets_.shape
+    (5,)
+    >>> clf.shapelets_[0].shape
+    (10, 2)
+    >>> clf.predict(X).shape
+    (60,)
+    >>> clf.predict_proba(X).shape
+    (60, 3)
+    >>> clf.transform(X).shape
+    (60, 5)
+    >>> params = clf.get_params(deep=True)
+    >>> sorted(params.keys())
+    ['batch_size', 'learning_rate', 'max_iter', 'n_shapelets_per_size', 'random_state', 'verbose_level', 'weight_regularizer']
+    >>> clf.set_params(batch_size=128)  # doctest: +NORMALIZE_WHITESPACE
+    SerializableShapeletModel(batch_size=128, learning_rate=0.01, max_iter=1,
+           n_shapelets_per_size={10: 5}, random_state=None,
+           verbose_level=0, weight_regularizer=0.0)
+    >>> import sklearn
+    >>> cv_results = sklearn.model_selection.cross_validate(clf, X, y, return_train_score=False)
+    >>> cv_results['test_score'].shape
+    (3,)
+
+    References
+    ----------
+    .. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
+    """
+    def __init__(self, n_shapelets_per_size,
+                 max_iter=1000,
+                 batch_size=256,
+                 verbose_level=2,
+                 learning_rate=0.01,
+                 weight_regularizer=0.,
+                 random_state=None):
+        super(SerializableShapeletModel,
+              self).__init__(n_shapelets_per_size=n_shapelets_per_size,
+                             max_iter=max_iter,
+                             batch_size=batch_size,
+                             verbose_level=verbose_level,
+                             weight_regularizer=weight_regularizer,
+                             random_state=random_state)
+        self.learning_rate = learning_rate
+
+    def _set_model_layers(self, X, ts_sz, d, n_classes):
+        super(SerializableShapeletModel,
+              self)._set_model_layers(X=X,
+                                      ts_sz=ts_sz,
+                                      d=d,
+                                      n_classes=n_classes)
+        K.set_value(self.model.optimizer.lr, 0.001)
+
+    def set_params(self, **params):
+        return super(SerializableShapeletModel, self).set_params(**params)

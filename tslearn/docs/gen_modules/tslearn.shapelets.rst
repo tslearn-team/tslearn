@@ -23,6 +23,7 @@ tslearn.shapelets
       :template: class.rst
    
       ShapeletModel
+      SerializableShapeletModel
    
    
 
