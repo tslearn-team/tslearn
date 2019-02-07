@@ -74,6 +74,7 @@ def y_shifted_sbd_vec(numpy.ndarray[DTYPE_t, ndim=2] ref_ts, numpy.ndarray[DTYPE
                       numpy.ndarray[DTYPE_t, ndim=1] norms_dataset):
     assert dataset.dtype == DTYPE and ref_ts.dtype == DTYPE
     assert dataset.shape[1] == ref_ts.shape[0] and dataset.shape[2] == ref_ts.shape[1]
+    cdef int shift_mean = 0
     cdef int i = 0
     cdef int sz = dataset.shape[1]
     cdef numpy.ndarray[DTYPE_t, ndim=3] dataset_shifted = numpy.zeros((dataset.shape[0], dataset.shape[1],
@@ -99,4 +100,10 @@ def y_shifted_sbd_vec(numpy.ndarray[DTYPE_t, ndim=2] ref_ts, numpy.ndarray[DTYPE
             dataset_shifted[i, :shift] = dataset[i, -shift:, :]
         else:
             dataset_shifted[i] = dataset[i]
-    return dataset_shifted
+
+        shift_mean = shift_mean + shift
+
+    if dataset.shape[0] > 0:
+        shift_mean = shift_mean/dataset.shape[0]
+
+    return dataset_shifted, shift_mean

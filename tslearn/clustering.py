@@ -162,6 +162,14 @@ def silhouette_score(X, labels, metric=None, sample_size=None, metric_params=Non
                                     **kwds)
 
 
+def _check_initial_guess(init, X, n_clusters):
+    if hasattr(init, '__array__'):
+        assert init.shape[-1] == 1, "kMeans is supposed to work on monomodal data, " \
+                                    "provided data has dimension {}".format(X.shape[-1])
+        assert init.shape[0] == n_clusters, "Initial guess index array must contain {} samples," \
+                                            " {} given".format(n_clusters, init.shape[0])
+
+
 class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
     """Global Alignment Kernel K-means.
 
@@ -396,6 +404,9 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
     random_state : integer or numpy.RandomState, optional
         Generator used to initialize the centers. If an integer is given, it fixes the seed. Defaults to the global
         numpy random number generator.
+    init : {'random' or ndarray} optional
+        Method for initialization. If an ndarray is passed, it should be of shape (n_clusters, n_features)
+        and gives the initial centers.
 
     Attributes
     ----------
@@ -454,7 +465,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
     """
 
     def __init__(self, n_clusters=3, max_iter=50, tol=1e-6, n_init=1, metric="euclidean", max_iter_barycenter=100,
-                 metric_params=None, dtw_inertia=False, verbose=True, random_state=None):
+                 metric_params=None, dtw_inertia=False, verbose=True, random_state=None, init='random'):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
         self.tol = tol
@@ -465,6 +476,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         self.max_iter_barycenter = max_iter_barycenter
         self.max_attempts = max(self.n_init, 10)
         self.dtw_inertia = dtw_inertia
+        self.init = init
 
         self.labels_ = None
         self.inertia_ = numpy.inf
@@ -479,8 +491,11 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
     def _fit_one_init(self, X, x_squared_norms, rs):
         n_ts, _, d = X.shape
         sz = min([ts_size(ts) for ts in X])
-        self.cluster_centers_ = _k_init(X[:, :sz, :].reshape((n_ts, -1)),
-                                        self.n_clusters, x_squared_norms, rs).reshape((-1, sz, d))
+        if hasattr(self.init, '__array__'):
+            self.cluster_centers_ = self.init.copy()
+        else:
+            self.cluster_centers_ = _k_init(X[:, :sz, :].reshape((n_ts, -1)),
+                                            self.n_clusters, x_squared_norms, rs).reshape((-1, sz, d))
         old_inertia = numpy.inf
 
         for it in range(self.max_iter):
@@ -544,6 +559,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         rs = check_random_state(self.random_state)
         x_squared_norms = cdist(X_.reshape((X_.shape[0], -1)), numpy.zeros((1, X_.shape[1] * X_.shape[2])),
                                 metric="sqeuclidean").reshape((1, -1))
+        _check_initial_guess(self.init, X_, self.n_clusters)
 
         best_correct_centroids = None
         min_inertia = numpy.inf
@@ -622,6 +638,9 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
     random_state : integer or numpy.RandomState, optional
         Generator used to initialize the centers. If an integer is given, it fixes the seed. Defaults to the global
         numpy random number generator.
+    init : {'random' or ndarray} optional
+        Method for initialization. If an ndarray is passed, it should be of shape (n_clusters, n_features)
+        and gives the initial centers.
 
     Attributes
     ----------
@@ -659,7 +678,7 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
     .. [1] J. Paparrizos & L. Gravano. k-Shape: Efficient and Accurate Clustering of Time Series. SIGMOD 2015.
        pp. 1855-1870.
     """
-    def __init__(self, n_clusters=3, max_iter=100, tol=1e-6, n_init=1, verbose=True, random_state=None):
+    def __init__(self, n_clusters=3, max_iter=100, tol=1e-6, n_init=1, verbose=True, random_state=None, init='random'):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
         self.tol = tol
@@ -667,6 +686,7 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         self.n_init = n_init
         self.verbose = verbose
         self.max_attempts = max(self.n_init, 10)
+        self.init = init
 
         self.labels_ = None
         self.inertia_ = numpy.inf
@@ -677,13 +697,21 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
 
     def _shape_extraction(self, X, k):
         sz = X.shape[1]
-        Xp = y_shifted_sbd_vec(self.cluster_centers_[k], X[self.labels_ == k], norm_ref=-1,
-                               norms_dataset=self._norms[self.labels_ == k])
+        Xp, mean_shift = y_shifted_sbd_vec(self.cluster_centers_[k], X[self.labels_ == k], norm_ref=-1,
+                                           norms_dataset=self._norms[self.labels_ == k])
         S = numpy.dot(Xp[:, :, 0].T, Xp[:, :, 0])
         Q = numpy.eye(sz) - numpy.ones((sz, sz)) / sz
         M = numpy.dot(Q.T, numpy.dot(S, Q))
         _, vec = numpy.linalg.eigh(M)
-        mu_k = vec[:, -1].reshape((sz, 1))
+        mu_k = numpy.zeros((sz,1))
+        mean_shift = -mean_shift
+
+        if mean_shift > 0:
+            mu_k[mean_shift:] = vec[:-mean_shift, -1].reshape((sz - mean_shift, 1))
+        elif mean_shift < 0:
+            mu_k[:mean_shift] = vec[-mean_shift:, -1].reshape((sz + mean_shift, 1))
+        else:
+            mu_k = vec[:, -1].reshape((sz, 1))
 
         # The way the optimization problem is (ill-)formulated, both mu_k and -mu_k are candidates for barycenters
         # In the following, we check which one is best candidate
@@ -712,9 +740,15 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
 
     def _fit_one_init(self, X, rs):
         n_samples, sz, d = X.shape
-        self.labels_ = rs.randint(self.n_clusters, size=n_samples)
-        self.cluster_centers_ = rs.randn(self.n_clusters, sz, d)
+        if hasattr(self.init, '__array__'):
+            self.cluster_centers_ = self.init.copy()
+        else:
+            self.cluster_centers_ = rs.randn(self.n_clusters, sz, d)
         self._norms_centroids = numpy.linalg.norm(self.cluster_centers_, axis=(1, 2))
+        if hasattr(self.init, '__array__'):
+            self._assign(X)
+        else:
+            self.labels_ = rs.randint(self.n_clusters, size=n_samples)
         old_inertia = numpy.inf
 
         for it in range(self.max_iter):
@@ -748,9 +782,11 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
 
         X_ = to_time_series_dataset(X)
         self._norms = numpy.linalg.norm(X_, axis=(1, 2))
-        X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
-        assert X_.shape[-1] == 1, "kShape is supposed to work on monomodal data, provided data has dimension %d" % \
-                                  X_.shape[-1]
+
+        assert X_.shape[-1] == 1, "kShape is supposed to work on monomodal data, provided data has " \
+                                  "dimension {}".format(X_.shape[-1])
+        _check_initial_guess(self.init, X_, self.n_clusters)
+
         rs = check_random_state(self.random_state)
 
         best_correct_centroids = None
@@ -789,7 +825,7 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
-        return self.fit(X).labels_
+        return self.fit(X, y).labels_
 
     def predict(self, X):
         """Predict the closest cluster each time series in X belongs to.
