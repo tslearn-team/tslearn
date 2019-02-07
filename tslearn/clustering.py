@@ -11,7 +11,7 @@ from scipy.spatial.distance import cdist
 import numpy
 
 from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw, cdist_soft_dtw_normalized, dtw
-from tslearn.barycenters import EuclideanBarycenter, DTWBarycenterAveraging, SoftDTWBarycenter
+from tslearn.barycenters import EuclideanBarycenter, dtw_barycenter_averaging, SoftDTWBarycenter
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.utils import to_time_series_dataset, to_time_series, ts_size
 from tslearn.cycc import cdist_normalized_cc, y_shifted_sbd_vec
@@ -49,6 +49,37 @@ def _check_no_empty_cluster(labels, n_clusters):
     for k in range(n_clusters):
         if numpy.sum(labels == k) == 0:
             raise EmptyClusterError
+
+def _check_full_length(centroids):
+    """Check that provided centroids are full-length (ie. not padded with nans).
+
+    If some centroids are found to be padded with nans, the last value is
+    repeated until the end.
+
+    Examples
+    --------
+    >>> centroids = to_time_series_dataset([[1, 2, 3], [1, 2, 3, 4, 5]])
+    >>> _check_full_length(centroids)
+    array([[[ 1.],
+            [ 2.],
+            [ 3.],
+            [ 3.],
+            [ 3.]],
+    <BLANKLINE>
+           [[ 1.],
+            [ 2.],
+            [ 3.],
+            [ 4.],
+            [ 5.]]])
+    """
+    centroids_ = numpy.empty(centroids.shape)
+    n, max_sz = centroids.shape[:2]
+    for i in range(n):
+        sz = ts_size(centroids[i])
+        centroids_[i, :sz] = centroids[i, :sz]
+        if sz < max_sz:
+            centroids_[i, sz:] = centroids[i, sz-1]
+    return centroids_
 
 
 def _compute_inertia(distances, assignments, squared=True):
@@ -160,6 +191,12 @@ def silhouette_score(X, labels, metric=None, sample_size=None, metric_params=Non
                                     sample_size=sample_size,
                                     random_state=random_state,
                                     **kwds)
+
+
+def _check_initial_guess(init, n_clusters):
+    if hasattr(init, '__array__'):
+        assert init.shape[0] == n_clusters, "Initial guess index array must contain {} samples," \
+                                            " {} given".format(n_clusters, init.shape[0])
 
 
 class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
@@ -396,6 +433,12 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
     random_state : integer or numpy.RandomState, optional
         Generator used to initialize the centers. If an integer is given, it fixes the seed. Defaults to the global
         numpy random number generator.
+    init : {'k-means++', 'random' or an ndarray} (default: 'k-means++')
+        Method for initialization:
+        'k-means++' : use k-means++ heuristic. See `scikit-learn's k_init_
+        <https://github.com/scikit-learn/scikit-learn/blob/master/sklearn/cluster/k_means_.py>`_ for more.
+        'random': choose k observations (rows) at random from data for the initial centroids.
+        If an ndarray is passed, it should be of shape (n_clusters, ts_size, d) and gives the initial centers.
 
     Attributes
     ----------
@@ -451,10 +494,13 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
     >>> X_bis = to_time_series_dataset([[1, 2, 3, 4], [1, 2, 3], [2, 5, 6, 7, 8, 9]])
     >>> km = TimeSeriesKMeans(n_clusters=2, verbose=False, max_iter=5, metric="dtw", random_state=0).fit(X_bis)
     >>> km_bis = TimeSeriesKMeans(n_clusters=2, verbose=False, max_iter=5, metric="softdtw", random_state=0).fit(X_bis)
+    >>> km_init = TimeSeriesKMeans(n_clusters=2, verbose=False, max_iter=5, metric="dtw", random_state=0, init="random").fit(X_bis)
+    >>> km_init = TimeSeriesKMeans(n_clusters=2, verbose=False, max_iter=5, metric="dtw", random_state=0, init="k-means++").fit(X_bis)
+    >>> km_init = TimeSeriesKMeans(n_clusters=2, verbose=False, max_iter=5, metric="dtw", init=X_bis[:2]).fit(X_bis)
     """
 
     def __init__(self, n_clusters=3, max_iter=50, tol=1e-6, n_init=1, metric="euclidean", max_iter_barycenter=100,
-                 metric_params=None, dtw_inertia=False, verbose=True, random_state=None):
+                 metric_params=None, dtw_inertia=False, verbose=True, random_state=None, init='k-means++'):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
         self.tol = tol
@@ -465,6 +511,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         self.max_iter_barycenter = max_iter_barycenter
         self.max_attempts = max(self.n_init, 10)
         self.dtw_inertia = dtw_inertia
+        self.init = init
 
         self.labels_ = None
         self.inertia_ = numpy.inf
@@ -479,8 +526,17 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
     def _fit_one_init(self, X, x_squared_norms, rs):
         n_ts, _, d = X.shape
         sz = min([ts_size(ts) for ts in X])
-        self.cluster_centers_ = _k_init(X[:, :sz, :].reshape((n_ts, -1)),
-                                        self.n_clusters, x_squared_norms, rs).reshape((-1, sz, d))
+        if hasattr(self.init, '__array__'):
+            self.cluster_centers_ = self.init.copy()
+        elif self.init == "k-means++":
+            self.cluster_centers_ = _k_init(X[:, :sz, :].reshape((n_ts, -1)),
+                                            self.n_clusters, x_squared_norms, rs).reshape((-1, sz, d))
+        elif self.init == "random":
+            indices = rs.choice(X.shape[0], self.n_clusters)
+            self.cluster_centers_ = X[indices].copy()
+        else:
+            raise ValueError("Value %r for parameter 'init' is invalid" % self.init)
+        self.cluster_centers_ = _check_full_length(self.cluster_centers_)
         old_inertia = numpy.inf
 
         for it in range(self.max_iter):
@@ -521,10 +577,14 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
     def _update_centroids(self, X):
         for k in range(self.n_clusters):
             if self.metric == "dtw":
-                self.cluster_centers_[k] = DTWBarycenterAveraging(max_iter=self.max_iter_barycenter,
-                                                                  barycenter_size=None,
-                                                                  init_barycenter=self.cluster_centers_[k],
-                                                                  verbose=False).fit(X[self.labels_ == k])
+                self.cluster_centers_[k] = dtw_barycenter_averaging(X=X[self.labels_ == k],
+                                                                    barycenter_size=None,
+                                                                    init_barycenter=self.cluster_centers_[k],
+                                                                    verbose=False)
+                    # DTWBarycenterAveraging(max_iter=self.max_iter_barycenter,
+                    #                                               barycenter_size=None,
+                    #                                               init_barycenter=self.cluster_centers_[k],
+                    #                                               verbose=False).fit(X[self.labels_ == k])
             elif self.metric == "softdtw":
                 self.cluster_centers_[k] = SoftDTWBarycenter(max_iter=self.max_iter_barycenter,
                                                              gamma=self.gamma_sdtw,
@@ -544,6 +604,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         rs = check_random_state(self.random_state)
         x_squared_norms = cdist(X_.reshape((X_.shape[0], -1)), numpy.zeros((1, X_.shape[1] * X_.shape[2])),
                                 metric="sqeuclidean").reshape((1, -1))
+        _check_initial_guess(self.init, self.n_clusters)
 
         best_correct_centroids = None
         min_inertia = numpy.inf
@@ -558,7 +619,6 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
                 if self.inertia_ < min_inertia:
                     best_correct_centroids = self.cluster_centers_.copy()
                     min_inertia = self.inertia_
-                n_successful += 1
                 n_successful += 1
             except EmptyClusterError:
                 if self.verbose:
@@ -622,6 +682,10 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
     random_state : integer or numpy.RandomState, optional
         Generator used to initialize the centers. If an integer is given, it fixes the seed. Defaults to the global
         numpy random number generator.
+    init : {'random' or ndarray} (default: 'random')
+        Method for initialization.
+        'random': choose k observations (rows) at random from data for the initial centroids.
+        If an ndarray is passed, it should be of shape (n_clusters, ts_size, d) and gives the initial centers.
 
     Attributes
     ----------
@@ -659,7 +723,7 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
     .. [1] J. Paparrizos & L. Gravano. k-Shape: Efficient and Accurate Clustering of Time Series. SIGMOD 2015.
        pp. 1855-1870.
     """
-    def __init__(self, n_clusters=3, max_iter=100, tol=1e-6, n_init=1, verbose=True, random_state=None):
+    def __init__(self, n_clusters=3, max_iter=100, tol=1e-6, n_init=1, verbose=True, random_state=None, init='random'):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
         self.tol = tol
@@ -667,6 +731,7 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         self.n_init = n_init
         self.verbose = verbose
         self.max_attempts = max(self.n_init, 10)
+        self.init = init
 
         self.labels_ = None
         self.inertia_ = numpy.inf
@@ -712,9 +777,15 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
 
     def _fit_one_init(self, X, rs):
         n_samples, sz, d = X.shape
-        self.labels_ = rs.randint(self.n_clusters, size=n_samples)
-        self.cluster_centers_ = rs.randn(self.n_clusters, sz, d)
+        if hasattr(self.init, '__array__'):
+            self.cluster_centers_ = self.init.copy()
+        elif self.init == "random":
+            indices = rs.choice(X.shape[0], self.n_clusters)
+            self.cluster_centers_ = X[indices].copy()
+        else:
+            raise ValueError("Value %r for parameter 'init' is invalid" % self.init)
         self._norms_centroids = numpy.linalg.norm(self.cluster_centers_, axis=(1, 2))
+        self._assign(X)
         old_inertia = numpy.inf
 
         for it in range(self.max_iter):
@@ -748,9 +819,9 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
 
         X_ = to_time_series_dataset(X)
         self._norms = numpy.linalg.norm(X_, axis=(1, 2))
-        X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
-        assert X_.shape[-1] == 1, "kShape is supposed to work on monomodal data, provided data has dimension %d" % \
-                                  X_.shape[-1]
+
+        _check_initial_guess(self.init, self.n_clusters)
+
         rs = check_random_state(self.random_state)
 
         best_correct_centroids = None
@@ -789,7 +860,7 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
-        return self.fit(X).labels_
+        return self.fit(X, y).labels_
 
     def predict(self, X):
         """Predict the closest cluster each time series in X belongs to.
