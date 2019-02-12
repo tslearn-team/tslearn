@@ -10,7 +10,7 @@ __bibtex__ = """@misc{tslearn,
 }"""
 
 
-# on_rtd = os.environ.get('READTHEDOCS') == 'True'
-# if on_rtd:
-#     import pyximport
-#     pyximport.install()
+on_rtd = os.environ.get('READTHEDOCS') == 'True'
+if on_rtd:
+    import pyximport
+    pyximport.install()
