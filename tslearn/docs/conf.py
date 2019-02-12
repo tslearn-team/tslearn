@@ -279,16 +279,3 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
-
-try:
-    from unittest.mock import MagicMock
-except:
-    from mock import Mock as MagicMock
-
-class Mock(MagicMock):
-    @classmethod
-    def __getattr__(cls, name):
-        return MagicMock()
-
-MOCK_MODULES = ['numpy', 'scipy', 'sklearn']
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)

@@ -1,5 +1,4 @@
 from setuptools import setup, Extension
-import os
 import tslearn
 
 # Inspired from a StackOverflow comment: https://stackoverflow.com/a/42163080
@@ -32,11 +31,7 @@ class CustomBuildExtCommand(build_ext):
         # Call original build_ext command
         build_ext.run(self)
 
-on_rtd = os.environ.get('READTHEDOCS') == 'True'
-if on_rtd:
-    install_requires = []
-else:
-    install_requires = ['numpy', 'scipy', 'scikit-learn', 'cython']
+install_requires = ['numpy', 'scipy', 'scikit-learn', 'cython']
 
 setup(
     name="tslearn",
