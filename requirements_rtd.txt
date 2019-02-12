@@ -1,0 +1,13 @@
+Cython
+numpy
+scipy
+scikit-learn
+sphinx>=1.4
+ipykernel
+nbsphinx
+sphinx-gallery
+pillow
+tensorflow
+keras
+Pygments
+mock

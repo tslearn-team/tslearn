@@ -1,4 +1,5 @@
 from setuptools import setup, Extension
+import os
 import tslearn
 
 # Inspired from a StackOverflow comment: https://stackoverflow.com/a/42163080
@@ -31,13 +32,19 @@ class CustomBuildExtCommand(build_ext):
         # Call original build_ext command
         build_ext.run(self)
 
+on_rtd = os.environ.get('READTHEDOCS') == 'True'
+if on_rtd:
+    install_requires = []
+else:
+    install_requires = ['numpy', 'scipy', 'scikit-learn', 'cython']
+
 setup(
     name="tslearn",
     description="A machine learning toolkit dedicated to time-series data",
     packages=['tslearn'],
     package_data={"tslearn": [".cached_datasets/Trace.npz"]},
     data_files=[("", ["LICENSE"])],
-    install_requires=['numpy', 'scipy', 'scikit-learn', 'cython'],
+    install_requires=install_requires,
     ext_modules=ext_modules,
     cmdclass={'build_ext': CustomBuildExtCommand},
     version=tslearn.__version__,
