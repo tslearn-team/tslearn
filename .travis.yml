@@ -47,7 +47,7 @@ install:
 - pip install argparse
 - pip install codeclimate-test-reporter
 - rm -f tslearn/*.c
-- pip install .
+- python setup.py build_ext --inplace
 script:
 # run keras backend init to initialize backend config
 - if [[ -z ${KERAS_IGNORE+x} ]]; then python -c "import keras.backend";
