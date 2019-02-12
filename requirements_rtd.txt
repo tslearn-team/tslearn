@@ -10,4 +10,3 @@ pillow
 tensorflow
 keras
 Pygments
-mock
