@@ -1,10 +1,24 @@
 from setuptools import setup, Extension
 import tslearn
 
-from Cython.Distutils import build_ext as _build_ext
+# Inspired from a StackOverflow comment: https://stackoverflow.com/a/42163080
+
+list_pyx = ['cydtw', 'cygak', 'cysax', 'cycc', 'soft_dtw_fast']
+try:
+    from Cython.setuptools import build_ext
+except:
+    # If we couldn't import Cython, use the normal setuptools
+    # and look for a pre-compiled .c file instead of a .pyx file
+    from setuptools.command.build_ext import build_ext
+    ext_modules = [Extension('tslearn.%s' % s, ['tslearn/%s.c' % s])
+                   for s in list_pyx]
+else:
+    # If we successfully imported Cython, look for a .pyx file
+    ext_modules = [Extension('tslearn.%s' % s, ['tslearn/%s.pyx' % s])
+                   for s in list_pyx]
 
 
-class CustomBuildExtCommand(_build_ext):
+class CustomBuildExtCommand(build_ext):
     """build_ext command for use when numpy headers are needed."""
     def run(self):
 
@@ -15,10 +29,7 @@ class CustomBuildExtCommand(_build_ext):
         self.include_dirs.append(numpy.get_include())
 
         # Call original build_ext command
-        _build_ext.run(self)
-
-list_pyx = ['cydtw', 'cygak', 'cysax', 'cycc', 'soft_dtw_fast']
-ext = [Extension('tslearn.%s' % s, ['tslearn/%s.pyx' % s]) for s in list_pyx]
+        build_ext.run(self)
 
 setup(
     name="tslearn",
@@ -26,8 +37,8 @@ setup(
     packages=['tslearn'],
     package_data={"tslearn": [".cached_datasets/Trace.npz"]},
     data_files=[("", ["LICENSE"])],
-    install_requires=['numpy', 'scipy', 'scikit-learn', 'Cython'],
-    ext_modules=ext,
+    install_requires=['numpy', 'scipy', 'scikit-learn', 'cython'],
+    ext_modules=ext_modules,
     cmdclass={'build_ext': CustomBuildExtCommand},
     version=tslearn.__version__,
     url="http://tslearn.readthedocs.io/",
