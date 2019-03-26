@@ -445,7 +445,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         Number of SAX symbols to use to describe slopes.
     sigma_l : float or None (default: None)
         Scale parameter of the Gaussian distribution used to quantize slopes. If None, the formula given in [1]_ is
-        used: :math:`\\sigma_L = \\sqrt{0.03 / L}` where :math:`L` is the length of the considered time series.
+        used: :math:`\\sigma_L = \\sqrt{0.03 / L}` where :math:`L` is the length of each segment.
 
     Attributes
     ----------
@@ -516,8 +516,11 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
 
     def _fit(self, X, y=None):
         SymbolicAggregateApproximation._fit(self, X, y)
+
+        n_ts, sz, d = X.shape
+        sz_segment = sz // self.n_segments
         if self.sigma_l is None:
-            self.sigma_l = numpy.sqrt(0.03 / self.size_fitted_)
+            self.sigma_l = numpy.sqrt(0.03 / sz_segment)
 
         self.breakpoints_slope_ = _breakpoints(self.alphabet_size_slope, scale=self.sigma_l)
         self.breakpoints_slope_middle_ = _bin_medians(self.alphabet_size_slope, scale=self.sigma_l)
