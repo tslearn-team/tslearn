@@ -445,7 +445,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         Number of SAX symbols to use to describe slopes.
     sigma_l : float or None (default: None)
         Scale parameter of the Gaussian distribution used to quantize slopes. If None, the formula given in [1]_ is
-        used: :math:`\\sigma_L = \\sqrt{0.03 / L}` where :math:`L` is the length of the considered time series.
+        used: :math:`\\sigma_L = \\sqrt{0.03 / L}` where :math:`L` is the length of each segment.
 
     Attributes
     ----------
