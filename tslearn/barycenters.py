@@ -475,6 +475,9 @@ def softdtw_barycenter(X, gamma=1.0, weights=None, method="L-BFGS-B", tol=1e-3, 
     True
     >>> softdtw_barycenter(time_series, max_iter=5).shape
     (4, 1)
+    >>> time_series = [[1, 2, 3, 4], [1, 2, 3, 4, 5]]
+    >>> softdtw_barycenter(time_series, max_iter=5).shape
+    (5, 1)
     """
     X_ = to_time_series_dataset(X)
     weights = _set_weights(weights, X_.shape[0])
