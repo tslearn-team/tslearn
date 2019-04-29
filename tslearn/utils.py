@@ -495,6 +495,35 @@ class LabelCategorizer(BaseEstimator, TransformerMixin):
         out["backward_match"] = self.backward_match
 
 
+# Function for converting arff list to csv list
+def to_txt(content):
+    data = False
+    header = ""
+    new_x, new_y = [], []
+    nb_example = 0
+    for line in content:
+        if not data:
+            if "@attribute" in line:
+                attri = line.split()
+                columnName = attri[attri.index("@attribute") + 1]
+                header = header + columnName + ","
+            elif "@data" in line:
+                data = True
+                header = (',').join(header.split(',')[1:-2])
+                header += '\n'
+                # new_x.append(header)
+        else:
+            nb_example += 1
+            temp_line = line.replace('"', "'").split("',")
+            new_x.append(temp_line[0].replace("'", '') + '\n')
+            new_y.append(temp_line[-1])
+    one_channel = line.rstrip().split('\\n')
+    # channels = len(one_channel)  # not really precise (because SpokenArabic has an extra '\n' in each example)
+    channels = -1
+    length = len(one_channel[0].split(','))
+    return new_x, new_y, channels, length, nb_example
+
+
 def remake_files(dataset_full_path):
     folder_all = os.listdir(dataset_full_path)
     # remove useless files
@@ -507,34 +536,6 @@ def remake_files(dataset_full_path):
     dataset_name = dataset_full_path.split('/')[-1]
     folder = os.path.join(dataset_full_path, dataset_name)
     files = [folder + '_TEST.arff', folder + '_TRAIN.arff']
-
-    # Function for converting arff list to csv list
-    def to_txt(content):
-        data = False
-        header = ""
-        new_x, new_y = [], []
-        nb_example = 0
-        for line in content:
-            if not data:
-                if "@attribute" in line:
-                    attri = line.split()
-                    columnName = attri[attri.index("@attribute") + 1]
-                    header = header + columnName + ","
-                elif "@data" in line:
-                    data = True
-                    header = (',').join(header.split(',')[1:-2])
-                    header += '\n'
-                    # new_x.append(header)
-            else:
-                nb_example += 1
-                temp_line = line.replace('"', "'").split("',")
-                new_x.append(temp_line[0].replace("'", '') + '\n')
-                new_y.append(temp_line[-1])
-        one_channel = line.rstrip().split('\\n')
-        # channels = len(one_channel)  # not really precise (because SpokenArabic has an extra '\n' in each example)
-        channels = -1
-        length = len(one_channel[0].split(','))
-        return new_x, new_y, channels, length, nb_example
 
     # Main loop for reading and writing files
     for file in files:
@@ -552,6 +553,7 @@ def remake_files(dataset_full_path):
                 outFile.writelines(new_y)
         # print("made file for: {}".format(file))
 
+
 def load_multivariate_x(f_name):
     with open(f_name, 'r') as f:
         shape = map(int, f.readline()[1:].split(','))
@@ -561,3 +563,4 @@ def load_multivariate_x(f_name):
         # reshpe to (nb_example, length, channels)
         xx = temp.transpose(0, 2, 1)
     return xx
+

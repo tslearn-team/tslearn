@@ -120,11 +120,13 @@ class UCR_UEA_datasets(object):
 
         self._ignore_list = ["Data Descriptions"]
         self._multivariate_dataset = \
-            ['ArticularyWordRecognition', 'AtrialFibrilation', 'BasicMotions', 'CharacterTrajectories',
-             'Cricket', 'DuckDuckGeese', 'ERing', 'EigenWorms', 'Epilepsy', 'EthanolConcentration',
-             'FaceDetection', 'FingerMovements', 'HandMovementDirection', 'Handwriting', 'Heartbeat',
-             'InsectWingbeat', 'JapaneseVowels', 'LSST', 'Libras', 'MotorImagery', 'NATOPS', 'PEMS-SF',
-             'PenDigits', 'Phoneme', 'RacketSports', 'SelfRegulationSCP1', 'SelfRegulationSCP2',
+            ['ArticularyWordRecognition', 'AtrialFibrilation', 'BasicMotions',
+             'CharacterTrajectories', 'Cricket', 'DuckDuckGeese', 'ERing',
+             'EigenWorms', 'Epilepsy', 'EthanolConcentration', 'FaceDetection',
+             'FingerMovements', 'HandMovementDirection', 'Handwriting',
+             'Heartbeat', 'InsectWingbeat', 'JapaneseVowels', 'LSST', 'Libras',
+             'MotorImagery', 'NATOPS', 'PEMS-SF', 'PenDigits', 'Phoneme',
+             'RacketSports', 'SelfRegulationSCP1', 'SelfRegulationSCP2',
              'SpokenArabicDigits', 'StandWalkJump', 'UWaveGestureLibrary']  # 30 multivariate datasets
 
     def baseline_accuracy(self, list_datasets=None, list_methods=None):
@@ -241,9 +243,9 @@ class UCR_UEA_datasets(object):
         fname_test_x = dataset_name + "_TEST_x.txt"
         fname_test_y = dataset_name + "_TEST_y.txt"
         if not os.path.exists(os.path.join(full_path, fname_test_x)) and \
-           (not os.path.exists(os.path.join(full_path, fname_train)) or \
+           (not os.path.exists(os.path.join(full_path, fname_train)) or
            not os.path.exists(os.path.join(full_path, fname_test))):
-            print("downloading dataset")
+            # print("downloading dataset")
             url = "http://www.timeseriesclassification.com/Downloads/%s.zip" % dataset_name
             for fname in [fname_train, fname_test]:
                 if os.path.exists(os.path.join(full_path, fname)):
