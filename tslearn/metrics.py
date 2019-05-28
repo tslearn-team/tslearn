@@ -21,8 +21,8 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 @njit()
-def njit_dtw(s1, s2, mask, return_matrix=False):
-    """Compute the dynamic time warping score between two time series.
+def njit_accumulated_matrix(s1, s2, mask):
+    """Compute the accumulated cost matrix score between two time series.
 
     Parameters
     ----------
@@ -35,14 +35,10 @@ def njit_dtw(s1, s2, mask, return_matrix=False):
     mask : array, shape = (sz1, sz2)
         Mask. Unconsidered cells must have infinite values.
 
-    return_matrix : bool (default: False)
-        If True, return the accumulated cost matrix. If False, return
-        the dynamic time warping score.
-
     Returns
     -------
-    dtw_score : float
-        Dynamic Time Warping score between both time series.
+    mat : array, shape = (sz1, sz2)
+        Accumulated cost matrix.
 
     """
     l1 = s1.shape[0]
@@ -57,9 +53,32 @@ def njit_dtw(s1, s2, mask, return_matrix=False):
                 cum_sum[i + 1, j + 1] += min(cum_sum[i, j + 1],
                                              cum_sum[i + 1, j],
                                              cum_sum[i, j])
-    if return_matrix:
-        return cum_sum[1:, 1:]
-    return numpy.sqrt(cum_sum[l1, l2])
+    return numpy.sqrt(cum_sum[1:, 1:])
+
+
+@njit()
+def njit_dtw(s1, s2, mask):
+    """Compute the dynamic time warping score between two time series.
+
+    Parameters
+    ----------
+    s1 : array, shape = (sz1,)
+        First time series.
+
+    s2 : array, shape = (sz2,)
+        Second time series
+
+    mask : array, shape = (sz1, sz2)
+        Mask. Unconsidered cells must have infinite values. d
+
+    Returns
+    -------
+    dtw_score : float
+        Dynamic Time Warping score between both time series.
+
+    """
+    cum_sum = njit_accumulated_matrix(s1, s2, mask)
+    return cum_sum[-1, -1]
 
 
 @njit()
@@ -87,7 +106,7 @@ def _return_path(acc_cost_mat):
 
 
 @njit()
-def njit_cdist_dtw(dataset1, dataset2, mask):
+def njit_cdist_dtw(dataset1, dataset2, global_constraint, sakoe_chiba_radius, itakura_max_slope):
     """Compute the cross-similarity matrix between two datasets.
 
     Parameters
@@ -111,13 +130,19 @@ def njit_cdist_dtw(dataset1, dataset2, mask):
     n_samples_2 = dataset2.shape[0]
     cdist = numpy.empty((n_samples_1, n_samples_2))
     for i in prange(n_samples_1):
+        s1 = dataset1[i]
+        s1 = s1[numpy.isfinite(s1[:, 0])]
         for j in prange(n_samples_2):
-            cdist[i, j] = njit_dtw(dataset1[i], dataset2[j], mask)
+            s2 = dataset2[j]
+            s2 = s2[numpy.isfinite(s2[:, 0])]
+            mask = compute_mask(s1, s2, global_constraint,
+                                sakoe_chiba_radius, itakura_max_slope)
+            cdist[i, j] = njit_dtw(s1, s2, mask)
     return cdist
 
 
 @njit()
-def njit_cdist_dtw_self(dataset, mask):
+def njit_cdist_dtw_self(dataset, global_constraint, sakoe_chiba_radius, itakura_max_slope):
     """Compute the cross-similarity matrix between a dataset and itself.
 
     Parameters
@@ -137,8 +162,14 @@ def njit_cdist_dtw_self(dataset, mask):
     n_samples = dataset.shape[0]
     cdist = numpy.zeros((n_samples, n_samples))
     for i in prange(n_samples):
+        s1 = dataset[i]
+        s1 = s1[numpy.isfinite(s1[:, 0])]
         for j in prange(i + 1, n_samples):
-            cdist[i, j] = cdist[j, i] = njit_dtw(dataset[i], dataset[j], mask)
+            s2 = dataset[j]
+            s2 = s2[numpy.isfinite(s2[:, 0])]
+            mask = compute_mask(s1, s2, global_constraint,
+                                sakoe_chiba_radius, itakura_max_slope)
+            cdist[i, j] = cdist[j, i] = njit_dtw(s1, s2, mask)
     return cdist
 
 
@@ -206,15 +237,10 @@ def dtw_path(s1, s2, global_constraint=None,
     """
     s1 = to_time_series(s1)
     s2 = to_time_series(s2)
-    sz1 = s1.shape[0]
-    sz2 = s2.shape[0]
-    if global_constraint == "sakoe_chiba":
-        mask = sakoe_chiba_mask(sz1, sz2, radius=sakoe_chiba_radius)
-    elif global_constraint == "itakura":
-        mask = itakura_mask(sz1, sz2, max_slope=itakura_max_slope)
-    else:
-        mask = numpy.zeros((sz1, sz2))
-    acc_cost_mat = njit_dtw(s1, s2, mask=mask, return_matrix=True)
+    mask = compute_mask(
+        s1, s2, global_constraint, sakoe_chiba_radius, itakura_max_slope
+    )
+    acc_cost_mat = njit_accumulated_matrix(s1, s2, mask=mask)
     path = _return_path(acc_cost_mat)
     return path, acc_cost_mat[-1, -1]
 
@@ -275,14 +301,8 @@ def dtw(s1, s2, global_constraint=None,
     """
     s1 = to_time_series(s1)
     s2 = to_time_series(s2)
-    sz1 = s1.shape[0]
-    sz2 = s2.shape[0]
-    if global_constraint == "sakoe_chiba":
-        mask = sakoe_chiba_mask(sz1, sz2, radius=sakoe_chiba_radius)
-    elif global_constraint == "itakura":
-        mask = itakura_mask(sz1, sz2, max_slope=itakura_max_slope)
-    else:
-        mask = numpy.zeros((sz1, sz2))
+    mask = compute_mask(s1, s2, global_constraint=None,
+                        sakoe_chiba_radius=1, itakura_max_slope=2.)
     return njit_dtw(s1, s2, mask=mask)
 
 
@@ -358,18 +378,18 @@ def sakoe_chiba_mask(sz1, sz2, radius=1):
     Examples
     --------
     >>> sakoe_chiba_mask(4, 4, 1)  # doctest: +NORMALIZE_WHITESPACE
-    array([[  0.,  0., inf, inf],
-           [  0.,  0.,  0., inf],
-           [ inf,  0.,  0.,  0.],
-           [ inf, inf,  0.,  0.]])
+    array([[ 0.,  0., inf, inf],
+           [ 0.,  0.,  0., inf],
+           [inf,  0.,  0.,  0.],
+           [inf, inf,  0.,  0.]])
     >>> sakoe_chiba_mask(7, 3, 1)  # doctest: +NORMALIZE_WHITESPACE
-    array([[  0., 0., inf],
-           [  0., 0.,  0.],
-           [  0., 0.,  0.],
-           [  0., 0.,  0.],
-           [  0., 0.,  0.],
-           [  0., 0.,  0.],
-           [ inf, 0.,  0.]])
+    array([[ 0.,  0., inf],
+           [ 0.,  0.,  0.],
+           [ 0.,  0.,  0.],
+           [ 0.,  0.,  0.],
+           [ 0.,  0.,  0.],
+           [ 0.,  0.,  0.],
+           [inf,  0.,  0.]])
 
     """
     mask = numpy.full((sz1, sz2), numpy.inf)
@@ -388,6 +408,7 @@ def sakoe_chiba_mask(sz1, sz2, radius=1):
     return mask
 
 
+@njit()
 def itakura_mask(sz1, sz2, max_slope=2.):
     """Compute the Itakura mask.
 
@@ -410,12 +431,12 @@ def itakura_mask(sz1, sz2, max_slope=2.):
     Examples
     --------
     >>> itakura_mask(6, 6, max_slope=2)  # doctest: +NORMALIZE_WHITESPACE
-    array([[  0., inf, inf, inf, inf, inf],
-           [ inf,  0.,  0., inf, inf, inf],
-           [ inf,  0.,  0.,  0., inf, inf],
-           [ inf, inf,  0.,  0.,  0., inf],
-           [ inf, inf, inf,  0.,  0., inf],
-           [ inf, inf, inf, inf, inf,  0.]])
+    array([[ 0., inf, inf, inf, inf, inf],
+           [inf,  0.,  0., inf, inf, inf],
+           [inf,  0.,  0.,  0., inf, inf],
+           [inf, inf,  0.,  0.,  0., inf],
+           [inf, inf, inf,  0.,  0., inf],
+           [inf, inf, inf, inf, inf,  0.]])
 
     """
     min_slope = 1 / max_slope
@@ -426,22 +447,67 @@ def itakura_mask(sz1, sz2, max_slope=2.):
     lower_bound[0] = min_slope * numpy.arange(sz2)
     lower_bound[1] = ((sz1 - 1) - max_slope * (sz2 - 1)
                       + max_slope * numpy.arange(sz2))
-    lower_bound = numpy.round(lower_bound, 2)
-    lower_bound = numpy.ceil(numpy.max(lower_bound, axis=0))
+    lower_bound_ = numpy.empty(sz2)
+    for i in prange(sz2):
+        lower_bound_[i] = max(round(lower_bound[0, i], 2),
+                              round(lower_bound[1, i], 2))
+    lower_bound_ = numpy.ceil(lower_bound_)
 
     upper_bound = numpy.empty((2, sz2))
     upper_bound[0] = max_slope * numpy.arange(sz2)
     upper_bound[1] = ((sz1 - 1) - min_slope * (sz2 - 1)
                       + min_slope * numpy.arange(sz2))
-    upper_bound = numpy.round(upper_bound, 2)
-    upper_bound = numpy.floor(numpy.min(upper_bound, axis=0) + 1)
-
-    region = numpy.asarray([lower_bound, upper_bound]).astype('int64')
+    upper_bound_ = numpy.empty(sz2)
+    for i in prange(sz2):
+        upper_bound_[i] = min(round(upper_bound[0, i], 2),
+                              round(upper_bound[1, i], 2))
+    upper_bound_ = numpy.floor(upper_bound_ + 1)
 
     mask = numpy.full((sz1, sz2), numpy.inf)
-    for i, (j, k) in enumerate(region.T):
-        mask[j:k, i] = 0.
+    for i in prange(sz2):
+        mask[lower_bound_[i]:upper_bound_[i], i] = 0.
 
+    return mask
+
+
+@njit()
+def compute_mask(s1, s2, global_constraint=None,
+                 sakoe_chiba_radius=1, itakura_max_slope=2.):
+    """Compute the mask (region constraint).
+
+    Parameters
+    ----------
+    s1 : array
+        A time series.
+
+    s2: array
+        Another time series.
+
+    global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
+        Global constraint to restrict admissible paths for DTW.
+
+    sakoe_chiba_radius : int (default: 1)
+        Radius to be used for Sakoe-Chiba band global constraint. Used only if
+        ``global_constraint="sakoe_chiba"``.
+
+    itakura_max_slope : float (default: 2.)
+        Maximum slope for the Itakura parallelogram constraint. Used only if
+        ``global_constraint="itakura_parallelogram"``.
+
+    Returns
+    -------
+    mask : array
+        Constraint region.
+
+    """
+    sz1 = s1.shape[0]
+    sz2 = s2.shape[0]
+    if global_constraint == "sakoe_chiba":
+        mask = sakoe_chiba_mask(sz1, sz2, radius=sakoe_chiba_radius)
+    elif global_constraint == "itakura":
+        mask = itakura_mask(sz1, sz2, max_slope=itakura_max_slope)
+    else:
+        mask = numpy.zeros((sz1, sz2))
     return mask
 
 
@@ -463,31 +529,35 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
     ----------
     dataset1 : array-like
         A dataset of time series
+
     dataset2 : array-like (default: None)
         Another dataset of time series. If `None`, self-similarity of
         `dataset1` is returned.
+
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
         Global constraint to restrict admissible paths for DTW.
+
     sakoe_chiba_radius : int (default: 1)
         Radius to be used for Sakoe-Chiba band global constraint. Used only if
         ``global_constraint="sakoe_chiba"``.
+
     itakura_max_slope : float (default: 2.)
         Maximum slope for the Itakura parallelogram constraint. Used only if
         ``global_constraint="itakura"``.
 
     Returns
     -------
-    numpy.ndarray
+    cdist : numpy.ndarray
         Cross-similarity matrix
 
     Examples
     --------
     >>> cdist_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]])  # doctest: +NORMALIZE_WHITESPACE
-    array([[ 0., 1.],
-           [ 1., 0.]])
+    array([[0., 1.],
+           [1., 0.]])
     >>> cdist_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 3], [2, 3, 4, 5]])  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    array([[ 0. ,  2.449...],
-           [ 1. ,  1.414...]])
+    array([[0. ,  2.449...],
+           [1. ,  1.414...]])
 
     See Also
     --------
@@ -501,26 +571,13 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
 
     """
     dataset1 = to_time_series_dataset(dataset1)
-    sz1 = dataset1.shape[1]
-    self_similarity = False
     if dataset2 is None:
-        self_similarity = True
-        sz2 = sz1
+        return njit_cdist_dtw_self(dataset1, global_constraint,
+                                   sakoe_chiba_radius, itakura_max_slope)
     else:
         dataset2 = to_time_series_dataset(dataset2)
-        sz2 = dataset2.shape[1]
-
-    if global_constraint == "sakoe_chiba":
-        mask = sakoe_chiba_mask(sz1, sz2, radius=sakoe_chiba_radius)
-    elif global_constraint == "itakura":
-        mask = itakura_mask(sz1, sz2, max_slope=itakura_max_slope)
-    else:
-        mask = numpy.zeros((sz1, sz2))
-
-    if self_similarity:
-        return njit_cdist_dtw_self(dataset1, mask)
-    else:
-        return njit_cdist_dtw(dataset1, dataset2, mask)
+        return njit_cdist_dtw(dataset1, dataset2, global_constraint,
+                              sakoe_chiba_radius, itakura_max_slope)
 
 
 def gak(s1, s2, sigma=1.):
@@ -586,11 +643,11 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.):
     Examples
     --------
     >>> cdist_gak([[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    array([[ 1. , 0.656...],
-           [ 0.656..., 1. ]])
+    array([[1. , 0.656...],
+           [0.656..., 1. ]])
     >>> cdist_gak([[1, 2, 2], [1., 2., 3., 4.]], [[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    array([[ 0.710...,  0.297...],
-           [ 0.656...,  1.        ]])
+    array([[0.710...,  0.297...],
+           [0.656...,  1.        ]])
 
     See Also
     --------
@@ -783,17 +840,17 @@ def lb_envelope(ts, radius=1):
     >>> ts1 = [1, 2, 3, 2, 1]
     >>> env_low, env_up = lb_envelope(ts1, radius=1)
     >>> env_low
-    array([[ 1.],
-           [ 1.],
-           [ 2.],
-           [ 1.],
-           [ 1.]])
+    array([[1.],
+           [1.],
+           [2.],
+           [1.],
+           [1.]])
     >>> env_up
-    array([[ 2.],
-           [ 3.],
-           [ 3.],
-           [ 3.],
-           [ 2.]])
+    array([[2.],
+           [3.],
+           [3.],
+           [3.],
+           [2.]])
 
     See also
     --------
