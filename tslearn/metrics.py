@@ -431,12 +431,12 @@ def itakura_mask(sz1, sz2, max_slope=2.):
     Examples
     --------
     >>> itakura_mask(6, 6, max_slope=2)  # doctest: +NORMALIZE_WHITESPACE
-    array([[ 0., inf, inf, inf, inf, inf],
-           [inf,  0.,  0., inf, inf, inf],
-           [inf,  0.,  0.,  0., inf, inf],
-           [inf, inf,  0.,  0.,  0., inf],
-           [inf, inf, inf,  0.,  0., inf],
-           [inf, inf, inf, inf, inf,  0.]])
+    array([[  0., inf, inf, inf, inf, inf],
+           [ inf,  0.,  0., inf, inf, inf],
+           [ inf,  0.,  0.,  0., inf, inf],
+           [ inf, inf,  0.,  0.,  0., inf],
+           [ inf, inf, inf,  0.,  0., inf],
+           [ inf, inf, inf, inf, inf,  0.]])
 
     """
     min_slope = 1 / max_slope
