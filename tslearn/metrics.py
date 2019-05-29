@@ -439,10 +439,9 @@ def itakura_mask(sz1, sz2, max_slope=2.):
            [ inf, inf, inf, inf, inf,  0.]])
 
     """
-    sz1, sz2, max_slope = float(sz1), float(sz2), float(max_slope)
-    min_slope = 1 / max_slope
-    max_slope *= (sz1 / sz2)
-    min_slope *= (sz1 / sz2)
+    min_slope = 1 / float(max_slope)
+    max_slope *= (float(sz1) / float(sz2))
+    min_slope *= (float(sz1) / float(sz2))
 
     lower_bound = numpy.empty((2, sz2))
     lower_bound[0] = min_slope * numpy.arange(sz2)
