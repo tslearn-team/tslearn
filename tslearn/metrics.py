@@ -378,18 +378,18 @@ def sakoe_chiba_mask(sz1, sz2, radius=1):
     Examples
     --------
     >>> sakoe_chiba_mask(4, 4, 1)  # doctest: +NORMALIZE_WHITESPACE
-    array([[ 0.,  0., inf, inf],
-           [ 0.,  0.,  0., inf],
-           [inf,  0.,  0.,  0.],
-           [inf, inf,  0.,  0.]])
+    array([[  0.,  0., inf, inf],
+           [  0.,  0.,  0., inf],
+           [ inf,  0.,  0.,  0.],
+           [ inf, inf,  0.,  0.]])
     >>> sakoe_chiba_mask(7, 3, 1)  # doctest: +NORMALIZE_WHITESPACE
-    array([[ 0.,  0., inf],
-           [ 0.,  0.,  0.],
-           [ 0.,  0.,  0.],
-           [ 0.,  0.,  0.],
-           [ 0.,  0.,  0.],
-           [ 0.,  0.,  0.],
-           [inf,  0.,  0.]])
+    array([[  0.,  0., inf],
+           [  0.,  0.,  0.],
+           [  0.,  0.,  0.],
+           [  0.,  0.,  0.],
+           [  0.,  0.,  0.],
+           [  0.,  0.,  0.],
+           [ inf,  0.,  0.]])
 
     """
     mask = numpy.full((sz1, sz2), numpy.inf)
@@ -465,7 +465,7 @@ def itakura_mask(sz1, sz2, max_slope=2.):
 
     mask = numpy.full((sz1, sz2), numpy.inf)
     for i in prange(sz2):
-        mask[lower_bound_[i]:upper_bound_[i], i] = 0.
+        mask[int(lower_bound_[i]):int(upper_bound_[i]), i] = 0.
 
     return mask
 
@@ -553,11 +553,11 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
     Examples
     --------
     >>> cdist_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]])  # doctest: +NORMALIZE_WHITESPACE
-    array([[0., 1.],
-           [1., 0.]])
+    array([[ 0., 1.],
+           [ 1., 0.]])
     >>> cdist_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 3], [2, 3, 4, 5]])  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    array([[0. ,  2.449...],
-           [1. ,  1.414...]])
+    array([[ 0. ,  2.449...],
+           [ 1. ,  1.414...]])
 
     See Also
     --------
@@ -643,11 +643,11 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.):
     Examples
     --------
     >>> cdist_gak([[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    array([[1. , 0.656...],
-           [0.656..., 1. ]])
+    array([[ 1. , 0.656...],
+           [ 0.656..., 1. ]])
     >>> cdist_gak([[1, 2, 2], [1., 2., 3., 4.]], [[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    array([[0.710...,  0.297...],
-           [0.656...,  1.        ]])
+    array([[ 0.710...,  0.297...],
+           [ 0.656...,  1.        ]])
 
     See Also
     --------
@@ -840,17 +840,17 @@ def lb_envelope(ts, radius=1):
     >>> ts1 = [1, 2, 3, 2, 1]
     >>> env_low, env_up = lb_envelope(ts1, radius=1)
     >>> env_low
-    array([[1.],
-           [1.],
-           [2.],
-           [1.],
-           [1.]])
+    array([[ 1.],
+           [ 1.],
+           [ 2.],
+           [ 1.],
+           [ 1.]])
     >>> env_up
-    array([[2.],
-           [3.],
-           [3.],
-           [3.],
-           [2.]])
+    array([[ 2.],
+           [ 3.],
+           [ 3.],
+           [ 3.],
+           [ 2.]])
 
     See also
     --------
