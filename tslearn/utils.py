@@ -3,7 +3,9 @@ The :mod:`tslearn.utils` module includes various utilities.
 """
 
 import numpy
+import os
 from sklearn.base import BaseEstimator, TransformerMixin
+from scipy.io import arff
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -492,3 +494,113 @@ class LabelCategorizer(BaseEstimator, TransformerMixin):
         out = BaseEstimator.get_params(self, deep=deep)
         out["forward_match"] = self.forward_match
         out["backward_match"] = self.backward_match
+
+
+def load_arff(dataset_path):
+    """
+    Load arff file for uni/multi variate dataset
+    Parameters
+    ----------
+    dataset_path: string of dataset_path
+
+    Returns
+    -------
+    numpy.ndarray
+        y: an 1d-array of examples.
+        x: a time series with dimension
+            (examples, length) for uni variate time seris.
+            (examples, length, channels) for multi variable time series.
+    """
+
+    data, meta = arff.loadarff(dataset_path)
+    names = meta.names()  # ["input", "class"] for multi-variate
+
+    # firstly get y_train
+    y_ = data[names[-1]]  # data["class"]
+    y = numpy.array(y_).astype("str").reshape(-1, 1)
+
+    # get x_train
+    if len(names) == 2:  # len=2 => multi-variate
+        x_ = data[names[0]]
+        x_ = numpy.asarray(x_.tolist())
+
+        nb_example = x_.shape[0]
+        nb_channel = x_.shape[1]
+        length_one_channel = len(x_.dtype.descr)
+        x = numpy.empty([nb_example, length_one_channel, nb_channel])
+
+        for i in range(length_one_channel):
+            # x_.dtype.descr: [('t1', '<f8'), ('t2', '<f8'), ('t3', '<f8')]
+            time_stamp = x_.dtype.descr[i][0]  # ["t1", "t2", "t3"]
+            x[:, i, :] = x_[time_stamp]
+
+    else:  # uni-variate situation
+        x_ = data[names[:-1]]
+        x = numpy.asarray(x_.tolist(), dtype=numpy.float32)
+        x = x.reshape(len(x), -1, 1)
+
+    return x, y
+
+
+# Function for converting arff list to csv list
+def to_txt(content):
+    data = False
+    header = ""
+    new_x, new_y = [], []
+    nb_example = 0
+    for line in content:
+        if not data:
+            if "@attribute" in line:
+                attri = line.split()
+                columnName = attri[attri.index("@attribute") + 1]
+                header = header + columnName + ","
+            elif "@data" in line:
+                data = True
+                header = (',').join(header.split(',')[1:-2])
+                header += '\n'
+                # new_x.append(header)
+        else:
+            nb_example += 1
+            temp_line = line.replace('"', "'").split("',")
+            new_x.append(temp_line[0].replace("'", '') + '\n')
+            new_y.append(temp_line[-1])
+    one_channel = line.rstrip().split('\\n')
+    # channels = len(one_channel)
+    # not precise (because SpokenArabic has an extra '\n' in each example)
+    channels = -1
+    length = len(one_channel[0].split(','))
+    return new_x, new_y, channels, length, nb_example
+
+
+def remake_files(dataset_full_path):
+    folder_all = os.listdir(dataset_full_path)
+
+    dataset_name = dataset_full_path.split('/')[-1]
+    folder = os.path.join(dataset_full_path, dataset_name)
+    files = [folder + '_TEST.arff', folder + '_TRAIN.arff']
+
+    # Main loop for reading and writing files
+    for file in files:
+        with open(file, "r") as inFile:
+            content = inFile.readlines()
+            name, ext = os.path.splitext(inFile.name)
+            new_x, new_y, channels, length, nb_example = to_txt(content)
+            new_xx = []
+            for item in new_x:
+                new_xx.append(item.replace("\\n\n", "\n").replace("\\n", ","))
+            with open(name + "_x.txt", "w") as outFile:
+                outFile.write('#{}, {}, {}\n'.format(nb_example, channels, length))
+                outFile.writelines(new_xx)
+            with open(name + "_y.txt", "w") as outFile:
+                outFile.writelines(new_y)
+
+
+def load_multivariate_x(f_name):
+    with open(f_name, 'r') as f:
+        shape = map(int, f.readline()[1:].split(','))
+        # load txt as (nb_example, channels, length)
+        # columns = range(tuple(shape)[2])
+        temp = numpy.loadtxt(f, delimiter=',').reshape(tuple(shape))
+        # reshpe to (nb_example, length, channels)
+        xx = temp.transpose(0, 2, 1)
+    return xx

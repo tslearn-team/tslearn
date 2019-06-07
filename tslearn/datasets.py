@@ -19,6 +19,7 @@ except ImportError:
     from zipfile import BadZipfile as BadZipFile
 
 from tslearn.utils import to_time_series_dataset
+from tslearn.utils import load_arff, remake_files, load_multivariate_x
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -118,6 +119,14 @@ class UCR_UEA_datasets(object):
             self._baseline_scores_filename = None
 
         self._ignore_list = ["Data Descriptions"]
+        # File names for datasets for which it is not obvious
+        # key: from timeseriesclassification.com, value: right dataset name
+        self._filenames = {"AtrialFibrillation": "AtrialFibrilation",
+                           "CinCECGtorso": "CinCECGTorso",
+                           "MixedShapes": "MixedShapesRegularTrain",
+                           "NonInvasiveFetalECGThorax1": "NonInvasiveFatalECGThorax1",
+                           "NonInvasiveFetalECGThorax2": "NonInvasiveFatalECGThorax2",
+                           "StarlightCurves": "StarLightCurves"}
 
     def baseline_accuracy(self, list_datasets=None, list_methods=None):
         """Report baseline performances as provided by UEA/UCR website.
@@ -201,11 +210,11 @@ class UCR_UEA_datasets(object):
         -------
         numpy.ndarray of shape (n_ts_train, sz, d) or None
             Training time series. None if unsuccessful.
-        numpy.ndarray of integers with shape (n_ts_train, ) or None
+        numpy.ndarray of integers or strings with shape (n_ts_train, ) or None
             Training labels. None if unsuccessful.
         numpy.ndarray of shape (n_ts_test, sz, d) or None
             Test time series. None if unsuccessful.
-        numpy.ndarray of integers with shape (n_ts_test, ) or None
+        numpy.ndarray of integers or strings with shape (n_ts_test, ) or None
             Test labels. None if unsuccessful.
 
         Examples
@@ -225,25 +234,37 @@ class UCR_UEA_datasets(object):
         >>> print(X_train)
         None
         """
+        dataset_name = self._filenames.get(dataset_name, dataset_name)
         full_path = os.path.join(self._data_dir, dataset_name)
-        fname_train = dataset_name + "_TRAIN.txt"
-        fname_test = dataset_name + "_TEST.txt"
-        if not os.path.exists(os.path.join(full_path, fname_train)) or \
-            not os.path.exists(os.path.join(full_path, fname_test)):
+        fname_train = dataset_name + "_TRAIN.arff"
+        fname_test = dataset_name + "_TEST.arff"
+        full_path_train_file = os.path.join(full_path, fname_train)
+        full_path_test_file = os.path.join(full_path, fname_test)
+        if not os.path.exists(full_path_train_file) or \
+            not os.path.exists(full_path_test_file):
             url = "http://www.timeseriesclassification.com/Downloads/%s.zip" % dataset_name
             for fname in [fname_train, fname_test]:
                 if os.path.exists(os.path.join(full_path, fname)):
                     os.remove(os.path.join(full_path, fname))
             extract_from_zip_url(url, target_dir=full_path, verbose=False)
         try:
-            data_train = numpy.loadtxt(os.path.join(full_path, fname_train), delimiter=None)
-            data_test = numpy.loadtxt(os.path.join(full_path, fname_test), delimiter=None)
+            X_train, y_train = load_arff(full_path_train_file)
+            X_test, y_test = load_arff(full_path_test_file)
         except:
-            return None, None, None, None
-        X_train = to_time_series_dataset(data_train[:, 1:])
-        y_train = data_train[:, 0].astype(numpy.int)
-        X_test = to_time_series_dataset(data_test[:, 1:])
-        y_test = data_test[:, 0].astype(numpy.int)
+            try:
+                remake_files(full_path)
+                train_x = dataset_name + "_TRAIN_x.txt"
+                train_y = dataset_name + "_TRAIN_y.txt"
+                test_x = dataset_name + "_TEST_x.txt"
+                test_y = dataset_name + "_TEST_y.txt"
+                X_train = load_multivariate_x(os.path.join(full_path, train_x))
+                X_test = load_multivariate_x(os.path.join(full_path, test_x))
+                y_train = numpy.genfromtxt(os.path.join(full_path, train_y),
+                                           delimiter=None, dtype='str')
+                y_test = numpy.genfromtxt(os.path.join(full_path, test_y),
+                                          delimiter=None, dtype='str')
+            except:
+                return None, None, None, None
         return X_train, y_train, X_test, y_test
 
     def cache_all(self):
