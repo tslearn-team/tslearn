@@ -9,10 +9,8 @@ from tslearn.soft_dtw_fast import _soft_dtw, _soft_dtw_grad, _jacobian_product_s
 from sklearn.metrics.pairwise import euclidean_distances
 from numba import njit, prange
 
-from tslearn.cydtw import dtw as cydtw, dtw_path as cydtw_path, cdist_dtw as cycdist_dtw, \
-    dtw_subsequence_path as cydtw_subsequence_path
+from tslearn.cydtw import dtw_subsequence_path as cydtw_subsequence_path
 from tslearn.cydtw import lb_envelope as cylb_envelope
-from tslearn.cydtw import sakoe_chiba_mask as cysakoe_chiba_mask, itakura_mask as cyitakura_mask
 from tslearn.cygak import cdist_gak as cycdist_gak, cdist_normalized_gak as cycdist_normalized_gak, \
     normalized_gak as cynormalized_gak, gak as cygak
 from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, check_equal_size
@@ -301,8 +299,9 @@ def dtw(s1, s2, global_constraint=None,
     """
     s1 = to_time_series(s1)
     s2 = to_time_series(s2)
-    mask = compute_mask(s1, s2, global_constraint=None,
-                        sakoe_chiba_radius=1, itakura_max_slope=2.)
+    mask = compute_mask(s1, s2, global_constraint=global_constraint,
+                        sakoe_chiba_radius=sakoe_chiba_radius,
+                        itakura_max_slope=itakura_max_slope)
     return njit_dtw(s1, s2, mask=mask)
 
 
