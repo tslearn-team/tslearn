@@ -517,7 +517,7 @@ def load_arff(dataset_path):
 
     # firstly get y_train
     y_ = data[names[-1]]  # data["class"]
-    y = numpy.array(y_).astype("str").reshape(-1, 1)
+    y = numpy.array(y_).astype("str")
 
     # get x_train
     if len(names) == 2:  # len=2 => multi-variate

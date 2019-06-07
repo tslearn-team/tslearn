@@ -230,6 +230,9 @@ class UCR_UEA_datasets(object):
         >>> X_train, y_train, X_test, y_test = UCR_UEA_datasets().load_dataset("CinCECGTorso")
         >>> print(X_train.shape)
         (40, 1639, 1)
+        >>> X_train, y_train, X_test, y_test = UCR_UEA_datasets().load_dataset("PenDigits")
+        >>> print(X_train.shape)
+        (7494, 8, 2)
         >>> X_train, y_train, X_test, y_test = UCR_UEA_datasets().load_dataset("DatasetThatDoesNotExist")
         >>> print(X_train)
         None
