@@ -9,7 +9,6 @@ from tslearn.soft_dtw_fast import _soft_dtw, _soft_dtw_grad, _jacobian_product_s
 from sklearn.metrics.pairwise import euclidean_distances
 from numba import njit, prange
 
-from tslearn.cydtw import lb_envelope as cylb_envelope
 from tslearn.cygak import cdist_gak as cycdist_gak, cdist_normalized_gak as cycdist_normalized_gak, \
     normalized_gak as cynormalized_gak, gak as cygak
 from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, check_equal_size
@@ -880,6 +879,25 @@ def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
     return numpy.sqrt(numpy.linalg.norm(ts_query[indices_up, 0] - envelope_up[indices_up, 0]) ** 2 + \
                       numpy.linalg.norm(ts_query[indices_down, 0] - envelope_down[indices_down, 0]) ** 2)
 
+@njit()
+def njit_lb_envelope(time_series, radius):
+    sz, d = time_series.shape
+    enveloppe_up = numpy.empty((sz, d))
+    enveloppe_down = numpy.empty((sz, d))
+
+    for i in prange(sz):
+        min_idx = i - radius
+        max_idx = i + radius + 1
+        if min_idx < 0:
+            min_idx = 0
+        if max_idx > sz:
+            max_idx = sz
+        for di in prange(d):
+            enveloppe_down[i, di] = numpy.min(time_series[min_idx:max_idx, di])
+            enveloppe_up[i, di] = numpy.max(time_series[min_idx:max_idx, di])
+
+    return enveloppe_down, enveloppe_up
+
 
 def lb_envelope(ts, radius=1):
     """Compute time-series envelope as required by LB_Keogh.
@@ -927,7 +945,7 @@ def lb_envelope(ts, radius=1):
     .. [1] Keogh, E. Exact indexing of dynamic time warping. In International Conference on Very Large Data Bases, 2002.
        pp 406-417.
     """
-    return cylb_envelope(to_time_series(ts), radius=radius)
+    return njit_lb_envelope(to_time_series(ts), radius=radius)
 
 
 def soft_dtw(ts1, ts2, gamma=1.):
