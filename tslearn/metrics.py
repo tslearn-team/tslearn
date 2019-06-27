@@ -9,7 +9,6 @@ from tslearn.soft_dtw_fast import _soft_dtw, _soft_dtw_grad, _jacobian_product_s
 from sklearn.metrics.pairwise import euclidean_distances
 from numba import njit, prange
 
-from tslearn.cydtw import dtw_subsequence_path as cydtw_subsequence_path
 from tslearn.cydtw import lb_envelope as cylb_envelope
 from tslearn.cygak import cdist_gak as cycdist_gak, cdist_normalized_gak as cycdist_normalized_gak, \
     normalized_gak as cynormalized_gak, gak as cygak
@@ -305,6 +304,66 @@ def dtw(s1, s2, global_constraint=None,
     return njit_dtw(s1, s2, mask=mask)
 
 
+
+
+
+@njit()
+def njit_accumulated_matrix_subsequence(subseq, longseq):
+    """Compute the accumulated cost matrix score between a subsequence and
+     a reference time series.
+
+    Parameters
+    ----------
+    subseq : array, shape = (sz1, d)
+        Subsequence time series.
+
+    longseq : array, shape = (sz2, d)
+        Reference time series
+
+    Returns
+    -------
+    mat : array, shape = (sz1, sz2)
+        Accumulated cost matrix.
+    """
+    l1 = subseq.shape[0]
+    l2 = longseq.shape[0]
+    cum_sum = numpy.full((l1 + 1, l2 + 1), numpy.inf)
+    cum_sum[0, :] = 0.
+
+    for i in prange(l1):
+        for j in prange(l2):
+            cum_sum[i + 1, j + 1] = numpy.linalg.norm(subseq[i] - longseq[j]) ** 2
+            cum_sum[i + 1, j + 1] += min(cum_sum[i, j + 1],
+                                         cum_sum[i + 1, j],
+                                         cum_sum[i, j])
+    return numpy.sqrt(cum_sum[1:, 1:])
+
+
+@njit()
+def _return_path_subsequence(acc_cost_mat):
+    sz1, sz2 = acc_cost_mat.shape
+    idx_last_match = numpy.argmin(acc_cost_mat[-1, :])
+    path = [(sz1 - 1, idx_last_match)]
+    while path[-1][0] != 0:
+        i, j = path[-1]
+        if i == 0:
+            path.append((0, j - 1))
+        elif j == 0:
+            path.append((i - 1, 0))
+        else:
+            arr = numpy.array([acc_cost_mat[i - 1][j - 1],
+                               acc_cost_mat[i - 1][j],
+                               acc_cost_mat[i][j - 1]])
+            argmin = numpy.argmin(arr)
+            if argmin == 0:
+                path.append((i - 1, j - 1))
+            elif argmin == 1:
+                path.append((i - 1, j))
+            else:
+                path.append((i, j - 1))
+    return path[::-1]
+
+
 def dtw_subsequence_path(subseq, longseq):
     r"""Compute sub-sequence Dynamic Time Warping (DTW) similarity measure
     between a (possibly multidimensional) query and a long time series and
@@ -316,6 +375,11 @@ def dtw_subsequence_path(subseq, longseq):
     .. math::
 
         DTW(X, Y) = \sqrt{\sum_{(i, j) \in P} (X_{i} - Y_{j})^2}
+
+    Compared to traditional DTW, here, border constraints on admissible paths
+    :math:`P` are relaxed such that :math:`P_0 = (0, ?)` and
+    :math:`P_L = (N-1, ?)` where :math:`L` is the length of the considered path
+    and :math:`N` is the length of the subsequence time series.
 
     It is not required that both time series share the same size, but they must
     be the same dimension. This implementation finds the best matching starting
@@ -339,7 +403,7 @@ def dtw_subsequence_path(subseq, longseq):
 
     Examples
     --------
-    >>> path, dist = dtw_subsequence_path([2, 3], [1., 2., 2., 3., 4.])
+    >>> path, dist = dtw_subsequence_path([2., 3.], [1., 2., 2., 3., 4.])
     >>> path
     [(0, 2), (1, 3)]
     >>> dist
@@ -351,7 +415,10 @@ def dtw_subsequence_path(subseq, longseq):
     """
     subseq = to_time_series(subseq)
     longseq = to_time_series(longseq)
-    return cydtw_subsequence_path(subseq=subseq, longseq=longseq)
+    acc_cost_mat = njit_accumulated_matrix_subsequence(subseq=subseq,
+                                                       longseq=longseq)
+    path = _return_path_subsequence(acc_cost_mat)
+    return path, numpy.min(acc_cost_mat[-1, :])
 
 
 @njit()
