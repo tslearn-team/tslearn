@@ -7,11 +7,8 @@ from scipy.spatial.distance import pdist
 from sklearn.utils import check_random_state
 from tslearn.soft_dtw_fast import _soft_dtw, _soft_dtw_grad, _jacobian_product_sq_euc
 from sklearn.metrics.pairwise import euclidean_distances
+from numba import njit, prange
 
-from tslearn.cydtw import dtw as cydtw, dtw_path as cydtw_path, cdist_dtw as cycdist_dtw, \
-    dtw_subsequence_path as cydtw_subsequence_path
-from tslearn.cydtw import lb_envelope as cylb_envelope
-from tslearn.cydtw import sakoe_chiba_mask as cysakoe_chiba_mask, itakura_mask as cyitakura_mask
 from tslearn.cygak import cdist_gak as cycdist_gak, cdist_normalized_gak as cycdist_normalized_gak, \
     normalized_gak as cynormalized_gak, gak as cygak
 from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, check_equal_size
@@ -19,15 +16,174 @@ from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, check
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
-def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=1):
-    """Compute Dynamic Time Warping (DTW) similarity measure between (possibly multidimensional) time series and
-    return both the path and the similarity.
+@njit()
+def njit_accumulated_matrix(s1, s2, mask):
+    """Compute the accumulated cost matrix score between two time series.
 
-    DTW is computed as the Euclidean distance between aligned time series, i.e., if :math:`P` is the alignment path:
-    $$DTW(X, Y) = \\\sqrt{\\\sum_{(i, j) \\\in P} (X_{i} - Y_{j})^2}$$
+    Parameters
+    ----------
+    s1 : array, shape = (sz1,)
+        First time series.
 
-    It is not required that both time series share the same size, but they must be the same dimension.
-    DTW was originally presented in [1]_.
+    s2 : array, shape = (sz2,)
+        Second time series
+
+    mask : array, shape = (sz1, sz2)
+        Mask. Unconsidered cells must have infinite values.
+
+    Returns
+    -------
+    mat : array, shape = (sz1, sz2)
+        Accumulated cost matrix.
+
+    """
+    l1 = s1.shape[0]
+    l2 = s2.shape[0]
+    cum_sum = numpy.full((l1 + 1, l2 + 1), numpy.inf)
+    cum_sum[0, 0] = 0.
+
+    for i in prange(l1):
+        for j in prange(l2):
+            if numpy.isfinite(mask[i, j]):
+                cum_sum[i + 1, j + 1] = numpy.linalg.norm(s1[i] - s2[j]) ** 2
+                cum_sum[i + 1, j + 1] += min(cum_sum[i, j + 1],
+                                             cum_sum[i + 1, j],
+                                             cum_sum[i, j])
+    return numpy.sqrt(cum_sum[1:, 1:])
+
+
+@njit()
+def njit_dtw(s1, s2, mask):
+    """Compute the dynamic time warping score between two time series.
+
+    Parameters
+    ----------
+    s1 : array, shape = (sz1,)
+        First time series.
+
+    s2 : array, shape = (sz2,)
+        Second time series
+
+    mask : array, shape = (sz1, sz2)
+        Mask. Unconsidered cells must have infinite values. d
+
+    Returns
+    -------
+    dtw_score : float
+        Dynamic Time Warping score between both time series.
+
+    """
+    cum_sum = njit_accumulated_matrix(s1, s2, mask)
+    return cum_sum[-1, -1]
+
+
+@njit()
+def _return_path(acc_cost_mat):
+    sz1, sz2 = acc_cost_mat.shape
+    path = [(sz1 - 1, sz2 - 1)]
+    while path[-1] != (0, 0):
+        i, j = path[-1]
+        if i == 0:
+            path.append((0, j - 1))
+        elif j == 0:
+            path.append((i - 1, 0))
+        else:
+            arr = numpy.array([acc_cost_mat[i - 1][j - 1],
+                               acc_cost_mat[i - 1][j],
+                               acc_cost_mat[i][j - 1]])
+            argmin = numpy.argmin(arr)
+            if argmin == 0:
+                path.append((i - 1, j - 1))
+            elif argmin == 1:
+                path.append((i - 1, j))
+            else:
+                path.append((i, j - 1))
+    return path[::-1]
+
+
+@njit()
+def njit_cdist_dtw(dataset1, dataset2, global_constraint, sakoe_chiba_radius, itakura_max_slope):
+    """Compute the cross-similarity matrix between two datasets.
+
+    Parameters
+    ----------
+    dataset1 : array
+        A dataset of time series.
+
+    dataset2 : array
+        Another dataset of time series.
+
+    mask : array
+        Constraint reion.
+
+    Returns
+    -------
+    cdist : array
+        Cross-similarity matrix.
+
+    """
+    n_samples_1 = dataset1.shape[0]
+    n_samples_2 = dataset2.shape[0]
+    cdist = numpy.empty((n_samples_1, n_samples_2))
+    for i in prange(n_samples_1):
+        s1 = dataset1[i]
+        s1 = s1[numpy.isfinite(s1[:, 0])]
+        for j in prange(n_samples_2):
+            s2 = dataset2[j]
+            s2 = s2[numpy.isfinite(s2[:, 0])]
+            mask = compute_mask(s1, s2, global_constraint,
+                                sakoe_chiba_radius, itakura_max_slope)
+            cdist[i, j] = njit_dtw(s1, s2, mask)
+    return cdist
+
+
+@njit()
+def njit_cdist_dtw_self(dataset, global_constraint, sakoe_chiba_radius, itakura_max_slope):
+    """Compute the cross-similarity matrix between a dataset and itself.
+
+    Parameters
+    ----------
+    dataset : array
+        A dataset of time series.
+
+    mask : array
+        Constraint reion.
+
+    Returns
+    -------
+    cdist : array
+        Cross-similarity matrix.
+
+    """
+    n_samples = dataset.shape[0]
+    cdist = numpy.zeros((n_samples, n_samples))
+    for i in prange(n_samples):
+        s1 = dataset[i]
+        s1 = s1[numpy.isfinite(s1[:, 0])]
+        for j in prange(i + 1, n_samples):
+            s2 = dataset[j]
+            s2 = s2[numpy.isfinite(s2[:, 0])]
+            mask = compute_mask(s1, s2, global_constraint,
+                                sakoe_chiba_radius, itakura_max_slope)
+            cdist[i, j] = cdist[j, i] = njit_dtw(s1, s2, mask)
+    return cdist
+
+
+def dtw_path(s1, s2, global_constraint=None,
+             sakoe_chiba_radius=1, itakura_max_slope=2.):
+    r"""Compute Dynamic Time Warping (DTW) similarity measure between
+    (possibly multidimensional) time series and return both the path and the
+    similarity.
+
+    DTW is computed as the Euclidean distance between aligned time series,
+    i.e., if :math:`P` is the alignment path:
+
+    .. math::
+
+        DTW(X, Y) = \sqrt{\sum_{(i, j) \in P} (X_{i} - Y_{j})^2}
+
+    It is not required that both time series share the same size, but they must
+    be the same dimension. DTW was originally presented in [1]_.
 
     Parameters
     ----------
@@ -39,13 +195,17 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=1):
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
         Global constraint to restrict admissible paths for DTW.
     sakoe_chiba_radius : int (default: 1)
-        Radius to be used for Sakoe-Chiba band global constraint. Used only if global_constraint is "sakoe_chiba".
+        Radius to be used for Sakoe-Chiba band global constraint. Used only if
+        ``global_constraint="sakoe_chiba"``.
+    itakura_max_slope : float (default: 2.)
+        Maximum slope for the Itakura parallelogram constraint. Used only if
+        ``global_constraint="itakura_parallelogram"``.
 
     Returns
     -------
     list of integer pairs
-        Matching path represented as a list of index pairs. In each pair, the first index corresponds to s1 and the
-        second one corresponds to s2
+        Matching path represented as a list of index pairs. In each pair, the
+        first index corresponds to s1 and the second one corresponds to s2
     float
         Similarity score
 
@@ -66,29 +226,35 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=1):
 
     References
     ----------
-    .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for spoken word recognition,"
-       IEEE Transactions on Acoustics, Speech and Signal Processing, vol. 26(1), pp. 43--49, 1978.
+    .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
+           spoken word recognition," IEEE Transactions on Acoustics, Speech and
+           Signal Processing, vol. 26(1), pp. 43--49, 1978.
+
     """
     s1 = to_time_series(s1)
     s2 = to_time_series(s2)
-    sz1 = s1.shape[0]
-    sz2 = s2.shape[0]
-    if global_constraint == "sakoe_chiba":
-        return cydtw_path(s1, s2, mask=sakoe_chiba_mask(sz1, sz2, radius=sakoe_chiba_radius))
-    elif global_constraint == "itakura":
-        return cydtw_path(s1, s2, mask=itakura_mask(sz1, sz2))
-    return cydtw_path(s1, s2, mask=numpy.zeros((sz1, sz2)))
+    mask = compute_mask(
+        s1, s2, global_constraint, sakoe_chiba_radius, itakura_max_slope
+    )
+    acc_cost_mat = njit_accumulated_matrix(s1, s2, mask=mask)
+    path = _return_path(acc_cost_mat)
+    return path, acc_cost_mat[-1, -1]
 
 
-def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=1):
-    """Compute Dynamic Time Warping (DTW) similarity measure between (possibly multidimensional) time series and
-    return it.
+def dtw(s1, s2, global_constraint=None,
+        sakoe_chiba_radius=1, itakura_max_slope=2.):
+    r"""Compute Dynamic Time Warping (DTW) similarity measure between
+    (possibly multidimensional) time series and return it.
 
-    DTW is computed as the Euclidean distance between aligned time series, i.e., if :math:`P` is the alignment path:
-    $$DTW(X, Y) = \\\sqrt{\\\sum_{(i, j) \\\in P} (X_{i} - Y_{j})^2}$$
+    DTW is computed as the Euclidean distance between aligned time series,
+    i.e., if :math:`P` is the alignment path:
 
-    It is not required that both time series share the same size, but they must be the same dimension.
-    DTW was originally presented in [1]_.
+    .. math::
+
+        DTW(X, Y) = \sqrt{\sum_{(i, j) \in P} (X_{i} - Y_{j})^2}
+
+    It is not required that both time series share the same size, but they must
+    be the same dimension. DTW was originally presented in [1]_.
 
     Parameters
     ----------
@@ -99,7 +265,11 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=1):
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
         Global constraint to restrict admissible paths for DTW.
     sakoe_chiba_radius : int (default: 1)
-        Radius to be used for Sakoe-Chiba band global constraint. Used only if global_constraint is "sakoe_chiba".
+        Radius to be used for Sakoe-Chiba band global constraint. Used only if
+        ``global_constraint="sakoe_chiba"``.
+    itakura_max_slope : float (default: 2.)
+        Maximum slope for the Itakura parallelogram constraint. Used only if
+        ``global_constraint="itakura"``.
 
     Returns
     -------
@@ -120,29 +290,99 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=1):
 
     References
     ----------
-    .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for spoken word recognition,"
-       IEEE Transactions on Acoustics, Speech and Signal Processing, vol. 26(1), pp. 43--49, 1978.
+    .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
+           spoken word recognition," IEEE Transactions on Acoustics, Speech and
+           Signal Processing, vol. 26(1), pp. 43--49, 1978.
+
     """
     s1 = to_time_series(s1)
     s2 = to_time_series(s2)
-    sz1 = s1.shape[0]
-    sz2 = s2.shape[0]
-    if global_constraint == "sakoe_chiba":
-        return cydtw(s1, s2, mask=sakoe_chiba_mask(sz1, sz2, radius=sakoe_chiba_radius))
-    elif global_constraint == "itakura":
-        return cydtw(s1, s2, mask=itakura_mask(sz1, sz2))
-    return cydtw(s1, s2, mask=numpy.zeros((sz1, sz2)))
+    mask = compute_mask(s1, s2, global_constraint=global_constraint,
+                        sakoe_chiba_radius=sakoe_chiba_radius,
+                        itakura_max_slope=itakura_max_slope)
+    return njit_dtw(s1, s2, mask=mask)
+
+
+
+
+
+@njit()
+def njit_accumulated_matrix_subsequence(subseq, longseq):
+    """Compute the accumulated cost matrix score between a subsequence and
+     a reference time series.
+
+    Parameters
+    ----------
+    subseq : array, shape = (sz1, d)
+        Subsequence time series.
+
+    longseq : array, shape = (sz2, d)
+        Reference time series
+
+    Returns
+    -------
+    mat : array, shape = (sz1, sz2)
+        Accumulated cost matrix.
+    """
+    l1 = subseq.shape[0]
+    l2 = longseq.shape[0]
+    cum_sum = numpy.full((l1 + 1, l2 + 1), numpy.inf)
+    cum_sum[0, :] = 0.
+
+    for i in prange(l1):
+        for j in prange(l2):
+            cum_sum[i + 1, j + 1] = numpy.linalg.norm(subseq[i] - longseq[j]) ** 2
+            cum_sum[i + 1, j + 1] += min(cum_sum[i, j + 1],
+                                         cum_sum[i + 1, j],
+                                         cum_sum[i, j])
+    return numpy.sqrt(cum_sum[1:, 1:])
+
+
+@njit()
+def _return_path_subsequence(acc_cost_mat):
+    sz1, sz2 = acc_cost_mat.shape
+    idx_last_match = numpy.argmin(acc_cost_mat[-1, :])
+    path = [(sz1 - 1, idx_last_match)]
+    while path[-1][0] != 0:
+        i, j = path[-1]
+        if i == 0:
+            path.append((0, j - 1))
+        elif j == 0:
+            path.append((i - 1, 0))
+        else:
+            arr = numpy.array([acc_cost_mat[i - 1][j - 1],
+                               acc_cost_mat[i - 1][j],
+                               acc_cost_mat[i][j - 1]])
+            argmin = numpy.argmin(arr)
+            if argmin == 0:
+                path.append((i - 1, j - 1))
+            elif argmin == 1:
+                path.append((i - 1, j))
+            else:
+                path.append((i, j - 1))
+    return path[::-1]
 
 
 def dtw_subsequence_path(subseq, longseq):
-    """Compute sub-sequence Dynamic Time Warping (DTW) similarity measure between a (possibly multidimensional)
-    query and a long time series and return both the path and the similarity.
+    r"""Compute sub-sequence Dynamic Time Warping (DTW) similarity measure
+    between a (possibly multidimensional) query and a long time series and
+    return both the path and the similarity.
 
-    DTW is computed as the Euclidean distance between aligned time series, i.e., if :math:`P` is the alignment path:
-    $$DTW(X, Y) = \\\sqrt{\\\sum_{(i, j) \\\in P} (X_{i} - Y_{j})^2}$$
+    DTW is computed as the Euclidean distance between aligned time series,
+    i.e., if :math:`P` is the alignment path:
 
-    It is not required that both time series share the same size, but they must be the same dimension.
-    This implementation finds the best matching starting and ending positions for `subseq` inside `longseq`.
+    .. math::
+
+        DTW(X, Y) = \sqrt{\sum_{(i, j) \in P} (X_{i} - Y_{j})^2}
+
+    Compared to traditional DTW, here, border constraints on admissible paths
+    :math:`P` are relaxed such that :math:`P_0 = (0, ?)` and
+    :math:`P_L = (N-1, ?)` where :math:`L` is the length of the considered path
+    and :math:`N` is the length of the subsequence time series.
+
+    It is not required that both time series share the same size, but they must
+    be the same dimension. This implementation finds the best matching starting
+    and ending positions for `subseq` inside `longseq`.
 
     Parameters
     ----------
@@ -154,14 +394,15 @@ def dtw_subsequence_path(subseq, longseq):
     Returns
     -------
     list of integer pairs
-        Matching path represented as a list of index pairs. In each pair, the first index corresponds to `subseq` and
-        the second one corresponds to `longseq`
+        Matching path represented as a list of index pairs. In each pair, the
+        first index corresponds to `subseq` and the second one corresponds to
+        `longseq`.
     float
         Similarity score
 
     Examples
     --------
-    >>> path, dist = dtw_subsequence_path([2, 3], [1., 2., 2., 3., 4.])
+    >>> path, dist = dtw_subsequence_path([2., 3.], [1., 2., 2., 3., 4.])
     >>> path
     [(0, 2), (1, 3)]
     >>> dist
@@ -173,11 +414,32 @@ def dtw_subsequence_path(subseq, longseq):
     """
     subseq = to_time_series(subseq)
     longseq = to_time_series(longseq)
-    return cydtw_subsequence_path(subseq=subseq, longseq=longseq)
+    acc_cost_mat = njit_accumulated_matrix_subsequence(subseq=subseq,
+                                                       longseq=longseq)
+    path = _return_path_subsequence(acc_cost_mat)
+    return path, numpy.min(acc_cost_mat[-1, :])
 
 
+@njit()
 def sakoe_chiba_mask(sz1, sz2, radius=1):
-    """
+    """Compute the Sakoe-Chiba mask.
+
+    Parameters
+    ----------
+    sz1 : int
+        The size of the first time series
+
+    sz2 : int
+        The size of the second time series.
+
+    radius : int
+        The radius of the band.
+
+    Returns
+    -------
+    mask : array, shape = (sz1, sz2)
+        Sakoe-Chiba mask.
+
     Examples
     --------
     >>> sakoe_chiba_mask(4, 4, 1)  # doctest: +NORMALIZE_WHITESPACE
@@ -186,37 +448,145 @@ def sakoe_chiba_mask(sz1, sz2, radius=1):
            [ inf,  0.,  0.,  0.],
            [ inf, inf,  0.,  0.]])
     >>> sakoe_chiba_mask(7, 3, 1)  # doctest: +NORMALIZE_WHITESPACE
-    array([[  0., 0., inf],
-           [  0., 0., inf],
-           [  0., 0., inf],
-           [  0., 0.,  0.],
-           [ inf, 0.,  0.],
-           [ inf, 0.,  0.],
-           [ inf, 0.,  0.]])
+    array([[  0.,  0., inf],
+           [  0.,  0.,  0.],
+           [  0.,  0.,  0.],
+           [  0.,  0.,  0.],
+           [  0.,  0.,  0.],
+           [  0.,  0.,  0.],
+           [ inf,  0.,  0.]])
+
     """
-    return cysakoe_chiba_mask(sz1, sz2, radius)
+    mask = numpy.full((sz1, sz2), numpy.inf)
+    if sz1 > sz2:
+        width = sz1 - sz2 + radius
+        for i in prange(sz2):
+            lower = max(0, i - radius)
+            upper = min(sz1, i + width) + 1
+            mask[lower:upper, i] = 0.
+    else:
+        width = sz2 - sz1 + radius
+        for i in prange(sz1):
+            lower = max(0, i - radius)
+            upper = min(sz2, i + width) + 1
+            mask[i, lower:upper] = 0.
+    return mask
 
 
-def itakura_mask(sz1, sz2):
-    """
+@njit()
+def itakura_mask(sz1, sz2, max_slope=2.):
+    """Compute the Itakura mask.
+
+    Parameters
+    ----------
+    sz1 : int
+        The size of the first time series
+
+    sz2 : int
+        The size of the second time series.
+
+    max_slope : float (default = 2)
+        The maximum slope of the parallelogram.
+
+    Returns
+    -------
+    mask : array, shape = (sz1, sz2)
+        Itakura mask.
+
     Examples
     --------
-    >>> itakura_mask(6, 6)  # doctest: +NORMALIZE_WHITESPACE
+    >>> itakura_mask(6, 6, max_slope=2)  # doctest: +NORMALIZE_WHITESPACE
     array([[  0., inf, inf, inf, inf, inf],
            [ inf,  0.,  0., inf, inf, inf],
            [ inf,  0.,  0.,  0., inf, inf],
            [ inf, inf,  0.,  0.,  0., inf],
            [ inf, inf, inf,  0.,  0., inf],
            [ inf, inf, inf, inf, inf,  0.]])
+
     """
-    return cyitakura_mask(sz1, sz2)
+    min_slope = 1 / float(max_slope)
+    max_slope *= (float(sz1) / float(sz2))
+    min_slope *= (float(sz1) / float(sz2))
+
+    lower_bound = numpy.empty((2, sz2))
+    lower_bound[0] = min_slope * numpy.arange(sz2)
+    lower_bound[1] = ((sz1 - 1) - max_slope * (sz2 - 1)
+                      + max_slope * numpy.arange(sz2))
+    lower_bound_ = numpy.empty(sz2)
+    for i in prange(sz2):
+        lower_bound_[i] = max(round(lower_bound[0, i], 2),
+                              round(lower_bound[1, i], 2))
+    lower_bound_ = numpy.ceil(lower_bound_)
+
+    upper_bound = numpy.empty((2, sz2))
+    upper_bound[0] = max_slope * numpy.arange(sz2)
+    upper_bound[1] = ((sz1 - 1) - min_slope * (sz2 - 1)
+                      + min_slope * numpy.arange(sz2))
+    upper_bound_ = numpy.empty(sz2)
+    for i in prange(sz2):
+        upper_bound_[i] = min(round(upper_bound[0, i], 2),
+                              round(upper_bound[1, i], 2))
+    upper_bound_ = numpy.floor(upper_bound_ + 1)
+
+    mask = numpy.full((sz1, sz2), numpy.inf)
+    for i in prange(sz2):
+        mask[int(lower_bound_[i]):int(upper_bound_[i]), i] = 0.
+
+    return mask
 
 
-def cdist_dtw(dataset1, dataset2=None, global_constraint=None, sakoe_chiba_radius=1):
-    """Compute cross-similarity matrix using Dynamic Time Warping (DTW) similarity measure.
+@njit()
+def compute_mask(s1, s2, global_constraint=None,
+                 sakoe_chiba_radius=1, itakura_max_slope=2.):
+    """Compute the mask (region constraint).
 
-    DTW is computed as the Euclidean distance between aligned time series, i.e., if :math:`P` is the alignment path:
-    $$DTW(X, Y) = \\\sqrt{\\\sum_{(i, j) \\\in P} (X_{i} - Y_{j})^2}$$
+    Parameters
+    ----------
+    s1 : array
+        A time series.
+
+    s2: array
+        Another time series.
+
+    global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
+        Global constraint to restrict admissible paths for DTW.
+
+    sakoe_chiba_radius : int (default: 1)
+        Radius to be used for Sakoe-Chiba band global constraint. Used only if
+        ``global_constraint="sakoe_chiba"``.
+
+    itakura_max_slope : float (default: 2.)
+        Maximum slope for the Itakura parallelogram constraint. Used only if
+        ``global_constraint="itakura_parallelogram"``.
+
+    Returns
+    -------
+    mask : array
+        Constraint region.
+
+    """
+    sz1 = s1.shape[0]
+    sz2 = s2.shape[0]
+    if global_constraint == "sakoe_chiba":
+        mask = sakoe_chiba_mask(sz1, sz2, radius=sakoe_chiba_radius)
+    elif global_constraint == "itakura":
+        mask = itakura_mask(sz1, sz2, max_slope=itakura_max_slope)
+    else:
+        mask = numpy.zeros((sz1, sz2))
+    return mask
+
+
+def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
+              sakoe_chiba_radius=1, itakura_max_slope=2.):
+    r"""Compute cross-similarity matrix using Dynamic Time Warping (DTW)
+    similarity measure.
+
+    DTW is computed as the Euclidean distance between aligned time series,
+    i.e., if :math:`P` is the alignment path:
+
+    .. math::
+
+        DTW(X, Y) = \sqrt{\sum_{(i, j) \in P} (X_{i} - Y_{j})^2}
 
     DTW was originally presented in [1]_.
 
@@ -224,16 +594,25 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None, sakoe_chiba_radiu
     ----------
     dataset1 : array-like
         A dataset of time series
+
     dataset2 : array-like (default: None)
-        Another dataset of time series. If `None`, self-similarity of `dataset1` is returned.
+        Another dataset of time series. If `None`, self-similarity of
+        `dataset1` is returned.
+
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
         Global constraint to restrict admissible paths for DTW.
+
     sakoe_chiba_radius : int (default: 1)
-        Radius to be used for Sakoe-Chiba band global constraint. Used only if global_constraint is "sakoe_chiba".
+        Radius to be used for Sakoe-Chiba band global constraint. Used only if
+        ``global_constraint="sakoe_chiba"``.
+
+    itakura_max_slope : float (default: 2.)
+        Maximum slope for the Itakura parallelogram constraint. Used only if
+        ``global_constraint="itakura"``.
 
     Returns
     -------
-    numpy.ndarray
+    cdist : numpy.ndarray
         Cross-similarity matrix
 
     Examples
@@ -251,24 +630,19 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None, sakoe_chiba_radiu
 
     References
     ----------
-    .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for spoken word recognition,"
-       IEEE Transactions on Acoustics, Speech and Signal Processing, vol. 26(1), pp. 43--49, 1978.
+    .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
+           spoken word recognition," IEEE Transactions on Acoustics, Speech and
+           Signal Processing, vol. 26(1), pp. 43--49, 1978.
+
     """
     dataset1 = to_time_series_dataset(dataset1)
-    self_similarity = False
     if dataset2 is None:
-        dataset2 = dataset1
-        self_similarity = True
+        return njit_cdist_dtw_self(dataset1, global_constraint,
+                                   sakoe_chiba_radius, itakura_max_slope)
     else:
         dataset2 = to_time_series_dataset(dataset2)
-    sz1 = dataset1.shape[1]
-    sz2 = dataset2.shape[1]
-    if global_constraint == "sakoe_chiba":
-        return cycdist_dtw(dataset1, dataset2, self_similarity=self_similarity,
-                           mask=sakoe_chiba_mask(sz1, sz2, radius=sakoe_chiba_radius))
-    elif global_constraint == "itakura":
-        return cycdist_dtw(dataset1, dataset2, self_similarity=self_similarity, mask=itakura_mask(sz1, sz2))
-    return cycdist_dtw(dataset1, dataset2, self_similarity=self_similarity, mask=numpy.zeros((sz1, sz2)))
+        return njit_cdist_dtw(dataset1, dataset2, global_constraint,
+                              sakoe_chiba_radius, itakura_max_slope)
 
 
 def gak(s1, s2, sigma=1.):
@@ -505,6 +879,25 @@ def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
     return numpy.sqrt(numpy.linalg.norm(ts_query[indices_up, 0] - envelope_up[indices_up, 0]) ** 2 + \
                       numpy.linalg.norm(ts_query[indices_down, 0] - envelope_down[indices_down, 0]) ** 2)
 
+@njit()
+def njit_lb_envelope(time_series, radius):
+    sz, d = time_series.shape
+    enveloppe_up = numpy.empty((sz, d))
+    enveloppe_down = numpy.empty((sz, d))
+
+    for i in prange(sz):
+        min_idx = i - radius
+        max_idx = i + radius + 1
+        if min_idx < 0:
+            min_idx = 0
+        if max_idx > sz:
+            max_idx = sz
+        for di in prange(d):
+            enveloppe_down[i, di] = numpy.min(time_series[min_idx:max_idx, di])
+            enveloppe_up[i, di] = numpy.max(time_series[min_idx:max_idx, di])
+
+    return enveloppe_down, enveloppe_up
+
 
 def lb_envelope(ts, radius=1):
     """Compute time-series envelope as required by LB_Keogh.
@@ -552,7 +945,7 @@ def lb_envelope(ts, radius=1):
     .. [1] Keogh, E. Exact indexing of dynamic time warping. In International Conference on Very Large Data Bases, 2002.
        pp 406-417.
     """
-    return cylb_envelope(to_time_series(ts), radius=radius)
+    return njit_lb_envelope(to_time_series(ts), radius=radius)
 
 
 def soft_dtw(ts1, ts2, gamma=1.):

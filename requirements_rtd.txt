@@ -2,6 +2,7 @@ Cython
 numpy
 scipy
 scikit-learn
+numba
 sphinx>=1.4
 ipykernel
 nbsphinx
