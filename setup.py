@@ -26,7 +26,6 @@ setup(
     packages=['tslearn'],
     package_data={"tslearn": [".cached_datasets/Trace.npz"]},
     data_files=[("", ["LICENSE"])],
-    requires=['numpy', 'scipy', 'scikit-learn', 'Cython', 'numba'],
     install_requires=['numpy', 'scipy', 'scikit-learn', 'Cython', 'numba'],
     ext_modules=cythonize("tslearn/*.pyx", include_path=[numpy.get_include()]),
     version=__version__,
