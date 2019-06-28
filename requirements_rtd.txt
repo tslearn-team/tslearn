@@ -10,3 +10,4 @@ pillow
 tensorflow
 keras
 Pygments
+numba

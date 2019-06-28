@@ -14,6 +14,7 @@ If you would like to contribute to `tslearn`, please have a look at [our contrib
 ```
 Cython
 numpy
+numba
 scipy
 scikit-learn
 ```
