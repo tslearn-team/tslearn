@@ -13,30 +13,11 @@
 # serve to show the default.
 
 import sys
-import os
-
-# # !!!! allow readthedoc compilation
-# try:
-#     from unittest.mock import MagicMock
-# except ImportError:
-#     from mock import Mock as MagicMock
-#     ## check whether in the source directory...
-# #
-#
-#
-# #!!! This should be commented when executing sphinx-gallery
-# class Mock(MagicMock):
-#     @classmethod
-#     def __getattr__(cls, name):
-#         return MagicMock()
-# MOCK_MODULES = ['tslearn.cycc', 'tslearn.cydtw', 'tslearn.cygak',
-#                 'tslern.cysax', 'tslearn.soft_dtw_fast']
-# sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
-# # !!!!
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
+# Uncomment for local build
 # sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
 
 # -- General configuration ------------------------------------------------
