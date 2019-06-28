@@ -20,13 +20,17 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=1):
-    """Compute Dynamic Time Warping (DTW) similarity measure between (possibly multidimensional) time series and
-    return both the path and the similarity.
+    """Compute Dynamic Time Warping (DTW) similarity measure between (possibly
+    multidimensional) time series and return both the path and the similarity.
 
-    DTW is computed as the Euclidean distance between aligned time series, i.e., if :math:`P` is the alignment path:
-    $$DTW(X, Y) = \\\sqrt{\\\sum_{(i, j) \\\in P} (X_{i} - Y_{j})^2}$$
+    DTW is computed as the Euclidean distance between aligned time series, i.e.,
+    if :math:`P` is the alignment path:
 
-    It is not required that both time series share the same size, but they must be the same dimension.
+    .. math::
+        DTW(X, Y) = \\sqrt{\\sum_{(i, j) \\in P} (X_{i} - Y_{j})^2}
+
+    It is not required that both time series share the same size, but they must
+    be the same dimension.
     DTW was originally presented in [1]_.
 
     Parameters
@@ -39,13 +43,14 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=1):
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
         Global constraint to restrict admissible paths for DTW.
     sakoe_chiba_radius : int (default: 1)
-        Radius to be used for Sakoe-Chiba band global constraint. Used only if global_constraint is "sakoe_chiba".
+        Radius to be used for Sakoe-Chiba band global constraint. Used only if
+        global_constraint is "sakoe_chiba".
 
     Returns
     -------
     list of integer pairs
-        Matching path represented as a list of index pairs. In each pair, the first index corresponds to s1 and the
-        second one corresponds to s2
+        Matching path represented as a list of index pairs. In each pair, the
+        first index corresponds to s1 and the second one corresponds to s2
     float
         Similarity score
 
@@ -81,13 +86,17 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=1):
 
 
 def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=1):
-    """Compute Dynamic Time Warping (DTW) similarity measure between (possibly multidimensional) time series and
-    return it.
+    """Compute Dynamic Time Warping (DTW) similarity measure between (possibly
+    multidimensional) time series and return it.
 
-    DTW is computed as the Euclidean distance between aligned time series, i.e., if :math:`P` is the alignment path:
-    $$DTW(X, Y) = \\\sqrt{\\\sum_{(i, j) \\\in P} (X_{i} - Y_{j})^2}$$
+    DTW is computed as the Euclidean distance between aligned time series, i.e.,
+    if :math:`P` is the alignment path:
 
-    It is not required that both time series share the same size, but they must be the same dimension.
+    .. math::
+        DTW(X, Y) = \\sqrt{\\sum_{(i, j) \\in P} (X_{i} - Y_{j})^2}
+
+    It is not required that both time series share the same size, but they must
+    be the same dimension.
     DTW was originally presented in [1]_.
 
     Parameters
@@ -99,7 +108,8 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=1):
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
         Global constraint to restrict admissible paths for DTW.
     sakoe_chiba_radius : int (default: 1)
-        Radius to be used for Sakoe-Chiba band global constraint. Used only if global_constraint is "sakoe_chiba".
+        Radius to be used for Sakoe-Chiba band global constraint. Used only if
+        global_constraint is "sakoe_chiba".
 
     Returns
     -------
