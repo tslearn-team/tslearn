@@ -8,6 +8,7 @@ We also provide example usage for these methods using the following variable-len
 
     from tslearn.utils import to_time_series_dataset
     X = to_time_series_dataset([[1, 2, 3, 4], [1, 2, 3], [2, 5, 6, 7, 8, 9]])
+    y = [0, 0, 1]
 
 Clustering
 ----------
@@ -52,7 +53,7 @@ Example
 
     from tslearn.neighbors import KNeighborsTimeSeriesClassifier
     clf = KNeighborsTimeSeriesClassifier(metric="dtw")
-    labels = clf.fit_predict(X)
+    predicted_labels = clf.fit_predict(X, y)
 
 Barycenter computation
 ----------------------
