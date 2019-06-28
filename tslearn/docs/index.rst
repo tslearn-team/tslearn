@@ -15,7 +15,7 @@ Installation
 ------------
 
 Pre-requisites 
-------------
+``````````````
 You need to have c++ build tools
 
 Using conda
