@@ -27,7 +27,7 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=1):
     if :math:`P` is the alignment path:
 
     .. math::
-        DTW(X, Y) = \\sqrt{\\sum_{(i, j) \\in P} (X_{i} - Y_{j})^2}
+        DTW(X, Y) = \\sqrt{\\sum_{(i, j) \\in P} \|X_{i} - Y_{j}\|_2^2}
 
     It is not required that both time series share the same size, but they must
     be the same dimension.
@@ -93,7 +93,7 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=1):
     if :math:`P` is the alignment path:
 
     .. math::
-        DTW(X, Y) = \\sqrt{\\sum_{(i, j) \\in P} (X_{i} - Y_{j})^2}
+        DTW(X, Y) = \\sqrt{\\sum_{(i, j) \\in P} \|X_{i} - Y_{j}\|_2^2}
 
     It is not required that both time series share the same size, but they must
     be the same dimension.
