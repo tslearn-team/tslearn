@@ -22,6 +22,10 @@ If you plan to use the `shapelets` module, `keras` and `tensorflow` should also 
 
 # Installation
 
+## Pre-requisites 
+
+C++ build tools should be available to perform installation.
+
 ## Using conda
 
 The easiest way to install `tslearn` is probably via `conda`:
