@@ -41,20 +41,6 @@ Examples
     labels = km.fit_predict(X)
     silhouette_score(X, labels, metric="dtw")
 
-Supervised classification
--------------------------
-
-* :ref:`KNeighborsTimeSeriesClassifier <knn-clf>`
-
-Example
-~~~~~~~
-
-.. code-block:: python
-
-    from tslearn.neighbors import KNeighborsTimeSeriesClassifier
-    clf = KNeighborsTimeSeriesClassifier(metric="dtw")
-    predicted_labels = clf.fit_predict(X, y)
-
 Barycenter computation
 ----------------------
 
