@@ -33,7 +33,8 @@ install:
   scikit-learn;
 - source activate test-environment
 - pip install git+git://github.com/Theano/Theano.git; conda install mkl-service && export MKL_THREADING_LAYER=GNU;
-- pip install pytest "pytest-cov<2.6"
+- pip install coverage==4.3
+- pip install pytest pytest-cov
 - pip install argparse
 - pip install codeclimate-test-reporter
 - rm -f tslearn/*.c
