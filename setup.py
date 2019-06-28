@@ -1,4 +1,5 @@
 from setuptools import setup
+from codecs import open
 import numpy
 import re
 import os
