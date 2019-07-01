@@ -1,5 +1,5 @@
 import numpy as np
-
+from scipy.spatial.distance import cdist
 import tslearn.metrics
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -104,12 +104,11 @@ def test_gak():
     dists = tslearn.metrics.cdist_soft_dtw_normalized(time_series)
     np.testing.assert_equal(dists >= 0., True)
 
-    sqeuc = tslearn.metrics.SquaredEuclidean([1, 2, 2, 3], [1, 2, 3, 4])
+    v1 = rng.randn(n, 1)
+    v2 = rng.randn(n, 1)
+    sqeuc = tslearn.metrics.SquaredEuclidean(v1.flat, v2.flat)
     np.testing.assert_allclose(sqeuc.compute(),
-                               np.array([[0., 1., 4., 9.],
-                                         [1., 0., 1., 4.],
-                                         [1., 0., 1., 4.],
-                                         [4., 1., 0., 1.]]))
+                               cdist(v1, v2, metric="sqeuclidean"))
 
 def test_lb_keogh():
     ts1 = [1, 2, 3, 2, 1]
