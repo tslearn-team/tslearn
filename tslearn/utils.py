@@ -10,16 +10,6 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 def _arraylike_copy(arr):
     """Duplicate content of arr into a numpy array.
-
-     Examples
-     --------
-     >>> X_npy = numpy.array([1, 2, 3])
-     >>> numpy.alltrue(_arraylike_copy(X_npy) == X_npy)
-     True
-     >>> _arraylike_copy(X_npy) is X_npy
-     False
-     >>> numpy.alltrue(_arraylike_copy([1, 2, 3]) == X_npy)
-     True
      """
     if type(arr) != numpy.ndarray:
         return numpy.array(arr)
@@ -36,10 +26,10 @@ def bit_length(n):
     --------
     >>> bit_length(0)
     0
-    >>> bit_length(2)
-    2
     >>> bit_length(1)
     1
+    >>> bit_length(2)
+    2
     """
     k = 0
     try:
@@ -67,16 +57,16 @@ def to_time_series(ts, remove_nans=False):
     
     Example
     -------
-    >>> to_time_series([1, 2]) # doctest: +NORMALIZE_WHITESPACE
-    array([[ 1.],
-           [ 2.]])
-    >>> to_time_series([1, 2, numpy.nan]) # doctest: +NORMALIZE_WHITESPACE
+    >>> to_time_series([1, 2])
+    array([[1.],
+           [2.]])
+    >>> to_time_series([1, 2, numpy.nan])
     array([[ 1.],
            [ 2.],
-           [ nan]])
-    >>> to_time_series([1, 2, numpy.nan], remove_nans=True) # doctest: +NORMALIZE_WHITESPACE
-    array([[ 1.],
-           [ 2.]])
+           [nan]])
+    >>> to_time_series([1, 2, numpy.nan], remove_nans=True)
+    array([[1.],
+           [2.]])
     
     See Also
     --------
@@ -109,17 +99,17 @@ def to_time_series_dataset(dataset, dtype=numpy.float):
     
     Example
     -------
-    >>> to_time_series_dataset([[1, 2]]) # doctest: +NORMALIZE_WHITESPACE
+    >>> to_time_series_dataset([[1, 2]])
+    array([[[1.],
+            [2.]]])
+    >>> to_time_series_dataset([[1, 2], [1, 4, 3]])
     array([[[ 1.],
-            [ 2.]]])
-    >>> to_time_series_dataset([[1, 2], [1, 4, 3]]) # doctest: +NORMALIZE_WHITESPACE
-    array([[[  1.],
-            [  2.],
-            [ nan]],
+            [ 2.],
+            [nan]],
     <BLANKLINE>
-           [[  1.],
-            [  4.],
-            [  3.]]])
+           [[ 1.],
+            [ 4.],
+            [ 3.]]])
     
     See Also
     --------
@@ -147,19 +137,24 @@ def to_sklearn_dataset(dataset, dtype=numpy.float, return_dim=False):
         The dataset of time series to be transformed.
     dtype : data type (default: numpy.float)
         Data type for the returned dataset.
+    return_dim : boolean  (optional, default: False)
+        Whether the dimensionality (third dimension should be returned together
+        with the transformed dataset).
 
     Returns
     -------
     numpy.ndarray of shape (n_ts, sz * d)
         The transformed dataset of time series.
+    int (optional, if return_dim=True)
+        The dimensionality of the original tslearn dataset (third dimension)
 
     Example
     -------
-    >>> to_sklearn_dataset([[1, 2]], return_dim=True) # doctest: +NORMALIZE_WHITESPACE
-    (array([[ 1., 2.]]), 1)
-    >>> to_sklearn_dataset([[1, 2], [1, 4, 3]]) # doctest: +NORMALIZE_WHITESPACE
+    >>> to_sklearn_dataset([[1, 2]], return_dim=True)
+    (array([[1., 2.]]), 1)
+    >>> to_sklearn_dataset([[1, 2], [1, 4, 3]])
     array([[ 1.,  2., nan],
-           [ 1.,  4., 3.]])
+           [ 1.,  4.,  3.]])
 
     See Also
     --------
@@ -192,9 +187,9 @@ def timeseries_to_str(ts, fmt="%.18e"):
 
     Examples
     --------
-    >>> timeseries_to_str([1, 2, 3, 4], fmt="%.1f")  # doctest: +NORMALIZE_WHITESPACE
+    >>> timeseries_to_str([1, 2, 3, 4], fmt="%.1f")
     '1.0 2.0 3.0 4.0'
-    >>> timeseries_to_str([[1, 3], [2, 4]], fmt="%.1f")  # doctest: +NORMALIZE_WHITESPACE
+    >>> timeseries_to_str([[1, 3], [2, 4]], fmt="%.1f")
     '1.0 2.0|3.0 4.0'
 
     See Also
@@ -227,14 +222,14 @@ def str_to_timeseries(ts_str):
 
     Examples
     --------
-    >>> str_to_timeseries("1 2 3 4")  # doctest: +NORMALIZE_WHITESPACE
-    array([[ 1.],
-           [ 2.],
-           [ 3.],
-           [ 4.]])
-    >>> str_to_timeseries("1 2|3 4")  # doctest: +NORMALIZE_WHITESPACE
-    array([[ 1., 3.],
-           [ 2., 4.]])
+    >>> str_to_timeseries("1 2 3 4")
+    array([[1.],
+           [2.],
+           [3.],
+           [4.]])
+    >>> str_to_timeseries("1 2|3 4")
+    array([[1., 3.],
+           [2., 4.]])
 
     See Also
     --------
@@ -262,14 +257,6 @@ def save_timeseries_txt(fname, dataset, fmt="%.18e"):
     --------
     >>> dataset = to_time_series_dataset([[1, 2, 3, 4], [1, 2, 3]])
     >>> save_timeseries_txt("tmp-tslearn-test.txt", dataset)
-    >>> reloaded_dataset = load_timeseries_txt("tmp-tslearn-test.txt")
-    >>> [numpy.alltrue((ts0[:ts_size(ts0)] - ts1[:ts_size(ts1)]) < 1e-6) for ts0, ts1 in zip(dataset, reloaded_dataset)]
-    [True, True]
-    >>> dataset = to_time_series_dataset([[1, 2, 4], [1, 2, 3]])
-    >>> save_timeseries_txt("tmp-tslearn-test.txt", dataset)
-    >>> reloaded_dataset = load_timeseries_txt("tmp-tslearn-test.txt")
-    >>> [numpy.alltrue((ts0 - ts1) < 1e-6) for ts0, ts1 in zip(dataset, reloaded_dataset)]
-    [True, True]
 
     See Also
     --------
@@ -299,13 +286,6 @@ def load_timeseries_txt(fname):
     >>> dataset = to_time_series_dataset([[1, 2, 3, 4], [1, 2, 3]])
     >>> save_timeseries_txt("tmp-tslearn-test.txt", dataset)
     >>> reloaded_dataset = load_timeseries_txt("tmp-tslearn-test.txt")
-    >>> [numpy.alltrue((ts0[:ts_size(ts0)] - ts1[:ts_size(ts1)]) < 1e-6) for ts0, ts1 in zip(dataset, reloaded_dataset)]
-    [True, True]
-    >>> dataset = to_time_series_dataset([[1, 2, 4], [1, 2, 3]])
-    >>> save_timeseries_txt("tmp-tslearn-test.txt", dataset)
-    >>> reloaded_dataset = load_timeseries_txt("tmp-tslearn-test.txt")
-    >>> [numpy.alltrue((ts0 - ts1) < 1e-6) for ts0, ts1 in zip(dataset, reloaded_dataset)]
-    [True, True]
 
     See Also
     --------
@@ -402,9 +382,9 @@ def ts_zeros(sz, d=1):
     Examples
     --------
     >>> ts_zeros(3, 2)  # doctest: +NORMALIZE_WHITESPACE
-    array([[ 0., 0.],
-           [ 0., 0.],
-           [ 0., 0.]])
+    array([[0., 0.],
+           [0., 0.],
+           [0., 0.]])
     >>> ts_zeros(5).shape
     (5, 1)
     """
@@ -425,28 +405,23 @@ class LabelCategorizer(BaseEstimator, TransformerMixin):
     --------
     >>> y = numpy.array([-1, 2, 1, 1, 2])
     >>> lc = LabelCategorizer()
-    >>> lc.fit_transform(y)  # doctest: +NORMALIZE_WHITESPACE
-    array([[ 1., 0., 0.],
-           [ 0., 0., 1.],
-           [ 0., 1., 0.],
-           [ 0., 1., 0.],
-           [ 0., 0., 1.]])
-    >>> lc.inverse_transform([[0, 1, 0], [0, 0, 1], [1, 0, 0]])  # doctest: +NORMALIZE_WHITESPACE
-    array([ 1., 2., -1.])
-    >>> import pickle
-    >>> s = pickle.dumps(lc)
-    >>> lc2 = pickle.loads(s)
-    >>> lc2.inverse_transform([[0, 1, 0], [0, 0, 1], [1, 0, 0]])  # doctest: +NORMALIZE_WHITESPACE
-    array([ 1., 2., -1.])
+    >>> lc.fit_transform(y)
+    array([[1., 0., 0.],
+           [0., 0., 1.],
+           [0., 1., 0.],
+           [0., 1., 0.],
+           [0., 0., 1.]])
+    >>> lc.inverse_transform([[0, 1, 0], [0, 0, 1], [1, 0, 0]])
+    array([ 1.,  2., -1.])
     >>> y = numpy.array([-1, 2, -1, -1, 2])
     >>> lc = LabelCategorizer(single_column_if_binary=True)
-    >>> lc.fit_transform(y)  # doctest: +NORMALIZE_WHITESPACE
-    array([[ 1.],
-           [ 0.],
-           [ 1.],
-           [ 1.],
-           [ 0.]])
-    >>> lc.inverse_transform(lc.transform(y))  # doctest: +NORMALIZE_WHITESPACE
+    >>> lc.fit_transform(y)
+    array([[1.],
+           [0.],
+           [1.],
+           [1.],
+           [0.]])
+    >>> lc.inverse_transform(lc.transform(y))
     array([-1.,  2., -1., -1.,  2.])
 
     References
