@@ -190,19 +190,19 @@ def sakoe_chiba_mask(sz1, sz2, radius=1):
     """
     Examples
     --------
-    >>> sakoe_chiba_mask(4, 4, 1) # doctest: +SKIP
-    array([[  0.,  0., inf, inf],
-           [  0.,  0.,  0., inf],
-           [ inf,  0.,  0.,  0.],
-           [ inf, inf,  0.,  0.]])
-    >>> sakoe_chiba_mask(7, 3, 1) # doctest: +SKIP
-    array([[  0., 0., inf],
-           [  0., 0., inf],
-           [  0., 0., inf],
-           [  0., 0.,  0.],
-           [ inf, 0.,  0.],
-           [ inf, 0.,  0.],
-           [ inf, 0.,  0.]])
+    >>> sakoe_chiba_mask(4, 4, 1)
+    array([[ 0.,  0., inf, inf],
+           [ 0.,  0.,  0., inf],
+           [inf,  0.,  0.,  0.],
+           [inf, inf,  0.,  0.]])
+    >>> sakoe_chiba_mask(7, 3, 1)
+    array([[ 0.,  0., inf],
+           [ 0.,  0., inf],
+           [ 0.,  0., inf],
+           [ 0.,  0.,  0.],
+           [inf,  0.,  0.],
+           [inf,  0.,  0.],
+           [inf,  0.,  0.]])
     """
     return cysakoe_chiba_mask(sz1, sz2, radius)
 
@@ -211,13 +211,13 @@ def itakura_mask(sz1, sz2):
     r"""
     Examples
     --------
-    >>> itakura_mask(6, 6)  # doctest: +SKIP
-    array([[  0., inf, inf, inf, inf, inf],
-           [ inf,  0.,  0., inf, inf, inf],
-           [ inf,  0.,  0.,  0., inf, inf],
-           [ inf, inf,  0.,  0.,  0., inf],
-           [ inf, inf, inf,  0.,  0., inf],
-           [ inf, inf, inf, inf, inf,  0.]])
+    >>> itakura_mask(6, 6)
+    array([[ 0., inf, inf, inf, inf, inf],
+           [inf,  0.,  0., inf, inf, inf],
+           [inf,  0.,  0.,  0., inf, inf],
+           [inf, inf,  0.,  0.,  0., inf],
+           [inf, inf, inf,  0.,  0., inf],
+           [inf, inf, inf, inf, inf,  0.]])
     """
     return cyitakura_mask(sz1, sz2)
 
@@ -248,12 +248,12 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None, sakoe_chiba_radiu
 
     Examples
     --------
-    >>> cdist_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]])  # doctest: +SKIP
-    array([[ 0., 1.],
-           [ 1., 0.]])
-    >>> cdist_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 3], [2, 3, 4, 5]])  # doctest: +SKIP
-    array([[ 0. ,  2.449...],
-           [ 1. ,  1.414...]])
+    >>> cdist_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]])
+    array([[0., 1.],
+           [1., 0.]])
+    >>> cdist_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 3], [2, 3, 4, 5]])
+    array([[0.        , 2.44948974],
+           [1.        , 1.41421356]])
 
     See Also
     --------
@@ -343,12 +343,12 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.):
 
     Examples
     --------
-    >>> cdist_gak([[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)  # doctest: +SKIP
-    array([[ 1. , 0.656...],
-           [ 0.656..., 1. ]])
-    >>> cdist_gak([[1, 2, 2], [1., 2., 3., 4.]], [[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)  # doctest: +SKIP
-    array([[ 0.710...,  0.297...],
-           [ 0.656...,  1.        ]])
+    >>> cdist_gak([[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)
+    array([[1.        , 0.65629661],
+           [0.65629661, 1.        ]])
+    >>> cdist_gak([[1, 2, 2], [1., 2., 3., 4.]], [[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)
+    array([[0.71059484, 0.29722877],
+           [0.65629661, 1.        ]])
 
     See Also
     --------
@@ -540,18 +540,18 @@ def lb_envelope(ts, radius=1):
     --------
     >>> ts1 = [1, 2, 3, 2, 1]
     >>> env_low, env_up = lb_envelope(ts1, radius=1)
-    >>> env_low  # doctest: +SKIP
-    array([[ 1.],
-           [ 1.],
-           [ 2.],
-           [ 1.],
-           [ 1.]])
-    >>> env_up  # doctest: +SKIP
-    array([[ 2.],
-           [ 3.],
-           [ 3.],
-           [ 3.],
-           [ 2.]])
+    >>> env_low
+    array([[1.],
+           [1.],
+           [2.],
+           [1.],
+           [1.]])
+    >>> env_up
+    array([[2.],
+           [3.],
+           [3.],
+           [3.],
+           [2.]])
 
     See also
     --------
@@ -625,12 +625,12 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
 
     Examples
     --------
-    >>> cdist_soft_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], gamma=.01)  # doctest: +SKIP
-    array([[-0.01...,  1. ],
-           [ 1.     ,  0. ]])
-    >>> cdist_soft_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 2, 3], [1., 2., 3., 4.]], gamma=.01)  # doctest: +SKIP
-    array([[-0.01...,  1. ],
-           [ 1.     ,  0. ]])
+    >>> cdist_soft_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], gamma=.01)
+    array([[-0.01098612,  1.        ],
+           [ 1.        ,  0.        ]])
+    >>> cdist_soft_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 2, 3], [1., 2., 3., 4.]], gamma=.01)
+    array([[-0.01098612,  1.        ],
+           [ 1.        ,  0.        ]])
 
     See Also
     --------
@@ -797,11 +797,11 @@ class SquaredEuclidean(object):
 
         Examples
         --------
-        >>> SquaredEuclidean([1, 2, 2, 3], [1, 2, 3, 4]).compute()  # doctest: +SKIP
-        array([[ 0.,  1.,  4.,  9.],
-               [ 1.,  0.,  1.,  4.],
-               [ 1.,  0.,  1.,  4.],
-               [ 4.,  1.,  0.,  1.]])
+        >>> SquaredEuclidean([1, 2, 2, 3], [1, 2, 3, 4]).compute()
+        array([[0., 1., 4., 9.],
+               [1., 0., 1., 4.],
+               [1., 0., 1., 4.],
+               [4., 1., 0., 1.]])
         """
         self.X = to_time_series(X).astype(numpy.float64)
         self.Y = to_time_series(Y).astype(numpy.float64)
