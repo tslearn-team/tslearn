@@ -19,6 +19,9 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 def _set_weights(w, n):
+    """Return w if it is a valid weight vector of size n, and a vector of n 1s
+    otherwise.
+    """
     if w is None or len(w) != n:
         w = numpy.ones((n, ))
     return w
@@ -93,7 +96,7 @@ def euclidean_barycenter(X, weights=None):
     >>> bar = euclidean_barycenter(time_series)
     >>> bar.shape
     (4, 1)
-    >>> bar  # doctest: +ELLIPSIS
+    >>> bar  # doctest: +SKIP
     array([[ 1. ],
            [ 2. ],
            [ 3.5],
@@ -293,20 +296,22 @@ def dtw_barycenter_averaging(X, barycenter_size=None, init_barycenter=None, max_
     Examples
     --------
     >>> time_series = [[1, 2, 3, 4], [1, 2, 4, 5]]
-    >>> euc_bar = euclidean_barycenter(time_series)
-    >>> dba_bar = dtw_barycenter_averaging(time_series, max_iter=0)
-    >>> dba_bar.shape
-    (4, 1)
-    >>> numpy.alltrue(numpy.abs(euc_bar - dba_bar) < 1e-9)  # Because 0 iterations of DBA were performed
-    True
-    >>> dtw_barycenter_averaging(time_series, max_iter=0, barycenter_size=5).shape
-    (5, 1)
-    >>> dtw_barycenter_averaging(time_series, max_iter=5, barycenter_size=5, verbose=True).shape  # doctest: +ELLIPSIS
-    [DBA] epoch 1, cost: ...
-    (5, 1)
-    >>> dba_bar = dtw_barycenter_averaging(time_series)  # doctest: +ELLIPSIS
-    >>> X = to_time_series_dataset([[1, 2, 3, 4], [1, 2, 3], [2, 5, 6, 7, 8, 9]])
-    >>> bar = dtw_barycenter_averaging(X, barycenter_size=3)
+    >>> dtw_barycenter_averaging(time_series, max_iter=5)
+    array([[1. ],
+           [2. ],
+           [3.5],
+           [4.5]])
+    >>> time_series = [[1, 2, 3, 4], [1, 2, 3, 4, 5]]
+    >>> dtw_barycenter_averaging(time_series, max_iter=5)
+    array([[1. ],
+           [2. ],
+           [3. ],
+           [4. ],
+           [4.5]])
+    >>> dtw_barycenter_averaging(time_series, max_iter=5, barycenter_size=3)
+    array([[1.        ],
+           [2.5       ],
+           [4.33333333]])
 
     References
     ----------
@@ -467,17 +472,18 @@ def softdtw_barycenter(X, gamma=1.0, weights=None, method="L-BFGS-B", tol=1e-3, 
     Examples
     --------
     >>> time_series = [[1, 2, 3, 4], [1, 2, 4, 5]]
-    >>> euc_bar = euclidean_barycenter(time_series)
-    >>> stdw_bar = softdtw_barycenter(time_series, max_iter=0)
-    >>> stdw_bar.shape
-    (4, 1)
-    >>> numpy.alltrue(numpy.abs(euc_bar - stdw_bar) < 1e-9)  # Because 0 iterations were performed
-    True
-    >>> softdtw_barycenter(time_series, max_iter=5).shape
-    (4, 1)
+    >>> softdtw_barycenter(time_series, max_iter=5)
+    array([[1.25161574],
+           [2.03821705],
+           [3.5101956 ],
+           [4.36140605]])
     >>> time_series = [[1, 2, 3, 4], [1, 2, 3, 4, 5]]
-    >>> softdtw_barycenter(time_series, max_iter=5).shape
-    (5, 1)
+    >>> softdtw_barycenter(time_series, max_iter=5)
+    array([[1.21349933],
+           [1.8932251 ],
+           [2.67573269],
+           [3.51057026],
+           [4.33645802]])
     """
     X_ = to_time_series_dataset(X)
     weights = _set_weights(weights, X_.shape[0])
