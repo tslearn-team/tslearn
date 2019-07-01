@@ -36,7 +36,7 @@ def _breakpoints(n_bins, scale=1.):
     Example
     -------
     >>> _breakpoints(n_bins=2)
-    array([ 0.])
+    array([0.])
     """
     return norm.ppf([float(a) / n_bins for a in range(1, n_bins)], scale=scale)
 
@@ -278,8 +278,6 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
            [[1],
             [0],
             [1]]])
-    >>> numpy.alltrue(sax_data == sax.fit(data).transform(data))
-    True
     >>> sax.distance_sax(sax_data[0], sax_data[1])  # doctest: +ELLIPSIS
     0.0
     >>> sax.distance(data[0], data[1])  # doctest: +ELLIPSIS
@@ -298,10 +296,6 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
             [-0.67448975],
             [ 0.67448975],
             [ 0.67448975]]])
-    >>> unfitted_sax = SymbolicAggregateApproximation(n_segments=3, alphabet_size_avg=2)
-    >>> unfitted_sax.distance(data[0], data[1])  # doctest: +IGNORE_EXCEPTION_DETAIL
-    Traceback (most recent call last):
-    ValueError: Model not fitted yet: cannot be used for distance computation.
 
     References
     ----------
@@ -473,11 +467,9 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
            [[1, 1],
             [0, 0],
             [1, 0]]])
-    >>> numpy.alltrue(one_d_sax_data == one_d_sax.fit(data).transform(data))
-    True
-    >>> one_d_sax.distance_sax(one_d_sax_data[0], one_d_sax_data[1])  # doctest: +ELLIPSIS
+    >>> one_d_sax.distance_sax(one_d_sax_data[0], one_d_sax_data[1])
     0.0
-    >>> one_d_sax.distance(data[0], data[1])  # doctest: +ELLIPSIS
+    >>> one_d_sax.distance(data[0], data[1])
     0.0
     >>> one_d_sax.inverse_transform(one_d_sax_data)
     array([[[ 0.33724488],
@@ -493,12 +485,8 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
             [-1.01173463],
             [ 1.01173463],
             [ 0.33724488]]])
-    >>> unfitted_1dsax = OneD_SymbolicAggregateApproximation(n_segments=3, alphabet_size_avg=2, alphabet_size_slope=2)
-    >>> unfitted_1dsax.distance(data[0], data[1])  # doctest: +IGNORE_EXCEPTION_DETAIL
-    Traceback (most recent call last):
-    ValueError: Model not fitted yet: cannot be used for distance computation.
-    >>> unfitted_1dsax.fit(data).sigma_l  # doctest: +ELLIPSIS
-    0.12247...
+    >>> one_d_sax.fit(data).sigma_l
+    1.0
 
 
     References
