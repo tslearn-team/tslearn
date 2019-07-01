@@ -21,12 +21,12 @@ class TimeSeriesResampler(TransformerMixin):
 
     Example
     -------
-    >>> TimeSeriesResampler(sz=5).fit_transform([[0, 3, 6]]) # doctest: +NORMALIZE_WHITESPACE
-    array([[[ 0. ],
-            [ 1.5],
-            [ 3. ],
-            [ 4.5],
-            [ 6. ]]])
+    >>> TimeSeriesResampler(sz=5).fit_transform([[0, 3, 6]])
+    array([[[0. ],
+            [1.5],
+            [3. ],
+            [4.5],
+            [6. ]]])
     """
     def __init__(self, sz):
         self.sz_ = sz
@@ -75,9 +75,9 @@ class TimeSeriesScalerMinMax(TransformerMixin):
     Example
     -------
     >>> TimeSeriesScalerMinMax(min=1., max=2.).fit_transform([[0, 3, 6]]) # doctest: +NORMALIZE_WHITESPACE
-    array([[[ 1. ],
-            [ 1.5],
-            [ 2. ]]])
+    array([[[1. ],
+            [1.5],
+            [2. ]]])
     """
     def __init__(self, min=0., max=1.):
         self.min_ = min
