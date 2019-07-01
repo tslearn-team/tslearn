@@ -81,8 +81,6 @@ class PiecewiseAggregateApproximation(TransformerMixin):
            [[ 2.1 ],
             [-2.  ],
             [ 0.  ]]])
-    >>> numpy.alltrue(paa_data == paa.fit(data).transform(data))
-    True
     >>> paa.distance_paa(paa_data[0], paa_data[1])  # doctest: +ELLIPSIS
     3.15039...
     >>> paa.distance(data[0], data[1])  # doctest: +ELLIPSIS
@@ -101,10 +99,6 @@ class PiecewiseAggregateApproximation(TransformerMixin):
             [-2.  ],
             [ 0.  ],
             [ 0.  ]]])
-    >>> unfitted_paa = PiecewiseAggregateApproximation(n_segments=3)
-    >>> unfitted_paa.distance(data[0], data[1])  # doctest: +IGNORE_EXCEPTION_DETAIL
-    Traceback (most recent call last):
-    ValueError: Model not fitted yet: cannot be used for distance computation.
 
     References
     ----------
