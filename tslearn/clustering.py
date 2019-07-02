@@ -14,7 +14,7 @@ import numpy
 from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw, cdist_soft_dtw_normalized, dtw
 from tslearn.barycenters import EuclideanBarycenter, dtw_barycenter_averaging, SoftDTWBarycenter
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
-from tslearn.utils import (to_time_series_dataset, to_time_series, 
+from tslearn.utils import (to_time_series_dataset, to_time_series,
                            ts_size, _check_dims)
 from tslearn.cycc import cdist_normalized_cc, y_shifted_sbd_vec
 

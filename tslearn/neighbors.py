@@ -4,6 +4,8 @@ time series metrics.
 """
 
 import numpy
+from sklearn import neighbors
+neighbors.VALID_METRICS['brute'].append('dtw')
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 from sklearn.neighbors.base import KNeighborsMixin
 from sklearn.utils import check_array
@@ -11,7 +13,7 @@ from sklearn.utils.validation import check_is_fitted
 from scipy.spatial.distance import cdist as scipy_cdist
 
 from tslearn.metrics import cdist_dtw
-from tslearn.utils import (to_time_series_dataset, to_sklearn_dataset, 
+from tslearn.utils import (to_time_series_dataset, to_sklearn_dataset,
                            _check_dims)
 
 
@@ -197,7 +199,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
     def __init__(self,
                  n_neighbors=5,
                  weights='uniform',
-                 metric=cdist_dtw,
+                 metric='dtw',
                  metric_params=None):
         KNeighborsClassifier.__init__(self,
                                       n_neighbors=n_neighbors,
