@@ -5,7 +5,6 @@ time series metrics.
 
 import numpy
 from sklearn import neighbors
-neighbors.VALID_METRICS['brute'].append('dtw')
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 from sklearn.neighbors.base import KNeighborsMixin
 from sklearn.utils import check_array
@@ -15,6 +14,8 @@ from scipy.spatial.distance import cdist as scipy_cdist
 from tslearn.metrics import cdist_dtw
 from tslearn.utils import (to_time_series_dataset, to_sklearn_dataset,
                            _check_dims)
+
+neighbors.VALID_METRICS['brute'].append('dtw')
 
 
 class KNeighborsTimeSeriesMixin(KNeighborsMixin):
@@ -230,10 +231,10 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         X : array-like, shape (n_ts, sz, d)
             Test samples.
         """
-        X = check_array(X, allow_nd=True)
         check_is_fitted(self, ['X_'])
-        _check_dims(self.X_, X)
+        X = check_array(X, allow_nd=True)
         X_ = to_sklearn_dataset(X)
+        _check_dims(self.X_, X_)
         return super(KNeighborsTimeSeriesClassifier, self).predict(X_)
 
     def predict_proba(self, X):
@@ -244,8 +245,8 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         X : array-like, shape (n_ts, sz, d)
             Test samples.
         """
-        X = check_array(X, allow_nd=True)
         check_is_fitted(self, ['X_'])
-        _check_dims(self.X_, X)
+        X = check_array(X, allow_nd=True)
         X_ = to_sklearn_dataset(X)
+        _check_dims(self.X_, X_)
         return super(KNeighborsTimeSeriesClassifier, self).predict_proba(X_)

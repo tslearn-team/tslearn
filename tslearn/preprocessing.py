@@ -84,10 +84,10 @@ class TimeSeriesScalerMinMax(TransformerMixin):
         self.max_ = max
 
     def fit(self, X, y=None, **kwargs):
-        self.fit_transform(X, **kwargs)
+        return self.fit_transform(X, **kwargs)
 
     def transform(self, X, y=None, **kwargs):
-        self.fit_transform(X, **kwargs)
+        return self.fit_transform(X, **kwargs)
 
     def fit_transform(self, X, y=None, **kwargs):
         """Fit to data, then transform it.
