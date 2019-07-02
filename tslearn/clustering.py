@@ -9,7 +9,6 @@ from sklearn.metrics.cluster import silhouette_score as sklearn_silhouette_score
 from sklearn.utils import check_random_state, check_array
 from scipy.spatial.distance import cdist
 import numpy
-import pandas
 
 from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw, cdist_soft_dtw_normalized, dtw
 from tslearn.barycenters import EuclideanBarycenter, dtw_barycenter_averaging, SoftDTWBarycenter
@@ -316,8 +315,8 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
 
         n_samples = X.shape[0]
         K = self._get_kernel(X)
-        sw = (sample_weight if sample_weight is not None 
-                            else numpy.ones(n_samples))
+        sw = (sample_weight if sample_weight is not None
+              else numpy.ones(n_samples))
         self.sample_weight_ = sw
         rs = check_random_state(self.random_state)
 

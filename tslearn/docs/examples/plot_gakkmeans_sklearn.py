@@ -16,5 +16,4 @@ pipeline = Pipeline([
 n, sz, d = 15, 10, 3
 rng = np.random.RandomState(0)
 time_series = rng.randn(n, sz, d) * 10
-print(time_series.shape)
 pipeline.fit(time_series)
