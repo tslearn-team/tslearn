@@ -301,7 +301,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
             Weights to be given to time series in the learning process. By default, all time series weights are equal.
         """
 
-        X = check_array(X)
+        X = check_array(X, ensure_2d=False, allow_nd=True)
 
         if sample_weight is not None:
             sample_weight = check_array(sample_weight, ensure_2d=False)
