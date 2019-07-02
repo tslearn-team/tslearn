@@ -8,6 +8,11 @@ from sklearn.base import BaseEstimator, TransformerMixin
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
+def _check_dims(X_fit, X):
+    if X_fit.shape[1:] != X.shape[1:]:
+        raise ValueError('Second and third dimension must match!')
+
+
 def _arraylike_copy(arr):
     """Duplicate content of arr into a numpy array.
 

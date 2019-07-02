@@ -76,8 +76,9 @@ def get_estimators(type_filter='all'):
 
 def check_all_estimators():
     for estimator in get_estimators('all'):
+        print(estimator[0])
         check_estimator(estimator[1])
-        print('{} passed test.'.format(estimator[0]))
+        print('{} is sklearn compliant.'.format(estimator[0]))
 
 
 check_all_estimators()

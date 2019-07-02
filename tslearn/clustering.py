@@ -7,13 +7,15 @@ from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.cluster.k_means_ import _k_init
 from sklearn.metrics.cluster import silhouette_score as sklearn_silhouette_score
 from sklearn.utils import check_random_state, check_array
+from sklearn.utils.validation import check_is_fitted
 from scipy.spatial.distance import cdist
 import numpy
 
 from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw, cdist_soft_dtw_normalized, dtw
 from tslearn.barycenters import EuclideanBarycenter, dtw_barycenter_averaging, SoftDTWBarycenter
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
-from tslearn.utils import to_time_series_dataset, to_time_series, ts_size
+from tslearn.utils import (to_time_series_dataset, to_time_series, 
+                           ts_size, _check_dims)
 from tslearn.cycc import cdist_normalized_cc, y_shifted_sbd_vec
 
 
@@ -300,7 +302,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
             Weights to be given to time series in the learning process. By default, all time series weights are equal.
         """
 
-        X = check_array(X, ensure_2d=False, allow_nd=True)
+        X = check_array(X, allow_nd=True)
 
         if sample_weight is not None:
             sample_weight = check_array(sample_weight, ensure_2d=False)
@@ -393,7 +395,9 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
-        X = check_array(X)
+        X = check_array(X, allow_nd=True)
+        check_is_fitted(self, ['X_fit_'])
+        _check_dims(self.X_fit_, X)
         K = self._get_kernel(X, self.X_fit_)
         n_samples = X.shape[0]
         dist = numpy.zeros((n_samples, self.n_clusters))
