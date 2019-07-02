@@ -316,8 +316,8 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
 
         n_samples = X.shape[0]
         K = self._get_kernel(X)
-        sw = (sample_weight if sample_weight is not None
-              else numpy.ones(n_samples))
+        sw = (sample_weight if sample_weight is not None 
+                            else numpy.ones(n_samples))
         self.sample_weight_ = sw
         rs = check_random_state(self.random_state)
 
