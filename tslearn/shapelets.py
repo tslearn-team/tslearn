@@ -534,7 +534,7 @@ class SerializableShapeletModel(ShapeletModel):
     >>> from tslearn.generators import random_walk_blobs
     >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=16, d=2, n_blobs=3)
     >>> clf = SerializableShapeletModel(n_shapelets_per_size={4: 5}, max_iter=1, verbose_level=0, learning_rate=0.01)
-    >>> clf.fit(X, y)
+    >>> clf.fit(X, y)  # doctest: +NORMALIZE_WHITESPACE
     SerializableShapeletModel(batch_size=256, learning_rate=0.01, max_iter=1,
                  n_shapelets_per_size={4: 5}, random_state=None,
                  verbose_level=0, weight_regularizer=0.0)
