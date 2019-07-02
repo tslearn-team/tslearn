@@ -131,16 +131,16 @@ def silhouette_score(X, labels, metric=None, sample_size=None, metric_params=Non
     >>> numpy.random.seed(0)
     >>> X = random_walks(n_ts=20, sz=16, d=1)
     >>> labels = numpy.random.randint(2, size=20)
-    >>> silhouette_score(X, labels, metric="dtw")
-    0.13383800961858022
-    >>> silhouette_score(X, labels, metric="euclidean")
-    0.09126917644591379
-    >>> silhouette_score(X, labels, metric="softdtw")
-    0.17953934301338687
-    >>> silhouette_score(X, labels, metric="softdtw", metric_params={"gamma_sdtw": 2.})
-    0.1759106080277656
-    >>> silhouette_score(cdist_dtw(X), labels, metric="precomputed")
-    0.13383800961858022
+    >>> silhouette_score(X, labels, metric="dtw")  # doctest: +ELLIPSIS
+    0.13383800...
+    >>> silhouette_score(X, labels, metric="euclidean")  # doctest: +ELLIPSIS
+    0.09126917...
+    >>> silhouette_score(X, labels, metric="softdtw")  # doctest: +ELLIPSIS
+    0.17953934...
+    >>> silhouette_score(X, labels, metric="softdtw", metric_params={"gamma_sdtw": 2.})  # doctest: +ELLIPSIS
+    0.17591060...
+    >>> silhouette_score(cdist_dtw(X), labels, metric="precomputed")  # doctest: +ELLIPSIS
+    0.13383800...
     """
     sklearn_metric = None
     if metric_params is None:
