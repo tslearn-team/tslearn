@@ -7,12 +7,11 @@ from sklearn.pipeline import Pipeline
 
 import numpy as np
 
-# In this example, we show how tslearn estimators can be used in combination 
+# In this example, we show how tslearn estimators can be used in combination
 # with sklearn utilities such as Pipeline
-
 pipeline = Pipeline([
-	('normalize', TimeSeriesScalerMinMax()),
-	('clustering', GlobalAlignmentKernelKMeans())	
+    ('normalize', TimeSeriesScalerMinMax()),
+    ('clustering', GlobalAlignmentKernelKMeans())
 ])
 n, sz, d = 15, 10, 3
 rng = np.random.RandomState(0)
