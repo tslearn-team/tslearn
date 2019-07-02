@@ -19,7 +19,8 @@ from tslearn.cycc import cdist_normalized_cc, y_shifted_sbd_vec
 
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
-# Kernel k-means is derived from https://gist.github.com/mblondel/6230787 by Mathieu Blondel, under BSD 3 clause license
+# Kernel k-means is derived from https://gist.github.com/mblondel/6230787
+# by Mathieu Blondel, under BSD 3 clause license
 
 
 class EmptyClusterError(Exception):
@@ -51,6 +52,7 @@ def _check_no_empty_cluster(labels, n_clusters):
         if numpy.sum(labels == k) == 0:
             raise EmptyClusterError
 
+
 def _check_full_length(centroids):
     """Check that provided centroids are full-length (ie. not padded with nans).
 
@@ -79,7 +81,7 @@ def _check_full_length(centroids):
         sz = ts_size(centroids[i])
         centroids_[i, :sz] = centroids[i, :sz]
         if sz < max_sz:
-            centroids_[i, sz:] = centroids[i, sz-1]
+            centroids_[i, sz:] = centroids[i, sz - 1]
     return centroids_
 
 
@@ -95,7 +97,8 @@ def _compute_inertia(distances, assignments, squared=True):
     """
     n_ts = distances.shape[0]
     if squared:
-        return numpy.sum(distances[numpy.arange(n_ts), assignments] ** 2) / n_ts
+        return numpy.sum(
+            distances[numpy.arange(n_ts), assignments] ** 2) / n_ts
     else:
         return numpy.sum(distances[numpy.arange(n_ts), assignments]) / n_ts
 
@@ -184,8 +187,9 @@ def silhouette_score(X, labels, metric=None, sample_size=None, metric_params=Non
         sklearn_X = X_.reshape((n, -1))
         if metric is None:
             metric = dtw
-        sklearn_metric = lambda x, y: metric(to_time_series(x.reshape((sz, d)), remove_nans=True),
-                                             to_time_series(y.reshape((sz, d)), remove_nans=True))
+
+        def sklearn_metric(x, y): return metric(to_time_series(x.reshape((sz, d)), remove_nans=True),
+                                                to_time_series(y.reshape((sz, d)), remove_nans=True))
     return sklearn_silhouette_score(X=sklearn_X,
                                     labels=labels,
                                     metric="precomputed" if sklearn_metric is None else sklearn_metric,
@@ -197,7 +201,8 @@ def silhouette_score(X, labels, metric=None, sample_size=None, metric_params=Non
 def _check_initial_guess(init, n_clusters):
     if hasattr(init, '__array__'):
         assert init.shape[0] == n_clusters, "Initial guess index array must contain {} samples," \
-                                            " {} given".format(n_clusters, init.shape[0])
+                                            " {} given".format(
+                                                n_clusters, init.shape[0])
 
 
 class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
@@ -253,7 +258,8 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
     ICML 2011.
     """
 
-    def __init__(self, n_clusters=3, max_iter=50, tol=1e-6, n_init=1, sigma=1., verbose=True, random_state=None):
+    def __init__(self, n_clusters=3, max_iter=50, tol=1e-6,
+                 n_init=1, sigma=1., verbose=True, random_state=None):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
         self.tol = tol
@@ -316,8 +322,8 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
 
         n_samples = X.shape[0]
         K = self._get_kernel(X)
-        sw = (sample_weight if sample_weight is not None 
-                            else numpy.ones(n_samples))
+        sw = (sample_weight if sample_weight is not None
+              else numpy.ones(n_samples))
         self.sample_weight_ = sw
         rs = check_random_state(self.random_state)
 
@@ -355,10 +361,13 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
             mask = (self.labels_ == j)
 
             if numpy.sum(mask) == 0:
-                raise EmptyClusterError("try smaller n_cluster or better kernel parameters")
+                raise EmptyClusterError(
+                    "try smaller n_cluster or better kernel parameters")
 
-            # NB: we use a normalized kernel so k(x,x) = 1 for all x (including the centroid)
-            dist[:, j] = 2 - 2 * numpy.sum(sw[mask] * K[:, mask], axis=1) / sw[mask].sum()
+            # NB: we use a normalized kernel so k(x,x) = 1 for all x (including
+            # the centroid)
+            dist[:, j] = 2 - 2 * \
+                numpy.sum(sw[mask] * K[:, mask], axis=1) / sw[mask].sum()
 
     @staticmethod
     def _compute_inertia(dist_sq):
@@ -404,6 +413,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
 
 class TimeSeriesCentroidBasedClusteringMixin:
     """Mixin class for centroid-based clustering of time series."""
+
     def _post_fit(self, X_fitted, centroids, inertia):
         if numpy.isfinite(inertia) and (centroids is not None):
             self.cluster_centers_ = centroids
@@ -414,7 +424,8 @@ class TimeSeriesCentroidBasedClusteringMixin:
             self.X_fit_ = None
 
 
-class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin):
+class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
+                       TimeSeriesCentroidBasedClusteringMixin):
     """K-means clustering for time-series data.
 
     Parameters
@@ -546,7 +557,9 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
             indices = rs.choice(X.shape[0], self.n_clusters)
             self.cluster_centers_ = X[indices].copy()
         else:
-            raise ValueError("Value %r for parameter 'init' is invalid" % self.init)
+            raise ValueError(
+                "Value %r for parameter 'init' is invalid" %
+                self.init)
         self.cluster_centers_ = _check_full_length(self.cluster_centers_)
         old_inertia = numpy.inf
 
@@ -571,9 +584,12 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         elif self.metric == "dtw":
             dists = cdist_dtw(X, self.cluster_centers_)
         elif self.metric == "softdtw":
-            dists = cdist_soft_dtw(X, self.cluster_centers_, gamma=self.gamma_sdtw)
+            dists = cdist_soft_dtw(
+                X, self.cluster_centers_, gamma=self.gamma_sdtw)
         else:
-            raise ValueError("Incorrect metric: %s (should be one of 'dtw', 'softdtw', 'euclidean')" % self.metric)
+            raise ValueError(
+                "Incorrect metric: %s (should be one of 'dtw', 'softdtw', 'euclidean')" %
+                self.metric)
         matched_labels = dists.argmin(axis=1)
         if update_class_attributes:
             self.labels_ = matched_labels
@@ -582,7 +598,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
                 inertia_dists = cdist_dtw(X, self.cluster_centers_)
             else:
                 inertia_dists = dists
-            self.inertia_ = _compute_inertia(inertia_dists, self.labels_, self._squared_inertia)
+            self.inertia_ = _compute_inertia(
+                inertia_dists, self.labels_, self._squared_inertia)
         return matched_labels
 
     def _update_centroids(self, X):
@@ -590,18 +607,20 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
             if self.metric == "dtw":
                 self.cluster_centers_[k] = dtw_barycenter_averaging(X=X[self.labels_ == k],
                                                                     barycenter_size=None,
-                                                                    init_barycenter=self.cluster_centers_[k],
+                                                                    init_barycenter=self.cluster_centers_[
+                                                                        k],
                                                                     verbose=False)
-                    # DTWBarycenterAveraging(max_iter=self.max_iter_barycenter,
-                    #                                               barycenter_size=None,
-                    #                                               init_barycenter=self.cluster_centers_[k],
-                    #                                               verbose=False).fit(X[self.labels_ == k])
+                # DTWBarycenterAveraging(max_iter=self.max_iter_barycenter,
+                #                                               barycenter_size=None,
+                #                                               init_barycenter=self.cluster_centers_[k],
+                # verbose=False).fit(X[self.labels_ == k])
             elif self.metric == "softdtw":
                 self.cluster_centers_[k] = SoftDTWBarycenter(max_iter=self.max_iter_barycenter,
                                                              gamma=self.gamma_sdtw,
                                                              init=self.cluster_centers_[k]).fit(X[self.labels_ == k])
             else:
-                self.cluster_centers_[k] = EuclideanBarycenter().fit(X[self.labels_ == k])
+                self.cluster_centers_[k] = EuclideanBarycenter().fit(
+                    X[self.labels_ == k])
 
     def fit(self, X, y=None):
         """Compute k-means clustering.
@@ -671,7 +690,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         return self._assign(X_, update_class_attributes=False)
 
 
-class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin):
+class KShape(BaseEstimator, ClusterMixin,
+             TimeSeriesCentroidBasedClusteringMixin):
     """KShape clustering for time series.
 
     KShape was originally presented in [1]_.
@@ -734,7 +754,9 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
     .. [1] J. Paparrizos & L. Gravano. k-Shape: Efficient and Accurate Clustering of Time Series. SIGMOD 2015.
        pp. 1855-1870.
     """
-    def __init__(self, n_clusters=3, max_iter=100, tol=1e-6, n_init=1, verbose=True, random_state=None, init='random'):
+
+    def __init__(self, n_clusters=3, max_iter=100, tol=1e-6,
+                 n_init=1, verbose=True, random_state=None, init='random'):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
         self.tol = tol
@@ -773,8 +795,10 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
     def _update_centroids(self, X):
         for k in range(self.n_clusters):
             self.cluster_centers_[k] = self._shape_extraction(X, k)
-        self.cluster_centers_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(self.cluster_centers_)
-        self._norms_centroids = numpy.linalg.norm(self.cluster_centers_, axis=(1, 2))
+        self.cluster_centers_ = TimeSeriesScalerMeanVariance(
+            mu=0., std=1.).fit_transform(self.cluster_centers_)
+        self._norms_centroids = numpy.linalg.norm(
+            self.cluster_centers_, axis=(1, 2))
 
     def _cross_dists(self, X):
         return 1. - cdist_normalized_cc(X, self.cluster_centers_, norms1=self._norms,
@@ -794,8 +818,11 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
             indices = rs.choice(X.shape[0], self.n_clusters)
             self.cluster_centers_ = X[indices].copy()
         else:
-            raise ValueError("Value %r for parameter 'init' is invalid" % self.init)
-        self._norms_centroids = numpy.linalg.norm(self.cluster_centers_, axis=(1, 2))
+            raise ValueError(
+                "Value %r for parameter 'init' is invalid" %
+                self.init)
+        self._norms_centroids = numpy.linalg.norm(
+            self.cluster_centers_, axis=(1, 2))
         self._assign(X)
         old_inertia = numpy.inf
 
@@ -853,7 +880,8 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
                 if self.verbose:
                     print("Resumed because of empty cluster")
         self._post_fit(X_, best_correct_centroids, min_inertia)
-        self._norms_centroids = numpy.linalg.norm(self.cluster_centers_, axis=(1, 2))
+        self._norms_centroids = numpy.linalg.norm(
+            self.cluster_centers_, axis=(1, 2))
         return self
 
     def fit_predict(self, X, y=None):
