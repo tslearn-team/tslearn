@@ -6,9 +6,10 @@ from __future__ import print_function
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.cluster.k_means_ import _k_init
 from sklearn.metrics.cluster import silhouette_score as sklearn_silhouette_score
-from sklearn.utils import check_random_state
+from sklearn.utils import check_random_state, check_array
 from scipy.spatial.distance import cdist
 import numpy
+import pandas
 
 from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw, cdist_soft_dtw_normalized, dtw
 from tslearn.barycenters import EuclideanBarycenter, dtw_barycenter_averaging, SoftDTWBarycenter
@@ -256,16 +257,10 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
         self.tol = tol
-        self.random_state = random_state
-        self.sigma = sigma
         self.n_init = n_init
+        self.sigma = sigma
         self.verbose = verbose
-        self.max_attempts = max(self.n_init, 10)
-
-        self.labels_ = None
-        self.inertia_ = None
-        self.sample_weight_ = None
-        self.X_fit_ = None
+        self.random_state = random_state
 
     def _get_kernel(self, X, Y=None):
         return cdist_gak(X, Y, sigma=self.sigma)
@@ -306,9 +301,22 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
             Weights to be given to time series in the learning process. By default, all time series weights are equal.
         """
 
+        X = check_array(X)
+
+        if sample_weight is not None:
+            sample_weight = check_array(sample_weight, ensure_2d=False)
+
+        max_attempts = max(self.n_init, 10)
+
+        self.labels_ = None
+        self.inertia_ = None
+        self.sample_weight_ = None
+        self.X_fit_ = None
+        self.n_iter_ = 0
+
         n_samples = X.shape[0]
         K = self._get_kernel(X)
-        sw = sample_weight if sample_weight else numpy.ones(n_samples)
+        sw = sample_weight if sample_weight is not None else numpy.ones(n_samples)
         self.sample_weight_ = sw
         rs = check_random_state(self.random_state)
 
@@ -316,7 +324,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         min_inertia = numpy.inf
         n_attempts = 0
         n_successful = 0
-        while n_successful < self.n_init and n_attempts < self.max_attempts:
+        while n_successful < self.n_init and n_attempts < max_attempts:
             try:
                 if self.verbose and self.n_init > 1:
                     print("Init %d" % (n_successful + 1))
@@ -332,6 +340,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         if n_successful > 0:
             self.X_fit_ = X
             self.labels_ = last_correct_labels
+            self.n_iter_ = n_successful
             self.inertia_ = min_inertia
         else:
             self.X_fit_ = None
@@ -384,6 +393,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
+        X = check_array(X)
         K = self._get_kernel(X, self.X_fit_)
         n_samples = X.shape[0]
         dist = numpy.zeros((n_samples, self.n_clusters))

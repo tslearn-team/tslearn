@@ -2,15 +2,19 @@
 The :mod:`tslearn.testing_utils` module includes various utilities that can be used for testing.
 """
 
+import tslearn
+
 import pkgutil
 import inspect
-import tslearn
+from operator import itemgetter
+
 from sklearn.base import (BaseEstimator, ClassifierMixin, ClusterMixin,
                           RegressorMixin, TransformerMixin)
 from sklearn.utils.estimator_checks import check_estimator
 
 def get_estimators(type_filter='all'):
-    """Return a list of classes that inherit from `sklearn.BaseEstimator`.
+    """Return a list of classes that inherit from `sklearn.BaseEstimator`. 
+    This code is based on `sklearn,utils.testing.all_estimators`.
     
     Parameters
     ----------
@@ -23,6 +27,13 @@ def get_estimators(type_filter='all'):
     list 
         Collection of estimators of the type specified in `type_filter`
     """
+
+    def is_abstract(c):
+        if not(hasattr(c, '__abstractmethods__')):
+            return False
+        if not len(c.__abstractmethods__):
+            return False
+        return True
 
     if type_filter not in ['all', 'classifier', 'transformer', 'cluster']:
         # TODO: make this exception more specific
@@ -38,13 +49,11 @@ def get_estimators(type_filter='all'):
         module = __import__(name, fromlist="dummy")
         all_classes.extend(inspect.getmembers(module, inspect.isclass))
 
-    print(all_classes)
-
     # Filter out those that are not a subclass of `sklearn.BaseEstimator`
-    all_classes = [c for c in all_classes
+    all_classes = [c for c in set(all_classes)
                    if issubclass(c[1], BaseEstimator)]
-
-    print(all_classes)
+    # get rid of abstract base classes
+    all_classes = [c for c in all_classes if not is_abstract(c[1])]
      
      # Now filter out the estimators that are not of the specified type
     filters = {
@@ -60,11 +69,12 @@ def get_estimators(type_filter='all'):
             filtered_classes.append(_class)
 
     # Remove duplicates and return the list of remaining estimators
-    return list(set(filtered_classes))
+    return sorted(set(filtered_classes), key=itemgetter(0))
 
 def check_all_estimators():
-	for estimator in get_estimators('all'):
-		check_estimator(estimator)
+    for estimator in get_estimators('all'):
+        check_estimator(estimator[1])
+        print('{} passed test.'.format(estimator[0]))
 
 
 check_all_estimators()
