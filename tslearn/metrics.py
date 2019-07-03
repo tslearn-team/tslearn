@@ -16,7 +16,7 @@ from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, check
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
-
+global_constraint_code = {"": 0, "itakura": 1, "sakoe_chiba": 2}
 
 
 @njit()
@@ -115,8 +115,6 @@ def njit_cdist_dtw(dataset1, dataset2, global_constraint, sakoe_chiba_radius,
         A dataset of time series.
     dataset2 : array
         Another dataset of time series.
-    mask : array
-        Constraint reion.
 
     Returns
     -------
@@ -146,9 +144,6 @@ def njit_cdist_dtw_self(dataset, global_constraint, sakoe_chiba_radius, itakura_
     ----------
     dataset : array
         A dataset of time series.
-
-    mask : array
-        Constraint reion.
 
     Returns
     -------
@@ -236,8 +231,14 @@ def dtw_path(s1, s2, global_constraint=None,
     """
     s1 = to_time_series(s1, remove_nans=True)
     s2 = to_time_series(s2, remove_nans=True)
+
+    if global_constraint is not None:
+        global_constraint_str = global_constraint
+    else:
+        global_constraint_str = ""
+
     mask = compute_mask(
-        s1, s2, global_constraint if global_constraint is not None else "",
+        s1, s2, global_constraint_code[global_constraint_str],
         sakoe_chiba_radius, itakura_max_slope
     )
     acc_cost_mat = njit_accumulated_matrix(s1, s2, mask=mask)
@@ -301,9 +302,15 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=1,
     """
     s1 = to_time_series(s1)
     s2 = to_time_series(s2)
+
+    if global_constraint is not None:
+        global_constraint_str = global_constraint
+    else:
+        global_constraint_str = ""
+
     mask = compute_mask(
         s1, s2,
-        global_constraint if global_constraint is not None else "",
+        global_constraint_code[global_constraint_str],
         sakoe_chiba_radius=sakoe_chiba_radius,
         itakura_max_slope=itakura_max_slope)
     return njit_dtw(s1, s2, mask=mask)
@@ -540,7 +547,7 @@ def itakura_mask(sz1, sz2, max_slope=2.):
 
 
 @njit()
-def compute_mask(s1, s2, global_constraint="",
+def compute_mask(s1, s2, global_constraint=0,
                  sakoe_chiba_radius=1, itakura_max_slope=2.):
     """Compute the mask (region constraint).
 
@@ -550,9 +557,11 @@ def compute_mask(s1, s2, global_constraint="",
         A time series.
     s2: array
         Another time series.
-    global_constraint : {"itakura", "sakoe_chiba"} or "" (default: "")
-        Global constraint to restrict admissible paths for DTW, no constraint
-        if "".
+    global_constraint : {0, 1, 2} (default: 0){, "sakoe_chiba"} or "" (default: "")
+        Global constraint to restrict admissible paths for DTW:
+        - "itakura" if 1
+        - "sakoe_chiba" if 2
+        - no constraint otherwise
     sakoe_chiba_radius : int (default: 1)
         Radius to be used for Sakoe-Chiba band global constraint. Used only if
         ``global_constraint="sakoe_chiba"``.
@@ -567,9 +576,9 @@ def compute_mask(s1, s2, global_constraint="",
     """
     sz1 = s1.shape[0]
     sz2 = s2.shape[0]
-    if global_constraint == "sakoe_chiba":
+    if global_constraint == 1:
         mask = sakoe_chiba_mask(sz1, sz2, radius=sakoe_chiba_radius)
-    elif global_constraint == "itakura":
+    elif global_constraint == 2:
         mask = itakura_mask(sz1, sz2, max_slope=itakura_max_slope)
     else:
         mask = numpy.zeros((sz1, sz2))
@@ -641,11 +650,13 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
         global_constraint_str = ""
 
     if dataset2 is None:
-        return njit_cdist_dtw_self(dataset1, global_constraint_str,
+        return njit_cdist_dtw_self(dataset1,
+                                   global_constraint_code[global_constraint_str],
                                    sakoe_chiba_radius, itakura_max_slope)
     else:
         dataset2 = to_time_series_dataset(dataset2)
-        return njit_cdist_dtw(dataset1, dataset2, global_constraint_str,
+        return njit_cdist_dtw(dataset1, dataset2,
+                              global_constraint_code[global_constraint_str],
                               sakoe_chiba_radius, itakura_max_slope)
 
 
