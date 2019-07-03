@@ -105,17 +105,16 @@ def _return_path(acc_cost_mat):
 
 
 @njit()
-def njit_cdist_dtw(dataset1, dataset2, global_constraint, sakoe_chiba_radius, itakura_max_slope):
+def njit_cdist_dtw(dataset1, dataset2, global_constraint, sakoe_chiba_radius,
+                   itakura_max_slope):
     """Compute the cross-similarity matrix between two datasets.
 
     Parameters
     ----------
     dataset1 : array
         A dataset of time series.
-
     dataset2 : array
         Another dataset of time series.
-
     mask : array
         Constraint reion.
 
@@ -123,7 +122,6 @@ def njit_cdist_dtw(dataset1, dataset2, global_constraint, sakoe_chiba_radius, it
     -------
     cdist : array
         Cross-similarity matrix.
-
     """
     n_samples_1 = dataset1.shape[0]
     n_samples_2 = dataset2.shape[0]
@@ -239,15 +237,16 @@ def dtw_path(s1, s2, global_constraint=None,
     s1 = to_time_series(s1, remove_nans=True)
     s2 = to_time_series(s2, remove_nans=True)
     mask = compute_mask(
-        s1, s2, global_constraint, sakoe_chiba_radius, itakura_max_slope
+        s1, s2, global_constraint if global_constraint is not None else "",
+        sakoe_chiba_radius, itakura_max_slope
     )
     acc_cost_mat = njit_accumulated_matrix(s1, s2, mask=mask)
     path = _return_path(acc_cost_mat)
     return path, acc_cost_mat[-1, -1]
 
 
-def dtw(s1, s2, global_constraint=None,
-        sakoe_chiba_radius=1, itakura_max_slope=2.):
+def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=1,
+        itakura_max_slope=2.):
     r"""Compute Dynamic Time Warping (DTW) similarity measure between
     (possibly multidimensional) time series and return it.
 
@@ -302,9 +301,11 @@ def dtw(s1, s2, global_constraint=None,
     """
     s1 = to_time_series(s1)
     s2 = to_time_series(s2)
-    mask = compute_mask(s1, s2, global_constraint=global_constraint,
-                        sakoe_chiba_radius=sakoe_chiba_radius,
-                        itakura_max_slope=itakura_max_slope)
+    mask = compute_mask(
+        s1, s2,
+        global_constraint if global_constraint is not None else "",
+        sakoe_chiba_radius=sakoe_chiba_radius,
+        itakura_max_slope=itakura_max_slope)
     return njit_dtw(s1, s2, mask=mask)
 
 
@@ -539,7 +540,7 @@ def itakura_mask(sz1, sz2, max_slope=2.):
 
 
 @njit()
-def compute_mask(s1, s2, global_constraint=None,
+def compute_mask(s1, s2, global_constraint="",
                  sakoe_chiba_radius=1, itakura_max_slope=2.):
     """Compute the mask (region constraint).
 
@@ -549,8 +550,9 @@ def compute_mask(s1, s2, global_constraint=None,
         A time series.
     s2: array
         Another time series.
-    global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
-        Global constraint to restrict admissible paths for DTW.
+    global_constraint : {"itakura", "sakoe_chiba"} or "" (default: "")
+        Global constraint to restrict admissible paths for DTW, no constraint
+        if "".
     sakoe_chiba_radius : int (default: 1)
         Radius to be used for Sakoe-Chiba band global constraint. Used only if
         ``global_constraint="sakoe_chiba"``.
@@ -565,13 +567,9 @@ def compute_mask(s1, s2, global_constraint=None,
     """
     sz1 = s1.shape[0]
     sz2 = s2.shape[0]
-    global_constraint_str = "default"
-    if isinstance(global_constraint, str):
-        global_constraint_str = global_constraint
-
-    if global_constraint_str == "sakoe_chiba":
+    if global_constraint == "sakoe_chiba":
         mask = sakoe_chiba_mask(sz1, sz2, radius=sakoe_chiba_radius)
-    elif global_constraint_str == "itakura":
+    elif global_constraint == "itakura":
         mask = itakura_mask(sz1, sz2, max_slope=itakura_max_slope)
     else:
         mask = numpy.zeros((sz1, sz2))
@@ -636,12 +634,18 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
 
     """
     dataset1 = to_time_series_dataset(dataset1)
+
+    if global_constraint is not None:
+        global_constraint_str = global_constraint
+    else:
+        global_constraint_str = ""
+
     if dataset2 is None:
-        return njit_cdist_dtw_self(dataset1, global_constraint,
+        return njit_cdist_dtw_self(dataset1, global_constraint_str,
                                    sakoe_chiba_radius, itakura_max_slope)
     else:
         dataset2 = to_time_series_dataset(dataset2)
-        return njit_cdist_dtw(dataset1, dataset2, global_constraint,
+        return njit_cdist_dtw(dataset1, dataset2, global_constraint_str,
                               sakoe_chiba_radius, itakura_max_slope)
 
 
