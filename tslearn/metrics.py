@@ -454,11 +454,11 @@ def sakoe_chiba_mask(sz1, sz2, radius=1):
            [inf, inf,  0.,  0.]])
     >>> sakoe_chiba_mask(7, 3, 1)
     array([[ 0.,  0., inf],
-           [ 0.,  0., inf],
-           [ 0.,  0., inf],
            [ 0.,  0.,  0.],
-           [inf,  0.,  0.],
-           [inf,  0.,  0.],
+           [ 0.,  0.,  0.],
+           [ 0.,  0.,  0.],
+           [ 0.,  0.,  0.],
+           [ 0.,  0.,  0.],
            [inf,  0.,  0.]])
     """
     mask = numpy.full((sz1, sz2), numpy.inf)
