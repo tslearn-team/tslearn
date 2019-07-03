@@ -547,17 +547,13 @@ def compute_mask(s1, s2, global_constraint=None,
     ----------
     s1 : array
         A time series.
-
     s2: array
         Another time series.
-
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
         Global constraint to restrict admissible paths for DTW.
-
     sakoe_chiba_radius : int (default: 1)
         Radius to be used for Sakoe-Chiba band global constraint. Used only if
         ``global_constraint="sakoe_chiba"``.
-
     itakura_max_slope : float (default: 2.)
         Maximum slope for the Itakura parallelogram constraint. Used only if
         ``global_constraint="itakura_parallelogram"``.
@@ -566,11 +562,12 @@ def compute_mask(s1, s2, global_constraint=None,
     -------
     mask : array
         Constraint region.
-
     """
     sz1 = s1.shape[0]
     sz2 = s2.shape[0]
-    if global_constraint == "sakoe_chiba":
+    if global_constraint is None:
+        mask = numpy.zeros((sz1, sz2))
+    elif global_constraint == "sakoe_chiba":
         mask = sakoe_chiba_mask(sz1, sz2, radius=sakoe_chiba_radius)
     elif global_constraint == "itakura":
         mask = itakura_mask(sz1, sz2, max_slope=itakura_max_slope)
