@@ -236,8 +236,8 @@ def dtw_path(s1, s2, global_constraint=None,
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
 
     """
-    s1 = to_time_series(s1)
-    s2 = to_time_series(s2)
+    s1 = to_time_series(s1, remove_nans=True)
+    s2 = to_time_series(s2, remove_nans=True)
     mask = compute_mask(
         s1, s2, global_constraint, sakoe_chiba_radius, itakura_max_slope
     )
