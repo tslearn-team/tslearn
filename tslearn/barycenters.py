@@ -309,8 +309,8 @@ def dtw_barycenter_averaging(X, barycenter_size=None, init_barycenter=None, max_
            [4. ],
            [4.5]])
     >>> dtw_barycenter_averaging(time_series, max_iter=5, barycenter_size=3)
-    array([[1.        ],
-           [2.5       ],
+    array([[1.5       ],
+           [3.        ],
            [4.33333333]])
 
     References

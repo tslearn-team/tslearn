@@ -52,11 +52,11 @@ def test_masks():
 
     sk_mask = tslearn.metrics.sakoe_chiba_mask(7, 3, 1)
     reference_mask = np.array([[0., 0., np.inf],
-                               [0., 0., np.inf],
-                               [0., 0., np.inf],
                                [0., 0., 0.],
-                               [np.inf, 0., 0.],
-                               [np.inf, 0., 0.],
+                               [0., 0., 0.],
+                               [0., 0., 0.],
+                               [0., 0., 0.],
+                               [0., 0., 0.],
                                [np.inf, 0., 0.]])
     np.testing.assert_allclose(sk_mask, reference_mask)
 
