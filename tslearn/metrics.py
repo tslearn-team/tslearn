@@ -565,11 +565,13 @@ def compute_mask(s1, s2, global_constraint=None,
     """
     sz1 = s1.shape[0]
     sz2 = s2.shape[0]
-    if global_constraint is None:
-        mask = numpy.zeros((sz1, sz2))
-    elif global_constraint == "sakoe_chiba":
+    global_constraint_str = "default"
+    if isinstance(global_constraint, str):
+        global_constraint_str = global_constraint
+
+    if global_constraint_str == "sakoe_chiba":
         mask = sakoe_chiba_mask(sz1, sz2, radius=sakoe_chiba_radius)
-    elif global_constraint == "itakura":
+    elif global_constraint_str == "itakura":
         mask = itakura_mask(sz1, sz2, max_slope=itakura_max_slope)
     else:
         mask = numpy.zeros((sz1, sz2))
