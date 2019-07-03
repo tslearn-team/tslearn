@@ -3,5 +3,6 @@ numpy
 numba
 scipy
 scikit-learn
+numba
 tensorflow
 keras

@@ -18,6 +18,7 @@ numpy
 numba
 scipy
 scikit-learn
+numba
 ```
 
 If you plan to use the `shapelets` module, `keras` and `tensorflow` should also be installed.
@@ -54,7 +55,7 @@ pip install git+https://github.com/rtavenar/tslearn.git
 It seems on some platforms `Cython` dependency does not install properly.
 If you experiment such an issue, try installing it with the following command:
 
-```bash 
+```bash
 pip install cython
 ```
 
@@ -72,7 +73,7 @@ The documentation, including a gallery of examples, is hosted at [readthedocs](h
 # Already available
 
 * A `generators` module provides Random Walks generators
-* A `datasets` module provides access to the famous UCR/UEA datasets through the `UCR_UEA_datasets` class 
+* A `datasets` module provides access to the famous UCR/UEA datasets through the `UCR_UEA_datasets` class
 * A `preprocessing` module provides standard time series scalers
 * A `metrics` module provides:
   * Dynamic Time Warping (DTW) (with Sakoe-Chiba band and Itakura parallelogram variants)
@@ -87,7 +88,7 @@ The documentation, including a gallery of examples, is hosted at [readthedocs](h
   * Standard Euclidean k-means (with adequate array reshaping done for you)
     * Based on `tslearn.barycenters`
   * DBA k-means from Petitjean _et al._
-    * Based on `tslearn.barycenters` that offers DBA facility that could be used for other applications than just 
+    * Based on `tslearn.barycenters` that offers DBA facility that could be used for other applications than just
     k-means
   * Global Alignment kernel k-means
   * KShape clustering from Paparizzos and Gravano
@@ -108,8 +109,8 @@ Have a look [there](https://github.com/rtavenar/tslearn/issues?utf8=✓&q=is%3Ai
 
 # Acknowledgments
 
-Authors would like to thank Mathieu Blondel for providing code for 
-[Kernel k-means](https://gist.github.com/mblondel/6230787) and [Soft-DTW](https://github.com/mblondel/soft-dtw) (both 
+Authors would like to thank Mathieu Blondel for providing code for
+[Kernel k-means](https://gist.github.com/mblondel/6230787) and [Soft-DTW](https://github.com/mblondel/soft-dtw) (both
 distributed under BSD license) that are used in the `clustering` and `metrics` modules of this library.
 
 # Referencing `tslearn`
@@ -124,4 +125,3 @@ If you use `tslearn` in a scientific publication, we would appreciate citations:
  note={\url{https://github.com/rtavenar/tslearn}}
 }
 ```
-
