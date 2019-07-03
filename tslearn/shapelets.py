@@ -218,44 +218,18 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
     Examples
     --------
     >>> from tslearn.generators import random_walk_blobs
-    >>> X, y = random_walk_blobs(n_ts_per_blob=20, sz=64, d=2, n_blobs=3)
-    >>> clf = ShapeletModel(n_shapelets_per_size={10: 5}, max_iter=1, verbose_level=0)
+    >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=16, d=2, n_blobs=3)
+    >>> clf = ShapeletModel(n_shapelets_per_size={4: 5}, max_iter=1, verbose_level=0)
     >>> clf.fit(X, y).shapelets_.shape
     (5,)
     >>> clf.shapelets_[0].shape
-    (10, 2)
+    (4, 2)
     >>> clf.predict(X).shape
-    (60,)
+    (30,)
     >>> clf.predict_proba(X).shape
-    (60, 3)
+    (30, 3)
     >>> clf.transform(X).shape
-    (60, 5)
-    >>> params = clf.get_params(deep=True)
-    >>> sorted(params.keys())
-    ['batch_size', 'max_iter', 'n_shapelets_per_size', 'optimizer', 'random_state', 'verbose_level', 'weight_regularizer']
-    >>> clf.set_params(batch_size=128)  # doctest: +NORMALIZE_WHITESPACE
-    ShapeletModel(batch_size=128, max_iter=1, n_shapelets_per_size={10: 5},
-           optimizer='sgd', random_state=None, verbose_level=0,
-           weight_regularizer=0.0)
-    >>> clf2 = ShapeletModel(n_shapelets_per_size={10: 5, 20: 10}, max_iter=1, verbose_level=0)
-    >>> clf2.fit(X, y).shapelets_.shape
-    (15,)
-    >>> clf2.shapelets_[0].shape
-    (10, 2)
-    >>> clf2.shapelets_[5].shape
-    (20, 2)
-    >>> clf2.shapelets_as_time_series_.shape
-    (15, 20, 2)
-    >>> clf2.predict(X).shape
-    (60,)
-    >>> clf2.transform(X).shape
-    (60, 15)
-    >>> clf2.locate(X).shape
-    (60, 15)
-    >>> import sklearn
-    >>> cv_results = sklearn.model_selection.cross_validate(clf, X, y, return_train_score=False)
-    >>> cv_results['test_score'].shape
-    (3,)
+    (30, 5)
 
     References
     ----------
@@ -558,29 +532,22 @@ class SerializableShapeletModel(ShapeletModel):
     Examples
     --------
     >>> from tslearn.generators import random_walk_blobs
-    >>> X, y = random_walk_blobs(n_ts_per_blob=20, sz=64, d=2, n_blobs=3)
-    >>> clf = SerializableShapeletModel(n_shapelets_per_size={10: 5}, max_iter=1, verbose_level=0, learning_rate=0.01)
-    >>> clf.fit(X, y).shapelets_.shape
-    (5,)
+    >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=16, d=2, n_blobs=3)
+    >>> clf = SerializableShapeletModel(n_shapelets_per_size={4: 5}, max_iter=1, verbose_level=0, learning_rate=0.01)
+    >>> clf.fit(X, y)  # doctest: +NORMALIZE_WHITESPACE
+    SerializableShapeletModel(batch_size=256, learning_rate=0.01, max_iter=1,
+                 n_shapelets_per_size={4: 5}, random_state=None,
+                 verbose_level=0, weight_regularizer=0.0)
+    >>> len(clf.shapelets_)
+    5
     >>> clf.shapelets_[0].shape
-    (10, 2)
+    (4, 2)
     >>> clf.predict(X).shape
-    (60,)
+    (30,)
     >>> clf.predict_proba(X).shape
-    (60, 3)
+    (30, 3)
     >>> clf.transform(X).shape
-    (60, 5)
-    >>> params = clf.get_params(deep=True)
-    >>> sorted(params.keys())
-    ['batch_size', 'learning_rate', 'max_iter', 'n_shapelets_per_size', 'random_state', 'verbose_level', 'weight_regularizer']
-    >>> clf.set_params(batch_size=128)  # doctest: +NORMALIZE_WHITESPACE
-    SerializableShapeletModel(batch_size=128, learning_rate=0.01, max_iter=1,
-           n_shapelets_per_size={10: 5}, random_state=None,
-           verbose_level=0, weight_regularizer=0.0)
-    >>> import sklearn
-    >>> cv_results = sklearn.model_selection.cross_validate(clf, X, y, return_train_score=False)
-    >>> cv_results['test_score'].shape
-    (3,)
+    (30, 5)
 
     References
     ----------

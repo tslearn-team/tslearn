@@ -178,7 +178,7 @@ class UCR_UEA_datasets(object):
         return datasets
 
     def list_cached_datasets(self):
-        """List datasets from the UCR/UEA archive that are avilable in cache.
+        """List datasets from the UCR/UEA archive that are available in cache.
 
         Examples
         --------

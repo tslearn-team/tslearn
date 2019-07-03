@@ -8,6 +8,7 @@ We also provide example usage for these methods using the following variable-len
 
     from tslearn.utils import to_time_series_dataset
     X = to_time_series_dataset([[1, 2, 3, 4], [1, 2, 3], [2, 5, 6, 7, 8, 9]])
+    y = [0, 0, 1]
 
 Clustering
 ----------
@@ -39,20 +40,6 @@ Examples
     km = TimeSeriesKMeans(n_clusters=2, metric="dtw")
     labels = km.fit_predict(X)
     silhouette_score(X, labels, metric="dtw")
-
-Supervised classification
--------------------------
-
-* :ref:`KNeighborsTimeSeriesClassifier <knn-clf>`
-
-Example
-~~~~~~~
-
-.. code-block:: python
-
-    from tslearn.neighbors import KNeighborsTimeSeriesClassifier
-    clf = KNeighborsTimeSeriesClassifier(metric="dtw")
-    labels = clf.fit_predict(X)
 
 Barycenter computation
 ----------------------

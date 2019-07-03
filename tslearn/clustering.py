@@ -11,7 +11,7 @@ from scipy.spatial.distance import cdist
 import numpy
 
 from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw, cdist_soft_dtw_normalized, dtw
-from tslearn.barycenters import EuclideanBarycenter, dtw_barycenter_averaging, SoftDTWBarycenter
+from tslearn.barycenters import euclidean_barycenter, dtw_barycenter_averaging, softdtw_barycenter
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.utils import to_time_series_dataset, to_time_series, ts_size
 from tslearn.cycc import cdist_normalized_cc, y_shifted_sbd_vec
@@ -36,14 +36,6 @@ class EmptyClusterError(Exception):
 
 def _check_no_empty_cluster(labels, n_clusters):
     """Check that all clusters have at least one sample assigned.
-
-    Examples
-    --------
-    >>> labels = numpy.array([1, 1, 2, 0, 2])
-    >>> _check_no_empty_cluster(labels, 3)
-    >>> _check_no_empty_cluster(labels, 4)  # doctest: +IGNORE_EXCEPTION_DETAIL
-    Traceback (most recent call last):
-    EmptyClusterError: Cluster assignments lead to at least one empty cluster
     """
 
     for k in range(n_clusters):
@@ -55,22 +47,6 @@ def _check_full_length(centroids):
 
     If some centroids are found to be padded with nans, the last value is
     repeated until the end.
-
-    Examples
-    --------
-    >>> centroids = to_time_series_dataset([[1, 2, 3], [1, 2, 3, 4, 5]])
-    >>> _check_full_length(centroids)
-    array([[[ 1.],
-            [ 2.],
-            [ 3.],
-            [ 3.],
-            [ 3.]],
-    <BLANKLINE>
-           [[ 1.],
-            [ 2.],
-            [ 3.],
-            [ 4.],
-            [ 5.]]])
     """
     centroids_ = numpy.empty(centroids.shape)
     n, max_sz = centroids.shape[:2]
@@ -152,13 +128,19 @@ def silhouette_score(X, labels, metric=None, sample_size=None, metric_params=Non
     --------
     >>> from tslearn.generators import random_walks
     >>> from tslearn.metrics import cdist_dtw
-    >>> X = random_walks(n_ts=50, sz=32, d=1)
-    >>> labels = numpy.random.randint(2, size=50)
-    >>> s_sc = silhouette_score(X, labels, metric="dtw")
-    >>> s_sc2 = silhouette_score(X, labels, metric="euclidean")
-    >>> s_sc3 = silhouette_score(X, labels, metric="softdtw")
-    >>> s_sc3b = silhouette_score(X, labels, metric="softdtw", metric_params={"gamma_sdtw": 2.})
-    >>> s_sc4 = silhouette_score(cdist_dtw(X), labels, metric="precomputed")
+    >>> numpy.random.seed(0)
+    >>> X = random_walks(n_ts=20, sz=16, d=1)
+    >>> labels = numpy.random.randint(2, size=20)
+    >>> silhouette_score(X, labels, metric="dtw")  # doctest: +ELLIPSIS
+    0.13383800...
+    >>> silhouette_score(X, labels, metric="euclidean")  # doctest: +ELLIPSIS
+    0.09126917...
+    >>> silhouette_score(X, labels, metric="softdtw")  # doctest: +ELLIPSIS
+    0.17953934...
+    >>> silhouette_score(X, labels, metric="softdtw", metric_params={"gamma_sdtw": 2.})  # doctest: +ELLIPSIS
+    0.17591060...
+    >>> silhouette_score(cdist_dtw(X), labels, metric="precomputed")  # doctest: +ELLIPSIS
+    0.13383800...
     """
     sklearn_metric = None
     if metric_params is None:
@@ -234,12 +216,6 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
     >>> from tslearn.generators import random_walks
     >>> X = random_walks(n_ts=50, sz=32, d=1)
     >>> gak_km = GlobalAlignmentKernelKMeans(n_clusters=3, verbose=False, random_state=0).fit(X)
-    >>> numpy.alltrue(gak_km.labels_ == gak_km.predict(X))
-    True
-    >>> numpy.alltrue(gak_km.fit(X).predict(X) == gak_km.fit_predict(X))
-    True
-    >>> GlobalAlignmentKernelKMeans(n_clusters=101, verbose=False, random_state=0).fit(X).X_fit_ is None
-    True
 
     References
     ----------
@@ -460,43 +436,18 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
     >>> km = TimeSeriesKMeans(n_clusters=3, metric="euclidean", max_iter=5, verbose=False, random_state=0).fit(X)
     >>> km.cluster_centers_.shape
     (3, 32, 1)
-    >>> dists = cdist(X.reshape((50, 32)), km.cluster_centers_.reshape((3, 32)))
-    >>> numpy.alltrue(km.labels_ == dists.argmin(axis=1))
-    True
-    >>> numpy.alltrue(km.labels_ == km.predict(X))
-    True
-    >>> numpy.alltrue(km.fit(X).predict(X) == km.fit_predict(X))
-    True
     >>> km_dba = TimeSeriesKMeans(n_clusters=3, metric="dtw", max_iter=5, max_iter_barycenter=5, verbose=False, \
                                   random_state=0).fit(X)
     >>> km_dba.cluster_centers_.shape
     (3, 32, 1)
-    >>> dists = cdist_dtw(X, km_dba.cluster_centers_)
-    >>> numpy.alltrue(km_dba.labels_ == dists.argmin(axis=1))
-    True
-    >>> numpy.alltrue(km_dba.labels_ == km_dba.predict(X))
-    True
-    >>> numpy.alltrue(km_dba.fit(X).predict(X) == km_dba.fit_predict(X))
-    True
     >>> km_sdtw = TimeSeriesKMeans(n_clusters=3, metric="softdtw", max_iter=5, max_iter_barycenter=5, \
                                    metric_params={"gamma_sdtw": .5}, verbose=False, random_state=0).fit(X)
     >>> km_sdtw.cluster_centers_.shape
     (3, 32, 1)
-    >>> dists = cdist_soft_dtw(X, km_sdtw.cluster_centers_, gamma=.5)
-    >>> numpy.alltrue(km_sdtw.labels_ == dists.argmin(axis=1))
-    True
-    >>> numpy.alltrue(km_sdtw.labels_ == km_sdtw.predict(X))
-    True
-    >>> numpy.alltrue(km_sdtw.fit(X).predict(X) == km_sdtw.fit_predict(X))
-    True
-    >>> TimeSeriesKMeans(n_clusters=101, verbose=False, random_state=0).fit(X).X_fit_ is None
-    True
     >>> X_bis = to_time_series_dataset([[1, 2, 3, 4], [1, 2, 3], [2, 5, 6, 7, 8, 9]])
     >>> km = TimeSeriesKMeans(n_clusters=2, verbose=False, max_iter=5, metric="dtw", random_state=0).fit(X_bis)
-    >>> km_bis = TimeSeriesKMeans(n_clusters=2, verbose=False, max_iter=5, metric="softdtw", random_state=0).fit(X_bis)
-    >>> km_init = TimeSeriesKMeans(n_clusters=2, verbose=False, max_iter=5, metric="dtw", random_state=0, init="random").fit(X_bis)
-    >>> km_init = TimeSeriesKMeans(n_clusters=2, verbose=False, max_iter=5, metric="dtw", random_state=0, init="k-means++").fit(X_bis)
-    >>> km_init = TimeSeriesKMeans(n_clusters=2, verbose=False, max_iter=5, metric="dtw", init=X_bis[:2]).fit(X_bis)
+    >>> km.cluster_centers_.shape
+    (2, 3, 1)
     """
 
     def __init__(self, n_clusters=3, max_iter=50, tol=1e-6, n_init=1, metric="euclidean", max_iter_barycenter=100,
@@ -581,16 +532,13 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
                                                                     barycenter_size=None,
                                                                     init_barycenter=self.cluster_centers_[k],
                                                                     verbose=False)
-                    # DTWBarycenterAveraging(max_iter=self.max_iter_barycenter,
-                    #                                               barycenter_size=None,
-                    #                                               init_barycenter=self.cluster_centers_[k],
-                    #                                               verbose=False).fit(X[self.labels_ == k])
             elif self.metric == "softdtw":
-                self.cluster_centers_[k] = SoftDTWBarycenter(max_iter=self.max_iter_barycenter,
-                                                             gamma=self.gamma_sdtw,
-                                                             init=self.cluster_centers_[k]).fit(X[self.labels_ == k])
+                self.cluster_centers_[k] = softdtw_barycenter(X=X[self.labels_ == k],
+                                                              max_iter=self.max_iter_barycenter,
+                                                              gamma=self.gamma_sdtw,
+                                                              init=self.cluster_centers_[k])
             else:
-                self.cluster_centers_[k] = EuclideanBarycenter().fit(X[self.labels_ == k])
+                self.cluster_centers_[k] = euclidean_barycenter(X=X[self.labels_ == k])
 
     def fit(self, X, y=None):
         """Compute k-means clustering.
@@ -708,15 +656,6 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
     >>> ks = KShape(n_clusters=3, n_init=1, verbose=False, random_state=0).fit(X)
     >>> ks.cluster_centers_.shape
     (3, 32, 1)
-    >>> dists = ks._cross_dists(X)
-    >>> numpy.alltrue(ks.labels_ == dists.argmin(axis=1))
-    True
-    >>> numpy.alltrue(ks.labels_ == ks.predict(X))
-    True
-    >>> numpy.alltrue(ks.predict(X) == KShape(n_clusters=3, n_init=1, verbose=False, random_state=0).fit_predict(X))
-    True
-    >>> KShape(n_clusters=101, verbose=False, random_state=0).fit(X).X_fit_ is None
-    True
 
     References
     ----------
@@ -776,7 +715,6 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         self.inertia_ = _compute_inertia(dists, self.labels_)
 
     def _fit_one_init(self, X, rs):
-        n_samples, sz, d = X.shape
         if hasattr(self.init, '__array__'):
             self.cluster_centers_ = self.init.copy()
         elif self.init == "random":
@@ -795,9 +733,8 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
             if self.verbose:
                 print("%.3f" % self.inertia_, end=" --> ")
 
-            if numpy.abs(old_inertia - self.inertia_) < self.tol:
-                break
-            if old_inertia - self.inertia_ < 0:
+            if numpy.abs(old_inertia - self.inertia_) < self.tol or \
+                                    old_inertia - self.inertia_ < 0:
                 self.cluster_centers_ = old_cluster_centers
                 self._assign(X)
                 break
@@ -841,8 +778,8 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
             except EmptyClusterError:
                 if self.verbose:
                     print("Resumed because of empty cluster")
-        self._post_fit(X_, best_correct_centroids, min_inertia)
         self._norms_centroids = numpy.linalg.norm(self.cluster_centers_, axis=(1, 2))
+        self._post_fit(X_, best_correct_centroids, min_inertia)
         return self
 
     def fit_predict(self, X, y=None):
