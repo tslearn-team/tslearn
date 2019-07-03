@@ -120,7 +120,7 @@ If you use `tslearn` in a scientific publication, we would appreciate citations:
 ```bibtex
 @misc{tslearn,
  title={tslearn: A machine learning toolkit dedicated to time-series data},
- author={Tavenard, Romain},
+ author={Tavenard, Romain and Faouzi, Johann},
  year={2017},
  note={\url{https://github.com/rtavenar/tslearn}}
 }
