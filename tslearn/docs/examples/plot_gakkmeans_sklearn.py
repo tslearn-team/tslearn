@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+GAK KMeans with a sklearn Pipeline
+==================================
+
+In this example, we demonstrate how it is possible to use the different
+algorithms of tslearn in combination with sklearn utilities, such as
+the `sklearn.pipeline.Pipeline`. 
+
+"""
+
 from tslearn.clustering import GlobalAlignmentKernelKMeans
 from tslearn.preprocessing import TimeSeriesScalerMinMax
 from tslearn.utils import to_sklearn_dataset

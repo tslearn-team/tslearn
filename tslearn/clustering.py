@@ -270,6 +270,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         n_samples = K.shape[0]
 
         self.labels_ = rs.randint(self.n_clusters, size=n_samples)
+        self.iter_ = 0
 
         dist = numpy.empty((n_samples, self.n_clusters))
         old_inertia = numpy.inf
@@ -286,6 +287,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
             if numpy.abs(old_inertia - self.inertia_) < self.tol:
                 break
             old_inertia = self.inertia_
+            self.iter_ += 1
         if self.verbose:
             print("")
 
@@ -313,6 +315,8 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         self.inertia_ = None
         self.sample_weight_ = None
         self.X_fit_ = None
+        # n_iter_ will contain the number of iterations the most
+        # successful run required.
         self.n_iter_ = 0
 
         n_samples = X.shape[0]
@@ -335,6 +339,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
                 if self.inertia_ < min_inertia:
                     last_correct_labels = self.labels_
                     min_inertia = self.inertia_
+                    self.n_iter_ = self.iter_
                 n_successful += 1
             except EmptyClusterError:
                 if self.verbose:
@@ -342,7 +347,6 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         if n_successful > 0:
             self.X_fit_ = X
             self.labels_ = last_correct_labels
-            self.n_iter_ = n_successful
             self.inertia_ = min_inertia
         else:
             self.X_fit_ = None
