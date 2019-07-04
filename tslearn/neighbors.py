@@ -231,7 +231,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         X : array-like, shape (n_ts, sz, d)
             Test samples.
         """
-        check_is_fitted(self, ['X_'])
+        check_is_fitted(self, 'X_')
         X = check_array(X, allow_nd=True)
         X_ = to_sklearn_dataset(X)
         _check_dims(self.X_, X_)
@@ -245,7 +245,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         X : array-like, shape (n_ts, sz, d)
             Test samples.
         """
-        check_is_fitted(self, ['X_'])
+        check_is_fitted(self, 'X_')
         X = check_array(X, allow_nd=True)
         X_ = to_sklearn_dataset(X)
         _check_dims(self.X_, X_)

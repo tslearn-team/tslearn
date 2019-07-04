@@ -400,7 +400,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
             Index of the cluster each sample belongs to.
         """
         X = check_array(X, allow_nd=True)
-        check_is_fitted(self, ['X_fit_'])
+        check_is_fitted(self, 'X_fit_')
         _check_dims(self.X_fit_, X)
         K = self._get_kernel(X, self.X_fit_)
         n_samples = X.shape[0]
@@ -748,15 +748,7 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         self.random_state = random_state
         self.n_init = n_init
         self.verbose = verbose
-        self.max_attempts = max(self.n_init, 10)
         self.init = init
-
-        self.labels_ = None
-        self.inertia_ = numpy.inf
-        self.cluster_centers_ = None
-
-        self._norms = 0.
-        self._norms_centroids = 0.
 
     def _shape_extraction(self, X, k):
         sz = X.shape[1]
@@ -794,11 +786,14 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         self.inertia_ = _compute_inertia(dists, self.labels_)
 
     def _fit_one_init(self, X, rs):
+        print('---> test')
         n_samples, sz, d = X.shape
         if hasattr(self.init, '__array__'):
             self.cluster_centers_ = self.init.copy()
         elif self.init == "random":
             indices = rs.choice(X.shape[0], self.n_clusters)
+            print(indices)
+            print(X[indices])
             self.cluster_centers_ = X[indices].copy()
         else:
             raise ValueError("Value %r for parameter 'init' is invalid" % self.init)
@@ -835,6 +830,18 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
             Time series dataset.
         """
 
+        print('----> test')
+        X = check_array(X, allow_nd=True)
+
+        max_attempts = max(self.n_init, 10)
+
+        self.labels_ = None
+        self.inertia_ = numpy.inf
+        self.cluster_centers_ = None
+
+        self._norms = 0.
+        self._norms_centroids = 0.
+
         X_ = to_time_series_dataset(X)
         self._norms = numpy.linalg.norm(X_, axis=(1, 2))
 
@@ -846,7 +853,7 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         min_inertia = numpy.inf
         n_successful = 0
         n_attempts = 0
-        while n_successful < self.n_init and n_attempts < self.max_attempts:
+        while n_successful < self.n_init and n_attempts < max_attempts:
             try:
                 if self.verbose and self.n_init > 1:
                     print("Init %d" % (n_successful + 1))
@@ -893,7 +900,10 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
+        X = check_array(X, allow_nd=True)
+        check_is_fitted(self, 'X_fit_')
         X_ = to_time_series_dataset(X)
+        _check_dims(self.X_fit_, X_)
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
         dists = self._cross_dists(X_)
         return dists.argmin(axis=1)

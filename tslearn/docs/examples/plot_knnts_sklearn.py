@@ -5,7 +5,7 @@ Hyper-parameter tuning of a Pipeline with KNeighborsTimeSeriesClassifier
 
 In this example, we demonstrate how it is possible to use the different
 algorithms of tslearn in combination with sklearn utilities, such as
-the `sklearn.pipeline.Pipeline` and `sklearn.model_selection.GridSearchCV`. 
+the `sklearn.pipeline.Pipeline` and `sklearn.model_selection.GridSearchCV`.
 
 """
 
@@ -28,13 +28,13 @@ import matplotlib.pyplot as plt
 # KNN classifier, we tune the n_neighbors and weights hyper-parameters.
 n_splits = 2
 pipeline = GridSearchCV(
-	Pipeline([
-	    ('normalize', TimeSeriesScalerMinMax()),
-	    ('knn', KNeighborsTimeSeriesClassifier())
-	]), \
-	{'knn__n_neighbors': [5, 25], 'knn__weights': ['uniform', 'distance']}, 
-	cv=StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42), 
-	iid=True
+    Pipeline([
+            ('normalize', TimeSeriesScalerMinMax()),
+            ('knn', KNeighborsTimeSeriesClassifier())
+    ]),
+    {'knn__n_neighbors': [5, 25], 'knn__weights': ['uniform', 'distance']},
+    cv=StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42),
+    iid=True
 )
 
 X_train, y_train, _, _ = CachedDatasets().load_dataset("Trace")
@@ -51,7 +51,7 @@ X_train, y_train = X_train[:50, 50:150], y_train[:50]
 colors = ['k', 'g', 'b', 'r', 'c']
 plt.figure()
 for ts, label in zip(X_train, y_train):
-	plt.plot(ts, c=colors[label], alpha=0.5)
+    plt.plot(ts, c=colors[label], alpha=0.5)
 plt.title('The timeseries in the training set')
 plt.tight_layout()
 plt.show()
@@ -59,8 +59,6 @@ plt.show()
 # Fit our pipeline
 pipeline.fit(X_train, y_train)
 results = pipeline.cv_results_
-
-print(results)
 
 # Print each possible configuration parameter and the out-of-fold accuracies
 print('Fitted KNeighborsTimeSeriesClassifier on random walk blobs...')
