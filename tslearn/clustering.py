@@ -786,21 +786,20 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         self.inertia_ = _compute_inertia(dists, self.labels_)
 
     def _fit_one_init(self, X, rs):
-        print('---> test')
         n_samples, sz, d = X.shape
         if hasattr(self.init, '__array__'):
             self.cluster_centers_ = self.init.copy()
         elif self.init == "random":
             indices = rs.choice(X.shape[0], self.n_clusters)
-            print(indices)
-            print(X[indices])
             self.cluster_centers_ = X[indices].copy()
         else:
             raise ValueError("Value %r for parameter 'init' is invalid" % self.init)
+
         self._norms_centroids = numpy.linalg.norm(self.cluster_centers_, axis=(1, 2))
         self._assign(X)
         old_inertia = numpy.inf
 
+        self.iter_ = 0
         for it in range(self.max_iter):
             old_cluster_centers = self.cluster_centers_.copy()
             self._update_centroids(X)
@@ -816,6 +815,7 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
                 break
 
             old_inertia = self.inertia_
+            self.iter_ += 1
         if self.verbose:
             print("")
 
@@ -829,8 +829,6 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset.
         """
-
-        print('----> test')
         X = check_array(X, allow_nd=True)
 
         max_attempts = max(self.n_init, 10)
@@ -862,6 +860,7 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
                 if self.inertia_ < min_inertia:
                     best_correct_centroids = self.cluster_centers_.copy()
                     min_inertia = self.inertia_
+                    self.n_iter_ = self.iter_
                 n_successful += 1
             except EmptyClusterError:
                 if self.verbose:
