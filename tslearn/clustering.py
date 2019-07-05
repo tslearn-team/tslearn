@@ -314,7 +314,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         self.labels_ = None
         self.inertia_ = None
         self.sample_weight_ = None
-        self.X_fit_ = X
+        self.X_fit_ = None
         # n_iter_ will contain the number of iterations the most
         # successful run required.
         self.n_iter_ = 0
@@ -347,6 +347,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         if n_successful > 0:
             self.labels_ = last_correct_labels
             self.inertia_ = min_inertia
+            self.X_fit_ = X
         return self
 
     def _compute_dist(self, K, dist):
