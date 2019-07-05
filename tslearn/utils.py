@@ -8,10 +8,33 @@ from sklearn.base import BaseEstimator, TransformerMixin
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
-def _check_dims(X_fit, X):
-    if X_fit is None or X is None or X_fit.shape[1:] != X.shape[1:]:
-        print('===>', X_fit, X)
-        raise ValueError('Second and third dimension must match!')
+def check_dims(X_fit, X):
+    """Checks whether the dimensions, except the first one which is used
+    for each of the timeseries (which can be variable) of X_fit and X.
+
+    Parameters
+    ----------
+    X_fit : array-like
+        The first array to be compared.
+    X : array-like
+        The second array to be compared.
+
+    Returns
+    -------
+    bool
+        True if both are not None and dimensions, except first, match.
+
+    """
+    if X_fit is None:
+        raise ValueError('X_fit is equal to None!')
+
+    if X is None:
+        raise ValueError('X is equal to None!')
+
+    if X_fit.shape[1:] != X.shape[1:]:
+        raise ValueError('Second and third dimension must match!'\
+                         ' ({} and {} are passed shapes)'.format(X_fit.shape,
+                                                                 X.shape))
 
 
 def _arraylike_copy(arr):
