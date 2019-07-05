@@ -24,6 +24,8 @@ from sklearn.model_selection._validation import _safe_split
 
 import numpy as np
 
+import warnings
+
 
 @ignore_warnings(category=(DeprecationWarning, FutureWarning))
 def check_clustering(name, clusterer_orig, readonly_memmap=False):
@@ -236,10 +238,14 @@ def test_all_estimators():
     estimators = get_estimators('all')
     for estimator in estimators:
         print(estimator[0])
+        if hasattr(estimator[1], '_get_tags'):
+            warnings.warn('Tags (_get_tags) are currently ignored by tslearn!')
+
         # TODO: This needs to be removed!!! (Currently here for faster testing)
         if estimator[0] in ['KNeighborsTimeSeriesClassifier']: #'GlobalAlignmentKernelKMeans', 'KShape'
             print('SKIPPED')
             continue
+
         check_estimator(estimator[1])
         print('{} is sklearn compliant.'.format(estimator[0]))
 
