@@ -13,7 +13,7 @@ from scipy.spatial.distance import cdist as scipy_cdist
 
 from tslearn.metrics import cdist_dtw
 from tslearn.utils import (to_time_series_dataset, to_sklearn_dataset,
-                           _check_dims)
+                           check_dims)
 
 neighbors.VALID_METRICS['brute'].append('dtw')
 
@@ -234,7 +234,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         check_is_fitted(self, 'X_')
         X = check_array(X, allow_nd=True)
         X_ = to_sklearn_dataset(X)
-        _check_dims(self.X_, X_)
+        check_dims(self.X_, X_)
         return super(KNeighborsTimeSeriesClassifier, self).predict(X_)
 
     def predict_proba(self, X):
@@ -248,5 +248,5 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         check_is_fitted(self, 'X_')
         X = check_array(X, allow_nd=True)
         X_ = to_sklearn_dataset(X)
-        _check_dims(self.X_, X_)
+        check_dims(self.X_, X_)
         return super(KNeighborsTimeSeriesClassifier, self).predict_proba(X_)

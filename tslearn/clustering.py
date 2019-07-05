@@ -15,7 +15,7 @@ from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw, cdist_soft_dtw
 from tslearn.barycenters import EuclideanBarycenter, dtw_barycenter_averaging, SoftDTWBarycenter
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.utils import (to_time_series_dataset, to_time_series,
-                           ts_size, _check_dims)
+                           ts_size, check_dims)
 from tslearn.cycc import cdist_normalized_cc, y_shifted_sbd_vec
 
 
@@ -398,7 +398,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         """
         X = check_array(X, allow_nd=True)
         check_is_fitted(self, 'X_fit_')
-        _check_dims(self.X_fit_, X)
+        check_dims(self.X_fit_, X)
         K = self._get_kernel(X, self.X_fit_)
         n_samples = X.shape[0]
         dist = numpy.zeros((n_samples, self.n_clusters))
@@ -412,7 +412,10 @@ class TimeSeriesCentroidBasedClusteringMixin:
         if numpy.isfinite(inertia) and (centroids is not None):
             self.cluster_centers_ = centroids
             self._assign(X_fitted)
+            self.X_fit_ = X_fitted
             self.inertia_ = inertia
+        else:
+            self.X_fit_ = None
 
 
 class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin):
@@ -899,7 +902,7 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         X = check_array(X, allow_nd=True)
         check_is_fitted(self, 'X_fit_')
         X_ = to_time_series_dataset(X)
-        _check_dims(self.X_fit_, X_)
+        check_dims(self.X_fit_, X_)
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
         dists = self._cross_dists(X_)
         return dists.argmin(axis=1)

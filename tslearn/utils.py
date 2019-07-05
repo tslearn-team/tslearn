@@ -21,8 +21,9 @@ def check_dims(X_fit, X):
 
     Returns
     -------
-    bool
-        True if both are not None and dimensions, except first, match.
+    nothing
+        Will raise exception if one of both arrays is None or one of the 
+        dimensions, except the first, does not match.
 
     """
     if X_fit is None:
@@ -32,7 +33,7 @@ def check_dims(X_fit, X):
         raise ValueError('X is equal to None!')
 
     if X_fit.shape[1:] != X.shape[1:]:
-        raise ValueError('Second and third dimension must match!'\
+        raise ValueError('Dimensions (except first) must match!'\
                          ' ({} and {} are passed shapes)'.format(X_fit.shape,
                                                                  X.shape))
 
