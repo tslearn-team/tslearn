@@ -270,7 +270,6 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         n_samples = K.shape[0]
 
         self.labels_ = rs.randint(self.n_clusters, size=n_samples)
-        self.iter_ = 0
 
         dist = numpy.empty((n_samples, self.n_clusters))
         old_inertia = numpy.inf
@@ -287,9 +286,10 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
             if numpy.abs(old_inertia - self.inertia_) < self.tol:
                 break
             old_inertia = self.inertia_
-            self.iter_ += 1
         if self.verbose:
             print("")
+
+        self.iter_ = it
 
         return self
 
@@ -314,7 +314,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         self.labels_ = None
         self.inertia_ = None
         self.sample_weight_ = None
-        self.X_fit_ = None
+        self.X_fit_ = X
         # n_iter_ will contain the number of iterations the most
         # successful run required.
         self.n_iter_ = 0
@@ -345,11 +345,8 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
                 if self.verbose:
                     print("Resumed because of empty cluster")
         if n_successful > 0:
-            self.X_fit_ = X
             self.labels_ = last_correct_labels
             self.inertia_ = min_inertia
-        else:
-            self.X_fit_ = None
         return self
 
     def _compute_dist(self, K, dist):
@@ -415,10 +412,7 @@ class TimeSeriesCentroidBasedClusteringMixin:
         if numpy.isfinite(inertia) and (centroids is not None):
             self.cluster_centers_ = centroids
             self._assign(X_fitted)
-            self.X_fit_ = X_fitted
             self.inertia_ = inertia
-        else:
-            self.X_fit_ = None
 
 
 class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin):
@@ -799,7 +793,6 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         self._assign(X)
         old_inertia = numpy.inf
 
-        self.iter_ = 0
         for it in range(self.max_iter):
             old_cluster_centers = self.cluster_centers_.copy()
             self._update_centroids(X)
@@ -815,9 +808,10 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
                 break
 
             old_inertia = self.inertia_
-            self.iter_ += 1
         if self.verbose:
             print("")
+
+        self.iter_ = it
 
         return self
 
@@ -840,7 +834,10 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         self._norms = 0.
         self._norms_centroids = 0.
 
+        self.n_iter_ = 0
+
         X_ = to_time_series_dataset(X)
+        self.X_fit_ = X_
         self._norms = numpy.linalg.norm(X_, axis=(1, 2))
 
         _check_initial_guess(self.init, self.n_clusters)
