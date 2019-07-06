@@ -35,7 +35,7 @@ def check_clustering(name, clusterer_orig, readonly_memmap=False):
                       'check_clustering!')
 
     clusterer = clone(clusterer_orig)
-    X, y = random_walk_blobs(n_ts_per_blob=15, n_blobs=3, random_state=1, 
+    X, y = random_walk_blobs(n_ts_per_blob=15, n_blobs=3, random_state=1,
                              noise_level=0.25)
     X, y = shuffle(X, y, random_state=7)
     X = TimeSeriesScalerMeanVariance().fit_transform(X)

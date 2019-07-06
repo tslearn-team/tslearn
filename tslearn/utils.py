@@ -519,7 +519,7 @@ class LabelCategorizer(BaseEstimator, TransformerMixin):
 
     def inverse_transform(self, y):
         check_is_fitted(self, ['backward_match', 'forward_match'])
-        y_ = column_or_1d(y, warn=True)
+        y_ = numpy.array(y)
         n, n_c = y_.shape
         if n_c == 1 and self.single_column_if_binary:
             y_ = numpy.hstack((y_, 1 - y_))
