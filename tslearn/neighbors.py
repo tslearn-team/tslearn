@@ -108,8 +108,8 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
     >>> time_series = to_time_series_dataset([[1, 2, 3, 4], [3, 3, 2, 0], [1, 2, 2, 4]])
     >>> knn = KNeighborsTimeSeries(n_neighbors=1).fit(time_series)
     >>> dist, ind = knn.kneighbors(to_time_series_dataset([[1, 1, 2, 2, 2, 3, 4]]), return_distance=True)
-    >>> dist
-    array([[ 0.]])
+    >>> dist # doctest: +NORMALIZE_WHITESPACE
+    array([[0.]])
     >>> ind
     array([[0]])
     >>> knn2 = KNeighborsTimeSeries(n_neighbors=10, metric="euclidean").fit(time_series)
@@ -194,7 +194,8 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
     Examples
     --------
     >>> clf = KNeighborsTimeSeriesClassifier(n_neighbors=2, metric="dtw")
-    >>> clf.fit([[1, 2, 3], [1, 1.2, 3.2], [3, 2, 1]], y=[0, 0, 1]).predict([[1, 2.2, 3.5]])
+    >>> _ = clf.fit([[1, 2, 3], [1, 1.2, 3.2], [3, 2, 1]], y=[0, 0, 1])
+    >>> clf.predict([[1, 2.2, 3.5]])
     array([0])
     """
     def __init__(self,

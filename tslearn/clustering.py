@@ -61,18 +61,18 @@ def _check_full_length(centroids):
     Examples
     --------
     >>> centroids = to_time_series_dataset([[1, 2, 3], [1, 2, 3, 4, 5]])
-    >>> _check_full_length(centroids)
-    array([[[ 1.],
-            [ 2.],
-            [ 3.],
-            [ 3.],
-            [ 3.]],
+    >>> _check_full_length(centroids) # doctest: +NORMALIZE_WHITESPACE
+    array([[[1.],
+            [2.],
+            [3.],
+            [3.],
+            [3.]],
     <BLANKLINE>
-           [[ 1.],
-            [ 2.],
-            [ 3.],
-            [ 4.],
-            [ 5.]]])
+           [[1.],
+            [2.],
+            [3.],
+            [4.],
+            [5.]]])
     """
     centroids_ = numpy.empty(centroids.shape)
     n, max_sz = centroids.shape[:2]

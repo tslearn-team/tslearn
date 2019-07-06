@@ -24,7 +24,7 @@ def check_dims(X_fit, X):
     Returns
     -------
     nothing
-        Will raise exception if one of both arrays is None or one of the 
+        Will raise exception if one of both arrays is None or one of the
         dimensions, except the first, does not match.
 
     """

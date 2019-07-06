@@ -35,7 +35,8 @@ def check_clustering(name, clusterer_orig, readonly_memmap=False):
                       'check_clustering!')
 
     clusterer = clone(clusterer_orig)
-    X, y = random_walk_blobs(n_ts_per_blob=15, n_blobs=3, random_state=1, noise_level=0.25)
+    X, y = random_walk_blobs(n_ts_per_blob=15, n_blobs=3, random_state=1, 
+                             noise_level=0.25)
     X, y = shuffle(X, y, random_state=7)
     X = TimeSeriesScalerMeanVariance().fit_transform(X)
     X_noise = np.concatenate([X, random_walks(n_ts=5)])
@@ -83,7 +84,7 @@ def check_clustering(name, clusterer_orig, readonly_memmap=False):
 
 
 @ignore_warnings(category=(DeprecationWarning, FutureWarning))
-def check_non_transformer_estimators_n_iter(name, estimator_orig):
+def check_non_transf_est_n_iter(name, estimator_orig):
     # Test that estimators that are not transformers with a parameter
     # max_iter, return the attribute of n_iter_ at least 1.
 
@@ -109,7 +110,7 @@ def check_non_transformer_estimators_n_iter(name, estimator_orig):
     else:
         estimator = clone(estimator_orig)
     if hasattr(estimator, 'max_iter'):
-        X, y_ = random_walk_blobs(n_ts_per_blob=15, n_blobs=3, random_state=1, 
+        X, y_ = random_walk_blobs(n_ts_per_blob=15, n_blobs=3, random_state=1,
                                   noise_level=0.25)
 
         set_random_state(estimator, 0)
@@ -181,10 +182,11 @@ def check_fit_idempotent(name, estimator_orig):
             )
 
 
-# Monkey-patching some checks function to work on timeseries data instead of tabular data.
-sklearn.utils.estimator_checks.check_clustering = check_clustering
-sklearn.utils.estimator_checks.check_non_transformer_estimators_n_iter = check_non_transformer_estimators_n_iter
-sklearn.utils.estimator_checks.check_fit_idempotent = check_fit_idempotent
+# Patching some checks function to work on ts data instead of tabular data.
+checks = sklearn.utils.estimator_checks
+checks.check_clustering = check_clustering
+checks.check_non_transformer_estimators_n_iter = check_non_transf_est_n_iter
+checks.check_fit_idempotent = check_fit_idempotent
 
 
 def get_estimators(type_filter='all'):
@@ -251,9 +253,8 @@ def test_all_estimators():
     estimators = get_estimators('all')
     for estimator in estimators:
         print(estimator[0])
-
         # TODO: This needs to be removed!!! (Currently here for faster testing)
-        if estimator[0] in ['KNeighborsTimeSeriesClassifier', 
+        if estimator[0] in ['KNeighborsTimeSeriesClassifier',
                             'GlobalAlignmentKernelKMeans', 'KShape',
                             'LabelBinarizer', 'LabelCategorizer']:
             print('SKIPPED')
