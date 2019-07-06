@@ -29,6 +29,11 @@ import warnings
 
 @ignore_warnings(category=(DeprecationWarning, FutureWarning))
 def check_clustering(name, clusterer_orig, readonly_memmap=False):
+
+    if hasattr(estimator_orig, '_get_tags'):
+        warnings.warn('Tags (_get_tags) are currently ignored by '
+                      'check_clustering!')
+
     clusterer = clone(clusterer_orig)
     X, y = random_walk_blobs(n_ts_per_blob=15, n_blobs=3, random_state=1, noise_level=0.25)
     X, y = shuffle(X, y, random_state=7)
@@ -82,6 +87,10 @@ def check_non_transformer_estimators_n_iter(name, estimator_orig):
     # Test that estimators that are not transformers with a parameter
     # max_iter, return the attribute of n_iter_ at least 1.
 
+    if hasattr(estimator_orig, '_get_tags'):
+        warnings.warn('Tags (_get_tags) are currently ignored by '
+                      'check_non_transformer_estimators_n_iter!')
+
     # These models are dependent on external solvers like
     # libsvm and accessing the iter parameter is non-trivial.
     not_run_check_n_iter = ['Ridge', 'SVR', 'NuSVR', 'NuSVC',
@@ -120,6 +129,10 @@ def check_fit_idempotent(name, estimator_orig):
     # attributes is difficult and full of edge cases. So instead we check that
     # predict(), predict_proba(), decision_function() and transform() return
     # the same results.
+
+    if hasattr(estimator_orig, '_get_tags'):
+        warnings.warn('Tags (_get_tags) are currently ignored by '
+                      'check_fit_idempotent!')
 
     check_methods = ["predict", "transform", "decision_function",
                      "predict_proba"]
@@ -238,11 +251,11 @@ def test_all_estimators():
     estimators = get_estimators('all')
     for estimator in estimators:
         print(estimator[0])
-        if hasattr(estimator[1], '_get_tags'):
-            warnings.warn('Tags (_get_tags) are currently ignored by tslearn!')
 
         # TODO: This needs to be removed!!! (Currently here for faster testing)
-        if estimator[0] in ['KNeighborsTimeSeriesClassifier']: #'GlobalAlignmentKernelKMeans', 'KShape'
+        if estimator[0] in ['KNeighborsTimeSeriesClassifier', 
+                            'GlobalAlignmentKernelKMeans', 'KShape',
+                            'LabelBinarizer', 'LabelCategorizer']:
             print('SKIPPED')
             continue
 
