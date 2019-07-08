@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/rtavenar/tslearn.svg?branch=master)](https://travis-ci.org/rtavenar/tslearn)
 [![Code Climate](https://codeclimate.com/github/rtavenar/tslearn/badges/gpa.svg)](https://codeclimate.com/github/rtavenar/tslearn)
 [![Test Coverage](https://codeclimate.com/github/rtavenar/tslearn/badges/coverage.svg)](https://codeclimate.com/github/rtavenar/tslearn/coverage)
+[![Downloads](https://pepy.tech/badge/tslearn)](https://pepy.tech/project/tslearn)
 
 `tslearn` is a Python package that provides machine learning tools for the analysis of time series.
 This package builds on `scikit-learn`, `numpy` and `scipy` libraries.
@@ -14,6 +15,7 @@ If you would like to contribute to `tslearn`, please have a look at [our contrib
 ```
 Cython
 numpy
+numba
 scipy
 scikit-learn
 numba
@@ -22,6 +24,10 @@ numba
 If you plan to use the `shapelets` module, `keras` and `tensorflow` should also be installed.
 
 # Installation
+
+## Pre-requisites 
+
+C++ build tools should be available to perform installation.
 
 ## Using conda
 
@@ -114,7 +120,7 @@ If you use `tslearn` in a scientific publication, we would appreciate citations:
 ```bibtex
 @misc{tslearn,
  title={tslearn: A machine learning toolkit dedicated to time-series data},
- author={Tavenard, Romain},
+ author={Tavenard, Romain and Faouzi, Johann},
  year={2017},
  note={\url{https://github.com/rtavenar/tslearn}}
 }

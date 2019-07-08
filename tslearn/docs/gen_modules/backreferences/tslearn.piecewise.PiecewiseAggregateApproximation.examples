@@ -5,7 +5,7 @@ Examples using ``tslearn.piecewise.PiecewiseAggregateApproximation``
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="This example presents a comparison between PAA, SAX and 1d-SAX features. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="This example presents a comparison between PAA, SAX and 1d-SAX features.">
 
 .. only:: html
 
