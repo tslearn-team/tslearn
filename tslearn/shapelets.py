@@ -12,7 +12,7 @@ from sklearn.preprocessing import LabelBinarizer
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils import check_array, column_or_1d
 import keras
-from keras.utils.io_utils import H5Dict
+#from keras.utils.io_utils import H5Dict
 from keras.regularizers import l2
 from keras.initializers import Initializer
 import keras.backend as K
@@ -30,16 +30,17 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 # Patching unpickle_model to handle our custom layers
-def unpickle_model(state):
-    h5dict = H5Dict(state, mode='r')
-    return keras.engine.saving._deserialize_model(
-        h5dict, custom_objects={
-            'LocalSquaredDistanceLayer': LocalSquaredDistanceLayer,
-            'GlobalArgminPooling1D': GlobalArgminPooling1D,
-            'GlobalMinPooling1D': GlobalMinPooling1D
-        })
+# def unpickle_model(state):
+#     h5dict = H5Dict(state, mode='r')
+#     return keras.engine.saving._deserialize_model(
+#         h5dict, custom_objects={
+#             'LocalSquaredDistanceLayer': LocalSquaredDistanceLayer,
+#             'GlobalArgminPooling1D': GlobalArgminPooling1D,
+#             'GlobalMinPooling1D': GlobalMinPooling1D
+#         })
 
-keras.engine.saving.unpickle_model = unpickle_model
+# keras.engine.saving.unpickle_model = unpickle_model
+
 
 class GlobalMinPooling1D(Layer):
     """Global min pooling operation for temporal data.
@@ -373,7 +374,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         self.d = None
 
         self.d = d
-        if y.ndim == 1:
+        if y.ndim == 1 or y.shape[1] == 1:
             self.label_binarizer = LabelBinarizer().fit(y)
             y_ = self.label_binarizer.transform(y)
             self.classes_ = self.label_binarizer.classes_
@@ -382,14 +383,14 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
             self.categorical_y = True
             self.classes_ = np.unique(y)
             assert y_.shape[1] != 2, "Binary classification case, monodimensional y should be passed."
-        
+
         if y_.ndim == 1 or y_.shape[1] == 1:
             n_classes = 2
         else:
             n_classes = y_.shape[1]
 
         if self.n_shapelets_per_size is None:
-            sizes = grabocka_params_to_shapelet_size_dict(n_ts, sz, 
+            sizes = grabocka_params_to_shapelet_size_dict(n_ts, sz,
                                                           n_classes,
                                                           self.shap_len,
                                                           self.nr_shap_lens)
@@ -434,12 +435,14 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
 
         check_dims(self.X_fit_, X)
         categorical_preds = self.predict_proba(X)
+        print('---->', self.categorical_y)
         if self.categorical_y:
             return categorical_preds
         else:
-            if categorical_preds.shape[1] == 2:
-                categorical_preds = categorical_preds[:, 0]
-            return self.label_binarizer.inverse_transform(categorical_preds)
+            preds = []
+            for idx in numpy.argmax(categorical_preds, axis=1):
+                preds.append(self.label_binarizer.classes_[idx])
+            return numpy.array(preds)
 
     def predict_proba(self, X):
         """Predict class probability for a given set of time series.
@@ -469,8 +472,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
                                                verbose=self.verbose_level)
 
         if categorical_preds.shape[1] == 1:
-            categorical_preds = numpy.hstack((1 - categorical_preds, 
-                                              categorical_preds))
+            categorical_preds = numpy.hstack((categorical_preds, 1 - categorical_preds))
 
         return categorical_preds
 
