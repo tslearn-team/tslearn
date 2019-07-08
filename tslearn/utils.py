@@ -28,6 +28,7 @@ def check_dims(X_fit, X):
         dimensions, except the first, does not match.
 
     """
+    # TODO: What is difference check_equal_size <--> this?
     if X_fit is None:
         raise ValueError('X_fit is equal to None!')
 

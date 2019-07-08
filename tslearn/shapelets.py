@@ -7,8 +7,12 @@ It depends on the `keras` library for optimization.
 from keras.models import Model
 from keras.layers import Dense, Conv1D, Layer, Input, concatenate, add
 from keras.metrics import categorical_accuracy, categorical_crossentropy, binary_accuracy, binary_crossentropy
+from keras.utils.generic_utils import get_custom_objects
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.utils import check_array, column_or_1d
+import keras
+from keras.utils.io_utils import H5Dict
 from keras.regularizers import l2
 from keras.initializers import Initializer
 import keras.backend as K
@@ -16,11 +20,26 @@ from keras.engine import InputSpec
 import numpy
 from tensorflow import set_random_seed
 
-from tslearn.utils import to_time_series_dataset
+import warnings
+
+from tslearn.utils import to_time_series_dataset, check_dims
 from tslearn.clustering import TimeSeriesKMeans
+from tslearn.preprocessing import TimeSeriesResampler
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
+
+# Patching unpickle_model to handle our custom layers
+def unpickle_model(state):
+    h5dict = H5Dict(state, mode='r')
+    return keras.engine.saving._deserialize_model(
+        h5dict, custom_objects={
+            'LocalSquaredDistanceLayer': LocalSquaredDistanceLayer,
+            'GlobalArgminPooling1D': GlobalArgminPooling1D,
+            'GlobalMinPooling1D': GlobalMinPooling1D
+        })
+
+keras.engine.saving.unpickle_model = unpickle_model
 
 class GlobalMinPooling1D(Layer):
     """Global min pooling operation for temporal data.
@@ -127,6 +146,11 @@ class LocalSquaredDistanceLayer(Layer):
     def compute_output_shape(self, input_shape):
         return input_shape[0], input_shape[1], self.n_shapelets
 
+    def get_config(self):
+        config = {'n_shapelets': self.n_shapelets}
+        base_config = super(LocalSquaredDistanceLayer, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+
 
 def grabocka_params_to_shapelet_size_dict(n_ts, ts_sz, n_classes, l, r):
     """Compute number and length of shapelets.
@@ -166,10 +190,13 @@ def grabocka_params_to_shapelet_size_dict(n_ts, ts_sz, n_classes, l, r):
     .. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
     """
     base_size = int(l * ts_sz)
+    base_size = max(base_size, 1)
+    r = min(r, ts_sz)
     d = {}
     for sz_idx in range(r):
         shp_sz = base_size * (sz_idx + 1)
         n_shapelets = int(numpy.log10(n_ts * (ts_sz - shp_sz + 1) * (n_classes - 1)))
+        n_shapelets = max(1, n_shapelets)
         d[shp_sz] = n_shapelets
     return d
 
@@ -261,41 +288,36 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
     ----------
     .. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
     """
-    def __init__(self, n_shapelets_per_size,
+    def __init__(self, n_shapelets_per_size=None,
                  max_iter=1000,
                  batch_size=256,
                  verbose_level=2,
                  optimizer="sgd",
                  weight_regularizer=0.,
+                 shap_len=0.3,
+                 nr_shap_lens=3,
                  random_state=None):
         self.n_shapelets_per_size = n_shapelets_per_size
-        self.n_classes = None
-        self.optimizer = optimizer
         self.max_iter = max_iter
-        self.weight_regularizer = weight_regularizer
-        self.random_state = random_state
-        self.model = None
-        self.transformer_model = None
-        self.locator_model = None
         self.batch_size = batch_size
         self.verbose_level = verbose_level
-        self.categorical_y = False
-        self.label_binarizer = None
-        self.binary_problem = False
-
-        self.d = None
+        self.optimizer = optimizer
+        self.weight_regularizer = weight_regularizer
+        self.shap_len = shap_len
+        self.nr_shap_lens = nr_shap_lens
+        self.random_state = random_state
 
     @property
     def _n_shapelet_sizes(self):
-        return len(self.n_shapelets_per_size)
+        return len(self.n_shapelets_per_size_)
 
     @property
     def shapelets_(self):
-        total_n_shp = sum(self.n_shapelets_per_size.values())
+        total_n_shp = sum(self.n_shapelets_per_size_.values())
         shapelets = numpy.empty((total_n_shp, ), dtype=object)
         idx = 0
-        for i, shp_sz in enumerate(sorted(self.n_shapelets_per_size.keys())):
-            n_shp = self.n_shapelets_per_size[shp_sz]
+        for i, shp_sz in enumerate(sorted(self.n_shapelets_per_size_.keys())):
+            n_shp = self.n_shapelets_per_size_[shp_sz]
             for idx_shp in range(idx, idx + n_shp):
                 shapelets[idx_shp] = numpy.zeros((shp_sz, self.d))
             for di in range(self.d):
@@ -307,8 +329,8 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
 
     @property
     def shapelets_as_time_series_(self):
-        total_n_shp = sum(self.n_shapelets_per_size.values())
-        shp_sz = max(self.n_shapelets_per_size.keys())
+        total_n_shp = sum(self.n_shapelets_per_size_.values())
+        shp_sz = max(self.n_shapelets_per_size_.keys())
         non_formatted_shapelets = self.shapelets_
         d = non_formatted_shapelets[0].shape[1]
         shapelets = numpy.zeros((total_n_shp, shp_sz, d)) + numpy.nan
@@ -327,21 +349,54 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         y : array-like of shape=(n_ts, )
             Time series labels.
         """
+        X = check_array(X, allow_nd=True)
+        y = column_or_1d(y, warn=True)
+
         set_random_seed(seed=self.random_state)
         numpy.random.seed(seed=self.random_state)
+
+        if len(X.shape) == 2:
+            warnings.warn('2-Dimensional data passed. Assuming these are '
+                          '{} 1-dimensional timeseries'.format(X.shape[0]))
+            X = X.reshape((X.shape) + (1,))
+
         n_ts, sz, d = X.shape
+        self.X_fit_ = X
+
+        self.model = None
+        self.transformer_model = None
+        self.locator_model = None
+        self.categorical_y = False
+        self.label_binarizer = None
+        self.binary_problem = False
+
+        self.d = None
+
         self.d = d
         if y.ndim == 1:
             self.label_binarizer = LabelBinarizer().fit(y)
             y_ = self.label_binarizer.transform(y)
+            self.classes_ = self.label_binarizer.classes_
         else:
             y_ = y
             self.categorical_y = True
+            self.classes_ = np.unique(y)
             assert y_.shape[1] != 2, "Binary classification case, monodimensional y should be passed."
-        if y_.ndim == 1:
+        
+        if y_.ndim == 1 or y_.shape[1] == 1:
             n_classes = 2
         else:
             n_classes = y_.shape[1]
+
+        if self.n_shapelets_per_size is None:
+            sizes = grabocka_params_to_shapelet_size_dict(n_ts, sz, 
+                                                          n_classes,
+                                                          self.shap_len,
+                                                          self.nr_shap_lens)
+            self.n_shapelets_per_size_ = sizes
+        else:
+            self.n_shapelets_per_size_ = self.n_shapelets_per_size
+
         self._set_model_layers(X=X, ts_sz=sz, d=d, n_classes=n_classes)
         self.transformer_model.compile(loss="mean_squared_error",
                                        optimizer=self.optimizer)
@@ -370,6 +425,14 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
             Index of the cluster each sample belongs to or class probability matrix, depending on
             what was provided at training time.
         """
+        X = check_array(X, allow_nd=True)
+
+        if len(X.shape) == 2:
+            warnings.warn('2-Dimensional data passed. Assuming these are '
+                          '{} 1-dimensional timeseries'.format(X.shape[0]))
+            X = X.reshape((X.shape) + (1,))
+
+        check_dims(self.X_fit_, X)
         categorical_preds = self.predict_proba(X)
         if self.categorical_y:
             return categorical_preds
@@ -391,11 +454,24 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         array of shape=(n_ts, n_classes),
             Class probability matrix.
         """
+        X = check_array(X, allow_nd=True)
+
+        if len(X.shape) == 2:
+            warnings.warn('2-Dimensional data passed. Assuming these are '
+                          '{} 1-dimensional timeseries'.format(X.shape[0]))
+            X = X.reshape((X.shape) + (1,))
+
+        check_dims(self.X_fit_, X)
         X_ = to_time_series_dataset(X)
         n_ts, sz, d = X_.shape
         categorical_preds = self.model.predict([X_[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d)],
                                                batch_size=self.batch_size,
                                                verbose=self.verbose_level)
+
+        if categorical_preds.shape[1] == 1:
+            categorical_preds = numpy.hstack((1 - categorical_preds, 
+                                              categorical_preds))
+
         return categorical_preds
 
     def transform(self, X):
@@ -411,6 +487,14 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         array of shape=(n_ts, n_shapelets)
             Shapelet-Transform of the provided time series.
         """
+        X = check_array(X, allow_nd=True)
+
+        if len(X.shape) == 2:
+            warnings.warn('2-Dimensional data passed. Assuming these are '
+                          '{} 1-dimensional timeseries'.format(X.shape[0]))
+            X = X.reshape((X.shape) + (1,))
+
+        check_dims(self.X_fit_, X)
         X_ = to_time_series_dataset(X)
         n_ts, sz, d = X_.shape
         pred = self.transformer_model.predict([X_[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d)],
@@ -439,14 +523,14 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         return locations.astype(numpy.int)
 
     def _set_weights_false_conv(self, d):
-        shapelet_sizes = sorted(self.n_shapelets_per_size.keys())
+        shapelet_sizes = sorted(self.n_shapelets_per_size_.keys())
         for i, sz in enumerate(shapelet_sizes):
             for di in range(d):
                 self.model.get_layer("false_conv_%d_%d" % (i, di)).set_weights([numpy.eye(sz).reshape((sz, 1, sz))])
 
     def _set_model_layers(self, X, ts_sz, d, n_classes):
         inputs = [Input(shape=(ts_sz, 1), name="input_%d" % di) for di in range(d)]
-        shapelet_sizes = sorted(self.n_shapelets_per_size.keys())
+        shapelet_sizes = sorted(self.n_shapelets_per_size_.keys())
         pool_layers = []
         pool_layers_locations = []
         for i, sz in enumerate(sorted(shapelet_sizes)):
@@ -455,7 +539,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
                                          trainable=False,
                                          use_bias=False,
                                          name="false_conv_%d_%d" % (i, di))(inputs[di]) for di in range(d)]
-            shapelet_layers = [LocalSquaredDistanceLayer(self.n_shapelets_per_size[sz],
+            shapelet_layers = [LocalSquaredDistanceLayer(self.n_shapelets_per_size_[sz],
                                                          X=X,
                                                          name="shapelets_%d_%d" % (i, di))(transformer_layers[di])
                                for di in range(d)]
@@ -586,12 +670,14 @@ class SerializableShapeletModel(ShapeletModel):
     ----------
     .. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
     """
-    def __init__(self, n_shapelets_per_size,
+    def __init__(self, n_shapelets_per_size=None,
                  max_iter=1000,
                  batch_size=256,
                  verbose_level=2,
                  learning_rate=0.01,
                  weight_regularizer=0.,
+                 shap_len=0.3,
+                 nr_shap_lens=3,
                  random_state=None):
         super(SerializableShapeletModel,
               self).__init__(n_shapelets_per_size=n_shapelets_per_size,
@@ -599,6 +685,8 @@ class SerializableShapeletModel(ShapeletModel):
                              batch_size=batch_size,
                              verbose_level=verbose_level,
                              weight_regularizer=weight_regularizer,
+                             shap_len=shap_len,
+                             nr_shap_lens=nr_shap_lens,
                              random_state=random_state)
         self.learning_rate = learning_rate
 

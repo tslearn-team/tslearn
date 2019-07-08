@@ -18,9 +18,10 @@ from sklearn.base import (BaseEstimator, ClassifierMixin, ClusterMixin,
                           RegressorMixin, TransformerMixin, clone)
 from sklearn.utils.testing import *
 from sklearn.utils.estimator_checks import *
-from sklearn.metrics import adjusted_rand_score
+from sklearn.metrics import adjusted_rand_score, accuracy_score
 from sklearn.model_selection import ShuffleSplit
 from sklearn.model_selection._validation import _safe_split
+from sklearn.pipeline import make_pipeline
 
 import numpy as np
 
@@ -182,11 +183,179 @@ def check_fit_idempotent(name, estimator_orig):
             )
 
 
+def check_classifiers_classes(name, classifier_orig):
+    X_multiclass, y_multiclass = random_walk_blobs(n_ts_per_blob=10, 
+                                                   random_state=0,
+                                                   n_blobs=3,
+                                                   noise_level=0.1,
+                                                   sz=100)
+    X_multiclass, y_multiclass = shuffle(X_multiclass, y_multiclass,
+                                         random_state=7)
+
+    scaler = TimeSeriesScalerMeanVariance()
+    X_multiclass = scaler.fit_transform(X_multiclass)
+
+    X_binary = X_multiclass[y_multiclass != 2]
+    y_binary = y_multiclass[y_multiclass != 2]
+
+    X_multiclass = pairwise_estimator_convert_X(X_multiclass, classifier_orig)
+    X_binary = pairwise_estimator_convert_X(X_binary, classifier_orig)
+
+    labels_multiclass = ["one", "two", "three"]
+    labels_binary = ["one", "two"]
+
+    y_names_multiclass = np.take(labels_multiclass, y_multiclass)
+    y_names_binary = np.take(labels_binary, y_binary)
+
+    problems = [(X_binary, y_binary, y_names_binary)]
+
+    if hasattr(classifier_orig, '_get_tags'):
+        warnings.warn('Tags (_get_tags) are currently ignored by '
+                      'check_classifiers_classes!')
+
+    for X, y, y_names in problems:
+        for y_names_i in [y_names, y_names.astype('O')]:
+            y_ = choose_check_classifiers_labels(name, y, y_names_i)
+            check_classifiers_predictions(X, y_, name, classifier_orig)
+
+    labels_binary = [-1, 1]
+    y_names_binary = np.take(labels_binary, y_binary)
+    y_binary = choose_check_classifiers_labels(name, y_binary, y_names_binary)
+    check_classifiers_predictions(X_binary, y_binary, name, classifier_orig)
+
+
+@ignore_warnings  # Warnings are raised by decision function
+def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
+    X_m, y_m = random_walk_blobs(n_ts_per_blob=100, random_state=0,
+                                 n_blobs=3, noise_level=0., sz=200)
+    X_m, y_m = shuffle(X_m, y_m, random_state=7)
+    X_m = TimeSeriesScalerMeanVariance().fit_transform(X_m)
+    # generate binary problem from multi-class one
+    y_b = y_m[y_m != 2]
+    X_b = X_m[y_m != 2]
+
+    if name in ['BernoulliNB', 'MultinomialNB', 'ComplementNB']:
+        X_m -= X_m.min()
+        X_b -= X_b.min()
+
+    problems = [(X_b, y_b)]
+    if hasattr(classifier_orig, '_get_tags'):
+        warnings.warn('Tags (_get_tags) are currently ignored by '
+                      'check_classifiers_train!')
+    tags = {'binary_only': False, 'no_validation': False,
+            'poor_score': False, 'multioutput_only': False}
+
+    for (X, y) in problems:
+        classes = np.unique(y)
+        n_classes = len(classes)
+        n_samples, n_features, dim = X.shape
+        classifier = clone(classifier_orig)
+        X = pairwise_estimator_convert_X(X, classifier)
+
+        set_random_state(classifier)
+        # raises error on malformed input for fit
+        if not tags["no_validation"]:
+            with assert_raises(
+                ValueError,
+                msg="The classifier {} does not "
+                    "raise an error when incorrect/malformed input "
+                    "data for fit is passed. The number of training "
+                    "examples is not the same as the number of labels. "
+                    "Perhaps use check_X_y in fit.".format(name)):
+                classifier.fit(X, y[:-1])
+
+        # fit
+        classifier.fit(X, y)
+        # with lists
+        classifier.fit(X.tolist(), y.tolist())
+        assert hasattr(classifier, "classes_")
+        y_pred = classifier.predict(X)
+
+        assert y_pred.shape == (n_samples,)
+        # training set performance
+        if not tags['poor_score']:
+            print(accuracy_score(y, y_pred))
+            print(y)
+            print(y_pred)
+            assert accuracy_score(y, y_pred) > 0.83
+
+        # raises error on malformed input for predict
+        msg_pairwise = (
+            "The classifier {} does not raise an error when shape of X in "
+            " {} is not equal to (n_test_samples, n_training_samples)")
+        msg = ("The classifier {} does not raise an error when the number of "
+               "features in {} is different from the number of features in "
+               "fit.")
+
+        if not tags["no_validation"]:
+            if bool(getattr(classifier, "_pairwise", False)):
+                with assert_raises(ValueError,
+                                   msg=msg_pairwise.format(name, "predict")):
+                    classifier.predict(X.reshape(-1, 1))
+            else:
+                with assert_raises(ValueError,
+                                   msg=msg.format(name, "predict")):
+                    classifier.predict(X.T)
+        if hasattr(classifier, "decision_function"):
+            try:
+                # decision_function agrees with predict
+                decision = classifier.decision_function(X)
+                if n_classes == 2:
+                    if not tags["multioutput_only"]:
+                        assert decision.shape == (n_samples,)
+                    else:
+                        assert decision.shape == (n_samples, 1)
+                    dec_pred = (decision.ravel() > 0).astype(np.int)
+                    assert_array_equal(dec_pred, y_pred)
+                else:
+                    assert decision.shape == (n_samples, n_classes)
+                    assert_array_equal(np.argmax(decision, axis=1), y_pred)
+
+                # raises error on malformed input for decision_function
+                if not tags["no_validation"]:
+                    if _is_pairwise(classifier):
+                        with assert_raises(ValueError, msg=msg_pairwise.format(
+                                name, "decision_function")):
+                            classifier.decision_function(X.reshape(-1, 1))
+                    else:
+                        with assert_raises(ValueError, msg=msg.format(
+                                name, "decision_function")):
+                            classifier.decision_function(X.T)
+            except NotImplementedError:
+                pass
+
+        if hasattr(classifier, "predict_proba"):
+            # predict_proba agrees with predict
+            y_prob = classifier.predict_proba(X)
+            print(y, y_prob, y_prob.shape)
+            assert y_prob.shape == (n_samples, n_classes)
+            assert_array_equal(np.argmax(y_prob, axis=1), y_pred)
+            # check that probas for all classes sum to one
+            assert_array_almost_equal(np.sum(y_prob, axis=1),
+                                      np.ones(n_samples))
+            if not tags["no_validation"]:
+                # raises error on malformed input for predict_proba
+                if _is_pairwise(classifier_orig):
+                    with assert_raises(ValueError, msg=msg_pairwise.format(
+                            name, "predict_proba")):
+                        classifier.predict_proba(X.reshape(-1, 1))
+                else:
+                    with assert_raises(ValueError, msg=msg.format(
+                            name, "predict_proba")):
+                        classifier.predict_proba(X.T)
+            if hasattr(classifier, "predict_log_proba"):
+                # predict_log_proba is a transformation of predict_proba
+                y_log_prob = classifier.predict_log_proba(X)
+                assert_allclose(y_log_prob, np.log(y_prob), 8, atol=1e-9)
+                assert_array_equal(np.argsort(y_log_prob), np.argsort(y_prob))
+
 # Patching some checks function to work on ts data instead of tabular data.
 checks = sklearn.utils.estimator_checks
 checks.check_clustering = check_clustering
 checks.check_non_transformer_estimators_n_iter = check_non_transf_est_n_iter
 checks.check_fit_idempotent = check_fit_idempotent
+checks.check_classifiers_classes = check_classifiers_classes
+checks.check_classifiers_train = check_classifiers_train
 
 
 def get_estimators(type_filter='all'):
@@ -229,8 +398,13 @@ def get_estimators(type_filter='all'):
     # Filter out those that are not a subclass of `sklearn.BaseEstimator`
     all_classes = [c for c in set(all_classes)
                    if issubclass(c[1], BaseEstimator)]
+
     # get rid of abstract base classes
     all_classes = [c for c in all_classes if not is_abstract(c[1])]
+
+    # only keep those that are from tslearn
+    is_sklearn = lambda x: inspect.getmodule(x).__name__.startswith('sklearn')
+    all_classes = [c for c in all_classes if not is_sklearn(c[1])]
 
     # Now filter out the estimators that are not of the specified type
     filters = {
