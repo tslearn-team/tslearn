@@ -9,7 +9,7 @@ __pycache__/
 *.so
 
 # Cython compiled files
-.c
+*.c
 
 # Distribution / packaging
 .Python
