@@ -520,24 +520,14 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         self.n_clusters = n_clusters
         self.max_iter = max_iter
         self.tol = tol
-        self.random_state = random_state
-        self.metric = metric
         self.n_init = n_init
-        self.verbose = verbose
+        self.metric = metric
         self.max_iter_barycenter = max_iter_barycenter
-        self.max_attempts = max(self.n_init, 10)
+        self.metric_params = metric_params
         self.dtw_inertia = dtw_inertia
+        self.verbose = verbose
+        self.random_state = random_state
         self.init = init
-
-        self.labels_ = None
-        self.inertia_ = numpy.inf
-        self.cluster_centers_ = None
-        self.X_fit_ = None
-        self._squared_inertia = True
-
-        if metric_params is None:
-            metric_params = {}
-        self.gamma_sdtw = metric_params.get("gamma_sdtw", 1.)
 
     def _fit_one_init(self, X, x_squared_norms, rs):
         n_ts, _, d = X.shape
@@ -567,6 +557,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         if self.verbose:
             print("")
 
+        self.iter_ = it
+
         return self
 
     def _assign(self, X, update_class_attributes=True):
@@ -576,7 +568,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         elif self.metric == "dtw":
             dists = cdist_dtw(X, self.cluster_centers_)
         elif self.metric == "softdtw":
-            dists = cdist_soft_dtw(X, self.cluster_centers_, gamma=self.gamma_sdtw)
+            dists = cdist_soft_dtw(X, self.cluster_centers_, gamma=self.gamma_sdtw_)
         else:
             raise ValueError("Incorrect metric: %s (should be one of 'dtw', 'softdtw', 'euclidean')" % self.metric)
         matched_labels = dists.argmin(axis=1)
@@ -603,7 +595,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
                     #                                               verbose=False).fit(X[self.labels_ == k])
             elif self.metric == "softdtw":
                 self.cluster_centers_[k] = SoftDTWBarycenter(max_iter=self.max_iter_barycenter,
-                                                             gamma=self.gamma_sdtw,
+                                                             gamma=self.gamma_sdtw_,
                                                              init=self.cluster_centers_[k]).fit(X[self.labels_ == k])
             else:
                 self.cluster_centers_[k] = EuclideanBarycenter().fit(X[self.labels_ == k])
@@ -616,17 +608,36 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset.
         """
+
+        X = check_array(X, allow_nd=True)
+
+        self.labels_ = None
+        self.inertia_ = numpy.inf
+        self.cluster_centers_ = None
+        self.X_fit_ = None
+        self._squared_inertia = True
+        if self.metric_params is None:
+            metric_params = {}
+        else:
+            metric_params = self.metric_params
+        self.gamma_sdtw_ = metric_params.get("gamma_sdtw", 1.)
+
+        max_attempts = max(self.n_init, 10)
+
         X_ = to_time_series_dataset(X)
         rs = check_random_state(self.random_state)
-        x_squared_norms = cdist(X_.reshape((X_.shape[0], -1)), numpy.zeros((1, X_.shape[1] * X_.shape[2])),
-                                metric="sqeuclidean").reshape((1, -1))
+        x_squared_norms = cdist(
+            X_.reshape((X_.shape[0], -1)), 
+            numpy.zeros((1, X_.shape[1] * X_.shape[2])),
+            metric="sqeuclidean"
+        ).reshape((1, -1))
         _check_initial_guess(self.init, self.n_clusters)
 
         best_correct_centroids = None
         min_inertia = numpy.inf
         n_successful = 0
         n_attempts = 0
-        while n_successful < self.n_init and n_attempts < self.max_attempts:
+        while n_successful < self.n_init and n_attempts < max_attempts:
             try:
                 if self.verbose and self.n_init > 1:
                     print("Init %d" % (n_successful + 1))
@@ -635,6 +646,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
                 if self.inertia_ < min_inertia:
                     best_correct_centroids = self.cluster_centers_.copy()
                     min_inertia = self.inertia_
+                    self.n_iter_ = self.iter_
                 n_successful += 1
             except EmptyClusterError:
                 if self.verbose:
@@ -657,6 +669,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
+        X = check_array(X, allow_nd=True)
         return self.fit(X, y).labels_
 
     def predict(self, X):
@@ -672,7 +685,10 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
+        X = check_array(X, allow_nd=True)
+        check_is_fitted(self, 'X_fit_')
         X_ = to_time_series_dataset(X)
+        check_dims(self.X_fit_, X_)
         return self._assign(X_, update_class_attributes=False)
 
 

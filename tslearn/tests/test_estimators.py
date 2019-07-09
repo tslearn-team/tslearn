@@ -436,7 +436,9 @@ def test_all_estimators():
         # TODO: This needs to be removed!!! (Currently here for faster testing)
         if estimator[0] in ['KNeighborsTimeSeriesClassifier',
                             'GlobalAlignmentKernelKMeans', 'KShape',
-                            'LabelBinarizer', 'LabelCategorizer']:
+                            'LabelBinarizer', 'LabelCategorizer',
+                            'ShapeletModel', 'SerializableShapeletModel',
+                            'TimeSeriesKMeans']:
             print('SKIPPED')
             continue
 
