@@ -11,7 +11,8 @@ from operator import itemgetter
 from functools import partial
 
 from tslearn.generators import random_walks, random_walk_blobs
-from tslearn.preprocessing import TimeSeriesScalerMeanVariance
+from tslearn.preprocessing import (TimeSeriesScalerMeanVariance, 
+                                   TimeSeriesScalerMinMax)
 
 import sklearn
 from sklearn.base import (BaseEstimator, ClassifierMixin, ClusterMixin,
@@ -31,7 +32,7 @@ import warnings
 @ignore_warnings(category=(DeprecationWarning, FutureWarning))
 def check_clustering(name, clusterer_orig, readonly_memmap=False):
 
-    if hasattr(estimator_orig, '_get_tags'):
+    if hasattr(clusterer_orig, '_get_tags'):
         warnings.warn('Tags (_get_tags) are currently ignored by '
                       'check_clustering!')
 
@@ -189,6 +190,7 @@ def check_classifiers_classes(name, classifier_orig):
                                                    n_blobs=3,
                                                    noise_level=0.1,
                                                    sz=100)
+
     X_multiclass, y_multiclass = shuffle(X_multiclass, y_multiclass,
                                          random_state=7)
 
@@ -226,19 +228,20 @@ def check_classifiers_classes(name, classifier_orig):
 
 @ignore_warnings  # Warnings are raised by decision function
 def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
-    X_m, y_m = random_walk_blobs(n_ts_per_blob=100, random_state=0,
-                                 n_blobs=3, noise_level=0.05, sz=100)
+    # Generate some random walk blobs, shuffle them and normalize them
+    X_m, y_m = random_walk_blobs(n_ts_per_blob=25, random_state=42,
+                                 n_blobs=3, noise_level=0.1, sz=75)
     X_m, y_m = shuffle(X_m, y_m, random_state=7)
+
     X_m = TimeSeriesScalerMeanVariance().fit_transform(X_m)
+
     # generate binary problem from multi-class one
     y_b = y_m[y_m != 2]
     X_b = X_m[y_m != 2]
 
-    if name in ['BernoulliNB', 'MultinomialNB', 'ComplementNB']:
-        X_m -= X_m.min()
-        X_b -= X_b.min()
+    # We will test for both binary and multiclass case
+    problems = [(X_b, y_b), (X_m, y_m)]
 
-    problems = [(X_b, y_b)]
     if hasattr(classifier_orig, '_get_tags'):
         warnings.warn('Tags (_get_tags) are currently ignored by '
                       'check_classifiers_train!')
@@ -264,9 +267,7 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
                     "Perhaps use check_X_y in fit.".format(name)):
                 classifier.fit(X, y[:-1])
 
-        # fit
-        classifier.fit(X, y)
-        # with lists
+        # fit with lists
         classifier.fit(X.tolist(), y.tolist())
         assert hasattr(classifier, "classes_")
         y_pred = classifier.predict(X)
@@ -274,8 +275,6 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
         assert y_pred.shape == (n_samples,)
         # training set performance
         if not tags['poor_score']:
-            print(y)
-            print(y_pred)
             assert accuracy_score(y, y_pred) > 0.83
 
         # raises error on malformed input for predict
@@ -326,8 +325,6 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
         if hasattr(classifier, "predict_proba"):
             # predict_proba agrees with predict
             y_prob = classifier.predict_proba(X)
-            print(y_prob)
-            print(y)
             assert y_prob.shape == (n_samples, n_classes)
             assert_array_equal(np.argmax(y_prob, axis=1), y_pred)
             # check that probas for all classes sum to one
@@ -443,8 +440,7 @@ def test_all_estimators():
             print('SKIPPED')
             continue
 
-        #check_estimator(estimator[1])
-        check_classifiers_train(estimator[0], estimator[1]())
+        check_estimator(estimator[1])
         print('{} is sklearn compliant.'.format(estimator[0]))
 
 

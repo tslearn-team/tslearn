@@ -9,10 +9,10 @@ from keras.layers import Dense, Conv1D, Layer, Input, concatenate, add
 from keras.metrics import categorical_accuracy, categorical_crossentropy, binary_accuracy, binary_crossentropy
 from keras.utils.generic_utils import get_custom_objects
 from sklearn.preprocessing import LabelBinarizer
-from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.base import BaseEstimator, ClassifierMixin, TransformerMixin
 from sklearn.utils import check_array, column_or_1d
+from sklearn.utils.validation import check_is_fitted
 import keras
-#from keras.utils.io_utils import H5Dict
 from keras.regularizers import l2
 from keras.initializers import Initializer
 import keras.backend as K
@@ -202,7 +202,7 @@ def grabocka_params_to_shapelet_size_dict(n_ts, ts_sz, n_classes, l, r):
     return d
 
 
-class ShapeletModel(BaseEstimator, ClassifierMixin):
+class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
     """Learning Time-Series Shapelets model.
 
 
@@ -295,7 +295,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
                  verbose_level=2,
                  optimizer="sgd",
                  weight_regularizer=0.,
-                 shap_len=0.3,
+                 shap_len=0.15,
                  nr_shap_lens=3,
                  random_state=None):
         self.n_shapelets_per_size = n_shapelets_per_size
@@ -320,9 +320,10 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         for i, shp_sz in enumerate(sorted(self.n_shapelets_per_size_.keys())):
             n_shp = self.n_shapelets_per_size_[shp_sz]
             for idx_shp in range(idx, idx + n_shp):
-                shapelets[idx_shp] = numpy.zeros((shp_sz, self.d))
-            for di in range(self.d):
-                for inc, shp in enumerate(self.model.get_layer("shapelets_%d_%d" % (i, di)).get_weights()[0]):
+                shapelets[idx_shp] = numpy.zeros((shp_sz, self.d_))
+            for di in range(self.d_):
+                layer = self.model_.get_layer("shapelets_%d_%d" % (i, di))
+                for inc, shp in enumerate(layer.get_weights()[0]):
                     shapelets[idx + inc][:, di] = shp
             idx += n_shp
         assert idx == total_n_shp
@@ -364,23 +365,20 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         n_ts, sz, d = X.shape
         self.X_fit_ = X
 
-        self.model = None
-        self.transformer_model = None
-        self.locator_model = None
-        self.categorical_y = False
-        self.label_binarizer = None
-        self.binary_problem = False
+        self.model_ = None
+        self.transformer_model_ = None
+        self.locator_model_ = None
+        self.categorical_y_ = False
+        self.label_binarizer_ = None
+        self.d_ = d
 
-        self.d = None
-
-        self.d = d
         if y.ndim == 1 or y.shape[1] == 1:
-            self.label_binarizer = LabelBinarizer().fit(y)
-            y_ = self.label_binarizer.transform(y)
-            self.classes_ = self.label_binarizer.classes_
+            self.label_binarizer_ = LabelBinarizer().fit(y)
+            y_ = self.label_binarizer_.transform(y)
+            self.classes_ = self.label_binarizer_.classes_
         else:
             y_ = y
-            self.categorical_y = True
+            self.categorical_y_ = True
             self.classes_ = np.unique(y)
             assert y_.shape[1] != 2, "Binary classification case, monodimensional y should be passed."
 
@@ -399,16 +397,17 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
             self.n_shapelets_per_size_ = self.n_shapelets_per_size
 
         self._set_model_layers(X=X, ts_sz=sz, d=d, n_classes=n_classes)
-        self.transformer_model.compile(loss="mean_squared_error",
+        self.transformer_model_.compile(loss="mean_squared_error",
                                        optimizer=self.optimizer)
-        self.locator_model.compile(loss="mean_squared_error",
+        self.locator_model_.compile(loss="mean_squared_error",
                                    optimizer=self.optimizer)
         self._set_weights_false_conv(d=d)
-        self.model.fit([X[:, :, di].reshape((n_ts, sz, 1)) for di in range(d)],
+        self.model_.fit([X[:, :, di].reshape((n_ts, sz, 1)) for di in range(d)],
                        y_,
                        batch_size=self.batch_size,
                        epochs=self.max_iter,
                        verbose=self.verbose_level)
+        self.n_iter_ = len(self.model_.history.history)
         return self
 
     def predict(self, X):
@@ -426,6 +425,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
             Index of the cluster each sample belongs to or class probability matrix, depending on
             what was provided at training time.
         """
+        check_is_fitted(self, 'X_fit_')
         X = check_array(X, allow_nd=True)
 
         if len(X.shape) == 2:
@@ -435,14 +435,11 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
 
         check_dims(self.X_fit_, X)
         categorical_preds = self.predict_proba(X)
-        print('---->', self.categorical_y)
-        if self.categorical_y:
+        if self.categorical_y_:
             return categorical_preds
         else:
-            preds = []
-            for idx in numpy.argmax(categorical_preds, axis=1):
-                preds.append(self.label_binarizer.classes_[idx])
-            return numpy.array(preds)
+            return self.label_binarizer_.inverse_transform(categorical_preds, 
+                                                           threshold=0.5)
 
     def predict_proba(self, X):
         """Predict class probability for a given set of time series.
@@ -457,6 +454,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         array of shape=(n_ts, n_classes),
             Class probability matrix.
         """
+        check_is_fitted(self, 'X_fit_')
         X = check_array(X, allow_nd=True)
 
         if len(X.shape) == 2:
@@ -467,12 +465,13 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         check_dims(self.X_fit_, X)
         X_ = to_time_series_dataset(X)
         n_ts, sz, d = X_.shape
-        categorical_preds = self.model.predict([X_[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d)],
+        categorical_preds = self.model_.predict([X_[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
                                                batch_size=self.batch_size,
                                                verbose=self.verbose_level)
 
         if categorical_preds.shape[1] == 1:
-            categorical_preds = numpy.hstack((categorical_preds, 1 - categorical_preds))
+            categorical_preds = numpy.hstack((1 - categorical_preds, 
+                                              categorical_preds))
 
         return categorical_preds
 
@@ -489,6 +488,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         array of shape=(n_ts, n_shapelets)
             Shapelet-Transform of the provided time series.
         """
+        check_is_fitted(self, 'X_fit_')
         X = check_array(X, allow_nd=True)
 
         if len(X.shape) == 2:
@@ -499,7 +499,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         check_dims(self.X_fit_, X)
         X_ = to_time_series_dataset(X)
         n_ts, sz, d = X_.shape
-        pred = self.transformer_model.predict([X_[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d)],
+        pred = self.transformer_model_.predict([X_[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
                                               batch_size=self.batch_size,
                                               verbose=self.verbose_level)
         return pred
@@ -519,7 +519,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         """
         X_ = to_time_series_dataset(X)
         n_ts, sz, d = X_.shape
-        locations = self.locator_model.predict([X_[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d)],
+        locations = self.locator_model_.predict([X_[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
                                           batch_size=self.batch_size,
                                           verbose=self.verbose_level)
         return locations.astype(numpy.int)
@@ -528,7 +528,8 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         shapelet_sizes = sorted(self.n_shapelets_per_size_.keys())
         for i, sz in enumerate(shapelet_sizes):
             for di in range(d):
-                self.model.get_layer("false_conv_%d_%d" % (i, di)).set_weights([numpy.eye(sz).reshape((sz, 1, sz))])
+                layer = self.model_.get_layer("false_conv_%d_%d" % (i, di))
+                layer.set_weights([numpy.eye(sz).reshape((sz, 1, sz))])
 
     def _set_model_layers(self, X, ts_sz, d, n_classes):
         inputs = [Input(shape=(ts_sz, 1), name="input_%d" % di) for di in range(d)]
@@ -561,10 +562,10 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
                         activation="softmax" if n_classes > 2 else "sigmoid",
                         kernel_regularizer=l2(self.weight_regularizer) if self.weight_regularizer > 0 else None,
                         name="classification")(concatenated_features)
-        self.model = Model(inputs=inputs, outputs=outputs)
-        self.transformer_model = Model(inputs=inputs, outputs=concatenated_features)
-        self.locator_model = Model(inputs=inputs, outputs=concatenated_locations)
-        self.model.compile(loss="categorical_crossentropy" if n_classes > 2 else "binary_crossentropy",
+        self.model_ = Model(inputs=inputs, outputs=outputs)
+        self.transformer_model_ = Model(inputs=inputs, outputs=concatenated_features)
+        self.locator_model_ = Model(inputs=inputs, outputs=concatenated_locations)
+        self.model_.compile(loss="categorical_crossentropy" if n_classes > 2 else "binary_crossentropy",
                            optimizer=self.optimizer,
                            metrics=[categorical_accuracy, categorical_crossentropy] if n_classes > 2
                            else [binary_accuracy, binary_crossentropy])
@@ -595,9 +596,16 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         (5, 3)
         """
         if layer_name is None:
-            return self.model.get_weights()
+            return self.model_.get_weights()
         else:
-            return self.model.get_layer(layer_name).get_weights()
+            return self.model_.get_layer(layer_name).get_weights()
+
+    def _more_tags(self):
+        # This is added due to the fact that there are small rounding
+        # errors in the `transform` method, while sklearn performs checks
+        # that requires the output of transform to have less than 1e-9
+        # difference between outputs of same input.
+        return {'non_deterministic': True}
 
 
 class SerializableShapeletModel(ShapeletModel):
@@ -698,7 +706,7 @@ class SerializableShapeletModel(ShapeletModel):
                                       ts_sz=ts_sz,
                                       d=d,
                                       n_classes=n_classes)
-        K.set_value(self.model.optimizer.lr, 0.001)
+        K.set_value(self.model_.optimizer.lr, self.learning_rate)
 
     def set_params(self, **params):
         return super(SerializableShapeletModel, self).set_params(**params)
