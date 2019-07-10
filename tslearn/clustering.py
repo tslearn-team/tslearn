@@ -568,7 +568,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         elif self.metric == "dtw":
             dists = cdist_dtw(X, self.cluster_centers_)
         elif self.metric == "softdtw":
-            dists = cdist_soft_dtw(X, self.cluster_centers_, gamma=self.gamma_sdtw_)
+            dists = cdist_soft_dtw(X, self.cluster_centers_, 
+                                   gamma=self.gamma_sdtw_)
         else:
             raise ValueError("Incorrect metric: %s (should be one of 'dtw', 'softdtw', 'euclidean')" % self.metric)
         matched_labels = dists.argmin(axis=1)
@@ -594,9 +595,10 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
                     #                                               init_barycenter=self.cluster_centers_[k],
                     #                                               verbose=False).fit(X[self.labels_ == k])
             elif self.metric == "softdtw":
-                self.cluster_centers_[k] = SoftDTWBarycenter(max_iter=self.max_iter_barycenter,
-                                                             gamma=self.gamma_sdtw_,
-                                                             init=self.cluster_centers_[k]).fit(X[self.labels_ == k])
+                self.cluster_centers_[k] = SoftDTWBarycenter(
+                    max_iter=self.max_iter_barycenter, gamma=self.gamma_sdtw_,
+                    init=self.cluster_centers_[k]).fit(X[self.labels_ == k]
+                )
             else:
                 self.cluster_centers_[k] = EuclideanBarycenter().fit(X[self.labels_ == k])
 
@@ -627,7 +629,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         X_ = to_time_series_dataset(X)
         rs = check_random_state(self.random_state)
         x_squared_norms = cdist(
-            X_.reshape((X_.shape[0], -1)), 
+            X_.reshape((X_.shape[0], -1)),
             numpy.zeros((1, X_.shape[1] * X_.shape[2])),
             metric="sqeuclidean"
         ).reshape((1, -1))

@@ -402,11 +402,11 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         self.locator_model_.compile(loss="mean_squared_error",
                                    optimizer=self.optimizer)
         self._set_weights_false_conv(d=d)
-        self.model_.fit([X[:, :, di].reshape((n_ts, sz, 1)) for di in range(d)],
-                       y_,
-                       batch_size=self.batch_size,
-                       epochs=self.max_iter,
-                       verbose=self.verbose_level)
+        self.model_.fit(
+            [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(d)], y_,
+            batch_size=self.batch_size, epochs=self.max_iter,
+            verbose=self.verbose_level
+        )
         self.n_iter_ = len(self.model_.history.history)
         return self
 
@@ -438,7 +438,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         if self.categorical_y_:
             return categorical_preds
         else:
-            return self.label_binarizer_.inverse_transform(categorical_preds, 
+            return self.label_binarizer_.inverse_transform(categorical_preds,
                                                            threshold=0.5)
 
     def predict_proba(self, X):
@@ -465,12 +465,13 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         check_dims(self.X_fit_, X)
         X_ = to_time_series_dataset(X)
         n_ts, sz, d = X_.shape
-        categorical_preds = self.model_.predict([X_[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
-                                               batch_size=self.batch_size,
-                                               verbose=self.verbose_level)
+        categorical_preds = self.model_.predict(
+            [X_[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
+            batch_size=self.batch_size, verbose=self.verbose_level
+        )
 
         if categorical_preds.shape[1] == 1:
-            categorical_preds = numpy.hstack((1 - categorical_preds, 
+            categorical_preds = numpy.hstack((1 - categorical_preds,
                                               categorical_preds))
 
         return categorical_preds
@@ -499,9 +500,10 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         check_dims(self.X_fit_, X)
         X_ = to_time_series_dataset(X)
         n_ts, sz, d = X_.shape
-        pred = self.transformer_model_.predict([X_[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
-                                              batch_size=self.batch_size,
-                                              verbose=self.verbose_level)
+        pred = self.transformer_model_.predict(
+            [X_[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
+            batch_size=self.batch_size, verbose=self.verbose_level
+        )
         return pred
 
     def locate(self, X):
@@ -519,9 +521,10 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         """
         X_ = to_time_series_dataset(X)
         n_ts, sz, d = X_.shape
-        locations = self.locator_model_.predict([X_[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
-                                          batch_size=self.batch_size,
-                                          verbose=self.verbose_level)
+        locations = self.locator_model_.predict(
+            [X_[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
+            batch_size=self.batch_size, verbose=self.verbose_level
+        )
         return locations.astype(numpy.int)
 
     def _set_weights_false_conv(self, d):
@@ -537,19 +540,26 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         pool_layers = []
         pool_layers_locations = []
         for i, sz in enumerate(sorted(shapelet_sizes)):
-            transformer_layers = [Conv1D(filters=sz,
-                                         kernel_size=sz,
-                                         trainable=False,
-                                         use_bias=False,
-                                         name="false_conv_%d_%d" % (i, di))(inputs[di]) for di in range(d)]
-            shapelet_layers = [LocalSquaredDistanceLayer(self.n_shapelets_per_size_[sz],
-                                                         X=X,
-                                                         name="shapelets_%d_%d" % (i, di))(transformer_layers[di])
-                               for di in range(d)]
+            transformer_layers = [
+                Conv1D(
+                    filters=sz, kernel_size=sz,
+                    trainable=False, use_bias=False,
+                    name="false_conv_%d_%d" % (i, di)
+                )(inputs[di]) for di in range(d)
+            ]
+            shapelet_layers = [
+                LocalSquaredDistanceLayer(
+                    self.n_shapelets_per_size_[sz], X=X,
+                    name="shapelets_%d_%d" % (i, di)
+                )(transformer_layers[di]) for di in range(d)
+            ]
+
             if d == 1:
                 summed_shapelet_layer = shapelet_layers[0]
             else:
                 summed_shapelet_layer = add(shapelet_layers)
+
+            gp = GlobalMinPooling1D(name="min_pooling_%d" % i)(summed_shapelet_layer)
             pool_layers.append(GlobalMinPooling1D(name="min_pooling_%d" % i)(summed_shapelet_layer))
             pool_layers_locations.append(GlobalArgminPooling1D(name="min_pooling_%d" % i)(summed_shapelet_layer))
         if len(shapelet_sizes) > 1:

@@ -11,7 +11,7 @@ from operator import itemgetter
 from functools import partial
 
 from tslearn.generators import random_walks, random_walk_blobs
-from tslearn.preprocessing import (TimeSeriesScalerMeanVariance, 
+from tslearn.preprocessing import (TimeSeriesScalerMeanVariance,
                                    TimeSeriesScalerMinMax)
 
 import sklearn

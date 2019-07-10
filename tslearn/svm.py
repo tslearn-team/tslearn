@@ -43,8 +43,8 @@ class GAKKernel():
 
     def __call__(self, x, y):
         return cdist_gak(
-            x.reshape((-1, self.sz, self.d)), 
-            y.reshape((-1, self.sz, self.d)), 
+            x.reshape((-1, self.sz, self.d)),
+            y.reshape((-1, self.sz, self.d)),
             sigma=numpy.sqrt(self.gamma / 2.)
         )
 
@@ -158,8 +158,8 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
     Marco Cuturi.
     ICML 2011.
     """
-    def __init__(self, C=1.0, kernel="gak", degree=3, gamma="auto", coef0=0.0, 
-                 shrinking=True, probability=True, tol=0.001, cache_size=200, 
+    def __init__(self, C=1.0, kernel="gak", degree=3, gamma="auto", coef0=0.0,
+                 shrinking=True, probability=True, tol=0.001, cache_size=200,
                  class_weight=None, verbose=False, max_iter=-1,
                  decision_function_shape="ovr", random_state=None):
         self.C = C
@@ -184,8 +184,8 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
         return 1
 
     def _kernel_func_gak(self, x, y):
-        return cdist_gak(x.reshape((-1, self.sz_, self.d_)), 
-                         y.reshape((-1, self.sz_, self.d_)), 
+        return cdist_gak(x.reshape((-1, self.sz_, self.d_)),
+                         y.reshape((-1, self.sz_, self.d_)),
                          sigma=numpy.sqrt(self.gamma_ / 2.))
 
     def support_vectors_time_series_(self, X):
@@ -217,14 +217,14 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
         if gamma == "auto":
             gamma = gamma_soft_dtw(to_time_series_dataset(X))
         if kernel == "gak":
-            kernel = GAKKernel(sz, d, gamma) 
+            kernel = GAKKernel(sz, d, gamma)
 
         self.svm_estimator_ = SVC(
-            C=self.C, kernel=kernel, degree=self.degree, 
-            gamma=gamma, coef0=self.coef0, shrinking=self.shrinking, 
+            C=self.C, kernel=kernel, degree=self.degree,
+            gamma=gamma, coef0=self.coef0, shrinking=self.shrinking,
             probability=self.probability, tol=self.tol,
-            cache_size=self.cache_size, class_weight=self.class_weight, 
-            verbose=self.verbose, max_iter=self.max_iter, 
+            cache_size=self.cache_size, class_weight=self.class_weight,
+            verbose=self.verbose, max_iter=self.max_iter,
             decision_function_shape=self.decision_function_shape,
             random_state=self.random_state
         )
