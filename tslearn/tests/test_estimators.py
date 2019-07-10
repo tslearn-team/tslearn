@@ -356,6 +356,42 @@ def check_estimators_pickle(name, estimator_orig):
     pass
 
 
+@ignore_warnings(category=(DeprecationWarning, FutureWarning))
+def check_supervised_y_2d(name, estimator_orig):
+        
+    tags = {'multioutput': False, 'binary_only': False}
+
+    rnd = np.random.RandomState(0)
+    X = random_walks(n_ts=10, sz=50)
+    if tags['binary_only']:
+        y = np.arange(10) % 2
+    else:
+        y = np.arange(10) % 3
+
+    estimator = clone(estimator_orig)
+    set_random_state(estimator)
+    # fit
+    estimator.fit(X, y)
+    y_pred = estimator.predict(X)
+
+    set_random_state(estimator)
+    # Check that when a 2D y is given, a DataConversionWarning is
+    # raised
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always", DataConversionWarning)
+        warnings.simplefilter("ignore", RuntimeWarning)
+        estimator.fit(X, y[:, np.newaxis])
+    y_pred_2d = estimator.predict(X)
+    msg = "expected 1 DataConversionWarning, got: %s" % (
+        ", ".join([str(w_x) for w_x in w]))
+    if not tags['multioutput']:
+        # check that we warned if we don't support multi-output
+        assert len(w) > 0, msg
+        assert "DataConversionWarning('A column-vector y" \
+               " was passed when a 1d array was expected" in msg
+        assert_allclose(y_pred.ravel(), y_pred_2d.ravel())
+
+
 # Patching some checks function to work on ts data instead of tabular data.
 checks = sklearn.utils.estimator_checks
 checks.check_clustering = check_clustering
@@ -364,6 +400,7 @@ checks.check_fit_idempotent = check_fit_idempotent
 checks.check_classifiers_classes = check_classifiers_classes
 checks.check_classifiers_train = check_classifiers_train
 checks.check_estimators_pickle = check_estimators_pickle
+checks.check_supervised_y_2d = check_supervised_y_2d
 
 
 def get_estimators(type_filter='all'):
@@ -441,7 +478,7 @@ def test_all_estimators():
                             'GlobalAlignmentKernelKMeans', 'KShape',
                             'LabelBinarizer', 'LabelCategorizer',
                             'ShapeletModel', 'SerializableShapeletModel',
-                            'TimeSeriesKMeans', 'TimeSeriesSVR']:
+                            'TimeSeriesKMeans']:
             print('SKIPPED')
             continue
 

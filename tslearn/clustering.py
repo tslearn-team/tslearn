@@ -609,7 +609,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
             Time series dataset.
         """
 
-        X = check_array(X, allow_nd=True)
+        X = check_array(X, allow_nd=True, force_all_finite='allow-nan')
 
         self.labels_ = None
         self.inertia_ = numpy.inf
@@ -669,7 +669,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
-        X = check_array(X, allow_nd=True)
+        X = check_array(X, allow_nd=True, force_all_finite='allow-nan')
         return self.fit(X, y).labels_
 
     def predict(self, X):
@@ -685,7 +685,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
-        X = check_array(X, allow_nd=True)
+        X = check_array(X, allow_nd=True, force_all_finite='allow-nan')
         check_is_fitted(self, 'X_fit_')
         X_ = to_time_series_dataset(X)
         check_dims(self.X_fit_, X_)
