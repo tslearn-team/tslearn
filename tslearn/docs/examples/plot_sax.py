@@ -15,7 +15,8 @@ import matplotlib.pyplot as plt
 from tslearn.generators import random_walks
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.piecewise import PiecewiseAggregateApproximation
-from tslearn.piecewise import SymbolicAggregateApproximation, OneD_SymbolicAggregateApproximation
+from tslearn.piecewise import SymbolicAggregateApproximation, \
+    OneD_SymbolicAggregateApproximation
 
 numpy.random.seed(0)
 # Generate a random walk time series
@@ -31,15 +32,19 @@ paa_dataset_inv = paa.inverse_transform(paa.fit_transform(dataset))
 
 # SAX transform
 n_sax_symbols = 8
-sax = SymbolicAggregateApproximation(n_segments=n_paa_segments, alphabet_size_avg=n_sax_symbols)
+sax = SymbolicAggregateApproximation(n_segments=n_paa_segments,
+                                     alphabet_size_avg=n_sax_symbols)
 sax_dataset_inv = sax.inverse_transform(sax.fit_transform(dataset))
 
 # 1d-SAX transform
 n_sax_symbols_avg = 8
 n_sax_symbols_slope = 8
-one_d_sax = OneD_SymbolicAggregateApproximation(n_segments=n_paa_segments, alphabet_size_avg=n_sax_symbols_avg,
-                                                alphabet_size_slope=n_sax_symbols_slope)
-one_d_sax_dataset_inv = one_d_sax.inverse_transform(one_d_sax.fit_transform(dataset))
+one_d_sax = OneD_SymbolicAggregateApproximation(
+    n_segments=n_paa_segments,
+    alphabet_size_avg=n_sax_symbols_avg,
+    alphabet_size_slope=n_sax_symbols_slope)
+transformed_data = one_d_sax.fit_transform(dataset)
+one_d_sax_dataset_inv = one_d_sax.inverse_transform(transformed_data)
 
 plt.figure()
 plt.subplot(2, 2, 1)  # First, raw time series
@@ -59,9 +64,10 @@ plt.title("SAX, %d symbols" % n_sax_symbols)
 plt.subplot(2, 2, 4)  # Finally, 1d-SAX
 plt.plot(dataset[0].ravel(), "b-", alpha=0.4)
 plt.plot(one_d_sax_dataset_inv[0].ravel(), "b-")
-plt.title("1d-SAX, %d symbols (%dx%d)" % (n_sax_symbols_avg * n_sax_symbols_slope,
-                                          n_sax_symbols_avg,
-                                          n_sax_symbols_slope))
+plt.title("1d-SAX, %d symbols"
+          "(%dx%d)" % (n_sax_symbols_avg * n_sax_symbols_slope,
+                       n_sax_symbols_avg,
+                       n_sax_symbols_slope))
 
 plt.tight_layout()
 plt.show()

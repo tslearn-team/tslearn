@@ -3,7 +3,8 @@
 Nearest neighbors
 =================
 
-This example illustrates the use of nearest neighbor methods for database search and classification tasks.
+This example illustrates the use of nearest neighbor methods for database
+search and classification tasks.
 """
 
 # Author: Romain Tavenard
@@ -16,14 +17,18 @@ from sklearn.pipeline import Pipeline
 
 from tslearn.generators import random_walk_blobs
 from tslearn.preprocessing import TimeSeriesScalerMinMax
-from tslearn.neighbors import KNeighborsTimeSeriesClassifier, KNeighborsTimeSeries
+from tslearn.neighbors import KNeighborsTimeSeriesClassifier, \
+    KNeighborsTimeSeries
 from tslearn.piecewise import SymbolicAggregateApproximation
 
 numpy.random.seed(0)
 n_ts_per_blob, sz, d, n_blobs = 20, 100, 1, 2
 
 # Prepare data
-X, y = random_walk_blobs(n_ts_per_blob=n_ts_per_blob, sz=sz, d=d, n_blobs=n_blobs)
+X, y = random_walk_blobs(n_ts_per_blob=n_ts_per_blob,
+                         sz=sz,
+                         d=d,
+                         n_blobs=n_blobs)
 scaler = TimeSeriesScalerMinMax(min=0., max=1.)  # Rescale time series
 X_scaled = scaler.fit_transform(X)
 

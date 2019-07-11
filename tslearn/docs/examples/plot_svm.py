@@ -3,10 +3,12 @@
 SVM and GAK
 ===========
 
-This example illustrates the use of the global alignment kernel for support vector classification.
+This example illustrates the use of the global alignment kernel for support
+vector classification.
 
-This metric is defined in the :ref:`tslearn.metrics <mod-metrics>` module and explained in details in
-"Fast global alignment kernels", by M. Cuturi (ICML 2011).
+This metric is defined in the :ref:`tslearn.metrics <mod-metrics>` module and
+explained in details in "Fast global alignment kernels", by M. Cuturi
+(ICML 2011).
 """
 
 # Author: Romain Tavenard
@@ -24,7 +26,10 @@ X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")
 X_train = TimeSeriesScalerMinMax().fit_transform(X_train)
 X_test = TimeSeriesScalerMinMax().fit_transform(X_test)
 
-clf = TimeSeriesSVC(kernel="gak", gamma=.1, sz=X_train.shape[1], d=X_train.shape[2])
+clf = TimeSeriesSVC(kernel="gak",
+                    gamma=.1,
+                    sz=X_train.shape[1],
+                    d=X_train.shape[2])
 clf.fit(X_train, y_train)
 print("Correct classification rate:", clf.score(X_test, y_test))
 

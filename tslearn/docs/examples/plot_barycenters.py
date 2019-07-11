@@ -12,7 +12,8 @@ This example shows three methods to compute barycenters of time series.
 import numpy
 import matplotlib.pyplot as plt
 
-from tslearn.barycenters import euclidean_barycenter, dtw_barycenter_averaging, softdtw_barycenter
+from tslearn.barycenters import euclidean_barycenter, \
+    dtw_barycenter_averaging, softdtw_barycenter
 from tslearn.datasets import CachedDatasets
 
 numpy.random.seed(0)

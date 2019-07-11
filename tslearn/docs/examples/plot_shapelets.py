@@ -20,7 +20,8 @@ import matplotlib.pyplot as plt
 
 from tslearn.datasets import CachedDatasets
 from tslearn.preprocessing import TimeSeriesScalerMinMax
-from tslearn.shapelets import ShapeletModel, grabocka_params_to_shapelet_size_dict
+from tslearn.shapelets import ShapeletModel, \
+    grabocka_params_to_shapelet_size_dict
 from tslearn.utils import ts_size
 
 numpy.random.seed(0)
@@ -61,7 +62,8 @@ for i, sz in enumerate(shapelet_sizes.keys()):
 plt.tight_layout()
 plt.show()
 
-# The loss history is accessible via the `model` attribute that is a keras model
+# The loss history is accessible via the `model` attribute that is a keras
+# model
 plt.figure()
 plt.plot(numpy.arange(1, 201), shp_clf.model.history.history["loss"])
 plt.title("Evolution of cross-entropy loss during training")
