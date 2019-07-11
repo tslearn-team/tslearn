@@ -180,6 +180,19 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
 
     Learning Time-Series Shapelets was originally presented in [1]_.
 
+    From an input (possibly multidimensional) time series :math:`x` and a set of
+    shapelets :math:`\{s_i\}_i`, the :math:`i`-th coordinate of the Shapelet
+    transform is computed as:
+
+    .. math::
+
+        ST(x, s_i) = \min_t \sum_{\delta_t}
+            \left\|x(t+\delta_t) - s_i(\delta_t)\\right\|_2^2
+
+    The Shapelet model consists in a logistic regression layer on top of this
+    transform. Shapelet coefficients as well as logistic regression weights are
+    optimized by gradient descent on a L2-penalized cross-entropy loss.
+
     Parameters
     ----------
     n_shapelets_per_size: dict
