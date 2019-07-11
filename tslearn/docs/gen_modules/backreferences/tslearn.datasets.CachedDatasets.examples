@@ -95,24 +95,6 @@ Examples using ``tslearn.datasets.CachedDatasets``
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="This example illustrates the use of the &quot;Learning Shapelets&quot; method for a time series classific...">
-
-.. only:: html
-
-    .. figure:: /auto_examples/images/thumb/sphx_glr_plot_shapelets_thumb.png
-
-        :ref:`sphx_glr_auto_examples_plot_shapelets.py`
-
-.. raw:: html
-
-    </div>
-
-.. only:: not html
-
-    * :ref:`sphx_glr_auto_examples_plot_shapelets.py`
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="This example presents the weighted Soft-DTW time series barycenter method.">
 
 .. only:: html
@@ -146,3 +128,21 @@ Examples using ``tslearn.datasets.CachedDatasets``
 .. only:: not html
 
     * :ref:`sphx_glr_auto_examples_plot_kmeans.py`
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example illustrates the use of the &quot;Learning Shapelets&quot; method for a time series classific...">
+
+.. only:: html
+
+    .. figure:: /auto_examples/images/thumb/sphx_glr_plot_shapelets_thumb.png
+
+        :ref:`sphx_glr_auto_examples_plot_shapelets.py`
+
+.. raw:: html
+
+    </div>
+
+.. only:: not html
+
+    * :ref:`sphx_glr_auto_examples_plot_shapelets.py`
