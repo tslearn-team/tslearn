@@ -12,7 +12,8 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 class TimeSeriesResampler(TransformerMixin):
-    """Resampler for time series. Resample time series so that they reach the target size.
+    """Resampler for time series. Resample time series so that they reach the
+    target size.
 
     Parameters
     ----------
@@ -53,13 +54,15 @@ class TimeSeriesResampler(TransformerMixin):
             if not equal_size:
                 sz = ts_size(X_[i])
             for di in range(d):
-                f = interp1d(numpy.linspace(0, 1, sz), X_[i, :sz, di], kind="slinear")
+                f = interp1d(numpy.linspace(0, 1, sz), X_[i, :sz, di],
+                             kind="slinear")
                 X_out[i, :, di] = f(xnew)
         return X_out
 
 
 class TimeSeriesScalerMinMax(TransformerMixin):
-    """Scaler for time series. Scales time series so that their span in each dimension is between ``min`` and ``max``.
+    """Scaler for time series. Scales time series so that their span in each
+    dimension is between ``min`` and ``max``.
 
     Parameters
     ----------
@@ -74,7 +77,8 @@ class TimeSeriesScalerMinMax(TransformerMixin):
 
     Example
     -------
-    >>> TimeSeriesScalerMinMax(min=1., max=2.).fit_transform([[0, 3, 6]]) # doctest: +NORMALIZE_WHITESPACE
+    >>> TimeSeriesScalerMinMax(min=1.,
+    ...                        max=2.).fit_transform([[0, 3, 6]])
     array([[[1. ],
             [1.5],
             [2. ]]])
@@ -106,7 +110,8 @@ class TimeSeriesScalerMinMax(TransformerMixin):
 
 
 class TimeSeriesScalerMeanVariance(TransformerMixin):
-    """Scaler for time series. Scales time series so that their mean (resp. standard deviation) in each dimension is
+    """Scaler for time series. Scales time series so that their mean (resp.
+    standard deviation) in each dimension is
     mu (resp. std).
 
     Parameters
@@ -122,9 +127,10 @@ class TimeSeriesScalerMeanVariance(TransformerMixin):
 
     Example
     -------
-    >>> TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform([[0, 3, 6]]) # doctest: +NORMALIZE_WHITESPACE
+    >>> TimeSeriesScalerMeanVariance(mu=0.,
+    ...                              std=1.).fit_transform([[0, 3, 6]])
     array([[[-1.22474487],
-            [ 0. ],
+            [ 0.        ],
             [ 1.22474487]]])
     """
     def __init__(self, mu=0., std=1.):

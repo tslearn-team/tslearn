@@ -19,7 +19,6 @@ if True:  # pragma: no cover
     from tslearn.metrics import dtw_path, SquaredEuclidean, SoftDTW
     from tslearn.barycenters import _set_weights
 
-
     class EuclideanBarycenter:
         """Standard Euclidean barycenter computed from a set of time series.
 
@@ -64,7 +63,6 @@ if True:  # pragma: no cover
             self.weights = _set_weights(self.weights, X_.shape[0])
             return numpy.average(X_, axis=0, weights=self.weights)
 
-
     class DTWBarycenterAveraging(EuclideanBarycenter):
         """DTW Barycenter Averaging (DBA) method.
 
@@ -78,23 +76,26 @@ if True:  # pragma: no cover
             Number of iterations of the Expectation-Maximization optimization
             procedure.
         barycenter_size : int or None (default: None)
-            Size of the barycenter to generate. If None, the size of the barycenter
+            Size of the barycenter to generate. If None, the size of the
+            barycenter
             is that of the data provided at fit
             time or that of the initial barycenter if specified.
         init_barycenter : array or None (default: None)
             Initial barycenter to start from for the optimization process.
         tol : float (default: 1e-5)
-            Tolerance to use for early stopping: if the decrease in cost is lower
+            Tolerance to use for early stopping: if the decrease in cost is
+            lower
             than this value, the
             Expectation-Maximization procedure stops.
         verbose : boolean (default: False)
-            Whether to print information about the cost at each iteration or not.
+            Whether to print information about the cost at each iteration or
+            not.
 
         References
         ----------
-        .. [1] F. Petitjean, A. Ketterlin & P. Gancarski. A global averaging method
-           for dynamic time warping, with applications to clustering. Pattern
-           Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
+        .. [1] F. Petitjean, A. Ketterlin & P. Gancarski. A global averaging
+           method for dynamic time warping, with applications to clustering.
+           Pattern Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
 
 
         .. deprecated:: 0.1.15
@@ -131,8 +132,8 @@ if True:  # pragma: no cover
 
             Returns
             -------
-            numpy.array of shape (barycenter_size, d) or (sz, d) if barycenter_size
-            is None
+            numpy.array of shape (barycenter_size, d) or (sz, d) if
+            barycenter_size is None
                 DBA barycenter of the provided time series dataset.
             """
             X_ = to_time_series_dataset(X)
@@ -153,8 +154,8 @@ if True:  # pragma: no cover
                 if abs(cost_prev - cost) < self.tol:
                     break
                 elif cost_prev < cost:
-                    warnings.warn("DBA loss is increasing while it should not be.",
-                                  ConvergenceWarning)
+                    warnings.warn("DBA loss is increasing while it should "
+                                  "not be.", ConvergenceWarning)
                 else:
                     cost_prev = cost
             return barycenter
@@ -183,8 +184,10 @@ if True:  # pragma: no cover
         def _petitjean_update_barycenter(self, X, assign):
             barycenter = numpy.zeros((self.barycenter_size, X.shape[-1]))
             for t in range(self.barycenter_size):
-                barycenter[t] = numpy.average(X[assign[0][t], assign[1][t]], axis=0,
-                                              weights=self.weights[assign[0][t]])
+                barycenter[t] = numpy.average(
+                    X[assign[0][t], assign[1][t]],
+                    axis=0,
+                    weights=self.weights[assign[0][t]])
             return barycenter
 
         def _petitjean_cost(self, X, barycenter, assign):
@@ -196,9 +199,9 @@ if True:  # pragma: no cover
                         X[i_ts, t_ts] - barycenter[t_barycenter]) ** 2
             return cost / self.weights.sum()
 
-
     class SoftDTWBarycenter(EuclideanBarycenter):
-        """Compute barycenter (time series averaging) under the soft-DTW geometry.
+        """Compute barycenter (time series averaging) under the soft-DTW
+        geometry.
 
         Parameters
         ----------
@@ -227,8 +230,8 @@ if True:  # pragma: no cover
                instead.
         """
 
-        def __init__(self, gamma=1.0, weights=None, method="L-BFGS-B", tol=1e-3,
-                     max_iter=50, init=None):
+        def __init__(self, gamma=1.0, weights=None, method="L-BFGS-B",
+                     tol=1e-3, max_iter=50, init=None):
             EuclideanBarycenter.__init__(self, weights=weights)
             self.method = method
             self.tol = tol
@@ -270,11 +273,13 @@ if True:  # pragma: no cover
             self.weights = _set_weights(self.weights, self._X_fit.shape[0])
             if self.barycenter_ is None:
                 if check_equal_size(self._X_fit):
-                    self.barycenter_ = EuclideanBarycenter.fit(self, self._X_fit)
+                    self.barycenter_ = EuclideanBarycenter.fit(self,
+                                                               self._X_fit)
                 else:
                     resampled_X = TimeSeriesResampler(
                         sz=self._X_fit.shape[1]).fit_transform(self._X_fit)
-                    self.barycenter_ = EuclideanBarycenter.fit(self, resampled_X)
+                    self.barycenter_ = EuclideanBarycenter.fit(self,
+                                                               resampled_X)
 
             if self.max_iter > 0:
                 # The function works with vectors so we need to vectorize
@@ -285,4 +290,3 @@ if True:  # pragma: no cover
                 return res.x.reshape(self.barycenter_.shape)
             else:
                 return self.barycenter_
-

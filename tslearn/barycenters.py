@@ -1,5 +1,6 @@
 """
-The :mod:`tslearn.barycenters` module gathers algorithms for time series barycenter computation.
+The :mod:`tslearn.barycenters` module gathers algorithms for time series
+barycenter computation.
 """
 
 # Code for soft DTW is by Mathieu Blondel under Simplified BSD license
@@ -10,7 +11,8 @@ from scipy.optimize import minimize
 from sklearn.exceptions import ConvergenceWarning
 import warnings
 
-from tslearn.utils import to_time_series_dataset, check_equal_size, to_time_series
+from tslearn.utils import to_time_series_dataset, check_equal_size, \
+    to_time_series
 from tslearn.preprocessing import TimeSeriesResampler
 from tslearn.metrics import dtw_path, SquaredEuclidean, SoftDTW
 
@@ -100,8 +102,11 @@ def _petitjean_cost(X, barycenter, assign, weights):
     cost = 0.
     barycenter_size = barycenter.shape[0]
     for t_barycenter in range(barycenter_size):
-        for i_ts, t_ts in zip(assign[0][t_barycenter], assign[1][t_barycenter]):
-            cost += weights[i_ts] * numpy.linalg.norm(X[i_ts, t_ts] - barycenter[t_barycenter]) ** 2
+        for i_ts, t_ts in zip(assign[0][t_barycenter],
+                              assign[1][t_barycenter]):
+            sq_norm = numpy.linalg.norm(X[i_ts, t_ts] -
+                                        barycenter[t_barycenter]) ** 2
+            cost += weights[i_ts] * sq_norm
     return cost / weights.sum()
 
 
@@ -186,7 +191,7 @@ def dtw_barycenter_averaging(X, barycenter_size=None, init_barycenter=None,
         if abs(cost_prev - cost) < tol:
             break
         elif cost_prev < cost:
-            warnings.warn("DBA loss is increasing while it should not be. " +
+            warnings.warn("DBA loss is increasing while it should not be. "
                           "Stopping optimization.", ConvergenceWarning)
             break
         else:
@@ -266,7 +271,10 @@ def softdtw_barycenter(X, gamma=1.0, weights=None, method="L-BFGS-B", tol=1e-3,
 
     if max_iter > 0:
         X_ = numpy.array([to_time_series(d, remove_nans=True) for d in X_])
-        f = lambda Z: _softdtw_func(Z, X_, weights, barycenter, gamma)
+
+        def f(Z):
+            return _softdtw_func(Z, X_, weights, barycenter, gamma)
+
         # The function works with vectors so we need to vectorize barycenter.
         res = minimize(f, barycenter.ravel(), method=method, jac=True, tol=tol,
                        options=dict(maxiter=max_iter, disp=False))

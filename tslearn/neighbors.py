@@ -56,9 +56,10 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
         if self.metric == "dtw" or self.metric == cdist_dtw:
             cdist_fun = cdist_dtw
         elif self.metric in ["euclidean", "sqeuclidean", "cityblock"]:
-            cdist_fun = lambda X, Xp: scipy_cdist(X.reshape((X.shape[0], -1)),
-                                                  Xp.reshape((Xp.shape[0], -1)),
-                                                  metric=self.metric)
+            def cdist_fun(X, Xp):
+                return scipy_cdist(X.reshape((X.shape[0], -1)),
+                                   Xp.reshape((Xp.shape[0], -1)),
+                                   metric=self.metric)
         else:
             raise ValueError("Unrecognized time series metric string: %s "
                              "(should be one of 'dtw', 'euclidean', "
@@ -106,14 +107,18 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
 
     Examples
     --------
-    >>> time_series = to_time_series_dataset([[1, 2, 3, 4], [3, 3, 2, 0], [1, 2, 2, 4]])
+    >>> time_series = to_time_series_dataset([[1, 2, 3, 4],
+    ...                                       [3, 3, 2, 0],
+    ...                                       [1, 2, 2, 4]])
     >>> knn = KNeighborsTimeSeries(n_neighbors=1).fit(time_series)
-    >>> dist, ind = knn.kneighbors(to_time_series_dataset([[1, 1, 2, 2, 2, 3, 4]]), return_distance=True)
+    >>> dataset = to_time_series_dataset([[1, 1, 2, 2, 2, 3, 4]])
+    >>> dist, ind = knn.kneighbors(dataset, return_distance=True)
     >>> dist
     array([[0.]])
     >>> ind
     array([[0]])
-    >>> knn2 = KNeighborsTimeSeries(n_neighbors=10, metric="euclidean").fit(time_series)
+    >>> knn2 = KNeighborsTimeSeries(n_neighbors=10,
+    ...                             metric="euclidean").fit(time_series)
     >>> knn2.kneighbors(return_distance=False)
     array([[2, 1],
            [2, 0],
@@ -161,10 +166,11 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
         ind : array
             Indices of the nearest points in the population matrix.
         """
-        return KNeighborsTimeSeriesMixin.kneighbors(self,
-                                                    X=X,
-                                                    n_neighbors=n_neighbors,
-                                                    return_distance=return_distance)
+        return KNeighborsTimeSeriesMixin.kneighbors(
+            self,
+            X=X,
+            n_neighbors=n_neighbors,
+            return_distance=return_distance)
 
 
 class KNeighborsTimeSeriesClassifier(KNeighborsClassifier,
@@ -186,7 +192,8 @@ class KNeighborsTimeSeriesClassifier(KNeighborsClassifier,
         - [callable] : a user-defined function which accepts an array of
           distances, and returns an array of the same
           shape containing the weights.
-    metric : one of the metrics allowed for class :class:`.KNeighborsTimeSeries`
+    metric : one of the metrics allowed for class
+    :class:`.KNeighborsTimeSeries`
         (default: 'dtw')
         Metric to be used at the core of the nearest neighbor procedure
     metric_params : dict or None (default: None)
@@ -195,7 +202,8 @@ class KNeighborsTimeSeriesClassifier(KNeighborsClassifier,
     Examples
     --------
     >>> clf = KNeighborsTimeSeriesClassifier(n_neighbors=2, metric="dtw")
-    >>> clf.fit([[1, 2, 3], [1, 1.2, 3.2], [3, 2, 1]], y=[0, 0, 1]).predict([1, 2.2, 3.5])
+    >>> clf.fit([[1, 2, 3], [1, 1.2, 3.2], [3, 2, 1]],
+    ...         y=[0, 0, 1]).predict([1, 2.2, 3.5])
     array([0])
     """
     def __init__(self,

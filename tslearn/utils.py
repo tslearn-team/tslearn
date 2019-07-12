@@ -18,7 +18,8 @@ def _arraylike_copy(arr):
 
 
 def bit_length(n):
-    """Returns the number of bits necessary to represent an integer in binary, excluding the sign and leading zeros.
+    """Returns the number of bits necessary to represent an integer in binary,
+    excluding the sign and leading zeros.
 
     This function is provided for Python 2.6 compatibility.
 
@@ -41,20 +42,22 @@ def bit_length(n):
 
 
 def to_time_series(ts, remove_nans=False):
-    """Transforms a time series so that it fits the format used in ``tslearn`` models.
+    """Transforms a time series so that it fits the format used in ``tslearn``
+    models.
 
     Parameters
     ----------
     ts : array-like
         The time series to be transformed.
     remove_nans : bool (default: False)
-        Whether trailing NaNs at the end of the time series should be removed or not
+        Whether trailing NaNs at the end of the time series should be removed
+        or not
 
     Returns
     -------
     numpy.ndarray of shape (sz, d)
         The transformed time series.
-    
+
     Example
     -------
     >>> to_time_series([1, 2])
@@ -67,7 +70,7 @@ def to_time_series(ts, remove_nans=False):
     >>> to_time_series([1, 2, numpy.nan], remove_nans=True)
     array([[1.],
            [2.]])
-    
+
     See Also
     --------
     to_time_series_dataset : Transforms a dataset of time series
@@ -83,7 +86,8 @@ def to_time_series(ts, remove_nans=False):
 
 
 def to_time_series_dataset(dataset, dtype=numpy.float):
-    """Transforms a time series dataset so that it fits the format used in ``tslearn`` models.
+    """Transforms a time series dataset so that it fits the format used in
+    ``tslearn`` models.
 
     Parameters
     ----------
@@ -96,7 +100,7 @@ def to_time_series_dataset(dataset, dtype=numpy.float):
     -------
     numpy.ndarray of shape (n_ts, sz, d)
         The transformed dataset of time series.
-    
+
     Example
     -------
     >>> to_time_series_dataset([[1, 2]])
@@ -110,7 +114,7 @@ def to_time_series_dataset(dataset, dtype=numpy.float):
            [[ 1.],
             [ 4.],
             [ 3.]]])
-    
+
     See Also
     --------
     to_time_series : Transforms a single time series
@@ -171,7 +175,8 @@ def to_sklearn_dataset(dataset, dtype=numpy.float, return_dim=False):
 
 
 def timeseries_to_str(ts, fmt="%.18e"):
-    """Transforms a time series to its representation as a string (used when saving time series to disk).
+    """Transforms a time series to its representation as a string (used when
+    saving time series to disk).
 
     Parameters
     ----------
@@ -208,7 +213,8 @@ def timeseries_to_str(ts, fmt="%.18e"):
 
 
 def str_to_timeseries(ts_str):
-    """Reads a time series from its string representation (used when loading time series from disk).
+    """Reads a time series from its string representation (used when loading
+    time series from disk).
 
     Parameters
     ----------
@@ -334,7 +340,8 @@ def check_equal_size(dataset):
 def ts_size(ts):
     """Returns actual time series size.
 
-    Final timesteps that have NaN values for all dimensions will be removed from the count.
+    Final timesteps that have NaN values for all dimensions will be removed
+    from the count.
 
     Parameters
     ----------
@@ -354,7 +361,11 @@ def ts_size(ts):
     1
     >>> ts_size([numpy.nan])
     0
-    >>> ts_size([[1, 2], [2, 3], [3, 4], [numpy.nan, 2], [numpy.nan, numpy.nan]])
+    >>> ts_size([[1, 2],
+    ...          [2, 3],
+    ...          [3, 4],
+    ...          [numpy.nan, 2],
+    ...          [numpy.nan, numpy.nan]])
     4
     """
     ts_ = to_time_series(ts)

@@ -1,5 +1,6 @@
 """
-The :mod:`tslearn.datasets` module provides simplified access to standard time series datasets.
+The :mod:`tslearn.datasets` module provides simplified access to standard time
+series datasets.
 """
 
 import numpy
@@ -38,7 +39,8 @@ def extract_from_zip_url(url, target_dir=None, verbose=False):
     Returns
     -------
     str or None
-        Directory in which the zip file has been extracted if the process was successful, None otherwise
+        Directory in which the zip file has been extracted if the process was
+        successful, None otherwise
     """
     fname = os.path.basename(url)
     tmpdir = tempfile.mkdtemp()
@@ -50,7 +52,8 @@ def extract_from_zip_url(url, target_dir=None, verbose=False):
         zipfile.ZipFile(local_zip_fname, "r").extractall(path=target_dir)
         shutil.rmtree(tmpdir)
         if verbose:
-            print("Successfully extracted file %s to path %s" % (local_zip_fname, target_dir))
+            print("Successfully extracted file %s to path %s" %
+                  (local_zip_fname, target_dir))
         return target_dir
     except BadZipFile:
         shutil.rmtree(tmpdir)
@@ -58,9 +61,12 @@ def extract_from_zip_url(url, target_dir=None, verbose=False):
             sys.stderr.write("Corrupted zip file encountered, aborting.\n")
         return None
 
+
 def in_file_string_replace(filename, old_string, new_string):
-    """ String replacement within a text file. It is used to fix typos in downloaded csv file.
-    The code was modified from "https://stackoverflow.com/questions/4128144/replace-string-within-file-contents"
+    """ String replacement within a text file. It is used to fix typos in
+    downloaded csv file.
+    The code was modified from "https://stackoverflow.com/questions/4128144/\
+    replace-string-within-file-contents"
 
     Parameters
     ----------
@@ -83,7 +89,8 @@ def in_file_string_replace(filename, old_string, new_string):
 class UCR_UEA_datasets(object):
     """A convenience class to access UCR/UEA time series datasets.
 
-    When using one (or several) of these datasets in research projects, please cite [1]_.
+    When using one (or several) of these datasets in research projects, please
+    cite [1]_.
 
     Parameters
     ----------
@@ -92,28 +99,35 @@ class UCR_UEA_datasets(object):
 
     Note
     ----
-        Downloading dataset files can be time-consuming, it is recommended using `use_cache=True` (default) in order to
-        only experience downloading time once per dataset and work on a cached version of the datasets after it.
+        Downloading dataset files can be time-consuming, it is recommended
+        using `use_cache=True` (default) in order to
+        only experience downloading time once per dataset and work on a cached
+        version of the datasets after it.
 
     References
     ----------
-    .. [1] A. Bagnall, J. Lines, W. Vickers and E. Keogh, The UEA & UCR Time Series Classification Repository,
-       www.timeseriesclassification.com
+    .. [1] A. Bagnall, J. Lines, W. Vickers and E. Keogh, The UEA & UCR Time
+       Series Classification Repository, www.timeseriesclassification.com
     """
     def __init__(self, use_cache=True):
         self.use_cache = use_cache
-        base_dir = os.path.expanduser(os.path.join("~", ".tslearn", "datasets", "UCR_UEA"))
+        base_dir = os.path.expanduser(os.path.join("~", ".tslearn",
+                                                   "datasets", "UCR_UEA"))
         self._data_dir = base_dir
         if not os.path.exists(self._data_dir):
             os.makedirs(self._data_dir)
         try:
-            url_baseline = "http://www.timeseriesclassification.com/singleTrainTest.csv"
-            self._baseline_scores_filename = os.path.join(self._data_dir, os.path.basename(url_baseline))
+            url_baseline = "http://www.timeseriesclassification.com/" + \
+                           "singleTrainTest.csv"
+            self._baseline_scores_filename = os.path.join(
+                self._data_dir, os.path.basename(url_baseline))
             urlretrieve(url_baseline, self._baseline_scores_filename)
 
             # fix typos in that CSV to match with the name in the download link
-            in_file_string_replace(self._baseline_scores_filename, "CinCECGtorso", "CinCECGTorso")
-            in_file_string_replace(self._baseline_scores_filename, "StarlightCurves", "StarLightCurves")
+            in_file_string_replace(self._baseline_scores_filename,
+                                   "CinCECGtorso", "CinCECGTorso")
+            in_file_string_replace(self._baseline_scores_filename,
+                                   "StarlightCurves", "StarLightCurves")
         except:
             self._baseline_scores_filename = None
 
@@ -125,17 +139,20 @@ class UCR_UEA_datasets(object):
         Parameters
         ----------
         list_datasets: list or None (default: None)
-            A list of strings indicating for which datasets performance should be reported.
+            A list of strings indicating for which datasets performance should
+            be reported.
             If None, performance is reported for all datasets.
         list_methods: list or None (default: None)
-            A list of baselines methods for which performance should be reported.
+            A list of baselines methods for which performance should be
+            reported.
             If None, performance for all baseline methods is reported.
 
         Returns
         -------
         dict
-            A dictionary in which keys are dataset names and associated values are themselves
-            dictionaries that provide accuracy scores for the requested methods.
+            A dictionary in which keys are dataset names and associated values
+            are themselves dictionaries that provide accuracy scores for the
+            requested methods.
 
         Examples
         --------
@@ -187,7 +204,8 @@ class UCR_UEA_datasets(object):
         True
         """
         return [path for path in os.listdir(self._data_dir)
-                if os.path.isdir(os.path.join(self._data_dir, path)) and path not in self._ignore_list]
+                if os.path.isdir(os.path.join(self._data_dir, path)) and
+                path not in self._ignore_list]
 
     def load_dataset(self, dataset_name):
         """Load a dataset from the UCR/UEA archive from its name.
@@ -195,7 +213,8 @@ class UCR_UEA_datasets(object):
         Parameters
         ----------
         dataset_name : str
-            Name of the dataset. Should be in the list returned by `list_datasets`
+            Name of the dataset. Should be in the list returned by
+            `list_datasets`
 
         Returns
         -------
@@ -236,8 +255,10 @@ class UCR_UEA_datasets(object):
                     os.remove(os.path.join(full_path, fname))
             extract_from_zip_url(url, target_dir=full_path, verbose=False)
         try:
-            data_train = numpy.loadtxt(os.path.join(full_path, fname_train), delimiter=None)
-            data_test = numpy.loadtxt(os.path.join(full_path, fname_test), delimiter=None)
+            data_train = numpy.loadtxt(os.path.join(full_path, fname_train),
+                                       delimiter=None)
+            data_test = numpy.loadtxt(os.path.join(full_path, fname_test),
+                                      delimiter=None)
         except:
             return None, None, None, None
         X_train = to_time_series_dataset(data_train[:, 1:])
@@ -263,8 +284,8 @@ class CachedDatasets(object):
 
     References
     ----------
-    .. [1] A. Bagnall, J. Lines, W. Vickers and E. Keogh, The UEA & UCR Time Series Classification Repository,
-       www.timeseriesclassification.com
+    .. [1] A. Bagnall, J. Lines, W. Vickers and E. Keogh, The UEA & UCR Time
+       Series Classification Repository, www.timeseriesclassification.com
     """
     def __init__(self):
         self.path = os.path.join(os.path.dirname(__file__), ".cached_datasets")
@@ -281,7 +302,8 @@ class CachedDatasets(object):
         Parameters
         ----------
         dataset_name : str
-            Name of the dataset. Should be in the list returned by `list_datasets`
+            Name of the dataset. Should be in the list returned by
+            `list_datasets`
 
         Returns
         -------
