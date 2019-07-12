@@ -168,7 +168,8 @@ class UCR_UEA_datasets(object):
         85
         """
         d_out = {}
-        for perfs_dict in csv.DictReader(open(self._baseline_scores_filename, "r"), delimiter=","):
+        for perfs_dict in csv.DictReader(
+                open(self._baseline_scores_filename, "r"), delimiter=","):
             dataset_name = perfs_dict[""]
             if list_datasets is None or dataset_name in list_datasets:
                 d_out[dataset_name] = {}
@@ -190,7 +191,8 @@ class UCR_UEA_datasets(object):
         85
         """
         datasets = []
-        for perfs_dict in csv.DictReader(open(self._baseline_scores_filename, "r"), delimiter=","):
+        for perfs_dict in csv.DictReader(
+                open(self._baseline_scores_filename, "r"), delimiter=","):
             datasets.append(perfs_dict[""])
         return datasets
 
@@ -200,7 +202,7 @@ class UCR_UEA_datasets(object):
         Examples
         --------
         >>> l = UCR_UEA_datasets().list_cached_datasets()
-        >>> len(l) >= 0 and len(l) <= len(UCR_UEA_datasets().list_datasets())
+        >>> 0 <= len(l) <= len(UCR_UEA_datasets().list_datasets())
         True
         """
         return [path for path in os.listdir(self._data_dir)
@@ -248,8 +250,9 @@ class UCR_UEA_datasets(object):
         fname_train = dataset_name + "_TRAIN.txt"
         fname_test = dataset_name + "_TEST.txt"
         if not os.path.exists(os.path.join(full_path, fname_train)) or \
-            not os.path.exists(os.path.join(full_path, fname_test)):
-            url = "http://www.timeseriesclassification.com/Downloads/%s.zip" % dataset_name
+                not os.path.exists(os.path.join(full_path, fname_test)):
+            url = "http://www.timeseriesclassification.com/Downloads/%s.zip" \
+                  % dataset_name
             for fname in [fname_train, fname_test]:
                 if os.path.exists(os.path.join(full_path, fname)):
                     os.remove(os.path.join(full_path, fname))
@@ -274,7 +277,8 @@ class UCR_UEA_datasets(object):
             try:
                 self.load_dataset(dataset_name)
             except:
-                sys.stderr.write("Could not cache dataset %s properly.\n" % dataset_name)
+                sys.stderr.write("Could not cache dataset %s properly.\n"
+                                 % dataset_name)
 
 
 class CachedDatasets(object):
