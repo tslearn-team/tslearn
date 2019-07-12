@@ -54,14 +54,20 @@ def test_kmeans():
     np.testing.assert_allclose(km.labels_, dists.argmin(axis=1))
     np.testing.assert_allclose(km.labels_, km.predict(time_series))
 
-    km_dba = TimeSeriesKMeans(n_clusters=3, metric="dtw", max_iter=5,
-                              verbose=False, random_state=rng).fit(time_series)
+    km_dba = TimeSeriesKMeans(n_clusters=3,
+                              metric="dtw",
+                              max_iter=5,
+                              verbose=False,
+                              random_state=rng).fit(time_series)
     dists = cdist_dtw(time_series, km_dba.cluster_centers_)
     np.testing.assert_allclose(km_dba.labels_, dists.argmin(axis=1))
     np.testing.assert_allclose(km_dba.labels_, km_dba.predict(time_series))
 
-    km_sdtw = TimeSeriesKMeans(n_clusters=3, metric="softdtw", max_iter=5,
-                               verbose=False, random_state=rng).fit(time_series)
+    km_sdtw = TimeSeriesKMeans(n_clusters=3,
+                               metric="softdtw",
+                               max_iter=5,
+                               verbose=False,
+                               random_state=rng).fit(time_series)
     dists = cdist_soft_dtw(time_series, km_sdtw.cluster_centers_)
     np.testing.assert_allclose(km_sdtw.labels_, dists.argmin(axis=1))
     np.testing.assert_allclose(km_sdtw.labels_, km_sdtw.predict(time_series))

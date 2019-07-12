@@ -25,7 +25,8 @@ def test_euclidean_barycenter():
 
     weights = rng.rand(n, )
     weights /= np.sum(weights)
-    bar = tslearn.barycenters.euclidean_barycenter(time_series, weights=weights)
+    bar = tslearn.barycenters.euclidean_barycenter(time_series,
+                                                   weights=weights)
     np.testing.assert_allclose(bar, np.average(time_series,
                                                axis=0, weights=weights))
 
@@ -38,13 +39,13 @@ def test_dba():
     # Equal length, 0 iterations -> Euclidean
     euc_bar = tslearn.barycenters.euclidean_barycenter(time_series)
     dba_bar = tslearn.barycenters.dtw_barycenter_averaging(time_series,
-                                                            max_iter=0)
+                                                           max_iter=0)
     np.testing.assert_allclose(euc_bar, dba_bar)
 
     # Equal length, >0 iterations
     dba_bar = tslearn.barycenters.dtw_barycenter_averaging(time_series,
                                                            max_iter=5)
-    ref = np.array([[ 0.33447722, 0.0418787, -0.03953774],
+    ref = np.array([[0.33447722, 0.0418787, -0.03953774],
                     [-0.75757987, -0.26841384, -0.22418874],
                     [-0.0473153, 0.41030073, 0.06069343],
                     [0.36250957, -0.79033572, 0.02300398],
@@ -69,7 +70,7 @@ def test_softdtw_barycenter():
 
     # Equal length, >0 iterations
     sdtw_bar = tslearn.barycenters.softdtw_barycenter(time_series, max_iter=5)
-    ref = np.array([[ 0.28049395, -0.01190817, -0.06228361],
+    ref = np.array([[0.28049395, -0.01190817, -0.06228361],
                     [-0.67097059, -0.10737132, -0.33867808],
                     [0.29380813, 0.0474172, 0.32718516],
                     [0.14438242, -0.56877605, -0.14563386],
@@ -80,7 +81,3 @@ def test_softdtw_barycenter():
                     [0.53149515, -0.24839857, -0.03430969],
                     [-0.17690603, 0.07217633, 0.58071408]])
     np.testing.assert_allclose(sdtw_bar, ref, atol=1e-6)
-
-
-
-

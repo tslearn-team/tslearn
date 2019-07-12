@@ -42,6 +42,7 @@ def test_dtw_subseq():
     np.testing.assert_equal(path, [(0, 2), (1, 3)])
     np.testing.assert_allclose(dist, 0.)
 
+
 def test_masks():
     sk_mask = tslearn.metrics.sakoe_chiba_mask(4, 4, 1)
     reference_mask = np.array([[0., 0., np.inf, np.inf],
@@ -61,13 +62,14 @@ def test_masks():
     np.testing.assert_allclose(sk_mask, reference_mask)
 
     i_mask = tslearn.metrics.itakura_mask(6, 6)
-    reference_mask = np.array([[  0., np.inf, np.inf, np.inf, np.inf, np.inf],
+    reference_mask = np.array([[0., np.inf, np.inf, np.inf, np.inf, np.inf],
                                [np.inf, 0., 0., np.inf, np.inf, np.inf],
                                [np.inf, 0., 0., 0., np.inf, np.inf],
                                [np.inf, np.inf, 0., 0., 0., np.inf],
                                [np.inf, np.inf, np.inf, 0., 0., np.inf],
                                [np.inf, np.inf, np.inf, np.inf, np.inf,  0.]])
     np.testing.assert_allclose(i_mask, reference_mask)
+
 
 def test_gak():
     # GAK
@@ -109,6 +111,7 @@ def test_gak():
     sqeuc = tslearn.metrics.SquaredEuclidean(v1.flat, v2.flat)
     np.testing.assert_allclose(sqeuc.compute(),
                                cdist(v1, v2, metric="sqeuclidean"))
+
 
 def test_lb_keogh():
     ts1 = [1, 2, 3, 2, 1]
