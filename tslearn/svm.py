@@ -135,7 +135,7 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
     --------
     >>> from tslearn.generators import random_walk_blobs
     >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=64, d=2, n_blobs=2)
-    >>> clf = TimeSeriesSVC(sz=64, d=2, kernel="gak", gamma="auto", probability=True)
+    >>> clf = TimeSeriesSVC(kernel="gak", gamma="auto", probability=True)
     >>> clf.fit(X, y).predict(X).shape
     (20,)
     >>> sv = clf.support_vectors_time_series_(X)
@@ -143,7 +143,7 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
     2
     >>> sv[0].shape  # doctest: +ELLIPSIS
     (..., 64, 2)
-    >>> sum([sv_i.shape[0] for sv_i in sv]) == clf.n_support_.sum()
+    >>> sum([sv_i.shape[0] for sv_i in sv]) == clf.svm_estimator_.n_support_.sum()
     True
     >>> clf.decision_function(X).shape
     (20,)
@@ -192,10 +192,10 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
         X_ = to_time_series_dataset(X)
         sv = []
         idx_start = 0
-        for cl in range(len(self.n_support_)):
-            indices = self.support_[idx_start:idx_start + self.n_support_[cl]]
+        for cl in range(len(self.svm_estimator_.n_support_)):
+            indices = self.svm_estimator_.support_[idx_start:idx_start + self.svm_estimator_.n_support_[cl]]
             sv.append(X_[indices])
-            idx_start += self.n_support_[cl]
+            idx_start += self.svm_estimator_.n_support_[cl]
         return sv
 
     def fit(self, X, y, sample_weight=None):
@@ -340,7 +340,7 @@ class TimeSeriesSVR(BaseEstimator, RegressorMixin):
     >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=64, d=2, n_blobs=2)
     >>> import numpy
     >>> y = y.astype(numpy.float) + numpy.random.randn(20) * .1
-    >>> reg = TimeSeriesSVR(sz=64, d=2, kernel="gak", gamma="auto")
+    >>> reg = TimeSeriesSVR(kernel="gak", gamma="auto")
     >>> reg.fit(X, y).predict(X).shape
     (20,)
     >>> sv = reg.support_vectors_time_series_(X)
@@ -379,7 +379,7 @@ class TimeSeriesSVR(BaseEstimator, RegressorMixin):
 
     def support_vectors_time_series_(self, X):
         X_ = to_time_series_dataset(X)
-        return X_[self.support_]
+        return X_[self.svm_estimator_.support_]
 
     def fit(self, X, y, sample_weight=None):
         X = check_array(X, allow_nd=True)

@@ -260,11 +260,11 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
     (60, 5)
     >>> params = clf.get_params(deep=True)
     >>> sorted(params.keys())
-    ['batch_size', 'max_iter', 'n_shapelets_per_size', 'optimizer', 'random_state', 'verbose_level', 'weight_regularizer']
+    ['batch_size', 'max_iter', 'n_shapelets_per_size', 'nr_shap_lens', 'optimizer', 'random_state', 'shap_len', 'verbose_level', 'weight_regularizer']
     >>> clf.set_params(batch_size=128)  # doctest: +NORMALIZE_WHITESPACE
     ShapeletModel(batch_size=128, max_iter=1, n_shapelets_per_size={10: 5},
-           optimizer='sgd', random_state=None, verbose_level=0,
-           weight_regularizer=0.0)
+                  nr_shap_lens=3, optimizer='sgd', random_state=None, shap_len=0.15,
+                  verbose_level=0, weight_regularizer=0.0)
     >>> clf2 = ShapeletModel(n_shapelets_per_size={10: 5, 20: 10}, max_iter=1, verbose_level=0)
     >>> clf2.fit(X, y).shapelets_.shape
     (15,)
@@ -657,11 +657,12 @@ class SerializableShapeletModel(ShapeletModel):
     (60, 5)
     >>> params = clf.get_params(deep=True)
     >>> sorted(params.keys())
-    ['batch_size', 'learning_rate', 'max_iter', 'n_shapelets_per_size', 'random_state', 'verbose_level', 'weight_regularizer']
+    ['batch_size', 'learning_rate', 'max_iter', 'n_shapelets_per_size', 'nr_shap_lens', 'random_state', 'shap_len', 'verbose_level', 'weight_regularizer']
     >>> clf.set_params(batch_size=128)  # doctest: +NORMALIZE_WHITESPACE
     SerializableShapeletModel(batch_size=128, learning_rate=0.01, max_iter=1,
-           n_shapelets_per_size={10: 5}, random_state=None,
-           verbose_level=0, weight_regularizer=0.0)
+                              n_shapelets_per_size={10: 5}, nr_shap_lens=3,
+                              random_state=None, shap_len=0.3, verbose_level=0,
+                              weight_regularizer=0.0)
     >>> import sklearn
     >>> cv_results = sklearn.model_selection.cross_validate(clf, X, y, return_train_score=False)
     >>> cv_results['test_score'].shape
