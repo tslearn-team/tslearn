@@ -15,6 +15,8 @@ from sklearn.base import (BaseEstimator, ClassifierMixin, ClusterMixin,
 from sklearn.utils.testing import *
 from sklearn_patches import *
 
+import warnings
+
 
 # Patching some checks function to work on ts data instead of tabular data.
 checks = sklearn.utils.estimator_checks
@@ -107,7 +109,6 @@ def test_all_estimators():
     estimators = get_estimators('all')
     for estimator in estimators:
         # TODO: Remove what's below
-        print(estimator[0])
         # if estimator[0] in ['KNeighborsTimeSeriesClassifier',
         #                     'GlobalAlignmentKernelKMeans', 'KShape',
         #                     'ShapeletModel', 'SerializableShapeletModel',
@@ -117,8 +118,9 @@ def test_all_estimators():
         #     continue
         # TODO: Remove the above
 
+        warnings.warn('Checking {}'.format(estimator[0]))
         check_estimator(estimator[1])
-        print('{} is sklearn compliant.'.format(estimator[0]))
+        warnings.warn('{} is sklearn compliant.'.format(estimator[0]))
 
 
 # TODO: remove this
