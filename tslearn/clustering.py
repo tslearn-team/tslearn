@@ -305,6 +305,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         """
 
         X = check_array(X, allow_nd=True)
+        X = check_dims(X, X_fit=None)
 
         if sample_weight is not None:
             sample_weight = check_array(sample_weight, ensure_2d=False)
@@ -399,7 +400,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         """
         X = check_array(X, allow_nd=True)
         check_is_fitted(self, 'X_fit_')
-        check_dims(self.X_fit_, X)
+        X = check_dims(X, self.X_fit_)
         K = self._get_kernel(X, self.X_fit_)
         n_samples = X.shape[0]
         dist = numpy.zeros((n_samples, self.n_clusters))
@@ -568,7 +569,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         elif self.metric == "dtw":
             dists = cdist_dtw(X, self.cluster_centers_)
         elif self.metric == "softdtw":
-            dists = cdist_soft_dtw(X, self.cluster_centers_, 
+            dists = cdist_soft_dtw(X, self.cluster_centers_,
                                    gamma=self.gamma_sdtw_)
         else:
             raise ValueError("Incorrect metric: %s (should be one of 'dtw', 'softdtw', 'euclidean')" % self.metric)
@@ -598,7 +599,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
                 self.cluster_centers_[k] = SoftDTWBarycenter(
                     max_iter=self.max_iter_barycenter, gamma=self.gamma_sdtw_,
                     init=self.cluster_centers_[k]).fit(X[self.labels_ == k]
-                )
+                    )
             else:
                 self.cluster_centers_[k] = EuclideanBarycenter().fit(X[self.labels_ == k])
 
@@ -689,9 +690,12 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClust
         """
         X = check_array(X, allow_nd=True, force_all_finite='allow-nan')
         check_is_fitted(self, 'X_fit_')
+        X = check_dims(X, self.X_fit_)
         X_ = to_time_series_dataset(X)
-        check_dims(self.X_fit_, X_)
         return self._assign(X_, update_class_attributes=False)
+
+    def _more_tags(self):
+        return {'allow_nan': True}
 
 
 class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin):
@@ -921,7 +925,7 @@ class KShape(BaseEstimator, ClusterMixin, TimeSeriesCentroidBasedClusteringMixin
         X = check_array(X, allow_nd=True)
         check_is_fitted(self, 'X_fit_')
         X_ = to_time_series_dataset(X)
-        check_dims(self.X_fit_, X_)
+        X = check_dims(X, self.X_fit_)
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
         dists = self._cross_dists(X_)
         return dists.argmin(axis=1)

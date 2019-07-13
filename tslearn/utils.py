@@ -6,20 +6,21 @@ import numpy
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import column_or_1d
 from sklearn.utils.validation import check_is_fitted
+import warnings
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
-def check_dims(X_fit, X):
+def check_dims(X, X_fit=None, extend=True):
     """Checks whether the dimensions, except the first one which is used
     for each of the timeseries (which can be variable) of X_fit and X.
 
     Parameters
     ----------
-    X_fit : array-like
-        The first array to be compared.
     X : array-like
-        The second array to be compared.
+        The first array to be compared.
+    X_fit : array-like
+        The second array to be compared, which is created during fit.
 
     Returns
     -------
@@ -28,17 +29,20 @@ def check_dims(X_fit, X):
         dimensions, except the first, does not match.
 
     """
-    # TODO: What is difference check_equal_size <--> this?
-    if X_fit is None:
-        raise ValueError('X_fit is equal to None!')
-
     if X is None:
         raise ValueError('X is equal to None!')
 
-    if X_fit.shape[1:] != X.shape[1:]:
+    if extend and len(X.shape) == 2:
+        warnings.warn('2-Dimensional data passed. Assuming these are '
+                      '{} 1-dimensional timeseries'.format(X.shape[0]))
+        X = X.reshape((X.shape) + (1,))
+
+    if X_fit is not None and X_fit.shape[1:] != X.shape[1:]:
         raise ValueError('Dimensions (except first) must match!'
                          ' ({} and {} are passed shapes)'.format(X_fit.shape,
                                                                  X.shape))
+
+    return X
 
 
 def _arraylike_copy(arr):

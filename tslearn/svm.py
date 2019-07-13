@@ -3,12 +3,12 @@ The :mod:`tslearn.svm` module contains Support Vector Classifier (SVC) and Suppo
 for time series.
 """
 
-from sklearn.svm import SVC, SVR as BaseSVR
+from sklearn.svm import SVC, SVR
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 import numpy
 
 from tslearn.metrics import cdist_gak, gamma_soft_dtw
-from tslearn.utils import to_time_series_dataset
+from tslearn.utils import to_time_series_dataset, check_dims
 from sklearn.utils import check_array, column_or_1d
 from sklearn.utils.validation import check_is_fitted
 
@@ -179,7 +179,7 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
 
     @property
     def n_iter_(self):
-        warnings.warn('n_iter_ is always 1 for SVC, since '
+        warnings.warn('n_iter_ is always 1 for TimeSeriesSVC, since '
                       'it is non-trivial to access from libsvm')
         return 1
 
@@ -201,13 +201,10 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
     def fit(self, X, y, sample_weight=None):
         X = check_array(X, allow_nd=True)
         y = column_or_1d(y, warn=True)
+        X = check_dims(X, X_fit=None)
 
+        self.X_fit_ = X
         self.classes_ = numpy.unique(y)
-
-        if len(X.shape) == 2:
-            warnings.warn('2-Dimensional data passed. Assuming these are '
-                          '{} 1-dimensional timeseries'.format(X.shape[0]))
-            X = X.reshape((X.shape) + (1,))
 
         _, sz, d = X.shape
         sklearn_X = _prepare_ts_datasets_sklearn(X)
@@ -234,28 +231,32 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
 
     def predict(self, X):
         X = check_array(X, allow_nd=True)
-        check_is_fitted(self, 'svm_estimator_')
+        check_is_fitted(self, ['svm_estimator_', 'X_fit_'])
+        X = check_dims(X, self.X_fit_)
 
         sklearn_X = _prepare_ts_datasets_sklearn(X)
         return self.svm_estimator_.predict(sklearn_X)
 
     def decision_function(self, X):
         X = check_array(X, allow_nd=True)
-        check_is_fitted(self, 'svm_estimator_')
+        check_is_fitted(self, ['svm_estimator_', 'X_fit_'])
+        X = check_dims(X, self.X_fit_)
 
         sklearn_X = _prepare_ts_datasets_sklearn(X)
         return self.svm_estimator_.decision_function(sklearn_X)
 
     def predict_log_proba(self, X):
         X = check_array(X, allow_nd=True)
-        check_is_fitted(self, 'svm_estimator_')
+        check_is_fitted(self, ['svm_estimator_', 'X_fit_'])
+        X = check_dims(X, self.X_fit_)
 
         sklearn_X = _prepare_ts_datasets_sklearn(X)
         return self.svm_estimator_.predict_log_proba(sklearn_X)
 
     def predict_proba(self, X):
         X = check_array(X, allow_nd=True)
-        check_is_fitted(self, 'svm_estimator_')
+        check_is_fitted(self, ['svm_estimator_', 'X_fit_'])
+        X = check_dims(X, self.X_fit_)
 
         sklearn_X = _prepare_ts_datasets_sklearn(X)
         return self.svm_estimator_.predict_proba(sklearn_X)
@@ -263,12 +264,15 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
     def score(self, X, y, sample_weight=None):
         X = check_array(X, allow_nd=True)
         y = column_or_1d(y, warn=True)
-        check_is_fitted(self, 'svm_estimator_')
+        check_is_fitted(self, ['svm_estimator_', 'X_fit_'])
+        X = check_dims(X, X_fit=self.X_fit_)
 
-        return self.svm_estimator_.score(X, y, sample_weight=sample_weight)
+        sklearn_X = _prepare_ts_datasets_sklearn(X)
+        return self.svm_estimator_.score(sklearn_X, y, 
+                                         sample_weight=sample_weight)
 
 
-class TimeSeriesSVR(BaseSVR):
+class TimeSeriesSVR(BaseEstimator, RegressorMixin):
     """Time-series specific Support Vector Regressor.
 
     Parameters
@@ -352,30 +356,72 @@ class TimeSeriesSVR(BaseSVR):
     Marco Cuturi.
     ICML 2011.
     """
-    def __init__(self, sz, d, kernel="gak", degree=3, gamma="auto", coef0=0.0, tol=0.001, C=1.0, epsilon=0.1,
+    def __init__(self, C=1.0, kernel="gak", degree=3, gamma="auto", 
+                 coef0=0.0, tol=0.001, epsilon=0.1,
                  shrinking=True, cache_size=200, verbose=False, max_iter=-1):
-        self.sz = sz
-        self.d = d
-        if kernel == "gak":
-            kernel = _kernel_func_gak(sz=sz, d=d, gamma=gamma)
-        super(TimeSeriesSVR, self).__init__(C=C, kernel=kernel, degree=degree, gamma=gamma, coef0=coef0,
-                                            shrinking=shrinking, tol=tol, cache_size=cache_size, epsilon=epsilon,
-                                            verbose=verbose, max_iter=max_iter)
+        self.C = C
+        self.kernel = kernel
+        self.degree = degree
+        self.gamma = gamma
+        self.coef0 = coef0
+        self.tol = tol
+        self.epsilon = epsilon
+        self.shrinking = shrinking
+        self.cache_size = cache_size
+        self.verbose = verbose
+        self.max_iter = max_iter
+
+    @property
+    def n_iter_(self):
+        warnings.warn('n_iter_ is always 1 for TimeSeriesSVR, since '
+                      'it is non-trivial to access from libsvm')
+        return 1
 
     def support_vectors_time_series_(self, X):
         X_ = to_time_series_dataset(X)
         return X_[self.support_]
 
     def fit(self, X, y, sample_weight=None):
+        X = check_array(X, allow_nd=True)
+        y = column_or_1d(y, warn=True)
+        X = check_dims(X, X_fit=None)
+
+        self.X_fit_ = X
+        self.classes_ = numpy.unique(y)
+
+        _, sz, d = X.shape
         sklearn_X = _prepare_ts_datasets_sklearn(X)
-        if self.kernel == "gak" and self.gamma == "auto":
-            gamma_ = gamma_soft_dtw(to_time_series_dataset(X))
-            self.kernel = _kernel_func_gak(sz=self.sz, d=self.d, gamma=gamma_)
-        return super(TimeSeriesSVR, self).fit(sklearn_X, y, sample_weight=sample_weight)
+
+        gamma = self.gamma
+        kernel = self.kernel
+        if gamma == "auto":
+            gamma = gamma_soft_dtw(to_time_series_dataset(X))
+        if kernel == "gak":
+            kernel = GAKKernel(sz, d, gamma)
+
+        self.svm_estimator_ = SVR(
+            C=self.C, kernel=kernel, degree=self.degree,
+            gamma=gamma, coef0=self.coef0, shrinking=self.shrinking,
+            tol=self.tol, cache_size=self.cache_size, 
+            verbose=self.verbose, max_iter=self.max_iter
+        )
+        self.svm_estimator_.fit(sklearn_X, y, sample_weight=sample_weight)
+        return self
 
     def predict(self, X):
+        X = check_array(X, allow_nd=True)
+        check_is_fitted(self, ['svm_estimator_', 'X_fit_'])
+        X = check_dims(X, self.X_fit_)
         sklearn_X = _prepare_ts_datasets_sklearn(X)
-        return super(TimeSeriesSVR, self).predict(sklearn_X)
+        return  self.svm_estimator_.predict(sklearn_X)
 
     def score(self, X, y, sample_weight=None):
-        return super(TimeSeriesSVR, self).score(X, y, sample_weight=sample_weight)
+        X = check_array(X, allow_nd=True)
+        check_is_fitted(self, ['svm_estimator_', 'X_fit_'])
+        X = check_dims(X, self.X_fit_)
+        sklearn_X = _prepare_ts_datasets_sklearn(X)
+        return  self.svm_estimator_.score(sklearn_X, y, 
+                                          sample_weight=sample_weight)
+
+    def _more_tags(self):
+        return {'non_deterministic': True}

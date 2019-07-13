@@ -235,7 +235,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         check_is_fitted(self, 'X_fit_')
         X = check_array(X, allow_nd=True)
         X_ = to_sklearn_dataset(X)
-        check_dims(self.X_fit_, X_)
+        X_ = check_dims(X_, self.X_fit_, extend=False)
         return super(KNeighborsTimeSeriesClassifier, self).predict(X_)
 
     def predict_proba(self, X):
@@ -249,5 +249,5 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         check_is_fitted(self, 'X_fit_')
         X = check_array(X, allow_nd=True)
         X_ = to_sklearn_dataset(X)
-        check_dims(self.X_fit_, X_)
+        X_ = check_dims(X_, self.X_fit_, extend=False)
         return super(KNeighborsTimeSeriesClassifier, self).predict_proba(X_)

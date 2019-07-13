@@ -353,14 +353,10 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         """
         X = check_array(X, allow_nd=True)
         y = column_or_1d(y, warn=True)
+        X = check_dims(X, X_fit=None)
 
         set_random_seed(seed=self.random_state)
         numpy.random.seed(seed=self.random_state)
-
-        if len(X.shape) == 2:
-            warnings.warn('2-Dimensional data passed. Assuming these are '
-                          '{} 1-dimensional timeseries'.format(X.shape[0]))
-            X = X.reshape((X.shape) + (1,))
 
         n_ts, sz, d = X.shape
         self.X_fit_ = X
@@ -427,13 +423,8 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         """
         check_is_fitted(self, 'X_fit_')
         X = check_array(X, allow_nd=True)
+        X = check_dims(X, X_fit=self.X_fit_)
 
-        if len(X.shape) == 2:
-            warnings.warn('2-Dimensional data passed. Assuming these are '
-                          '{} 1-dimensional timeseries'.format(X.shape[0]))
-            X = X.reshape((X.shape) + (1,))
-
-        check_dims(self.X_fit_, X)
         categorical_preds = self.predict_proba(X)
         if self.categorical_y_:
             return categorical_preds
@@ -456,13 +447,8 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         """
         check_is_fitted(self, 'X_fit_')
         X = check_array(X, allow_nd=True)
+        X = check_dims(X, self.X_fit_)
 
-        if len(X.shape) == 2:
-            warnings.warn('2-Dimensional data passed. Assuming these are '
-                          '{} 1-dimensional timeseries'.format(X.shape[0]))
-            X = X.reshape((X.shape) + (1,))
-
-        check_dims(self.X_fit_, X)
         X_ = to_time_series_dataset(X)
         n_ts, sz, d = X_.shape
         categorical_preds = self.model_.predict(
@@ -491,13 +477,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         """
         check_is_fitted(self, 'X_fit_')
         X = check_array(X, allow_nd=True)
-
-        if len(X.shape) == 2:
-            warnings.warn('2-Dimensional data passed. Assuming these are '
-                          '{} 1-dimensional timeseries'.format(X.shape[0]))
-            X = X.reshape((X.shape) + (1,))
-
-        check_dims(self.X_fit_, X)
+        X = check_dims(X, X_fit=self.X_fit_)
         X_ = to_time_series_dataset(X)
         n_ts, sz, d = X_.shape
         pred = self.transformer_model_.predict(
@@ -519,6 +499,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         array of shape=(n_ts, n_shapelets)
             Location of the shapelet matches for the provided time series.
         """
+        X = check_dims(X, X_fit=self.X_fit_)
         X_ = to_time_series_dataset(X)
         n_ts, sz, d = X_.shape
         locations = self.locator_model_.predict(
