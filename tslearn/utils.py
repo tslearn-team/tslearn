@@ -500,7 +500,7 @@ class LabelCategorizer(BaseEstimator, TransformerMixin):
         self.forward_match = {}
         self.backward_match = []
 
-    def fit(self, y):
+    def fit(self, y, _=None):
         self._init()
         y = column_or_1d(y, warn=True)
         values = sorted(set(y))
