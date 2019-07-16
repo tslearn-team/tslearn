@@ -20,7 +20,6 @@ import warnings
 
 # Patching some checks function to work on ts data instead of tabular data.
 checks = sklearn.utils.estimator_checks
-checks.__all__.append('LabelCategorizer')
 checks.check_clustering = check_clustering
 checks.check_non_transformer_estimators_n_iter = check_non_transf_est_n_iter
 checks.check_fit_idempotent = check_fit_idempotent
