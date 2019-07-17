@@ -65,8 +65,9 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
                              "'sqeuclidean' or 'cityblock')" % self.metric)
 
         if X.ndim == 2:  # sklearn-format case
-            X = X.reshape((X.shape[0], -1, self.d))
-            fit_X = self._fit_X.reshape((self._fit_X.shape[0], -1, self.d))
+            X = X.reshape((X.shape[0], -1, X.shape[1]))
+            fit_X = self._fit_X.reshape((self._fit_X.shape[0], -1, 
+                                         self._fit_X.shape[1]))
         else:
             fit_X = self._fit_X
 
