@@ -217,7 +217,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         Number of training epochs.
     batch_size: int (default:256)
         Batch size to be used.
-    verbose_level: {0, 1, 2} (default: 2)
+    verbose_level: {0, 1, 2} (default: 0)
         `keras` verbose level.
     optimizer: str or keras.optimizers.Optimizer (default: "sgd")
         `keras` optimizer to use for training.
@@ -292,7 +292,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
     def __init__(self, n_shapelets_per_size=None,
                  max_iter=1000,
                  batch_size=256,
-                 verbose_level=2,
+                 verbose_level=0,
                  optimizer="sgd",
                  weight_regularizer=0.,
                  shap_len=0.15,
@@ -614,7 +614,7 @@ class SerializableShapeletModel(ShapeletModel):
         Number of training epochs.
     batch_size: int (default:256)
         Batch size to be used.
-    verbose_level: {0, 1, 2} (default: 2)
+    verbose_level: {0, 1, 2} (default: 0)
         `keras` verbose level.
     learning_rate: float (default: 0.01)
         Learning rate to be used for the SGD optimizer.
@@ -675,7 +675,7 @@ class SerializableShapeletModel(ShapeletModel):
     def __init__(self, n_shapelets_per_size=None,
                  max_iter=1000,
                  batch_size=256,
-                 verbose_level=2,
+                 verbose_level=0,
                  learning_rate=0.01,
                  weight_regularizer=0.,
                  shap_len=0.3,

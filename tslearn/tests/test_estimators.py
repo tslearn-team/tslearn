@@ -18,7 +18,7 @@ from sklearn_patches import *
 import warnings
 
 
-# Patching some checks function to work on ts data instead of tabular data.
+# Patching some check functions to work on ts data instead of tabular data.
 checks = sklearn.utils.estimator_checks
 checks.check_clustering = check_clustering
 checks.check_non_transformer_estimators_n_iter = check_non_transf_est_n_iter
@@ -83,10 +83,10 @@ def get_estimators(type_filter='all'):
                    if issubclass(c[1], BaseEstimator)]
 
     # get rid of abstract base classes
-    all_classes = [c for c in all_classes if not is_abstract(c[1])]
+    all_classes = filter(lambda c: not is_abstract(c[1]), all_classes)
 
     # only keep those that are from tslearn
-    all_classes = [c for c in all_classes if not is_sklearn(c[1])]
+    all_classes = filter(lambda c: not is_sklearn(c[1]), all_classes)
 
     # Now filter out the estimators that are not of the specified type
     filters = {
@@ -105,22 +105,11 @@ def get_estimators(type_filter='all'):
     return sorted(set(filtered_classes), key=itemgetter(0))
 
 
+@ignore_warnings()
 def test_all_estimators():
     estimators = get_estimators('all')
     for estimator in estimators:
-        # TODO: Remove what's below
-        # if estimator[0] in ['KNeighborsTimeSeriesClassifier',
-        #                     'GlobalAlignmentKernelKMeans', 'KShape',
-        #                     'ShapeletModel', 'SerializableShapeletModel',
-        #                     'LabelBinarizer', 'LabelCategorizer', 
-        #                     'TimeSeriesKMeans', 'TimeSeriesSVC']: 
-        #     print('SKIPPED')
-        #     continue
-        # TODO: Remove the above
-
-        warnings.warn('Checking {}'.format(estimator[0]))
         check_estimator(estimator[1])
-        warnings.warn('{} is sklearn compliant.'.format(estimator[0]))
 
 
 # TODO: remove this
