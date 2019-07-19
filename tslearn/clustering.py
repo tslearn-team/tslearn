@@ -225,7 +225,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         best output of n_init consecutive runs in terms of inertia.
     sigma : float (default: 1.)
         Bandwidth parameter for the Global Alignment kernel
-    verbose : bool (default: True)
+    verbose : bool (default: False)
         Whether or not to print information about the inertia while learning
         the model.
     random_state : integer or numpy.RandomState, optional
@@ -260,7 +260,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
     """
 
     def __init__(self, n_clusters=3, max_iter=50, tol=1e-6, n_init=1, sigma=1.,
-                 verbose=True, random_state=None):
+                 verbose=False, random_state=None):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
         self.tol = tol
@@ -465,7 +465,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         parameter in Soft-DTW.
     dtw_inertia: bool
         Whether to compute DTW inertia even if DTW is not the chosen metric.
-    verbose : bool (default: True)
+    verbose : bool (default: False)
         Whether or not to print information about the inertia while learning
         the model.
     random_state : integer or numpy.RandomState, optional
@@ -526,7 +526,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
 
     def __init__(self, n_clusters=3, max_iter=50, tol=1e-6, n_init=1,
                  metric="euclidean", max_iter_barycenter=100,
-                 metric_params=None, dtw_inertia=False, verbose=True,
+                 metric_params=None, dtw_inertia=False, verbose=False,
                  random_state=None, init='k-means++'):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
@@ -735,7 +735,7 @@ class KShape(BaseEstimator, ClusterMixin,
         Number of time the k-Shape algorithm will be run with different
         centroid seeds. The final results will be the
         best output of n_init consecutive runs in terms of inertia.
-    verbose : bool (default: True)
+    verbose : bool (default: False)
         Whether or not to print information about the inertia while learning
         the model.
     random_state : integer or numpy.RandomState, optional
@@ -778,7 +778,7 @@ class KShape(BaseEstimator, ClusterMixin,
        Clustering of Time Series. SIGMOD 2015. pp. 1855-1870.
     """
     def __init__(self, n_clusters=3, max_iter=100, tol=1e-6, n_init=1,
-                 verbose=True, random_state=None, init='random'):
+                 verbose=False, random_state=None, init='random'):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
         self.tol = tol
