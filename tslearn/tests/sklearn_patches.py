@@ -5,12 +5,17 @@ import sklearn
 from sklearn.base import clone
 from sklearn.utils.testing import *
 from sklearn.utils.estimator_checks import *
-from sklearn.utils.estimator_checks import (_yield_checks, 
-                                            _yield_classifier_checks, 
+from sklearn.utils.estimator_checks import (_yield_classifier_checks, 
                                             _yield_regressor_checks, 
                                             _yield_transformer_checks,
                                             _yield_clustering_checks, 
                                             _yield_outliers_checks)
+try:
+    from sklearn.utils.estimator_checks import _yield_checks
+except:
+    from sklearn.utils.estimator_checks import _yield_non_meta_checks
+    _yield_checks = _yield_non_meta_checks
+
 from sklearn.metrics import adjusted_rand_score, accuracy_score
 from sklearn.model_selection import ShuffleSplit
 from sklearn.model_selection._validation import _safe_split
@@ -35,6 +40,10 @@ _DEFAULT_TAGS = {
     'multioutput_only': False,
     'binary_only': False,
     'requires_fit': True}
+
+
+BOSTON = random_walk_blobs(n_ts_per_blob=25, random_state=42,
+                           n_blobs=3, noise_level=0.1, sz=75)
 
 
 def _safe_tags(estimator, key=None):
