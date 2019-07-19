@@ -710,7 +710,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         X_ = to_time_series_dataset(X)
         return self._assign(X_, update_class_attributes=False)
 
-    def _more_tags(self):
+    def _get_tags(self):
         return {'allow_nan': True}
 
 

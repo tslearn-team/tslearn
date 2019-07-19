@@ -5,10 +5,10 @@ import sklearn
 from sklearn.base import clone
 from sklearn.utils.testing import *
 from sklearn.utils.estimator_checks import *
-from sklearn.utils.estimator_checks import (_yield_classifier_checks, 
-                                            _yield_regressor_checks, 
+from sklearn.utils.estimator_checks import (_yield_classifier_checks,
+                                            _yield_regressor_checks,
                                             _yield_transformer_checks,
-                                            _yield_clustering_checks, 
+                                            _yield_clustering_checks,
                                             _yield_outliers_checks)
 try:
     from sklearn.utils.estimator_checks import _yield_checks
@@ -84,7 +84,7 @@ def check_clustering(name, clusterer_orig, readonly_memmap=False):
     pred = clusterer.labels_
     assert_equal(pred.shape, (n_samples,))
     assert_greater(adjusted_rand_score(pred, y), 0.4)
-    
+
     if _safe_tags(clusterer, 'non_deterministic'):
         return
 
@@ -312,11 +312,13 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
                 # raises error on malformed input for decision_function
                 if not tags["no_validation"]:
                     if bool(getattr(classifier, "_pairwise", False)):
-                        error_msg = msg_pairwise.format(name, "decision_function")
+                        error_msg = msg_pairwise.format(name, 
+                                                        "decision_function")
                         with assert_raises(ValueError, msg=error_msg):
                             classifier.decision_function(X.reshape(-1, 1))
                     else:
-                        error_msg = msg_pairwise.format(name, "decision_function")
+                        error_msg = msg_pairwise.format(name, 
+                                                        "decision_function")
                         with assert_raises(ValueError, msg=error_msg):
                             classifier.decision_function(X.T)
             except NotImplementedError:
@@ -355,7 +357,7 @@ def check_estimators_pickle(name, estimator_orig):
 
 @ignore_warnings(category=(DeprecationWarning, FutureWarning))
 def check_supervised_y_2d(name, estimator_orig):
-     
+
     tags = {'multioutput': False, 'binary_only': False}
 
     rnd = np.random.RandomState(0)

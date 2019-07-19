@@ -268,7 +268,7 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
         X = check_dims(X, X_fit=self.X_fit_)
 
         sklearn_X = _prepare_ts_datasets_sklearn(X)
-        return self.svm_estimator_.score(sklearn_X, y, 
+        return self.svm_estimator_.score(sklearn_X, y,
                                          sample_weight=sample_weight)
 
 
@@ -356,7 +356,7 @@ class TimeSeriesSVR(BaseEstimator, RegressorMixin):
     Marco Cuturi.
     ICML 2011.
     """
-    def __init__(self, C=1.0, kernel="gak", degree=3, gamma="auto", 
+    def __init__(self, C=1.0, kernel="gak", degree=3, gamma="auto",
                  coef0=0.0, tol=0.001, epsilon=0.1,
                  shrinking=True, cache_size=200, verbose=False, max_iter=-1):
         self.C = C
@@ -402,7 +402,7 @@ class TimeSeriesSVR(BaseEstimator, RegressorMixin):
         self.svm_estimator_ = SVR(
             C=self.C, kernel=kernel, degree=self.degree,
             gamma=gamma, coef0=self.coef0, shrinking=self.shrinking,
-            tol=self.tol, cache_size=self.cache_size, 
+            tol=self.tol, cache_size=self.cache_size,
             verbose=self.verbose, max_iter=self.max_iter
         )
         self.svm_estimator_.fit(sklearn_X, y, sample_weight=sample_weight)
@@ -413,15 +413,15 @@ class TimeSeriesSVR(BaseEstimator, RegressorMixin):
         check_is_fitted(self, ['svm_estimator_', 'X_fit_'])
         X = check_dims(X, self.X_fit_)
         sklearn_X = _prepare_ts_datasets_sklearn(X)
-        return  self.svm_estimator_.predict(sklearn_X)
+        return self.svm_estimator_.predict(sklearn_X)
 
     def score(self, X, y, sample_weight=None):
         X = check_array(X, allow_nd=True)
         check_is_fitted(self, ['svm_estimator_', 'X_fit_'])
         X = check_dims(X, self.X_fit_)
         sklearn_X = _prepare_ts_datasets_sklearn(X)
-        return  self.svm_estimator_.score(sklearn_X, y, 
-                                          sample_weight=sample_weight)
+        return self.svm_estimator_.score(sklearn_X, y,
+                                         sample_weight=sample_weight)
 
     def _more_tags(self):
         return {'non_deterministic': True}

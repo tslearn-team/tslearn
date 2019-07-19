@@ -148,7 +148,7 @@ def njit_cdist_dtw_self(dataset, global_constraint, sakoe_chiba_radius,
     ----------
     dataset : array
         A dataset of time series.
-        
+
     Returns
     -------
     cdist : array
@@ -387,7 +387,7 @@ def dtw_subsequence_path(subseq, longseq):
     .. math::
 
         DTW(X, Y) = \sqrt{\sum_{(i, j) \in P} (X_{i} - Y_{j})^2}
-        
+
     Compared to traditional DTW, here, border constraints on admissible paths
     :math:`P` are relaxed such that :math:`P_0 = (0, ?)` and
     :math:`P_L = (N-1, ?)` where :math:`L` is the length of the considered path

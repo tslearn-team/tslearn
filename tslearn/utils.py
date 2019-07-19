@@ -537,5 +537,5 @@ class LabelCategorizer(BaseEstimator, TransformerMixin):
         out["backward_match"] = self.backward_match
         return out
 
-    def _more_tags(self):
+    def _get_tags(self):
         return {'X_types': ['1dlabels']}
