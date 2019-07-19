@@ -44,7 +44,7 @@ _DEFAULT_TAGS = {
 
 BOSTON = random_walk_blobs(n_ts_per_blob=25, random_state=42,
                            n_blobs=3, noise_level=0.1, sz=75)
-
+sklearn.utils.estimator_checks.BOSTON = BOSTON
 
 def _safe_tags(estimator, key=None):
     # if estimator doesn't have _get_tags, use _DEFAULT_TAGS
