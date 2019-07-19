@@ -17,6 +17,8 @@ from sklearn_patches import *
 
 import warnings
 
+import logging
+
 
 # Patching some check functions to work on ts data instead of tabular data.
 checks = sklearn.utils.estimator_checks
@@ -29,6 +31,7 @@ checks.check_estimators_pickle = check_estimators_pickle
 checks.check_supervised_y_2d = check_supervised_y_2d
 checks.check_regressor_data_not_an_array = check_regressor_data_not_an_array
 checks.check_regressors_int = check_regressors_int_patched
+checks.check_classifiers_regression_target = check_classifiers_cont_target
 
 
 def _get_all_classes():
@@ -110,6 +113,7 @@ def test_all_estimators():
     estimators = get_estimators('all')
     for estimator in estimators:
         check_estimator(estimator[1])
+        logging.info('{} is sklearn compliant.'.format(estimator[0]))
 
 
 # TODO: remove this

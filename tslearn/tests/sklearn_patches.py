@@ -372,3 +372,16 @@ def check_regressors_int_patched(name, regressor_orig):
         return
 
     check_regressors_int(name, regressor_orig)
+
+
+@ignore_warnings(category=(DeprecationWarning, FutureWarning))
+def check_classifiers_cont_target(name, estimator_orig):
+    # Check if classifier throws an exception when fed regression targets
+
+    X, _ = random_walk_blobs(n_ts_per_blob=25, random_state=42,
+                             n_blobs=3, noise_level=0.1, sz=75)
+    y = np.random.random(len(X))
+    e = clone(estimator_orig)
+    msg = 'Unknown label type: '
+    if not _safe_tags(e, "no_validation"):
+        assert_raises_regex(ValueError, msg, e.fit, X, y)
