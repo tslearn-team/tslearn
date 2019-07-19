@@ -584,7 +584,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
             dists = cdist_dtw(X, self.cluster_centers_)
         elif self.metric == "softdtw":
             dists = cdist_soft_dtw(X, self.cluster_centers_,
-                                   gamma=self.gamma_sdtw)
+                                   gamma=self.gamma_sdtw_)
         else:
             raise ValueError("Incorrect metric: %s (should be one of 'dtw', "
                              "'softdtw', 'euclidean')" % self.metric)
@@ -613,7 +613,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
                 self.cluster_centers_[k] = softdtw_barycenter(
                     X=X[self.labels_ == k],
                     max_iter=self.max_iter_barycenter,
-                    gamma=self.gamma_sdtw,
+                    gamma=self.gamma_sdtw_,
                     init=self.cluster_centers_[k])
             else:
                 self.cluster_centers_[k] = euclidean_barycenter(
