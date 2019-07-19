@@ -295,7 +295,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         if self.verbose:
             print("")
 
-        self.iter_ = it
+        self.iter_ = it + 1
 
         return self
 
@@ -571,7 +571,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         if self.verbose:
             print("")
 
-        self.iter_ = it
+        self.iter_ = it + 1
 
         return self
 
@@ -858,7 +858,7 @@ class KShape(BaseEstimator, ClusterMixin,
         if self.verbose:
             print("")
 
-        self.iter_ = it
+        self.iter_ = it + 1
 
         return self
 
