@@ -228,6 +228,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         y : array-like, shape (n_ts, )
             Target values.
         """
+        X = check_dims(X, X_fit=None)
         X = check_array(X, allow_nd=True)
         self.X_fit_, self.d_ = to_sklearn_dataset(X, return_dim=True)
         return super(KNeighborsTimeSeriesClassifier, self).fit(self.X_fit_, y)

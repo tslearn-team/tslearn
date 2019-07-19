@@ -422,7 +422,7 @@ def check_classifiers_cont_target(name, estimator_orig):
 
 @ignore_warnings
 def check_pipeline_consistency(name, estimator_orig):
-    if _safe_tags(transformer_orig, 'non_deterministic'):
+    if _safe_tags(estimator_orig, 'non_deterministic'):
         msg = name + ' is non deterministic'
         raise SkipTest(msg)
 
