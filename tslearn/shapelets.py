@@ -277,7 +277,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
     .. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
     """
     def __init__(self, n_shapelets_per_size=None,
-                 max_iter=1000,
+                 max_iter=100,
                  batch_size=256,
                  verbose_level=0,
                  optimizer="sgd",
@@ -578,7 +578,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         else:
             return self.model_.get_layer(layer_name).get_weights()
 
-    def _more_tags(self):
+    def _get_tags(self):
         # This is added due to the fact that there are small rounding
         # errors in the `transform` method, while sklearn performs checks
         # that requires the output of transform to have less than 1e-9
@@ -652,7 +652,7 @@ class SerializableShapeletModel(ShapeletModel):
     .. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
     """
     def __init__(self, n_shapelets_per_size=None,
-                 max_iter=1000,
+                 max_iter=100,
                  batch_size=256,
                  verbose_level=0,
                  learning_rate=0.01,

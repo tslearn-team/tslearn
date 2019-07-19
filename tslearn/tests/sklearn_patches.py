@@ -41,11 +41,6 @@ _DEFAULT_TAGS = {
     'binary_only': False,
     'requires_fit': True}
 
-
-BOSTON = random_walk_blobs(n_ts_per_blob=25, random_state=42,
-                           n_blobs=3, noise_level=0.1, sz=75)
-sklearn.utils.estimator_checks.BOSTON = BOSTON
-
 def _safe_tags(estimator, key=None):
     # if estimator doesn't have _get_tags, use _DEFAULT_TAGS
     # if estimator has tags but not key, use _DEFAULT_TAGS[key]
@@ -60,15 +55,24 @@ def _safe_tags(estimator, key=None):
     return _DEFAULT_TAGS
 
 
+def _create_small_ts_dataset():
+    return random_walk_blobs(n_ts_per_blob=10, n_blobs=3, random_state=1,
+                             sz=25, noise_level=0.25)
+
+
+# Patch BOSTON dataset of sklearn: _csv.Error: line contains NULL byte
+BOSTON = _create_small_ts_dataset()
+sklearn.utils.estimator_checks.BOSTON = BOSTON
+
+
 @ignore_warnings(category=(DeprecationWarning, FutureWarning))
 def check_clustering(name, clusterer_orig, readonly_memmap=False):
 
     clusterer = clone(clusterer_orig)
-    X, y = random_walk_blobs(n_ts_per_blob=15, n_blobs=3, random_state=1,
-                             noise_level=0.25)
+    X, y = _create_small_ts_dataset()
     X, y = shuffle(X, y, random_state=7)
     X = TimeSeriesScalerMeanVariance().fit_transform(X)
-    X_noise = np.concatenate([X, random_walks(n_ts=5)])
+    X_noise = np.concatenate([X, random_walks(n_ts=5, sz=25)])
 
     n_samples, n_features, dim = X.shape
     # catch deprecation and neighbors warnings
@@ -122,8 +126,7 @@ def check_non_transf_est_n_iter(name, estimator_orig):
     # max_iter, return the attribute of n_iter_ at least 1.
     estimator = clone(estimator_orig)
     if hasattr(estimator, 'max_iter'):
-        X, y_ = random_walk_blobs(n_ts_per_blob=15, n_blobs=3, random_state=1,
-                                  noise_level=0.25)
+        X, y_ = _create_small_ts_dataset()
         set_random_state(estimator, 0)
         estimator.fit(X, y_)
 
@@ -190,11 +193,7 @@ def check_fit_idempotent(name, estimator_orig):
 
 
 def check_classifiers_classes(name, classifier_orig):
-    X_multiclass, y_multiclass = random_walk_blobs(n_ts_per_blob=10,
-                                                   random_state=0,
-                                                   n_blobs=3,
-                                                   noise_level=0.1,
-                                                   sz=100)
+    X_multiclass, y_multiclass = _create_small_ts_dataset()
 
     X_multiclass, y_multiclass = shuffle(X_multiclass, y_multiclass,
                                          random_state=7)
@@ -233,8 +232,7 @@ def check_classifiers_classes(name, classifier_orig):
 @ignore_warnings  # Warnings are raised by decision function
 def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
     # Generate some random walk blobs, shuffle them and normalize them
-    X_m, y_m = random_walk_blobs(n_ts_per_blob=25, random_state=42,
-                                 n_blobs=3, noise_level=0.1, sz=75)
+    X_m, y_m = _create_small_ts_dataset()
     X_m, y_m = shuffle(X_m, y_m, random_state=7)
 
     X_m = TimeSeriesScalerMeanVariance().fit_transform(X_m)
@@ -361,7 +359,7 @@ def check_supervised_y_2d(name, estimator_orig):
     tags = {'multioutput': False, 'binary_only': False}
 
     rnd = np.random.RandomState(0)
-    X = random_walks(n_ts=10, sz=50)
+    X = random_walks(n_ts=10, sz=25)
     if tags['binary_only']:
         y = np.arange(10) % 2
     else:
@@ -414,13 +412,41 @@ def check_regressors_int_patched(name, regressor_orig):
 def check_classifiers_cont_target(name, estimator_orig):
     # Check if classifier throws an exception when fed regression targets
 
-    X, _ = random_walk_blobs(n_ts_per_blob=25, random_state=42,
-                             n_blobs=3, noise_level=0.1, sz=75)
+    X, _ = _create_small_ts_dataset()
     y = np.random.random(len(X))
     e = clone(estimator_orig)
     msg = 'Unknown label type: '
     if not _safe_tags(e, "no_validation"):
         assert_raises_regex(ValueError, msg, e.fit, X, y)
+
+
+@ignore_warnings
+def check_pipeline_consistency(name, estimator_orig):
+    if _safe_tags(transformer_orig, 'non_deterministic'):
+        msg = name + ' is non deterministic'
+        raise SkipTest(msg)
+
+    # check that make_pipeline(est) gives same score as est
+    X, y = make_blobs(n_samples=30, centers=[[0, 0, 0], [1, 1, 1]],
+                      random_state=0, n_features=2, cluster_std=0.1)
+    X -= X.min()
+    X = pairwise_estimator_convert_X(X, estimator_orig, kernel=rbf_kernel)
+    estimator = clone(estimator_orig)
+    y = multioutput_estimator_convert_y_2d(estimator, y)
+    set_random_state(estimator)
+    pipeline = make_pipeline(estimator)
+    estimator.fit(X, y)
+    pipeline.fit(X, y)
+
+    funcs = ["score", "fit_transform"]
+
+    for func_name in funcs:
+        func = getattr(estimator, func_name, None)
+        if func is not None:
+            func_pipeline = getattr(pipeline, func_name)
+            result = func(X, y)
+            result_pipe = func_pipeline(X, y)
+            assert_allclose_dense_sparse(result, result_pipe)
 
 
 def yield_all_checks(name, estimator):

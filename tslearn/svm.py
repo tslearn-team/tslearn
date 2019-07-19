@@ -423,5 +423,5 @@ class TimeSeriesSVR(BaseEstimator, RegressorMixin):
         return self.svm_estimator_.score(sklearn_X, y,
                                          sample_weight=sample_weight)
 
-    def _more_tags(self):
+    def _get_tags(self):
         return {'non_deterministic': True}

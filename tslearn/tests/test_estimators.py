@@ -33,6 +33,7 @@ checks.check_supervised_y_2d = check_supervised_y_2d
 checks.check_regressor_data_not_an_array = check_regressor_data_not_an_array
 checks.check_regressors_int = check_regressors_int_patched
 checks.check_classifiers_regression_target = check_classifiers_cont_target
+checks.check_pipeline_consistency = check_pipeline_consistency
 
 
 def _get_all_classes():
@@ -115,7 +116,3 @@ def test_all_estimators():
     for estimator in estimators:
         check_estimator(estimator[1])
         logging.info('{} is sklearn compliant.'.format(estimator[0]))
-
-
-# TODO: remove this
-test_all_estimators()
