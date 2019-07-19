@@ -245,7 +245,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
     --------
     >>> from tslearn.generators import random_walks
     >>> X = random_walks(n_ts=50, sz=32, d=1)
-    >>> gak_km = GlobalAlignmentKernelKMeans(n_clusters=3, verbose=False,
+    >>> gak_km = GlobalAlignmentKernelKMeans(n_clusters=3,
     ...                                      random_state=0).fit(X)
 
     References
@@ -501,24 +501,24 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
     >>> from tslearn.generators import random_walks
     >>> X = random_walks(n_ts=50, sz=32, d=1)
     >>> km = TimeSeriesKMeans(n_clusters=3, metric="euclidean", max_iter=5,
-    ...                       verbose=False, random_state=0).fit(X)
+    ...                       random_state=0).fit(X)
     >>> km.cluster_centers_.shape
     (3, 32, 1)
     >>> km_dba = TimeSeriesKMeans(n_clusters=3, metric="dtw", max_iter=5,
-    ...                           max_iter_barycenter=5, verbose=False,
+    ...                           max_iter_barycenter=5,
     ...                           random_state=0).fit(X)
     >>> km_dba.cluster_centers_.shape
     (3, 32, 1)
     >>> km_sdtw = TimeSeriesKMeans(n_clusters=3, metric="softdtw", max_iter=5,
     ...                            max_iter_barycenter=5,
     ...                            metric_params={"gamma_sdtw": .5},
-    ...                            verbose=False, random_state=0).fit(X)
+    ...                            random_state=0).fit(X)
     >>> km_sdtw.cluster_centers_.shape
     (3, 32, 1)
     >>> X_bis = to_time_series_dataset([[1, 2, 3, 4],
     ...                                 [1, 2, 3],
     ...                                 [2, 5, 6, 7, 8, 9]])
-    >>> km = TimeSeriesKMeans(n_clusters=2, verbose=False, max_iter=5,
+    >>> km = TimeSeriesKMeans(n_clusters=2, max_iter=5,
     ...                       metric="dtw", random_state=0).fit(X_bis)
     >>> km.cluster_centers_.shape
     (2, 3, 1)
@@ -767,8 +767,7 @@ class KShape(BaseEstimator, ClusterMixin,
     >>> from tslearn.generators import random_walks
     >>> X = random_walks(n_ts=50, sz=32, d=1)
     >>> X = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X)
-    >>> ks = KShape(n_clusters=3, n_init=1, verbose=False,
-    ...             random_state=0).fit(X)
+    >>> ks = KShape(n_clusters=3, n_init=1, random_state=0).fit(X)
     >>> ks.cluster_centers_.shape
     (3, 32, 1)
 
