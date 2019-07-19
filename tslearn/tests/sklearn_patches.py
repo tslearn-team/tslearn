@@ -5,6 +5,12 @@ import sklearn
 from sklearn.base import clone
 from sklearn.utils.testing import *
 from sklearn.utils.estimator_checks import *
+from sklearn.utils.estimator_checks import (_yield_checks, 
+                                            _yield_classifier_checks, 
+                                            _yield_regressor_checks, 
+                                            _yield_transformer_checks,
+                                            _yield_clustering_checks, 
+                                            _yield_outliers_checks)
 from sklearn.metrics import adjusted_rand_score, accuracy_score
 from sklearn.model_selection import ShuffleSplit
 from sklearn.model_selection._validation import _safe_split
@@ -14,12 +20,39 @@ import warnings
 import numpy as np
 
 
+_DEFAULT_TAGS = {
+    'non_deterministic': False,
+    'requires_positive_X': False,
+    'requires_positive_y': False,
+    'X_types': ['2darray'],
+    'poor_score': False,
+    'no_validation': False,
+    'multioutput': False,
+    "allow_nan": False,
+    'stateless': False,
+    'multilabel': False,
+    '_skip_test': False,
+    'multioutput_only': False,
+    'binary_only': False,
+    'requires_fit': True}
+
+
+def _safe_tags(estimator, key=None):
+    # if estimator doesn't have _get_tags, use _DEFAULT_TAGS
+    # if estimator has tags but not key, use _DEFAULT_TAGS[key]
+    if hasattr(estimator, "_get_tags"):
+        if key is not None:
+            return estimator._get_tags().get(key, _DEFAULT_TAGS[key])
+        tags = estimator._get_tags()
+        return {key: tags.get(key, _DEFAULT_TAGS[key])
+                for key in _DEFAULT_TAGS.keys()}
+    if key is not None:
+        return _DEFAULT_TAGS[key]
+    return _DEFAULT_TAGS
+
+
 @ignore_warnings(category=(DeprecationWarning, FutureWarning))
 def check_clustering(name, clusterer_orig, readonly_memmap=False):
-
-    if hasattr(clusterer_orig, '_get_tags'):
-        warnings.warn('Tags (_get_tags) are currently ignored by '
-                      'check_clustering!')
 
     clusterer = clone(clusterer_orig)
     X, y = random_walk_blobs(n_ts_per_blob=15, n_blobs=3, random_state=1,
@@ -42,6 +75,10 @@ def check_clustering(name, clusterer_orig, readonly_memmap=False):
     pred = clusterer.labels_
     assert_equal(pred.shape, (n_samples,))
     assert_greater(adjusted_rand_score(pred, y), 0.4)
+    
+    if _safe_tags(clusterer, 'non_deterministic'):
+        return
+
     set_random_state(clusterer)
     with warnings.catch_warnings(record=True):
         pred2 = clusterer.fit_predict(X)
@@ -74,9 +111,6 @@ def check_clustering(name, clusterer_orig, readonly_memmap=False):
 def check_non_transf_est_n_iter(name, estimator_orig):
     # Test that estimators that are not transformers with a parameter
     # max_iter, return the attribute of n_iter_ at least 1.
-    if hasattr(estimator_orig, '_get_tags'):
-        warnings.warn('Tags (_get_tags) are currently ignored by '
-                      'check_non_transformer_estimators_n_iter!')
     estimator = clone(estimator_orig)
     if hasattr(estimator, 'max_iter'):
         X, y_ = random_walk_blobs(n_ts_per_blob=15, n_blobs=3, random_state=1,
@@ -95,10 +129,6 @@ def check_fit_idempotent(name, estimator_orig):
     # attributes is difficult and full of edge cases. So instead we check that
     # predict(), predict_proba(), decision_function() and transform() return
     # the same results.
-
-    if hasattr(estimator_orig, '_get_tags'):
-        warnings.warn('Tags (_get_tags) are currently ignored by '
-                      'check_fit_idempotent!')
 
     check_methods = ["predict", "transform", "decision_function",
                      "predict_proba"]
@@ -177,9 +207,8 @@ def check_classifiers_classes(name, classifier_orig):
 
     problems = [(X_binary, y_binary, y_names_binary)]
 
-    if hasattr(classifier_orig, '_get_tags'):
-        warnings.warn('Tags (_get_tags) are currently ignored by '
-                      'check_classifiers_classes!')
+    if not _safe_tags(classifier_orig, 'binary_only'):
+        problems.append((X_multiclass, y_multiclass, y_names_multiclass))
 
     for X, y, y_names in problems:
         for y_names_i in [y_names, y_names.astype('O')]:
@@ -208,11 +237,7 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
     # We will test for both binary and multiclass case
     problems = [(X_b, y_b), (X_m, y_m)]
 
-    if hasattr(classifier_orig, '_get_tags'):
-        warnings.warn('Tags (_get_tags) are currently ignored by '
-                      'check_classifiers_train!')
-    tags = {'binary_only': False, 'no_validation': False,
-            'poor_score': False, 'multioutput_only': False}
+    tags = _safe_tags(classifier_orig)
 
     for (X, y) in problems:
         classes = np.unique(y)
@@ -385,3 +410,45 @@ def check_classifiers_cont_target(name, estimator_orig):
     msg = 'Unknown label type: '
     if not _safe_tags(e, "no_validation"):
         assert_raises_regex(ValueError, msg, e.fit, X, y)
+
+
+def yield_all_checks(name, estimator):
+    tags = _safe_tags(estimator)
+    if "2darray" not in tags["X_types"]:
+        warnings.warn("Can't test estimator {} which requires input "
+                      " of type {}".format(name, tags["X_types"]),
+                      SkipTestWarning)
+        return
+    if tags["_skip_test"]:
+        warnings.warn("Explicit SKIP via _skip_test tag for estimator "
+                      "{}.".format(name),
+                      SkipTestWarning)
+        return
+
+    for check in _yield_checks(name, estimator):
+        yield check
+    if is_classifier(estimator):
+        for check in _yield_classifier_checks(name, estimator):
+            yield check
+    if is_regressor(estimator):
+        for check in _yield_regressor_checks(name, estimator):
+            yield check
+    if hasattr(estimator, 'transform'):
+        for check in _yield_transformer_checks(name, estimator):
+            yield check
+    if isinstance(estimator, ClusterMixin):
+        for check in _yield_clustering_checks(name, estimator):
+            yield check
+    if is_outlier_detector(estimator):
+        for check in _yield_outliers_checks(name, estimator):
+            yield check
+    yield check_fit2d_predict1d
+    yield check_methods_subset_invariance
+    yield check_fit2d_1sample
+    yield check_fit2d_1feature
+    yield check_fit1d
+    yield check_get_params_invariance
+    yield check_set_params
+    yield check_dict_unchanged
+    yield check_dont_overwrite_parameters
+    yield check_fit_idempotent

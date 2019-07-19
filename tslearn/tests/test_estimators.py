@@ -22,6 +22,7 @@ import logging
 
 # Patching some check functions to work on ts data instead of tabular data.
 checks = sklearn.utils.estimator_checks
+checks._yield_all_checks = yield_all_checks
 checks.check_clustering = check_clustering
 checks.check_non_transformer_estimators_n_iter = check_non_transf_est_n_iter
 checks.check_fit_idempotent = check_fit_idempotent
