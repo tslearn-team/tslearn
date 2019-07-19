@@ -5,7 +5,8 @@ Soft-DTW weighted barycenters
 
 This example presents the weighted Soft-DTW time series barycenter method.
 
-:math:`X_0, X_1, X_2` and :math:`X_3` are time series from 4 different classes in the Trace dataset.
+:math:`X_0, X_1, X_2` and :math:`X_3` are time series from 4 different classes
+in the Trace dataset.
 Other time series are weighted barycenters.
 """
 
@@ -33,6 +34,7 @@ def get_color(weights):
     for i, c in enumerate(["r", "g", "b", "y"]):
         baselines[i] = matplotlib.colors.ColorConverter().to_rgb(c)
     return numpy.dot(weights, baselines).ravel()
+
 
 numpy.random.seed(0)
 X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")

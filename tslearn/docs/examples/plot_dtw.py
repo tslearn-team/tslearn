@@ -3,7 +3,8 @@
 DTW computation
 ===============
 
-This example illustrates DTW computation between time series and plots the optimal alignment path.
+This example illustrates DTW computation between time series and plots the
+optimal alignment path.
 """
 
 # Author: Romain Tavenard

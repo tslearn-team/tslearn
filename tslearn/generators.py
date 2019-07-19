@@ -1,5 +1,6 @@
 """
-The :mod:`tslearn.generators` module gathers synthetic time series dataset generation routines.
+The :mod:`tslearn.generators` module gathers synthetic time series dataset
+generation routines.
 """
 
 import numpy
@@ -13,8 +14,13 @@ def random_walks(n_ts=100, sz=256, d=1, mu=0., std=1., random_state=None):
 
     Generate n_ts time series of size sz and dimensionality d.
     Generated time series follow the model:
-    $$ts[t] = ts[t - 1] + a$$
-    where :math:`a` is drawn from a normal distribution of mean mu and standard deviation std.
+
+    .. math::
+
+        ts[t] = ts[t - 1] + a
+
+    where :math:`a` is drawn from a normal distribution of mean mu and standard
+    deviation std.
 
     Parameters
     ----------
@@ -27,9 +33,11 @@ def random_walks(n_ts=100, sz=256, d=1, mu=0., std=1., random_state=None):
     mu : float (default: 0.)
         Mean of the normal distribution from which random walk steps are drawn.
     std : float (default: 1.)
-        Standard deviation of the normal distribution from which random walk steps are drawn.
+        Standard deviation of the normal distribution from which random walk
+        steps are drawn.
     random_state : integer or numpy.RandomState or None (default: None)
-        Generator used to draw the time series. If an integer is given, it fixes the seed. Defaults to the global
+        Generator used to draw the time series. If an integer is given, it
+        fixes the seed. Defaults to the global
         numpy random number generator.
 
     Returns
@@ -51,16 +59,24 @@ def random_walks(n_ts=100, sz=256, d=1, mu=0., std=1., random_state=None):
     return ts
 
 
-def random_walk_blobs(n_ts_per_blob=100, sz=256, d=1, n_blobs=2, noise_level=1., random_state=None):
+def random_walk_blobs(n_ts_per_blob=100, sz=256, d=1, n_blobs=2,
+                      noise_level=1., random_state=None):
     """Blob-based random walk time series generator.
-    
-    Generate n_ts_per_blobs * n_blobs time series of size sz and dimensionality d.
+
+    Generate n_ts_per_blobs * n_blobs time series of size sz and
+    dimensionality d.
     Generated time series follow the model:
-    $$ts[t] = ts[t - 1] + a$$
-    where :math:`a` is drawn from a normal distribution of mean mu and standard deviation std.
-    
-    Each blob contains time series derived from a same seed time series with added white noise.
-    
+
+    .. math::
+
+        ts[t] = ts[t - 1] + a
+
+    where :math:`a` is drawn from a normal distribution of mean mu and
+    standard deviation std.
+
+    Each blob contains time series derived from a same seed time series with
+    added white noise.
+
     Parameters
     ----------
     n_ts_per_blob : int (default: 100)
@@ -74,7 +90,8 @@ def random_walk_blobs(n_ts_per_blob=100, sz=256, d=1, n_blobs=2, noise_level=1.,
     noise_level : float (default: 1.)
         Standard deviation of white noise added to time series in each blob
     random_state : integer or numpy.RandomState or None (default: None)
-        Generator used to draw the time series. If an integer is given, it fixes the seed. Defaults to the global
+        Generator used to draw the time series. If an integer is given, it
+        fixes the seed. Defaults to the global
         numpy random number generator.
 
     Returns

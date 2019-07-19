@@ -5,24 +5,6 @@ Examples using ``tslearn.datasets.CachedDatasets``
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="This example illustrates the use of the global alignment kernel for support vector classificati...">
-
-.. only:: html
-
-    .. figure:: /auto_examples/images/thumb/sphx_glr_plot_svm_thumb.png
-
-        :ref:`sphx_glr_auto_examples_plot_svm.py`
-
-.. raw:: html
-
-    </div>
-
-.. only:: not html
-
-    * :ref:`sphx_glr_auto_examples_plot_svm.py`
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="This example uses the KShape clustering method that is based on cross-correlation to cluster ti...">
 
 .. only:: html
@@ -38,6 +20,24 @@ Examples using ``tslearn.datasets.CachedDatasets``
 .. only:: not html
 
     * :ref:`sphx_glr_auto_examples_plot_kshape.py`
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example illustrates the use of the global alignment kernel for support vector classificati...">
+
+.. only:: html
+
+    .. figure:: /auto_examples/images/thumb/sphx_glr_plot_svm_thumb.png
+
+        :ref:`sphx_glr_auto_examples_plot_svm.py`
+
+.. raw:: html
+
+    </div>
+
+.. only:: not html
+
+    * :ref:`sphx_glr_auto_examples_plot_svm.py`
 
 .. raw:: html
 
@@ -95,24 +95,6 @@ Examples using ``tslearn.datasets.CachedDatasets``
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="This example illustrates the use of the &quot;Learning Shapelets&quot; method for a time series classific...">
-
-.. only:: html
-
-    .. figure:: /auto_examples/images/thumb/sphx_glr_plot_shapelets_thumb.png
-
-        :ref:`sphx_glr_auto_examples_plot_shapelets.py`
-
-.. raw:: html
-
-    </div>
-
-.. only:: not html
-
-    * :ref:`sphx_glr_auto_examples_plot_shapelets.py`
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="This example presents the weighted Soft-DTW time series barycenter method.">
 
 .. only:: html
@@ -128,6 +110,24 @@ Examples using ``tslearn.datasets.CachedDatasets``
 .. only:: not html
 
     * :ref:`sphx_glr_auto_examples_plot_barycenter_interpolate.py`
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example illustrates the use of the &quot;Learning Shapelets&quot; method for a time series classific...">
+
+.. only:: html
+
+    .. figure:: /auto_examples/images/thumb/sphx_glr_plot_shapelets_thumb.png
+
+        :ref:`sphx_glr_auto_examples_plot_shapelets.py`
+
+.. raw:: html
+
+    </div>
+
+.. only:: not html
+
+    * :ref:`sphx_glr_auto_examples_plot_shapelets.py`
 
 .. raw:: html
 

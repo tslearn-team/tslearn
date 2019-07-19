@@ -5,15 +5,20 @@ The :mod:`tslearn.metrics` module gathers time series similarity metrics.
 import numpy
 from scipy.spatial.distance import pdist
 from sklearn.utils import check_random_state
-from tslearn.soft_dtw_fast import _soft_dtw, _soft_dtw_grad, _jacobian_product_sq_euc
+from tslearn.soft_dtw_fast import _soft_dtw, _soft_dtw_grad, \
+    _jacobian_product_sq_euc
 from sklearn.metrics.pairwise import euclidean_distances
 from numba import njit, prange
 
-from tslearn.cygak import cdist_gak as cycdist_gak, cdist_normalized_gak as cycdist_normalized_gak, \
-    normalized_gak as cynormalized_gak, gak as cygak
-from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, check_equal_size
+from tslearn.cygak import cdist_normalized_gak as cycdist_normalized_gak, \
+    normalized_gak as cynormalized_gak
+from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, \
+    check_equal_size
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
+
+
+global_constraint_code = {"": 0, "itakura": 1, "sakoe_chiba": 2}
 
 
 @njit()
@@ -102,7 +107,8 @@ def _return_path(acc_cost_mat):
 
 
 @njit()
-def njit_cdist_dtw(dataset1, dataset2, global_constraint, sakoe_chiba_radius, itakura_max_slope):
+def njit_cdist_dtw(dataset1, dataset2, global_constraint, sakoe_chiba_radius,
+                   itakura_max_slope):
     """Compute the cross-similarity matrix between two datasets.
 
     Parameters
@@ -113,14 +119,10 @@ def njit_cdist_dtw(dataset1, dataset2, global_constraint, sakoe_chiba_radius, it
     dataset2 : array
         Another dataset of time series.
 
-    mask : array
-        Constraint reion.
-
     Returns
     -------
     cdist : array
         Cross-similarity matrix.
-
     """
     n_samples_1 = dataset1.shape[0]
     n_samples_2 = dataset2.shape[0]
@@ -138,17 +140,15 @@ def njit_cdist_dtw(dataset1, dataset2, global_constraint, sakoe_chiba_radius, it
 
 
 @njit()
-def njit_cdist_dtw_self(dataset, global_constraint, sakoe_chiba_radius, itakura_max_slope):
+def njit_cdist_dtw_self(dataset, global_constraint, sakoe_chiba_radius,
+                        itakura_max_slope):
     """Compute the cross-similarity matrix between a dataset and itself.
 
     Parameters
     ----------
     dataset : array
         A dataset of time series.
-
-    mask : array
-        Constraint reion.
-
+        
     Returns
     -------
     cdist : array
@@ -231,18 +231,25 @@ def dtw_path(s1, s2, global_constraint=None,
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
 
     """
-    s1 = to_time_series(s1)
-    s2 = to_time_series(s2)
+    s1 = to_time_series(s1, remove_nans=True)
+    s2 = to_time_series(s2, remove_nans=True)
+
+    if global_constraint is not None:
+        global_constraint_str = global_constraint
+    else:
+        global_constraint_str = ""
+
     mask = compute_mask(
-        s1, s2, global_constraint, sakoe_chiba_radius, itakura_max_slope
+        s1, s2, global_constraint_code[global_constraint_str],
+        sakoe_chiba_radius, itakura_max_slope
     )
     acc_cost_mat = njit_accumulated_matrix(s1, s2, mask=mask)
     path = _return_path(acc_cost_mat)
     return path, acc_cost_mat[-1, -1]
 
 
-def dtw(s1, s2, global_constraint=None,
-        sakoe_chiba_radius=1, itakura_max_slope=2.):
+def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=1,
+        itakura_max_slope=2.):
     r"""Compute Dynamic Time Warping (DTW) similarity measure between
     (possibly multidimensional) time series and return it.
 
@@ -297,9 +304,17 @@ def dtw(s1, s2, global_constraint=None,
     """
     s1 = to_time_series(s1)
     s2 = to_time_series(s2)
-    mask = compute_mask(s1, s2, global_constraint=global_constraint,
-                        sakoe_chiba_radius=sakoe_chiba_radius,
-                        itakura_max_slope=itakura_max_slope)
+
+    if global_constraint is not None:
+        global_constraint_str = global_constraint
+    else:
+        global_constraint_str = ""
+
+    mask = compute_mask(
+        s1, s2,
+        global_constraint_code[global_constraint_str],
+        sakoe_chiba_radius=sakoe_chiba_radius,
+        itakura_max_slope=itakura_max_slope)
     return njit_dtw(s1, s2, mask=mask)
 
 
@@ -328,7 +343,8 @@ def njit_accumulated_matrix_subsequence(subseq, longseq):
 
     for i in prange(l1):
         for j in prange(l2):
-            cum_sum[i + 1, j + 1] = numpy.linalg.norm(subseq[i] - longseq[j]) ** 2
+            cum_sum[i + 1, j + 1] = numpy.linalg.norm(subseq[i] -
+                                                      longseq[j]) ** 2
             cum_sum[i + 1, j + 1] += min(cum_sum[i, j + 1],
                                          cum_sum[i + 1, j],
                                          cum_sum[i, j])
@@ -371,7 +387,7 @@ def dtw_subsequence_path(subseq, longseq):
     .. math::
 
         DTW(X, Y) = \sqrt{\sum_{(i, j) \in P} (X_{i} - Y_{j})^2}
-
+        
     Compared to traditional DTW, here, border constraints on admissible paths
     :math:`P` are relaxed such that :math:`P_0 = (0, ?)` and
     :math:`P_L = (N-1, ?)` where :math:`L` is the length of the considered path
@@ -439,20 +455,19 @@ def sakoe_chiba_mask(sz1, sz2, radius=1):
 
     Examples
     --------
-    >>> sakoe_chiba_mask(4, 4, 1)  # doctest: +NORMALIZE_WHITESPACE
-    array([[  0.,  0., inf, inf],
-           [  0.,  0.,  0., inf],
-           [ inf,  0.,  0.,  0.],
-           [ inf, inf,  0.,  0.]])
-    >>> sakoe_chiba_mask(7, 3, 1)  # doctest: +NORMALIZE_WHITESPACE
-    array([[  0.,  0., inf],
-           [  0.,  0.,  0.],
-           [  0.,  0.,  0.],
-           [  0.,  0.,  0.],
-           [  0.,  0.,  0.],
-           [  0.,  0.,  0.],
-           [ inf,  0.,  0.]])
-
+    >>> sakoe_chiba_mask(4, 4, 1)
+    array([[ 0.,  0., inf, inf],
+           [ 0.,  0.,  0., inf],
+           [inf,  0.,  0.,  0.],
+           [inf, inf,  0.,  0.]])
+    >>> sakoe_chiba_mask(7, 3, 1)
+    array([[ 0.,  0., inf],
+           [ 0.,  0.,  0.],
+           [ 0.,  0.,  0.],
+           [ 0.,  0.,  0.],
+           [ 0.,  0.,  0.],
+           [ 0.,  0.,  0.],
+           [inf,  0.,  0.]])
     """
     mask = numpy.full((sz1, sz2), numpy.inf)
     if sz1 > sz2:
@@ -492,14 +507,13 @@ def itakura_mask(sz1, sz2, max_slope=2.):
 
     Examples
     --------
-    >>> itakura_mask(6, 6, max_slope=2)  # doctest: +NORMALIZE_WHITESPACE
-    array([[  0., inf, inf, inf, inf, inf],
-           [ inf,  0.,  0., inf, inf, inf],
-           [ inf,  0.,  0.,  0., inf, inf],
-           [ inf, inf,  0.,  0.,  0., inf],
-           [ inf, inf, inf,  0.,  0., inf],
-           [ inf, inf, inf, inf, inf,  0.]])
-
+    >>> itakura_mask(6, 6)
+    array([[ 0., inf, inf, inf, inf, inf],
+           [inf,  0.,  0., inf, inf, inf],
+           [inf,  0.,  0.,  0., inf, inf],
+           [inf, inf,  0.,  0.,  0., inf],
+           [inf, inf, inf,  0.,  0., inf],
+           [inf, inf, inf, inf, inf,  0.]])
     """
     min_slope = 1 / float(max_slope)
     max_slope *= (float(sz1) / float(sz2))
@@ -533,7 +547,7 @@ def itakura_mask(sz1, sz2, max_slope=2.):
 
 
 @njit()
-def compute_mask(s1, s2, global_constraint=None,
+def compute_mask(s1, s2, global_constraint=0,
                  sakoe_chiba_radius=1, itakura_max_slope=2.):
     """Compute the mask (region constraint).
 
@@ -541,17 +555,16 @@ def compute_mask(s1, s2, global_constraint=None,
     ----------
     s1 : array
         A time series.
-
     s2: array
         Another time series.
-
-    global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
-        Global constraint to restrict admissible paths for DTW.
-
+    global_constraint : {0, 1, 2} (default: 0)
+        Global constraint to restrict admissible paths for DTW:
+        - "itakura" if 1
+        - "sakoe_chiba" if 2
+        - no constraint otherwise
     sakoe_chiba_radius : int (default: 1)
         Radius to be used for Sakoe-Chiba band global constraint. Used only if
         ``global_constraint="sakoe_chiba"``.
-
     itakura_max_slope : float (default: 2.)
         Maximum slope for the Itakura parallelogram constraint. Used only if
         ``global_constraint="itakura_parallelogram"``.
@@ -560,13 +573,12 @@ def compute_mask(s1, s2, global_constraint=None,
     -------
     mask : array
         Constraint region.
-
     """
     sz1 = s1.shape[0]
     sz2 = s2.shape[0]
-    if global_constraint == "sakoe_chiba":
+    if global_constraint == 1:
         mask = sakoe_chiba_mask(sz1, sz2, radius=sakoe_chiba_radius)
-    elif global_constraint == "itakura":
+    elif global_constraint == 2:
         mask = itakura_mask(sz1, sz2, max_slope=itakura_max_slope)
     else:
         mask = numpy.zeros((sz1, sz2))
@@ -614,12 +626,12 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
 
     Examples
     --------
-    >>> cdist_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]])  # doctest: +NORMALIZE_WHITESPACE
-    array([[ 0., 1.],
-           [ 1., 0.]])
-    >>> cdist_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 3], [2, 3, 4, 5]])  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    array([[ 0. ,  2.449...],
-           [ 1. ,  1.414...]])
+    >>> cdist_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]])
+    array([[0., 1.],
+           [1., 0.]])
+    >>> cdist_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 3], [2, 3, 4, 5]])
+    array([[0.        , 2.44948974],
+           [1.        , 1.41421356]])
 
     See Also
     --------
@@ -633,21 +645,33 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
 
     """
     dataset1 = to_time_series_dataset(dataset1)
+
+    if global_constraint is not None:
+        global_constraint_str = global_constraint
+    else:
+        global_constraint_str = ""
+
     if dataset2 is None:
-        return njit_cdist_dtw_self(dataset1, global_constraint,
-                                   sakoe_chiba_radius, itakura_max_slope)
+        return njit_cdist_dtw_self(
+            dataset1,
+            global_constraint_code[global_constraint_str],
+            sakoe_chiba_radius, itakura_max_slope)
     else:
         dataset2 = to_time_series_dataset(dataset2)
-        return njit_cdist_dtw(dataset1, dataset2, global_constraint,
+        return njit_cdist_dtw(dataset1, dataset2,
+                              global_constraint_code[global_constraint_str],
                               sakoe_chiba_radius, itakura_max_slope)
 
 
-def gak(s1, s2, sigma=1.):
-    """Compute Global Alignment Kernel (GAK) between (possibly multidimensional) time series and return it.
+def gak(s1, s2, sigma=1.):  # TODO: better doc (formula for the kernel)
+    r"""Compute Global Alignment Kernel (GAK) between (possibly
+    multidimensional) time series and return it.
 
-    It is not required that both time series share the same size, but they must be the same dimension. GAK was
+    It is not required that both time series share the same size, but they must
+    be the same dimension. GAK was
     originally presented in [1]_.
-    This is a normalized version that ensures that $k(x,x)=1$ for all $x$ and $k(x,y) \in [0, 1]$ for all $x, y$.
+    This is a normalized version that ensures that :math:`k(x,x)=1` for all
+    :math:`x` and :math:`k(x,y) \in [0, 1]` for all :math:`x, y`.
 
     Parameters
     ----------
@@ -684,7 +708,7 @@ def gak(s1, s2, sigma=1.):
 
 
 def cdist_gak(dataset1, dataset2=None, sigma=1.):
-    """Compute cross-similarity matrix using Global Alignment kernel (GAK).
+    r"""Compute cross-similarity matrix using Global Alignment kernel (GAK).
 
     GAK was originally presented in [1]_.
 
@@ -704,12 +728,13 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.):
 
     Examples
     --------
-    >>> cdist_gak([[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    array([[ 1. , 0.656...],
-           [ 0.656..., 1. ]])
-    >>> cdist_gak([[1, 2, 2], [1., 2., 3., 4.]], [[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    array([[ 0.710...,  0.297...],
-           [ 0.656...,  1.        ]])
+    >>> cdist_gak([[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)
+    array([[1.        , 0.65629661],
+           [0.65629661, 1.        ]])
+    >>> cdist_gak([[1, 2, 2], [1., 2., 3., 4.]],
+    ...           [[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)
+    array([[0.71059484, 0.29722877],
+           [0.65629661, 1.        ]])
 
     See Also
     --------
@@ -726,11 +751,12 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.):
         self_similarity = True
     else:
         dataset2 = to_time_series_dataset(dataset2)
-    return cycdist_normalized_gak(dataset1, dataset2, sigma, self_similarity=self_similarity)
+    return cycdist_normalized_gak(dataset1, dataset2, sigma,
+                                  self_similarity=self_similarity)
 
 
 def sigma_gak(dataset, n_samples=100, random_state=None):
-    """Compute sigma value to be used for GAK.
+    r"""Compute sigma value to be used for GAK.
 
     This method was originally presented in [1]_.
 
@@ -741,8 +767,8 @@ def sigma_gak(dataset, n_samples=100, random_state=None):
     n_samples : int (default: 100)
         Number of samples on which median distance should be estimated
     random_state : integer or numpy.RandomState or None (default: None)
-        The generator used to draw the samples. If an integer is given, it fixes the seed. Defaults to the global
-        numpy random number generator.
+        The generator used to draw the samples. If an integer is given, it
+        fixes the seed. Defaults to the global numpy random number generator.
 
     Returns
     -------
@@ -752,7 +778,9 @@ def sigma_gak(dataset, n_samples=100, random_state=None):
     Example
     -------
     >>> dataset = [[1, 2, 2, 3], [1., 2., 3., 4.]]
-    >>> sigma_gak(dataset=dataset, n_samples=200, random_state=0)  # doctest: +ELLIPSIS
+    >>> sigma_gak(dataset=dataset,
+    ...           n_samples=200,
+    ...           random_state=0)  # doctest: +ELLIPSIS
     2.0...
 
     See Also
@@ -773,13 +801,16 @@ def sigma_gak(dataset, n_samples=100, random_state=None):
         replace = True
     else:
         replace = False
-    sample_indices = random_state.choice(n_ts * sz, size=n_samples, replace=replace)
-    dists = pdist(dataset[:, :sz, :].reshape((-1, d))[sample_indices], metric="euclidean")
+    sample_indices = random_state.choice(n_ts * sz,
+                                         size=n_samples,
+                                         replace=replace)
+    dists = pdist(dataset[:, :sz, :].reshape((-1, d))[sample_indices],
+                  metric="euclidean")
     return numpy.median(dists) * numpy.sqrt(sz)
 
 
 def gamma_soft_dtw(dataset, n_samples=100, random_state=None):
-    """Compute gamma value to be used for GAK/Soft-DTW.
+    r"""Compute gamma value to be used for GAK/Soft-DTW.
 
     This method was originally presented in [1]_.
 
@@ -790,8 +821,8 @@ def gamma_soft_dtw(dataset, n_samples=100, random_state=None):
     n_samples : int (default: 100)
         Number of samples on which median distance should be estimated
     random_state : integer or numpy.RandomState or None (default: None)
-        The generator used to draw the samples. If an integer is given, it fixes the seed. Defaults to the global
-        numpy random number generator.
+        The generator used to draw the samples. If an integer is given, it
+        fixes the seed. Defaults to the global numpy random number generator.
 
     Returns
     -------
@@ -801,7 +832,9 @@ def gamma_soft_dtw(dataset, n_samples=100, random_state=None):
     Example
     -------
     >>> dataset = [[1, 2, 2, 3], [1., 2., 3., 4.]]
-    >>> gamma_soft_dtw(dataset=dataset, n_samples=200, random_state=0)  # doctest: +ELLIPSIS
+    >>> gamma_soft_dtw(dataset=dataset,
+    ...                n_samples=200,
+    ...                random_state=0)  # doctest: +ELLIPSIS
     8.0...
 
     See Also
@@ -812,11 +845,13 @@ def gamma_soft_dtw(dataset, n_samples=100, random_state=None):
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """
-    return 2. * sigma_gak(dataset=dataset, n_samples=n_samples, random_state=random_state) ** 2
+    return 2. * sigma_gak(dataset=dataset,
+                          n_samples=n_samples,
+                          random_state=random_state) ** 2
 
 
 def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
-    """Compute LB_Keogh.
+    r"""Compute LB_Keogh.
 
     LB_Keogh was originally presented in [1]_.
 
@@ -825,33 +860,42 @@ def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
     ts_query : array-like
         Query time-series to compare to the envelope of the candidate.
     ts_candidate : array-like or None (default: None)
-        Candidate time-series. None means the envelope is provided via `envelope_query` parameter and hence does not
+        Candidate time-series. None means the envelope is provided via
+        `envelope_query` parameter and hence does not
         need to be computed again.
     radius : int (default: 1)
-        Radius to be used for the envelope generation (the envelope at time index i will be generated based on
-        all observations from the candidate time series at indices comprised between i-radius and i+radius). Not used
+        Radius to be used for the envelope generation (the envelope at time
+        index i will be generated based on
+        all observations from the candidate time series at indices comprised
+        between i-radius and i+radius). Not used
         if `ts_candidate` is None.
-    envelope_candidate: pair of array-like (envelope_down, envelope_up) or None (default: None)
-        Pre-computed envelope of the candidate time series. If set to None, it is computed based on `ts_candidate`.
+    envelope_candidate: pair of array-like (envelope_down, envelope_up) or None
+    (default: None)
+        Pre-computed envelope of the candidate time series. If set to None, it
+        is computed based on `ts_candidate`.
 
     Note
     ----
-        This method requires a `ts_query` and `ts_candidate` (or `envelope_candidate`, depending on the call)
-        to be of equal size.
+        This method requires a `ts_query` and `ts_candidate` (or
+        `envelope_candidate`, depending on the call) to be of equal size.
 
     Returns
     -------
     float
-        Distance between the query time series and the envelope of the candidate time series.
+        Distance between the query time series and the envelope of the
+        candidate time series.
 
     Examples
     --------
     >>> ts1 = [1, 2, 3, 2, 1]
     >>> ts2 = [0, 0, 0, 0, 0]
     >>> env_low, env_up = lb_envelope(ts1, radius=1)
-    >>> lb_keogh(ts_query=ts2, envelope_candidate=(env_low, env_up))  # doctest: +ELLIPSIS
+    >>> lb_keogh(ts_query=ts2,
+    ...          envelope_candidate=(env_low, env_up))  # doctest: +ELLIPSIS
     2.8284...
-    >>> lb_keogh(ts_query=ts2, ts_candidate=ts1, radius=1)  # doctest: +ELLIPSIS
+    >>> lb_keogh(ts_query=ts2,
+    ...          ts_candidate=ts1,
+    ...          radius=1)  # doctest: +ELLIPSIS
     2.8284...
 
     See also
@@ -860,21 +904,45 @@ def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
 
     References
     ----------
-    .. [1] Keogh, E. Exact indexing of dynamic time warping. In International Conference on Very Large Data Bases, 2002.
-       pp 406-417.
+    .. [1] Keogh, E. Exact indexing of dynamic time warping. In International
+       Conference on Very Large Data Bases, 2002. pp 406-417.
     """
     if ts_candidate is None:
         envelope_down, envelope_up = envelope_candidate
     else:
         ts_candidate = to_time_series(ts_candidate)
-        assert ts_candidate.shape[1] == 1, "LB_Keogh is available only for monodimensional time series"
+        assert ts_candidate.shape[1] == 1, \
+            "LB_Keogh is available only for monodimensional time series"
         envelope_down, envelope_up = lb_envelope(ts_candidate, radius)
     ts_query = to_time_series(ts_query)
-    assert ts_query.shape[1] == 1, "LB_Keogh is available only for monodimensional time series"
+    assert ts_query.shape[1] == 1, \
+        "LB_Keogh is available only for monodimensional time series"
     indices_up = ts_query[:, 0] > envelope_up[:, 0]
     indices_down = ts_query[:, 0] < envelope_down[:, 0]
-    return numpy.sqrt(numpy.linalg.norm(ts_query[indices_up, 0] - envelope_up[indices_up, 0]) ** 2 + \
-                      numpy.linalg.norm(ts_query[indices_down, 0] - envelope_down[indices_down, 0]) ** 2)
+    return numpy.sqrt(numpy.linalg.norm(ts_query[indices_up, 0] -
+                                        envelope_up[indices_up, 0]) ** 2 +
+                      numpy.linalg.norm(ts_query[indices_down, 0] -
+                                        envelope_down[indices_down, 0]) ** 2)
+
+
+@njit()
+def njit_lb_envelope(time_series, radius):
+    sz, d = time_series.shape
+    enveloppe_up = numpy.empty((sz, d))
+    enveloppe_down = numpy.empty((sz, d))
+
+    for i in prange(sz):
+        min_idx = i - radius
+        max_idx = i + radius + 1
+        if min_idx < 0:
+            min_idx = 0
+        if max_idx > sz:
+            max_idx = sz
+        for di in prange(d):
+            enveloppe_down[i, di] = numpy.min(time_series[min_idx:max_idx, di])
+            enveloppe_up[i, di] = numpy.max(time_series[min_idx:max_idx, di])
+
+    return enveloppe_down, enveloppe_up
 
 @njit()
 def njit_lb_envelope(time_series, radius):
@@ -897,7 +965,7 @@ def njit_lb_envelope(time_series, radius):
 
 
 def lb_envelope(ts, radius=1):
-    """Compute time-series envelope as required by LB_Keogh.
+    r"""Compute time-series envelope as required by LB_Keogh.
 
     LB_Keogh was originally presented in [1]_.
 
@@ -906,8 +974,10 @@ def lb_envelope(ts, radius=1):
     ts : array-like
         Time-series for which the envelope should be computed.
     radius : int (default: 1)
-        Radius to be used for the envelope generation (the envelope at time index i will be generated based on
-        all observations from the time series at indices comprised between i-radius and i+radius).
+        Radius to be used for the envelope generation (the envelope at time
+        index i will be generated based on
+        all observations from the time series at indices comprised between
+        i-radius and i+radius).
 
     Returns
     -------
@@ -921,17 +991,17 @@ def lb_envelope(ts, radius=1):
     >>> ts1 = [1, 2, 3, 2, 1]
     >>> env_low, env_up = lb_envelope(ts1, radius=1)
     >>> env_low
-    array([[ 1.],
-           [ 1.],
-           [ 2.],
-           [ 1.],
-           [ 1.]])
+    array([[1.],
+           [1.],
+           [2.],
+           [1.],
+           [1.]])
     >>> env_up
-    array([[ 2.],
-           [ 3.],
-           [ 3.],
-           [ 3.],
-           [ 2.]])
+    array([[2.],
+           [3.],
+           [3.],
+           [3.],
+           [2.]])
 
     See also
     --------
@@ -939,14 +1009,14 @@ def lb_envelope(ts, radius=1):
 
     References
     ----------
-    .. [1] Keogh, E. Exact indexing of dynamic time warping. In International Conference on Very Large Data Bases, 2002.
-       pp 406-417.
+    .. [1] Keogh, E. Exact indexing of dynamic time warping. In International
+       Conference on Very Large Data Bases, 2002. pp 406-417.
     """
     return njit_lb_envelope(to_time_series(ts), radius=radius)
 
 
 def soft_dtw(ts1, ts2, gamma=1.):
-    """Compute Soft-DTW metric between two time series.
+    r"""Compute Soft-DTW metric between two time series.
 
     Soft-DTW was originally presented in [1]_.
 
@@ -966,9 +1036,13 @@ def soft_dtw(ts1, ts2, gamma=1.):
 
     Examples
     --------
-    >>> soft_dtw([1, 2, 2, 3], [1., 2., 3., 4.], gamma=1.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    >>> soft_dtw([1, 2, 2, 3],
+    ...          [1., 2., 3., 4.],
+    ...          gamma=1.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     -0.89...
-    >>> soft_dtw([1, 2, 3, 3], [1., 2., 2.1, 3.2], gamma=0.01)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    >>> soft_dtw([1, 2, 3, 3],
+    ...          [1., 2., 2.1, 3.2],
+    ...          gamma=0.01)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     0.089...
 
     See Also
@@ -977,15 +1051,17 @@ def soft_dtw(ts1, ts2, gamma=1.):
 
     References
     ----------
-    .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for Time-Series," ICML 2017.
+    .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
+       Time-Series," ICML 2017.
     """
     if gamma == 0.:
         return dtw(ts1, ts2)
-    return SoftDTW(SquaredEuclidean(ts1[:ts_size(ts1)], ts2[:ts_size(ts2)]), gamma=gamma).compute()
+    return SoftDTW(SquaredEuclidean(ts1[:ts_size(ts1)], ts2[:ts_size(ts2)]),
+                   gamma=gamma).compute()
 
 
 def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
-    """Compute cross-similarity matrix using Soft-DTW metric.
+    r"""Compute cross-similarity matrix using Soft-DTW metric.
 
     Soft-DTW was originally presented in [1]_.
 
@@ -1005,12 +1081,13 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
 
     Examples
     --------
-    >>> cdist_soft_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], gamma=.01)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    array([[-0.01...,  1. ],
-           [ 1.     ,  0. ]])
-    >>> cdist_soft_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 2, 3], [1., 2., 3., 4.]], gamma=.01)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    array([[-0.01...,  1. ],
-           [ 1.     ,  0. ]])
+    >>> cdist_soft_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], gamma=.01)
+    array([[-0.01098612,  1.        ],
+           [ 1.        ,  0.        ]])
+    >>> cdist_soft_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]],
+    ...                [[1, 2, 2, 3], [1., 2., 3., 4.]], gamma=.01)
+    array([[-0.01098612,  1.        ],
+           [ 1.        ,  0.        ]])
 
     See Also
     --------
@@ -1020,7 +1097,8 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
 
     References
     ----------
-    .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for Time-Series," ICML 2017.
+    .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
+       Time-Series," ICML 2017.
     """
     dataset1 = to_time_series_dataset(dataset1, dtype=numpy.float64)
     self_similarity = False
@@ -1184,10 +1262,10 @@ class SquaredEuclidean(object):
         Examples
         --------
         >>> SquaredEuclidean([1, 2, 2, 3], [1, 2, 3, 4]).compute()
-        array([[ 0.,  1.,  4.,  9.],
-               [ 1.,  0.,  1.,  4.],
-               [ 1.,  0.,  1.,  4.],
-               [ 4.,  1.,  0.,  1.]])
+        array([[0., 1., 4., 9.],
+               [1., 0., 1., 4.],
+               [1., 0., 1., 4.],
+               [4., 1., 0., 1.]])
         """
         self.X = to_time_series(X).astype(numpy.float64)
         self.Y = to_time_series(Y).astype(numpy.float64)

@@ -47,16 +47,6 @@ def check_dims(X, X_fit=None, extend=True):
 
 def _arraylike_copy(arr):
     """Duplicate content of arr into a numpy array.
-
-     Examples
-     --------
-     >>> X_npy = numpy.array([1, 2, 3])
-     >>> numpy.alltrue(_arraylike_copy(X_npy) == X_npy)
-     True
-     >>> _arraylike_copy(X_npy) is X_npy
-     False
-     >>> numpy.alltrue(_arraylike_copy([1, 2, 3]) == X_npy)
-     True
      """
     if type(arr) != numpy.ndarray:
         return numpy.array(arr)
@@ -65,7 +55,8 @@ def _arraylike_copy(arr):
 
 
 def bit_length(n):
-    """Returns the number of bits necessary to represent an integer in binary, excluding the sign and leading zeros.
+    """Returns the number of bits necessary to represent an integer in binary,
+    excluding the sign and leading zeros.
 
     This function is provided for Python 2.6 compatibility.
 
@@ -73,10 +64,10 @@ def bit_length(n):
     --------
     >>> bit_length(0)
     0
-    >>> bit_length(2)
-    2
     >>> bit_length(1)
     1
+    >>> bit_length(2)
+    2
     """
     k = 0
     try:
@@ -88,33 +79,35 @@ def bit_length(n):
 
 
 def to_time_series(ts, remove_nans=False):
-    """Transforms a time series so that it fits the format used in ``tslearn`` models.
+    """Transforms a time series so that it fits the format used in ``tslearn``
+    models.
 
     Parameters
     ----------
     ts : array-like
         The time series to be transformed.
     remove_nans : bool (default: False)
-        Whether trailing NaNs at the end of the time series should be removed or not
+        Whether trailing NaNs at the end of the time series should be removed
+        or not
 
     Returns
     -------
     numpy.ndarray of shape (sz, d)
         The transformed time series.
-    
+
     Example
     -------
-    >>> to_time_series([1, 2]) # doctest: +NORMALIZE_WHITESPACE
-    array([[ 1.],
-           [ 2.]])
-    >>> to_time_series([1, 2, numpy.nan]) # doctest: +NORMALIZE_WHITESPACE
+    >>> to_time_series([1, 2])
+    array([[1.],
+           [2.]])
+    >>> to_time_series([1, 2, numpy.nan])
     array([[ 1.],
            [ 2.],
-           [ nan]])
-    >>> to_time_series([1, 2, numpy.nan], remove_nans=True) # doctest: +NORMALIZE_WHITESPACE
-    array([[ 1.],
-           [ 2.]])
-    
+           [nan]])
+    >>> to_time_series([1, 2, numpy.nan], remove_nans=True)
+    array([[1.],
+           [2.]])
+
     See Also
     --------
     to_time_series_dataset : Transforms a dataset of time series
@@ -130,7 +123,8 @@ def to_time_series(ts, remove_nans=False):
 
 
 def to_time_series_dataset(dataset, dtype=numpy.float):
-    """Transforms a time series dataset so that it fits the format used in ``tslearn`` models.
+    """Transforms a time series dataset so that it fits the format used in
+    ``tslearn`` models.
 
     Parameters
     ----------
@@ -143,21 +137,21 @@ def to_time_series_dataset(dataset, dtype=numpy.float):
     -------
     numpy.ndarray of shape (n_ts, sz, d)
         The transformed dataset of time series.
-    
+
     Example
     -------
-    >>> to_time_series_dataset([[1, 2]]) # doctest: +NORMALIZE_WHITESPACE
+    >>> to_time_series_dataset([[1, 2]])
+    array([[[1.],
+            [2.]]])
+    >>> to_time_series_dataset([[1, 2], [1, 4, 3]])
     array([[[ 1.],
-            [ 2.]]])
-    >>> to_time_series_dataset([[1, 2], [1, 4, 3]]) # doctest: +NORMALIZE_WHITESPACE
-    array([[[  1.],
-            [  2.],
-            [ nan]],
+            [ 2.],
+            [nan]],
     <BLANKLINE>
-           [[  1.],
-            [  4.],
-            [  3.]]])
-    
+           [[ 1.],
+            [ 4.],
+            [ 3.]]])
+
     See Also
     --------
     to_time_series : Transforms a single time series
@@ -184,19 +178,24 @@ def to_sklearn_dataset(dataset, dtype=numpy.float, return_dim=False):
         The dataset of time series to be transformed.
     dtype : data type (default: numpy.float)
         Data type for the returned dataset.
+    return_dim : boolean  (optional, default: False)
+        Whether the dimensionality (third dimension should be returned together
+        with the transformed dataset).
 
     Returns
     -------
     numpy.ndarray of shape (n_ts, sz * d)
         The transformed dataset of time series.
+    int (optional, if return_dim=True)
+        The dimensionality of the original tslearn dataset (third dimension)
 
     Example
     -------
-    >>> to_sklearn_dataset([[1, 2]], return_dim=True) # doctest: +NORMALIZE_WHITESPACE
-    (array([[ 1., 2.]]), 1)
-    >>> to_sklearn_dataset([[1, 2], [1, 4, 3]]) # doctest: +NORMALIZE_WHITESPACE
+    >>> to_sklearn_dataset([[1, 2]], return_dim=True)
+    (array([[1., 2.]]), 1)
+    >>> to_sklearn_dataset([[1, 2], [1, 4, 3]])
     array([[ 1.,  2., nan],
-           [ 1.,  4., 3.]])
+           [ 1.,  4.,  3.]])
 
     See Also
     --------
@@ -213,7 +212,8 @@ def to_sklearn_dataset(dataset, dtype=numpy.float, return_dim=False):
 
 
 def timeseries_to_str(ts, fmt="%.18e"):
-    """Transforms a time series to its representation as a string (used when saving time series to disk).
+    """Transforms a time series to its representation as a string (used when
+    saving time series to disk).
 
     Parameters
     ----------
@@ -229,9 +229,9 @@ def timeseries_to_str(ts, fmt="%.18e"):
 
     Examples
     --------
-    >>> timeseries_to_str([1, 2, 3, 4], fmt="%.1f")  # doctest: +NORMALIZE_WHITESPACE
+    >>> timeseries_to_str([1, 2, 3, 4], fmt="%.1f")
     '1.0 2.0 3.0 4.0'
-    >>> timeseries_to_str([[1, 3], [2, 4]], fmt="%.1f")  # doctest: +NORMALIZE_WHITESPACE
+    >>> timeseries_to_str([[1, 3], [2, 4]], fmt="%.1f")
     '1.0 2.0|3.0 4.0'
 
     See Also
@@ -250,7 +250,8 @@ def timeseries_to_str(ts, fmt="%.18e"):
 
 
 def str_to_timeseries(ts_str):
-    """Reads a time series from its string representation (used when loading time series from disk).
+    """Reads a time series from its string representation (used when loading
+    time series from disk).
 
     Parameters
     ----------
@@ -264,14 +265,14 @@ def str_to_timeseries(ts_str):
 
     Examples
     --------
-    >>> str_to_timeseries("1 2 3 4")  # doctest: +NORMALIZE_WHITESPACE
-    array([[ 1.],
-           [ 2.],
-           [ 3.],
-           [ 4.]])
-    >>> str_to_timeseries("1 2|3 4")  # doctest: +NORMALIZE_WHITESPACE
-    array([[ 1., 3.],
-           [ 2., 4.]])
+    >>> str_to_timeseries("1 2 3 4")
+    array([[1.],
+           [2.],
+           [3.],
+           [4.]])
+    >>> str_to_timeseries("1 2|3 4")
+    array([[1., 3.],
+           [2., 4.]])
 
     See Also
     --------
@@ -299,14 +300,6 @@ def save_timeseries_txt(fname, dataset, fmt="%.18e"):
     --------
     >>> dataset = to_time_series_dataset([[1, 2, 3, 4], [1, 2, 3]])
     >>> save_timeseries_txt("tmp-tslearn-test.txt", dataset)
-    >>> reloaded_dataset = load_timeseries_txt("tmp-tslearn-test.txt")
-    >>> [numpy.alltrue((ts0[:ts_size(ts0)] - ts1[:ts_size(ts1)]) < 1e-6) for ts0, ts1 in zip(dataset, reloaded_dataset)]
-    [True, True]
-    >>> dataset = to_time_series_dataset([[1, 2, 4], [1, 2, 3]])
-    >>> save_timeseries_txt("tmp-tslearn-test.txt", dataset)
-    >>> reloaded_dataset = load_timeseries_txt("tmp-tslearn-test.txt")
-    >>> [numpy.alltrue((ts0 - ts1) < 1e-6) for ts0, ts1 in zip(dataset, reloaded_dataset)]
-    [True, True]
 
     See Also
     --------
@@ -336,13 +329,6 @@ def load_timeseries_txt(fname):
     >>> dataset = to_time_series_dataset([[1, 2, 3, 4], [1, 2, 3]])
     >>> save_timeseries_txt("tmp-tslearn-test.txt", dataset)
     >>> reloaded_dataset = load_timeseries_txt("tmp-tslearn-test.txt")
-    >>> [numpy.alltrue((ts0[:ts_size(ts0)] - ts1[:ts_size(ts1)]) < 1e-6) for ts0, ts1 in zip(dataset, reloaded_dataset)]
-    [True, True]
-    >>> dataset = to_time_series_dataset([[1, 2, 4], [1, 2, 3]])
-    >>> save_timeseries_txt("tmp-tslearn-test.txt", dataset)
-    >>> reloaded_dataset = load_timeseries_txt("tmp-tslearn-test.txt")
-    >>> [numpy.alltrue((ts0 - ts1) < 1e-6) for ts0, ts1 in zip(dataset, reloaded_dataset)]
-    [True, True]
 
     See Also
     --------
@@ -391,7 +377,8 @@ def check_equal_size(dataset):
 def ts_size(ts):
     """Returns actual time series size.
 
-    Final timesteps that have NaN values for all dimensions will be removed from the count.
+    Final timesteps that have NaN values for all dimensions will be removed
+    from the count.
 
     Parameters
     ----------
@@ -411,7 +398,11 @@ def ts_size(ts):
     1
     >>> ts_size([numpy.nan])
     0
-    >>> ts_size([[1, 2], [2, 3], [3, 4], [numpy.nan, 2], [numpy.nan, numpy.nan]])
+    >>> ts_size([[1, 2],
+    ...          [2, 3],
+    ...          [3, 4],
+    ...          [numpy.nan, 2],
+    ...          [numpy.nan, numpy.nan]])
     4
     """
     ts_ = to_time_series(ts)
@@ -439,9 +430,9 @@ def ts_zeros(sz, d=1):
     Examples
     --------
     >>> ts_zeros(3, 2)  # doctest: +NORMALIZE_WHITESPACE
-    array([[ 0., 0.],
-           [ 0., 0.],
-           [ 0., 0.]])
+    array([[0., 0.],
+           [0., 0.],
+           [0., 0.]])
     >>> ts_zeros(5).shape
     (5, 1)
     """
@@ -462,28 +453,23 @@ class LabelCategorizer(BaseEstimator, TransformerMixin):
     --------
     >>> y = numpy.array([-1, 2, 1, 1, 2])
     >>> lc = LabelCategorizer()
-    >>> lc.fit_transform(y)  # doctest: +NORMALIZE_WHITESPACE
-    array([[ 1., 0., 0.],
-           [ 0., 0., 1.],
-           [ 0., 1., 0.],
-           [ 0., 1., 0.],
-           [ 0., 0., 1.]])
-    >>> lc.inverse_transform([[0, 1, 0], [0, 0, 1], [1, 0, 0]])  # doctest: +NORMALIZE_WHITESPACE
-    array([ 1., 2., -1.])
-    >>> import pickle
-    >>> s = pickle.dumps(lc)
-    >>> lc2 = pickle.loads(s)
-    >>> lc2.inverse_transform([[0, 1, 0], [0, 0, 1], [1, 0, 0]])  # doctest: +NORMALIZE_WHITESPACE
-    array([ 1., 2., -1.])
+    >>> lc.fit_transform(y)
+    array([[1., 0., 0.],
+           [0., 0., 1.],
+           [0., 1., 0.],
+           [0., 1., 0.],
+           [0., 0., 1.]])
+    >>> lc.inverse_transform([[0, 1, 0], [0, 0, 1], [1, 0, 0]])
+    array([ 1.,  2., -1.])
     >>> y = numpy.array([-1, 2, -1, -1, 2])
     >>> lc = LabelCategorizer(single_column_if_binary=True)
-    >>> lc.fit_transform(y)  # doctest: +NORMALIZE_WHITESPACE
-    array([[ 1.],
-           [ 0.],
-           [ 1.],
-           [ 1.],
-           [ 0.]])
-    >>> lc.inverse_transform(lc.transform(y))  # doctest: +NORMALIZE_WHITESPACE
+    >>> lc.fit_transform(y)
+    array([[1.],
+           [0.],
+           [1.],
+           [1.],
+           [0.]])
+    >>> lc.inverse_transform(lc.transform(y))
     array([-1.,  2., -1., -1.,  2.])
 
     References
