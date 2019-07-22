@@ -19,7 +19,7 @@ def test_shapelets():
     np.testing.assert_allclose(clf.shapelets_[0],
                                np.array([[0.56373, 0.494684],
                                          [1.235707, 1.119235]]),
-                               atol=1e-5)
+                               atol=1e-2)
     np.testing.assert_allclose(clf.predict(time_series),
                                np.array([0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0,
                                          1, 0]))

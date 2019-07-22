@@ -156,6 +156,8 @@ def to_time_series_dataset(dataset, dtype=numpy.float):
     --------
     to_time_series : Transforms a single time series
     """
+    if len(dataset) == 0:
+        return numpy.zeros((0, 0, 0))
     if numpy.array(dataset[0]).ndim == 0:
         dataset = [dataset]
     n_ts = len(dataset)

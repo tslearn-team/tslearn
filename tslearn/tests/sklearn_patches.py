@@ -41,6 +41,7 @@ _DEFAULT_TAGS = {
     'binary_only': False,
     'requires_fit': True}
 
+
 def _safe_tags(estimator, key=None):
     # if estimator doesn't have _get_tags, use _DEFAULT_TAGS
     # if estimator has tags but not key, use _DEFAULT_TAGS[key]
@@ -57,10 +58,10 @@ def _safe_tags(estimator, key=None):
 
 def _create_small_ts_dataset():
     return random_walk_blobs(n_ts_per_blob=10, n_blobs=3, random_state=1,
-                             sz=40, noise_level=0.05)
+                             sz=50, noise_level=0.1)
 
 
-# Patch BOSTON dataset of sklearn: _csv.Error: line contains NULL byte
+# Patch BOSTON dataset of sklearn to fix _csv.Error: line contains NULL byte
 BOSTON = _create_small_ts_dataset()
 sklearn.utils.estimator_checks.BOSTON = BOSTON
 
@@ -72,7 +73,7 @@ def check_clustering(name, clusterer_orig, readonly_memmap=False):
     X, y = _create_small_ts_dataset()
     X, y = shuffle(X, y, random_state=7)
     X = TimeSeriesScalerMeanVariance().fit_transform(X)
-    X_noise = np.concatenate([X, random_walks(n_ts=5, sz=40)])
+    X_noise = np.concatenate([X, random_walks(n_ts=5, sz=50)])
 
     n_samples, n_features, dim = X.shape
     # catch deprecation and neighbors warnings
@@ -270,6 +271,8 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
         y_pred = classifier.predict(X)
 
         assert y_pred.shape == (n_samples,)
+
+        print(list(zip(y, y_pred)))
         # training set performance
         if not tags['poor_score']:
             assert accuracy_score(y, y_pred) > 0.83

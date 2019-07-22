@@ -338,9 +338,9 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         y : array-like of shape=(n_ts, )
             Time series labels.
         """
-        X = to_time_series_dataset(X)
         X = check_array(X, allow_nd=True)
         y = column_or_1d(y, warn=True)
+        X = to_time_series_dataset(X)
         X = check_dims(X, X_fit=None)
 
         set_random_seed(seed=self.random_state)
@@ -410,16 +410,15 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
             what was provided at training time.
         """
         check_is_fitted(self, 'X_fit_')
-        X = to_time_series_dataset(X)
         X = check_array(X, allow_nd=True)
+        X = to_time_series_dataset(X)
         X = check_dims(X, X_fit=self.X_fit_)
 
         categorical_preds = self.predict_proba(X)
         if self.categorical_y_:
             return categorical_preds
         else:
-            return self.label_binarizer_.inverse_transform(categorical_preds,
-                                                           threshold=0.5)
+            return self.label_binarizer_.inverse_transform(categorical_preds)
 
     def predict_proba(self, X):
         """Predict class probability for a given set of time series.
@@ -435,11 +434,9 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
             Class probability matrix.
         """
         check_is_fitted(self, 'X_fit_')
-        X = to_time_series_dataset(X)
         X = check_array(X, allow_nd=True)
-        X = check_dims(X, self.X_fit_)
-
         X_ = to_time_series_dataset(X)
+        X_ = check_dims(X_, self.X_fit_)
         n_ts, sz, d = X_.shape
         categorical_preds = self.model_.predict(
             [X_[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
@@ -467,8 +464,8 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         """
         check_is_fitted(self, 'X_fit_')
         X = check_array(X, allow_nd=True)
-        X = check_dims(X, X_fit=self.X_fit_)
         X_ = to_time_series_dataset(X)
+        X_ = check_dims(X_, X_fit=self.X_fit_)
         n_ts, sz, d = X_.shape
         pred = self.transformer_model_.predict(
             [X_[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
@@ -635,11 +632,7 @@ class SerializableShapeletModel(ShapeletModel):
     >>> from tslearn.generators import random_walk_blobs
     >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=16, d=2, n_blobs=3)
     >>> clf = SerializableShapeletModel(n_shapelets_per_size={4: 5}, max_iter=1, verbose_level=0, learning_rate=0.01)
-    >>> clf.fit(X, y)  # doctest: +NORMALIZE_WHITESPACE
-    SerializableShapeletModel(batch_size=256, learning_rate=0.01, max_iter=1,
-                              n_shapelets_per_size={4: 5}, nr_shap_lens=3,
-                              random_state=None, shap_len=0.3, verbose_level=0,
-                              weight_regularizer=0.0)
+    >>> _ = clf.fit(X, y)  # doctest: +NORMALIZE_WHITESPACE
     >>> len(clf.shapelets_)
     5
     >>> clf.shapelets_[0].shape
