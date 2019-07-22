@@ -272,7 +272,6 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
 
         assert y_pred.shape == (n_samples,)
 
-        print(list(zip(y, y_pred)))
         # training set performance
         if not tags['poor_score']:
             assert accuracy_score(y, y_pred) > 0.83
