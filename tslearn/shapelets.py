@@ -338,6 +338,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         y : array-like of shape=(n_ts, )
             Time series labels.
         """
+        X = to_time_series_dataset(X)
         X = check_array(X, allow_nd=True)
         y = column_or_1d(y, warn=True)
         X = check_dims(X, X_fit=None)
@@ -409,6 +410,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
             what was provided at training time.
         """
         check_is_fitted(self, 'X_fit_')
+        X = to_time_series_dataset(X)
         X = check_array(X, allow_nd=True)
         X = check_dims(X, X_fit=self.X_fit_)
 
@@ -433,6 +435,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
             Class probability matrix.
         """
         check_is_fitted(self, 'X_fit_')
+        X = to_time_series_dataset(X)
         X = check_array(X, allow_nd=True)
         X = check_dims(X, self.X_fit_)
 
@@ -634,8 +637,9 @@ class SerializableShapeletModel(ShapeletModel):
     >>> clf = SerializableShapeletModel(n_shapelets_per_size={4: 5}, max_iter=1, verbose_level=0, learning_rate=0.01)
     >>> clf.fit(X, y)  # doctest: +NORMALIZE_WHITESPACE
     SerializableShapeletModel(batch_size=256, learning_rate=0.01, max_iter=1,
-                 n_shapelets_per_size={4: 5}, random_state=None,
-                 verbose_level=0, weight_regularizer=0.0)
+                              n_shapelets_per_size={4: 5}, nr_shap_lens=3,
+                              random_state=None, shap_len=0.3, verbose_level=0,
+                              weight_regularizer=0.0)
     >>> len(clf.shapelets_)
     5
     >>> clf.shapelets_[0].shape

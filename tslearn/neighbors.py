@@ -228,6 +228,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         y : array-like, shape (n_ts, )
             Target values.
         """
+        X = to_time_series_dataset(X)
         X = check_array(X, allow_nd=True)
         X = check_dims(X, X_fit=None)
         self.X_fit_, self.d_ = to_sklearn_dataset(X, return_dim=True)
@@ -242,6 +243,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             Test samples.
         """
         check_is_fitted(self, 'X_fit_')
+        X = to_time_series_dataset(X)
         X = check_array(X, allow_nd=True)
         X_ = to_sklearn_dataset(X)
         X_ = check_dims(X_, self.X_fit_, extend=False)
@@ -256,6 +258,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             Test samples.
         """
         check_is_fitted(self, 'X_fit_')
+        X = to_time_series_dataset(X)
         X = check_array(X, allow_nd=True)
         X_ = to_sklearn_dataset(X)
         X_ = check_dims(X_, self.X_fit_, extend=False)
