@@ -57,7 +57,7 @@ def _safe_tags(estimator, key=None):
 
 def _create_small_ts_dataset():
     return random_walk_blobs(n_ts_per_blob=10, n_blobs=3, random_state=1,
-                             sz=25, noise_level=0.25)
+                             sz=40, noise_level=0.05)
 
 
 # Patch BOSTON dataset of sklearn: _csv.Error: line contains NULL byte
@@ -72,7 +72,7 @@ def check_clustering(name, clusterer_orig, readonly_memmap=False):
     X, y = _create_small_ts_dataset()
     X, y = shuffle(X, y, random_state=7)
     X = TimeSeriesScalerMeanVariance().fit_transform(X)
-    X_noise = np.concatenate([X, random_walks(n_ts=5, sz=25)])
+    X_noise = np.concatenate([X, random_walks(n_ts=5, sz=40)])
 
     n_samples, n_features, dim = X.shape
     # catch deprecation and neighbors warnings
@@ -126,10 +126,9 @@ def check_non_transf_est_n_iter(name, estimator_orig):
     # max_iter, return the attribute of n_iter_ at least 1.
     estimator = clone(estimator_orig)
     if hasattr(estimator, 'max_iter'):
-        X, y_ = _create_small_ts_dataset()
+        X, y = _create_small_ts_dataset()
         set_random_state(estimator, 0)
-        estimator.fit(X, y_)
-
+        estimator.fit(X, y)
         assert estimator.n_iter_ >= 1
 
 

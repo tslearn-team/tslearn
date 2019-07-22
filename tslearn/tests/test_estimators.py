@@ -110,7 +110,7 @@ def get_estimators(type_filter='all'):
     return sorted(set(filtered_classes), key=itemgetter(0))
 
 
-@ignore_warnings()
+#@ignore_warnings()
 def test_all_estimators():
     estimators = get_estimators('all')
     for estimator in estimators:

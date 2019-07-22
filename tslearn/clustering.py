@@ -641,6 +641,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
             metric_params = self.metric_params
         self.gamma_sdtw_ = metric_params.get("gamma_sdtw", 1.)
 
+        self.n_iter_ = 0
+
         max_attempts = max(self.n_init, 10)
 
         X_ = to_time_series_dataset(X)
