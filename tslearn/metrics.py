@@ -22,6 +22,15 @@ global_constraint_code = {"": 0, "itakura": 1, "sakoe_chiba": 2}
 
 
 @njit()
+def _local_squared_dist(x, y):
+    dist = 0.
+    for di in prange(x.shape[0]):
+        diff = (x[di] - y[di])
+        dist += diff * diff
+    return dist
+
+
+@njit()
 def njit_accumulated_matrix(s1, s2, mask):
     """Compute the accumulated cost matrix score between two time series.
 
@@ -50,11 +59,11 @@ def njit_accumulated_matrix(s1, s2, mask):
     for i in prange(l1):
         for j in prange(l2):
             if numpy.isfinite(mask[i, j]):
-                cum_sum[i + 1, j + 1] = numpy.linalg.norm(s1[i] - s2[j]) ** 2
+                cum_sum[i + 1, j + 1] = _local_squared_dist(s1[i], s2[j])
                 cum_sum[i + 1, j + 1] += min(cum_sum[i, j + 1],
                                              cum_sum[i + 1, j],
                                              cum_sum[i, j])
-    return numpy.sqrt(cum_sum[1:, 1:])
+    return cum_sum[1:, 1:]
 
 
 @njit()
@@ -79,7 +88,7 @@ def njit_dtw(s1, s2, mask):
 
     """
     cum_sum = njit_accumulated_matrix(s1, s2, mask)
-    return cum_sum[-1, -1]
+    return numpy.sqrt(cum_sum[-1, -1])
 
 
 @njit()
@@ -125,7 +134,7 @@ def njit_cdist_dtw(dataset1, dataset2, global_constraint, sakoe_chiba_radius,
     """
     n_samples_1 = dataset1.shape[0]
     n_samples_2 = dataset2.shape[0]
-    cdist = numpy.empty((n_samples_1, n_samples_2))
+    cdist_arr = numpy.empty((n_samples_1, n_samples_2))
     for i in prange(n_samples_1):
         s1 = dataset1[i]
         s1 = s1[numpy.isfinite(s1[:, 0])]
@@ -134,8 +143,8 @@ def njit_cdist_dtw(dataset1, dataset2, global_constraint, sakoe_chiba_radius,
             s2 = s2[numpy.isfinite(s2[:, 0])]
             mask = compute_mask(s1, s2, global_constraint,
                                 sakoe_chiba_radius, itakura_max_slope)
-            cdist[i, j] = njit_dtw(s1, s2, mask)
-    return cdist
+            cdist_arr[i, j] = njit_dtw(s1, s2, mask)
+    return cdist_arr
 
 
 @njit()
@@ -246,7 +255,7 @@ def dtw_path(s1, s2, global_constraint=None,
     )
     acc_cost_mat = njit_accumulated_matrix(s1, s2, mask=mask)
     path = _return_path(acc_cost_mat)
-    return path, acc_cost_mat[-1, -1]
+    return path, numpy.sqrt(acc_cost_mat[-1, -1])
 
 
 def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=1,
@@ -303,8 +312,8 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=1,
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
 
     """
-    s1 = to_time_series(s1)
-    s2 = to_time_series(s2)
+    s1 = to_time_series(s1, remove_nans=True)
+    s2 = to_time_series(s2, remove_nans=True)
 
     if global_constraint is not None:
         global_constraint_str = global_constraint
@@ -344,12 +353,11 @@ def njit_accumulated_matrix_subsequence(subseq, longseq):
 
     for i in prange(l1):
         for j in prange(l2):
-            cum_sum[i + 1, j + 1] = numpy.linalg.norm(subseq[i] -
-                                                      longseq[j]) ** 2
+            cum_sum[i + 1, j + 1] = _local_squared_dist(subseq[i], longseq[j])
             cum_sum[i + 1, j + 1] += min(cum_sum[i, j + 1],
                                          cum_sum[i + 1, j],
                                          cum_sum[i, j])
-    return numpy.sqrt(cum_sum[1:, 1:])
+    return cum_sum[1:, 1:]
 
 
 @njit()
@@ -431,7 +439,7 @@ def dtw_subsequence_path(subseq, longseq):
     acc_cost_mat = njit_accumulated_matrix_subsequence(subseq=subseq,
                                                        longseq=longseq)
     path = _return_path_subsequence(acc_cost_mat)
-    return path, numpy.min(acc_cost_mat[-1, :])
+    return path, numpy.sqrt(numpy.min(acc_cost_mat[-1, :]))
 
 
 @njit()
@@ -701,8 +709,8 @@ def gak(s1, s2, sigma=1.):  # TODO: better doc (formula for the kernel)
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """
-    s1 = to_time_series(s1)
-    s2 = to_time_series(s2)
+    s1 = to_time_series(s1, remove_nans=True)
+    s2 = to_time_series(s2, remove_nans=True)
     return cynormalized_gak(s1, s2, sigma)
 
 
