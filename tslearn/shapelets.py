@@ -14,7 +14,7 @@ from keras.initializers import Initializer
 import keras.backend as K
 from keras.engine import InputSpec
 import numpy
-from tensorflow import set_random_seed
+import tensorflow as tf
 
 from tslearn.utils import to_time_series_dataset
 from tslearn.clustering import TimeSeriesKMeans
@@ -327,8 +327,8 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         y : array-like of shape=(n_ts, )
             Time series labels.
         """
-        set_random_seed(seed=self.random_state)
         numpy.random.seed(seed=self.random_state)
+        tf.compat.v1.random.set_random_seed(seed=self.random_state)
         n_ts, sz, d = X.shape
         self.d = d
         if y.ndim == 1:
