@@ -58,7 +58,7 @@ def _safe_tags(estimator, key=None):
 
 def _create_small_ts_dataset():
     return random_walk_blobs(n_ts_per_blob=10, n_blobs=3, random_state=1,
-                             sz=30, noise_level=0.1)
+                             sz=50, noise_level=0.1)
 
 
 # Patch BOSTON dataset of sklearn to fix _csv.Error: line contains NULL byte
@@ -360,12 +360,11 @@ def check_supervised_y_2d(name, estimator_orig):
     tags = {'multioutput': False, 'binary_only': False}
 
     rnd = np.random.RandomState(0)
-    X = random_walks(n_ts=10, sz=25)
+    X, y = _create_small_ts_dataset()
     if tags['binary_only']:
-        y = np.arange(10) % 2
-    else:
-        y = np.arange(10) % 3
-
+        X = X[y != 2]
+        y = y[y != 2]
+    
     estimator = clone(estimator_orig)
     set_random_state(estimator)
     # fit
