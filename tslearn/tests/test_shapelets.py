@@ -49,9 +49,10 @@ def test_serializable_shapelets():
 
     params = clf.get_params(deep=True)
     for s1, s2 in zip(sorted(params.keys()),
-                      ['batch_size', 'learning_rate', 'max_iter',
-                       'n_shapelets_per_size', 'random_state',
-                       'verbose_level', 'weight_regularizer']):
+                      sorted(['batch_size', 'learning_rate', 'max_iter',
+                              'n_shapelets_per_size', 'random_state',
+                              'nr_shap_lens', 'shap_len',
+                              'verbose_level', 'weight_regularizer'])):
         np.testing.assert_string_equal(s1, s2)
 
     from sklearn.model_selection import cross_validate
