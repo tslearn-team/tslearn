@@ -114,10 +114,7 @@ def get_estimators(type_filter='all'):
 def test_all_estimators():
     estimators = get_estimators('all')
     for estimator in estimators:
-        #if estimator[0] in ['ShapeletModel', 'SerializableShapeletModel']:
-        #    continue
+        if estimator[0] in ['ShapeletModel', 'SerializableShapeletModel']:
+            continue
         check_estimator(estimator[1])
         logging.info('{} is sklearn compliant.'.format(estimator[0]))
-
-
-test_all_estimators()
