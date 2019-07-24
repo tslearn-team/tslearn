@@ -277,7 +277,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
     .. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
     """
     def __init__(self, n_shapelets_per_size=None,
-                 max_iter=100,
+                 max_iter=500,
                  batch_size=256,
                  verbose_level=0,
                  optimizer="sgd",
@@ -339,9 +339,9 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
             Time series labels.
         """
         X = check_array(X, allow_nd=True)
-        y = column_or_1d(y, warn=True)
         X = to_time_series_dataset(X)
         X = check_dims(X, X_fit=None)
+        y = column_or_1d(y, warn=True)
 
         set_random_seed(seed=self.random_state)
         numpy.random.seed(seed=self.random_state)
@@ -435,11 +435,11 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         """
         check_is_fitted(self, 'X_fit_')
         X = check_array(X, allow_nd=True)
-        X_ = to_time_series_dataset(X)
-        X_ = check_dims(X_, self.X_fit_)
-        n_ts, sz, d = X_.shape
+        X = to_time_series_dataset(X)
+        X = check_dims(X, self.X_fit_)
+        n_ts, sz, d = X.shape
         categorical_preds = self.model_.predict(
-            [X_[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
+            [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
             batch_size=self.batch_size, verbose=self.verbose_level
         )
 
@@ -464,11 +464,11 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         """
         check_is_fitted(self, 'X_fit_')
         X = check_array(X, allow_nd=True)
-        X_ = to_time_series_dataset(X)
-        X_ = check_dims(X_, X_fit=self.X_fit_)
-        n_ts, sz, d = X_.shape
+        X = to_time_series_dataset(X)
+        X = check_dims(X, X_fit=self.X_fit_)
+        n_ts, sz, d = X.shape
         pred = self.transformer_model_.predict(
-            [X_[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
+            [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
             batch_size=self.batch_size, verbose=self.verbose_level
         )
         return pred
@@ -487,10 +487,12 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
             Location of the shapelet matches for the provided time series.
         """
         X = check_dims(X, X_fit=self.X_fit_)
-        X_ = to_time_series_dataset(X)
-        n_ts, sz, d = X_.shape
+        X = check_array(X, allow_nd=True)
+        X = to_time_series_dataset(X)
+        X = check_dims(X, X_fit=self.X_fit_)
+        n_ts, sz, d = X.shape
         locations = self.locator_model_.predict(
-            [X_[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
+            [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
             batch_size=self.batch_size, verbose=self.verbose_level
         )
         return locations.astype(numpy.int)
@@ -632,7 +634,7 @@ class SerializableShapeletModel(ShapeletModel):
     >>> from tslearn.generators import random_walk_blobs
     >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=16, d=2, n_blobs=3)
     >>> clf = SerializableShapeletModel(n_shapelets_per_size={4: 5}, max_iter=1, verbose_level=0, learning_rate=0.01)
-    >>> _ = clf.fit(X, y)  # doctest: +NORMALIZE_WHITESPACE
+    >>> _ = clf.fit(X, y)
     >>> len(clf.shapelets_)
     5
     >>> clf.shapelets_[0].shape

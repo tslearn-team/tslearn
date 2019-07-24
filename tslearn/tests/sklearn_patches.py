@@ -58,7 +58,7 @@ def _safe_tags(estimator, key=None):
 
 def _create_small_ts_dataset():
     return random_walk_blobs(n_ts_per_blob=10, n_blobs=3, random_state=1,
-                             sz=50, noise_level=0.1)
+                             sz=30, noise_level=0.1)
 
 
 # Patch BOSTON dataset of sklearn to fix _csv.Error: line contains NULL byte

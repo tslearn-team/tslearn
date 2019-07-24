@@ -204,7 +204,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
     --------
     >>> clf = KNeighborsTimeSeriesClassifier(n_neighbors=2, metric="dtw")
     >>> clf.fit([[1, 2, 3], [1, 1.2, 3.2], [3, 2, 1]],
-    ...         y=[0, 0, 1]).predict([1, 2.2, 3.5])
+    ...         y=[0, 0, 1]).predict([[1, 2.2, 3.5]])
     array([0])
     """
     def __init__(self,
