@@ -632,6 +632,9 @@ class SerializableShapeletModel(ShapeletModel):
     Examples
     --------
     >>> from tslearn.generators import random_walk_blobs
+    >>> import os
+    >>> _ = os.environ['KMP_WARNINGS'] = 'off'
+    >>> _ = os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
     >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=16, d=2, n_blobs=3)
     >>> clf = SerializableShapeletModel(n_shapelets_per_size={4: 5}, max_iter=1, verbose_level=0, learning_rate=0.01)
     >>> clf.fit(X, y).shapelets_.shape
@@ -650,7 +653,7 @@ class SerializableShapeletModel(ShapeletModel):
     .. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
     """
     def __init__(self, n_shapelets_per_size=None,
-                 max_iter=100,
+                 max_iter=500,
                  batch_size=256,
                  verbose_level=0,
                  learning_rate=0.01,
