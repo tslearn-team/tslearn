@@ -2,9 +2,7 @@
 """
 Learning Shapelets
 ==================
-
 This example illustrates the use of the "Learning Shapelets" method for a time series classification task.
-
 More information on the method can be found at: http://fs.ismll.de/publicspace/LearningShapelets/.
 """
 
@@ -13,7 +11,7 @@ More information on the method can be found at: http://fs.ismll.de/publicspace/L
 
 import numpy
 from sklearn.metrics import accuracy_score
-from keras.optimizers import Adagrad
+import tensorflow as tf
 import matplotlib.pyplot as plt
 
 from tslearn.datasets import CachedDatasets
@@ -35,7 +33,7 @@ shapelet_sizes = grabocka_params_to_shapelet_size_dict(n_ts=X_train.shape[0],
 
 # Define the model using parameters provided by the authors (except that we use fewer iterations here)
 shp_clf = ShapeletModel(n_shapelets_per_size=shapelet_sizes,
-                        optimizer=Adagrad(lr=.1),
+                        optimizer=tf.optimizers.Adam(.1),
                         weight_regularizer=.01,
                         max_iter=200,
                         verbose_level=0)
@@ -52,5 +50,5 @@ for i, sz in enumerate(shapelet_sizes.keys()):
             plt.plot(shp.ravel())
     plt.xlim([0, max(shapelet_sizes.keys()) - 1])
 
-plt.tight_layout()
 plt.show()
+plt.close()
