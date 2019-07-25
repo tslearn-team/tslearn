@@ -637,8 +637,8 @@ class SerializableShapeletModel(ShapeletModel):
     >>> _ = os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
     >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=16, d=2, n_blobs=3)
     >>> clf = SerializableShapeletModel(n_shapelets_per_size={4: 5}, max_iter=1, verbose_level=0, learning_rate=0.01)
-    >>> clf.fit(X, y).shapelets_.shape
-    (5,)
+    >>> clf.fit(X, y).shapelets_.shape[0]
+    5
     >>> clf.shapelets_[0].shape
     (4, 2)
     >>> clf.predict(X).shape
