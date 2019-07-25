@@ -86,7 +86,7 @@ class KMeansShapeletInitializer(Initializer):
         shapelets = _kmeans_init_shapelets(self.X_,
                                            n_shapelets,
                                            shp_len)[:, :, 0]
-        return K.tensorflow_backend._to_tensor(x=shapelets, dtype=K.floatx())
+        return tf.convert_to_tensor(x=shapelets, dtype=K.floatx())
 
     def get_config(self):
         return {'data': self.X_}
