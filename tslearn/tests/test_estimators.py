@@ -36,6 +36,10 @@ checks.check_classifiers_regression_target = check_classifiers_cont_target
 checks.check_pipeline_consistency = check_pipeline_consistency
 
 
+if hasattr(checks, 'ALLOW_NAN'):
+    checks.ALLOW_NAN.append('TimeSeriesKMeans')
+
+
 def _get_all_classes():
     # Walk through all the packages from our base_path and
     # add all the classes to a list
