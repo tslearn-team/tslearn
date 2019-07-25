@@ -56,9 +56,9 @@ script:
   sed -i -e 's/"backend":[[:space:]]*"[^"]*/"backend":\ "'$KERAS_BACKEND'/g' ~/.keras/keras.json;
   echo -e "Running tests with the following config:\n$(cat ~/.keras/keras.json)";
 - if [[ "$NUMBA_DISABLE_JIT" == 1 ]]; then
-  python -m pytest -v tslearn tslearn/tests/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py $KERAS_IGNORE --cov=tslearn --log-cli-level info;
+  python -m pytest -v tslearn tslearn/tests/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py $KERAS_IGNORE --cov=tslearn;
   if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then codeclimate-test-reporter; fi
-  else python -m pytest -v tslearn tslearn/tests/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py $KERAS_IGNORE --log-cli-level info; fi
+  else python -m pytest -v tslearn tslearn/tests/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py $KERAS_IGNORE; fi
 notifications:
   email: false
 
