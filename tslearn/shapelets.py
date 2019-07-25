@@ -5,14 +5,13 @@ It depends on the `keras` library for optimization.
 """
 
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Dense, Conv1D, Layer, Input, concatenate, add
+from tensorflow.keras.layers import InputSpec, Dense, Conv1D, Layer, Input, concatenate, add
 from tensorflow.keras.metrics import categorical_accuracy, categorical_crossentropy, binary_accuracy, binary_crossentropy
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.base import BaseEstimator, ClassifierMixin
 from tensorflow.keras.regularizers import l2
 from tensorflow.keras.initializers import Initializer
 import tensorflow.keras.backend as K
-from tensorflow.keras.engine import InputSpec
 import numpy
 import tensorflow.compat.v1 as tf
 
