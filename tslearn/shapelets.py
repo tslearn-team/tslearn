@@ -327,7 +327,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
             Time series labels.
         """
         numpy.random.seed(seed=self.random_state)
-        tf.set_random_seed(seed=self.random_state)
+        tf.random.set_seed(seed=self.random_state)
         n_ts, sz, d = X.shape
         self.d = d
         if y.ndim == 1:
