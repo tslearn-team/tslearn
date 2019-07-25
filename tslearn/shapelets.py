@@ -13,7 +13,7 @@ from tensorflow.keras.regularizers import l2
 from tensorflow.keras.initializers import Initializer
 import tensorflow.keras.backend as K
 import numpy
-import tensorflow.compat.v1 as tf
+import tensorflow as tf
 
 from tslearn.utils import to_time_series_dataset
 from tslearn.clustering import TimeSeriesKMeans
