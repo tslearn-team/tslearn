@@ -57,10 +57,8 @@ def _safe_tags(estimator, key=None):
 
 
 def _create_small_ts_dataset():
-    X, y = random_walk_blobs(n_ts_per_blob=10, n_blobs=3, random_state=1,
+    return random_walk_blobs(n_ts_per_blob=10, n_blobs=3, random_state=1,
                              sz=50, noise_level=0.1)
-    X = np.reshape(X, (X.shape[0], X.shape[1]))
-    return X, y
 
 
 # Patch BOSTON dataset of sklearn to fix _csv.Error: line contains NULL byte
@@ -202,6 +200,9 @@ def check_classifiers_classes(name, classifier_orig):
 
     scaler = TimeSeriesScalerMeanVariance()
     X_multiclass = scaler.fit_transform(X_multiclass)
+
+    X_multiclass = np.reshape(X_multiclass, (X_multiclass.shape[0], 
+                                             X_multiclass.shape[1]))
 
     X_binary = X_multiclass[y_multiclass != 2]
     y_binary = y_multiclass[y_multiclass != 2]
