@@ -633,8 +633,10 @@ class SerializableShapeletModel(ShapeletModel):
     --------
     >>> from tslearn.generators import random_walk_blobs
     >>> import os
-    >>> _ = os.environ['KMP_WARNINGS'] = 'off'
-    >>> _ = os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+    >>> import tensorflow as tf
+    >>> os.environ['KMP_WARNINGS'] = 'off'
+    >>> os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+    >>> _ = tf.logging.set_verbosity(tf.logging.ERROR)
     >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=16, d=2, n_blobs=3)
     >>> clf = SerializableShapeletModel(n_shapelets_per_size={4: 5}, max_iter=1, verbose_level=0, learning_rate=0.01)
     >>> _ = clf.fit(X, y)

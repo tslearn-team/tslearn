@@ -483,7 +483,10 @@ def yield_all_checks(name, estimator):
         for check in _yield_outliers_checks(name, estimator):
             yield check
     yield check_fit2d_predict1d
-    yield check_methods_subset_invariance
+
+    if not tags["non_deterministic"]:
+        yield check_methods_subset_invariance
+        
     yield check_fit2d_1sample
     yield check_fit2d_1feature
     yield check_fit1d
