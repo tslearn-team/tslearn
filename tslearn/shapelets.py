@@ -10,7 +10,7 @@ from keras.metrics import categorical_accuracy, categorical_crossentropy, binary
 from keras.utils.generic_utils import get_custom_objects
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.base import BaseEstimator, ClassifierMixin, TransformerMixin
-from sklearn.utils import check_array, column_or_1d
+from sklearn.utils import check_array, check_X_y
 from sklearn.utils.validation import check_is_fitted
 import keras
 from keras.regularizers import l2
@@ -277,7 +277,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
     .. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
     """
     def __init__(self, n_shapelets_per_size=None,
-                 max_iter=500,
+                 max_iter=100,
                  batch_size=256,
                  verbose_level=0,
                  optimizer="sgd",
@@ -338,10 +338,9 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         y : array-like of shape=(n_ts, )
             Time series labels.
         """
-        X = check_array(X, allow_nd=True)
+        X, y = check_X_y(X, allow_nd=True)
         X = to_time_series_dataset(X)
         X = check_dims(X, X_fit=None)
-        y = column_or_1d(y, warn=True)
 
         set_random_seed(seed=self.random_state)
         numpy.random.seed(seed=self.random_state)
@@ -525,30 +524,45 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
             ]
 
             if d == 1:
-                summed_shapelet_layer = shapelet_layers[0]
+                sum_shap = shapelet_layers[0]
             else:
-                summed_shapelet_layer = add(shapelet_layers)
+                sum_shap = add(shapelet_layers)
 
-            gp = GlobalMinPooling1D(name="min_pooling_%d" % i)(summed_shapelet_layer)
-            pool_layers.append(GlobalMinPooling1D(name="min_pooling_%d" % i)(summed_shapelet_layer))
-            pool_layers_locations.append(GlobalArgminPooling1D(name="min_pooling_%d" % i)(summed_shapelet_layer))
+            gp = GlobalMinPooling1D(name="min_pooling_%d" % i)(sum_shap)
+            gap = GlobalArgminPooling1D(name="min_pooling_%d" % i)(sum_shap)
+            pool_layers.append(gp)
+            pool_layers_locations.append(gap)
         if len(shapelet_sizes) > 1:
             concatenated_features = concatenate(pool_layers)
             concatenated_locations = concatenate(pool_layers_locations)
         else:
             concatenated_features = pool_layers[0]
             concatenated_locations = pool_layers_locations[0]
+        
+        if self.weight_regularizer > 0:
+            regularizer = l2(self.weight_regularizer)
+        else:
+            regularizer = None
+
+        if n_classes > 2:
+            loss = "categorical_crossentropy"
+            metrics = [categorical_accuracy, categorical_crossentropy]
+        else:
+            loss = "binary_crossentropy"
+            metrics = [binary_accuracy, binary_crossentropy]
+
         outputs = Dense(units=n_classes if n_classes > 2 else 1,
                         activation="softmax" if n_classes > 2 else "sigmoid",
-                        kernel_regularizer=l2(self.weight_regularizer) if self.weight_regularizer > 0 else None,
+                        kernel_regularizer=regularizer,
                         name="classification")(concatenated_features)
         self.model_ = Model(inputs=inputs, outputs=outputs)
-        self.transformer_model_ = Model(inputs=inputs, outputs=concatenated_features)
-        self.locator_model_ = Model(inputs=inputs, outputs=concatenated_locations)
-        self.model_.compile(loss="categorical_crossentropy" if n_classes > 2 else "binary_crossentropy",
-                           optimizer=self.optimizer,
-                           metrics=[categorical_accuracy, categorical_crossentropy] if n_classes > 2
-                           else [binary_accuracy, binary_crossentropy])
+        self.transformer_model_ = Model(inputs=inputs, 
+                                        outputs=concatenated_features)
+        self.locator_model_ = Model(inputs=inputs, 
+                                    outputs=concatenated_locations)
+        self.model_.compile(loss=loss,
+                            optimizer=self.optimizer,
+                            metrics=metrics)
 
     def get_weights(self, layer_name=None):
         """Return model weights (or weights for a given layer if `layer_name` is provided).
@@ -656,7 +670,7 @@ class SerializableShapeletModel(ShapeletModel):
     .. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
     """
     def __init__(self, n_shapelets_per_size=None,
-                 max_iter=500,
+                 max_iter=100,
                  batch_size=256,
                  verbose_level=0,
                  learning_rate=0.01,

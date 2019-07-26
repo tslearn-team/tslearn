@@ -12,7 +12,7 @@ from sklearn.utils.estimator_checks import (_yield_classifier_checks,
                                             _yield_outliers_checks)
 try:
     from sklearn.utils.estimator_checks import _yield_checks
-except:
+except ImportError:
     from sklearn.utils.estimator_checks import _yield_non_meta_checks
     _yield_checks = _yield_non_meta_checks
 
@@ -145,9 +145,10 @@ def check_fit_idempotent(name, estimator_orig):
     check_methods = ["predict", "transform", "decision_function",
                      "predict_proba"]
     rng = np.random.RandomState(0)
-
-    if name in ['TimeSeriesSVC', 'TimeSeriesSVR']:
-        return
+    
+    if _safe_tags(estimator_orig, 'non_deterministic'):
+        msg = name + ' is non deterministic'
+        raise SkipTest(msg)
 
     estimator = clone(estimator_orig)
     set_random_state(estimator)
@@ -201,7 +202,7 @@ def check_classifiers_classes(name, classifier_orig):
     scaler = TimeSeriesScalerMeanVariance()
     X_multiclass = scaler.fit_transform(X_multiclass)
 
-    X_multiclass = np.reshape(X_multiclass, (X_multiclass.shape[0], 
+    X_multiclass = np.reshape(X_multiclass, (X_multiclass.shape[0],
                                              X_multiclass.shape[1]))
 
     X_binary = X_multiclass[y_multiclass != 2]
@@ -319,12 +320,12 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
                 # raises error on malformed input for decision_function
                 if not tags["no_validation"]:
                     if bool(getattr(classifier, "_pairwise", False)):
-                        error_msg = msg_pairwise.format(name, 
+                        error_msg = msg_pairwise.format(name,
                                                         "decision_function")
                         with assert_raises(ValueError, msg=error_msg):
                             classifier.decision_function(X.reshape(-1, 1))
                     else:
-                        error_msg = msg_pairwise.format(name, 
+                        error_msg = msg_pairwise.format(name,
                                                         "decision_function")
                         with assert_raises(ValueError, msg=error_msg):
                             classifier.decision_function(X.T)
@@ -372,7 +373,7 @@ def check_supervised_y_2d(name, estimator_orig):
     if tags['binary_only']:
         X = X[y != 2]
         y = y[y != 2]
-    
+
     estimator = clone(estimator_orig)
     set_random_state(estimator)
     # fit
@@ -491,7 +492,7 @@ def yield_all_checks(name, estimator):
 
     if not tags["non_deterministic"]:
         yield check_methods_subset_invariance
-        
+
     yield check_fit2d_1sample
     yield check_fit2d_1feature
     yield check_fit1d

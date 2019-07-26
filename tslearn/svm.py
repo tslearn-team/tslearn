@@ -9,7 +9,7 @@ import numpy
 
 from tslearn.metrics import cdist_gak, gamma_soft_dtw
 from tslearn.utils import to_time_series_dataset, check_dims
-from sklearn.utils import check_array, column_or_1d
+from sklearn.utils import check_array, check_X_y
 from sklearn.utils.validation import check_is_fitted
 
 import warnings
@@ -139,11 +139,12 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
     >>> clf.fit(X, y).predict(X).shape
     (20,)
     >>> sv = clf.support_vectors_time_series_(X)
-    >>> len(sv)  # should be equal to the number of classes in the classification problem
+    >>> len(sv)  # should be equal to the nr of classes in the clf problem
     2
     >>> sv[0].shape  # doctest: +ELLIPSIS
     (..., 64, 2)
-    >>> sum([sv_i.shape[0] for sv_i in sv]) == clf.svm_estimator_.n_support_.sum()
+    >>> sv_sum = sum([sv_i.shape[0] for sv_i in sv])
+    >>> sv_sum == clf.svm_estimator_.n_support_.sum()
     True
     >>> clf.decision_function(X).shape
     (20,)
@@ -193,14 +194,14 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
         sv = []
         idx_start = 0
         for cl in range(len(self.svm_estimator_.n_support_)):
-            indices = self.svm_estimator_.support_[idx_start:idx_start + self.svm_estimator_.n_support_[cl]]
+            idx_end = idx_start + self.svm_estimator_.n_support_[cl]
+            indices = self.svm_estimator_.support_[idx_start:idx_end]
             sv.append(X_[indices])
             idx_start += self.svm_estimator_.n_support_[cl]
         return sv
 
     def fit(self, X, y, sample_weight=None):
-        X = check_array(X, allow_nd=True)
-        y = column_or_1d(y, warn=True)
+        X, y = check_X_y(X, allow_nd=True)
         X = check_dims(X, X_fit=None)
 
         self.X_fit_ = X
@@ -262,8 +263,7 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
         return self.svm_estimator_.predict_proba(sklearn_X)
 
     def score(self, X, y, sample_weight=None):
-        X = check_array(X, allow_nd=True)
-        y = column_or_1d(y, warn=True)
+        X, y = check_X_y(X, allow_nd=True)
         check_is_fitted(self, ['svm_estimator_', 'X_fit_'])
         X = check_dims(X, X_fit=self.X_fit_)
 
@@ -385,8 +385,7 @@ class TimeSeriesSVR(BaseEstimator, RegressorMixin):
         return X_[self.svm_estimator_.support_]
 
     def fit(self, X, y, sample_weight=None):
-        X = check_array(X, allow_nd=True)
-        y = column_or_1d(y, warn=True)
+        X, y = check_X_y(X, allow_nd=True)
         X = check_dims(X, X_fit=None)
 
         self.X_fit_ = X
