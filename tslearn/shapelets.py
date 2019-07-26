@@ -338,7 +338,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         y : array-like of shape=(n_ts, )
             Time series labels.
         """
-        X, y = check_X_y(X, allow_nd=True)
+        X, y = check_X_y(X, y, allow_nd=True)
         X = to_time_series_dataset(X)
         X = check_dims(X, X_fit=None)
 
@@ -538,7 +538,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         else:
             concatenated_features = pool_layers[0]
             concatenated_locations = pool_layers_locations[0]
-        
+
         if self.weight_regularizer > 0:
             regularizer = l2(self.weight_regularizer)
         else:
@@ -556,9 +556,9 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
                         kernel_regularizer=regularizer,
                         name="classification")(concatenated_features)
         self.model_ = Model(inputs=inputs, outputs=outputs)
-        self.transformer_model_ = Model(inputs=inputs, 
+        self.transformer_model_ = Model(inputs=inputs,
                                         outputs=concatenated_features)
-        self.locator_model_ = Model(inputs=inputs, 
+        self.locator_model_ = Model(inputs=inputs,
                                     outputs=concatenated_locations)
         self.model_.compile(loss=loss,
                             optimizer=self.optimizer,

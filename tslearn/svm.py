@@ -201,7 +201,7 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
         return sv
 
     def fit(self, X, y, sample_weight=None):
-        X, y = check_X_y(X, allow_nd=True)
+        X, y = check_X_y(X, y, allow_nd=True)
         X = check_dims(X, X_fit=None)
 
         self.X_fit_ = X
@@ -263,7 +263,7 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
         return self.svm_estimator_.predict_proba(sklearn_X)
 
     def score(self, X, y, sample_weight=None):
-        X, y = check_X_y(X, allow_nd=True)
+        X, y = check_X_y(X, y, allow_nd=True)
         check_is_fitted(self, ['svm_estimator_', 'X_fit_'])
         X = check_dims(X, X_fit=self.X_fit_)
 
@@ -385,7 +385,7 @@ class TimeSeriesSVR(BaseEstimator, RegressorMixin):
         return X_[self.svm_estimator_.support_]
 
     def fit(self, X, y, sample_weight=None):
-        X, y = check_X_y(X, allow_nd=True)
+        X, y = check_X_y(X, y, allow_nd=True)
         X = check_dims(X, X_fit=None)
 
         self.X_fit_ = X
