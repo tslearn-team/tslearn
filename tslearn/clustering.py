@@ -306,6 +306,8 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset.
+        y : Ignored
+            not used, present here for API consistency by convention.
         sample_weight : array-like of shape=(n_ts, ) or None (default: None)
             Weights to be given to time series in the learning process. By
             default, all time series weights are equal.
@@ -390,6 +392,8 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset to predict.
+        y : Ignored
+            not used, present here for API consistency by convention.
 
         Returns
         -------
@@ -626,6 +630,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset.
+        y : Ignored
+            not used, present here for API consistency by convention.
         """
 
         X = check_array(X, allow_nd=True, force_all_finite='allow-nan')
@@ -684,6 +690,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset to predict.
+        y : Ignored
+            not used, present here for API consistency by convention.
 
         Returns
         -------
@@ -871,6 +879,8 @@ class KShape(BaseEstimator, ClusterMixin,
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset.
+        y : Ignored
+            not used, present here for API consistency by convention.
         """
         X = check_array(X, allow_nd=True)
 
@@ -927,6 +937,8 @@ class KShape(BaseEstimator, ClusterMixin,
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset to predict.
+        y : Ignored
+            not used, present here for API consistency by convention.
 
         Returns
         -------

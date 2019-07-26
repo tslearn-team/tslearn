@@ -54,10 +54,6 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
 
     Parameters
     ----------
-    sz : int
-        Time series length
-    d : int
-        Time series dimensionality
     C : float, optional (default=1.0)
         Penalty parameter C of the error term.
     kernel : string, optional (default='gak')
@@ -77,14 +73,14 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
     coef0 : float, optional (default=0.0)
         Independent term in kernel function.
         It is only significant in 'poly' and 'sigmoid'.
-    probability : boolean, optional (default=False)
-        Whether to enable probability estimates. This must be enabled prior
-        to calling `fit`, and will slow down that method.
     shrinking : boolean, optional (default=True)
         Whether to use the shrinking heuristic.
+    probability : boolean, optional (default=True)
+        Whether to enable probability estimates. This must be enabled prior
+        to calling `fit`, and will slow down that method.
     tol : float, optional (default=1e-3)
         Tolerance for stopping criterion.
-    cache_size : float, optional
+    cache_size : float, optional (default=200.0)
         Specify the size of the kernel cache (in MB).
     class_weight : {dict, 'balanced'}, optional
         Set the parameter C of class i to class_weight[i]*C for
@@ -130,6 +126,8 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
         `support_vectors_`.
     intercept_ : array, shape = [n_class * (n_class-1) / 2]
         Constants in decision function.
+    svm_estimator_ : sklearn.svm.SVC
+        The underlying support vector machine
 
     Examples
     --------
@@ -280,17 +278,8 @@ class TimeSeriesSVR(BaseEstimator, RegressorMixin):
 
     Parameters
     ----------
-    sz : int
-        Time series length
-    d : int
-        Time series dimensionality
     C : float, optional (default=1.0)
         Penalty parameter C of the error term.
-    epsilon : float, optional (default=0.1)
-         Epsilon in the epsilon-SVR model. It specifies the epsilon-tube
-         within which no penalty is associated in the training loss function
-         with points predicted within a distance epsilon from the actual
-         value.
     kernel : string, optional (default='gak')
          Specifies the kernel type to be used in the algorithm.
          It must be one of 'gak' or a kernel accepted by ``sklearn.svm.SVC``.
@@ -308,11 +297,16 @@ class TimeSeriesSVR(BaseEstimator, RegressorMixin):
     coef0 : float, optional (default=0.0)
         Independent term in kernel function.
         It is only significant in 'poly' and 'sigmoid'.
-    shrinking : boolean, optional (default=True)
-        Whether to use the shrinking heuristic.
     tol : float, optional (default=1e-3)
         Tolerance for stopping criterion.
-    cache_size : float, optional
+    epsilon : float, optional (default=0.1)
+         Epsilon in the epsilon-SVR model. It specifies the epsilon-tube
+         within which no penalty is associated in the training loss function
+         with points predicted within a distance epsilon from the actual
+         value.
+    shrinking : boolean, optional (default=True)
+        Whether to use the shrinking heuristic.
+    cache_size :  float, optional (default=200.0)
         Specify the size of the kernel cache (in MB).
     verbose : bool, default: False
         Enable verbose output. Note that this setting takes advantage of a
@@ -336,6 +330,8 @@ class TimeSeriesSVR(BaseEstimator, RegressorMixin):
         Constants in decision function.
     sample_weight : array-like, shape = [n_samples]
         Individual weights for each sample
+    svm_estimator_ : sklearn.svm.SVR
+        The underlying support vector machine
 
     Examples
     --------
@@ -360,8 +356,8 @@ class TimeSeriesSVR(BaseEstimator, RegressorMixin):
     ICML 2011.
     """
     def __init__(self, C=1.0, kernel="gak", degree=3, gamma="auto",
-                 coef0=0.0, tol=0.001, epsilon=0.1,
-                 shrinking=True, cache_size=200, verbose=False, max_iter=-1):
+                 coef0=0.0, tol=0.001, epsilon=0.1, shrinking=True,
+                 cache_size=200, verbose=False, max_iter=-1):
         self.C = C
         self.kernel = kernel
         self.degree = degree

@@ -29,19 +29,6 @@ from tslearn.preprocessing import TimeSeriesResampler
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
-# Patching unpickle_model to handle our custom layers
-# def unpickle_model(state):
-#     h5dict = H5Dict(state, mode='r')
-#     return keras.engine.saving._deserialize_model(
-#         h5dict, custom_objects={
-#             'LocalSquaredDistanceLayer': LocalSquaredDistanceLayer,
-#             'GlobalArgminPooling1D': GlobalArgminPooling1D,
-#             'GlobalMinPooling1D': GlobalMinPooling1D
-#         })
-
-# keras.engine.saving.unpickle_model = unpickle_model
-
-
 class GlobalMinPooling1D(Layer):
     """Global min pooling operation for temporal data.
     # Input shape
@@ -236,8 +223,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         `keras` optimizer to use for training.
     weight_regularizer: float or None (default: 0.)
         Strength of the L2 regularizer to use for training the classification
-        (softmax) layer.
-        If None, no regularization is performed.
+        (softmax) layer. If 0, no regularization is performed.
     shap_len: float (default 0.15)
         The length of the shapelets, expressed as a fraction of the ts length
     nr_shap_lens: int (default 3)
@@ -628,8 +614,7 @@ class SerializableShapeletModel(ShapeletModel):
         Learning rate to be used for the SGD optimizer.
     weight_regularizer: float or None (default: 0.)
         Strength of the L2 regularizer to use for training the classification
-        (softmax) layer.
-        If None, no regularization is performed.
+        (softmax) layer. If 0, no regularization is performed.
     shap_len: float (default 0.15)
         The length of the shapelets, expressed as a fraction of the ts length
     nr_shap_lens: int (default 3)
