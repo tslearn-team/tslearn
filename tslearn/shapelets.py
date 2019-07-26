@@ -223,10 +223,10 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
 
     Parameters
     ----------
-    n_shapelets_per_size: dict
+    n_shapelets_per_size: dict (default: None)
         Dictionary giving, for each shapelet size (key),
         the number of such shapelets to be trained (value)
-    max_iter: int (default: 1000)
+    max_iter: int (default: 100)
         Number of training epochs.
     batch_size: int (default:256)
         Batch size to be used.
@@ -234,10 +234,15 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         `keras` verbose level.
     optimizer: str or keras.optimizers.Optimizer (default: "sgd")
         `keras` optimizer to use for training.
-    weight_regularizer: float or None (default: None)
+    weight_regularizer: float or None (default: 0.)
         Strength of the L2 regularizer to use for training the classification
         (softmax) layer.
         If None, no regularization is performed.
+    shap_len: float (default 0.15)
+        The length of the shapelets, expressed as a fraction of the ts length
+    nr_shap_lens: int (default 3)
+        The number of different shapelet lengths. Will extract shapelets of
+        length i * shap_len for i in [1, nr_shap_lens]
     random_state : int or None, optional (default: None)
         The seed of the pseudo random number generator to use when shuffling
         the data.  If int, random_state is the seed used by the random number
@@ -610,10 +615,10 @@ class SerializableShapeletModel(ShapeletModel):
 
     Parameters
     ----------
-    n_shapelets_per_size: dict
+    n_shapelets_per_size: dict (default: None)
         Dictionary giving, for each shapelet size (key),
         the number of such shapelets to be trained (value)
-    max_iter: int (default: 1000)
+    max_iter: int (default: 100)
         Number of training epochs.
     batch_size: int (default:256)
         Batch size to be used.
@@ -621,10 +626,15 @@ class SerializableShapeletModel(ShapeletModel):
         `keras` verbose level.
     learning_rate: float (default: 0.01)
         Learning rate to be used for the SGD optimizer.
-    weight_regularizer: float or None (default: None)
+    weight_regularizer: float or None (default: 0.)
         Strength of the L2 regularizer to use for training the classification
         (softmax) layer.
         If None, no regularization is performed.
+    shap_len: float (default 0.15)
+        The length of the shapelets, expressed as a fraction of the ts length
+    nr_shap_lens: int (default 3)
+        The number of different shapelet lengths. Will extract shapelets of
+        length i * shap_len for i in [1, nr_shap_lens]
     random_state : int or None, optional (default: None)
         The seed of the pseudo random number generator to use when shuffling
         the data.  If int, random_state is the seed used by the random number

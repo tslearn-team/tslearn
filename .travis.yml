@@ -58,7 +58,7 @@ script:
 - if [[ "$NUMBA_DISABLE_JIT" == 1 ]]; then
   python -m pytest -v tslearn tslearn/tests/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py --ignore tslearn/tests/test_estimators.py $KERAS_IGNORE --cov=tslearn --log-cli-level info;
   if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then codeclimate-test-reporter; fi
-  else travis_wait 30 python -m pytest -v tslearn tslearn/tests/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py $KERAS_IGNORE --log-cli-level info; fi
+  else travis_wait 40 python -m pytest -v tslearn tslearn/tests/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py $KERAS_IGNORE --log-cli-level info; fi
 notifications:
   email: false
 
