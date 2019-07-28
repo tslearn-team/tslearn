@@ -58,7 +58,7 @@ def _safe_tags(estimator, key=None):
 
 def _create_small_ts_dataset():
     return random_walk_blobs(n_ts_per_blob=5, n_blobs=3, random_state=1,
-                             sz=30, noise_level=0.025)
+                             sz=10, noise_level=0.025)
 
 
 # Patch BOSTON dataset of sklearn to fix _csv.Error: line contains NULL byte
@@ -74,7 +74,7 @@ def check_clustering(name, clusterer_orig, readonly_memmap=False):
     X, y = _create_small_ts_dataset()
     X, y = shuffle(X, y, random_state=7)
     X = TimeSeriesScalerMeanVariance().fit_transform(X)
-    X_noise = np.concatenate([X, random_walks(n_ts=5, sz=30)])
+    X_noise = np.concatenate([X, random_walks(n_ts=5, sz=10)])
 
     n_samples, n_features, dim = X.shape
     # catch deprecation and neighbors warnings
@@ -157,7 +157,7 @@ def check_fit_idempotent(name, estimator_orig):
         estimator.set_params(warm_start=False)
 
     n_samples = 100
-    X = random_walks(n_ts=n_samples)
+    X, _ = _create_small_ts_dataset()
     X = X.reshape((X.shape[0], X.shape[1]))
     X = pairwise_estimator_convert_X(X, estimator)
     if is_regressor(estimator_orig):

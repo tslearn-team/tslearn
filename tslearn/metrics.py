@@ -944,25 +944,6 @@ def njit_lb_envelope(time_series, radius):
 
     return enveloppe_down, enveloppe_up
 
-@njit()
-def njit_lb_envelope(time_series, radius):
-    sz, d = time_series.shape
-    enveloppe_up = numpy.empty((sz, d))
-    enveloppe_down = numpy.empty((sz, d))
-
-    for i in prange(sz):
-        min_idx = i - radius
-        max_idx = i + radius + 1
-        if min_idx < 0:
-            min_idx = 0
-        if max_idx > sz:
-            max_idx = sz
-        for di in prange(d):
-            enveloppe_down[i, di] = numpy.min(time_series[min_idx:max_idx, di])
-            enveloppe_up[i, di] = numpy.max(time_series[min_idx:max_idx, di])
-
-    return enveloppe_down, enveloppe_up
-
 
 def lb_envelope(ts, radius=1):
     r"""Compute time-series envelope as required by LB_Keogh.

@@ -143,6 +143,8 @@ def check_estimator(Estimator):
 
     if hasattr(estimator, 'max_iter'):
         estimator.set_params(max_iter=10)
+    if hasattr(estimator, 'total_lengths'):
+        estimator.set_params(total_lengths=1)
 
     for check in checks._yield_all_checks(name, estimator):
         try:
@@ -158,3 +160,4 @@ def test_all_estimators():
     estimators = get_estimators('all')
     for estimator in estimators:
         check_estimator(estimator[1])
+        print(estimator[0])

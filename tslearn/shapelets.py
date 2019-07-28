@@ -344,7 +344,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         set_random_seed(seed=self.random_state)
         numpy.random.seed(seed=self.random_state)
 
-        n_ts, sz, d = X.shape_
+        n_ts, sz, d = X.shape
         self.X_fit_ = X
 
         self.model_ = None
