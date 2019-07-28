@@ -158,6 +158,3 @@ def test_all_estimators():
     estimators = get_estimators('all')
     for estimator in estimators:
         check_estimator(estimator[1])
-
-
-test_all_estimators()
