@@ -114,8 +114,50 @@ def get_estimators(type_filter='all'):
     return sorted(set(filtered_classes), key=itemgetter(0))
 
 
+def check_estimator(Estimator):
+    """Check if estimator adheres to scikit-learn conventions.
+    This estimator will run an extensive test-suite for input validation,
+    shapes, etc.
+    Additional tests for classifiers, regressors, clustering or transformers
+    will be run if the Estimator class inherits from the corresponding mixin
+    from sklearn.base.
+    This test can be applied to classes or instances.
+    Classes currently have some additional tests that related to construction,
+    while passing instances allows the testing of multiple options.
+    Parameters
+    ----------
+    estimator : estimator object or class
+        Estimator to check. Estimator is a class object or instance.
+    """
+    if isinstance(Estimator, type):
+        # got a class
+        name = Estimator.__name__
+        estimator = Estimator()
+
+        if hasattr(estimator, 'max_iter'):
+            estimator.set_params(max_iter=10)
+
+        check_parameters_default_constructible(name, Estimator)
+        check_no_attributes_set_in_init(name, estimator)
+    else:
+        # got an instance
+        estimator = Estimator
+        name = type(estimator).__name__
+
+    for check in checks._yield_all_checks(name, estimator):
+        try:
+            check(name, estimator)
+        except SkipTest as exception:
+            # the only SkipTest thrown currently results from not
+            # being able to import pandas.
+            warnings.warn(str(exception), SkipTestWarning)
+
+
 @ignore_warnings()
 def test_all_estimators():
     estimators = get_estimators('all')
     for estimator in estimators:
         check_estimator(estimator[1])
+
+
+test_all_estimators()

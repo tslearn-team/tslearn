@@ -178,14 +178,9 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
 
     @property
     def n_iter_(self):
-        warnings.warn('n_iter_ is always 1 for TimeSeriesSVC, since '
-                      'it is non-trivial to access from libsvm')
+        warnings.warn('n_iter_ is always set to 1 for TimeSeriesSVC, since '
+                      'it is non-trivial to access the underlying libsvm')
         return 1
-
-    def _kernel_func_gak(self, x, y):
-        return cdist_gak(x.reshape((-1, self.sz_, self.d_)),
-                         y.reshape((-1, self.sz_, self.d_)),
-                         sigma=numpy.sqrt(self.gamma_ / 2.))
 
     def support_vectors_time_series_(self, X):
         X_ = to_time_series_dataset(X)
@@ -372,8 +367,8 @@ class TimeSeriesSVR(BaseEstimator, RegressorMixin):
 
     @property
     def n_iter_(self):
-        warnings.warn('n_iter_ is always 1 for TimeSeriesSVR, since '
-                      'it is non-trivial to access from libsvm')
+        warnings.warn('n_iter_ is always set to 1 for TimeSeriesSVR, since '
+                      'it is non-trivial to access the underlying libsvm')
         return 1
 
     def support_vectors_time_series_(self, X):

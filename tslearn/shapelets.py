@@ -224,11 +224,11 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
     weight_regularizer: float or None (default: 0.)
         Strength of the L2 regularizer to use for training the classification
         (softmax) layer. If 0, no regularization is performed.
-    shap_len: float (default 0.15)
+    shapelet_length: float (default 0.15)
         The length of the shapelets, expressed as a fraction of the ts length
-    nr_shap_lens: int (default 3)
+    total_lengths: int (default 3)
         The number of different shapelet lengths. Will extract shapelets of
-        length i * shap_len for i in [1, nr_shap_lens]
+        length i * shapelet_length for i in [1, total_lengths]
     random_state : int or None, optional (default: None)
         The seed of the pseudo random number generator to use when shuffling
         the data.  If int, random_state is the seed used by the random number
@@ -242,6 +242,14 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
     shapelets_as_time_series_: numpy.ndarray of shape (n_shapelets, sz_shp, d) where \
     sz_shp is the maximum of all shapelet sizes
         Set of time-series shapelets formatted as a ``tslearn`` time series dataset.
+    transformer_model_: keras.Model
+        Transforms an input dataset of timeseries into distances to the
+        learned shapelets.
+    locator_model_: keras.Model
+        Returns the indices where each of the shapelets can be found (minimal
+        distance) within each of the timeseries of the input dataset.
+    model_: keras.Model
+        Directly predicts the class probabilities for the input timeseries.
 
     Note
     ----
@@ -273,8 +281,8 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
                  verbose_level=0,
                  optimizer="sgd",
                  weight_regularizer=0.,
-                 shap_len=0.15,
-                 nr_shap_lens=3,
+                 shapelet_length=0.15,
+                 total_lengths=3,
                  random_state=None):
         self.n_shapelets_per_size = n_shapelets_per_size
         self.max_iter = max_iter
@@ -282,8 +290,8 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         self.verbose_level = verbose_level
         self.optimizer = optimizer
         self.weight_regularizer = weight_regularizer
-        self.shap_len = shap_len
-        self.nr_shap_lens = nr_shap_lens
+        self.shapelet_length = shapelet_length
+        self.total_lengths = total_lengths
         self.random_state = random_state
 
     @property
@@ -362,10 +370,9 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
             n_classes = y_.shape[1]
 
         if self.n_shapelets_per_size is None:
-            sizes = grabocka_params_to_shapelet_size_dict(n_ts, sz,
-                                                          n_classes,
-                                                          self.shap_len,
-                                                          self.nr_shap_lens)
+            sizes = grabocka_params_to_shapelet_size_dict(n_ts, sz, n_classes,
+                                                          self.shapelet_length,
+                                                          self.total_lengths)
             self.n_shapelets_per_size_ = sizes
         else:
             self.n_shapelets_per_size_ = self.n_shapelets_per_size
@@ -615,11 +622,11 @@ class SerializableShapeletModel(ShapeletModel):
     weight_regularizer: float or None (default: 0.)
         Strength of the L2 regularizer to use for training the classification
         (softmax) layer. If 0, no regularization is performed.
-    shap_len: float (default 0.15)
+    shapelet_length: float (default 0.15)
         The length of the shapelets, expressed as a fraction of the ts length
-    nr_shap_lens: int (default 3)
+    total_lengths: int (default 3)
         The number of different shapelet lengths. Will extract shapelets of
-        length i * shap_len for i in [1, nr_shap_lens]
+        length i * shapelet_length for i in [1, total_lengths]
     random_state : int or None, optional (default: None)
         The seed of the pseudo random number generator to use when shuffling
         the data.  If int, random_state is the seed used by the random number
@@ -633,6 +640,14 @@ class SerializableShapeletModel(ShapeletModel):
     shapelets_as_time_series_: numpy.ndarray of shape (n_shapelets, sz_shp, d) where \
     sz_shp is the maximum of all shapelet sizes
         Set of time-series shapelets formatted as a ``tslearn`` time series dataset.
+    transformer_model_: keras.Model
+        Transforms an input dataset of timeseries into distances to the
+        learned shapelets.
+    locator_model_: keras.Model
+        Returns the indices where each of the shapelets can be found (minimal
+        distance) within each of the timeseries of the input dataset.
+    model_: keras.Model
+        Directly predicts the class probabilities for the input timeseries.
 
     Note
     ----
@@ -641,10 +656,6 @@ class SerializableShapeletModel(ShapeletModel):
     Examples
     --------
     >>> from tslearn.generators import random_walk_blobs
-    >>> import os
-    >>> import tensorflow as tf
-    >>> os.environ['KMP_WARNINGS'] = 'off'
-    >>> os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
     >>> _ = tf.logging.set_verbosity(tf.logging.ERROR)
     >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=16, d=2, n_blobs=3)
     >>> clf = SerializableShapeletModel(n_shapelets_per_size={4: 5}, max_iter=1, verbose_level=0, learning_rate=0.01)
@@ -670,8 +681,8 @@ class SerializableShapeletModel(ShapeletModel):
                  verbose_level=0,
                  learning_rate=0.01,
                  weight_regularizer=0.,
-                 shap_len=0.3,
-                 nr_shap_lens=3,
+                 shapelet_length=0.3,
+                 total_lengths=3,
                  random_state=None):
         super(SerializableShapeletModel,
               self).__init__(n_shapelets_per_size=n_shapelets_per_size,
@@ -679,8 +690,8 @@ class SerializableShapeletModel(ShapeletModel):
                              batch_size=batch_size,
                              verbose_level=verbose_level,
                              weight_regularizer=weight_regularizer,
-                             shap_len=shap_len,
-                             nr_shap_lens=nr_shap_lens,
+                             shapelet_length=shapelet_length,
+                             total_lengths=total_lengths,
                              random_state=random_state)
         self.learning_rate = learning_rate
 
