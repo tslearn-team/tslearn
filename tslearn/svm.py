@@ -32,6 +32,29 @@ def _kernel_func_gak(sz, d, gamma):
         gamma = 1.
     return lambda x, y: cdist_gak(x.reshape((-1, sz, d)), y.reshape((-1, sz, d)), sigma=numpy.sqrt(gamma / 2.))
 
+def _sparse_kernel_func_gak(sz, d, gamma, slice_support_vectors=None):
+    if gamma == "auto":
+        gamma = 1.
+    
+    def sparse_gak(X, X_fit):
+        
+        if X_fit is X:
+            return cdist_gak(X.reshape((-1, sz, d)), None, sigma=numpy.sqrt(gamma / 2.))
+        
+        if slice_support_vectors is not None:
+            # slice out support vectors
+            sliced_X_fit = X_fit[slice_support_vectors]
+            gak_sim_dense = cdist_gak(X.reshape((-1, sz, d)), sliced_X_fit.reshape((-1, sz, d)), sigma=numpy.sqrt(gamma / 2.))
+
+            # act like nothing has happend ...
+            gak_sim = numpy.empty((len(X), len(X_fit)))
+            gak_sim[:, slice_support_vectors] = gak_sim_dense
+            
+            return gak_sim
+        
+        return cdist_gak(X.reshape((-1, sz, d)), X_fit.reshape((-1, sz, d)), sigma=numpy.sqrt(gamma / 2.))
+
+    return sparse_gak
 
 class TimeSeriesSVC(BaseSVC):
     """Time-series specific Support Vector Classifier.
@@ -148,7 +171,7 @@ class TimeSeriesSVC(BaseSVC):
         self.sz = sz
         self.d = d
         if kernel == "gak":
-            kernel = _kernel_func_gak(sz=sz, d=d, gamma=gamma)
+            kernel = _sparse_kernel_func_gak(sz=sz, d=d, gamma=gamma)
         super(TimeSeriesSVC, self).__init__(C=C, kernel=kernel, degree=degree, gamma=gamma, coef0=coef0,
                                             shrinking=shrinking, probability=probability, tol=tol,
                                             cache_size=cache_size, class_weight=class_weight, verbose=verbose,
@@ -169,8 +192,10 @@ class TimeSeriesSVC(BaseSVC):
         sklearn_X = _prepare_ts_datasets_sklearn(X)
         if self.kernel == "gak" and self.gamma == "auto":
             self.gamma = gamma_soft_dtw(to_time_series_dataset(X))
-            self.kernel = _kernel_func_gak(sz=self.sz, d=self.d, gamma=self.gamma)
-        return super(TimeSeriesSVC, self).fit(sklearn_X, y, sample_weight=sample_weight)
+            self.kernel = _sparse_kernel_func_gak(sz=self.sz, d=self.d, gamma=self.gamma)
+        super(TimeSeriesSVC, self).fit(sklearn_X, y, sample_weight=sample_weight)
+        self.kernel = _sparse_kernel_func_gak(sz=self.sz, d=self.d, gamma=self.gamma, slice_support_vectors=self.support_)
+        return self
 
     def predict(self, X):
         sklearn_X = _prepare_ts_datasets_sklearn(X)
