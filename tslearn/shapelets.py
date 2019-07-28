@@ -344,7 +344,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         set_random_seed(seed=self.random_state)
         numpy.random.seed(seed=self.random_state)
 
-        n_ts, sz, d = X.shape
+        n_ts, sz, d = X.shape_
         self.X_fit_ = X
 
         self.model_ = None
@@ -440,7 +440,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
             batch_size=self.batch_size, verbose=self.verbose_level
         )
 
-        if categorical_preds.shape[1] == 1:
+        if categorical_preds.shape[1] == 1 and len(self.classes_) == 2:
             categorical_preds = numpy.hstack((1 - categorical_preds,
                                               categorical_preds))
 
@@ -656,7 +656,6 @@ class SerializableShapeletModel(ShapeletModel):
     Examples
     --------
     >>> from tslearn.generators import random_walk_blobs
-    >>> _ = tf.logging.set_verbosity(tf.logging.ERROR)
     >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=16, d=2, n_blobs=3)
     >>> clf = SerializableShapeletModel(n_shapelets_per_size={4: 5}, max_iter=1, verbose_level=0, learning_rate=0.01)
     >>> _ = clf.fit(X, y)

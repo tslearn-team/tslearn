@@ -134,15 +134,15 @@ def check_estimator(Estimator):
         name = Estimator.__name__
         estimator = Estimator()
 
-        if hasattr(estimator, 'max_iter'):
-            estimator.set_params(max_iter=10)
-
         check_parameters_default_constructible(name, Estimator)
         check_no_attributes_set_in_init(name, estimator)
     else:
         # got an instance
         estimator = Estimator
         name = type(estimator).__name__
+
+    if hasattr(estimator, 'max_iter'):
+        estimator.set_params(max_iter=10)
 
     for check in checks._yield_all_checks(name, estimator):
         try:
