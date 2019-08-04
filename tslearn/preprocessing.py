@@ -93,8 +93,8 @@ class TimeSeriesScalerMinMax(TransformerMixin):
 
         Parameters
         ----------
-        X : array-like
-            Time series dataset to be rescaled.
+        X
+            Ignored
 
         Returns
         -------

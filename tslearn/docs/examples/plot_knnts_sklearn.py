@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 # Our pipeline consists of two phases. First, data will be normalized using
 # min-max normalization. Afterwards, it is fed to a KNN classifier. For the
 # KNN classifier, we tune the n_neighbors and weights hyper-parameters.
-n_splits = 2
+n_splits = 3
 pipeline = GridSearchCV(
     Pipeline([
             ('normalize', TimeSeriesScalerMinMax()),
@@ -48,22 +48,38 @@ y_train = y_train[y_train < 4]
 X_train, y_train = X_train[:50, 50:150], y_train[:50]
 
 # Plot our timeseries
-colors = ['k', 'g', 'b', 'r', 'c']
+colors = ['g', 'b', 'r']
 plt.figure()
 for ts, label in zip(X_train, y_train):
-    plt.plot(ts, c=colors[label], alpha=0.5)
-plt.title('The timeseries in the training set')
+    plt.plot(ts, c=colors[label - 1], alpha=0.5)
+plt.title('The timeseries in the dataset')
 plt.tight_layout()
 plt.show()
 
 # Fit our pipeline
+print('Performing hyper-parameter tuning of KNN classifier...')
 pipeline.fit(X_train, y_train)
 results = pipeline.cv_results_
 
 # Print each possible configuration parameter and the out-of-fold accuracies
-print('Fitted KNeighborsTimeSeriesClassifier on random walk blobs...')
+print('Done!')
+print()
+print('Got the following accuracies on the test set for each fold:')
+
+header_str = '|'
+columns = ['n_neighbors', 'weights']
+columns += ['score_fold_{}'.format(i + 1) for i in range(n_splits)]
+for col in columns:
+    header_str += '{:^12}|'.format(col)
+print(header_str)
+print('-'*(len(columns) * 13))
+
 for i in range(len(results['params'])):
-    s = '{}\t'.format(results['params'][i])
+    s = '|'
+    s += '{:>12}|'.format(results['params'][i]['knn__n_neighbors'])
+    s += '{:>12}|'.format(results['params'][i]['knn__weights'])
     for k in range(n_splits):
-        s += '{}\t'.format(results['split{}_test_score'.format(k)][i])
+        score = results['split{}_test_score'.format(k)][i]
+        score = np.around(score, 5)
+        s += '{:>12}|'.format(score)
     print(s.strip())

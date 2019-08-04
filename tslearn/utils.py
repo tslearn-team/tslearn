@@ -12,15 +12,20 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 def check_dims(X, X_fit=None, extend=True):
-    """Checks whether the dimensions, except the first one which is used
-    for each of the timeseries (which can be variable) of X_fit and X.
+    """Reshapes X to a 3-dimensional array of X.shape[0] univariate 
+    timeseries of length X.shape[1] if X is 2-dimensional and extend
+    is True. Then checks whether the dimensions, except the first one, 
+    of X_fit and X match.
 
     Parameters
     ----------
     X : array-like
         The first array to be compared.
-    X_fit : array-like
+    X_fit : array-like or None (default: None)
         The second array to be compared, which is created during fit.
+        If None, then only perform reshaping of X, if necessary.
+    extend : boolean
+        Whether to reshape X, if it is 2-dimensional.
 
     Returns
     -------
@@ -450,6 +455,13 @@ class LabelCategorizer(BaseEstimator, TransformerMixin):
         If true, generate a single column for binary classification case.
         Otherwise, will generate 2.
         If there are more than 2 labels, thie option will not change anything.
+    forward_match : dict
+        A dictionary that maps each element that occurs in the label vector
+        on a index {y_i : i} with i in [0, C - 1], C the total number of 
+        unique labels and y_i the ith unique label.
+    backward_match : array-like
+        An array that maps an index back to the original label. Where
+        backward_match[i] results in y_i.
 
     Examples
     --------

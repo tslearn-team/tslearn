@@ -240,6 +240,8 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
     inertia_ : float
         Sum of distances of samples to their closest cluster center (computed
         using the kernel trick).
+    n_iter_ : int
+        The number of iterations performed during fit.
 
     Examples
     --------
@@ -295,7 +297,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         if self.verbose:
             print("")
 
-        self.iter_ = it + 1
+        self._iter = it + 1
 
         return self
 
@@ -306,8 +308,8 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset.
-        y : Ignored
-            not used, present here for API consistency by convention.
+        y
+            Ignored
         sample_weight : array-like of shape=(n_ts, ) or None (default: None)
             Weights to be given to time series in the learning process. By
             default, all time series weights are equal.
@@ -349,7 +351,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
                 if self.inertia_ < min_inertia:
                     last_correct_labels = self.labels_
                     min_inertia = self.inertia_
-                    self.n_iter_ = self.iter_
+                    self.n_iter_ = self._iter
                 n_successful += 1
             except EmptyClusterError:
                 if self.verbose:
@@ -392,8 +394,8 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset to predict.
-        y : Ignored
-            not used, present here for API consistency by convention.
+        y
+            Ignored
 
         Returns
         -------
@@ -454,8 +456,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         stops.
     n_init : int (default: 1)
         Number of time the k-means algorithm will be run with different
-        centroid seeds. The final results will be the
-        best output of n_init consecutive runs in terms of inertia.
+        centroid seeds. The final results will be the best output of n_init 
+        consecutive runs in terms of inertia.
     metric : {"euclidean", "dtw", "softdtw"} (default: "euclidean")
         Metric to be used for both cluster assignment and barycenter
         computation. If "dtw", DBA is used for barycenter
@@ -494,6 +496,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         Cluster centers.
     inertia_ : float
         Sum of distances of samples to their closest cluster center.
+    n_iter_ : int
+        The number of iterations performed during fit.
 
     Note
     ----
@@ -575,7 +579,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         if self.verbose:
             print("")
 
-        self.iter_ = it + 1
+        self._iter = it + 1
 
         return self
 
@@ -588,7 +592,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
             dists = cdist_dtw(X, self.cluster_centers_)
         elif self.metric == "softdtw":
             dists = cdist_soft_dtw(X, self.cluster_centers_,
-                                   gamma=self.gamma_sdtw_)
+                                   gamma=self._gamma_sdtw)
         else:
             raise ValueError("Incorrect metric: %s (should be one of 'dtw', "
                              "'softdtw', 'euclidean')" % self.metric)
@@ -617,7 +621,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
                 self.cluster_centers_[k] = softdtw_barycenter(
                     X=X[self.labels_ == k],
                     max_iter=self.max_iter_barycenter,
-                    gamma=self.gamma_sdtw_,
+                    gamma=self._gamma_sdtw,
                     init=self.cluster_centers_[k])
             else:
                 self.cluster_centers_[k] = euclidean_barycenter(
@@ -630,8 +634,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset.
-        y : Ignored
-            not used, present here for API consistency by convention.
+        y
+            Ignored
         """
 
         X = check_array(X, allow_nd=True, force_all_finite='allow-nan')
@@ -645,7 +649,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
             metric_params = {}
         else:
             metric_params = self.metric_params
-        self.gamma_sdtw_ = metric_params.get("gamma_sdtw", 1.)
+        self._gamma_sdtw = metric_params.get("gamma_sdtw", 1.)
 
         self.n_iter_ = 0
 
@@ -671,7 +675,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
                 if self.inertia_ < min_inertia:
                     best_correct_centroids = self.cluster_centers_.copy()
                     min_inertia = self.inertia_
-                    self.n_iter_ = self.iter_
+                    self.n_iter_ = self._iter
                 n_successful += 1
             except EmptyClusterError:
                 if self.verbose:
@@ -690,8 +694,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset to predict.
-        y : Ignored
-            not used, present here for API consistency by convention.
+        y
+            Ignored
 
         Returns
         -------
@@ -767,6 +771,8 @@ class KShape(BaseEstimator, ClusterMixin,
         Labels of each point
     inertia_ : float
         Sum of distances of samples to their closest cluster center.
+    n_iter_ : int
+        The number of iterations performed during fit.
 
     Note
     ----
@@ -868,7 +874,7 @@ class KShape(BaseEstimator, ClusterMixin,
         if self.verbose:
             print("")
 
-        self.iter_ = it + 1
+        self._iter = it + 1
 
         return self
 
@@ -879,8 +885,8 @@ class KShape(BaseEstimator, ClusterMixin,
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset.
-        y : Ignored
-            not used, present here for API consistency by convention.
+        y
+            Ignored
         """
         X = check_array(X, allow_nd=True)
 
@@ -916,7 +922,7 @@ class KShape(BaseEstimator, ClusterMixin,
                 if self.inertia_ < min_inertia:
                     best_correct_centroids = self.cluster_centers_.copy()
                     min_inertia = self.inertia_
-                    self.n_iter_ = self.iter_
+                    self.n_iter_ = self._iter
                 n_successful += 1
             except EmptyClusterError:
                 if self.verbose:
@@ -937,8 +943,8 @@ class KShape(BaseEstimator, ClusterMixin,
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset to predict.
-        y : Ignored
-            not used, present here for API consistency by convention.
+        y
+            Ignored
 
         Returns
         -------
