@@ -29,7 +29,7 @@ X, y = random_walk_blobs(n_ts_per_blob=n_ts_per_blob,
                          sz=sz,
                          d=d,
                          n_blobs=n_blobs)
-scaler = TimeSeriesScalerMinMax(min=0., max=1.)  # Rescale time series
+scaler = TimeSeriesScalerMinMax(value_range=(0., 1.))  # Rescale time series
 X_scaled = scaler.fit_transform(X)
 
 indices_shuffle = numpy.random.permutation(n_ts_per_blob * n_blobs)

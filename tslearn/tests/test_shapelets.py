@@ -12,7 +12,7 @@ def test_shapelets():
     y = rng.randint(2, size=n)
     clf = ShapeletModel(n_shapelets_per_size={2: 5},
                         max_iter=1,
-                        verbose_level=0,
+                        verbose=0,
                         optimizer="sgd",
                         random_state=0)
     clf.fit(time_series, y)
@@ -35,7 +35,7 @@ def test_serializable_shapelets():
     y = rng.randint(2, size=n)
     clf = SerializableShapeletModel(n_shapelets_per_size={2: 5},
                                     max_iter=1,
-                                    verbose_level=0,
+                                    verbose=0,
                                     learning_rate=0.01,
                                     random_state=0)
     clf.fit(time_series, y)
