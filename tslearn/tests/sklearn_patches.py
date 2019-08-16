@@ -74,7 +74,7 @@ def check_clustering(name, clusterer_orig, readonly_memmap=False):
     X, y = _create_small_ts_dataset()
     X, y = shuffle(X, y, random_state=7)
     X = TimeSeriesScalerMeanVariance().fit_transform(X)
-    X_noise = np.concatenate([X, random_walks(n_ts=5, sz=10)])
+    X_noise = np.concatenate([X, random_walks(n_ts=2, sz=10)])
 
     n_samples, n_features, dim = X.shape
     # catch deprecation and neighbors warnings
@@ -115,11 +115,11 @@ def check_clustering(name, clusterer_orig, readonly_memmap=False):
 
     # Labels are expected to start at 0 (no noise) or -1 (if noise)
     assert labels_sorted[0] in [0, -1]
+
     # Labels should be less than n_clusters - 1
     if hasattr(clusterer, 'n_clusters'):
         n_clusters = getattr(clusterer, 'n_clusters')
         assert_greater_equal(n_clusters - 1, labels_sorted[-1])
-    # else labels should be less than max(labels_) which is necessarily true
 
 
 @ignore_warnings(category=(DeprecationWarning, FutureWarning))

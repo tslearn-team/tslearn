@@ -264,7 +264,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
     --------
     >>> from tslearn.generators import random_walk_blobs
     >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=16, d=2, n_blobs=3)
-    >>> clf = ShapeletModel(n_shapelets_per_size={4: 5}, max_iter=1, verbose_level=0)
+    >>> clf = ShapeletModel(n_shapelets_per_size={4: 5}, max_iter=1, verbose=0)
     >>> clf.fit(X, y).shapelets_.shape
     (5,)
     >>> clf.shapelets_[0].shape
@@ -597,7 +597,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         --------
         >>> from tslearn.generators import random_walk_blobs
         >>> X, y = random_walk_blobs(n_ts_per_blob=100, sz=256, d=1, n_blobs=3)
-        >>> clf = ShapeletModel(n_shapelets_per_size={10: 5}, max_iter=0, verbose_level=0)
+        >>> clf = ShapeletModel(n_shapelets_per_size={10: 5}, max_iter=0, verbose=0)
         >>> clf.fit(X, y).get_weights("classification")[0].shape
         (5, 3)
         """
@@ -676,7 +676,7 @@ class SerializableShapeletModel(ShapeletModel):
     --------
     >>> from tslearn.generators import random_walk_blobs
     >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=16, d=2, n_blobs=3)
-    >>> clf = SerializableShapeletModel(n_shapelets_per_size={4: 5}, max_iter=1, verbose_level=0, learning_rate=0.01)
+    >>> clf = SerializableShapeletModel(n_shapelets_per_size={4: 5}, max_iter=1, verbose=0, learning_rate=0.01)
     >>> _ = clf.fit(X, y)
     >>> clf.shapelets_.shape[0]
     5
