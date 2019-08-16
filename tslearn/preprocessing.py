@@ -67,7 +67,7 @@ class TimeSeriesScalerMinMax(TransformerMixin):
 
     Parameters
     ----------
-    feature_range : tuple (default: (0., 1.))
+    value_range : tuple (default: (0., 1.))
         The minimum and maximum value for the output time series.
 
     min : float (default: 0.)
@@ -96,8 +96,8 @@ class TimeSeriesScalerMinMax(TransformerMixin):
             [1.5],
             [2. ]]])
     """
-    def __init__(self, feature_range=(0., 1.), min=None, max=None):
-        self.feature_range = feature_range
+    def __init__(self, value_range=(0., 1.), min=None, max=None):
+        self.value_range = value_range
         self.min_ = min
         self.max_ = max
 
@@ -137,7 +137,7 @@ class TimeSeriesScalerMinMax(TransformerMixin):
                 "removed in 0.2. Don't set `min` to remove this "
                 "warning.",
                 DeprecationWarning, stacklevel=2)
-            self.feature_range = (self.min_, self.feature_range[1])
+            self.value_range = (self.min_, self.value_range[1])
 
         if self.max_ is not None:
             warnings.warn(
@@ -145,18 +145,18 @@ class TimeSeriesScalerMinMax(TransformerMixin):
                 "removed in 0.2. Don't set `max` to remove this "
                 "warning.",
                 DeprecationWarning, stacklevel=2)
-            self.feature_range = (self.feature_range[0], self.max_)
+            self.value_range = (self.value_range[0], self.max_)
 
-        if self.feature_range[0] >= self.feature_range[1]:
-            raise ValueError("Minimum of desired feature range must be smaller"
-                             " than maximum. Got %s." % str(self.feature_range))
+        if self.value_range[0] >= self.value_range[1]:
+            raise ValueError("Minimum of desired range must be smaller"
+                             " than maximum. Got %s." % str(self.value_range))
 
         X_ = to_time_series_dataset(X)
         min_t = numpy.min(X_, axis=1)[:, numpy.newaxis, :]
         max_t = numpy.max(X_, axis=1)[:, numpy.newaxis, :]
         range_t = max_t - min_t
-        nomin = (X_ - min_t) * (self.feature_range[1] - self.feature_range[0])
-        X_ = nomin / range_t + self.feature_range[0]
+        nomin = (X_ - min_t) * (self.value_range[1] - self.value_range[0])
+        X_ = nomin / range_t + self.value_range[0]
         return X_
 
 
