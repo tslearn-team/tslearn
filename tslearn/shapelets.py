@@ -284,7 +284,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
                  max_iter=100,
                  batch_size=256,
                  verbose=0,
-                 verbose_level=0,
+                 verbose_level=None,
                  optimizer="sgd",
                  weight_regularizer=0.,
                  shapelet_length=0.15,
@@ -294,6 +294,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         self.max_iter = max_iter
         self.batch_size = batch_size
         self.verbose_level = verbose_level
+        self.verbose = verbose
         self.optimizer = optimizer
         self.weight_regularizer = weight_regularizer
         self.shapelet_length = shapelet_length
@@ -696,7 +697,7 @@ class SerializableShapeletModel(ShapeletModel):
                  max_iter=100,
                  batch_size=256,
                  verbose=0,
-                 verbose_level=0,
+                 verbose_level=None,
                  learning_rate=0.01,
                  weight_regularizer=0.,
                  shapelet_length=0.3,
