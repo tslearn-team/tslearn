@@ -12,9 +12,9 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 def check_dims(X, X_fit=None, extend=True):
-    """Reshapes X to a 3-dimensional array of X.shape[0] univariate 
+    """Reshapes X to a 3-dimensional array of X.shape[0] univariate
     timeseries of length X.shape[1] if X is 2-dimensional and extend
-    is True. Then checks whether the dimensions, except the first one, 
+    is True. Then checks whether the dimensions, except the first one,
     of X_fit and X match.
 
     Parameters
@@ -457,7 +457,7 @@ class LabelCategorizer(BaseEstimator, TransformerMixin):
         If there are more than 2 labels, thie option will not change anything.
     forward_match : dict
         A dictionary that maps each element that occurs in the label vector
-        on a index {y_i : i} with i in [0, C - 1], C the total number of 
+        on a index {y_i : i} with i in [0, C - 1], C the total number of
         unique labels and y_i the ith unique label.
     backward_match : array-like
         An array that maps an index back to the original label. Where

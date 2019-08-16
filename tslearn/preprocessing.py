@@ -5,6 +5,7 @@ The :mod:`tslearn.preprocessing` module gathers time series scalers.
 import numpy
 from sklearn.base import TransformerMixin
 from scipy.interpolate import interp1d
+import warnings
 
 from tslearn.utils import to_time_series_dataset, check_equal_size, ts_size
 
@@ -66,10 +67,22 @@ class TimeSeriesScalerMinMax(TransformerMixin):
 
     Parameters
     ----------
+    feature_range : tuple (default: (0., 1.))
+        The minimum and maximum value for the output time series.
+
     min : float (default: 0.)
         Minimum value for output time series.
+
+        .. deprecated:: 0.1
+            min is deprecated in version 0.1 and will be
+            removed in 0.2.
+
     max : float (default: 1.)
         Maximum value for output time series.
+
+        .. deprecated:: 0.1
+            min is deprecated in version 0.1 and will be
+            removed in 0.2.
 
     Note
     ----
@@ -83,7 +96,8 @@ class TimeSeriesScalerMinMax(TransformerMixin):
             [1.5],
             [2. ]]])
     """
-    def __init__(self, min=0., max=1.):
+    def __init__(self, feature_range=(0., 1.), min=None, max=None):
+        self.feature_range = feature_range
         self.min_ = min
         self.max_ = max
 
@@ -117,12 +131,32 @@ class TimeSeriesScalerMinMax(TransformerMixin):
         numpy.ndarray
             Rescaled time series dataset.
         """
+        if self.min_ is not None:
+            warnings.warn(
+                "'min' is deprecated in version 0.1 and will be "
+                "removed in 0.2. Don't set `min` to remove this "
+                "warning.",
+                DeprecationWarning, stacklevel=2)
+            self.feature_range = (self.min_, self.feature_range[1])
+
+        if self.max_ is not None:
+            warnings.warn(
+                "'max' is deprecated in version 0.1 and will be "
+                "removed in 0.2. Don't set `max` to remove this "
+                "warning.",
+                DeprecationWarning, stacklevel=2)
+            self.feature_range = (self.feature_range[0], self.max_)
+
+        if self.feature_range[0] >= self.feature_range[1]:
+            raise ValueError("Minimum of desired feature range must be smaller"
+                             " than maximum. Got %s." % str(self.feature_range))
+
         X_ = to_time_series_dataset(X)
         min_t = numpy.min(X_, axis=1)[:, numpy.newaxis, :]
         max_t = numpy.max(X_, axis=1)[:, numpy.newaxis, :]
         range_t = max_t - min_t
-
-        X_ = (X_ - min_t) * (self.max_ - self.min_) / range_t + self.min_
+        nomin = (X_ - min_t) * (self.feature_range[1] - self.feature_range[0])
+        X_ = nomin / range_t + self.feature_range[0]
         return X_
 
 

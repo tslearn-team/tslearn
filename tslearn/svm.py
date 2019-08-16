@@ -33,6 +33,9 @@ def _prepare_ts_datasets_sklearn(X):
 
 
 class GAKKernel():
+    """Utility class, used to calculate the Global Alignment Kernel
+    functions for the Support Vector Machines.
+    """
     def __init__(self, sz, d, gamma):
         self.sz = sz
         self.d = d
@@ -158,7 +161,7 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
     ICML 2011.
     """
     def __init__(self, C=1.0, kernel="gak", degree=3, gamma="auto", coef0=0.0,
-                 shrinking=True, probability=True, tol=0.001, cache_size=200,
+                 shrinking=True, probability=False, tol=0.001, cache_size=200,
                  class_weight=None, verbose=False, max_iter=-1,
                  decision_function_shape="ovr", random_state=None):
         self.C = C
@@ -197,7 +200,7 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
         X, y = check_X_y(X, y, allow_nd=True)
         X = check_dims(X, X_fit=None)
 
-        self.X_fit_ = X
+        self._X_fit = X
         self.classes_ = numpy.unique(y)
 
         _, sz, d = X.shape
@@ -225,40 +228,40 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
 
     def predict(self, X):
         X = check_array(X, allow_nd=True)
-        check_is_fitted(self, ['svm_estimator_', 'X_fit_'])
-        X = check_dims(X, self.X_fit_)
+        check_is_fitted(self, ['svm_estimator_', '_X_fit'])
+        X = check_dims(X, self._X_fit)
 
         sklearn_X = _prepare_ts_datasets_sklearn(X)
         return self.svm_estimator_.predict(sklearn_X)
 
     def decision_function(self, X):
         X = check_array(X, allow_nd=True)
-        check_is_fitted(self, ['svm_estimator_', 'X_fit_'])
-        X = check_dims(X, self.X_fit_)
+        check_is_fitted(self, ['svm_estimator_', '_X_fit'])
+        X = check_dims(X, self._X_fit)
 
         sklearn_X = _prepare_ts_datasets_sklearn(X)
         return self.svm_estimator_.decision_function(sklearn_X)
 
     def predict_log_proba(self, X):
         X = check_array(X, allow_nd=True)
-        check_is_fitted(self, ['svm_estimator_', 'X_fit_'])
-        X = check_dims(X, self.X_fit_)
+        check_is_fitted(self, ['svm_estimator_', '_X_fit'])
+        X = check_dims(X, self._X_fit)
 
         sklearn_X = _prepare_ts_datasets_sklearn(X)
         return self.svm_estimator_.predict_log_proba(sklearn_X)
 
     def predict_proba(self, X):
         X = check_array(X, allow_nd=True)
-        check_is_fitted(self, ['svm_estimator_', 'X_fit_'])
-        X = check_dims(X, self.X_fit_)
+        check_is_fitted(self, ['svm_estimator_', '_X_fit'])
+        X = check_dims(X, self._X_fit)
 
         sklearn_X = _prepare_ts_datasets_sklearn(X)
         return self.svm_estimator_.predict_proba(sklearn_X)
 
     def score(self, X, y, sample_weight=None):
         X, y = check_X_y(X, y, allow_nd=True)
-        check_is_fitted(self, ['svm_estimator_', 'X_fit_'])
-        X = check_dims(X, X_fit=self.X_fit_)
+        check_is_fitted(self, ['svm_estimator_', '_X_fit'])
+        X = check_dims(X, X_fit=self._X_fit)
 
         sklearn_X = _prepare_ts_datasets_sklearn(X)
         return self.svm_estimator_.score(sklearn_X, y,
@@ -379,7 +382,7 @@ class TimeSeriesSVR(BaseEstimator, RegressorMixin):
         X, y = check_X_y(X, y, allow_nd=True)
         X = check_dims(X, X_fit=None)
 
-        self.X_fit_ = X
+        self._X_fit = X
         self.classes_ = numpy.unique(y)
 
         _, sz, d = X.shape
@@ -403,15 +406,15 @@ class TimeSeriesSVR(BaseEstimator, RegressorMixin):
 
     def predict(self, X):
         X = check_array(X, allow_nd=True)
-        check_is_fitted(self, ['svm_estimator_', 'X_fit_'])
-        X = check_dims(X, self.X_fit_)
+        check_is_fitted(self, ['svm_estimator_', '_X_fit'])
+        X = check_dims(X, self._X_fit)
         sklearn_X = _prepare_ts_datasets_sklearn(X)
         return self.svm_estimator_.predict(sklearn_X)
 
     def score(self, X, y, sample_weight=None):
         X = check_array(X, allow_nd=True)
-        check_is_fitted(self, ['svm_estimator_', 'X_fit_'])
-        X = check_dims(X, self.X_fit_)
+        check_is_fitted(self, ['svm_estimator_', '_X_fit'])
+        X = check_dims(X, self._X_fit)
         sklearn_X = _prepare_ts_datasets_sklearn(X)
         return self.svm_estimator_.score(sklearn_X, y,
                                          sample_weight=sample_weight)

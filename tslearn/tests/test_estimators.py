@@ -145,6 +145,8 @@ def check_estimator(Estimator):
         estimator.set_params(max_iter=10)
     if hasattr(estimator, 'total_lengths'):
         estimator.set_params(total_lengths=1)
+    if hasattr(estimator, 'probability'):
+        estimator.set_params(probability=True)
 
     for check in checks._yield_all_checks(name, estimator):
         try:

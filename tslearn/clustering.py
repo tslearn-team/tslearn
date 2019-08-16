@@ -240,6 +240,8 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
     inertia_ : float
         Sum of distances of samples to their closest cluster center (computed
         using the kernel trick).
+    sample_weight_ : numpy.ndarray
+        The weight given to each sample from the data provided to fit.
     n_iter_ : int
         The number of iterations performed during fit.
 
@@ -326,7 +328,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         self.labels_ = None
         self.inertia_ = None
         self.sample_weight_ = None
-        self.X_fit_ = None
+        self._X_fit = None
         # n_iter_ will contain the number of iterations the most
         # successful run required.
         self.n_iter_ = 0
@@ -359,7 +361,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         if n_successful > 0:
             self.labels_ = last_correct_labels
             self.inertia_ = min_inertia
-            self.X_fit_ = X
+            self._X_fit = X
         return self
 
     def _compute_dist(self, K, dist):
@@ -418,9 +420,9 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
             Index of the cluster each sample belongs to.
         """
         X = check_array(X, allow_nd=True)
-        check_is_fitted(self, 'X_fit_')
-        X = check_dims(X, self.X_fit_)
-        K = self._get_kernel(X, self.X_fit_)
+        check_is_fitted(self, '_X_fit')
+        X = check_dims(X, self._X_fit)
+        K = self._get_kernel(X, self._X_fit)
         n_samples = X.shape[0]
         dist = numpy.zeros((n_samples, self.n_clusters))
         self._compute_dist(K, dist)
@@ -433,10 +435,10 @@ class TimeSeriesCentroidBasedClusteringMixin:
         if numpy.isfinite(inertia) and (centroids is not None):
             self.cluster_centers_ = centroids
             self._assign(X_fitted)
-            self.X_fit_ = X_fitted
+            self._X_fit = X_fitted
             self.inertia_ = inertia
         else:
-            self.X_fit_ = None
+            self._X_fit = None
 
 
 class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
@@ -456,7 +458,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         stops.
     n_init : int (default: 1)
         Number of time the k-means algorithm will be run with different
-        centroid seeds. The final results will be the best output of n_init 
+        centroid seeds. The final results will be the best output of n_init
         consecutive runs in terms of inertia.
     metric : {"euclidean", "dtw", "softdtw"} (default: "euclidean")
         Metric to be used for both cluster assignment and barycenter
@@ -643,7 +645,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         self.labels_ = None
         self.inertia_ = numpy.inf
         self.cluster_centers_ = None
-        self.X_fit_ = None
+        self._X_fit = None
         self._squared_inertia = True
         if self.metric_params is None:
             metric_params = {}
@@ -719,8 +721,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
             Index of the cluster each sample belongs to.
         """
         X = check_array(X, allow_nd=True, force_all_finite='allow-nan')
-        check_is_fitted(self, 'X_fit_')
-        X = check_dims(X, self.X_fit_)
+        check_is_fitted(self, '_X_fit')
+        X = check_dims(X, self._X_fit)
         X_ = to_time_series_dataset(X)
         return self._assign(X_, update_class_attributes=False)
 
@@ -902,7 +904,7 @@ class KShape(BaseEstimator, ClusterMixin,
         self.n_iter_ = 0
 
         X_ = to_time_series_dataset(X)
-        self.X_fit_ = X_
+        self._X_fit = X_
         self._norms = numpy.linalg.norm(X_, axis=(1, 2))
 
         _check_initial_guess(self.init, self.n_clusters)
@@ -967,9 +969,9 @@ class KShape(BaseEstimator, ClusterMixin,
             Index of the cluster each sample belongs to.
         """
         X = check_array(X, allow_nd=True)
-        check_is_fitted(self, 'X_fit_')
+        check_is_fitted(self, '_X_fit')
         X_ = to_time_series_dataset(X)
-        X = check_dims(X, self.X_fit_)
+        X = check_dims(X, self._X_fit)
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
         dists = self._cross_dists(X_)
         return dists.argmin(axis=1)

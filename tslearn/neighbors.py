@@ -65,8 +65,8 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
                              "'sqeuclidean' or 'cityblock')" % self.metric)
 
         if X.ndim == 2:  # sklearn-format case
-            X = X.reshape((X.shape[0], -1, self.d_))
-            fit_X = self._fit_X.reshape((self._fit_X.shape[0], -1, self.d_))
+            X = X.reshape((X.shape[0], -1, self._d))
+            fit_X = self._fit_X.reshape((self._fit_X.shape[0], -1, self._d))
         else:
             fit_X = self._fit_X
 
@@ -232,8 +232,8 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         X = check_array(X, allow_nd=True)
         X = to_time_series_dataset(X)
         X = check_dims(X, X_fit=None)
-        self.X_fit_, self.d_ = to_sklearn_dataset(X, return_dim=True)
-        return super(KNeighborsTimeSeriesClassifier, self).fit(self.X_fit_, y)
+        self._X_fit, self._d = to_sklearn_dataset(X, return_dim=True)
+        return super(KNeighborsTimeSeriesClassifier, self).fit(self._X_fit, y)
 
     def predict(self, X):
         """Predict the class labels for the provided data
@@ -243,11 +243,11 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         X : array-like, shape (n_ts, sz, d)
             Test samples.
         """
-        check_is_fitted(self, 'X_fit_')
+        check_is_fitted(self, '_X_fit')
         X = check_array(X, allow_nd=True)
         X = to_time_series_dataset(X)
         X_ = to_sklearn_dataset(X)
-        X_ = check_dims(X_, self.X_fit_, extend=False)
+        X_ = check_dims(X_, self._X_fit, extend=False)
         return super(KNeighborsTimeSeriesClassifier, self).predict(X_)
 
     def predict_proba(self, X):
@@ -258,9 +258,9 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         X : array-like, shape (n_ts, sz, d)
             Test samples.
         """
-        check_is_fitted(self, 'X_fit_')
+        check_is_fitted(self, '_X_fit')
         X = check_array(X, allow_nd=True)
         X = to_time_series_dataset(X)
         X_ = to_sklearn_dataset(X)
-        X_ = check_dims(X_, self.X_fit_, extend=False)
+        X_ = check_dims(X_, self._X_fit, extend=False)
         return super(KNeighborsTimeSeriesClassifier, self).predict_proba(X_)

@@ -219,6 +219,11 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         Batch size to be used.
     verbose_level: {0, 1, 2} (default: 0)
         `keras` verbose level.
+        .. deprecated:: 0.1
+            min is deprecated in version 0.1 and will be
+            removed in 0.2.
+    verbose: {0, 1, 2} (default: 0)
+        `keras` verbose level.
     optimizer: str or keras.optimizers.Optimizer (default: "sgd")
         `keras` optimizer to use for training.
     weight_regularizer: float or None (default: 0.)
@@ -278,6 +283,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
     def __init__(self, n_shapelets_per_size=None,
                  max_iter=100,
                  batch_size=256,
+                 verbose=0,
                  verbose_level=0,
                  optimizer="sgd",
                  weight_regularizer=0.,
@@ -337,6 +343,13 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         y : array-like of shape=(n_ts, )
             Time series labels.
         """
+        if self.verbose_level is not None:
+            warnings.warn(
+                "'verbose_level' is deprecated in version 0.1 and will be"
+                " replaced by 'verbose' in 0.2.",
+                DeprecationWarning, stacklevel=2)
+            self.verbose = self.verbose_level
+
         X, y = check_X_y(X, y, allow_nd=True)
         X = to_time_series_dataset(X)
         X = check_dims(X, X_fit=None)
@@ -345,7 +358,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         numpy.random.seed(seed=self.random_state)
 
         n_ts, sz, d = X.shape
-        self.X_fit_ = X
+        self._X_fit = X
 
         self.model_ = None
         self.transformer_model_ = None
@@ -406,10 +419,10 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
             Index of the cluster each sample belongs to or class probability matrix, depending on
             what was provided at training time.
         """
-        check_is_fitted(self, 'X_fit_')
+        check_is_fitted(self, '_X_fit')
         X = check_array(X, allow_nd=True)
         X = to_time_series_dataset(X)
-        X = check_dims(X, X_fit=self.X_fit_)
+        X = check_dims(X, X_fit=self._X_fit)
 
         categorical_preds = self.predict_proba(X)
         if self.categorical_y_:
@@ -430,10 +443,10 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         array of shape=(n_ts, n_classes),
             Class probability matrix.
         """
-        check_is_fitted(self, 'X_fit_')
+        check_is_fitted(self, '_X_fit')
         X = check_array(X, allow_nd=True)
         X = to_time_series_dataset(X)
-        X = check_dims(X, self.X_fit_)
+        X = check_dims(X, self._X_fit)
         n_ts, sz, d = X.shape
         categorical_preds = self.model_.predict(
             [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
@@ -459,10 +472,10 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         array of shape=(n_ts, n_shapelets)
             Shapelet-Transform of the provided time series.
         """
-        check_is_fitted(self, 'X_fit_')
+        check_is_fitted(self, '_X_fit')
         X = check_array(X, allow_nd=True)
         X = to_time_series_dataset(X)
-        X = check_dims(X, X_fit=self.X_fit_)
+        X = check_dims(X, X_fit=self._X_fit)
         n_ts, sz, d = X.shape
         pred = self.transformer_model_.predict(
             [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
@@ -483,10 +496,10 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         array of shape=(n_ts, n_shapelets)
             Location of the shapelet matches for the provided time series.
         """
-        X = check_dims(X, X_fit=self.X_fit_)
+        X = check_dims(X, X_fit=self._X_fit)
         X = check_array(X, allow_nd=True)
         X = to_time_series_dataset(X)
-        X = check_dims(X, X_fit=self.X_fit_)
+        X = check_dims(X, X_fit=self._X_fit)
         n_ts, sz, d = X.shape
         locations = self.locator_model_.predict(
             [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
@@ -617,6 +630,11 @@ class SerializableShapeletModel(ShapeletModel):
         Batch size to be used.
     verbose_level: {0, 1, 2} (default: 0)
         `keras` verbose level.
+        .. deprecated:: 0.1
+            min is deprecated in version 0.1 and will be
+            removed in 0.2.
+    verbose: {0, 1, 2} (default: 0)
+        `keras` verbose level.
     learning_rate: float (default: 0.01)
         Learning rate to be used for the SGD optimizer.
     weight_regularizer: float or None (default: 0.)
@@ -677,6 +695,7 @@ class SerializableShapeletModel(ShapeletModel):
     def __init__(self, n_shapelets_per_size=None,
                  max_iter=100,
                  batch_size=256,
+                 verbose=0,
                  verbose_level=0,
                  learning_rate=0.01,
                  weight_regularizer=0.,
