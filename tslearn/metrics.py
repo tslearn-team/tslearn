@@ -9,6 +9,7 @@ from tslearn.soft_dtw_fast import _soft_dtw, _soft_dtw_grad, \
     _jacobian_product_sq_euc
 from sklearn.metrics.pairwise import euclidean_distances
 from numba import njit, prange
+from sklearn.externals.joblib import Parallel, delayed
 
 from tslearn.cygak import cdist_normalized_gak as cycdist_normalized_gak, \
     normalized_gak as cynormalized_gak
@@ -16,7 +17,6 @@ from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, \
     check_equal_size
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
-
 
 global_constraint_code = {"": 0, "itakura": 1, "sakoe_chiba": 2}
 
@@ -79,7 +79,7 @@ def njit_dtw(s1, s2, mask):
         Second time series
 
     mask : array, shape = (sz1, sz2)
-        Mask. Unconsidered cells must have infinite values. d
+        Mask. Unconsidered cells must have infinite values.
 
     Returns
     -------
@@ -595,7 +595,7 @@ def compute_mask(s1, s2, global_constraint=0,
 
 
 def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
-              sakoe_chiba_radius=1, itakura_max_slope=2.):
+              sakoe_chiba_radius=1, itakura_max_slope=2., n_jobs=None):
     r"""Compute cross-similarity matrix using Dynamic Time Warping (DTW)
     similarity measure.
 
@@ -615,16 +615,17 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
     dataset2 : array-like (default: None)
         Another dataset of time series. If `None`, self-similarity of
         `dataset1` is returned.
-
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
         Global constraint to restrict admissible paths for DTW.
     sakoe_chiba_radius : int (default: 1)
         Radius to be used for Sakoe-Chiba band global constraint. Used only if
         ``global_constraint="sakoe_chiba"``.
-
     itakura_max_slope : float (default: 2.)
         Maximum slope for the Itakura parallelogram constraint. Used only if
         ``global_constraint="itakura"``.
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel. None means 1 unless in a
+        `joblib.parallel_backend` context. -1 means using all processors.
 
     Returns
     -------
@@ -653,21 +654,28 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
     """
     dataset1 = to_time_series_dataset(dataset1)
 
-    if global_constraint is not None:
-        global_constraint_str = global_constraint
-    else:
-        global_constraint_str = ""
-
     if dataset2 is None:
+        if global_constraint is not None:
+            global_constraint_str = global_constraint
+        else:
+            global_constraint_str = ""
+
+        # TODO
         return njit_cdist_dtw_self(
             dataset1,
             global_constraint_code[global_constraint_str],
             sakoe_chiba_radius, itakura_max_slope)
     else:
         dataset2 = to_time_series_dataset(dataset2)
-        return njit_cdist_dtw(dataset1, dataset2,
-                              global_constraint_code[global_constraint_str],
-                              sakoe_chiba_radius, itakura_max_slope)
+        matrix = Parallel(n_jobs=n_jobs)(
+            delayed(dtw)(
+                dataset1[i], dataset2[j],
+                global_constraint=global_constraint,
+                sakoe_chiba_radius=sakoe_chiba_radius,
+                itakura_max_slope=itakura_max_slope)
+            for i in range(len(dataset1)) for j in range(len(dataset2))
+        )
+        return numpy.array(matrix).reshape((len(dataset1), -1))
 
 
 def gak(s1, s2, sigma=1.):  # TODO: better doc (formula for the kernel)
@@ -1187,7 +1195,7 @@ class SoftDTW(object):
         # We need +2 because we use indices starting from 1
         # and to deal with edge cases in the backward recursion.
         m, n = self.D.shape
-        self.R_ = numpy.zeros((m+2, n+2), dtype=numpy.float64)
+        self.R_ = numpy.zeros((m + 2, n + 2), dtype=numpy.float64)
         self.computed = False
 
         self.gamma = numpy.float64(gamma)
@@ -1224,12 +1232,12 @@ class SoftDTW(object):
         # Add an extra row and an extra column to D.
         # Needed to deal with edge cases in the recursion.
         D = numpy.vstack((self.D, numpy.zeros(n)))
-        D = numpy.hstack((D, numpy.zeros((m+1, 1))))
+        D = numpy.hstack((D, numpy.zeros((m + 1, 1))))
 
         # Allocate memory.
         # We need +2 because we use indices starting from 1
         # and to deal with edge cases in the recursion.
-        E = numpy.zeros((m+2, n+2), dtype=numpy.float64)
+        E = numpy.zeros((m + 2, n + 2), dtype=numpy.float64)
 
         _soft_dtw_grad(D, self.R_, E, gamma=self.gamma)
 
@@ -1237,7 +1245,6 @@ class SoftDTW(object):
 
 
 class SquaredEuclidean(object):
-
     def __init__(self, X, Y):
         """
         Parameters
