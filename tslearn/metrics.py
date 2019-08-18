@@ -655,16 +655,19 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
     dataset1 = to_time_series_dataset(dataset1)
 
     if dataset2 is None:
-        if global_constraint is not None:
-            global_constraint_str = global_constraint
-        else:
-            global_constraint_str = ""
-
-        # TODO
-        return njit_cdist_dtw_self(
-            dataset1,
-            global_constraint_code[global_constraint_str],
-            sakoe_chiba_radius, itakura_max_slope)
+        # Inspired from code by @GillesVandewiele:
+        # https://github.com/rtavenar/tslearn/pull/128#discussion_r314978479
+        matrix = numpy.zeros((len(dataset1), len(dataset1)))
+        indices = numpy.triu_indices(len(dataset1), k=1, m=len(dataset1))
+        matrix[indices] = Parallel(n_jobs=n_jobs)(
+            delayed(dtw)(
+                dataset1[i], dataset1[j],
+                global_constraint=global_constraint,
+                sakoe_chiba_radius=sakoe_chiba_radius,
+                itakura_max_slope=itakura_max_slope)
+            for i in range(len(dataset1)) for j in range(i + 1, len(dataset1))
+        )
+        return matrix + matrix.T
     else:
         dataset2 = to_time_series_dataset(dataset2)
         matrix = Parallel(n_jobs=n_jobs)(
