@@ -66,7 +66,7 @@ def njit_accumulated_matrix(s1, s2, mask):
     return cum_sum[1:, 1:]
 
 
-@njit()
+@njit(nogil=True)
 def njit_dtw(s1, s2, mask):
     """Compute the dynamic time warping score between two time series.
 
@@ -659,7 +659,7 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
         # https://github.com/rtavenar/tslearn/pull/128#discussion_r314978479
         matrix = numpy.zeros((len(dataset1), len(dataset1)))
         indices = numpy.triu_indices(len(dataset1), k=1, m=len(dataset1))
-        matrix[indices] = Parallel(n_jobs=n_jobs)(
+        matrix[indices] = Parallel(n_jobs=n_jobs, backend="threading")(
             delayed(dtw)(
                 dataset1[i], dataset1[j],
                 global_constraint=global_constraint,
@@ -670,7 +670,7 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
         return matrix + matrix.T
     else:
         dataset2 = to_time_series_dataset(dataset2)
-        matrix = Parallel(n_jobs=n_jobs)(
+        matrix = Parallel(n_jobs=n_jobs, backend="threading")(
             delayed(dtw)(
                 dataset1[i], dataset2[j],
                 global_constraint=global_constraint,
