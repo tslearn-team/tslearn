@@ -400,7 +400,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         self.model_.fit(
             [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(d)], y_,
             batch_size=self.batch_size, epochs=self.max_iter,
-            verbose=self.verbose_level
+            verbose=self.verbose
         )
         self.n_iter_ = len(self.model_.history.history)
         return self
@@ -451,7 +451,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         n_ts, sz, d = X.shape
         categorical_preds = self.model_.predict(
             [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
-            batch_size=self.batch_size, verbose=self.verbose_level
+            batch_size=self.batch_size, verbose=self.verbose
         )
 
         if categorical_preds.shape[1] == 1 and len(self.classes_) == 2:
@@ -480,7 +480,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         n_ts, sz, d = X.shape
         pred = self.transformer_model_.predict(
             [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
-            batch_size=self.batch_size, verbose=self.verbose_level
+            batch_size=self.batch_size, verbose=self.verbose
         )
         return pred
 
@@ -504,7 +504,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         n_ts, sz, d = X.shape
         locations = self.locator_model_.predict(
             [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
-            batch_size=self.batch_size, verbose=self.verbose_level
+            batch_size=self.batch_size, verbose=self.verbose
         )
         return locations.astype(numpy.int)
 
@@ -707,6 +707,7 @@ class SerializableShapeletModel(ShapeletModel):
               self).__init__(n_shapelets_per_size=n_shapelets_per_size,
                              max_iter=max_iter,
                              batch_size=batch_size,
+                             verbose=verbose,
                              verbose_level=verbose_level,
                              weight_regularizer=weight_regularizer,
                              shapelet_length=shapelet_length,
