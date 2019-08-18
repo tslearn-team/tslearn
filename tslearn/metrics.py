@@ -124,6 +124,7 @@ def njit_cdist_dtw(dataset1, dataset2, global_constraint, sakoe_chiba_radius,
     ----------
     dataset1 : array
         A dataset of time series.
+
     dataset2 : array
         Another dataset of time series.
 
@@ -203,8 +204,6 @@ def dtw_path(s1, s2, global_constraint=None,
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
         Global constraint to restrict admissible paths for DTW.
     sakoe_chiba_radius : int (default: 1)
-        Radius to be used for Sakoe-Chiba band global constraint. Used only if
-        global_constraint is "sakoe_chiba".
         Radius to be used for Sakoe-Chiba band global constraint. Used only if
         ``global_constraint="sakoe_chiba"``.
     itakura_max_slope : float (default: 2.)
@@ -612,12 +611,14 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
     ----------
     dataset1 : array-like
         A dataset of time series
+
     dataset2 : array-like (default: None)
         Another dataset of time series. If `None`, self-similarity of
         `dataset1` is returned.
 
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
         Global constraint to restrict admissible paths for DTW.
+
     sakoe_chiba_radius : int (default: 1)
         Radius to be used for Sakoe-Chiba band global constraint. Used only if
         ``global_constraint="sakoe_chiba"``.
@@ -628,7 +629,7 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
 
     Returns
     -------
-    numpy.ndarray
+    cdist : numpy.ndarray
         Cross-similarity matrix
 
     Examples

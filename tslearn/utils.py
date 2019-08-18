@@ -4,8 +4,50 @@ The :mod:`tslearn.utils` module includes various utilities.
 
 import numpy
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.utils import column_or_1d
+from sklearn.utils.validation import check_is_fitted
+import warnings
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
+
+
+def check_dims(X, X_fit=None, extend=True):
+    """Reshapes X to a 3-dimensional array of X.shape[0] univariate
+    timeseries of length X.shape[1] if X is 2-dimensional and extend
+    is True. Then checks whether the dimensions, except the first one,
+    of X_fit and X match.
+
+    Parameters
+    ----------
+    X : array-like
+        The first array to be compared.
+    X_fit : array-like or None (default: None)
+        The second array to be compared, which is created during fit.
+        If None, then only perform reshaping of X, if necessary.
+    extend : boolean
+        Whether to reshape X, if it is 2-dimensional.
+
+    Returns
+    -------
+    nothing
+        Will raise exception if one of both arrays is None or one of the
+        dimensions, except the first, does not match.
+
+    """
+    if X is None:
+        raise ValueError('X is equal to None!')
+
+    if extend and len(X.shape) == 2:
+        warnings.warn('2-Dimensional data passed. Assuming these are '
+                      '{} 1-dimensional timeseries'.format(X.shape[0]))
+        X = X.reshape((X.shape) + (1,))
+
+    if X_fit is not None and X_fit.shape[1:] != X.shape[1:]:
+        raise ValueError('Dimensions (except first) must match!'
+                         ' ({} and {} are passed shapes)'.format(X_fit.shape,
+                                                                 X.shape))
+
+    return X
 
 
 def _arraylike_copy(arr):
@@ -119,6 +161,8 @@ def to_time_series_dataset(dataset, dtype=numpy.float):
     --------
     to_time_series : Transforms a single time series
     """
+    if len(dataset) == 0:
+        return numpy.zeros((0, 0, 0))
     if numpy.array(dataset[0]).ndim == 0:
         dataset = [dataset]
     n_ts = len(dataset)
@@ -411,6 +455,13 @@ class LabelCategorizer(BaseEstimator, TransformerMixin):
         If true, generate a single column for binary classification case.
         Otherwise, will generate 2.
         If there are more than 2 labels, thie option will not change anything.
+    forward_match : dict
+        A dictionary that maps each element that occurs in the label vector
+        on a index {y_i : i} with i in [0, C - 1], C the total number of
+        unique labels and y_i the ith unique label.
+    backward_match : array-like
+        An array that maps an index back to the original label. Where
+        backward_match[i] results in y_i.
 
     Examples
     --------
@@ -439,9 +490,11 @@ class LabelCategorizer(BaseEstimator, TransformerMixin):
     ----------
     .. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
     """
-    def __init__(self, single_column_if_binary=False):
+    def __init__(self, single_column_if_binary=False, forward_match=None,
+                 backward_match=None):
         self.single_column_if_binary = single_column_if_binary
-        self._init()
+        self.forward_match = forward_match
+        self.backward_match = backward_match
 
     def _init(self):
         self.forward_match = {}
@@ -449,6 +502,7 @@ class LabelCategorizer(BaseEstimator, TransformerMixin):
 
     def fit(self, y):
         self._init()
+        y = column_or_1d(y, warn=True)
         values = sorted(set(y))
         for i, v in enumerate(values):
             self.forward_match[v] = i
@@ -456,6 +510,8 @@ class LabelCategorizer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, y):
+        check_is_fitted(self, ['backward_match', 'forward_match'])
+        y = column_or_1d(y, warn=True)
         n_classes = len(self.backward_match)
         n = len(y)
         y_out = numpy.zeros((n, n_classes))
@@ -467,6 +523,7 @@ class LabelCategorizer(BaseEstimator, TransformerMixin):
             return y_out
 
     def inverse_transform(self, y):
+        check_is_fitted(self, ['backward_match', 'forward_match'])
         y_ = numpy.array(y)
         n, n_c = y_.shape
         if n_c == 1 and self.single_column_if_binary:
@@ -489,5 +546,10 @@ class LabelCategorizer(BaseEstimator, TransformerMixin):
             Parameter names mapped to their values.
         """
         out = BaseEstimator.get_params(self, deep=deep)
+        out["single_column_if_binary"] = self.single_column_if_binary
         out["forward_match"] = self.forward_match
         out["backward_match"] = self.backward_match
+        return out
+
+    def _get_tags(self):
+        return {'X_types': ['1dlabels']}

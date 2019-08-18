@@ -39,7 +39,7 @@ def test_gak_kmeans():
     gak_km = GlobalAlignmentKernelKMeans(n_clusters=101, verbose=False,
                                          max_iter=5,
                                          random_state=rng).fit(time_series)
-    assert gak_km.X_fit_ is None
+    assert gak_km._X_fit is None
 
 
 def test_kmeans():
@@ -75,7 +75,7 @@ def test_kmeans():
     km_nofit = TimeSeriesKMeans(n_clusters=101,
                                 verbose=False,
                                 random_state=rng).fit(time_series)
-    assert(km_nofit.X_fit_ is None)
+    assert(km_nofit._X_fit is None)
 
     X_bis = to_time_series_dataset([[1, 2, 3, 4],
                                     [1, 2, 3],
@@ -105,4 +105,4 @@ def test_kshape():
     np.testing.assert_allclose(ks.labels_, ks.predict(time_series))
 
     assert KShape(n_clusters=101, verbose=False,
-                  random_state=rng).fit(time_series).X_fit_ is None
+                  random_state=rng).fit(time_series)._X_fit is None
