@@ -681,6 +681,70 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
         return numpy.array(matrix).reshape((len(dataset1), -1))
 
 
+def cdist_dtw_dev(dataset1, dataset2=None, global_constraint=None,
+              sakoe_chiba_radius=1, itakura_max_slope=2.):
+    r"""Compute cross-similarity matrix using Dynamic Time Warping (DTW)
+    similarity measure.
+    DTW is computed as the Euclidean distance between aligned time series,
+    i.e., if :math:`P` is the alignment path:
+    .. math::
+        DTW(X, Y) = \sqrt{\sum_{(i, j) \in P} (X_{i} - Y_{j})^2}
+    DTW was originally presented in [1]_.
+    Parameters
+    ----------
+    dataset1 : array-like
+        A dataset of time series
+    dataset2 : array-like (default: None)
+        Another dataset of time series. If `None`, self-similarity of
+        `dataset1` is returned.
+    global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
+        Global constraint to restrict admissible paths for DTW.
+    sakoe_chiba_radius : int (default: 1)
+        Radius to be used for Sakoe-Chiba band global constraint. Used only if
+        ``global_constraint="sakoe_chiba"``.
+    itakura_max_slope : float (default: 2.)
+        Maximum slope for the Itakura parallelogram constraint. Used only if
+        ``global_constraint="itakura"``.
+    Returns
+    -------
+    numpy.ndarray
+        Cross-similarity matrix
+    Examples
+    --------
+    >>> cdist_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]])
+    array([[0., 1.],
+           [1., 0.]])
+    >>> cdist_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 3], [2, 3, 4, 5]])
+    array([[0.        , 2.44948974],
+           [1.        , 1.41421356]])
+    See Also
+    --------
+    dtw : Get DTW similarity score
+    References
+    ----------
+    .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
+           spoken word recognition," IEEE Transactions on Acoustics, Speech and
+           Signal Processing, vol. 26(1), pp. 43--49, 1978.
+    """
+    dataset1 = to_time_series_dataset(dataset1)
+
+    if global_constraint is not None:
+        global_constraint_str = global_constraint
+    else:
+        global_constraint_str = ""
+
+    if dataset2 is None:
+        return njit_cdist_dtw_self(
+            dataset1,
+            global_constraint_code[global_constraint_str],
+            sakoe_chiba_radius, itakura_max_slope)
+    else:
+        dataset2 = to_time_series_dataset(dataset2)
+        return njit_cdist_dtw(dataset1, dataset2,
+                              global_constraint_code[global_constraint_str],
+                              sakoe_chiba_radius, itakura_max_slope)
+
+
 def gak(s1, s2, sigma=1.):  # TODO: better doc (formula for the kernel)
     r"""Compute Global Alignment Kernel (GAK) between (possibly
     multidimensional) time series and return it.
