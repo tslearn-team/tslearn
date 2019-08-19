@@ -316,3 +316,6 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             X_ = to_sklearn_dataset(X)
             X_ = check_dims(X_, self._X_fit, extend=False)
         return super(KNeighborsTimeSeriesClassifier, self).predict_proba(X_)
+
+    def _get_tags(self):
+        return {'allow_nan': True}
