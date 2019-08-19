@@ -335,4 +335,4 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
                          self).predict_proba(X_)
 
     def _get_tags(self):
-        return {'allow_nan': True, 'no_validation': True}
+        return {'allow_nan': True, 'allow_variable_length': True}

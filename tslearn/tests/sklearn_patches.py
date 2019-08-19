@@ -34,6 +34,7 @@ _DEFAULT_TAGS = {
     'no_validation': False,
     'multioutput': False,
     "allow_nan": False,
+    'allow_variable_length': False,
     'stateless': False,
     'multilabel': False,
     '_skip_test': False,
@@ -298,7 +299,7 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
                "features in {} is different from the number of features in "
                "fit.")
 
-        if not tags["no_validation"]:
+        if not tags["no_validation"] and not tags["allow_variable_length"]:
             if bool(getattr(classifier, "_pairwise", False)):
                 with assert_raises(ValueError,
                                    msg=msg_pairwise.format(name, "predict")):
@@ -345,7 +346,7 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
             # check that probas for all classes sum to one
             assert_array_almost_equal(np.sum(y_prob, axis=1),
                                       np.ones(n_samples))
-            if not tags["no_validation"]:
+            if not tags["no_validation"] and not tags["allow_variable_length"]:
                 # raises error on malformed input for predict_proba
                 if bool(getattr(classifier_orig, "_pairwise", False)):
                     with assert_raises(ValueError, msg=msg_pairwise.format(
