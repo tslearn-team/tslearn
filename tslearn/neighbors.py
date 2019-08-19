@@ -259,7 +259,10 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
                                        self._ts_fit.shape[0]))
         else:
             self._X_fit, self._d = to_sklearn_dataset(X, return_dim=True)
-        return super(KNeighborsTimeSeriesClassifier, self).fit(self._X_fit, y)
+        super(KNeighborsTimeSeriesClassifier, self).fit(self._X_fit, y)
+        if hasattr(self, '_ts_metric'):
+            self.metric = self._ts_metric
+        return self
 
     def predict(self, X):
         """Predict the class labels for the provided data
@@ -269,7 +272,10 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         X : array-like, shape (n_ts, sz, d)
             Test samples.
         """
-        if self.metric == "precomputed" and hasattr(self, '_ts_metric'):
+        if self.metric in self.variable_length_metrics:
+            self._ts_metric = self.metric
+            self.metric = "precomputed"
+
             if self.metric_params is None:
                 metric_params = {}
             else:
@@ -281,13 +287,16 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
                 X_ = cdist_dtw(X, self._ts_fit, **metric_params)
             elif self._ts_metric == "softdtw":
                 X_ = cdist_soft_dtw(X, self._ts_fit, **metric_params)
+            pred = super(KNeighborsTimeSeriesClassifier, self).predict(X_)
+            self.metric = self._ts_metric
+            return pred
         else:
             check_is_fitted(self, '_X_fit')
             X = check_array(X, allow_nd=True)
             X = to_time_series_dataset(X)
             X_ = to_sklearn_dataset(X)
             X_ = check_dims(X_, self._X_fit, extend=False)
-        return super(KNeighborsTimeSeriesClassifier, self).predict(X_)
+            return super(KNeighborsTimeSeriesClassifier, self).predict(X_)
 
     def predict_proba(self, X):
         """Predict the class probabilities for the provided data
