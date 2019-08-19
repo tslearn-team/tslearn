@@ -681,8 +681,8 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
         return numpy.array(matrix).reshape((len(dataset1), -1))
 
 
-def cdist_dtw_dev(dataset1, dataset2=None, global_constraint=None,
-              sakoe_chiba_radius=1, itakura_max_slope=2.):
+def cdist_dtw_no_parallel(dataset1, dataset2=None, global_constraint=None,
+                          sakoe_chiba_radius=1, itakura_max_slope=2.):
     r"""Compute cross-similarity matrix using Dynamic Time Warping (DTW)
     similarity measure.
     DTW is computed as the Euclidean distance between aligned time series,
@@ -705,21 +705,26 @@ def cdist_dtw_dev(dataset1, dataset2=None, global_constraint=None,
     itakura_max_slope : float (default: 2.)
         Maximum slope for the Itakura parallelogram constraint. Used only if
         ``global_constraint="itakura"``.
+
     Returns
     -------
     numpy.ndarray
         Cross-similarity matrix
+
     Examples
     --------
-    >>> cdist_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]])
+    >>> cdist_dtw_no_parallel([[1, 2, 2, 3], [1., 2., 3., 4.]])
     array([[0., 1.],
            [1., 0.]])
-    >>> cdist_dtw([[1, 2, 2, 3], [1., 2., 3., 4.]], [[1, 2, 3], [2, 3, 4, 5]])
+    >>> cdist_dtw_no_parallel([[1, 2, 2, 3], [1., 2., 3., 4.]],
+    ...                       [[1, 2, 3], [2, 3, 4, 5]])
     array([[0.        , 2.44948974],
            [1.        , 1.41421356]])
+
     See Also
     --------
     dtw : Get DTW similarity score
+
     References
     ----------
     .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
