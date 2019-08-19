@@ -65,7 +65,7 @@ plt.show()
 # The loss history is accessible via the `model` attribute that is a keras
 # model
 plt.figure()
-plt.plot(numpy.arange(1, 201), shp_clf.model.history.history["loss"])
+plt.plot(numpy.arange(1, 201), shp_clf.model_.history.history["loss"])
 plt.title("Evolution of cross-entropy loss during training")
 plt.xlabel("Epochs")
 plt.show()

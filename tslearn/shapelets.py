@@ -215,13 +215,13 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         the number of such shapelets to be trained (value)
     max_iter: int (default: 100)
         Number of training epochs.
-    batch_size: int (default:256)
+    batch_size: int (default: 256)
         Batch size to be used.
     verbose_level: {0, 1, 2} (default: 0)
         `keras` verbose level.
-        .. deprecated:: 0.1
-            min is deprecated in version 0.1 and will be
-            removed in 0.2.
+        .. deprecated:: 0.2
+            verbose_level is deprecated in version 0.2 and will be
+            removed in 0.4. Use `verbose` instead.
     verbose: {0, 1, 2} (default: 0)
         `keras` verbose level.
     optimizer: str or keras.optimizers.Optimizer (default: "sgd")
