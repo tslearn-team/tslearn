@@ -37,7 +37,8 @@ checks.check_pipeline_consistency = check_pipeline_consistency
 
 
 if hasattr(checks, 'ALLOW_NAN'):
-    checks.ALLOW_NAN.append('TimeSeriesKMeans')
+    checks.ALLOW_NAN.extend(['TimeSeriesKMeans',
+                             'KNeighborsTimeSeriesClassifier'])
 
 
 def _get_all_classes():
