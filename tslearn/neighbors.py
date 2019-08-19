@@ -232,9 +232,6 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
                                       algorithm='brute')
         self.metric = metric
         self.metric_params = metric_params
-        if metric in self.variable_length_metrics:
-            self.metric = "precomputed"
-            self._ts_metric = metric
 
     def fit(self, X, y):
         """Fit the model using X as training data and y as target values
@@ -246,6 +243,10 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         y : array-like, shape (n_ts, )
             Target values.
         """
+        if self.metric in self.variable_length_metrics:
+            self._ts_metric = self.metric
+            self.metric = "precomputed"
+
         X = check_array(X,
                         allow_nd=True,
                         force_all_finite=(self.metric != "precomputed"))
