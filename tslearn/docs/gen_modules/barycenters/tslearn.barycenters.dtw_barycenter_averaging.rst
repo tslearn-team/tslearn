@@ -1,3 +1,5 @@
+.. _fun-dba:
+
 tslearn.barycenters.dtw_barycenter_averaging
 ============================================
 

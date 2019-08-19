@@ -44,8 +44,8 @@ Examples
 Barycenter computation
 ----------------------
 
-* :ref:`DTWBarycenterAveraging <class-dba>`
-* :ref:`SoftDTWBarycenter <class-softdtw>`
+* :ref:`dtw_barycenter_averaging <fun-dba>`
+* :ref:`softdtw_barycenter <fun-softdtwbar>`
 
 Examples
 ~~~~~~~~

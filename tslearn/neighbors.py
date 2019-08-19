@@ -205,9 +205,8 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         - [callable] : a user-defined function which accepts an array of
           distances, and returns an array of the same
           shape containing the weights.
-    metric : one of the metrics allowed for class
-    :class:`.KNeighborsTimeSeries`
-        (default: 'dtw')
+    metric : one of the metrics allowed for :class:`.KNeighborsTimeSeries`
+    class (default: 'dtw')
         Metric to be used at the core of the nearest neighbor procedure
     metric_params : dict or None (default: None)
         Dictionnary of metric parameters.
