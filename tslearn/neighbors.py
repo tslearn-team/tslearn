@@ -306,7 +306,10 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         X : array-like, shape (n_ts, sz, d)
             Test samples.
         """
-        if self.metric == "precomputed" and hasattr(self, '_ts_metric'):
+        if self.metric in self.variable_length_metrics:
+            self._ts_metric = self.metric
+            self.metric = "precomputed"
+
             if self.metric_params is None:
                 metric_params = {}
             else:
