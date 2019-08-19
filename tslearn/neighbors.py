@@ -321,7 +321,8 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
                 X_ = cdist_dtw(X, self._ts_fit, **metric_params)
             elif self._ts_metric == "softdtw":
                 X_ = cdist_soft_dtw(X, self._ts_fit, **metric_params)
-            pred = super(KNeighborsTimeSeriesClassifier, self).predict(X_)
+            pred = super(KNeighborsTimeSeriesClassifier,
+                         self).predict_proba(X_)
             self.metric = self._ts_metric
             return pred
         else:
@@ -330,7 +331,8 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             X = to_time_series_dataset(X)
             X_ = to_sklearn_dataset(X)
             X_ = check_dims(X_, self._X_fit, extend=False)
-            return super(KNeighborsTimeSeriesClassifier, self).predict_proba(X_)
+            return super(KNeighborsTimeSeriesClassifier,
+                         self).predict_proba(X_)
 
     def _get_tags(self):
         return {'allow_nan': True, 'no_validation': True}
