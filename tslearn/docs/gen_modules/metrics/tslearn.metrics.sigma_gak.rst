@@ -1,3 +1,5 @@
+.. _fun-sigmagak:
+
 tslearn.metrics.sigma_gak
 =========================
 

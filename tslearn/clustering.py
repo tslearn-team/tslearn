@@ -223,8 +223,10 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         Number of time the k-means algorithm will be run with different
         centroid seeds. The final results will be the
         best output of n_init consecutive runs in terms of inertia.
-    sigma : float (default: 1.)
-        Bandwidth parameter for the Global Alignment kernel
+    sigma : float or "auto" (default: "auto")
+        Bandwidth parameter for the Global Alignment kernel. If set to 'auto',
+        it is computed based on a sampling of the training set
+        (cf :ref:`tslearn.metrics.sigma_gak <fun-sigmagak>`)
     verbose : bool (default: False)
         Whether or not to print information about the inertia while learning
         the model.
