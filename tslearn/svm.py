@@ -221,8 +221,11 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
         self.svm_estimator_ = SVC(
             C=self.C, kernel=estimator_kernel, degree=self.degree,
             gamma=self.gamma, coef0=self.coef0, shrinking=self.shrinking,
-            tol=self.tol, cache_size=self.cache_size,
-            verbose=self.verbose, max_iter=self.max_iter
+            probability=self.probability, tol=self.tol,
+            cache_size=self.cache_size, class_weight=self.class_weight,
+            verbose=self.verbose, max_iter=self.max_iter,
+            decision_function_shape=self.decision_function_shape,
+            random_state=self.random_state
         )
         self.svm_estimator_.fit(sklearn_X, y, sample_weight=sample_weight)
 
