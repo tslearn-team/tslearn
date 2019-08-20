@@ -1,3 +1,5 @@
+.. _class-svc:
+
 tslearn.svm.TimeSeriesSVC
 =========================
 

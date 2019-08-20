@@ -1,3 +1,5 @@
+.. _class-svr:
+
 tslearn.svm.TimeSeriesSVR
 =========================
 
