@@ -14,7 +14,6 @@ from sklearn.utils.validation import check_is_fitted
 
 import warnings
 
-
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
@@ -32,27 +31,40 @@ def _prepare_ts_datasets_sklearn(X):
     return sklearn_X.reshape((n_ts, -1))
 
 
-class GAKKernel():
-    """Utility class, used to calculate the Global Alignment Kernel
-    functions for the Support Vector Machines.
-    """
-    def __init__(self, sz, d, gamma):
-        self.sz = sz
-        self.d = d
-        if gamma == "auto":
-            self.gamma = 1.
+class TimeSeriesSVMMixin:
+    variable_length_kernels = ["gak"]
+
+    def _preprocess_sklearn(self, X, y=None, set_X_fit=False):
+        force_all_finite = self.kernel not in self.variable_length_kernels
+        if y is None:
+            X = check_array(X, allow_nd=True,
+                            force_all_finite=force_all_finite)
         else:
-            self.gamma = gamma
+            X, y = check_X_y(X, y, allow_nd=True,
+                             force_all_finite=force_all_finite)
+        X = check_dims(X, X_fit=None)
+        X = to_time_series_dataset(X)
 
-    def __call__(self, x, y):
-        return cdist_gak(
-            x.reshape((-1, self.sz, self.d)),
-            y.reshape((-1, self.sz, self.d)),
-            sigma=numpy.sqrt(self.gamma / 2.)
-        )
+        if set_X_fit:
+            self._X_fit = X
+            self.classes_ = numpy.unique(y)
+
+        if self.kernel in self.variable_length_kernels:
+            assert self.kernel == "gak"
+            estimator_kernel = "precomputed"
+            self.gamma = gamma_soft_dtw(X)
+            sklearn_X = cdist_gak(X, X, sigma=numpy.sqrt(self.gamma / 2.))
+        else:
+            estimator_kernel = self.kernel
+            sklearn_X = _prepare_ts_datasets_sklearn(X)
+
+        if y is None:
+            return sklearn_X, estimator_kernel
+        else:
+            return sklearn_X, estimator_kernel, y
 
 
-class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
+class TimeSeriesSVC(TimeSeriesSVMMixin, BaseEstimator, ClassifierMixin):
     """Time-series specific Support Vector Classifier.
 
     Parameters
@@ -160,8 +172,6 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
     Marco Cuturi.
     ICML 2011.
     """
-    variable_length_kernels = ["gak"]
-
     def __init__(self, C=1.0, kernel="gak", degree=3, gamma="auto", coef0=0.0,
                  shrinking=True, probability=False, tol=0.001, cache_size=200,
                  class_weight=None, verbose=False, max_iter=-1,
@@ -199,27 +209,10 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
         return sv
 
     def fit(self, X, y, sample_weight=None):
-        if self.kernel in self.variable_length_kernels:
-            X, y = check_X_y(X, y, allow_nd=True, force_all_finite=False)
-        else:
-            X, y = check_X_y(X, y, allow_nd=True)
-        X = check_dims(X, X_fit=None)
-        X = to_time_series_dataset(X)
-
-        self._X_fit = X
-        self.classes_ = numpy.unique(y)
-
-        if self.kernel in self.variable_length_kernels:
-            assert self.kernel == "gak"
-            estimator_kernel = "precomputed"
-            self.gamma = gamma_soft_dtw(X)
-            sklearn_X = cdist_gak(X, X, sigma=numpy.sqrt(self.gamma / 2.))
-        else:
-            estimator_kernel = self.kernel
-            sklearn_X = _prepare_ts_datasets_sklearn(X)
+        sklearn_X, kernel, y = self._preprocess_sklearn(X, y, set_X_fit=True)
 
         self.svm_estimator_ = SVC(
-            C=self.C, kernel=estimator_kernel, degree=self.degree,
+            C=self.C, kernel=kernel, degree=self.degree,
             gamma=self.gamma, coef0=self.coef0, shrinking=self.shrinking,
             probability=self.probability, tol=self.tol,
             cache_size=self.cache_size, class_weight=self.class_weight,
@@ -232,76 +225,28 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
         return self
 
     def predict(self, X):
-        if self.kernel in self.variable_length_kernels:
-            X = check_array(X, allow_nd=True, force_all_finite=False)
-        else:
-            X = check_array(X, allow_nd=True)
+        sklearn_X, _ = self._preprocess_sklearn(X, set_X_fit=False)
         check_is_fitted(self, ['svm_estimator_', '_X_fit'])
-        X = check_dims(X, self._X_fit)
-        if self.kernel in self.variable_length_kernels:
-            assert self.kernel == "gak"
-            sklearn_X = cdist_gak(X, self._X_fit,
-                                  sigma=numpy.sqrt(self.gamma / 2.))
-        else:
-            sklearn_X = _prepare_ts_datasets_sklearn(X)
         return self.svm_estimator_.predict(sklearn_X)
 
     def decision_function(self, X):
-        if self.kernel in self.variable_length_kernels:
-            X = check_array(X, allow_nd=True, force_all_finite=False)
-        else:
-            X = check_array(X, allow_nd=True)
+        sklearn_X, _ = self._preprocess_sklearn(X, set_X_fit=False)
         check_is_fitted(self, ['svm_estimator_', '_X_fit'])
-        X = check_dims(X, self._X_fit)
-
-        if self.kernel in self.variable_length_kernels:
-            assert self.kernel == "gak"
-            sklearn_X = cdist_gak(X, self._X_fit,
-                                  sigma=numpy.sqrt(self.gamma / 2.))
-        else:
-            sklearn_X = _prepare_ts_datasets_sklearn(X)
         return self.svm_estimator_.decision_function(sklearn_X)
 
     def predict_log_proba(self, X):
-        if self.kernel in self.variable_length_kernels:
-            X = check_array(X, allow_nd=True, force_all_finite=False)
-        else:
-            X = check_array(X, allow_nd=True)
+        sklearn_X, _ = self._preprocess_sklearn(X, set_X_fit=False)
         check_is_fitted(self, ['svm_estimator_', '_X_fit'])
-        X = check_dims(X, self._X_fit)
-
-        if self.kernel in self.variable_length_kernels:
-            assert self.kernel == "gak"
-            sklearn_X = cdist_gak(X, self._X_fit,
-                                  sigma=numpy.sqrt(self.gamma / 2.))
-        else:
-            sklearn_X = _prepare_ts_datasets_sklearn(X)
         return self.svm_estimator_.predict_log_proba(sklearn_X)
 
     def predict_proba(self, X):
-        if self.kernel in self.variable_length_kernels:
-            X = check_array(X, allow_nd=True, force_all_finite=False)
-        else:
-            X = check_array(X, allow_nd=True)
+        sklearn_X, _ = self._preprocess_sklearn(X, set_X_fit=False)
         check_is_fitted(self, ['svm_estimator_', '_X_fit'])
-        X = check_dims(X, self._X_fit)
-
-        if self.kernel in self.variable_length_kernels:
-            assert self.kernel == "gak"
-            sklearn_X = cdist_gak(X, self._X_fit,
-                                  sigma=numpy.sqrt(self.gamma / 2.))
-        else:
-            sklearn_X = _prepare_ts_datasets_sklearn(X)
         return self.svm_estimator_.predict_proba(sklearn_X)
 
     def score(self, X, y, sample_weight=None):
-        if self.kernel in self.variable_length_kernels:
-            X = check_array(X, allow_nd=True, force_all_finite=False)
-        else:
-            X = check_array(X, allow_nd=True)
+        sklearn_X, _ = self._preprocess_sklearn(X, set_X_fit=False)
         check_is_fitted(self, ['svm_estimator_', '_X_fit'])
-        X = check_dims(X, self._X_fit)
-        sklearn_X = _prepare_ts_datasets_sklearn(X)
         return self.svm_estimator_.score(sklearn_X, y,
                                          sample_weight=sample_weight)
 
@@ -310,7 +255,7 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
                 'allow_variable_length': True}
 
 
-class TimeSeriesSVR(BaseEstimator, RegressorMixin):
+class TimeSeriesSVR(TimeSeriesSVMMixin, BaseEstimator, RegressorMixin):
     """Time-series specific Support Vector Regressor.
 
     Parameters
@@ -392,8 +337,6 @@ class TimeSeriesSVR(BaseEstimator, RegressorMixin):
     Marco Cuturi.
     ICML 2011.
     """
-    variable_length_kernels = ["gak"]
-
     def __init__(self, C=1.0, kernel="gak", degree=3, gamma="auto",
                  coef0=0.0, tol=0.001, epsilon=0.1, shrinking=True,
                  cache_size=200, verbose=False, max_iter=-1):
@@ -420,26 +363,10 @@ class TimeSeriesSVR(BaseEstimator, RegressorMixin):
         return X_[self.svm_estimator_.support_]
 
     def fit(self, X, y, sample_weight=None):
-        if self.kernel in self.variable_length_kernels:
-            X, y = check_X_y(X, y, allow_nd=True, force_all_finite=False)
-        else:
-            X, y = check_X_y(X, y, allow_nd=True)
-        X = check_dims(X, X_fit=None)
-        X = to_time_series_dataset(X)
-
-        self._X_fit = X
-
-        if self.kernel in self.variable_length_kernels:
-            assert self.kernel == "gak"
-            estimator_kernel = "precomputed"
-            self.gamma = gamma_soft_dtw(X)
-            sklearn_X = cdist_gak(X, X, sigma=numpy.sqrt(self.gamma / 2.))
-        else:
-            estimator_kernel = self.kernel
-            sklearn_X = _prepare_ts_datasets_sklearn(X)
+        sklearn_X, kernel, y = self._preprocess_sklearn(X, y, set_X_fit=True)
 
         self.svm_estimator_ = SVR(
-            C=self.C, kernel=estimator_kernel, degree=self.degree,
+            C=self.C, kernel=kernel, degree=self.degree,
             gamma=self.gamma, coef0=self.coef0, shrinking=self.shrinking,
             tol=self.tol, cache_size=self.cache_size,
             verbose=self.verbose, max_iter=self.max_iter
@@ -448,28 +375,13 @@ class TimeSeriesSVR(BaseEstimator, RegressorMixin):
         return self
 
     def predict(self, X):
-        if self.kernel in self.variable_length_kernels:
-            X = check_array(X, allow_nd=True, force_all_finite=False)
-        else:
-            X = check_array(X, allow_nd=True)
+        sklearn_X, _ = self._preprocess_sklearn(X, set_X_fit=False)
         check_is_fitted(self, ['svm_estimator_', '_X_fit'])
-        X = check_dims(X, self._X_fit)
-        if self.kernel in self.variable_length_kernels:
-            assert self.kernel == "gak"
-            sklearn_X = cdist_gak(X, self._X_fit,
-                                  sigma=numpy.sqrt(self.gamma / 2.))
-        else:
-            sklearn_X = _prepare_ts_datasets_sklearn(X)
         return self.svm_estimator_.predict(sklearn_X)
 
     def score(self, X, y, sample_weight=None):
-        if self.kernel in self.variable_length_kernels:
-            X = check_array(X, allow_nd=True, force_all_finite=False)
-        else:
-            X = check_array(X, allow_nd=True)
+        sklearn_X, _ = self._preprocess_sklearn(X, set_X_fit=False)
         check_is_fitted(self, ['svm_estimator_', '_X_fit'])
-        X = check_dims(X, self._X_fit)
-        sklearn_X = _prepare_ts_datasets_sklearn(X)
         return self.svm_estimator_.score(sklearn_X, y,
                                          sample_weight=sample_weight)
 
