@@ -14,6 +14,7 @@ from sklearn.base import (BaseEstimator, ClassifierMixin, ClusterMixin,
 
 from sklearn.utils.testing import *
 from sklearn_patches import *
+from sklearn_patches import _safe_tags, _DEFAULT_TAGS
 
 import warnings
 
@@ -35,10 +36,6 @@ checks.check_regressors_int = check_regressors_int_patched
 checks.check_classifiers_regression_target = check_classifiers_cont_target
 checks.check_pipeline_consistency = check_pipeline_consistency
 
-
-if hasattr(checks, 'ALLOW_NAN'):
-    checks.ALLOW_NAN.extend(['TimeSeriesKMeans',
-                             'KNeighborsTimeSeriesClassifier'])
 
 
 def _get_all_classes():
@@ -162,5 +159,8 @@ def check_estimator(Estimator):
 def test_all_estimators():
     estimators = get_estimators('all')
     for estimator in estimators:
+        if hasattr(checks, 'ALLOW_NAN') \
+                and _safe_tags(estimator[1](), "allow_nan"):
+            checks.ALLOW_NAN.append(estimator[0])
         check_estimator(estimator[1])
         print(estimator[0])
