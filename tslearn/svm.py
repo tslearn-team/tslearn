@@ -218,7 +218,7 @@ class TimeSeriesSVC(BaseEstimator, ClassifierMixin):
             estimator_kernel = self.kernel
             sklearn_X = _prepare_ts_datasets_sklearn(X)
 
-        self.svm_estimator_ = SVR(
+        self.svm_estimator_ = SVC(
             C=self.C, kernel=estimator_kernel, degree=self.degree,
             gamma=self.gamma, coef0=self.coef0, shrinking=self.shrinking,
             tol=self.tol, cache_size=self.cache_size,
