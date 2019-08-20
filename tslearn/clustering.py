@@ -223,8 +223,10 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         Number of time the k-means algorithm will be run with different
         centroid seeds. The final results will be the
         best output of n_init consecutive runs in terms of inertia.
-    sigma : float (default: 1.)
-        Bandwidth parameter for the Global Alignment kernel
+    sigma : float or "auto" (default: "auto")
+        Bandwidth parameter for the Global Alignment kernel. If set to 'auto',
+        it is computed based on a sampling of the training set
+        (cf :ref:`tslearn.metrics.sigma_gak <fun-sigmagak>`)
     verbose : bool (default: False)
         Whether or not to print information about the inertia while learning
         the model.
@@ -317,7 +319,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
             default, all time series weights are equal.
         """
 
-        X = check_array(X, allow_nd=True)
+        X = check_array(X, allow_nd=True, force_all_finite=False)
         X = check_dims(X, X_fit=None)
 
         if sample_weight is not None:
@@ -419,7 +421,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
-        X = check_array(X, allow_nd=True)
+        X = check_array(X, allow_nd=True, force_all_finite=False)
         check_is_fitted(self, '_X_fit')
         X = check_dims(X, self._X_fit)
         K = self._get_kernel(X, self._X_fit)
@@ -427,6 +429,9 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         dist = numpy.zeros((n_samples, self.n_clusters))
         self._compute_dist(K, dist)
         return dist.argmin(axis=1)
+
+    def _get_tags(self):
+        return {'allow_nan': True, 'allow_variable_length': True}
 
 
 class TimeSeriesCentroidBasedClusteringMixin:
@@ -727,7 +732,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         return self._assign(X_, update_class_attributes=False)
 
     def _get_tags(self):
-        return {'allow_nan': True}
+        return {'allow_nan': True, 'allow_variable_length': True}
 
 
 class KShape(BaseEstimator, ClusterMixin,

@@ -73,16 +73,16 @@ class TimeSeriesScalerMinMax(TransformerMixin):
     min : float (default: 0.)
         Minimum value for output time series.
 
-        .. deprecated:: 0.1
-            min is deprecated in version 0.1 and will be
-            removed in 0.2.
+        .. deprecated:: 0.2
+            min is deprecated in version 0.2 and will be
+            removed in 0.4.
 
     max : float (default: 1.)
         Maximum value for output time series.
 
-        .. deprecated:: 0.1
-            min is deprecated in version 0.1 and will be
-            removed in 0.2.
+        .. deprecated:: 0.2
+            min is deprecated in version 0.2 and will be
+            removed in 0.4.
 
     Note
     ----
@@ -90,8 +90,7 @@ class TimeSeriesScalerMinMax(TransformerMixin):
 
     Example
     -------
-    >>> TimeSeriesScalerMinMax(min=1.,
-    ...                        max=2.).fit_transform([[0, 3, 6]])
+    >>> TimeSeriesScalerMinMax(value_range=(1., 2.)).fit_transform([[0, 3, 6]])
     array([[[1. ],
             [1.5],
             [2. ]]])
@@ -133,16 +132,16 @@ class TimeSeriesScalerMinMax(TransformerMixin):
         """
         if self.min_ is not None:
             warnings.warn(
-                "'min' is deprecated in version 0.1 and will be "
-                "removed in 0.2. Don't set `min` to remove this "
+                "'min' is deprecated in version 0.2 and will be "
+                "removed in 0.4. Don't set `min` to remove this "
                 "warning.",
                 DeprecationWarning, stacklevel=2)
             self.value_range = (self.min_, self.value_range[1])
 
         if self.max_ is not None:
             warnings.warn(
-                "'max' is deprecated in version 0.1 and will be "
-                "removed in 0.2. Don't set `max` to remove this "
+                "'max' is deprecated in version 0.2 and will be "
+                "removed in 0.4. Don't set `max` to remove this "
                 "warning.",
                 DeprecationWarning, stacklevel=2)
             self.value_range = (self.value_range[0], self.max_)
