@@ -9,7 +9,7 @@ from tslearn.soft_dtw_fast import _soft_dtw, _soft_dtw_grad, \
     _jacobian_product_sq_euc
 from sklearn.metrics.pairwise import euclidean_distances
 from numba import njit, prange
-from sklearn.externals.joblib import Parallel, delayed
+from joblib import Parallel, delayed
 
 from tslearn.cygak import cdist_normalized_gak as cycdist_normalized_gak, \
     normalized_gak as cynormalized_gak
@@ -914,14 +914,14 @@ def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None):
         # https://github.com/rtavenar/tslearn/pull/128#discussion_r314978479
         matrix = numpy.zeros((len(dataset1), len(dataset1)))
         indices = numpy.triu_indices(len(dataset1), k=1, m=len(dataset1))
-        matrix[indices] = Parallel(n_jobs=n_jobs, backend="threading")(
+        matrix[indices] = Parallel(n_jobs=n_jobs, prefer="threads")(
             delayed(fast_gak)(dataset1[i], dataset1[j], sigma=sigma)
             for i in range(len(dataset1)) for j in range(i + 1, len(dataset1))
         )
         return matrix + matrix.T + numpy.eye(len(dataset1))
     else:
         dataset2 = to_time_series_dataset(dataset2)
-        matrix = Parallel(n_jobs=n_jobs, backend="threading")(
+        matrix = Parallel(n_jobs=n_jobs, prefer="threads")(
             delayed(fast_gak)(dataset1[i], dataset2[j], sigma=sigma)
             for i in range(len(dataset1)) for j in range(len(dataset2))
         )
