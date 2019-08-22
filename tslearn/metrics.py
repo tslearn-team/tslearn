@@ -3,7 +3,7 @@ The :mod:`tslearn.metrics` module gathers time series similarity metrics.
 """
 
 import numpy
-from scipy.spatial.distance import pdist
+from scipy.spatial.distance import pdist, cdist
 from sklearn.utils import check_random_state
 from tslearn.soft_dtw_fast import _soft_dtw, _soft_dtw_grad, \
     _jacobian_product_sq_euc
@@ -660,7 +660,7 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
         # https://github.com/rtavenar/tslearn/pull/128#discussion_r314978479
         matrix = numpy.zeros((len(dataset1), len(dataset1)))
         indices = numpy.triu_indices(len(dataset1), k=1, m=len(dataset1))
-        matrix[indices] = Parallel(n_jobs=n_jobs, backend="threading")(
+        matrix[indices] = Parallel(n_jobs=n_jobs, prefer="threads")(
             delayed(dtw)(
                 dataset1[i], dataset1[j],
                 global_constraint=global_constraint,
@@ -671,7 +671,7 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
         return matrix + matrix.T
     else:
         dataset2 = to_time_series_dataset(dataset2)
-        matrix = Parallel(n_jobs=n_jobs, backend="threading")(
+        matrix = Parallel(n_jobs=n_jobs, prefer="threads")(
             delayed(dtw)(
                 dataset1[i], dataset2[j],
                 global_constraint=global_constraint,
@@ -751,6 +751,81 @@ def cdist_dtw_no_parallel(dataset1, dataset2=None, global_constraint=None,
                               sakoe_chiba_radius, itakura_max_slope)
 
 
+@njit(nogil=True)
+def njit_gak(s1, s2, gram):
+    l1 = s1.shape[0]
+    l2 = s2.shape[0]
+
+    cum_sum = numpy.zeros((l1 + 1, l2 + 1))
+    cum_sum[0, 0] = 1.
+
+    for i in prange(l1):
+        for j in prange(l2):
+            cum_sum[i + 1, j + 1] = (cum_sum[i, j + 1] +
+                                     cum_sum[i + 1, j] +
+                                     cum_sum[i, j]) * gram[i, j]
+
+    return cum_sum[l1, l2]
+
+
+def _gak_gram(s1, s2, sigma=1.):
+    gram = - cdist(s1, s2, "sqeuclidean") / (2 * sigma ** 2)
+    gram -= numpy.log(2 - numpy.exp(gram))
+    return numpy.exp(gram)
+
+
+def fast_gak(s1, s2, sigma=1., normalized=True):
+    r"""Compute Global Alignment Kernel (GAK) between (possibly
+    multidimensional) time series and return it.
+
+    It is not required that both time series share the same size, but they must
+    be the same dimension. GAK was
+    originally presented in [1]_.
+    This is a normalized version that ensures that :math:`k(x,x)=1` for all
+    :math:`x` and :math:`k(x,y) \in [0, 1]` for all :math:`x, y`.
+
+    Parameters
+    ----------
+    s1
+        A time series
+    s2
+        Another time series
+    sigma : float (default 1.)
+        Bandwidth of the internal gaussian kernel used for GAK
+
+    Returns
+    -------
+    float
+        Kernel value
+
+    Examples
+    --------
+    >>> fast_gak([1, 2, 3], [1., 2., 2., 3.], sigma=2.)  # doctest: +ELLIPSIS
+    0.839...
+    >>> fast_gak([1, 2, 3], [1., 2., 2., 3., 4.])  # doctest: +ELLIPSIS
+    0.273...
+
+    See Also
+    --------
+    cdist_gak : Compute cross-similarity matrix using Global Alignment kernel
+
+    References
+    ----------
+    .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
+    """
+    s1 = to_time_series(s1, remove_nans=True)
+    s2 = to_time_series(s2, remove_nans=True)
+
+    gram = _gak_gram(s1, s2, sigma=sigma)
+
+    gak_val = njit_gak(s1, s2, gram)
+    if normalized:
+        gram_s1 = _gak_gram(s1, s1, sigma=sigma)
+        gram_s2 = _gak_gram(s2, s2, sigma=sigma)
+        gak_val /= numpy.sqrt(njit_gak(s1, s1, gram_s1) *
+                              njit_gak(s2, s2, gram_s2))
+    return gak_val
+
 def gak(s1, s2, sigma=1.):  # TODO: better doc (formula for the kernel)
     r"""Compute Global Alignment Kernel (GAK) between (possibly
     multidimensional) time series and return it.
@@ -795,7 +870,7 @@ def gak(s1, s2, sigma=1.):  # TODO: better doc (formula for the kernel)
     return cynormalized_gak(s1, s2, sigma)
 
 
-def cdist_gak(dataset1, dataset2=None, sigma=1.):
+def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None):
     r"""Compute cross-similarity matrix using Global Alignment kernel (GAK).
 
     GAK was originally presented in [1]_.
@@ -820,6 +895,64 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.):
     array([[1.        , 0.65629661],
            [0.65629661, 1.        ]])
     >>> cdist_gak([[1, 2, 2], [1., 2., 3., 4.]],
+    ...           [[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)
+    array([[0.71059484, 0.29722877],
+           [0.65629661, 1.        ]])
+
+    See Also
+    --------
+    gak : Compute Global Alignment kernel
+
+    References
+    ----------
+    .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
+    """
+    dataset1 = to_time_series_dataset(dataset1)
+
+    if dataset2 is None:
+        # Inspired from code by @GillesVandewiele:
+        # https://github.com/rtavenar/tslearn/pull/128#discussion_r314978479
+        matrix = numpy.zeros((len(dataset1), len(dataset1)))
+        indices = numpy.triu_indices(len(dataset1), k=1, m=len(dataset1))
+        matrix[indices] = Parallel(n_jobs=n_jobs, backend="threading")(
+            delayed(fast_gak)(dataset1[i], dataset1[j], sigma=sigma)
+            for i in range(len(dataset1)) for j in range(i + 1, len(dataset1))
+        )
+        return matrix + matrix.T + numpy.eye(len(dataset1))
+    else:
+        dataset2 = to_time_series_dataset(dataset2)
+        matrix = Parallel(n_jobs=n_jobs, backend="threading")(
+            delayed(fast_gak)(dataset1[i], dataset2[j], sigma=sigma)
+            for i in range(len(dataset1)) for j in range(len(dataset2))
+        )
+        return numpy.array(matrix).reshape((len(dataset1), -1))
+
+
+def cdist_gak_no_parallel(dataset1, dataset2=None, sigma=1.):
+    r"""Compute cross-similarity matrix using Global Alignment kernel (GAK).
+
+    GAK was originally presented in [1]_.
+
+    Parameters
+    ----------
+    dataset1
+        A dataset of time series
+    dataset2
+        Another dataset of time series
+    sigma : float (default 1.)
+        Bandwidth of the internal gaussian kernel used for GAK
+
+    Returns
+    -------
+    numpy.ndarray
+        Cross-similarity matrix
+
+    Examples
+    --------
+    >>> cdist_gak_no_parallel([[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)
+    array([[1.        , 0.65629661],
+           [0.65629661, 1.        ]])
+    >>> cdist_gak_no_parallel([[1, 2, 2], [1., 2., 3., 4.]],
     ...           [[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)
     array([[0.71059484, 0.29722877],
            [0.65629661, 1.        ]])
