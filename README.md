@@ -18,6 +18,7 @@ numpy
 numba
 scipy
 scikit-learn
+joblib
 numba
 ```
 
