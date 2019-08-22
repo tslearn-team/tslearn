@@ -1,3 +1,5 @@
+.. _fun-gammasoftdtw:
+
 tslearn.metrics.gamma_soft_dtw
 ==============================
 

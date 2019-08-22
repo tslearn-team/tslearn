@@ -49,9 +49,19 @@ sphinx_gallery_conf = {
     'reference_url':  {'tslearn': None,
                        'matplotlib': 'http://matplotlib.org',
                        'numpy': 'http://docs.scipy.org/doc/numpy-1.9.1'},
-    'default_thumb_file': 'fig/logo.png',
+    # 'default_thumb_file': 'fig/logo.png',
     'backreferences_dir': 'gen_modules/backreferences',
-    'doc_module': ('tslearn', )
+    'doc_module': ('tslearn',),
+    'binder': {
+        # Required keys
+        'org': 'rtavenar',
+        'repo': 'tslearn',
+        'branch': 'master',
+        'binderhub_url': 'https://mybinder.org',
+        'dependencies': '../../requirements.txt',
+        # Optional keys
+        'use_jupyter_lab': True
+    }
 }
 
 # Add any paths that contain templates here, relative to this directory.

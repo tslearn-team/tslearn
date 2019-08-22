@@ -41,7 +41,7 @@ shp_clf = ShapeletModel(n_shapelets_per_size=shapelet_sizes,
                         optimizer=Adagrad(lr=.1),
                         weight_regularizer=.01,
                         max_iter=50,
-                        verbose_level=0)
+                        verbose=0)
 shp_clf.fit(X_train, y_train)
 predicted_locations = shp_clf.locate(X_test)
 

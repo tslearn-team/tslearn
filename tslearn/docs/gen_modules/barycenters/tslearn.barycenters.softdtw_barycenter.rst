@@ -1,3 +1,5 @@
+.. _fun-softdtwbar:
+
 tslearn.barycenters.softdtw_barycenter
 ======================================
 

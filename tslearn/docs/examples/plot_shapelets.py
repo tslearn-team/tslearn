@@ -45,7 +45,7 @@ shp_clf = ShapeletModel(n_shapelets_per_size=shapelet_sizes,
                         optimizer=Adagrad(lr=.1),
                         weight_regularizer=.01,
                         max_iter=200,
-                        verbose_level=0)
+                        verbose=0)
 shp_clf.fit(X_train, y_train)
 predicted_labels = shp_clf.predict(X_test)
 print("Correct classification rate:", accuracy_score(y_test, predicted_labels))
@@ -65,7 +65,7 @@ plt.show()
 # The loss history is accessible via the `model` attribute that is a keras
 # model
 plt.figure()
-plt.plot(numpy.arange(1, 201), shp_clf.model.history.history["loss"])
+plt.plot(numpy.arange(1, 201), shp_clf.model_.history.history["loss"])
 plt.title("Evolution of cross-entropy loss during training")
 plt.xlabel("Epochs")
 plt.show()

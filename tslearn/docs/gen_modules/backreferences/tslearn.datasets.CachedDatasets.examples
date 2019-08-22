@@ -5,24 +5,6 @@ Examples using ``tslearn.datasets.CachedDatasets``
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="This example uses the KShape clustering method that is based on cross-correlation to cluster ti...">
-
-.. only:: html
-
-    .. figure:: /auto_examples/images/thumb/sphx_glr_plot_kshape_thumb.png
-
-        :ref:`sphx_glr_auto_examples_plot_kshape.py`
-
-.. raw:: html
-
-    </div>
-
-.. only:: not html
-
-    * :ref:`sphx_glr_auto_examples_plot_kshape.py`
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="This example illustrates the use of the global alignment kernel for support vector classificati...">
 
 .. only:: html
@@ -38,6 +20,42 @@ Examples using ``tslearn.datasets.CachedDatasets``
 .. only:: not html
 
     * :ref:`sphx_glr_auto_examples_plot_svm.py`
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example performs a :math:`k`-Nearest-Neighbor search in a database of time series using DT...">
+
+.. only:: html
+
+    .. figure:: /auto_examples/images/thumb/sphx_glr_plot_knn_search_thumb.png
+
+        :ref:`sphx_glr_auto_examples_plot_knn_search.py`
+
+.. raw:: html
+
+    </div>
+
+.. only:: not html
+
+    * :ref:`sphx_glr_auto_examples_plot_knn_search.py`
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example uses the KShape clustering method that is based on cross-correlation to cluster ti...">
+
+.. only:: html
+
+    .. figure:: /auto_examples/images/thumb/sphx_glr_plot_kshape_thumb.png
+
+        :ref:`sphx_glr_auto_examples_plot_kshape.py`
+
+.. raw:: html
+
+    </div>
+
+.. only:: not html
+
+    * :ref:`sphx_glr_auto_examples_plot_kshape.py`
 
 .. raw:: html
 
@@ -146,3 +164,21 @@ Examples using ``tslearn.datasets.CachedDatasets``
 .. only:: not html
 
     * :ref:`sphx_glr_auto_examples_plot_kmeans.py`
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="In this example, we demonstrate how it is possible to use the different algorithms of tslearn i...">
+
+.. only:: html
+
+    .. figure:: /auto_examples/images/thumb/sphx_glr_plot_knnts_sklearn_thumb.png
+
+        :ref:`sphx_glr_auto_examples_plot_knnts_sklearn.py`
+
+.. raw:: html
+
+    </div>
+
+.. only:: not html
+
+    * :ref:`sphx_glr_auto_examples_plot_knnts_sklearn.py`

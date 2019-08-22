@@ -16,8 +16,11 @@ from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw, \
     cdist_soft_dtw_normalized, dtw
 from tslearn.barycenters import euclidean_barycenter, \
     dtw_barycenter_averaging, softdtw_barycenter
+from sklearn.utils import check_array, column_or_1d
+from sklearn.utils.validation import check_is_fitted
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
-from tslearn.utils import to_time_series_dataset, to_time_series, ts_size
+from tslearn.utils import (to_time_series_dataset, to_time_series,
+                           ts_size, check_dims)
 from tslearn.cycc import cdist_normalized_cc, y_shifted_sbd_vec
 
 
@@ -220,9 +223,11 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         Number of time the k-means algorithm will be run with different
         centroid seeds. The final results will be the
         best output of n_init consecutive runs in terms of inertia.
-    sigma : float (default: 1.)
-        Bandwidth parameter for the Global Alignment kernel
-    verbose : bool (default: True)
+    sigma : float or "auto" (default: "auto")
+        Bandwidth parameter for the Global Alignment kernel. If set to 'auto',
+        it is computed based on a sampling of the training set
+        (cf :ref:`tslearn.metrics.sigma_gak <fun-sigmagak>`)
+    verbose : bool (default: False)
         Whether or not to print information about the inertia while learning
         the model.
     random_state : integer or numpy.RandomState, optional
@@ -237,12 +242,16 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
     inertia_ : float
         Sum of distances of samples to their closest cluster center (computed
         using the kernel trick).
+    sample_weight_ : numpy.ndarray
+        The weight given to each sample from the data provided to fit.
+    n_iter_ : int
+        The number of iterations performed during fit.
 
     Examples
     --------
     >>> from tslearn.generators import random_walks
     >>> X = random_walks(n_ts=50, sz=32, d=1)
-    >>> gak_km = GlobalAlignmentKernelKMeans(n_clusters=3, verbose=False,
+    >>> gak_km = GlobalAlignmentKernelKMeans(n_clusters=3,
     ...                                      random_state=0).fit(X)
 
     References
@@ -257,20 +266,14 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
     """
 
     def __init__(self, n_clusters=3, max_iter=50, tol=1e-6, n_init=1, sigma=1.,
-                 verbose=True, random_state=None):
+                 verbose=False, random_state=None):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
         self.tol = tol
-        self.random_state = random_state
-        self.sigma = sigma
         self.n_init = n_init
+        self.sigma = sigma
         self.verbose = verbose
-        self.max_attempts = max(self.n_init, 10)
-
-        self.labels_ = None
-        self.inertia_ = None
-        self.sample_weight_ = None
-        self.X_fit_ = None
+        self.random_state = random_state
 
     def _get_kernel(self, X, Y=None):
         return cdist_gak(X, Y, sigma=self.sigma)
@@ -298,6 +301,8 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         if self.verbose:
             print("")
 
+        self._iter = it + 1
+
         return self
 
     def fit(self, X, y=None, sample_weight=None):
@@ -307,14 +312,33 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset.
+        y
+            Ignored
         sample_weight : array-like of shape=(n_ts, ) or None (default: None)
             Weights to be given to time series in the learning process. By
             default, all time series weights are equal.
         """
 
+        X = check_array(X, allow_nd=True, force_all_finite=False)
+        X = check_dims(X, X_fit=None)
+
+        if sample_weight is not None:
+            sample_weight = check_array(sample_weight, ensure_2d=False)
+
+        max_attempts = max(self.n_init, 10)
+
+        self.labels_ = None
+        self.inertia_ = None
+        self.sample_weight_ = None
+        self._X_fit = None
+        # n_iter_ will contain the number of iterations the most
+        # successful run required.
+        self.n_iter_ = 0
+
         n_samples = X.shape[0]
         K = self._get_kernel(X)
-        sw = sample_weight if sample_weight else numpy.ones(n_samples)
+        sw = (sample_weight if sample_weight is not None
+              else numpy.ones(n_samples))
         self.sample_weight_ = sw
         rs = check_random_state(self.random_state)
 
@@ -322,7 +346,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         min_inertia = numpy.inf
         n_attempts = 0
         n_successful = 0
-        while n_successful < self.n_init and n_attempts < self.max_attempts:
+        while n_successful < self.n_init and n_attempts < max_attempts:
             try:
                 if self.verbose and self.n_init > 1:
                     print("Init %d" % (n_successful + 1))
@@ -331,16 +355,15 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
                 if self.inertia_ < min_inertia:
                     last_correct_labels = self.labels_
                     min_inertia = self.inertia_
+                    self.n_iter_ = self._iter
                 n_successful += 1
             except EmptyClusterError:
                 if self.verbose:
                     print("Resumed because of empty cluster")
         if n_successful > 0:
-            self.X_fit_ = X
             self.labels_ = last_correct_labels
             self.inertia_ = min_inertia
-        else:
-            self.X_fit_ = None
+            self._X_fit = X
         return self
 
     def _compute_dist(self, K, dist):
@@ -375,6 +398,8 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset to predict.
+        y
+            Ignored
 
         Returns
         -------
@@ -396,11 +421,17 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
-        K = self._get_kernel(X, self.X_fit_)
+        X = check_array(X, allow_nd=True, force_all_finite=False)
+        check_is_fitted(self, '_X_fit')
+        X = check_dims(X, self._X_fit)
+        K = self._get_kernel(X, self._X_fit)
         n_samples = X.shape[0]
         dist = numpy.zeros((n_samples, self.n_clusters))
         self._compute_dist(K, dist)
         return dist.argmin(axis=1)
+
+    def _get_tags(self):
+        return {'allow_nan': True, 'allow_variable_length': True}
 
 
 class TimeSeriesCentroidBasedClusteringMixin:
@@ -409,10 +440,10 @@ class TimeSeriesCentroidBasedClusteringMixin:
         if numpy.isfinite(inertia) and (centroids is not None):
             self.cluster_centers_ = centroids
             self._assign(X_fitted)
-            self.X_fit_ = X_fitted
+            self._X_fit = X_fitted
             self.inertia_ = inertia
         else:
-            self.X_fit_ = None
+            self._X_fit = None
 
 
 class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
@@ -432,8 +463,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         stops.
     n_init : int (default: 1)
         Number of time the k-means algorithm will be run with different
-        centroid seeds. The final results will be the
-        best output of n_init consecutive runs in terms of inertia.
+        centroid seeds. The final results will be the best output of n_init
+        consecutive runs in terms of inertia.
     metric : {"euclidean", "dtw", "softdtw"} (default: "euclidean")
         Metric to be used for both cluster assignment and barycenter
         computation. If "dtw", DBA is used for barycenter
@@ -447,7 +478,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         parameter in Soft-DTW.
     dtw_inertia: bool
         Whether to compute DTW inertia even if DTW is not the chosen metric.
-    verbose : bool (default: True)
+    verbose : bool (default: False)
         Whether or not to print information about the inertia while learning
         the model.
     random_state : integer or numpy.RandomState, optional
@@ -472,6 +503,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         Cluster centers.
     inertia_ : float
         Sum of distances of samples to their closest cluster center.
+    n_iter_ : int
+        The number of iterations performed during fit.
 
     Note
     ----
@@ -483,24 +516,24 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
     >>> from tslearn.generators import random_walks
     >>> X = random_walks(n_ts=50, sz=32, d=1)
     >>> km = TimeSeriesKMeans(n_clusters=3, metric="euclidean", max_iter=5,
-    ...                       verbose=False, random_state=0).fit(X)
+    ...                       random_state=0).fit(X)
     >>> km.cluster_centers_.shape
     (3, 32, 1)
     >>> km_dba = TimeSeriesKMeans(n_clusters=3, metric="dtw", max_iter=5,
-    ...                           max_iter_barycenter=5, verbose=False,
+    ...                           max_iter_barycenter=5,
     ...                           random_state=0).fit(X)
     >>> km_dba.cluster_centers_.shape
     (3, 32, 1)
     >>> km_sdtw = TimeSeriesKMeans(n_clusters=3, metric="softdtw", max_iter=5,
     ...                            max_iter_barycenter=5,
     ...                            metric_params={"gamma_sdtw": .5},
-    ...                            verbose=False, random_state=0).fit(X)
+    ...                            random_state=0).fit(X)
     >>> km_sdtw.cluster_centers_.shape
     (3, 32, 1)
     >>> X_bis = to_time_series_dataset([[1, 2, 3, 4],
     ...                                 [1, 2, 3],
     ...                                 [2, 5, 6, 7, 8, 9]])
-    >>> km = TimeSeriesKMeans(n_clusters=2, verbose=False, max_iter=5,
+    >>> km = TimeSeriesKMeans(n_clusters=2, max_iter=5,
     ...                       metric="dtw", random_state=0).fit(X_bis)
     >>> km.cluster_centers_.shape
     (2, 3, 1)
@@ -508,29 +541,19 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
 
     def __init__(self, n_clusters=3, max_iter=50, tol=1e-6, n_init=1,
                  metric="euclidean", max_iter_barycenter=100,
-                 metric_params=None, dtw_inertia=False, verbose=True,
+                 metric_params=None, dtw_inertia=False, verbose=False,
                  random_state=None, init='k-means++'):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
         self.tol = tol
-        self.random_state = random_state
-        self.metric = metric
         self.n_init = n_init
-        self.verbose = verbose
+        self.metric = metric
         self.max_iter_barycenter = max_iter_barycenter
-        self.max_attempts = max(self.n_init, 10)
+        self.metric_params = metric_params
         self.dtw_inertia = dtw_inertia
+        self.verbose = verbose
+        self.random_state = random_state
         self.init = init
-
-        self.labels_ = None
-        self.inertia_ = numpy.inf
-        self.cluster_centers_ = None
-        self.X_fit_ = None
-        self._squared_inertia = True
-
-        if metric_params is None:
-            metric_params = {}
-        self.gamma_sdtw = metric_params.get("gamma_sdtw", 1.)
 
     def _fit_one_init(self, X, x_squared_norms, rs):
         n_ts, _, d = X.shape
@@ -563,6 +586,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         if self.verbose:
             print("")
 
+        self._iter = it + 1
+
         return self
 
     def _assign(self, X, update_class_attributes=True):
@@ -574,7 +599,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
             dists = cdist_dtw(X, self.cluster_centers_)
         elif self.metric == "softdtw":
             dists = cdist_soft_dtw(X, self.cluster_centers_,
-                                   gamma=self.gamma_sdtw)
+                                   gamma=self._gamma_sdtw)
         else:
             raise ValueError("Incorrect metric: %s (should be one of 'dtw', "
                              "'softdtw', 'euclidean')" % self.metric)
@@ -603,7 +628,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
                 self.cluster_centers_[k] = softdtw_barycenter(
                     X=X[self.labels_ == k],
                     max_iter=self.max_iter_barycenter,
-                    gamma=self.gamma_sdtw,
+                    gamma=self._gamma_sdtw,
                     init=self.cluster_centers_[k])
             else:
                 self.cluster_centers_[k] = euclidean_barycenter(
@@ -616,7 +641,27 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset.
+        y
+            Ignored
         """
+
+        X = check_array(X, allow_nd=True, force_all_finite='allow-nan')
+
+        self.labels_ = None
+        self.inertia_ = numpy.inf
+        self.cluster_centers_ = None
+        self._X_fit = None
+        self._squared_inertia = True
+        if self.metric_params is None:
+            metric_params = {}
+        else:
+            metric_params = self.metric_params
+        self._gamma_sdtw = metric_params.get("gamma_sdtw", 1.)
+
+        self.n_iter_ = 0
+
+        max_attempts = max(self.n_init, 10)
+
         X_ = to_time_series_dataset(X)
         rs = check_random_state(self.random_state)
         x_squared_norms = cdist(X_.reshape((X_.shape[0], -1)),
@@ -628,7 +673,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         min_inertia = numpy.inf
         n_successful = 0
         n_attempts = 0
-        while n_successful < self.n_init and n_attempts < self.max_attempts:
+        while n_successful < self.n_init and n_attempts < max_attempts:
             try:
                 if self.verbose and self.n_init > 1:
                     print("Init %d" % (n_successful + 1))
@@ -637,6 +682,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
                 if self.inertia_ < min_inertia:
                     best_correct_centroids = self.cluster_centers_.copy()
                     min_inertia = self.inertia_
+                    self.n_iter_ = self._iter
                 n_successful += 1
             except EmptyClusterError:
                 if self.verbose:
@@ -655,12 +701,15 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset to predict.
+        y
+            Ignored
 
         Returns
         -------
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
+        X = check_array(X, allow_nd=True, force_all_finite='allow-nan')
         return self.fit(X, y).labels_
 
     def predict(self, X):
@@ -676,8 +725,14 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
+        X = check_array(X, allow_nd=True, force_all_finite='allow-nan')
+        check_is_fitted(self, '_X_fit')
+        X = check_dims(X, self._X_fit)
         X_ = to_time_series_dataset(X)
         return self._assign(X_, update_class_attributes=False)
+
+    def _get_tags(self):
+        return {'allow_nan': True, 'allow_variable_length': True}
 
 
 class KShape(BaseEstimator, ClusterMixin,
@@ -701,7 +756,7 @@ class KShape(BaseEstimator, ClusterMixin,
         Number of time the k-Shape algorithm will be run with different
         centroid seeds. The final results will be the
         best output of n_init consecutive runs in terms of inertia.
-    verbose : bool (default: True)
+    verbose : bool (default: False)
         Whether or not to print information about the inertia while learning
         the model.
     random_state : integer or numpy.RandomState, optional
@@ -723,6 +778,8 @@ class KShape(BaseEstimator, ClusterMixin,
         Labels of each point
     inertia_ : float
         Sum of distances of samples to their closest cluster center.
+    n_iter_ : int
+        The number of iterations performed during fit.
 
     Note
     ----
@@ -733,8 +790,7 @@ class KShape(BaseEstimator, ClusterMixin,
     >>> from tslearn.generators import random_walks
     >>> X = random_walks(n_ts=50, sz=32, d=1)
     >>> X = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X)
-    >>> ks = KShape(n_clusters=3, n_init=1, verbose=False,
-    ...             random_state=0).fit(X)
+    >>> ks = KShape(n_clusters=3, n_init=1, random_state=0).fit(X)
     >>> ks.cluster_centers_.shape
     (3, 32, 1)
 
@@ -744,22 +800,14 @@ class KShape(BaseEstimator, ClusterMixin,
        Clustering of Time Series. SIGMOD 2015. pp. 1855-1870.
     """
     def __init__(self, n_clusters=3, max_iter=100, tol=1e-6, n_init=1,
-                 verbose=True, random_state=None, init='random'):
+                 verbose=False, random_state=None, init='random'):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
         self.tol = tol
         self.random_state = random_state
         self.n_init = n_init
         self.verbose = verbose
-        self.max_attempts = max(self.n_init, 10)
         self.init = init
-
-        self.labels_ = None
-        self.inertia_ = numpy.inf
-        self.cluster_centers_ = None
-
-        self._norms = 0.
-        self._norms_centroids = 0.
 
     def _shape_extraction(self, X, k):
         sz = X.shape[1]
@@ -833,6 +881,8 @@ class KShape(BaseEstimator, ClusterMixin,
         if self.verbose:
             print("")
 
+        self._iter = it + 1
+
         return self
 
     def fit(self, X, y=None):
@@ -842,9 +892,24 @@ class KShape(BaseEstimator, ClusterMixin,
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset.
+        y
+            Ignored
         """
+        X = check_array(X, allow_nd=True)
+
+        max_attempts = max(self.n_init, 10)
+
+        self.labels_ = None
+        self.inertia_ = numpy.inf
+        self.cluster_centers_ = None
+
+        self._norms = 0.
+        self._norms_centroids = 0.
+
+        self.n_iter_ = 0
 
         X_ = to_time_series_dataset(X)
+        self._X_fit = X_
         self._norms = numpy.linalg.norm(X_, axis=(1, 2))
 
         _check_initial_guess(self.init, self.n_clusters)
@@ -855,7 +920,7 @@ class KShape(BaseEstimator, ClusterMixin,
         min_inertia = numpy.inf
         n_successful = 0
         n_attempts = 0
-        while n_successful < self.n_init and n_attempts < self.max_attempts:
+        while n_successful < self.n_init and n_attempts < max_attempts:
             try:
                 if self.verbose and self.n_init > 1:
                     print("Init %d" % (n_successful + 1))
@@ -864,6 +929,7 @@ class KShape(BaseEstimator, ClusterMixin,
                 if self.inertia_ < min_inertia:
                     best_correct_centroids = self.cluster_centers_.copy()
                     min_inertia = self.inertia_
+                    self.n_iter_ = self._iter
                 n_successful += 1
             except EmptyClusterError:
                 if self.verbose:
@@ -884,6 +950,8 @@ class KShape(BaseEstimator, ClusterMixin,
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset to predict.
+        y
+            Ignored
 
         Returns
         -------
@@ -905,7 +973,10 @@ class KShape(BaseEstimator, ClusterMixin,
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
+        X = check_array(X, allow_nd=True)
+        check_is_fitted(self, '_X_fit')
         X_ = to_time_series_dataset(X)
+        X = check_dims(X, self._X_fit)
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
         dists = self._cross_dists(X_)
         return dists.argmin(axis=1)

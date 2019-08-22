@@ -5,6 +5,7 @@ The :mod:`tslearn.preprocessing` module gathers time series scalers.
 import numpy
 from sklearn.base import TransformerMixin
 from scipy.interpolate import interp1d
+import warnings
 
 from tslearn.utils import to_time_series_dataset, check_equal_size, ts_size
 
@@ -66,10 +67,22 @@ class TimeSeriesScalerMinMax(TransformerMixin):
 
     Parameters
     ----------
+    value_range : tuple (default: (0., 1.))
+        The minimum and maximum value for the output time series.
+
     min : float (default: 0.)
         Minimum value for output time series.
+
+        .. deprecated:: 0.2
+            min is deprecated in version 0.2 and will be
+            removed in 0.4.
+
     max : float (default: 1.)
         Maximum value for output time series.
+
+        .. deprecated:: 0.2
+            min is deprecated in version 0.2 and will be
+            removed in 0.4.
 
     Note
     ----
@@ -77,18 +90,35 @@ class TimeSeriesScalerMinMax(TransformerMixin):
 
     Example
     -------
-    >>> TimeSeriesScalerMinMax(min=1.,
-    ...                        max=2.).fit_transform([[0, 3, 6]])
+    >>> TimeSeriesScalerMinMax(value_range=(1., 2.)).fit_transform([[0, 3, 6]])
     array([[[1. ],
             [1.5],
             [2. ]]])
     """
-    def __init__(self, min=0., max=1.):
+    def __init__(self, value_range=(0., 1.), min=None, max=None):
+        self.value_range = value_range
         self.min_ = min
         self.max_ = max
 
-    def fit_transform(self, X, **kwargs):
-        """Fit to data, then transform it.
+    def fit(self, X, y=None, **kwargs):
+        """A dummy method such that it complies to the sklearn requirements.
+        Since this method is completely stateless, it just returns itself.
+
+        Parameters
+        ----------
+        X
+            Ignored
+
+        Returns
+        -------
+        self
+        """
+        return self
+
+    def transform(self, X, y=None, **kwargs):
+        """Will normalize (min-max) each of the timeseries. IMPORTANT: this
+        transformation is completely stateless, and is applied to each of
+        the timeseries individually.
 
         Parameters
         ----------
@@ -100,12 +130,32 @@ class TimeSeriesScalerMinMax(TransformerMixin):
         numpy.ndarray
             Rescaled time series dataset.
         """
+        if self.min_ is not None:
+            warnings.warn(
+                "'min' is deprecated in version 0.2 and will be "
+                "removed in 0.4. Don't set `min` to remove this "
+                "warning.",
+                DeprecationWarning, stacklevel=2)
+            self.value_range = (self.min_, self.value_range[1])
+
+        if self.max_ is not None:
+            warnings.warn(
+                "'max' is deprecated in version 0.2 and will be "
+                "removed in 0.4. Don't set `max` to remove this "
+                "warning.",
+                DeprecationWarning, stacklevel=2)
+            self.value_range = (self.value_range[0], self.max_)
+
+        if self.value_range[0] >= self.value_range[1]:
+            raise ValueError("Minimum of desired range must be smaller"
+                             " than maximum. Got %s." % str(self.value_range))
+
         X_ = to_time_series_dataset(X)
         min_t = numpy.min(X_, axis=1)[:, numpy.newaxis, :]
         max_t = numpy.max(X_, axis=1)[:, numpy.newaxis, :]
         range_t = max_t - min_t
-
-        X_ = (X_ - min_t) * (self.max_ - self.min_) / range_t + self.min_
+        nomin = (X_ - min_t) * (self.value_range[1] - self.value_range[0])
+        X_ = nomin / range_t + self.value_range[0]
         return X_
 
 
