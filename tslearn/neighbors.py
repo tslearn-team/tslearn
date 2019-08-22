@@ -115,6 +115,8 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
         <https://docs.scipy.org/doc/scipy/reference/spatial.distance.html>`_.
     metric_params : dict or None (default: None)
         Dictionnary of metric parameters.
+        For metrics that accept parallelization of the cross-distance matrix
+        computations, `n_jobs` is a valid `metric_params` field.
 
     Examples
     --------
@@ -210,10 +212,18 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         Metric to be used at the core of the nearest neighbor procedure
     metric_params : dict or None (default: None)
         Dictionnary of metric parameters.
+        For metrics that accept parallelization of the cross-distance matrix
+        computations, `n_jobs` is a valid `metric_params` field.
 
     Examples
     --------
     >>> clf = KNeighborsTimeSeriesClassifier(n_neighbors=2, metric="dtw")
+    >>> clf.fit([[1, 2, 3], [1, 1.2, 3.2], [3, 2, 1]],
+    ...         y=[0, 0, 1]).predict([[1, 2.2, 3.5]])
+    array([0])
+    >>> clf = KNeighborsTimeSeriesClassifier(n_neighbors=2,
+    ...                                      metric="dtw",
+    ...                                      metric_params={"n_jobs": 2})
     >>> clf.fit([[1, 2, 3], [1, 1.2, 3.2], [3, 2, 1]],
     ...         y=[0, 0, 1]).predict([[1, 2.2, 3.5]])
     array([0])
@@ -286,6 +296,9 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
                 X_ = cdist_dtw(X, self._ts_fit, **metric_params)
             elif self._ts_metric == "softdtw":
                 X_ = cdist_soft_dtw(X, self._ts_fit, **metric_params)
+            else:
+                raise ValueError("Invalid metric recorded: %s" %
+                                 self._ts_metric)
             pred = super(KNeighborsTimeSeriesClassifier, self).predict(X_)
             self.metric = self._ts_metric
             return pred
@@ -320,6 +333,9 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
                 X_ = cdist_dtw(X, self._ts_fit, **metric_params)
             elif self._ts_metric == "softdtw":
                 X_ = cdist_soft_dtw(X, self._ts_fit, **metric_params)
+            else:
+                raise ValueError("Invalid metric recorded: %s" %
+                                 self._ts_metric)
             pred = super(KNeighborsTimeSeriesClassifier,
                          self).predict_proba(X_)
             self.metric = self._ts_metric

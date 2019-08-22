@@ -11,6 +11,7 @@ from sklearn.metrics.cluster import \
 from sklearn.utils import check_random_state
 from scipy.spatial.distance import cdist
 import numpy
+import warnings
 
 from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw, \
     cdist_soft_dtw_normalized, dtw
@@ -117,8 +118,17 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
         on a random subset of the data.
         If ``sample_size is None``, no sampling is used.
     metric_params : dict or None
-        Parameter values for the chosen metric. Value associated to the
-        `"gamma_sdtw"` key corresponds to the gamma parameter in Soft-DTW.
+        Parameter values for the chosen metric.
+        For metrics (passed as strings that accept parallelization of the
+        cross-distance matrix computations, `n_jobs` is a valid
+        `metric_params` field.
+        Value associated to the `"gamma_sdtw"` key corresponds to the gamma
+        parameter in Soft-DTW.
+
+        .. deprecated:: 0.2
+            `"gamma_sdtw"` as a key for `metric_params` is deprecated in
+            version 0.2 and will be removed in 0.4.
+
     random_state : int, RandomState instance or None, optional (default=None)
         The generator used to randomly select a subset of samples.  If int,
         random_state is the seed used by the random number generator; If
@@ -126,7 +136,8 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
         None, the random number generator is the RandomState instance used by
         `np.random`. Used when ``sample_size is not None``.
     **kwds : optional keyword parameters
-        Any further parameters are passed directly to the distance function.
+        Any further parameters are passed directly to the distance function,
+        just as for the `metric_params` parameter.
     Returns
     -------
     silhouette : float
@@ -153,7 +164,7 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
     >>> silhouette_score(X, labels, metric="softdtw")  # doctest: +ELLIPSIS
     0.17953934...
     >>> silhouette_score(X, labels, metric="softdtw",
-    ...                  metric_params={"gamma_sdtw": 2.}) \
+    ...                  metric_params={"gamma": 2.}) \
     # doctest: +ELLIPSIS
     0.17591060...
     >>> silhouette_score(cdist_dtw(X), labels,
@@ -163,16 +174,24 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
     sklearn_metric = None
     if metric_params is None:
         metric_params = {}
+    else:
+        metric_params = metric_params.copy()
+    if "gamma_sdtw" in metric_params.keys():
+        warnings.warn(
+            "'gamma_sdtw' is deprecated in version 0.2 and will be "
+            "removed in 0.4. Use `gamma` instead of `gamma_sdtw` as a "
+            "`metric_params` key to remove this warning.",
+            DeprecationWarning, stacklevel=2)
+        metric_params["gamma"] = metric_params["gamma_sdtw"]
+        del metric_params["gamma_sdtw"]
+    for k in kwds.keys():
+        metric_params[k] = kwds[k]
     if metric == "precomputed":
         sklearn_X = X
     elif metric == "dtw":
-        sklearn_X = cdist_dtw(X)
+        sklearn_X = cdist_dtw(X, **metric_params)
     elif metric == "softdtw":
-        gamma = metric_params.get("gamma_sdtw", None)
-        if gamma is not None:
-            sklearn_X = cdist_soft_dtw_normalized(X, gamma=gamma)
-        else:
-            sklearn_X = cdist_soft_dtw_normalized(X)
+        sklearn_X = cdist_soft_dtw_normalized(X, **metric_params)
     elif metric == "euclidean":
         X_ = to_time_series_dataset(X)
         X_ = X_.reshape((X.shape[0], -1))
@@ -473,9 +492,16 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         Number of iterations for the barycenter computation process. Only used
         if `metric="dtw"` or `metric="softdtw"`.
     metric_params : dict or None
-        Parameter values for the chosen metric. Value associated to the
-        `"gamma_sdtw"` key corresponds to the gamma
+        Parameter values for the chosen metric.
+        For metrics that accept parallelization of the cross-distance matrix
+        computations, `n_jobs` is a valid `metric_params` field.
+        Value associated to the `"gamma_sdtw"` key corresponds to the gamma
         parameter in Soft-DTW.
+
+        .. deprecated:: 0.2
+            `"gamma_sdtw"` as a key for `metric_params` is deprecated in
+            version 0.2 and will be removed in 0.4.
+
     dtw_inertia: bool
         Whether to compute DTW inertia even if DTW is not the chosen metric.
     verbose : bool (default: False)
@@ -526,7 +552,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
     (3, 32, 1)
     >>> km_sdtw = TimeSeriesKMeans(n_clusters=3, metric="softdtw", max_iter=5,
     ...                            max_iter_barycenter=5,
-    ...                            metric_params={"gamma_sdtw": .5},
+    ...                            metric_params={"gamma": .5},
     ...                            random_state=0).fit(X)
     >>> km_sdtw.cluster_centers_.shape
     (3, 32, 1)
@@ -554,6 +580,14 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         self.verbose = verbose
         self.random_state = random_state
         self.init = init
+
+        if self.metric_params is not None and \
+            "gamma_sdtw" in self.metric_params.keys():
+            warnings.warn(
+                "'gamma_sdtw' is deprecated in version 0.2 and will be "
+                "removed in 0.4. Use `gamma` instead of `gamma_sdtw` as a "
+                "`metric_params` key to remove this warning.",
+                DeprecationWarning, stacklevel=2)
 
     def _fit_one_init(self, X, x_squared_norms, rs):
         n_ts, _, d = X.shape
@@ -591,15 +625,21 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         return self
 
     def _assign(self, X, update_class_attributes=True):
+        if self.metric_params is None:
+            metric_params = {}
+        else:
+            metric_params = self.metric_params.copy()
+        if "gamma_sdtw" in metric_params.keys():
+            metric_params["gamma"] = metric_params["gamma_sdtw"]
+            del metric_params["gamma_sdtw"]
         if self.metric == "euclidean":
             dists = cdist(X.reshape((X.shape[0], -1)),
                           self.cluster_centers_.reshape((self.n_clusters, -1)),
                           metric="euclidean")
         elif self.metric == "dtw":
-            dists = cdist_dtw(X, self.cluster_centers_)
+            dists = cdist_dtw(X, self.cluster_centers_, **metric_params)
         elif self.metric == "softdtw":
-            dists = cdist_soft_dtw(X, self.cluster_centers_,
-                                   gamma=self._gamma_sdtw)
+            dists = cdist_soft_dtw(X, self.cluster_centers_, **metric_params)
         else:
             raise ValueError("Incorrect metric: %s (should be one of 'dtw', "
                              "'softdtw', 'euclidean')" % self.metric)
@@ -608,7 +648,9 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
             self.labels_ = matched_labels
             _check_no_empty_cluster(self.labels_, self.n_clusters)
             if self.dtw_inertia and self.metric != "dtw":
-                inertia_dists = cdist_dtw(X, self.cluster_centers_)
+                inertia_dists = cdist_dtw(X, self.cluster_centers_,
+                                          n_jobs=metric_params.get("n_jobs",
+                                                                   None))
             else:
                 inertia_dists = dists
             self.inertia_ = _compute_inertia(inertia_dists,
@@ -617,6 +659,13 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         return matched_labels
 
     def _update_centroids(self, X):
+        if self.metric_params is None:
+            metric_params = {}
+        else:
+            metric_params = self.metric_params.copy()
+        if "gamma_sdtw" in metric_params.keys():
+            metric_params["gamma"] = metric_params["gamma_sdtw"]
+            del metric_params["gamma_sdtw"]
         for k in range(self.n_clusters):
             if self.metric == "dtw":
                 self.cluster_centers_[k] = dtw_barycenter_averaging(
@@ -628,8 +677,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
                 self.cluster_centers_[k] = softdtw_barycenter(
                     X=X[self.labels_ == k],
                     max_iter=self.max_iter_barycenter,
-                    gamma=self._gamma_sdtw,
-                    init=self.cluster_centers_[k])
+                    init=self.cluster_centers_[k],
+                    **metric_params)
             else:
                 self.cluster_centers_[k] = euclidean_barycenter(
                     X=X[self.labels_ == k])
@@ -655,8 +704,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         if self.metric_params is None:
             metric_params = {}
         else:
-            metric_params = self.metric_params
-        self._gamma_sdtw = metric_params.get("gamma_sdtw", 1.)
+            metric_params = self.metric_params.copy()
 
         self.n_iter_ = 0
 
