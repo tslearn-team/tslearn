@@ -26,18 +26,6 @@ tslearn.shapelets.SerializableShapeletModel
    
    
 
-   
-   
-   .. rubric:: Attributes
-
-   .. autosummary::
-      :toctree: SerializableShapeletModel
-   
-      ~SerializableShapeletModel.shapelets_
-      ~SerializableShapeletModel.shapelets_as_time_series_
-   
-   
-
 .. include:: ../backreferences/tslearn.shapelets.SerializableShapeletModel.examples
 
 .. raw:: html

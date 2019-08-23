@@ -166,7 +166,7 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, BaseEstimator, ClassifierMixin):
         Constants in decision function.
 
     svm_estimator_ : sklearn.svm.SVC
-        The underlying support vector machine
+        The underlying sklearn estimator
 
     Examples
     --------
@@ -354,7 +354,7 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, BaseEstimator, RegressorMixin):
         Individual weights for each sample
 
     svm_estimator_ : sklearn.svm.SVR
-        The underlying support vector machine
+        The underlying sklearn estimator
 
     Examples
     --------

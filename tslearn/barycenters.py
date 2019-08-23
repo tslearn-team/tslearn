@@ -39,6 +39,7 @@ def euclidean_barycenter(X, weights=None):
 
     weights: None or array
         Weights of each X[i]. Must be the same size as len(X).
+        If None, uniform weights are used.
 
     Returns
     -------
@@ -55,7 +56,7 @@ def euclidean_barycenter(X, weights=None):
     >>> bar = euclidean_barycenter(time_series)
     >>> bar.shape
     (4, 1)
-    >>> bar  # doctest: +SKIP
+    >>> bar
     array([[ 1. ],
            [ 2. ],
            [ 3.5],
@@ -136,13 +137,14 @@ def dtw_barycenter_averaging(X, barycenter_size=None, init_barycenter=None,
         Expectation-Maximization procedure stops.
     weights: None or array
         Weights of each X[i]. Must be the same size as len(X).
+        If None, uniform weights are used.
     verbose : boolean (default: False)
         Whether to print information about the cost at each iteration or not.
 
     Returns
     -------
-    numpy.array of shape (barycenter_size, d) or (sz, d) if barycenter_size is
-    None
+    numpy.array of shape (barycenter_size, d) or (sz, d) if barycenter_size \
+            is None
         DBA barycenter of the provided time series dataset.
 
     Examples
@@ -231,6 +233,7 @@ def softdtw_barycenter(X, gamma=1.0, weights=None, method="L-BFGS-B", tol=1e-3,
         Lower is less smoothed (closer to true DTW).
     weights: None or array
         Weights of each X[i]. Must be the same size as len(X).
+        If None, uniform weights are used.
     method: string
         Optimization method, passed to `scipy.optimize.minimize`.
         Default: L-BFGS.
@@ -241,6 +244,12 @@ def softdtw_barycenter(X, gamma=1.0, weights=None, method="L-BFGS-B", tol=1e-3,
     init: array or None (default: None)
         Initial barycenter to start from for the optimization process.
         If `None`, euclidean barycenter is used as a starting point.
+
+    Returns
+    -------
+    numpy.array of shape (bsz, d) where `bsz` is the size of the `init` array \
+            if provided or `sz` otherwise
+        Soft-DTW barycenter of the provided time series dataset.
 
     Examples
     --------
