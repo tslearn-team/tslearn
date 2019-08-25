@@ -912,7 +912,8 @@ def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None):
             delayed(fast_gak)(dataset1[i], dataset1[j], sigma=sigma)
             for i in range(len(dataset1)) for j in range(i, len(dataset1))
         )
-        return matrix + matrix.T + numpy.eye(len(dataset1))  #TODO: fast_gak is now unnormalized
+        indices = numpy.tril_indices(len(dataset1), k=1, m=len(dataset1))
+        matrix[indices] = matrix.T[indices]
     else:
         dataset2 = to_time_series_dataset(dataset2)
         matrix = Parallel(n_jobs=n_jobs, prefer="threads")(
@@ -920,8 +921,8 @@ def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None):
             for i in range(len(dataset1)) for j in range(len(dataset2))
         )
         matrix = numpy.array(matrix).reshape((len(dataset1), -1))
-        diagonal = numpy.sqrt(numpy.diag(numpy.diag(matrix)))
-        return (diagonal.dot(matrix)).dot(diagonal)
+    diagonal = numpy.sqrt(numpy.diag(numpy.diag(matrix)))
+    return (diagonal.dot(matrix)).dot(diagonal)
 
 
 def cdist_gak_no_parallel(dataset1, dataset2=None, sigma=1.):
