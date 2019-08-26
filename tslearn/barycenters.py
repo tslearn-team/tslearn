@@ -57,10 +57,10 @@ def euclidean_barycenter(X, weights=None):
     >>> bar.shape
     (4, 1)
     >>> bar
-    array([[ 1. ],
-           [ 2. ],
-           [ 3.5],
-           [ 4.5]])
+    array([[1. ],
+           [2. ],
+           [3.5],
+           [4.5]])
     """
     X_ = to_time_series_dataset(X)
     weights = _set_weights(weights, X_.shape[0])
