@@ -33,7 +33,22 @@ class TimeSeriesResampler(TransformerMixin):
     def __init__(self, sz):
         self.sz_ = sz
 
-    def fit_transform(self, X, **kwargs):
+    def fit(self, X, y=None, **kwargs):
+        """A dummy method such that it complies to the sklearn requirements.
+        Since this method is completely stateless, it just returns itself.
+
+        Parameters
+        ----------
+        X
+            Ignored
+
+        Returns
+        -------
+        self
+        """
+        return self
+
+    def transform(self, X, **kwargs):
         """Fit to data, then transform it.
 
         Parameters
@@ -187,7 +202,22 @@ class TimeSeriesScalerMeanVariance(TransformerMixin):
         self.global_mean = None
         self.global_std = None
 
-    def fit_transform(self, X, **kwargs):
+    def fit(self, X, y=None, **kwargs):
+        """A dummy method such that it complies to the sklearn requirements.
+        Since this method is completely stateless, it just returns itself.
+
+        Parameters
+        ----------
+        X
+            Ignored
+
+        Returns
+        -------
+        self
+        """
+        return self
+
+    def transform(self, X, **kwargs):
         """Fit to data, then transform it.
 
         Parameters
