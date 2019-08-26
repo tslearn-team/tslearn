@@ -75,14 +75,14 @@ class TimeSeriesScalerMinMax(TransformerMixin):
 
         .. deprecated:: 0.2
             min is deprecated in version 0.2 and will be
-            removed in 0.4.
+            removed in 0.4. Use value_range instead.
 
     max : float (default: 1.)
         Maximum value for output time series.
 
         .. deprecated:: 0.2
             min is deprecated in version 0.2 and will be
-            removed in 0.4.
+            removed in 0.4. Use value_range instead.
 
     Note
     ----
@@ -133,16 +133,14 @@ class TimeSeriesScalerMinMax(TransformerMixin):
         if self.min_ is not None:
             warnings.warn(
                 "'min' is deprecated in version 0.2 and will be "
-                "removed in 0.4. Don't set `min` to remove this "
-                "warning.",
+                "removed in 0.4. Use value_range instead.",
                 DeprecationWarning, stacklevel=2)
             self.value_range = (self.min_, self.value_range[1])
 
         if self.max_ is not None:
             warnings.warn(
                 "'max' is deprecated in version 0.2 and will be "
-                "removed in 0.4. Don't set `max` to remove this "
-                "warning.",
+                "removed in 0.4. Use value_range instead.",
                 DeprecationWarning, stacklevel=2)
             self.value_range = (self.value_range[0], self.max_)
 

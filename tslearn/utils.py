@@ -24,15 +24,36 @@ def check_dims(X, X_fit=None, extend=True):
     X_fit : array-like or None (default: None)
         The second array to be compared, which is created during fit.
         If None, then only perform reshaping of X, if necessary.
-    extend : boolean
+    extend : boolean (default: True)
         Whether to reshape X, if it is 2-dimensional.
 
     Returns
     -------
-    nothing
-        Will raise exception if one of both arrays is None or one of the
-        dimensions, except the first, does not match.
+    array
+        Reshaped X array
 
+    Examples
+    --------
+    >>> X = numpy.empty((10, 3))
+    >>> check_dims(X).shape
+    (10, 3, 1)
+    >>> X = numpy.empty((10, 3, 1))
+    >>> check_dims(X).shape
+    (10, 3, 1)
+    >>> X_fit = numpy.empty((5, 3, 1))
+    >>> check_dims(X, X_fit).shape
+    (10, 3, 1)
+    >>> X_fit = numpy.empty((5, 3, 2))
+    >>> check_dims(X, X_fit)  # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+    ValueError: Dimensions (except first) must match! ((5, 3, 2) and (10, 3, 1)
+    are passed shapes)
+
+    Raises
+    ------
+    ValueError
+        Will raise exception if X is None or (if X_fit is provided) one of the
+        dimensions, except the first, does not match.
     """
     if X is None:
         raise ValueError('X is equal to None!')
