@@ -219,7 +219,7 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, BaseEstimator, ClassifierMixin):
         self.tol = tol
         self.cache_size = cache_size
         self.class_weight = class_weight
-        self.n_jos = n_jobs
+        self.n_jobs = n_jobs
         self.verbose = verbose
         self.max_iter = max_iter
         self.decision_function_shape = decision_function_shape
