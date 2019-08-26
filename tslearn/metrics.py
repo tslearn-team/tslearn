@@ -881,6 +881,9 @@ def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None):
         Another dataset of time series
     sigma : float (default 1.)
         Bandwidth of the internal gaussian kernel used for GAK
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel. None means 1 unless in a
+        `joblib.parallel_backend` context. -1 means using all processors.
 
     Returns
     -------

@@ -119,7 +119,7 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
         If ``sample_size is None``, no sampling is used.
     metric_params : dict or None
         Parameter values for the chosen metric.
-        For metrics (passed as strings that accept parallelization of the
+        For metrics (passed as strings) that accept parallelization of the
         cross-distance matrix computations, `n_jobs` is a valid
         `metric_params` field.
         Value associated to the `"gamma_sdtw"` key corresponds to the gamma
@@ -246,6 +246,9 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         Bandwidth parameter for the Global Alignment kernel. If set to 'auto',
         it is computed based on a sampling of the training set
         (cf :ref:`tslearn.metrics.sigma_gak <fun-sigmagak>`)
+    n_jobs : int or None (default: None)
+        Number of parallel jobs to be run for GAK cross-similarity matrix
+        computations (cf :ref:`tslearn.metrics.cdist_gak <fun-cdist_gak>`)
     verbose : bool (default: False)
         Whether or not to print information about the inertia while learning
         the model.
@@ -285,17 +288,18 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
     """
 
     def __init__(self, n_clusters=3, max_iter=50, tol=1e-6, n_init=1, sigma=1.,
-                 verbose=False, random_state=None):
+                 n_jobs=None, verbose=False, random_state=None):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
         self.tol = tol
         self.n_init = n_init
         self.sigma = sigma
+        self.n_jobs = n_jobs
         self.verbose = verbose
         self.random_state = random_state
 
     def _get_kernel(self, X, Y=None):
-        return cdist_gak(X, Y, sigma=self.sigma)
+        return cdist_gak(X, Y, sigma=self.sigma, n_jobs=self.n_jobs)
 
     def _fit_one_init(self, K, rs):
         n_samples = K.shape[0]

@@ -54,10 +54,15 @@ class TimeSeriesSVMMixin:
             assert self.kernel == "gak"
             self.estimator_kernel_ = "precomputed"
             if fit_time:
-                sklearn_X = cdist_gak(X, X, sigma=numpy.sqrt(self.gamma_ / 2.))
+                sklearn_X = cdist_gak(X,
+                                      X,
+                                      sigma=numpy.sqrt(self.gamma_ / 2.),
+                                      n_jobs=self.n_jobs)
             else:
-                sklearn_X = cdist_gak(X, self._X_fit,
-                                      sigma=numpy.sqrt(self.gamma_ / 2.))
+                sklearn_X = cdist_gak(X,
+                                      self._X_fit,
+                                      sigma=numpy.sqrt(self.gamma_ / 2.),
+                                      n_jobs=self.n_jobs)
         else:
             self.estimator_kernel_ = self.kernel
             sklearn_X = _prepare_ts_datasets_sklearn(X)
@@ -119,6 +124,10 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, BaseEstimator, ClassifierMixin):
         The "balanced" mode uses the values of y to automatically adjust
         weights inversely proportional to class frequencies in the input data
         as ``n_samples / (n_classes * np.bincount(y))``
+
+    n_jobs : int or None (default: None)
+        Number of parallel jobs to be run for GAK cross-similarity matrix
+        computations (cf :ref:`tslearn.metrics.cdist_gak <fun-cdist_gak>`)
 
     verbose : bool, default: False
         Enable verbose output. Note that this setting takes advantage of a
@@ -198,7 +207,7 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, BaseEstimator, ClassifierMixin):
     """
     def __init__(self, C=1.0, kernel="gak", degree=3, gamma="auto", coef0=0.0,
                  shrinking=True, probability=False, tol=0.001, cache_size=200,
-                 class_weight=None, verbose=False, max_iter=-1,
+                 class_weight=None, n_jobs=None, verbose=False, max_iter=-1,
                  decision_function_shape="ovr", random_state=None):
         self.C = C
         self.kernel = kernel
@@ -210,6 +219,7 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, BaseEstimator, ClassifierMixin):
         self.tol = tol
         self.cache_size = cache_size
         self.class_weight = class_weight
+        self.n_jos = n_jobs
         self.verbose = verbose
         self.max_iter = max_iter
         self.decision_function_shape = decision_function_shape
@@ -325,6 +335,10 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, BaseEstimator, RegressorMixin):
     cache_size :  float, optional (default=200.0)
         Specify the size of the kernel cache (in MB).
 
+    n_jobs : int or None (default: None)
+        Number of parallel jobs to be run for GAK cross-similarity matrix
+        computations (cf :ref:`tslearn.metrics.cdist_gak <fun-cdist_gak>`)
+
     verbose : bool, default: False
         Enable verbose output. Note that this setting takes advantage of a
         per-process runtime setting in libsvm that, if enabled, may not work
@@ -380,7 +394,7 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, BaseEstimator, RegressorMixin):
     """
     def __init__(self, C=1.0, kernel="gak", degree=3, gamma="auto",
                  coef0=0.0, tol=0.001, epsilon=0.1, shrinking=True,
-                 cache_size=200, verbose=False, max_iter=-1):
+                 cache_size=200, n_jobs=None, verbose=False, max_iter=-1):
         self.C = C
         self.kernel = kernel
         self.degree = degree
@@ -390,6 +404,7 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, BaseEstimator, RegressorMixin):
         self.epsilon = epsilon
         self.shrinking = shrinking
         self.cache_size = cache_size
+        self.n_jobs = n_jobs
         self.verbose = verbose
         self.max_iter = max_iter
 
