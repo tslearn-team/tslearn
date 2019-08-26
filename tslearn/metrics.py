@@ -774,7 +774,7 @@ def _gak_gram(s1, s2, sigma=1.):
     return numpy.exp(gram)
 
 
-def fast_gak(s1, s2, sigma=1.):
+def unnormalized_gak(s1, s2, sigma=1.):
     r"""Compute Global Alignment Kernel (GAK) between (possibly
     multidimensional) time series and return it.
 
@@ -799,13 +799,17 @@ def fast_gak(s1, s2, sigma=1.):
 
     Examples
     --------
-    >>> fast_gak([1, 2, 3], [1., 2., 2., 3.], sigma=2.)  # doctest: +SKIP
-    0.839...
-    >>> fast_gak([1, 2, 3], [1., 2., 2., 3., 4.])  # doctest: +SKIP
-    0.273...
+    >>> unnormalized_gak([1, 2, 3],
+    ...                  [1., 2., 2., 3.],
+    ...                  sigma=2.)  # doctest: +ELLIPSIS
+    15.358...
+    >>> unnormalized_gak([1, 2, 3],
+    ...                  [1., 2., 2., 3., 4.])  # doctest: +ELLIPSIS
+    3.166...
 
     See Also
     --------
+    gak : normalized version of GAK that ensures that k(x,x) = 1
     cdist_gak : Compute cross-similarity matrix using Global Alignment kernel
 
     References
@@ -859,9 +863,9 @@ def gak(s1, s2, sigma=1.):  # TODO: better doc (formula for the kernel)
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """
-    s1 = to_time_series(s1, remove_nans=True)
-    s2 = to_time_series(s2, remove_nans=True)
-    return cynormalized_gak(s1, s2, sigma)
+    denom = numpy.sqrt(unnormalized_gak(s1, s1, sigma=sigma) *
+                       unnormalized_gak(s2, s2, sigma=sigma))
+    return unnormalized_gak(s1, s2, sigma=sigma) / denom
 
 
 def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None):
@@ -889,9 +893,10 @@ def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None):
     array([[1.        , 0.65629661],
            [0.65629661, 1.        ]])
     >>> cdist_gak([[1, 2, 2], [1., 2., 3., 4.]],
-    ...           [[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)
-    array([[0.71059484, 0.29722877],
-           [0.65629661, 1.        ]])
+    ...           [[1, 2, 2, 3], [1., 2., 3., 4.], [1, 2, 2, 3]],
+    ...           sigma=2.)
+    array([[0.71059484, 0.29722877, 0.71059484],
+           [0.65629661, 1.        , 0.65629661]])
 
     See Also
     --------
@@ -909,20 +914,31 @@ def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None):
         matrix = numpy.zeros((len(dataset1), len(dataset1)))
         indices = numpy.triu_indices(len(dataset1), k=0, m=len(dataset1))
         matrix[indices] = Parallel(n_jobs=n_jobs, prefer="threads")(
-            delayed(fast_gak)(dataset1[i], dataset1[j], sigma=sigma)
+            delayed(unnormalized_gak)(dataset1[i], dataset1[j], sigma=sigma)
             for i in range(len(dataset1)) for j in range(i, len(dataset1))
         )
-        indices = numpy.tril_indices(len(dataset1), k=1, m=len(dataset1))
+        indices = numpy.tril_indices(len(dataset1), k=-1, m=len(dataset1))
         matrix[indices] = matrix.T[indices]
+        diagonal = numpy.diag(numpy.sqrt(1. / numpy.diag(matrix)))
+        diagonal_left = diagonal_right = diagonal
     else:
         dataset2 = to_time_series_dataset(dataset2)
         matrix = Parallel(n_jobs=n_jobs, prefer="threads")(
-            delayed(fast_gak)(dataset1[i], dataset2[j], sigma=sigma)
+            delayed(unnormalized_gak)(dataset1[i], dataset2[j], sigma=sigma)
             for i in range(len(dataset1)) for j in range(len(dataset2))
         )
         matrix = numpy.array(matrix).reshape((len(dataset1), -1))
-    diagonal = numpy.sqrt(numpy.diag(numpy.diag(matrix)))
-    return (diagonal.dot(matrix)).dot(diagonal)
+        diagonal_left = Parallel(n_jobs=n_jobs, prefer="threads")(
+            delayed(unnormalized_gak)(dataset1[i], dataset1[i], sigma=sigma)
+            for i in range(len(dataset1))
+        )
+        diagonal_right = Parallel(n_jobs=n_jobs, prefer="threads")(
+            delayed(unnormalized_gak)(dataset2[j], dataset2[j], sigma=sigma)
+            for j in range(len(dataset2))
+        )
+        diagonal_left = numpy.diag(1. / numpy.sqrt(diagonal_left))
+        diagonal_right = numpy.diag(1. / numpy.sqrt(diagonal_right))
+    return (diagonal_left.dot(matrix)).dot(diagonal_right)
 
 
 def cdist_gak_no_parallel(dataset1, dataset2=None, sigma=1.):
