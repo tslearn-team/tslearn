@@ -13,8 +13,15 @@ Changelogs for this project are recorded in this file since v0.2.0.
 ### Added
 
 * `tslearn` estimators are now automatically tested to match `sklearn` 
-requirements "as much as possible" (eg. while still fitting `tslearn` needs in 
+requirements "as much as possible" (cf. `tslearn` needs in 
 terms of data format, _etc._)
+* `cdist_dtw` and `cdist_gak` now have a `n_jobs` parameter to parallelize
+distance computations using `joblib.Parallel`
+  * `n_jobs` is also available as a `metric_params` key in 
+  `silhouette_score`, `TimeSeriesKMeans`, `KNeighborsTimeSeries` and 
+  `KNeighborsTimeSeriesClassifier`
+  * `n_jobs` is also available as a parameter in `TimeSeriesSVC`,
+  `TimeSeriesSVR` and `GlobalAlignmentKernelKMeans`
 
 ### Changed
 
