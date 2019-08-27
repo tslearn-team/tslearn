@@ -27,8 +27,8 @@ if True:  # pragma: no cover
         weights: None or array
             Weights of each X[i]. Must be the same size as len(X).
 
-        Note
-        ----
+        Notes
+        -----
             This method requires a dataset of equal-sized time series
 
         .. deprecated:: 0.1.15

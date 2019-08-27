@@ -15,8 +15,8 @@ variable-length time series dataset:
 Classification
 --------------
 
-* :ref:`KNeighborsTimeSeriesClassifier <knn-clf>`
-* :ref:`TimeSeriesSVC <class-svc>`
+* :ref:`KNeighborsTimeSeriesClassifier <class-tslearn.neighbors.KNeighborsTimeSeriesClassifier>`
+* :ref:`TimeSeriesSVC <class-tslearn.svm.TimeSeriesSVC>`
 
 Examples
 ~~~~~~~~
@@ -36,7 +36,7 @@ Examples
 Regression
 ----------
 
-* :ref:`TimeSeriesSVR <class-svr>`
+* :ref:`TimeSeriesSVR <class-tslearn.svm.TimeSeriesSVR>`
 
 Examples
 ~~~~~~~~
@@ -51,9 +51,9 @@ Examples
 Clustering
 ----------
 
-* :ref:`GlobalAlignmentKernelKMeans <class-gakkmeans>`
-* :ref:`TimeSeriesKMeans <class-dbakmeans>`
-* :ref:`silhouette_score <fun-silhouette>`
+* :ref:`GlobalAlignmentKernelKMeans <class-tslearn.clustering.GlobalAlignmentKernelKMeans>`
+* :ref:`TimeSeriesKMeans <class-tslearn.clustering.TimeSeriesKMeans>`
+* :ref:`silhouette_score <fun-tslearn.clustering.silhouette_score>`
 
 Examples
 ~~~~~~~~
@@ -82,8 +82,8 @@ Examples
 Barycenter computation
 ----------------------
 
-* :ref:`dtw_barycenter_averaging <fun-dba>`
-* :ref:`softdtw_barycenter <fun-softdtwbar>`
+* :ref:`dtw_barycenter_averaging <fun-tslearn.barycenters.dtw_barycenter_averaging>`
+* :ref:`softdtw_barycenter <fun-tslearn.barycenters.softdtw_barycenter>`
 
 Examples
 ~~~~~~~~

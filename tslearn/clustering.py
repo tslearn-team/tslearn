@@ -266,7 +266,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
     sigma : float or "auto" (default: "auto")
         Bandwidth parameter for the Global Alignment kernel. If set to 'auto',
         it is computed based on a sampling of the training set
-        (cf :ref:`tslearn.metrics.sigma_gak <fun-sigmagak>`)
+        (cf :ref:`tslearn.metrics.sigma_gak <fun-tslearn.metrics.sigma_gak>`)
 
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel for GAK cross-similarity matrix
@@ -592,8 +592,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
     n_iter_ : int
         The number of iterations performed during fit.
 
-    Note
-    ----
+    Notes
+    -----
         If `metric` is set to `"euclidean"`, the algorithm expects a dataset of
         equal-sized time series.
 
@@ -899,8 +899,8 @@ class KShape(BaseEstimator, ClusterMixin,
     n_iter_ : int
         The number of iterations performed during fit.
 
-    Note
-    ----
+    Notes
+    -----
         This method requires a dataset of equal-sized time series.
 
     Examples

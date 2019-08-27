@@ -272,8 +272,8 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
     model_ : keras.Model
         Directly predicts the class probabilities for the input timeseries.
 
-    Note
-    ----
+    Notes
+    -----
         This implementation requires a dataset of equal-sized time series.
 
     Examples
@@ -698,8 +698,8 @@ class SerializableShapeletModel(ShapeletModel):
     model_ : keras.Model
         Directly predicts the class probabilities for the input timeseries.
 
-    Note
-    ----
+    Notes
+    -----
         This implementation requires a dataset of equal-sized time series.
 
     Examples

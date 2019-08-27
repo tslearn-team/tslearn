@@ -21,8 +21,8 @@ class TimeSeriesResampler(TransformerMixin):
     sz : int
         Size of the output time series.
 
-    Example
-    -------
+    Examples
+    --------
     >>> TimeSeriesResampler(sz=5).fit_transform([[0, 3, 6]])
     array([[[0. ],
             [1.5],
@@ -99,12 +99,12 @@ class TimeSeriesScalerMinMax(TransformerMixin):
             min is deprecated in version 0.2 and will be
             removed in 0.4. Use value_range instead.
 
-    Note
-    ----
+    Notes
+    -----
         This method requires a dataset of equal-sized time series.
 
-    Example
-    -------
+    Examples
+    --------
     >>> TimeSeriesScalerMinMax(value_range=(1., 2.)).fit_transform([[0, 3, 6]])
     array([[[1. ],
             [1.5],
@@ -184,12 +184,12 @@ class TimeSeriesScalerMeanVariance(TransformerMixin):
     std : float (default: 1.)
         Standard deviation of the output time series.
 
-    Note
-    ----
+    Notes
+    -----
         This method requires a dataset of equal-sized time series.
 
-    Example
-    -------
+    Examples
+    --------
     >>> TimeSeriesScalerMeanVariance(mu=0.,
     ...                              std=1.).fit_transform([[0, 3, 6]])
     array([[[-1.22474487],

@@ -1,0 +1,27 @@
+code {
+    color: #055781;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #FDFDFD;
+
+}
+tbody tr:nth-child(odd) {
+    background-color: #F0F7FA;
+}
+
+tbody tr {
+    border-style: solid none solid none;
+    border-width: 1px 0 1px 0;
+    border-color: #ddd;
+}
+
+tbody td {
+    border-color: #ddd;
+}
+
+.alert-info {
+    background-color: #d2edf6;
+    border-color: #d2edf6;
+    color: #555555;
+}

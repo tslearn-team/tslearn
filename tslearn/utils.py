@@ -121,8 +121,8 @@ def to_time_series(ts, remove_nans=False):
     numpy.ndarray of shape (sz, d)
         The transformed time series.
 
-    Example
-    -------
+    Examples
+    --------
     >>> to_time_series([1, 2])
     array([[1.],
            [2.]])
@@ -164,8 +164,8 @@ def to_time_series_dataset(dataset, dtype=numpy.float):
     numpy.ndarray of shape (n_ts, sz, d)
         The transformed dataset of time series.
 
-    Example
-    -------
+    Examples
+    --------
     >>> to_time_series_dataset([[1, 2]])
     array([[[1.],
             [2.]]])
@@ -217,8 +217,8 @@ def to_sklearn_dataset(dataset, dtype=numpy.float, return_dim=False):
     int (optional, if return_dim=True)
         The dimensionality of the original tslearn dataset (third dimension)
 
-    Example
-    -------
+    Examples
+    --------
     >>> to_sklearn_dataset([[1, 2]], return_dim=True)
     (array([[1., 2.]]), 1)
     >>> to_sklearn_dataset([[1, 2], [1, 4, 3]])
