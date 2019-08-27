@@ -362,8 +362,8 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         """
         if self.verbose_level is not None:
             warnings.warn(
-                "'verbose_level' is deprecated in version 0.2 and will be"
-                " replaced by 'verbose' in 0.4.",
+                "'verbose_level' is deprecated in version 0.2 and will be "
+                "removed in 0.4. Use 'verbose' instead.",
                 DeprecationWarning, stacklevel=2)
             self.verbose = self.verbose_level
 

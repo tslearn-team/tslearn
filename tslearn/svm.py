@@ -7,7 +7,7 @@ from sklearn.svm import SVC, SVR
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 import numpy
 
-from tslearn.metrics import cdist_gak, gamma_soft_dtw
+from tslearn.metrics import cdist_gak, gamma_soft_dtw, VARIABLE_LENGTH_METRICS
 from tslearn.utils import to_time_series_dataset, check_dims
 from sklearn.utils import check_array, check_X_y
 from sklearn.utils.validation import check_is_fitted
@@ -32,10 +32,8 @@ def _prepare_ts_datasets_sklearn(X):
 
 
 class TimeSeriesSVMMixin:
-    variable_length_kernels = ["gak"]
-
     def _preprocess_sklearn(self, X, y=None, fit_time=False):
-        force_all_finite = self.kernel not in self.variable_length_kernels
+        force_all_finite = self.kernel not in VARIABLE_LENGTH_METRICS
         if y is None:
             X = check_array(X, allow_nd=True,
                             force_all_finite=force_all_finite)
@@ -50,14 +48,18 @@ class TimeSeriesSVMMixin:
             self.gamma_ = gamma_soft_dtw(X)
             self.classes_ = numpy.unique(y)
 
-        if self.kernel in self.variable_length_kernels:
+        if self.kernel in VARIABLE_LENGTH_METRICS:
             assert self.kernel == "gak"
             self.estimator_kernel_ = "precomputed"
             if fit_time:
-                sklearn_X = cdist_gak(X, X, sigma=numpy.sqrt(self.gamma_ / 2.))
+                sklearn_X = cdist_gak(X,
+                                      sigma=numpy.sqrt(self.gamma_ / 2.),
+                                      n_jobs=self.n_jobs)
             else:
-                sklearn_X = cdist_gak(X, self._X_fit,
-                                      sigma=numpy.sqrt(self.gamma_ / 2.))
+                sklearn_X = cdist_gak(X,
+                                      self._X_fit,
+                                      sigma=numpy.sqrt(self.gamma_ / 2.),
+                                      n_jobs=self.n_jobs)
         else:
             self.estimator_kernel_ = self.kernel
             sklearn_X = _prepare_ts_datasets_sklearn(X)
@@ -119,6 +121,14 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, BaseEstimator, ClassifierMixin):
         The "balanced" mode uses the values of y to automatically adjust
         weights inversely proportional to class frequencies in the input data
         as ``n_samples / (n_classes * np.bincount(y))``
+
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel for GAK cross-similarity matrix
+        computations.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See scikit-learns'
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`
+        for more details.
 
     verbose : bool, default: False
         Enable verbose output. Note that this setting takes advantage of a
@@ -198,7 +208,7 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, BaseEstimator, ClassifierMixin):
     """
     def __init__(self, C=1.0, kernel="gak", degree=3, gamma="auto", coef0=0.0,
                  shrinking=True, probability=False, tol=0.001, cache_size=200,
-                 class_weight=None, verbose=False, max_iter=-1,
+                 class_weight=None, n_jobs=None, verbose=False, max_iter=-1,
                  decision_function_shape="ovr", random_state=None):
         self.C = C
         self.kernel = kernel
@@ -210,6 +220,7 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, BaseEstimator, ClassifierMixin):
         self.tol = tol
         self.cache_size = cache_size
         self.class_weight = class_weight
+        self.n_jobs = n_jobs
         self.verbose = verbose
         self.max_iter = max_iter
         self.decision_function_shape = decision_function_shape
@@ -325,6 +336,14 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, BaseEstimator, RegressorMixin):
     cache_size :  float, optional (default=200.0)
         Specify the size of the kernel cache (in MB).
 
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel for GAK cross-similarity matrix
+        computations.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See scikit-learns'
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`
+        for more details.
+
     verbose : bool, default: False
         Enable verbose output. Note that this setting takes advantage of a
         per-process runtime setting in libsvm that, if enabled, may not work
@@ -380,7 +399,7 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, BaseEstimator, RegressorMixin):
     """
     def __init__(self, C=1.0, kernel="gak", degree=3, gamma="auto",
                  coef0=0.0, tol=0.001, epsilon=0.1, shrinking=True,
-                 cache_size=200, verbose=False, max_iter=-1):
+                 cache_size=200, n_jobs=None, verbose=False, max_iter=-1):
         self.C = C
         self.kernel = kernel
         self.degree = degree
@@ -390,6 +409,7 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, BaseEstimator, RegressorMixin):
         self.epsilon = epsilon
         self.shrinking = shrinking
         self.cache_size = cache_size
+        self.n_jobs = n_jobs
         self.verbose = verbose
         self.max_iter = max_iter
 

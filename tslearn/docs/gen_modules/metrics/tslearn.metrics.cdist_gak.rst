@@ -1,3 +1,5 @@
+.. _fun-cdist_gak:
+
 tslearn.metrics.cdist_gak
 =========================
 

@@ -3,12 +3,13 @@ The :mod:`tslearn.metrics` module gathers time series similarity metrics.
 """
 
 import numpy
-from scipy.spatial.distance import pdist
+from scipy.spatial.distance import pdist, cdist
 from sklearn.utils import check_random_state
 from tslearn.soft_dtw_fast import _soft_dtw, _soft_dtw_grad, \
     _jacobian_product_sq_euc
 from sklearn.metrics.pairwise import euclidean_distances
 from numba import njit, prange
+from joblib import Parallel, delayed
 
 from tslearn.cygak import cdist_normalized_gak as cycdist_normalized_gak, \
     normalized_gak as cynormalized_gak
@@ -17,8 +18,8 @@ from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, \
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
-
-global_constraint_code = {"": 0, "itakura": 1, "sakoe_chiba": 2}
+GLOBAL_CONSTRAINT_CODE = {"": 0, "itakura": 1, "sakoe_chiba": 2}
+VARIABLE_LENGTH_METRICS = ["dtw", "gak", "softdtw"]
 
 
 @njit()
@@ -66,7 +67,7 @@ def njit_accumulated_matrix(s1, s2, mask):
     return cum_sum[1:, 1:]
 
 
-@njit()
+@njit(nogil=True)
 def njit_dtw(s1, s2, mask):
     """Compute the dynamic time warping score between two time series.
 
@@ -79,7 +80,7 @@ def njit_dtw(s1, s2, mask):
         Second time series
 
     mask : array, shape = (sz1, sz2)
-        Mask. Unconsidered cells must have infinite values. d
+        Mask. Unconsidered cells must have infinite values.
 
     Returns
     -------
@@ -249,7 +250,7 @@ def dtw_path(s1, s2, global_constraint=None,
         global_constraint_str = ""
 
     mask = compute_mask(
-        s1, s2, global_constraint_code[global_constraint_str],
+        s1, s2, GLOBAL_CONSTRAINT_CODE[global_constraint_str],
         sakoe_chiba_radius, itakura_max_slope
     )
     acc_cost_mat = njit_accumulated_matrix(s1, s2, mask=mask)
@@ -321,7 +322,7 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=1,
 
     mask = compute_mask(
         s1, s2,
-        global_constraint_code[global_constraint_str],
+        GLOBAL_CONSTRAINT_CODE[global_constraint_str],
         sakoe_chiba_radius=sakoe_chiba_radius,
         itakura_max_slope=itakura_max_slope)
     return njit_dtw(s1, s2, mask=mask)
@@ -594,7 +595,7 @@ def compute_mask(s1, s2, global_constraint=0,
 
 
 def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
-              sakoe_chiba_radius=1, itakura_max_slope=2.):
+              sakoe_chiba_radius=1, itakura_max_slope=2., n_jobs=None):
     r"""Compute cross-similarity matrix using Dynamic Time Warping (DTW)
     similarity measure.
 
@@ -615,17 +616,18 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
     dataset2 : array-like (default: None)
         Another dataset of time series. If `None`, self-similarity of
         `dataset1` is returned.
-
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
         Global constraint to restrict admissible paths for DTW.
 
     sakoe_chiba_radius : int (default: 1)
         Radius to be used for Sakoe-Chiba band global constraint. Used only if
         ``global_constraint="sakoe_chiba"``.
-
     itakura_max_slope : float (default: 2.)
         Maximum slope for the Itakura parallelogram constraint. Used only if
         ``global_constraint="itakura"``.
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel. None means 1 unless in a
+        `joblib.parallel_backend` context. -1 means using all processors.
 
     Returns
     -------
@@ -654,6 +656,85 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
     """
     dataset1 = to_time_series_dataset(dataset1)
 
+    if dataset2 is None:
+        # Inspired from code by @GillesVandewiele:
+        # https://github.com/rtavenar/tslearn/pull/128#discussion_r314978479
+        matrix = numpy.zeros((len(dataset1), len(dataset1)))
+        indices = numpy.triu_indices(len(dataset1), k=1, m=len(dataset1))
+        matrix[indices] = Parallel(n_jobs=n_jobs, prefer="threads")(
+            delayed(dtw)(
+                dataset1[i], dataset1[j],
+                global_constraint=global_constraint,
+                sakoe_chiba_radius=sakoe_chiba_radius,
+                itakura_max_slope=itakura_max_slope)
+            for i in range(len(dataset1)) for j in range(i + 1, len(dataset1))
+        )
+        return matrix + matrix.T
+    else:
+        dataset2 = to_time_series_dataset(dataset2)
+        matrix = Parallel(n_jobs=n_jobs, prefer="threads")(
+            delayed(dtw)(
+                dataset1[i], dataset2[j],
+                global_constraint=global_constraint,
+                sakoe_chiba_radius=sakoe_chiba_radius,
+                itakura_max_slope=itakura_max_slope)
+            for i in range(len(dataset1)) for j in range(len(dataset2))
+        )
+        return numpy.array(matrix).reshape((len(dataset1), -1))
+
+
+def cdist_dtw_no_parallel(dataset1, dataset2=None, global_constraint=None,
+                          sakoe_chiba_radius=1, itakura_max_slope=2.):
+    r"""Compute cross-similarity matrix using Dynamic Time Warping (DTW)
+    similarity measure.
+    DTW is computed as the Euclidean distance between aligned time series,
+    i.e., if :math:`P` is the alignment path:
+    .. math::
+        DTW(X, Y) = \sqrt{\sum_{(i, j) \in P} (X_{i} - Y_{j})^2}
+    DTW was originally presented in [1]_.
+    Parameters
+    ----------
+    dataset1 : array-like
+        A dataset of time series
+    dataset2 : array-like (default: None)
+        Another dataset of time series. If `None`, self-similarity of
+        `dataset1` is returned.
+    global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
+        Global constraint to restrict admissible paths for DTW.
+    sakoe_chiba_radius : int (default: 1)
+        Radius to be used for Sakoe-Chiba band global constraint. Used only if
+        ``global_constraint="sakoe_chiba"``.
+    itakura_max_slope : float (default: 2.)
+        Maximum slope for the Itakura parallelogram constraint. Used only if
+        ``global_constraint="itakura"``.
+
+    Returns
+    -------
+    numpy.ndarray
+        Cross-similarity matrix
+
+    Examples
+    --------
+    >>> cdist_dtw_no_parallel([[1, 2, 2, 3], [1., 2., 3., 4.]])
+    array([[0., 1.],
+           [1., 0.]])
+    >>> cdist_dtw_no_parallel([[1, 2, 2, 3], [1., 2., 3., 4.]],
+    ...                       [[1, 2, 3], [2, 3, 4, 5]])
+    array([[0.        , 2.44948974],
+           [1.        , 1.41421356]])
+
+    See Also
+    --------
+    dtw : Get DTW similarity score
+
+    References
+    ----------
+    .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
+           spoken word recognition," IEEE Transactions on Acoustics, Speech and
+           Signal Processing, vol. 26(1), pp. 43--49, 1978.
+    """
+    dataset1 = to_time_series_dataset(dataset1)
+
     if global_constraint is not None:
         global_constraint_str = global_constraint
     else:
@@ -662,14 +743,87 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
     if dataset2 is None:
         return njit_cdist_dtw_self(
             dataset1,
-            global_constraint_code[global_constraint_str],
+            GLOBAL_CONSTRAINT_CODE[global_constraint_str],
             sakoe_chiba_radius, itakura_max_slope)
     else:
         dataset2 = to_time_series_dataset(dataset2)
         return njit_cdist_dtw(dataset1, dataset2,
-                              global_constraint_code[global_constraint_str],
+                              GLOBAL_CONSTRAINT_CODE[global_constraint_str],
                               sakoe_chiba_radius, itakura_max_slope)
 
+
+@njit(nogil=True)
+def njit_gak(s1, s2, gram):
+    l1 = s1.shape[0]
+    l2 = s2.shape[0]
+
+    cum_sum = numpy.zeros((l1 + 1, l2 + 1))
+    cum_sum[0, 0] = 1.
+
+    for i in prange(l1):
+        for j in prange(l2):
+            cum_sum[i + 1, j + 1] = (cum_sum[i, j + 1] +
+                                     cum_sum[i + 1, j] +
+                                     cum_sum[i, j]) * gram[i, j]
+
+    return cum_sum[l1, l2]
+
+
+def _gak_gram(s1, s2, sigma=1.):
+    gram = - cdist(s1, s2, "sqeuclidean") / (2 * sigma ** 2)
+    gram -= numpy.log(2 - numpy.exp(gram))
+    return numpy.exp(gram)
+
+
+def unnormalized_gak(s1, s2, sigma=1.):
+    r"""Compute Global Alignment Kernel (GAK) between (possibly
+    multidimensional) time series and return it.
+
+    It is not required that both time series share the same size, but they must
+    be the same dimension. GAK was
+    originally presented in [1]_.
+    This is an unnormalized version.
+
+    Parameters
+    ----------
+    s1
+        A time series
+    s2
+        Another time series
+    sigma : float (default 1.)
+        Bandwidth of the internal gaussian kernel used for GAK
+
+    Returns
+    -------
+    float
+        Kernel value
+
+    Examples
+    --------
+    >>> unnormalized_gak([1, 2, 3],
+    ...                  [1., 2., 2., 3.],
+    ...                  sigma=2.)  # doctest: +ELLIPSIS
+    15.358...
+    >>> unnormalized_gak([1, 2, 3],
+    ...                  [1., 2., 2., 3., 4.])  # doctest: +ELLIPSIS
+    3.166...
+
+    See Also
+    --------
+    gak : normalized version of GAK that ensures that k(x,x) = 1
+    cdist_gak : Compute cross-similarity matrix using Global Alignment kernel
+
+    References
+    ----------
+    .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
+    """
+    s1 = to_time_series(s1, remove_nans=True)
+    s2 = to_time_series(s2, remove_nans=True)
+
+    gram = _gak_gram(s1, s2, sigma=sigma)
+
+    gak_val = njit_gak(s1, s2, gram)
+    return gak_val
 
 def gak(s1, s2, sigma=1.):  # TODO: better doc (formula for the kernel)
     r"""Compute Global Alignment Kernel (GAK) between (possibly
@@ -710,12 +864,88 @@ def gak(s1, s2, sigma=1.):  # TODO: better doc (formula for the kernel)
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """
-    s1 = to_time_series(s1, remove_nans=True)
-    s2 = to_time_series(s2, remove_nans=True)
-    return cynormalized_gak(s1, s2, sigma)
+    denom = numpy.sqrt(unnormalized_gak(s1, s1, sigma=sigma) *
+                       unnormalized_gak(s2, s2, sigma=sigma))
+    return unnormalized_gak(s1, s2, sigma=sigma) / denom
 
 
-def cdist_gak(dataset1, dataset2=None, sigma=1.):
+def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None):
+    r"""Compute cross-similarity matrix using Global Alignment kernel (GAK).
+
+    GAK was originally presented in [1]_.
+
+    Parameters
+    ----------
+    dataset1
+        A dataset of time series
+    dataset2
+        Another dataset of time series
+    sigma : float (default 1.)
+        Bandwidth of the internal gaussian kernel used for GAK
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel. None means 1 unless in a
+        `joblib.parallel_backend` context. -1 means using all processors.
+
+    Returns
+    -------
+    numpy.ndarray
+        Cross-similarity matrix
+
+    Examples
+    --------
+    >>> cdist_gak([[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)
+    array([[1.        , 0.65629661],
+           [0.65629661, 1.        ]])
+    >>> cdist_gak([[1, 2, 2], [1., 2., 3., 4.]],
+    ...           [[1, 2, 2, 3], [1., 2., 3., 4.], [1, 2, 2, 3]],
+    ...           sigma=2.)
+    array([[0.71059484, 0.29722877, 0.71059484],
+           [0.65629661, 1.        , 0.65629661]])
+
+    See Also
+    --------
+    gak : Compute Global Alignment kernel
+
+    References
+    ----------
+    .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
+    """
+    dataset1 = to_time_series_dataset(dataset1)
+
+    if dataset2 is None:
+        # Inspired from code by @GillesVandewiele:
+        # https://github.com/rtavenar/tslearn/pull/128#discussion_r314978479
+        matrix = numpy.zeros((len(dataset1), len(dataset1)))
+        indices = numpy.triu_indices(len(dataset1), k=0, m=len(dataset1))
+        matrix[indices] = Parallel(n_jobs=n_jobs, prefer="threads")(
+            delayed(unnormalized_gak)(dataset1[i], dataset1[j], sigma=sigma)
+            for i in range(len(dataset1)) for j in range(i, len(dataset1))
+        )
+        indices = numpy.tril_indices(len(dataset1), k=-1, m=len(dataset1))
+        matrix[indices] = matrix.T[indices]
+        diagonal = numpy.diag(numpy.sqrt(1. / numpy.diag(matrix)))
+        diagonal_left = diagonal_right = diagonal
+    else:
+        dataset2 = to_time_series_dataset(dataset2)
+        matrix = Parallel(n_jobs=n_jobs, prefer="threads")(
+            delayed(unnormalized_gak)(dataset1[i], dataset2[j], sigma=sigma)
+            for i in range(len(dataset1)) for j in range(len(dataset2))
+        )
+        matrix = numpy.array(matrix).reshape((len(dataset1), -1))
+        diagonal_left = Parallel(n_jobs=n_jobs, prefer="threads")(
+            delayed(unnormalized_gak)(dataset1[i], dataset1[i], sigma=sigma)
+            for i in range(len(dataset1))
+        )
+        diagonal_right = Parallel(n_jobs=n_jobs, prefer="threads")(
+            delayed(unnormalized_gak)(dataset2[j], dataset2[j], sigma=sigma)
+            for j in range(len(dataset2))
+        )
+        diagonal_left = numpy.diag(1. / numpy.sqrt(diagonal_left))
+        diagonal_right = numpy.diag(1. / numpy.sqrt(diagonal_right))
+    return (diagonal_left.dot(matrix)).dot(diagonal_right)
+
+
+def cdist_gak_no_parallel(dataset1, dataset2=None, sigma=1.):
     r"""Compute cross-similarity matrix using Global Alignment kernel (GAK).
 
     GAK was originally presented in [1]_.
@@ -736,10 +966,10 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.):
 
     Examples
     --------
-    >>> cdist_gak([[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)
+    >>> cdist_gak_no_parallel([[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)
     array([[1.        , 0.65629661],
            [0.65629661, 1.        ]])
-    >>> cdist_gak([[1, 2, 2], [1., 2., 3., 4.]],
+    >>> cdist_gak_no_parallel([[1, 2, 2], [1., 2., 3., 4.]],
     ...           [[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)
     array([[0.71059484, 0.29722877],
            [0.65629661, 1.        ]])
@@ -1188,7 +1418,7 @@ class SoftDTW(object):
         # We need +2 because we use indices starting from 1
         # and to deal with edge cases in the backward recursion.
         m, n = self.D.shape
-        self.R_ = numpy.zeros((m+2, n+2), dtype=numpy.float64)
+        self.R_ = numpy.zeros((m + 2, n + 2), dtype=numpy.float64)
         self.computed = False
 
         self.gamma = numpy.float64(gamma)
@@ -1225,12 +1455,12 @@ class SoftDTW(object):
         # Add an extra row and an extra column to D.
         # Needed to deal with edge cases in the recursion.
         D = numpy.vstack((self.D, numpy.zeros(n)))
-        D = numpy.hstack((D, numpy.zeros((m+1, 1))))
+        D = numpy.hstack((D, numpy.zeros((m + 1, 1))))
 
         # Allocate memory.
         # We need +2 because we use indices starting from 1
         # and to deal with edge cases in the recursion.
-        E = numpy.zeros((m+2, n+2), dtype=numpy.float64)
+        E = numpy.zeros((m + 2, n + 2), dtype=numpy.float64)
 
         _soft_dtw_grad(D, self.R_, E, gamma=self.gamma)
 
@@ -1238,7 +1468,6 @@ class SoftDTW(object):
 
 
 class SquaredEuclidean(object):
-
     def __init__(self, X, Y):
         """
         Parameters
