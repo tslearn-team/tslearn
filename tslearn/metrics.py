@@ -209,7 +209,7 @@ def dtw_path(s1, s2, global_constraint=None,
         ``global_constraint="sakoe_chiba"``.
     itakura_max_slope : float (default: 2.)
         Maximum slope for the Itakura parallelogram constraint. Used only if
-        ``global_constraint="itakura_parallelogram"``.
+        ``global_constraint="itakura"``.
 
     Returns
     -------
