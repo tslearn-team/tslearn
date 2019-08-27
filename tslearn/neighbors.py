@@ -46,6 +46,12 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
         ind : array
             Indices of the nearest points in the population matrix.
         """
+        if self.metric_params is not None:
+            metric_params = self.metric_params.copy()
+            if "n_jobs" in metric_params.keys():
+                del metric_params["n_jobs"]
+        else:
+            metric_params = {}
         self_neighbors = False
         if n_neighbors is None:
             n_neighbors = self.n_neighbors
@@ -55,8 +61,10 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
         if self.metric == "precomputed":
             full_dist_matrix = X
         else:
+            parallelize = False
             if self.metric == "dtw" or self.metric == cdist_dtw:
                 cdist_fun = cdist_dtw
+                parallelize = True
             elif self.metric == "softdtw" or self.metric == cdist_soft_dtw:
                 cdist_fun = cdist_soft_dtw
             elif self.metric in ["euclidean", "sqeuclidean", "cityblock"]:
@@ -77,11 +85,11 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
                                              self._d))
             else:
                 fit_X = self._X_fit
-
-            if self.metric_params is not None:
-                full_dist_matrix = cdist_fun(X, fit_X, **self.metric_params)
+            if parallelize:
+                full_dist_matrix = cdist_fun(X, fit_X, n_jobs=self.n_jobs,
+                                             **metric_params)
             else:
-                full_dist_matrix = cdist_fun(X, fit_X)
+                full_dist_matrix = cdist_fun(X, fit_X, **metric_params)
         ind = numpy.argsort(full_dist_matrix, axis=1)
 
         if self_neighbors:
@@ -116,7 +124,18 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
     metric_params : dict or None (default: None)
         Dictionnary of metric parameters.
         For metrics that accept parallelization of the cross-distance matrix
-        computations, `n_jobs` is a valid `metric_params` field.
+        computations, `n_jobs` key passed in `metric_params` is overridden by
+        the `n_jobs` argument.
+
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel for cross-distance matrix
+        computations.
+        Ignored if the cross-distance matrix cannot be computed using
+        parallelization.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See scikit-learns'
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`
+        for more details.
 
     Examples
     --------
@@ -137,12 +156,14 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
            [2, 0],
            [0, 1]])
     """
-    def __init__(self, n_neighbors=5, metric="dtw", metric_params=None):
+    def __init__(self, n_neighbors=5, metric="dtw", metric_params=None,
+                 n_jobs=None):
         NearestNeighbors.__init__(self,
                                   n_neighbors=n_neighbors,
                                   algorithm='brute')
         self.metric = metric
         self.metric_params = metric_params
+        self.n_jobs = n_jobs
 
     def fit(self, X, y=None):
         """Fit the model using X as training data
@@ -213,7 +234,18 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
     metric_params : dict or None (default: None)
         Dictionnary of metric parameters.
         For metrics that accept parallelization of the cross-distance matrix
-        computations, `n_jobs` is a valid `metric_params` field.
+        computations, `n_jobs` key passed in `metric_params` is overridden by
+        the `n_jobs` argument.
+
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel for cross-distance matrix
+        computations.
+        Ignored if the cross-distance matrix cannot be computed using
+        parallelization.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See scikit-learns'
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`
+        for more details.
 
     Examples
     --------
@@ -223,7 +255,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
     array([0])
     >>> clf = KNeighborsTimeSeriesClassifier(n_neighbors=2,
     ...                                      metric="dtw",
-    ...                                      metric_params={"n_jobs": 2})
+    ...                                      n_jobs=2)
     >>> clf.fit([[1, 2, 3], [1, 1.2, 3.2], [3, 2, 1]],
     ...         y=[0, 0, 1]).predict([[1, 2.2, 3.5]])
     array([0])
@@ -232,13 +264,15 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
                  n_neighbors=5,
                  weights='uniform',
                  metric='dtw',
-                 metric_params=None):
+                 metric_params=None,
+                 n_jobs=None):
         KNeighborsClassifier.__init__(self,
                                       n_neighbors=n_neighbors,
                                       weights=weights,
                                       algorithm='brute')
         self.metric = metric
         self.metric_params = metric_params
+        self.n_jobs = n_jobs
 
     def fit(self, X, y):
         """Fit the model using X as training data and y as target values
@@ -286,12 +320,15 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             if self.metric_params is None:
                 metric_params = {}
             else:
-                metric_params = self.metric_params
+                metric_params = self.metric_params.copy()
+                if "n_jobs" in metric_params.keys():
+                    del metric_params["n_jobs"]
             check_is_fitted(self, '_ts_fit')
             X = check_array(X, allow_nd=True, force_all_finite=False)
             X = to_time_series_dataset(X)
             if self._ts_metric == "dtw":
-                X_ = cdist_dtw(X, self._ts_fit, **metric_params)
+                X_ = cdist_dtw(X, self._ts_fit, n_jobs=self.n_jobs,
+                               **metric_params)
             elif self._ts_metric == "softdtw":
                 X_ = cdist_soft_dtw(X, self._ts_fit, **metric_params)
             else:
@@ -323,12 +360,15 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             if self.metric_params is None:
                 metric_params = {}
             else:
-                metric_params = self.metric_params
+                metric_params = self.metric_params.copy()
+                if "n_jobs" in metric_params.keys():
+                    del metric_params["n_jobs"]
             check_is_fitted(self, '_ts_fit')
             X = check_array(X, allow_nd=True, force_all_finite=False)
             X = to_time_series_dataset(X)
             if self._ts_metric == "dtw":
-                X_ = cdist_dtw(X, self._ts_fit, **metric_params)
+                X_ = cdist_dtw(X, self._ts_fit, n_jobs=self.n_jobs,
+                               **metric_params)
             elif self._ts_metric == "softdtw":
                 X_ = cdist_soft_dtw(X, self._ts_fit, **metric_params)
             else:

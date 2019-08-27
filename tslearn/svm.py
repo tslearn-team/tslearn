@@ -122,9 +122,13 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, BaseEstimator, ClassifierMixin):
         weights inversely proportional to class frequencies in the input data
         as ``n_samples / (n_classes * np.bincount(y))``
 
-    n_jobs : int or None (default: None)
-        Number of parallel jobs to be run for GAK cross-similarity matrix
-        computations (cf :ref:`tslearn.metrics.cdist_gak <fun-cdist_gak>`)
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel for GAK cross-similarity matrix
+        computations.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See scikit-learns'
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`
+        for more details.
 
     verbose : bool, default: False
         Enable verbose output. Note that this setting takes advantage of a
@@ -332,9 +336,13 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, BaseEstimator, RegressorMixin):
     cache_size :  float, optional (default=200.0)
         Specify the size of the kernel cache (in MB).
 
-    n_jobs : int or None (default: None)
-        Number of parallel jobs to be run for GAK cross-similarity matrix
-        computations (cf :ref:`tslearn.metrics.cdist_gak <fun-cdist_gak>`)
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel for GAK cross-similarity matrix
+        computations.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See scikit-learns'
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`
+        for more details.
 
     verbose : bool, default: False
         Enable verbose output. Note that this setting takes advantage of a

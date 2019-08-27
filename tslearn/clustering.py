@@ -90,7 +90,8 @@ def _compute_inertia(distances, assignments, squared=True):
 
 
 def silhouette_score(X, labels, metric=None, sample_size=None,
-                     metric_params=None, random_state=None, **kwds):
+                     metric_params=None, n_jobs=None, random_state=None,
+                     **kwds):
     """Compute the mean Silhouette Coefficient of all samples (cf.  [1]_ and
     [2]_).
 
@@ -120,15 +121,25 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
         If ``sample_size is None``, no sampling is used.
     metric_params : dict or None (default: None)
         Parameter values for the chosen metric.
-        For metrics (passed as strings) that accept parallelization of the
-        cross-distance matrix computations, `n_jobs` is a valid
-        `metric_params` field.
+        For metrics that accept parallelization of the cross-distance matrix
+        computations, `n_jobs` key passed in `metric_params` is overridden by
+        the `n_jobs` argument.
         Value associated to the `"gamma_sdtw"` key corresponds to the gamma
         parameter in Soft-DTW.
 
         .. deprecated:: 0.2
             `"gamma_sdtw"` as a key for `metric_params` is deprecated in
             version 0.2 and will be removed in 0.4.
+
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel for cross-distance matrix
+        computations.
+        Ignored if the cross-distance matrix cannot be computed using
+        parallelization.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See scikit-learns'
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`
+        for more details.
 
     random_state : int, RandomState instance or None, optional (default: None)
         The generator used to randomly select a subset of samples.  If int,
@@ -190,10 +201,12 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
         del metric_params_["gamma_sdtw"]
     for k in kwds.keys():
         metric_params_[k] = kwds[k]
+    if "n_jobs" in metric_params_.keys():
+        del metric_params_["n_jobs"]
     if metric == "precomputed":
         sklearn_X = X
     elif metric == "dtw":
-        sklearn_X = cdist_dtw(X, **metric_params_)
+        sklearn_X = cdist_dtw(X, n_jobs=n_jobs, **metric_params_)
     elif metric == "softdtw":
         sklearn_X = cdist_soft_dtw_normalized(X, **metric_params_)
     elif metric == "euclidean":
@@ -235,27 +248,38 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
     ----------
     n_clusters : int (default: 3)
         Number of clusters to form.
+
     max_iter : int (default: 50)
         Maximum number of iterations of the k-means algorithm for a single run.
+
     tol : float (default: 1e-6)
         Inertia variation threshold. If at some point, inertia varies less than
         this threshold between two consecutive
         iterations, the model is considered to have converged and the algorithm
         stops.
+
     n_init : int (default: 1)
         Number of time the k-means algorithm will be run with different
         centroid seeds. The final results will be the
         best output of n_init consecutive runs in terms of inertia.
+
     sigma : float or "auto" (default: "auto")
         Bandwidth parameter for the Global Alignment kernel. If set to 'auto',
         it is computed based on a sampling of the training set
         (cf :ref:`tslearn.metrics.sigma_gak <fun-sigmagak>`)
-    n_jobs : int or None (default: None)
-        Number of parallel jobs to be run for GAK cross-similarity matrix
-        computations (cf :ref:`tslearn.metrics.cdist_gak <fun-cdist_gak>`)
+
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel for GAK cross-similarity matrix
+        computations.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See scikit-learns'
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`
+        for more details.
+
     verbose : bool (default: False)
         Whether or not to print information about the inertia while learning
         the model.
+
     random_state : integer or numpy.RandomState, optional
         Generator used to initialize the centers. If an integer is given, it
         fixes the seed. Defaults to the global
@@ -265,11 +289,14 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
     ----------
     labels_ : numpy.ndarray
         Labels of each point
+
     inertia_ : float
         Sum of distances of samples to their closest cluster center (computed
         using the kernel trick).
+
     sample_weight_ : numpy.ndarray
         The weight given to each sample from the data provided to fit.
+
     n_iter_ : int
         The number of iterations performed during fit.
 
@@ -339,6 +366,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset.
+
         y
             Ignored
         sample_weight : array-like of shape=(n_ts, ) or None (default: None)
@@ -425,6 +453,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset to predict.
+
         y
             Ignored
 
@@ -481,28 +510,35 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
     ----------
     n_clusters : int (default: 3)
         Number of clusters to form.
+
     max_iter : int (default: 50)
         Maximum number of iterations of the k-means algorithm for a single run.
+
     tol : float (default: 1e-6)
         Inertia variation threshold. If at some point, inertia varies less than
         this threshold between two consecutive
         iterations, the model is considered to have converged and the algorithm
         stops.
+
     n_init : int (default: 1)
         Number of time the k-means algorithm will be run with different
         centroid seeds. The final results will be the best output of n_init
         consecutive runs in terms of inertia.
+
     metric : {"euclidean", "dtw", "softdtw"} (default: "euclidean")
         Metric to be used for both cluster assignment and barycenter
         computation. If "dtw", DBA is used for barycenter
         computation.
+
     max_iter_barycenter : int (default: 100)
         Number of iterations for the barycenter computation process. Only used
         if `metric="dtw"` or `metric="softdtw"`.
+
     metric_params : dict or None (default: None)
         Parameter values for the chosen metric.
         For metrics that accept parallelization of the cross-distance matrix
-        computations, `n_jobs` is a valid `metric_params` field.
+        computations, `n_jobs` key passed in `metric_params` is overridden by
+        the `n_jobs` argument.
         Value associated to the `"gamma_sdtw"` key corresponds to the gamma
         parameter in Soft-DTW.
 
@@ -510,15 +546,28 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
             `"gamma_sdtw"` as a key for `metric_params` is deprecated in
             version 0.2 and will be removed in 0.4.
 
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel for cross-distance matrix
+        computations.
+        Ignored if the cross-distance matrix cannot be computed using
+        parallelization.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See scikit-learns'
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`
+        for more details.
+
     dtw_inertia: bool (default: False)
         Whether to compute DTW inertia even if DTW is not the chosen metric.
+
     verbose : bool (default: False)
         Whether or not to print information about the inertia while learning
         the model.
+
     random_state : integer or numpy.RandomState, optional
         Generator used to initialize the centers. If an integer is given, it
         fixes the seed. Defaults to the global
         numpy random number generator.
+
     init : {'k-means++', 'random' or an ndarray} (default: 'k-means++')
         Method for initialization:
         'k-means++' : use k-means++ heuristic. See `scikit-learn's k_init_
@@ -533,10 +582,13 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
     ----------
     labels_ : numpy.ndarray
         Labels of each point.
+
     cluster_centers_ : numpy.ndarray
         Cluster centers.
+
     inertia_ : float
         Sum of distances of samples to their closest cluster center.
+
     n_iter_ : int
         The number of iterations performed during fit.
 
@@ -575,8 +627,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
 
     def __init__(self, n_clusters=3, max_iter=50, tol=1e-6, n_init=1,
                  metric="euclidean", max_iter_barycenter=100,
-                 metric_params=None, dtw_inertia=False, verbose=False,
-                 random_state=None, init='k-means++'):
+                 metric_params=None, n_jobs=None, dtw_inertia=False,
+                 verbose=False, random_state=None, init='k-means++'):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
         self.tol = tol
@@ -584,6 +636,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         self.metric = metric
         self.max_iter_barycenter = max_iter_barycenter
         self.metric_params = metric_params
+        self.n_jobs = n_jobs
         self.dtw_inertia = dtw_inertia
         self.verbose = verbose
         self.random_state = random_state
@@ -640,12 +693,15 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         if "gamma_sdtw" in metric_params.keys():
             metric_params["gamma"] = metric_params["gamma_sdtw"]
             del metric_params["gamma_sdtw"]
+        if "n_jobs" in metric_params.keys():
+            del metric_params["n_jobs"]
         if self.metric == "euclidean":
             dists = cdist(X.reshape((X.shape[0], -1)),
                           self.cluster_centers_.reshape((self.n_clusters, -1)),
                           metric="euclidean")
         elif self.metric == "dtw":
-            dists = cdist_dtw(X, self.cluster_centers_, **metric_params)
+            dists = cdist_dtw(X, self.cluster_centers_, n_jobs=self.n_jobs,
+                              **metric_params)
         elif self.metric == "softdtw":
             dists = cdist_soft_dtw(X, self.cluster_centers_, **metric_params)
         else:
@@ -657,8 +713,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
             _check_no_empty_cluster(self.labels_, self.n_clusters)
             if self.dtw_inertia and self.metric != "dtw":
                 inertia_dists = cdist_dtw(X, self.cluster_centers_,
-                                          n_jobs=metric_params.get("n_jobs",
-                                                                   None))
+                                          n_jobs=self.n_jobs)
             else:
                 inertia_dists = dists
             self.inertia_ = _compute_inertia(inertia_dists,
@@ -698,6 +753,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset.
+
         y
             Ignored
         """
@@ -753,6 +809,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset to predict.
+
         y
             Ignored
 
@@ -797,24 +854,30 @@ class KShape(BaseEstimator, ClusterMixin,
     ----------
     n_clusters : int (default: 3)
         Number of clusters to form.
+
     max_iter : int (default: 100)
         Maximum number of iterations of the k-Shape algorithm.
+
     tol : float (default: 1e-6)
         Inertia variation threshold. If at some point, inertia varies less than
         this threshold between two consecutive
         iterations, the model is considered to have converged and the algorithm
         stops.
+
     n_init : int (default: 1)
         Number of time the k-Shape algorithm will be run with different
         centroid seeds. The final results will be the
         best output of n_init consecutive runs in terms of inertia.
+
     verbose : bool (default: False)
         Whether or not to print information about the inertia while learning
         the model.
+
     random_state : integer or numpy.RandomState, optional
         Generator used to initialize the centers. If an integer is given, it
         fixes the seed. Defaults to the global
         numpy random number generator.
+
     init : {'random' or ndarray} (default: 'random')
         Method for initialization.
         'random': choose k observations (rows) at random from data for the
@@ -826,10 +889,13 @@ class KShape(BaseEstimator, ClusterMixin,
     ----------
     cluster_centers_ : numpy.ndarray of shape (sz, d).
         Centroids
+
     labels_ : numpy.ndarray of integers with shape (n_ts, ).
         Labels of each point
+
     inertia_ : float
         Sum of distances of samples to their closest cluster center.
+
     n_iter_ : int
         The number of iterations performed during fit.
 
@@ -944,6 +1010,7 @@ class KShape(BaseEstimator, ClusterMixin,
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset.
+
         y
             Ignored
         """
@@ -1002,6 +1069,7 @@ class KShape(BaseEstimator, ClusterMixin,
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset to predict.
+
         y
             Ignored
 
