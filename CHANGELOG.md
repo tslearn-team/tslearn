@@ -17,11 +17,10 @@ requirements "as much as possible" (cf. `tslearn` needs in
 terms of data format, _etc._)
 * `cdist_dtw` and `cdist_gak` now have a `n_jobs` parameter to parallelize
 distance computations using `joblib.Parallel`
-  * `n_jobs` is also available as a `metric_params` key in 
-  `silhouette_score`, `TimeSeriesKMeans`, `KNeighborsTimeSeries` and 
-  `KNeighborsTimeSeriesClassifier`
-  * `n_jobs` is also available as a parameter in `TimeSeriesSVC`,
-  `TimeSeriesSVR` and `GlobalAlignmentKernelKMeans`
+* `n_jobs` is also available as a prameter in 
+`silhouette_score`, `TimeSeriesKMeans`, `KNeighborsTimeSeries`, 
+`KNeighborsTimeSeriesClassifier`, `TimeSeriesSVC`,
+`TimeSeriesSVR` and `GlobalAlignmentKernelKMeans`
 
 ### Changed
 
@@ -32,6 +31,11 @@ cross-validation tools, even (for those concerned) with variable-length data
 other tests being moved to `tests/*.py`
 * The list of authors for the `tslearn` bibliographic reference has been 
 updated to include Johann Faouzi and Gilles Van de Wiele
+* In `TimeSeriesScalerMinMax`, `min` and `max` parameters are now deprecated
+in favor of `value_range`. Will be removed in v0.4
+* In `TimeSeriesKMeans` and `silhouette_score`, `'gamma_sdtw'` is now 
+deprecated as a key for `metric_params` in favor of `gamma`. Will be removed 
+in v0.4
 
 ### Removed
 
