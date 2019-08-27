@@ -626,8 +626,11 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
         Maximum slope for the Itakura parallelogram constraint. Used only if
         ``global_constraint="itakura"``.
     n_jobs : int or None, optional (default=None)
-        The number of jobs to run in parallel. None means 1 unless in a
-        `joblib.parallel_backend` context. -1 means using all processors.
+        The number of jobs to run in parallel.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See scikit-learns'
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        for more details.
 
     Returns
     -------
@@ -883,8 +886,11 @@ def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None):
     sigma : float (default 1.)
         Bandwidth of the internal gaussian kernel used for GAK
     n_jobs : int or None, optional (default=None)
-        The number of jobs to run in parallel. None means 1 unless in a
-        `joblib.parallel_backend` context. -1 means using all processors.
+        The number of jobs to run in parallel.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See scikit-learns'
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        for more details.
 
     Returns
     -------
