@@ -2,21 +2,21 @@ code {
     color: #055781;
 }
 
-longtable tbody tr:nth-child(even) {
+table.longtable tbody tr:nth-child(even) {
     background-color: #FDFDFD;
 
 }
-longtable tbody tr:nth-child(odd) {
+table.longtable tbody tr:nth-child(odd) {
     background-color: #F0F7FA;
 }
 
-longtable tbody tr {
+table.longtable tbody tr {
     border-style: solid none solid none;
     border-width: 1px 0 1px 0;
     border-color: #ddd;
 }
 
-longtable tbody td {
+table.longtable tbody td {
     border-color: #ddd;
 }
 
