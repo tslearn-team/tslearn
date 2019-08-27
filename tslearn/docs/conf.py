@@ -144,14 +144,22 @@ html_theme_options = {
     # Tab name for entire site. (Default: "Site")
     'navbar_site_name': "Table of Contents",
 
+    'navbar_links': [
+        ("Citing tslearn", "citing"),
+    ],
+
     # Render the next and previous page links in navbar. (Default: true)
     'navbar_sidebarrel': False,
 
     # Render the current pages TOC in the navbar. (Default: true)
-    'navbar_pagenav': True,
+    'navbar_pagenav': False,
 
     # Tab name for the current pages TOC. (Default: "Page")
     'navbar_pagenav_name': "Current Page",
+
+    # Global TOC depth for "site" navbar tab. (Default: 1)
+    # Switching to -1 shows all levels.
+    'globaltoc_depth': -1,
 
     # Location of link to source.
     # Options are "nav" (default), "footer" or anything else to exclude.
