@@ -114,7 +114,7 @@ class LocalSquaredDistanceLayer(Layer):
     """
     def __init__(self, n_shapelets, X=None, **kwargs):
         self.n_shapelets = n_shapelets
-        if X is None or K._BACKEND != "tensorflow":
+        if X is None or K.backend() != "tensorflow":
             self.initializer = "uniform"
         else:
             self.initializer = KMeansShapeletInitializer(X)
