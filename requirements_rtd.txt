@@ -13,3 +13,4 @@ keras
 Pygments
 numba
 sphinx_bootstrap_theme
+numpydoc
