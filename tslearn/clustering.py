@@ -106,18 +106,19 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
         dataset.
     labels : array, shape = [n_ts]
          Predicted labels for each time series.
-    metric : string, or callable
+    metric : string, callable or None (default: None)
         The metric to use when calculating distance between time series.
         Should be one of {'dtw', 'softdtw', 'euclidean'} or a callable distance
-        function.
+        function or None.
         If 'softdtw' is passed, a normalized version of Soft-DTW is used that
         is defined as `sdtw_(x,y) := sdtw(x,y) - 1/2(sdtw(x,x)+sdtw(y,y))`.
         If X is the distance array itself, use ``metric="precomputed"``.
-    sample_size : int or None
+        If None, dtw is used.
+    sample_size : int or None (default: None)
         The size of the sample to use when computing the Silhouette Coefficient
         on a random subset of the data.
         If ``sample_size is None``, no sampling is used.
-    metric_params : dict or None
+    metric_params : dict or None (default: None)
         Parameter values for the chosen metric.
         For metrics (passed as strings) that accept parallelization of the
         cross-distance matrix computations, `n_jobs` is a valid
@@ -129,7 +130,7 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
             `"gamma_sdtw"` as a key for `metric_params` is deprecated in
             version 0.2 and will be removed in 0.4.
 
-    random_state : int, RandomState instance or None, optional (default=None)
+    random_state : int, RandomState instance or None, optional (default: None)
         The generator used to randomly select a subset of samples.  If int,
         random_state is the seed used by the random number generator; If
         RandomState instance, random_state is the random number generator; If
@@ -138,10 +139,12 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
     **kwds : optional keyword parameters
         Any further parameters are passed directly to the distance function,
         just as for the `metric_params` parameter.
+
     Returns
     -------
     silhouette : float
         Mean Silhouette Coefficient for all samples.
+
     References
     ----------
     .. [1] `Peter J. Rousseeuw (1987). "Silhouettes: a Graphical Aid to the
@@ -150,6 +153,7 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
        <http://www.sciencedirect.com/science/article/pii/0377042787901257>`_
     .. [2] `Wikipedia entry on the Silhouette Coefficient
            <https://en.wikipedia.org/wiki/Silhouette_(clustering)>`_
+
     Examples
     --------
     >>> from tslearn.generators import random_walks
@@ -173,25 +177,25 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
     """
     sklearn_metric = None
     if metric_params is None:
-        metric_params = {}
+        metric_params_ = {}
     else:
-        metric_params = metric_params.copy()
-    if "gamma_sdtw" in metric_params.keys():
+        metric_params_ = metric_params.copy()
+    if "gamma_sdtw" in metric_params_.keys():
         warnings.warn(
             "'gamma_sdtw' is deprecated in version 0.2 and will be "
             "removed in 0.4. Use `gamma` instead of `gamma_sdtw` as a "
             "`metric_params` key to remove this warning.",
             DeprecationWarning, stacklevel=2)
-        metric_params["gamma"] = metric_params["gamma_sdtw"]
-        del metric_params["gamma_sdtw"]
+        metric_params_["gamma"] = metric_params_["gamma_sdtw"]
+        del metric_params_["gamma_sdtw"]
     for k in kwds.keys():
-        metric_params[k] = kwds[k]
+        metric_params_[k] = kwds[k]
     if metric == "precomputed":
         sklearn_X = X
     elif metric == "dtw":
-        sklearn_X = cdist_dtw(X, **metric_params)
+        sklearn_X = cdist_dtw(X, **metric_params_)
     elif metric == "softdtw":
-        sklearn_X = cdist_soft_dtw_normalized(X, **metric_params)
+        sklearn_X = cdist_soft_dtw_normalized(X, **metric_params_)
     elif metric == "euclidean":
         X_ = to_time_series_dataset(X)
         X_ = X_.reshape((X.shape[0], -1))
@@ -495,7 +499,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
     max_iter_barycenter : int (default: 100)
         Number of iterations for the barycenter computation process. Only used
         if `metric="dtw"` or `metric="softdtw"`.
-    metric_params : dict or None
+    metric_params : dict or None (default: None)
         Parameter values for the chosen metric.
         For metrics that accept parallelization of the cross-distance matrix
         computations, `n_jobs` is a valid `metric_params` field.
@@ -506,7 +510,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
             `"gamma_sdtw"` as a key for `metric_params` is deprecated in
             version 0.2 and will be removed in 0.4.
 
-    dtw_inertia: bool
+    dtw_inertia: bool (default: False)
         Whether to compute DTW inertia even if DTW is not the chosen metric.
     verbose : bool (default: False)
         Whether or not to print information about the inertia while learning
@@ -705,10 +709,6 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         self.cluster_centers_ = None
         self._X_fit = None
         self._squared_inertia = True
-        if self.metric_params is None:
-            metric_params = {}
-        else:
-            metric_params = self.metric_params.copy()
 
         self.n_iter_ = 0
 

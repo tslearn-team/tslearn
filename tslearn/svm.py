@@ -7,7 +7,7 @@ from sklearn.svm import SVC, SVR
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 import numpy
 
-from tslearn.metrics import cdist_gak, gamma_soft_dtw
+from tslearn.metrics import cdist_gak, gamma_soft_dtw, VARIABLE_LENGTH_METRICS
 from tslearn.utils import to_time_series_dataset, check_dims
 from sklearn.utils import check_array, check_X_y
 from sklearn.utils.validation import check_is_fitted
@@ -32,10 +32,8 @@ def _prepare_ts_datasets_sklearn(X):
 
 
 class TimeSeriesSVMMixin:
-    variable_length_kernels = ["gak"]
-
     def _preprocess_sklearn(self, X, y=None, fit_time=False):
-        force_all_finite = self.kernel not in self.variable_length_kernels
+        force_all_finite = self.kernel not in VARIABLE_LENGTH_METRICS
         if y is None:
             X = check_array(X, allow_nd=True,
                             force_all_finite=force_all_finite)
@@ -50,12 +48,11 @@ class TimeSeriesSVMMixin:
             self.gamma_ = gamma_soft_dtw(X)
             self.classes_ = numpy.unique(y)
 
-        if self.kernel in self.variable_length_kernels:
+        if self.kernel in VARIABLE_LENGTH_METRICS:
             assert self.kernel == "gak"
             self.estimator_kernel_ = "precomputed"
             if fit_time:
                 sklearn_X = cdist_gak(X,
-                                      X,
                                       sigma=numpy.sqrt(self.gamma_ / 2.),
                                       n_jobs=self.n_jobs)
             else:

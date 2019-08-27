@@ -113,6 +113,21 @@ def test_gak():
                                cdist(v1, v2, metric="sqeuclidean"))
 
 
+def test_symmetric_cdist():
+    rng = np.random.RandomState(0)
+    dataset = rng.randn(5, 10, 2)
+    np.testing.assert_allclose(tslearn.metrics.cdist_dtw(dataset, dataset),
+                               tslearn.metrics.cdist_dtw(dataset))
+    np.testing.assert_allclose(tslearn.metrics.cdist_gak(dataset, dataset),
+                               tslearn.metrics.cdist_gak(dataset))
+    np.testing.assert_allclose(
+        tslearn.metrics.cdist_soft_dtw(dataset, dataset),
+        tslearn.metrics.cdist_soft_dtw(dataset))
+    np.testing.assert_allclose(
+        tslearn.metrics.cdist_soft_dtw_normalized(dataset, dataset),
+        tslearn.metrics.cdist_soft_dtw_normalized(dataset))
+
+
 def test_lb_keogh():
     ts1 = [1, 2, 3, 2, 1]
     env_low, env_up = tslearn.metrics.lb_envelope(ts1, radius=1)

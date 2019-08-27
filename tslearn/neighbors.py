@@ -11,7 +11,7 @@ from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 from scipy.spatial.distance import cdist as scipy_cdist
 
-from tslearn.metrics import cdist_dtw, cdist_soft_dtw
+from tslearn.metrics import cdist_dtw, cdist_soft_dtw, VARIABLE_LENGTH_METRICS
 from tslearn.utils import (to_time_series_dataset, to_sklearn_dataset,
                            check_dims)
 
@@ -228,8 +228,6 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
     ...         y=[0, 0, 1]).predict([[1, 2.2, 3.5]])
     array([0])
     """
-    variable_length_metrics = ["dtw", "softdtw"]
-
     def __init__(self,
                  n_neighbors=5,
                  weights='uniform',
@@ -252,7 +250,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         y : array-like, shape (n_ts, )
             Target values.
         """
-        if self.metric in self.variable_length_metrics:
+        if self.metric in VARIABLE_LENGTH_METRICS:
             self._ts_metric = self.metric
             self.metric = "precomputed"
 
@@ -281,7 +279,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         X : array-like, shape (n_ts, sz, d)
             Test samples.
         """
-        if self.metric in self.variable_length_metrics:
+        if self.metric in VARIABLE_LENGTH_METRICS:
             self._ts_metric = self.metric
             self.metric = "precomputed"
 
@@ -318,7 +316,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         X : array-like, shape (n_ts, sz, d)
             Test samples.
         """
-        if self.metric in self.variable_length_metrics:
+        if self.metric in VARIABLE_LENGTH_METRICS:
             self._ts_metric = self.metric
             self.metric = "precomputed"
 

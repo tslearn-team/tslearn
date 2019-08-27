@@ -18,7 +18,8 @@ from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, \
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
-global_constraint_code = {"": 0, "itakura": 1, "sakoe_chiba": 2}
+GLOBAL_CONSTRAINT_CODE = {"": 0, "itakura": 1, "sakoe_chiba": 2}
+VARIABLE_LENGTH_METRICS = ["dtw", "gak", "softdtw"]
 
 
 @njit()
@@ -249,7 +250,7 @@ def dtw_path(s1, s2, global_constraint=None,
         global_constraint_str = ""
 
     mask = compute_mask(
-        s1, s2, global_constraint_code[global_constraint_str],
+        s1, s2, GLOBAL_CONSTRAINT_CODE[global_constraint_str],
         sakoe_chiba_radius, itakura_max_slope
     )
     acc_cost_mat = njit_accumulated_matrix(s1, s2, mask=mask)
@@ -321,7 +322,7 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=1,
 
     mask = compute_mask(
         s1, s2,
-        global_constraint_code[global_constraint_str],
+        GLOBAL_CONSTRAINT_CODE[global_constraint_str],
         sakoe_chiba_radius=sakoe_chiba_radius,
         itakura_max_slope=itakura_max_slope)
     return njit_dtw(s1, s2, mask=mask)
@@ -742,12 +743,12 @@ def cdist_dtw_no_parallel(dataset1, dataset2=None, global_constraint=None,
     if dataset2 is None:
         return njit_cdist_dtw_self(
             dataset1,
-            global_constraint_code[global_constraint_str],
+            GLOBAL_CONSTRAINT_CODE[global_constraint_str],
             sakoe_chiba_radius, itakura_max_slope)
     else:
         dataset2 = to_time_series_dataset(dataset2)
         return njit_cdist_dtw(dataset1, dataset2,
-                              global_constraint_code[global_constraint_str],
+                              GLOBAL_CONSTRAINT_CODE[global_constraint_str],
                               sakoe_chiba_radius, itakura_max_slope)
 
 
