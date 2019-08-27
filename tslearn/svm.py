@@ -92,7 +92,7 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, BaseEstimator, ClassifierMixin):
         If gamma is 'auto' then:
 
         - for 'gak' kernel, it is computed based on a sampling of the training
-          set (cf :ref:`tslearn.metrics.gamma_soft_dtw <fun-gammasoftdtw>`)
+          set (cf :ref:`tslearn.metrics.gamma_soft_dtw <fun-tslearn.metrics.gamma_soft_dtw>`)
         - for other kernels (eg. 'rbf'), 1/n_features will be used.
 
     coef0 : float, optional (default=0.0)
@@ -303,7 +303,7 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, BaseEstimator, RegressorMixin):
         If gamma is 'auto' then:
 
         - for 'gak' kernel, it is computed based on a sampling of the training
-          set (cf :ref:`tslearn.metrics.gamma_soft_dtw <fun-gammasoftdtw>`)
+          set (cf :ref:`tslearn.metrics.gamma_soft_dtw <fun-tslearn.metrics.gamma_soft_dtw>`)
         - for other kernels (eg. 'rbf'), 1/n_features will be used.
 
     coef0 : float, optional (default=0.0)

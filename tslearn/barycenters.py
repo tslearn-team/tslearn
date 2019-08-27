@@ -46,8 +46,8 @@ def euclidean_barycenter(X, weights=None):
     numpy.array of shape (sz, d)
         Barycenter of the provided time series dataset.
 
-    Note
-    ----
+    Notes
+    -----
         This method requires a dataset of equal-sized time series
 
     Examples

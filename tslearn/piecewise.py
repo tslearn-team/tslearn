@@ -20,8 +20,8 @@ def _paa_to_symbols(X_paa, breakpoints):
     """Transforms a Piecewise Aggregate Approximation representation into a
     SAX one given breakpoints.
 
-    Example
-    -------
+    Examples
+    --------
     >>> _paa_to_symbols(X_paa=numpy.array([-1., 0.1, 2.]),
     ...                 breakpoints=numpy.array([0.]))
     array([0, 1, 1])
@@ -39,8 +39,8 @@ def _breakpoints(n_bins, scale=1.):
     """Compute breakpoints for a given number of SAX symbols and a given
     Gaussian scale.
 
-    Example
-    -------
+    Examples
+    --------
     >>> _breakpoints(n_bins=2)
     array([0.])
     """
@@ -51,8 +51,8 @@ def _bin_medians(n_bins, scale=1.):
     """Compute median value corresponding to SAX symbols for a given Gaussian
     scale.
 
-    Example
-    -------
+    Examples
+    --------
     >>> _bin_medians(n_bins=2)
     array([-0.67448975,  0.67448975])
     """
@@ -70,12 +70,12 @@ class PiecewiseAggregateApproximation(TransformerMixin):
     n_segments : int
         Number of PAA segments to compute
 
-    Note
-    ----
+    Notes
+    -----
         This method requires a dataset of equal-sized time series.
 
-    Example
-    -------
+    Examples
+    --------
     >>> paa = PiecewiseAggregateApproximation(n_segments=3)
     >>> data = [[-1., 2., 0.1, -1., 1., -1.], [1., 3.2, -1., -3., 1., -1.]]
     >>> paa_data = paa.fit_transform(data)
@@ -264,12 +264,12 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
     breakpoints_avg_ : numpy.ndarray of shape (alphabet_size - 1, )
         List of breakpoints used to generate SAX symbols
 
-    Note
-    ----
+    Notes
+    -----
         This method requires a dataset of equal-sized time series.
 
-    Example
-    -------
+    Examples
+    --------
     >>> sax = SymbolicAggregateApproximation(n_segments=3, alphabet_size_avg=2)
     >>> data = [[-1., 2., 0.1, -1., 1., -1.], [1., 3.2, -1., -3., 1., -1.]]
     >>> sax_data = sax.fit_transform(data)
@@ -383,7 +383,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
         References
         ----------
         .. [1] J. Lin, E. Keogh, L. Wei, et al. Experiencing SAX: a novel
-        symbolic representation of time series.
+           symbolic representation of time series.
            Data Mining and Knowledge Discovery, 2007. vol. 15(107)
         """
         if self.size_fitted_ < 0:
@@ -464,12 +464,12 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
     breakpoints_slope_ : numpy.ndarray of shape (alphabet_size_slope - 1, )
         List of breakpoints used to generate SAX symbols for slopes.
 
-    Note
-    ----
+    Notes
+    -----
         This method requires a dataset of equal-sized time series.
 
-    Example
-    -------
+    Examples
+    --------
     >>> one_d_sax = OneD_SymbolicAggregateApproximation(n_segments=3,
     ...         alphabet_size_avg=2, alphabet_size_slope=2, sigma_l=1.)
     >>> data = [[-1., 2., 0.1, -1., 1., -1.], [1., 3.2, -1., -3., 1., -1.]]
@@ -632,8 +632,8 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         float
             1d-SAX distance
 
-        Note
-        ----
+        Notes
+        -----
             Unlike SAX distance, 1d-SAX distance does not lower bound Euclidean
             distance between original time series.
 

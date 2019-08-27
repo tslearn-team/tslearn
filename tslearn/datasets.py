@@ -97,8 +97,8 @@ class UCR_UEA_datasets(object):
     use_cache : bool (default: True)
         Whether a cached version of the dataset should be used, if found.
 
-    Note
-    ----
+    Notes
+    -----
         Downloading dataset files can be time-consuming, it is recommended
         using `use_cache=True` (default) in order to
         only experience downloading time once per dataset and work on a cached

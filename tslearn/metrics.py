@@ -783,8 +783,8 @@ def sigma_gak(dataset, n_samples=100, random_state=None):
     float
         Suggested bandwidth (:math:`\\sigma`) for the Global Alignment kernel
 
-    Example
-    -------
+    Examples
+    --------
     >>> dataset = [[1, 2, 2, 3], [1., 2., 3., 4.]]
     >>> sigma_gak(dataset=dataset,
     ...           n_samples=200,
@@ -837,8 +837,8 @@ def gamma_soft_dtw(dataset, n_samples=100, random_state=None):
     float
         Suggested :math:`\\gamma` parameter for the Soft-DTW
 
-    Example
-    -------
+    Examples
+    --------
     >>> dataset = [[1, 2, 2, 3], [1., 2., 3., 4.]]
     >>> gamma_soft_dtw(dataset=dataset,
     ...                n_samples=200,
@@ -882,8 +882,8 @@ def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
         Pre-computed envelope of the candidate time series. If set to None, it
         is computed based on `ts_candidate`.
 
-    Note
-    ----
+    Notes
+    -----
         This method requires a `ts_query` and `ts_candidate` (or
         `envelope_candidate`, depending on the call) to be of equal size.
 
@@ -1082,7 +1082,7 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
     --------
     soft_dtw : Compute Soft-DTW
     cdist_soft_dtw_normalized : Cross similarity matrix between time series
-    datasets using a normalized version of Soft-DTW
+        datasets using a normalized version of Soft-DTW
 
     References
     ----------
@@ -1151,7 +1151,7 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.):
     --------
     soft_dtw : Compute Soft-DTW
     cdist_soft_dtw : Cross similarity matrix between time series
-    datasets using the unnormalized version of Soft-DTW
+        datasets using the unnormalized version of Soft-DTW
 
     References
     ----------
@@ -1194,8 +1194,8 @@ class SoftDTW(object):
         self.gamma = numpy.float64(gamma)
 
     def compute(self):
-        """
-        Compute soft-DTW by dynamic programming.
+        """Compute soft-DTW by dynamic programming.
+
         Returns
         -------
         sdtw: float
@@ -1210,8 +1210,8 @@ class SoftDTW(object):
         return self.R_[m, n]
 
     def grad(self):
-        """
-        Compute gradient of soft-DTW w.r.t. D by dynamic programming.
+        """Compute gradient of soft-DTW w.r.t. D by dynamic programming.
+
         Returns
         -------
         grad: array, shape = [m, n]
@@ -1260,8 +1260,8 @@ class SquaredEuclidean(object):
         self.Y = to_time_series(Y).astype(numpy.float64)
 
     def compute(self):
-        """
-        Compute distance matrix.
+        """Compute distance matrix.
+
         Returns
         -------
         D: array, shape = [m, n]
@@ -1270,13 +1270,14 @@ class SquaredEuclidean(object):
         return euclidean_distances(self.X, self.Y, squared=True)
 
     def jacobian_product(self, E):
-        """
-        Compute the product between the Jacobian
+        """Compute the product between the Jacobian
         (a linear map from m x d to m x n) and a matrix E.
+
         Parameters
         ----------
         E: array, shape = [m, n]
             Second time series.
+
         Returns
         -------
         G: array, shape = [m, d]

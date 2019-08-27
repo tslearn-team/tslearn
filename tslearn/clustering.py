@@ -127,10 +127,12 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
         `np.random`. Used when ``sample_size is not None``.
     **kwds : optional keyword parameters
         Any further parameters are passed directly to the distance function.
+
     Returns
     -------
     silhouette : float
         Mean Silhouette Coefficient for all samples.
+
     References
     ----------
     .. [1] `Peter J. Rousseeuw (1987). "Silhouettes: a Graphical Aid to the
@@ -226,7 +228,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
     sigma : float or "auto" (default: "auto")
         Bandwidth parameter for the Global Alignment kernel. If set to 'auto',
         it is computed based on a sampling of the training set
-        (cf :ref:`tslearn.metrics.sigma_gak <fun-sigmagak>`)
+        (cf :ref:`tslearn.metrics.sigma_gak <fun-tslearn.metrics.sigma_gak>`)
     verbose : bool (default: False)
         Whether or not to print information about the inertia while learning
         the model.
@@ -506,8 +508,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
     n_iter_ : int
         The number of iterations performed during fit.
 
-    Note
-    ----
+    Notes
+    -----
         If `metric` is set to `"euclidean"`, the algorithm expects a dataset of
         equal-sized time series.
 
@@ -781,8 +783,8 @@ class KShape(BaseEstimator, ClusterMixin,
     n_iter_ : int
         The number of iterations performed during fit.
 
-    Note
-    ----
+    Notes
+    -----
         This method requires a dataset of equal-sized time series.
 
     Examples

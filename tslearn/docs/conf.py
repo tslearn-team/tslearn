@@ -32,6 +32,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
+    'numpydoc',
     'sphinx.ext.doctest',
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
@@ -40,8 +41,11 @@ extensions = [
     'sphinx_gallery.gen_gallery',
     'nbsphinx'
 ]
+
+numpydoc_show_class_members = True
+numpydoc_class_members_toctree = False
+
 autosummary_generate = True
-# autodoc_default_flags = ['members', 'inherited-members']
 
 sphinx_gallery_conf = {
     'examples_dirs': ['./examples'],
