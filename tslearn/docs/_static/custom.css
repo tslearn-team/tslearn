@@ -20,6 +20,8 @@ tbody td {
     border-color: #ddd;
 }
 
-/* .alert-info {
-    background-color: #F0F7FA;  // TODO
-} */
+.alert-info {
+    background-color: #d2edf6;
+    border-color: #d2edf6;
+    color: #555555;
+}
