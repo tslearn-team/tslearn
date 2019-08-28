@@ -31,7 +31,6 @@ from sklearn.utils.estimator_checks import (
     check_fit2d_predict1d,
     check_methods_subset_invariance,
     check_regressors_int,
-    enforce_estimator_tags_y,
     _boston_subset
 )
 
@@ -92,6 +91,20 @@ def _safe_tags(estimator, key=None):
 def _create_small_ts_dataset():
     return random_walk_blobs(n_ts_per_blob=5, n_blobs=3, random_state=1,
                              sz=10, noise_level=0.025)
+
+
+def enforce_estimator_tags_y(estimator, y):
+    # Estimators with a `requires_positive_y` tag only accept strictly positive
+    # data
+    if _safe_tags(estimator, "requires_positive_y"):
+        # Create strictly positive y. The minimal increment above 0 is 1, as
+        # y could be of integer dtype.
+        y += 1 + abs(y.min())
+    # Estimators in mono_output_task_error raise ValueError if y is of 1-D
+    # Convert into a 2-D y for those estimators.
+    if _safe_tags(estimator, "multioutput_only"):
+        return np.reshape(y, (-1, 1))
+    return y
 
 
 def multioutput_estimator_convert_y_2d(estimator, y):
