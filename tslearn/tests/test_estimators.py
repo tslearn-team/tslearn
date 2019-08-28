@@ -175,4 +175,3 @@ def test_all_estimators():
                 and _safe_tags(estimator[1](), "allow_nan"):
             checks.ALLOW_NAN.append(estimator[0])
         check_estimator(estimator[1])
-        print(estimator[0])
