@@ -3,8 +3,40 @@ from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 
 import sklearn
 from sklearn.base import clone
-from sklearn.utils.testing import *
-from sklearn.utils.estimator_checks import *
+
+from sklearn.base import is_classifier, is_outlier_detector, is_regressor
+from sklearn.base import ClusterMixin
+from sklearn.exceptions import DataConversionWarning
+
+from sklearn.datasets import make_blobs
+from sklearn.metrics.pairwise import rbf_kernel
+
+from sklearn.utils import shuffle
+from sklearn.utils.testing import (
+    set_random_state, assert_equal, assert_greater, assert_array_equal,
+    assert_raises, assert_array_almost_equal, assert_greater_equal,
+    assert_allclose, assert_raises_regex, assert_allclose_dense_sparse
+)
+from sklearn.utils.estimator_checks import (
+    pairwise_estimator_convert_X, choose_check_classifiers_labels,
+    check_classifiers_predictions,
+    check_fit2d_1sample,
+    check_fit2d_1feature,
+    check_fit1d,
+    check_get_params_invariance,
+    check_set_params,
+    check_dict_unchanged,
+    check_dont_overwrite_parameters,
+    check_estimators_data_not_an_array,
+    check_fit2d_predict1d,
+    check_methods_subset_invariance,
+    check_regressors_int,
+    enforce_estimator_tags_y,
+    _boston_subset
+)
+
+from sklearn.utils.testing import ignore_warnings, SkipTest
+from sklearn.exceptions import SkipTestWarning
 from sklearn.utils.estimator_checks import (_yield_classifier_checks,
                                             _yield_regressor_checks,
                                             _yield_transformer_checks,
@@ -62,6 +94,16 @@ def _create_small_ts_dataset():
                              sz=10, noise_level=0.025)
 
 
+def multioutput_estimator_convert_y_2d(estimator, y):
+    # This function seems to be removed in version 0.22, so let's make
+    # a copy here.
+    # Estimators in mono_output_task_error raise ValueError if y is of 1-D
+    # Convert into a 2-D y for those estimators.
+    if "MultiTask" in estimator.__class__.__name__:
+        return np.reshape(y, (-1, 1))
+    return y
+
+
 # Patch BOSTON dataset of sklearn to fix _csv.Error: line contains NULL byte
 # Moreover, it makes more sense to use a timeseries dataset for our estimators
 BOSTON = _create_small_ts_dataset()
@@ -101,8 +143,8 @@ def check_clustering(name, clusterer_orig, readonly_memmap=False):
     assert_array_equal(pred, pred2)
 
     # fit_predict(X) and labels_ should be of type int
-    assert_in(pred.dtype, [np.dtype('int32'), np.dtype('int64')])
-    assert_in(pred2.dtype, [np.dtype('int32'), np.dtype('int64')])
+    assert pred.dtype in [np.dtype('int32'), np.dtype('int64')]
+    assert pred2.dtype in [np.dtype('int32'), np.dtype('int64')]
 
     # Add noise to X to test the possible values of the labels
     labels = clusterer.fit_predict(X_noise)
@@ -373,8 +415,6 @@ def check_estimators_pickle(name, estimator_orig):
 def check_supervised_y_2d(name, estimator_orig):
 
     tags = {'multioutput': False, 'binary_only': False}
-
-    rnd = np.random.RandomState(0)
     X, y = _create_small_ts_dataset()
     if tags['binary_only']:
         X = X[y != 2]
