@@ -168,8 +168,8 @@ def check_estimator(Estimator):
             warnings.warn(str(exception), SkipTestWarning)
 
 
-@ignore_warnings()
 @pytest.mark.parametrize('estimator', get_estimators('all'))
+@ignore_warnings()
 def test_all_estimators(estimator):
     """Test all the estimators in tslearn."""
     allow_nan = (hasattr(checks, 'ALLOW_NAN') and
