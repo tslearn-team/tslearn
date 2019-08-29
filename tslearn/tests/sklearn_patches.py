@@ -131,7 +131,7 @@ def check_clustering(name, clusterer_orig, readonly_memmap=False):
     X, y = shuffle(X, y, random_state=7)
     X = TimeSeriesScalerMeanVariance().fit_transform(X)
     rng = np.random.RandomState(42)
-    X_noise = X + (rng.randn(*X.shape()) / 5)
+    X_noise = X + (rng.randn(*X.shape) / 5)
 
     n_samples, n_features, dim = X.shape
     # catch deprecation and neighbors warnings
