@@ -361,10 +361,9 @@ def njit_accumulated_matrix_subsequence(subseq, longseq):
 
 
 @njit()
-def _return_path_subsequence(acc_cost_mat):
+def _return_path_subsequence(acc_cost_mat, idx_path_end):
     sz1, sz2 = acc_cost_mat.shape
-    idx_last_match = numpy.argmin(acc_cost_mat[-1, :])
-    path = [(sz1 - 1, idx_last_match)]
+    path = [(sz1 - 1, idx_path_end)]
     while path[-1][0] != 0:
         i, j = path[-1]
         if i == 0:
@@ -438,8 +437,9 @@ def dtw_subsequence_path(subseq, longseq):
     longseq = to_time_series(longseq)
     acc_cost_mat = njit_accumulated_matrix_subsequence(subseq=subseq,
                                                        longseq=longseq)
-    path = _return_path_subsequence(acc_cost_mat)
-    return path, numpy.sqrt(numpy.min(acc_cost_mat[-1, :]))
+    global_optimal_match = numpy.argmin(acc_cost_mat[-1, :])
+    path = _return_path_subsequence(acc_cost_mat, global_optimal_match)
+    return path, numpy.sqrt(acc_cost_mat[-1, :][global_optimal_match])
 
 
 @njit()
