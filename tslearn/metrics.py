@@ -361,7 +361,43 @@ def njit_accumulated_matrix_subsequence(subseq, longseq):
 
 
 @njit()
-def _return_path_subsequence(acc_cost_mat, idx_path_end):
+def return_path_subsequence(acc_cost_mat, idx_path_end):
+    """Compute the optimal path through a accumulated cost matrix given the endpoint
+     of the sequence.
+
+
+    Parameters
+    ----------
+
+    acc_cost_mat
+        The accumulated cost matrix comparing subsequence from a longer sequence
+    idx_path_end
+        The end position of the matched subsequence in the longer sequence.
+
+    Returns
+    -------
+    list of integer pairs
+        Matching path represented as a list of index pairs. In each pair, the
+        first index corresponds to `subseq` and the second one corresponds to
+        `longseq`. The startpoint of the Path is :math:`P_0 = (0, ?)` and it
+        ends at :math:`P_0 = (0, idx_path_end)`
+
+    Examples
+    --------
+
+    >>> acc_cost_mat = numpy.array([[1., 0., 0., 1., 4.],
+    ...                             [5., 1., 1., 0., 1.]])
+    >>> # calculate the globally optimal path
+    >>> optimal_end_point = numpy.argmin(acc_cost_mat[-1, :])
+    >>> path = return_path_subsequence(acc_cost_mat, optimal_end_point)
+    >>> path
+    [(0, 2), (1, 3)]
+
+    See Also
+    --------
+    dtw_subsequence_path : Get the similarity score for DTW
+
+    """
     sz1, sz2 = acc_cost_mat.shape
     path = [(sz1 - 1, idx_path_end)]
     while path[-1][0] != 0:
@@ -398,7 +434,7 @@ def dtw_subsequence_path(subseq, longseq):
 
     Compared to traditional DTW, here, border constraints on admissible paths
     :math:`P` are relaxed such that :math:`P_0 = (0, ?)` and
-    :math:`P_L = (N-1, ?)` where :math:`L` is the length of the considered path
+    :math:`P_0 = (0, ?)` where :math:`L` is the length of the considered path
     and :math:`N` is the length of the subsequence time series.
 
     It is not required that both time series share the same size, but they must
@@ -438,7 +474,7 @@ def dtw_subsequence_path(subseq, longseq):
     acc_cost_mat = njit_accumulated_matrix_subsequence(subseq=subseq,
                                                        longseq=longseq)
     global_optimal_match = numpy.argmin(acc_cost_mat[-1, :])
-    path = _return_path_subsequence(acc_cost_mat, global_optimal_match)
+    path = return_path_subsequence(acc_cost_mat, global_optimal_match)
     return path, numpy.sqrt(acc_cost_mat[-1, :][global_optimal_match])
 
 
