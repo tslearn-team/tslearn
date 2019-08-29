@@ -12,7 +12,7 @@ import sklearn
 from sklearn.base import (BaseEstimator, ClassifierMixin, ClusterMixin,
                           RegressorMixin, TransformerMixin)
 
-from sklearn.utils.testing import ignore_warnings, SkipTest
+from sklearn.utils.testing import SkipTest
 from sklearn.exceptions import SkipTestWarning
 from sklearn.utils.estimator_checks import (
     check_no_attributes_set_in_init,
@@ -169,7 +169,6 @@ def check_estimator(Estimator):
 
 
 @pytest.mark.parametrize('estimator', get_estimators('all'))
-@ignore_warnings()
 def test_all_estimators(estimator):
     """Test all the estimators in tslearn."""
     allow_nan = (hasattr(checks, 'ALLOW_NAN') and
