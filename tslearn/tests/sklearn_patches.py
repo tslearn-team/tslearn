@@ -169,8 +169,8 @@ def check_clustering(name, clusterer_orig, readonly_memmap=False):
     assert_array_equal(labels_sorted, np.arange(labels_sorted[0],
                                                 labels_sorted[-1] + 1))
 
-    # Labels are expected to start at 0 (no noise) or -1 (if noise)
-    assert labels_sorted[0] in [0, -1]
+    # Labels are expected to start at 0 (no noise) or 1 (if noise)
+    assert labels_sorted[0] in [0, 1]
 
     # Labels should be less than n_clusters - 1
     if hasattr(clusterer, 'n_clusters'):
