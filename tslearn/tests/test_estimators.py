@@ -32,6 +32,7 @@ from sklearn_patches import (check_clustering,
                              yield_all_checks)
 from sklearn_patches import _safe_tags
 import warnings
+import pytest
 
 
 # Patching some check functions to work on ts data instead of tabular data.
@@ -168,10 +169,11 @@ def check_estimator(Estimator):
 
 
 @ignore_warnings()
-def test_all_estimators():
-    estimators = get_estimators('all')
-    for estimator in estimators:
-        if hasattr(checks, 'ALLOW_NAN') \
-                and _safe_tags(estimator[1](), "allow_nan"):
-            checks.ALLOW_NAN.append(estimator[0])
-        check_estimator(estimator[1])
+@pytest.mark.parametrize('estimator', get_estimators('all'))
+def test_all_estimators(estimator):
+    """Test all the estimators in tslearn."""
+    allow_nan = (hasattr(checks, 'ALLOW_NAN') and
+                 _safe_tags(estimator[1](), "allow_nan"))
+    if allow_nan:
+        checks.ALLOW_NAN.append(estimator[0])
+    check_estimator(estimator[1])
