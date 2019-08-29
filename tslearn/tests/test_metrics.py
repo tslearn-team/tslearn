@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.spatial.distance import cdist
 import tslearn.metrics
+from tslearn.utils import to_time_series
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -41,6 +42,24 @@ def test_dtw_subseq():
                                                       [1., 2., 2., 3., 4.])
     np.testing.assert_equal(path, [(0, 2), (1, 3)])
     np.testing.assert_allclose(dist, 0.)
+
+    path, dist = tslearn.metrics.dtw_subsequence_path([1, 4],
+                                                      [1., 2., 2., 3., 4.])
+    np.testing.assert_equal(path, [(0, 2), (1, 3)])
+    np.testing.assert_allclose(dist, np.sqrt(2.))
+
+
+def test_dtw_subseq_path():
+    subseq, longseq = [1, 4], [1., 2., 2., 3., 4.]
+    subseq = to_time_series(subseq)
+    longseq = to_time_series(longseq)
+    cost_matrix = tslearn.metrics.njit_accumulated_matrix_subsequence(subseq, longseq)
+
+    path = tslearn.metrics.return_path_subsequence(cost_matrix, 3)
+    np.testing.assert_equal(path, [(0, 2), (1, 3)])
+
+    path = tslearn.metrics.return_path_subsequence(cost_matrix, 1)
+    np.testing.assert_equal(path, [(0, 0), (1, 1)])
 
 
 def test_masks():
