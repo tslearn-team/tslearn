@@ -163,15 +163,9 @@ def check_clustering(name, clusterer_orig, readonly_memmap=False):
     # Add noise to X to test the possible values of the labels
     labels = clusterer.fit_predict(X_noise)
 
-    # There should be at least one sample in every cluster. Equivalently
-    # labels_ should contain all the consecutive values between its
-    # min and its max.
+    # There should be at least one sample in every original cluster
     labels_sorted = np.unique(labels)
-    assert_array_equal(labels_sorted, np.arange(labels_sorted[0],
-                                                labels_sorted[-1] + 1))
-
-    # Labels are expected to start at 0 (no noise) or 1 (if noise)
-    assert labels_sorted[0] in [0, 1]
+    assert_array_equal(labels_sorted, np.arange(0, 3))
 
     # Labels should be less than n_clusters - 1
     if hasattr(clusterer, 'n_clusters'):
