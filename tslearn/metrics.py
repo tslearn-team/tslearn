@@ -117,7 +117,7 @@ def _return_path(acc_cost_mat):
     return path[::-1]
 
 
-@njit()
+# @njit()
 def njit_cdist_dtw(dataset1, dataset2, global_constraint, sakoe_chiba_radius,
                    itakura_max_slope):
     """Compute the cross-similarity matrix between two datasets.
@@ -150,7 +150,7 @@ def njit_cdist_dtw(dataset1, dataset2, global_constraint, sakoe_chiba_radius,
     return cdist_arr
 
 
-@njit()
+# @njit()
 def njit_cdist_dtw_self(dataset, global_constraint, sakoe_chiba_radius,
                         itakura_max_slope):
     """Compute the cross-similarity matrix between a dataset and itself.
@@ -556,7 +556,7 @@ def _njit_itakura_mask(sz1, sz2, max_slope=2.):
     return mask
 
 
-@njit()
+# @njit()
 def itakura_mask(sz1, sz2, max_slope=2.):
     """Compute the Itakura mask.
 
