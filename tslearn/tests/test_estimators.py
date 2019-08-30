@@ -12,13 +12,27 @@ import sklearn
 from sklearn.base import (BaseEstimator, ClassifierMixin, ClusterMixin,
                           RegressorMixin, TransformerMixin)
 
-from sklearn.utils.testing import *
-from sklearn_patches import *
-from sklearn_patches import _safe_tags, _DEFAULT_TAGS
-
+from sklearn.utils.testing import SkipTest
+from sklearn.exceptions import SkipTestWarning
+from sklearn.utils.estimator_checks import (
+    check_no_attributes_set_in_init,
+    check_parameters_default_constructible
+)
+from sklearn_patches import (check_clustering,
+                             check_non_transf_est_n_iter,
+                             check_fit_idempotent,
+                             check_classifiers_classes,
+                             check_classifiers_train,
+                             check_estimators_pickle,
+                             check_supervised_y_2d,
+                             check_regressor_data_not_an_array,
+                             check_regressors_int_patched,
+                             check_classifiers_cont_target,
+                             check_pipeline_consistency,
+                             yield_all_checks)
+from sklearn_patches import _safe_tags
 import warnings
-
-import logging
+import pytest
 
 
 # Patching some check functions to work on ts data instead of tabular data.
@@ -35,7 +49,6 @@ checks.check_regressor_data_not_an_array = check_regressor_data_not_an_array
 checks.check_regressors_int = check_regressors_int_patched
 checks.check_classifiers_regression_target = check_classifiers_cont_target
 checks.check_pipeline_consistency = check_pipeline_consistency
-
 
 
 def _get_all_classes():
@@ -64,7 +77,7 @@ def is_sklearn(x):
 
 def get_estimators(type_filter='all'):
     """Return a list of classes that inherit from `sklearn.BaseEstimator`.
-    This code is based on `sklearn,utils.testing.all_estimators`.
+    This code is based on `sklearn.utils.testing.all_estimators`.
 
     Parameters
     ----------
@@ -155,12 +168,11 @@ def check_estimator(Estimator):
             warnings.warn(str(exception), SkipTestWarning)
 
 
-@ignore_warnings()
-def test_all_estimators():
-    estimators = get_estimators('all')
-    for estimator in estimators:
-        if hasattr(checks, 'ALLOW_NAN') \
-                and _safe_tags(estimator[1](), "allow_nan"):
-            checks.ALLOW_NAN.append(estimator[0])
-        check_estimator(estimator[1])
-        print(estimator[0])
+@pytest.mark.parametrize('estimator', get_estimators('all'))
+def test_all_estimators(estimator):
+    """Test all the estimators in tslearn."""
+    allow_nan = (hasattr(checks, 'ALLOW_NAN') and
+                 _safe_tags(estimator[1](), "allow_nan"))
+    if allow_nan:
+        checks.ALLOW_NAN.append(estimator[0])
+    check_estimator(estimator[1])

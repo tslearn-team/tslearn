@@ -28,6 +28,7 @@ setup(
     package_data={"tslearn": [".cached_datasets/Trace.npz"]},
     data_files=[("", ["LICENSE"])],
     install_requires=['numpy', 'scipy', 'scikit-learn', 'Cython', 'numba'],
+    extras_require={'tests': ['pytest']},
     ext_modules=cythonize("tslearn/*.pyx", include_path=[numpy.get_include()]),
     version=__version__,
     url="http://tslearn.readthedocs.io/",
