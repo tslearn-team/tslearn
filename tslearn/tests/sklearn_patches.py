@@ -1,4 +1,4 @@
-from tslearn.generators import random_walks, random_walk_blobs
+from tslearn.generators import random_walk_blobs
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 
 import sklearn
