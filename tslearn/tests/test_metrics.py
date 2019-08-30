@@ -53,8 +53,13 @@ def test_constrained_paths():
     np.testing.assert_allclose(dtw_itak, euc_dist,
                                atol=1e-5)
 
-    # TODO: assert that a warning is raised in case of unfeasible
-    # itakura constraint
+    z = rng.randn(3 * n, d)
+    np.testing.assert_warns(RuntimeWarning, tslearn.metrics.dtw,
+                            x, z, global_constraint="itakura",
+                            itakura_max_slope=2.0)
+    np.testing.assert_warns(RuntimeWarning, tslearn.metrics.dtw,
+                            z, x, global_constraint="itakura",
+                            itakura_max_slope=2.0)
 
 
 

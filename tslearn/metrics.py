@@ -506,6 +506,57 @@ def _njit_is_all_infinite(arr):
 
 
 @njit()
+def _njit_itakura_mask(sz1, sz2, max_slope=2.):
+    """Compute the Itakura mask without checking that the constraints
+    are feasible. In most cases, you should use itakura_mask instead.
+
+    Parameters
+    ----------
+    sz1 : int
+        The size of the first time series
+
+    sz2 : int
+        The size of the second time series.
+
+    max_slope : float (default = 2)
+        The maximum slope of the parallelogram.
+
+    Returns
+    -------
+    mask : array, shape = (sz1, sz2)
+        Itakura mask.
+    """
+    min_slope = 1 / float(max_slope)
+    max_slope *= (float(sz1) / float(sz2))
+    min_slope *= (float(sz1) / float(sz2))
+
+    lower_bound = numpy.empty((2, sz2))
+    lower_bound[0] = min_slope * numpy.arange(sz2)
+    lower_bound[1] = ((sz1 - 1) - max_slope * (sz2 - 1)
+                      + max_slope * numpy.arange(sz2))
+    lower_bound_ = numpy.empty(sz2)
+    for i in prange(sz2):
+        lower_bound_[i] = max(round(lower_bound[0, i], 2),
+                              round(lower_bound[1, i], 2))
+    lower_bound_ = numpy.ceil(lower_bound_)
+
+    upper_bound = numpy.empty((2, sz2))
+    upper_bound[0] = max_slope * numpy.arange(sz2)
+    upper_bound[1] = ((sz1 - 1) - min_slope * (sz2 - 1)
+                      + min_slope * numpy.arange(sz2))
+    upper_bound_ = numpy.empty(sz2)
+    for i in prange(sz2):
+        upper_bound_[i] = min(round(upper_bound[0, i], 2),
+                              round(upper_bound[1, i], 2))
+    upper_bound_ = numpy.floor(upper_bound_ + 1)
+
+    mask = numpy.full((sz1, sz2), numpy.inf)
+    for i in prange(sz2):
+        mask[int(lower_bound_[i]):int(upper_bound_[i]), i] = 0.
+    return mask
+
+
+@njit()
 def itakura_mask(sz1, sz2, max_slope=2.):
     """Compute the Itakura mask.
 
@@ -535,33 +586,7 @@ def itakura_mask(sz1, sz2, max_slope=2.):
            [inf, inf, inf,  0.,  0., inf],
            [inf, inf, inf, inf, inf,  0.]])
     """
-    min_slope = 1 / float(max_slope)
-    max_slope *= (float(sz1) / float(sz2))
-    min_slope *= (float(sz1) / float(sz2))
-
-    lower_bound = numpy.empty((2, sz2))
-    lower_bound[0] = min_slope * numpy.arange(sz2)
-    lower_bound[1] = ((sz1 - 1) - max_slope * (sz2 - 1)
-                      + max_slope * numpy.arange(sz2))
-    lower_bound_ = numpy.empty(sz2)
-    for i in prange(sz2):
-        lower_bound_[i] = max(round(lower_bound[0, i], 2),
-                              round(lower_bound[1, i], 2))
-    lower_bound_ = numpy.ceil(lower_bound_)
-
-    upper_bound = numpy.empty((2, sz2))
-    upper_bound[0] = max_slope * numpy.arange(sz2)
-    upper_bound[1] = ((sz1 - 1) - min_slope * (sz2 - 1)
-                      + min_slope * numpy.arange(sz2))
-    upper_bound_ = numpy.empty(sz2)
-    for i in prange(sz2):
-        upper_bound_[i] = min(round(upper_bound[0, i], 2),
-                              round(upper_bound[1, i], 2))
-    upper_bound_ = numpy.floor(upper_bound_ + 1)
-
-    mask = numpy.full((sz1, sz2), numpy.inf)
-    for i in prange(sz2):
-        mask[int(lower_bound_[i]):int(upper_bound_[i]), i] = 0.
+    mask = _njit_itakura_mask(sz1, sz2, max_slope=max_slope)
 
     # Post-check
     raise_warning = False
@@ -577,12 +602,12 @@ def itakura_mask(sz1, sz2, max_slope=2.):
     if raise_warning:
         warnings.warn("'itakura_max_slope' constraint is unfeasible "
                       "(ie. leads to no admissible path) for the "
-                      "provided time series sizes")
+                      "provided time series sizes",
+                      RuntimeWarning)
 
     return mask
 
 
-@njit()
 def compute_mask(s1, s2, global_constraint=0,
                  sakoe_chiba_radius=1, itakura_max_slope=2.):
     """Compute the mask (region constraint).
