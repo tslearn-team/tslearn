@@ -495,6 +495,7 @@ def sakoe_chiba_mask(sz1, sz2, radius=1):
     return mask
 
 
+@njit()
 def _njit_is_all_infinite(arr):
     """Returns True iff all elements in array arr are equal to numpy.inf"""
     arr_ = arr.reshape((-1, ))
