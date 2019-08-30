@@ -585,9 +585,9 @@ def compute_mask(s1, s2, global_constraint=0,
     """
     sz1 = s1.shape[0]
     sz2 = s2.shape[0]
-    if global_constraint == 1:
+    if global_constraint == 2:
         mask = sakoe_chiba_mask(sz1, sz2, radius=sakoe_chiba_radius)
-    elif global_constraint == 2:
+    elif global_constraint == 1:
         mask = itakura_mask(sz1, sz2, max_slope=itakura_max_slope)
     else:
         mask = numpy.zeros((sz1, sz2))

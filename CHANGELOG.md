@@ -8,6 +8,12 @@ and this project adheres to
 
 Changelogs for this project are recorded in this file since v0.2.0.
 
+## [v0.2.1]
+
+### Fixed
+
+* `'itakura'` and `'sakoe_chiba'` were swapped in `metrics.compute_mask`
+
 ## [v0.2.0]
 
 ### Added
