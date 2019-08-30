@@ -10,6 +10,7 @@ from tslearn.soft_dtw_fast import _soft_dtw, _soft_dtw_grad, \
 from sklearn.metrics.pairwise import euclidean_distances
 from numba import njit, prange
 from joblib import Parallel, delayed
+import warnings
 
 from tslearn.cygak import cdist_normalized_gak as cycdist_normalized_gak, \
     normalized_gak as cynormalized_gak
@@ -551,6 +552,22 @@ def itakura_mask(sz1, sz2, max_slope=2.):
     mask = numpy.full((sz1, sz2), numpy.inf)
     for i in prange(sz2):
         mask[int(lower_bound_[i]):int(upper_bound_[i]), i] = 0.
+
+    # Post-check
+    raise_warning = False
+    for i in prange(sz1):
+        if not numpy.any(numpy.isfinite(mask[i])):
+            raise_warning = True
+            break
+    if not raise_warning:
+        for j in prange(sz2):
+            if not numpy.any(numpy.isfinite(mask[:, j])):
+                raise_warning = True
+                break
+    if raise_warning:
+        warnings.warn("'itakura_max_slope' constraint is unfeasible "
+                      "(ie. leads to no admissible path) for the "
+                      "provided time series sizes")
 
     return mask
 

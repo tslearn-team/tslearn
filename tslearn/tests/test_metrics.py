@@ -36,6 +36,28 @@ def test_dtw():
                                atol=1e-5)
 
 
+def test_constrained_paths():
+    n, d = 10, 3
+    rng = np.random.RandomState(0)
+    x = rng.randn(n, d)
+    y = rng.randn(n, d)
+    dtw_sakoe = tslearn.metrics.dtw(x, y,
+                                    global_constraint="sakoe_chiba",
+                                    sakoe_chiba_radius=0)
+    dtw_itak = tslearn.metrics.dtw(x, y,
+                                   global_constraint="itakura",
+                                   itakura_max_slope=1.0)
+    euc_dist = np.linalg.norm(x - y)
+    np.testing.assert_allclose(dtw_sakoe, euc_dist,
+                               atol=1e-5)
+    np.testing.assert_allclose(dtw_itak, euc_dist,
+                               atol=1e-5)
+
+    # TODO: assert that a warning is raised in case of unfeasible
+    # itakura constraint
+
+
+
 def test_dtw_subseq():
     path, dist = tslearn.metrics.dtw_subsequence_path([2, 3],
                                                       [1., 2., 2., 3., 4.])
