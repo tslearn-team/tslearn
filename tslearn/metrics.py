@@ -496,16 +496,6 @@ def sakoe_chiba_mask(sz1, sz2, radius=1):
 
 
 @njit()
-def _njit_is_all_infinite(arr):
-    """Returns True iff all elements in array arr are equal to numpy.inf"""
-    arr_ = arr.reshape((-1, ))
-    for i in prange(len(arr_)):
-        if arr_[i] != numpy.inf:
-            return False
-    return True
-
-
-@njit()
 def _njit_itakura_mask(sz1, sz2, max_slope=2.):
     """Compute the Itakura mask without checking that the constraints
     are feasible. In most cases, you should use itakura_mask instead.
@@ -591,12 +581,12 @@ def itakura_mask(sz1, sz2, max_slope=2.):
     # Post-check
     raise_warning = False
     for i in prange(sz1):
-        if _njit_is_all_infinite(mask[i]):
+        if not numpy.any(numpy.isfinite(mask[i])):
             raise_warning = True
             break
     if not raise_warning:
         for j in prange(sz2):
-            if _njit_is_all_infinite(mask[:, j]):
+            if not numpy.any(numpy.isfinite(mask[:, j])):
                 raise_warning = True
                 break
     if raise_warning:
