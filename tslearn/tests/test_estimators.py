@@ -168,7 +168,6 @@ def check_estimator(Estimator):
             warnings.warn(str(exception), SkipTestWarning)
 
 
-@pytest.mark.filterwarnings('ignore')
 @pytest.mark.parametrize('estimator', get_estimators('all'))
 def test_all_estimators(estimator):
     """Test all the estimators in tslearn."""
