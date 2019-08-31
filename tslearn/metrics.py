@@ -1144,7 +1144,7 @@ def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
         Query time-series to compare to the envelope of the candidate.
     ts_candidate : array-like or None (default: None)
         Candidate time-series. None means the envelope is provided via
-        `envelope_query` parameter and hence does not
+        `envelope_candidate` parameter and hence does not
         need to be computed again.
     radius : int (default: 1)
         Radius to be used for the envelope generation (the envelope at time
