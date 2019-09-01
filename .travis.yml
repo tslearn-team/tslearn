@@ -47,7 +47,7 @@ install:
 - pip install pytest
 - if [[ "$NUMBA_DISABLE_JIT" == 1 ]]; then pip install coverage==4.3 "pytest-cov<2.6"; fi
 - pip install argparse
-- pip install codeclimate-test-reporter
+- pip install codeclimate-test-reporter codecov
 - rm -f tslearn/*.c
 - python setup.py build_ext --inplace
 script:
@@ -61,7 +61,8 @@ script:
   fi
 
 after_success:
-- if [ "$NUMBA_DISABLE_JIT" == 1 ]; then codeclimate-test-reporter fi
+- if [ "$NUMBA_DISABLE_JIT" == 1 ]; then codeclimate-test-reporter; fi
+- if [ "$NUMBA_DISABLE_JIT" == 1 ]; then codecov; fi
 
 notifications:
   email: false
