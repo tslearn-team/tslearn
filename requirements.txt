@@ -4,6 +4,5 @@ numba
 scipy
 scikit-learn
 joblib>=0.12
-numba
 tensorflow
 keras
