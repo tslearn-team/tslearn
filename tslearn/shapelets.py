@@ -319,15 +319,15 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
 
     @property
     def _n_shapelet_sizes(self):
-        return len(self.n_shapelets_per_size_)
+        return len(self.n_shapelets_per_size)
 
     @property
     def shapelets_(self):
-        total_n_shp = sum(self.n_shapelets_per_size_.values())
+        total_n_shp = sum(self.n_shapelets_per_size.values())
         shapelets = numpy.empty((total_n_shp, ), dtype=object)
         idx = 0
-        for i, shp_sz in enumerate(sorted(self.n_shapelets_per_size_.keys())):
-            n_shp = self.n_shapelets_per_size_[shp_sz]
+        for i, shp_sz in enumerate(sorted(self.n_shapelets_per_size.keys())):
+            n_shp = self.n_shapelets_per_size[shp_sz]
             for idx_shp in range(idx, idx + n_shp):
                 shapelets[idx_shp] = numpy.zeros((shp_sz, self.d_))
             for di in range(self.d_):
@@ -340,12 +340,25 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
 
     @property
     def shapelets_as_time_series_(self):
-        total_n_shp = sum(self.n_shapelets_per_size_.values())
-        shp_sz = max(self.n_shapelets_per_size_.keys())
+        """Set of time-series shapelets formatted as a ``tslearn`` time series
+        dataset.
+
+        Examples
+        --------
+        >>> from tslearn.generators import random_walk_blobs
+        >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=256, d=1, n_blobs=3)
+        >>> model = ShapeletModel(n_shapelets_per_size={3: 2, 4: 1},
+        ...                       max_iter=1)
+        >>> _ = model.fit(X, y)
+        >>> model.shapelets_as_time_series_.shape
+        (3, 4, 1)
+        """
+        total_n_shp = sum(self.n_shapelets_per_size.values())
+        shp_sz = max(self.n_shapelets_per_size.keys())
         non_formatted_shapelets = self.shapelets_
         d = non_formatted_shapelets[0].shape[1]
         shapelets = numpy.zeros((total_n_shp, shp_sz, d)) + numpy.nan
-        for i in range(self._n_shapelet_sizes):
+        for i in range(total_n_shp):
             sz = non_formatted_shapelets[i].shape[0]
             shapelets[i, :sz, :] = non_formatted_shapelets[i]
         return shapelets

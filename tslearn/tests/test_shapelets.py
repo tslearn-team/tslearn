@@ -1,6 +1,8 @@
 import numpy as np
 
 from tslearn.shapelets import ShapeletModel, SerializableShapeletModel
+from tslearn.utils import to_time_series
+import tslearn
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -26,6 +28,14 @@ def test_shapelets():
 
     from sklearn.model_selection import cross_validate
     cross_validate(clf, time_series, y, cv=2)
+
+    model = ShapeletModel(n_shapelets_per_size={3: 2, 4: 1},
+                          max_iter = 1)
+    model.fit(time_series, y)
+    for shp, shp_bis in zip(model.shapelets_,
+                            model.shapelets_as_time_series_):
+        np.testing.assert_allclose(shp,
+                                   to_time_series(shp_bis, remove_nans=True))
 
 
 def test_serializable_shapelets():

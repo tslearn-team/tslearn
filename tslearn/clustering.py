@@ -205,7 +205,7 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
         del metric_params_["n_jobs"]
     if metric == "precomputed":
         sklearn_X = X
-    elif metric == "dtw":
+    elif metric == "dtw" or metric is None:
         sklearn_X = cdist_dtw(X, n_jobs=n_jobs, **metric_params_)
     elif metric == "softdtw":
         sklearn_X = cdist_soft_dtw_normalized(X, **metric_params_)
@@ -217,8 +217,6 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
         X_ = to_time_series_dataset(X)
         n, sz, d = X_.shape
         sklearn_X = X_.reshape((n, -1))
-        if metric is None:
-            metric = dtw
 
         def sklearn_metric(x, y):
             return metric(to_time_series(x.reshape((sz, d)),
