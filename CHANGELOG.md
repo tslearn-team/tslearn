@@ -8,6 +8,14 @@ and this project adheres to
 
 Changelogs for this project are recorded in this file since v0.2.0.
 
+## [v0.2.2]
+
+### Fixed
+
+* The way version number is retrieved in `setup.py` was not working properly 
+on Python 3.4 (and made the install script fail), switched back to the previous
+version
+
 ## [v0.2.1]
 
 ### Added
