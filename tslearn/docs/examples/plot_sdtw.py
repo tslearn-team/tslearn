@@ -13,7 +13,7 @@ to find stride in sensor recordings of gait
 The example demonstrates the use of the functions
 `accumulated_subsequence_cost_matrix` and `calculate_subsequence_path`
 to manually calculate warping paths from multiple potential alignments. If
-you are only interested in finding the optimal alginement, you can directly use
+you are only interested in finding the optimal alignment, you can directly use
 `dtw_subsequence_path`.
 
 [1] Barth, et al. (2013). Subsequence dynamic time warping as a method for
@@ -42,7 +42,6 @@ dataset_scaled = scaler.fit_transform(dataset)
 
 # We repeat the long sequence multiple times to generate multiple possible
 # matches
-
 long_sequence = numpy.tile(dataset_scaled[1], (n_repeat, 1))
 short_sequence = dataset_scaled[0]
 
@@ -56,7 +55,7 @@ print('Shape short sequence: {}'.format(short_sequence.shape))
 mat = metrics.accumulated_subsequence_cost_matrix(short_sequence,
                                                   long_sequence)
 
-# Calculate cost funtion
+# Calculate cost function
 cost_func = mat[-1, :]
 
 # Identify potential matches in the cost function (parameters are tuned to
@@ -88,6 +87,8 @@ ax_s_y = plt.axes(rect_s_y)
 ax_gram.imshow(numpy.sqrt(mat))
 ax_gram.axis("off")
 ax_gram.autoscale(False)
+
+# Plot the paths
 for path in paths:
     ax_gram.plot([j for (i, j) in path], [i for (i, j) in path], "w-",
                  linewidth=3.)
