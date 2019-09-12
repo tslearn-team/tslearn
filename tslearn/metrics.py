@@ -3,16 +3,15 @@ The :mod:`tslearn.metrics` module gathers time series similarity metrics.
 """
 
 import numpy
+from joblib import Parallel, delayed
+from numba import njit, prange
 from scipy.spatial.distance import pdist, cdist
+from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.utils import check_random_state
+from tslearn.cygak import cdist_normalized_gak as cycdist_normalized_gak
 from tslearn.soft_dtw_fast import _soft_dtw, _soft_dtw_grad, \
     _jacobian_product_sq_euc
-from sklearn.metrics.pairwise import euclidean_distances
-from numba import njit, prange
-from joblib import Parallel, delayed
 
-from tslearn.cygak import cdist_normalized_gak as cycdist_normalized_gak, \
-    normalized_gak as cynormalized_gak
 from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, \
     check_equal_size
 
@@ -362,21 +361,19 @@ def accumulated_subsequence_cost_matrix(subseq, longseq):
 
 @njit()
 def calculate_subsequence_path(acc_cost_mat, idx_path_end):
-    """Compute the optimal path through a accumulated cost matrix given the endpoint
-     of the sequence.
-
+    """Compute the optimal path through a accumulated cost matrix given the
+     endpoint of the sequence.
 
     Parameters
     ----------
-
-    acc_cost_mat
+    acc_cost_mat: array, shape = (sz1, sz2)
         The accumulated cost matrix comparing subsequence from a longer sequence
-    idx_path_end
+    idx_path_end: int
         The end position of the matched subsequence in the longer sequence.
 
     Returns
     -------
-    list of integer pairs
+    path: list of tuples of integer pairs
         Matching path represented as a list of index pairs. In each pair, the
         first index corresponds to `subseq` and the second one corresponds to
         `longseq`. The startpoint of the Path is :math:`P_0 = (0, ?)` and it
@@ -396,6 +393,7 @@ def calculate_subsequence_path(acc_cost_mat, idx_path_end):
     See Also
     --------
     dtw_subsequence_path : Get the similarity score for DTW
+    accumulated_subsequence_cost_matrix: Calculate the required cost matrix
 
     """
     sz1, sz2 = acc_cost_mat.shape
@@ -468,6 +466,8 @@ def dtw_subsequence_path(subseq, longseq):
     See Also
     --------
     dtw : Get the similarity score for DTW
+    accumulated_subsequence_cost_matrix: Calculate the required cost matrix
+    calculate_subsequence_path: Calculate a matching path manually
     """
     subseq = to_time_series(subseq)
     longseq = to_time_series(longseq)
@@ -863,6 +863,7 @@ def unnormalized_gak(s1, s2, sigma=1.):
 
     gak_val = njit_gak(s1, s2, gram)
     return gak_val
+
 
 def gak(s1, s2, sigma=1.):  # TODO: better doc (formula for the kernel)
     r"""Compute Global Alignment Kernel (GAK) between (possibly
