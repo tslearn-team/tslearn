@@ -11,6 +11,7 @@ from sklearn.utils import check_random_state
 from tslearn.cygak import cdist_normalized_gak as cycdist_normalized_gak
 from tslearn.soft_dtw_fast import _soft_dtw, _soft_dtw_grad, \
     _jacobian_product_sq_euc
+import warnings
 
 from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, \
     check_equal_size
@@ -115,7 +116,6 @@ def _return_path(acc_cost_mat):
     return path[::-1]
 
 
-@njit()
 def njit_cdist_dtw(dataset1, dataset2, global_constraint, sakoe_chiba_radius,
                    itakura_max_slope):
     """Compute the cross-similarity matrix between two datasets.
@@ -148,7 +148,6 @@ def njit_cdist_dtw(dataset1, dataset2, global_constraint, sakoe_chiba_radius,
     return cdist_arr
 
 
-@njit()
 def njit_cdist_dtw_self(dataset, global_constraint, sakoe_chiba_radius,
                         itakura_max_slope):
     """Compute the cross-similarity matrix between a dataset and itself.
@@ -263,11 +262,13 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=1,
     (possibly multidimensional) time series and return it.
 
     DTW is computed as the Euclidean distance between aligned time series,
-    i.e., if :math:`P` is the alignment path:
+    i.e., if :math:`P` is the optimal alignment path:
 
     .. math::
 
-        DTW(X, Y) = \sqrt{\sum_{(i, j) \in P} (X_{i} - Y_{j})^2}
+        DTW(X, Y) = \sqrt{\sum_{(i, j) \in P} \|X_{i} - Y_{j}\|^2}
+
+    Note that this formula is still valid for the multivariate case.
 
     It is not required that both time series share the same size, but they must
     be the same dimension. DTW was originally presented in [1]_.
@@ -531,6 +532,56 @@ def sakoe_chiba_mask(sz1, sz2, radius=1):
 
 
 @njit()
+def _njit_itakura_mask(sz1, sz2, max_slope=2.):
+    """Compute the Itakura mask without checking that the constraints
+    are feasible. In most cases, you should use itakura_mask instead.
+
+    Parameters
+    ----------
+    sz1 : int
+        The size of the first time series
+
+    sz2 : int
+        The size of the second time series.
+
+    max_slope : float (default = 2)
+        The maximum slope of the parallelogram.
+
+    Returns
+    -------
+    mask : array, shape = (sz1, sz2)
+        Itakura mask.
+    """
+    min_slope = 1 / float(max_slope)
+    max_slope *= (float(sz1) / float(sz2))
+    min_slope *= (float(sz1) / float(sz2))
+
+    lower_bound = numpy.empty((2, sz2))
+    lower_bound[0] = min_slope * numpy.arange(sz2)
+    lower_bound[1] = ((sz1 - 1) - max_slope * (sz2 - 1)
+                      + max_slope * numpy.arange(sz2))
+    lower_bound_ = numpy.empty(sz2)
+    for i in prange(sz2):
+        lower_bound_[i] = max(round(lower_bound[0, i], 2),
+                              round(lower_bound[1, i], 2))
+    lower_bound_ = numpy.ceil(lower_bound_)
+
+    upper_bound = numpy.empty((2, sz2))
+    upper_bound[0] = max_slope * numpy.arange(sz2)
+    upper_bound[1] = ((sz1 - 1) - min_slope * (sz2 - 1)
+                      + min_slope * numpy.arange(sz2))
+    upper_bound_ = numpy.empty(sz2)
+    for i in prange(sz2):
+        upper_bound_[i] = min(round(upper_bound[0, i], 2),
+                              round(upper_bound[1, i], 2))
+    upper_bound_ = numpy.floor(upper_bound_ + 1)
+
+    mask = numpy.full((sz1, sz2), numpy.inf)
+    for i in prange(sz2):
+        mask[int(lower_bound_[i]):int(upper_bound_[i]), i] = 0.
+    return mask
+
+
 def itakura_mask(sz1, sz2, max_slope=2.):
     """Compute the Itakura mask.
 
@@ -560,38 +611,28 @@ def itakura_mask(sz1, sz2, max_slope=2.):
            [inf, inf, inf,  0.,  0., inf],
            [inf, inf, inf, inf, inf,  0.]])
     """
-    min_slope = 1 / float(max_slope)
-    max_slope *= (float(sz1) / float(sz2))
-    min_slope *= (float(sz1) / float(sz2))
+    mask = _njit_itakura_mask(sz1, sz2, max_slope=max_slope)
 
-    lower_bound = numpy.empty((2, sz2))
-    lower_bound[0] = min_slope * numpy.arange(sz2)
-    lower_bound[1] = ((sz1 - 1) - max_slope * (sz2 - 1)
-                      + max_slope * numpy.arange(sz2))
-    lower_bound_ = numpy.empty(sz2)
-    for i in prange(sz2):
-        lower_bound_[i] = max(round(lower_bound[0, i], 2),
-                              round(lower_bound[1, i], 2))
-    lower_bound_ = numpy.ceil(lower_bound_)
-
-    upper_bound = numpy.empty((2, sz2))
-    upper_bound[0] = max_slope * numpy.arange(sz2)
-    upper_bound[1] = ((sz1 - 1) - min_slope * (sz2 - 1)
-                      + min_slope * numpy.arange(sz2))
-    upper_bound_ = numpy.empty(sz2)
-    for i in prange(sz2):
-        upper_bound_[i] = min(round(upper_bound[0, i], 2),
-                              round(upper_bound[1, i], 2))
-    upper_bound_ = numpy.floor(upper_bound_ + 1)
-
-    mask = numpy.full((sz1, sz2), numpy.inf)
-    for i in prange(sz2):
-        mask[int(lower_bound_[i]):int(upper_bound_[i]), i] = 0.
+    # Post-check
+    raise_warning = False
+    for i in prange(sz1):
+        if not numpy.any(numpy.isfinite(mask[i])):
+            raise_warning = True
+            break
+    if not raise_warning:
+        for j in prange(sz2):
+            if not numpy.any(numpy.isfinite(mask[:, j])):
+                raise_warning = True
+                break
+    if raise_warning:
+        warnings.warn("'itakura_max_slope' constraint is unfeasible "
+                      "(ie. leads to no admissible path) for the "
+                      "provided time series sizes",
+                      RuntimeWarning)
 
     return mask
 
 
-@njit()
 def compute_mask(s1, s2, global_constraint=0,
                  sakoe_chiba_radius=1, itakura_max_slope=2.):
     """Compute the mask (region constraint).
@@ -621,9 +662,9 @@ def compute_mask(s1, s2, global_constraint=0,
     """
     sz1 = s1.shape[0]
     sz2 = s2.shape[0]
-    if global_constraint == 1:
+    if global_constraint == 2:
         mask = sakoe_chiba_mask(sz1, sz2, radius=sakoe_chiba_radius)
-    elif global_constraint == 2:
+    elif global_constraint == 1:
         mask = itakura_mask(sz1, sz2, max_slope=itakura_max_slope)
     else:
         mask = numpy.zeros((sz1, sz2))
@@ -1142,7 +1183,7 @@ def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
         Query time-series to compare to the envelope of the candidate.
     ts_candidate : array-like or None (default: None)
         Candidate time-series. None means the envelope is provided via
-        `envelope_query` parameter and hence does not
+        `envelope_candidate` parameter and hence does not
         need to be computed again.
     radius : int (default: 1)
         Radius to be used for the envelope generation (the envelope at time

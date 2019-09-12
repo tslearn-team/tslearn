@@ -319,15 +319,15 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
 
     @property
     def _n_shapelet_sizes(self):
-        return len(self.n_shapelets_per_size_)
+        return len(self.n_shapelets_per_size)
 
     @property
     def shapelets_(self):
-        total_n_shp = sum(self.n_shapelets_per_size_.values())
+        total_n_shp = sum(self.n_shapelets_per_size.values())
         shapelets = numpy.empty((total_n_shp, ), dtype=object)
         idx = 0
-        for i, shp_sz in enumerate(sorted(self.n_shapelets_per_size_.keys())):
-            n_shp = self.n_shapelets_per_size_[shp_sz]
+        for i, shp_sz in enumerate(sorted(self.n_shapelets_per_size.keys())):
+            n_shp = self.n_shapelets_per_size[shp_sz]
             for idx_shp in range(idx, idx + n_shp):
                 shapelets[idx_shp] = numpy.zeros((shp_sz, self.d_))
             for di in range(self.d_):
@@ -340,12 +340,25 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
 
     @property
     def shapelets_as_time_series_(self):
-        total_n_shp = sum(self.n_shapelets_per_size_.values())
-        shp_sz = max(self.n_shapelets_per_size_.keys())
+        """Set of time-series shapelets formatted as a ``tslearn`` time series
+        dataset.
+
+        Examples
+        --------
+        >>> from tslearn.generators import random_walk_blobs
+        >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=256, d=1, n_blobs=3)
+        >>> model = ShapeletModel(n_shapelets_per_size={3: 2, 4: 1},
+        ...                       max_iter=1)
+        >>> _ = model.fit(X, y)
+        >>> model.shapelets_as_time_series_.shape
+        (3, 4, 1)
+        """
+        total_n_shp = sum(self.n_shapelets_per_size.values())
+        shp_sz = max(self.n_shapelets_per_size.keys())
         non_formatted_shapelets = self.shapelets_
         d = non_formatted_shapelets[0].shape[1]
         shapelets = numpy.zeros((total_n_shp, shp_sz, d)) + numpy.nan
-        for i in range(self._n_shapelet_sizes):
+        for i in range(total_n_shp):
             sz = non_formatted_shapelets[i].shape[0]
             shapelets[i, :sz, :] = non_formatted_shapelets[i]
         return shapelets
@@ -513,6 +526,25 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         -------
         array of shape=(n_ts, n_shapelets)
             Location of the shapelet matches for the provided time series.
+
+        Examples
+        --------
+        >>> from tslearn.generators import random_walk_blobs
+        >>> X = numpy.zeros((3, 10, 1))
+        >>> X[0, 4:7, 0] = numpy.array([1, 2, 3])
+        >>> y = [1, 0, 0]
+        >>> # Data is all zeros except a motif 1-2-3 in the first time series
+        >>> clf = ShapeletModel(n_shapelets_per_size={3: 1}, max_iter=0,
+        ...                     verbose=0)
+        >>> _ = clf.fit(X, y)
+        >>> weights_shapelet = [
+        ...     numpy.array([[1, 2, 3]])
+        ... ]
+        >>> clf.set_weights(weights_shapelet, layer_name="shapelets_0_0")
+        >>> clf.locate(X)
+        array([[4],
+               [0],
+               [0]])
         """
         X = check_dims(X, X_fit=self._X_fit)
         X = check_array(X, allow_nd=True)
@@ -623,11 +655,54 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         ...                     verbose=0)
         >>> clf.fit(X, y).get_weights("classification")[0].shape
         (5, 3)
+        >>> clf.get_weights("shapelets_0_0")[0].shape
+        (5, 10)
+        >>> len(clf.get_weights("shapelets_0_0"))
+        1
         """
         if layer_name is None:
             return self.model_.get_weights()
         else:
             return self.model_.get_layer(layer_name).get_weights()
+
+    def set_weights(self, weights, layer_name=None):
+        """Set model weights (or weights for a given layer if `layer_name`
+        is provided).
+
+        Parameters
+        ----------
+        weights: list of ndarrays
+            Weights to set for the model / target layer
+
+        layer_name: str or None (default: None)
+            Name of the layer for which  weights should be set.
+            If None, all model weights are set.
+            Available layer names with weights are:
+
+            - "shapelets_i_j" with i an integer for the shapelet id and j an
+              integer for the dimension
+            - "classification" for the final classification layer
+
+        Examples
+        --------
+        >>> from tslearn.generators import random_walk_blobs
+        >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=16, d=1, n_blobs=3)
+        >>> clf = ShapeletModel(n_shapelets_per_size={3: 1}, max_iter=0,
+        ...                     verbose=0)
+        >>> _ = clf.fit(X, y)
+        >>> weights_shapelet = [
+        ...     numpy.array([[1, 2, 3]])
+        ... ]
+        >>> clf.set_weights(weights_shapelet, layer_name="shapelets_0_0")
+        >>> clf.shapelets_as_time_series_
+        array([[[1.],
+                [2.],
+                [3.]]])
+        """
+        if layer_name is None:
+            return self.model_.set_weights(weights)
+        else:
+            return self.model_.get_layer(layer_name).set_weights(weights)
 
     def _get_tags(self):
         # This is added due to the fact that there are small rounding
