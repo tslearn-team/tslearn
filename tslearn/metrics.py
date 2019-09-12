@@ -329,7 +329,7 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=1,
 
 
 @njit()
-def njit_accumulated_matrix_subsequence(subseq, longseq):
+def accumulated_subsequence_cost_matrix(subseq, longseq):
     """Compute the accumulated cost matrix score between a subsequence and
      a reference time series.
 
@@ -361,7 +361,7 @@ def njit_accumulated_matrix_subsequence(subseq, longseq):
 
 
 @njit()
-def return_path_subsequence(acc_cost_mat, idx_path_end):
+def calculate_subsequence_path(acc_cost_mat, idx_path_end):
     """Compute the optimal path through a accumulated cost matrix given the endpoint
      of the sequence.
 
@@ -389,7 +389,7 @@ def return_path_subsequence(acc_cost_mat, idx_path_end):
     ...                             [5., 1., 1., 0., 1.]])
     >>> # calculate the globally optimal path
     >>> optimal_end_point = numpy.argmin(acc_cost_mat[-1, :])
-    >>> path = return_path_subsequence(acc_cost_mat, optimal_end_point)
+    >>> path = calculate_subsequence_path(acc_cost_mat, optimal_end_point)
     >>> path
     [(0, 2), (1, 3)]
 
@@ -471,10 +471,10 @@ def dtw_subsequence_path(subseq, longseq):
     """
     subseq = to_time_series(subseq)
     longseq = to_time_series(longseq)
-    acc_cost_mat = njit_accumulated_matrix_subsequence(subseq=subseq,
+    acc_cost_mat = accumulated_subsequence_cost_matrix(subseq=subseq,
                                                        longseq=longseq)
     global_optimal_match = numpy.argmin(acc_cost_mat[-1, :])
-    path = return_path_subsequence(acc_cost_mat, global_optimal_match)
+    path = calculate_subsequence_path(acc_cost_mat, global_optimal_match)
     return path, numpy.sqrt(acc_cost_mat[-1, :][global_optimal_match])
 
 
