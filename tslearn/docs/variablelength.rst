@@ -122,6 +122,8 @@ data, in a standard way, such as:
 Resampling
 ----------
 
+* :ref:`TimeSeriesResampler <class-tslearn.preprocessing.TimeSeriesResampler>`
+
 Finally, if you want to use a method that cannot run on variable-length time
 series, one option would be to first resample your data so that all your
 time series have the same length and then run your method on this resampled 
