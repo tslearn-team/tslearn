@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
+r"""
 sDTW multi path matching
 ========================
 
@@ -8,7 +8,7 @@ matches of a sequence in a longer sequence.
 
 A potential usecase is to identify the occurrence of certain events in
 continuous sensor signals. As one example Barth et al. [1] used this method
-to find stride in sensor recordings of gait
+to find stride in sensor recordings of gait.
 
 The example demonstrates the use of the functions
 `subsequence_cost_matrix` and `subsequence_path`
@@ -16,8 +16,9 @@ to manually calculate warping paths from multiple potential alignments. If
 you are only interested in finding the optimal alignment, you can directly use
 `dtw_subsequence_path`.
 
-[1] Barth, et al. (2013). Subsequence dynamic time warping as a method for
-    robust step segmentation using gyroscope signals of daily life activities,
+[1] Barth, et al. (2013):
+    Subsequence dynamic time warping as a method for robust step segmentation
+    using gyroscope signals of daily life activities,
     EMBS, https://doi.org/10.1109/EMBC.2013.6611104
 
 """
