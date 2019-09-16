@@ -329,7 +329,7 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=1,
 
 
 @njit()
-def accumulated_subsequence_cost_matrix(subseq, longseq):
+def subsequence_cost_matrix(subseq, longseq):
     """Compute the accumulated cost matrix score between a subsequence and
      a reference time series.
 
@@ -361,7 +361,7 @@ def accumulated_subsequence_cost_matrix(subseq, longseq):
 
 
 @njit()
-def calculate_subsequence_path(acc_cost_mat, idx_path_end):
+def subsequence_path(acc_cost_mat, idx_path_end):
     """Compute the optimal path through a accumulated cost matrix given the
      endpoint of the sequence.
 
@@ -387,14 +387,14 @@ def calculate_subsequence_path(acc_cost_mat, idx_path_end):
     ...                             [5., 1., 1., 0., 1.]])
     >>> # calculate the globally optimal path
     >>> optimal_end_point = numpy.argmin(acc_cost_mat[-1, :])
-    >>> path = calculate_subsequence_path(acc_cost_mat, optimal_end_point)
+    >>> path = subsequence_path(acc_cost_mat, optimal_end_point)
     >>> path
     [(0, 2), (1, 3)]
 
     See Also
     --------
     dtw_subsequence_path : Get the similarity score for DTW
-    accumulated_subsequence_cost_matrix: Calculate the required cost matrix
+    subsequence_cost_matrix: Calculate the required cost matrix
 
     """
     sz1, sz2 = acc_cost_mat.shape
@@ -467,15 +467,15 @@ def dtw_subsequence_path(subseq, longseq):
     See Also
     --------
     dtw : Get the similarity score for DTW
-    accumulated_subsequence_cost_matrix: Calculate the required cost matrix
-    calculate_subsequence_path: Calculate a matching path manually
+    subsequence_cost_matrix: Calculate the required cost matrix
+    subsequence_path: Calculate a matching path manually
     """
     subseq = to_time_series(subseq)
     longseq = to_time_series(longseq)
-    acc_cost_mat = accumulated_subsequence_cost_matrix(subseq=subseq,
-                                                       longseq=longseq)
+    acc_cost_mat = subsequence_cost_matrix(subseq=subseq,
+                                           longseq=longseq)
     global_optimal_match = numpy.argmin(acc_cost_mat[-1, :])
-    path = calculate_subsequence_path(acc_cost_mat, global_optimal_match)
+    path = subsequence_path(acc_cost_mat, global_optimal_match)
     return path, numpy.sqrt(acc_cost_mat[-1, :][global_optimal_match])
 
 

@@ -11,7 +11,7 @@ continuous sensor signals. As one example Barth et al. [1] used this method
 to find stride in sensor recordings of gait
 
 The example demonstrates the use of the functions
-`accumulated_subsequence_cost_matrix` and `calculate_subsequence_path`
+`subsequence_cost_matrix` and `subsequence_path`
 to manually calculate warping paths from multiple potential alignments. If
 you are only interested in finding the optimal alignment, you can directly use
 `dtw_subsequence_path`.
@@ -52,8 +52,8 @@ print('Shape long sequence: {}'.format(long_sequence.shape))
 print('Shape short sequence: {}'.format(short_sequence.shape))
 
 # Calculate the accumulated cost matrix
-mat = metrics.accumulated_subsequence_cost_matrix(short_sequence,
-                                                  long_sequence)
+mat = metrics.subsequence_cost_matrix(short_sequence,
+                                      long_sequence)
 
 # Calculate cost function
 cost_func = mat[-1, :]
@@ -63,7 +63,7 @@ cost_func = mat[-1, :]
 potential_matches = find_peaks(-cost_func, distance=sz * 0.75, height=-50)[0]
 
 # Calculate the optimal warping path starting from each of the identified minima
-paths = [metrics.calculate_subsequence_path(mat, match) for match in
+paths = [metrics.subsequence_path(mat, match) for match in
          potential_matches]
 
 plt.figure(1, figsize=(6 * n_repeat, 6))
