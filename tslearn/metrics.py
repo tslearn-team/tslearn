@@ -378,7 +378,7 @@ def subsequence_path(acc_cost_mat, idx_path_end):
         Matching path represented as a list of index pairs. In each pair, the
         first index corresponds to `subseq` and the second one corresponds to
         `longseq`. The startpoint of the Path is :math:`P_0 = (0, ?)` and it
-        ends at :math:`P_0 = (0, idx_path_end)`
+        ends at :math:`P_L = (len(subseq)-1, idx_path_end)`
 
     Examples
     --------
@@ -433,7 +433,7 @@ def dtw_subsequence_path(subseq, longseq):
 
     Compared to traditional DTW, here, border constraints on admissible paths
     :math:`P` are relaxed such that :math:`P_0 = (0, ?)` and
-    :math:`P_0 = (0, ?)` where :math:`L` is the length of the considered path
+    :math:`P_L = (N-1, ?)` where :math:`L` is the length of the considered path
     and :math:`N` is the length of the subsequence time series.
 
     It is not required that both time series share the same size, but they must
