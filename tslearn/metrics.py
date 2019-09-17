@@ -2,6 +2,8 @@
 The :mod:`tslearn.metrics` module gathers time series similarity metrics.
 """
 
+import warnings
+
 import numpy
 from joblib import Parallel, delayed
 from numba import njit, prange
@@ -11,7 +13,6 @@ from sklearn.utils import check_random_state
 from tslearn.cygak import cdist_normalized_gak as cycdist_normalized_gak
 from tslearn.soft_dtw_fast import _soft_dtw, _soft_dtw_grad, \
     _jacobian_product_sq_euc
-import warnings
 
 from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, \
     check_equal_size
@@ -329,6 +330,21 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=1,
 
 
 @njit()
+def _subsequence_cost_matrix(subseq, longseq):
+    l1 = subseq.shape[0]
+    l2 = longseq.shape[0]
+    cum_sum = numpy.full((l1 + 1, l2 + 1), numpy.inf)
+    cum_sum[0, :] = 0.
+
+    for i in prange(l1):
+        for j in prange(l2):
+            cum_sum[i + 1, j + 1] = _local_squared_dist(subseq[i], longseq[j])
+            cum_sum[i + 1, j + 1] += min(cum_sum[i, j + 1],
+                                         cum_sum[i + 1, j],
+                                         cum_sum[i, j])
+    return cum_sum[1:, 1:]
+
+
 def subsequence_cost_matrix(subseq, longseq):
     """Compute the accumulated cost matrix score between a subsequence and
      a reference time series.
@@ -346,21 +362,33 @@ def subsequence_cost_matrix(subseq, longseq):
     mat : array, shape = (sz1, sz2)
         Accumulated cost matrix.
     """
-    l1 = subseq.shape[0]
-    l2 = longseq.shape[0]
-    cum_sum = numpy.full((l1 + 1, l2 + 1), numpy.inf)
-    cum_sum[0, :] = 0.
-
-    for i in prange(l1):
-        for j in prange(l2):
-            cum_sum[i + 1, j + 1] = _local_squared_dist(subseq[i], longseq[j])
-            cum_sum[i + 1, j + 1] += min(cum_sum[i, j + 1],
-                                         cum_sum[i + 1, j],
-                                         cum_sum[i, j])
-    return cum_sum[1:, 1:]
+    return _subsequence_cost_matrix(subseq, longseq)
 
 
 @njit()
+def _subsequence_path(acc_cost_mat, idx_path_end):
+    sz1, sz2 = acc_cost_mat.shape
+    path = [(sz1 - 1, idx_path_end)]
+    while path[-1][0] != 0:
+        i, j = path[-1]
+        if i == 0:
+            path.append((0, j - 1))
+        elif j == 0:
+            path.append((i - 1, 0))
+        else:
+            arr = numpy.array([acc_cost_mat[i - 1][j - 1],
+                               acc_cost_mat[i - 1][j],
+                               acc_cost_mat[i][j - 1]])
+            argmin = numpy.argmin(arr)
+            if argmin == 0:
+                path.append((i - 1, j - 1))
+            elif argmin == 1:
+                path.append((i - 1, j))
+            else:
+                path.append((i, j - 1))
+    return path[::-1]
+
+
 def subsequence_path(acc_cost_mat, idx_path_end):
     """Compute the optimal path through a accumulated cost matrix given the
      endpoint of the sequence.
@@ -397,26 +425,7 @@ def subsequence_path(acc_cost_mat, idx_path_end):
     subsequence_cost_matrix: Calculate the required cost matrix
 
     """
-    sz1, sz2 = acc_cost_mat.shape
-    path = [(sz1 - 1, idx_path_end)]
-    while path[-1][0] != 0:
-        i, j = path[-1]
-        if i == 0:
-            path.append((0, j - 1))
-        elif j == 0:
-            path.append((i - 1, 0))
-        else:
-            arr = numpy.array([acc_cost_mat[i - 1][j - 1],
-                               acc_cost_mat[i - 1][j],
-                               acc_cost_mat[i][j - 1]])
-            argmin = numpy.argmin(arr)
-            if argmin == 0:
-                path.append((i - 1, j - 1))
-            elif argmin == 1:
-                path.append((i - 1, j))
-            else:
-                path.append((i, j - 1))
-    return path[::-1]
+    return _subsequence_path(acc_cost_mat, idx_path_end)
 
 
 def dtw_subsequence_path(subseq, longseq):
