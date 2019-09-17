@@ -14,6 +14,9 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 * A `set_weights` method is added to the `ShapeletModel` and  
 `SerializableShapeletModel` estimators
+* `subsequence_path` and `subsequence_cost_matrix` are now part of the public 
+API and properly documented as such with an example use case in which more than
+one path could be of interest (cf. `plot_sdtw.py`)
 
 ## [v0.2.2]
 

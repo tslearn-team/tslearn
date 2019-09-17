@@ -347,7 +347,7 @@ def _subsequence_cost_matrix(subseq, longseq):
 
 def subsequence_cost_matrix(subseq, longseq):
     """Compute the accumulated cost matrix score between a subsequence and
-     a reference time series.
+    a reference time series.
 
     Parameters
     ----------
@@ -391,7 +391,7 @@ def _subsequence_path(acc_cost_mat, idx_path_end):
 
 def subsequence_path(acc_cost_mat, idx_path_end):
     """Compute the optimal path through a accumulated cost matrix given the
-     endpoint of the sequence.
+    endpoint of the sequence.
 
     Parameters
     ----------
@@ -406,7 +406,7 @@ def subsequence_path(acc_cost_mat, idx_path_end):
         Matching path represented as a list of index pairs. In each pair, the
         first index corresponds to `subseq` and the second one corresponds to
         `longseq`. The startpoint of the Path is :math:`P_0 = (0, ?)` and it
-        ends at :math:`P_L = (len(subseq)-1, idx_path_end)`
+        ends at :math:`P_L = (len(subseq)-1, idx\_path\_end)`
 
     Examples
     --------
@@ -451,9 +451,9 @@ def dtw_subsequence_path(subseq, longseq):
 
     Parameters
     ----------
-    subseq
+    subseq : array, shape = (sz1, d)
         A query time series.
-    longseq
+    longseq : array, shape = (sz2, d)
         A reference (supposed to be longer than `subseq`) time series.
 
     Returns

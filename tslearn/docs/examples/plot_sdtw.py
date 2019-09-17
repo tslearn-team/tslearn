@@ -16,10 +16,9 @@ to manually calculate warping paths from multiple potential alignments. If
 you are only interested in finding the optimal alignment, you can directly use
 `dtw_subsequence_path`.
 
-[1] Barth, et al. (2013):
-    Subsequence dynamic time warping as a method for robust step segmentation
-    using gyroscope signals of daily life activities,
-    EMBS, https://doi.org/10.1109/EMBC.2013.6611104
+[1] Barth, et al. (2013): Subsequence dynamic time warping as a method for \
+robust step segmentation using gyroscope signals of daily life activities, \
+EMBS, https://doi.org/10.1109/EMBC.2013.6611104
 
 """
 
