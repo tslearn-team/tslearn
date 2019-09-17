@@ -37,6 +37,8 @@ and DTW is computed as the Euclidean distance along the optimal path.
       cdist_gak
       dtw
       dtw_path
+      subsequence_path
+      subsequence_cost_matrix
       dtw_subsequence_path
       gak
       soft_dtw

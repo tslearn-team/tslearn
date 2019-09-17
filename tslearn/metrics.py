@@ -2,18 +2,18 @@
 The :mod:`tslearn.metrics` module gathers time series similarity metrics.
 """
 
-import numpy
-from scipy.spatial.distance import pdist, cdist
-from sklearn.utils import check_random_state
-from tslearn.soft_dtw_fast import _soft_dtw, _soft_dtw_grad, \
-    _jacobian_product_sq_euc
-from sklearn.metrics.pairwise import euclidean_distances
-from numba import njit, prange
-from joblib import Parallel, delayed
 import warnings
 
-from tslearn.cygak import cdist_normalized_gak as cycdist_normalized_gak, \
-    normalized_gak as cynormalized_gak
+import numpy
+from joblib import Parallel, delayed
+from numba import njit, prange
+from scipy.spatial.distance import pdist, cdist
+from sklearn.metrics.pairwise import euclidean_distances
+from sklearn.utils import check_random_state
+from tslearn.cygak import cdist_normalized_gak as cycdist_normalized_gak
+from tslearn.soft_dtw_fast import _soft_dtw, _soft_dtw_grad, \
+    _jacobian_product_sq_euc
+
 from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, \
     check_equal_size
 
@@ -330,7 +330,22 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=1,
 
 
 @njit()
-def njit_accumulated_matrix_subsequence(subseq, longseq):
+def _subsequence_cost_matrix(subseq, longseq):
+    l1 = subseq.shape[0]
+    l2 = longseq.shape[0]
+    cum_sum = numpy.full((l1 + 1, l2 + 1), numpy.inf)
+    cum_sum[0, :] = 0.
+
+    for i in prange(l1):
+        for j in prange(l2):
+            cum_sum[i + 1, j + 1] = _local_squared_dist(subseq[i], longseq[j])
+            cum_sum[i + 1, j + 1] += min(cum_sum[i, j + 1],
+                                         cum_sum[i + 1, j],
+                                         cum_sum[i, j])
+    return cum_sum[1:, 1:]
+
+
+def subsequence_cost_matrix(subseq, longseq):
     """Compute the accumulated cost matrix score between a subsequence and
      a reference time series.
 
@@ -347,25 +362,13 @@ def njit_accumulated_matrix_subsequence(subseq, longseq):
     mat : array, shape = (sz1, sz2)
         Accumulated cost matrix.
     """
-    l1 = subseq.shape[0]
-    l2 = longseq.shape[0]
-    cum_sum = numpy.full((l1 + 1, l2 + 1), numpy.inf)
-    cum_sum[0, :] = 0.
-
-    for i in prange(l1):
-        for j in prange(l2):
-            cum_sum[i + 1, j + 1] = _local_squared_dist(subseq[i], longseq[j])
-            cum_sum[i + 1, j + 1] += min(cum_sum[i, j + 1],
-                                         cum_sum[i + 1, j],
-                                         cum_sum[i, j])
-    return cum_sum[1:, 1:]
+    return _subsequence_cost_matrix(subseq, longseq)
 
 
 @njit()
-def _return_path_subsequence(acc_cost_mat):
+def _subsequence_path(acc_cost_mat, idx_path_end):
     sz1, sz2 = acc_cost_mat.shape
-    idx_last_match = numpy.argmin(acc_cost_mat[-1, :])
-    path = [(sz1 - 1, idx_last_match)]
+    path = [(sz1 - 1, idx_path_end)]
     while path[-1][0] != 0:
         i, j = path[-1]
         if i == 0:
@@ -384,6 +387,45 @@ def _return_path_subsequence(acc_cost_mat):
             else:
                 path.append((i, j - 1))
     return path[::-1]
+
+
+def subsequence_path(acc_cost_mat, idx_path_end):
+    """Compute the optimal path through a accumulated cost matrix given the
+     endpoint of the sequence.
+
+    Parameters
+    ----------
+    acc_cost_mat: array, shape = (sz1, sz2)
+        The accumulated cost matrix comparing subsequence from a longer sequence
+    idx_path_end: int
+        The end position of the matched subsequence in the longer sequence.
+
+    Returns
+    -------
+    path: list of tuples of integer pairs
+        Matching path represented as a list of index pairs. In each pair, the
+        first index corresponds to `subseq` and the second one corresponds to
+        `longseq`. The startpoint of the Path is :math:`P_0 = (0, ?)` and it
+        ends at :math:`P_L = (len(subseq)-1, idx_path_end)`
+
+    Examples
+    --------
+
+    >>> acc_cost_mat = numpy.array([[1., 0., 0., 1., 4.],
+    ...                             [5., 1., 1., 0., 1.]])
+    >>> # calculate the globally optimal path
+    >>> optimal_end_point = numpy.argmin(acc_cost_mat[-1, :])
+    >>> path = subsequence_path(acc_cost_mat, optimal_end_point)
+    >>> path
+    [(0, 2), (1, 3)]
+
+    See Also
+    --------
+    dtw_subsequence_path : Get the similarity score for DTW
+    subsequence_cost_matrix: Calculate the required cost matrix
+
+    """
+    return _subsequence_path(acc_cost_mat, idx_path_end)
 
 
 def dtw_subsequence_path(subseq, longseq):
@@ -434,13 +476,16 @@ def dtw_subsequence_path(subseq, longseq):
     See Also
     --------
     dtw : Get the similarity score for DTW
+    subsequence_cost_matrix: Calculate the required cost matrix
+    subsequence_path: Calculate a matching path manually
     """
     subseq = to_time_series(subseq)
     longseq = to_time_series(longseq)
-    acc_cost_mat = njit_accumulated_matrix_subsequence(subseq=subseq,
-                                                       longseq=longseq)
-    path = _return_path_subsequence(acc_cost_mat)
-    return path, numpy.sqrt(numpy.min(acc_cost_mat[-1, :]))
+    acc_cost_mat = subsequence_cost_matrix(subseq=subseq,
+                                           longseq=longseq)
+    global_optimal_match = numpy.argmin(acc_cost_mat[-1, :])
+    path = subsequence_path(acc_cost_mat, global_optimal_match)
+    return path, numpy.sqrt(acc_cost_mat[-1, :][global_optimal_match])
 
 
 @njit()
@@ -868,6 +913,7 @@ def unnormalized_gak(s1, s2, sigma=1.):
 
     gak_val = njit_gak(s1, s2, gram)
     return gak_val
+
 
 def gak(s1, s2, sigma=1.):  # TODO: better doc (formula for the kernel)
     r"""Compute Global Alignment Kernel (GAK) between (possibly
