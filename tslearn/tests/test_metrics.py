@@ -116,6 +116,32 @@ def test_masks():
                                [np.inf, np.inf, np.inf, np.inf, np.inf,  0.]])
     np.testing.assert_allclose(i_mask, reference_mask)
 
+    sz = 10
+    ts0 = np.empty((sz, 1))
+    ts1 = np.empty((sz, 1))
+    mask_no_constraint = tslearn.metrics.compute_mask(ts0, ts1,
+                                                      global_constraint=0)
+    np.testing.assert_allclose(mask_no_constraint, np.zeros((sz, sz)))
+
+    mask_itakura = tslearn.metrics.compute_mask(ts0, ts1,
+                                                global_constraint=1)
+    mask_itakura_bis = tslearn.metrics.compute_mask(ts0, ts1,
+                                                    itakura_max_slope=2.)
+    np.testing.assert_allclose(mask_itakura, mask_itakura_bis)
+
+    mask_sakoe = tslearn.metrics.compute_mask(ts0, ts1,
+                                              global_constraint=2)
+
+    mask_sakoe_bis = tslearn.metrics.compute_mask(ts0, ts1,
+                                                  sakoe_chiba_radius=1)
+    np.testing.assert_allclose(mask_sakoe, mask_sakoe_bis)
+
+    np.testing.assert_raises(ValueError,
+                             tslearn.metrics.compute_mask,
+                             ts0, ts1,
+                             sakoe_chiba_radius=1,
+                             itakura_max_slope=2.)
+
 
 def test_gak():
     # GAK
