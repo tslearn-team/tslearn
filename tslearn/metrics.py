@@ -10,7 +10,6 @@ from numba import njit, prange
 from scipy.spatial.distance import pdist, cdist
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.utils import check_random_state
-from tslearn.cygak import cdist_normalized_gak as cycdist_normalized_gak
 from tslearn.soft_dtw_fast import _soft_dtw, _soft_dtw_grad, \
     _jacobian_product_sq_euc
 
@@ -943,54 +942,6 @@ def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None):
         diagonal_left = numpy.diag(1. / numpy.sqrt(diagonal_left))
         diagonal_right = numpy.diag(1. / numpy.sqrt(diagonal_right))
     return (diagonal_left.dot(matrix)).dot(diagonal_right)
-
-
-def cdist_gak_no_parallel(dataset1, dataset2=None, sigma=1.):
-    r"""Compute cross-similarity matrix using Global Alignment kernel (GAK).
-
-    GAK was originally presented in [1]_.
-
-    Parameters
-    ----------
-    dataset1
-        A dataset of time series
-    dataset2
-        Another dataset of time series
-    sigma : float (default 1.)
-        Bandwidth of the internal gaussian kernel used for GAK
-
-    Returns
-    -------
-    numpy.ndarray
-        Cross-similarity matrix
-
-    Examples
-    --------
-    >>> cdist_gak_no_parallel([[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)
-    array([[1.        , 0.65629661],
-           [0.65629661, 1.        ]])
-    >>> cdist_gak_no_parallel([[1, 2, 2], [1., 2., 3., 4.]],
-    ...           [[1, 2, 2, 3], [1., 2., 3., 4.]], sigma=2.)
-    array([[0.71059484, 0.29722877],
-           [0.65629661, 1.        ]])
-
-    See Also
-    --------
-    gak : Compute Global Alignment kernel
-
-    References
-    ----------
-    .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
-    """
-    dataset1 = to_time_series_dataset(dataset1)
-    self_similarity = False
-    if dataset2 is None:
-        dataset2 = dataset1
-        self_similarity = True
-    else:
-        dataset2 = to_time_series_dataset(dataset2)
-    return cycdist_normalized_gak(dataset1, dataset2, sigma,
-                                  self_similarity=self_similarity)
 
 
 def sigma_gak(dataset, n_samples=100, random_state=None):
