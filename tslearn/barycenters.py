@@ -78,13 +78,15 @@ def _init_avg(X, barycenter_size):
         return f(xnew)
 
 
-def _petitjean_assignment(X, barycenter):
+def _petitjean_assignment(X, barycenter, metric_params=None):
+    if metric_params is None:
+        metric_params = {}
     n = X.shape[0]
     barycenter_size = barycenter.shape[0]
     assign = ([[] for _ in range(barycenter_size)],
               [[] for _ in range(barycenter_size)])
     for i in range(n):
-        path, _ = dtw_path(X[i], barycenter)
+        path, _ = dtw_path(X[i], barycenter, **metric_params)
         for pair in path:
             assign[0][pair[1]].append(i)
             assign[1][pair[1]].append(pair[0])
@@ -113,6 +115,7 @@ def _petitjean_cost(X, barycenter, assign, weights):
 
 def dtw_barycenter_averaging(X, barycenter_size=None, init_barycenter=None,
                              max_iter=30, tol=1e-5, weights=None,
+                             metric_params=None,
                              verbose=False):
     """DTW Barycenter Averaging (DBA) method.
 
@@ -122,22 +125,34 @@ def dtw_barycenter_averaging(X, barycenter_size=None, init_barycenter=None,
     ----------
     X : array-like, shape=(n_ts, sz, d)
         Time series dataset.
+
     barycenter_size : int or None (default: None)
         Size of the barycenter to generate. If None, the size of the barycenter
         is that of the data provided at fit
         time or that of the initial barycenter if specified.
+
     init_barycenter : array or None (default: None)
         Initial barycenter to start from for the optimization process.
+
     max_iter : int (default: 30)
         Number of iterations of the Expectation-Maximization optimization
         procedure.
+
     tol : float (default: 1e-5)
         Tolerance to use for early stopping: if the decrease in cost is lower
         than this value, the
         Expectation-Maximization procedure stops.
+
     weights: None or array
         Weights of each X[i]. Must be the same size as len(X).
         If None, uniform weights are used.
+
+    metric_params: dict or None (default: None)
+        DTW constraint parameters to be used.
+        See :ref:`tslearn.metrics.dtw_path <fun-tslearn.metrics.dtw_path>` for
+        a list of accepted parameters
+        If None, no constraint is used for DTW computations.
+
     verbose : boolean (default: False)
         Whether to print information about the cost at each iteration or not.
 
@@ -162,6 +177,13 @@ def dtw_barycenter_averaging(X, barycenter_size=None, init_barycenter=None,
            [3. ],
            [4. ],
            [4.5]])
+    >>> dtw_barycenter_averaging(time_series, max_iter=5,
+    ...                          metric_params={"itakura_max_slope": 2})
+    array([[1. ],
+           [2. ],
+           [3. ],
+           [3.5],
+           [4.5]])
     >>> dtw_barycenter_averaging(time_series, max_iter=5, barycenter_size=3)
     array([[1.5       ],
            [3.        ],
@@ -184,7 +206,7 @@ def dtw_barycenter_averaging(X, barycenter_size=None, init_barycenter=None,
         barycenter = init_barycenter
     cost_prev, cost = numpy.inf, numpy.inf
     for it in range(max_iter):
-        assign = _petitjean_assignment(X_, barycenter)
+        assign = _petitjean_assignment(X_, barycenter, metric_params)
         cost = _petitjean_cost(X_, barycenter, assign, weights)
         if verbose:
             print("[DBA] epoch %d, cost: %.3f" % (it + 1, cost))
