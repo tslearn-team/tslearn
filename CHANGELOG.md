@@ -18,6 +18,12 @@ Changelogs for this project are recorded in this file since v0.2.0.
 API and properly documented as such with an example use case in which more than
 one path could be of interest (cf. `plot_sdtw.py`)
 
+### Changed
+ 
+* When constrained DTW is used, if the name of the constraint is not given but 
+its parameter is set, that is now considered sufficient to identify the 
+constraint.
+
 ## [v0.2.2]
 
 ### Fixed
