@@ -148,11 +148,21 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
         Radius to be used for Sakoe-Chiba band global constraint.
         If None and `global_constraint` is set to "sakoe_chiba", a radius of
         1 is used.
+        If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+        `global_constraint` is used to infer which constraint to use among the
+        two. In this case, if `global_constraint` corresponds to no global
+        constraint, a `RuntimeWarning` is raised and no global constraint is
+        used.
 
     itakura_max_slope : float or None (default: None)
         Maximum slope for the Itakura parallelogram constraint.
         If None and `global_constraint` is set to "itakura", a maximum slope
         of 2. is used.
+        If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+        `global_constraint` is used to infer which constraint to use among the
+        two. In this case, if `global_constraint` corresponds to no global
+        constraint, a `RuntimeWarning` is raised and no global constraint is
+        used.
 
     Returns
     -------
@@ -229,11 +239,21 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
         Radius to be used for Sakoe-Chiba band global constraint.
         If None and `global_constraint` is set to "sakoe_chiba", a radius of
         1 is used.
+        If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+        `global_constraint` is used to infer which constraint to use among the
+        two. In this case, if `global_constraint` corresponds to no global
+        constraint, a `RuntimeWarning` is raised and no global constraint is
+        used.
 
     itakura_max_slope : float or None (default: None)
         Maximum slope for the Itakura parallelogram constraint.
         If None and `global_constraint` is set to "itakura", a maximum slope
         of 2. is used.
+        If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+        `global_constraint` is used to infer which constraint to use among the
+        two. In this case, if `global_constraint` corresponds to no global
+        constraint, a `RuntimeWarning` is raised and no global constraint is
+        used.
 
     Returns
     -------
@@ -605,11 +625,21 @@ def compute_mask(s1, s2, global_constraint=0,
         Radius to be used for Sakoe-Chiba band global constraint.
         If None and `global_constraint` is set to 2 (sakoe-chiba), a radius of
         1 is used.
+        If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+        `global_constraint` is used to infer which constraint to use among the
+        two. In this case, if `global_constraint` corresponds to no global
+        constraint, a `RuntimeWarning` is raised and no global constraint is
+        used.
 
     itakura_max_slope : float or None (default: None)
         Maximum slope for the Itakura parallelogram constraint.
         If None and `global_constraint` is set to 1 (itakura), a maximum slope
         of 2. is used.
+        If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+        `global_constraint` is used to infer which constraint to use among the
+        two. In this case, if `global_constraint` corresponds to no global
+        constraint, a `RuntimeWarning` is raised and no global constraint is
+        used.
 
     Returns
     -------
@@ -620,11 +650,10 @@ def compute_mask(s1, s2, global_constraint=0,
     sz2 = s2.shape[0]
     if (global_constraint == 0 and sakoe_chiba_radius is not None
             and itakura_max_slope is not None):
-        raise ValueError("global_constraint is not set for DTW, but both"
-                         "sakoe_chiba_radius and itakura_max_slope are set."
-                         "Please set only one of them so that "
-                         "global_constraint can be inferred, or set "
-                         "global_constraint explicitly.")
+        raise RuntimeWarning("global_constraint is not set for DTW, but both "
+                             "sakoe_chiba_radius and itakura_max_slope are "
+                             "set, hence global_constraint cannot be inferred "
+                             "and no global constraint will be used.")
     if global_constraint == 2 or (global_constraint == 0
                                   and sakoe_chiba_radius is not None):
         if sakoe_chiba_radius is None:
@@ -670,11 +699,21 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
         Radius to be used for Sakoe-Chiba band global constraint.
         If None and `global_constraint` is set to "sakoe_chiba", a radius of
         1 is used.
+        If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+        `global_constraint` is used to infer which constraint to use among the
+        two. In this case, if `global_constraint` corresponds to no global
+        constraint, a `RuntimeWarning` is raised and no global constraint is
+        used.
 
     itakura_max_slope : float or None (default: None)
         Maximum slope for the Itakura parallelogram constraint.
         If None and `global_constraint` is set to "itakura", a maximum slope
         of 2. is used.
+        If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+        `global_constraint` is used to infer which constraint to use among the
+        two. In this case, if `global_constraint` corresponds to no global
+        constraint, a `RuntimeWarning` is raised and no global constraint is
+        used.
 
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel.

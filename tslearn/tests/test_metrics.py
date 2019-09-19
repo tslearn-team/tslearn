@@ -136,7 +136,7 @@ def test_masks():
                                                   sakoe_chiba_radius=1)
     np.testing.assert_allclose(mask_sakoe, mask_sakoe_bis)
 
-    np.testing.assert_raises(ValueError,
+    np.testing.assert_raises(RuntimeWarning,
                              tslearn.metrics.compute_mask,
                              ts0, ts1,
                              sakoe_chiba_radius=1,
