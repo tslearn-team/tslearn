@@ -259,6 +259,14 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
     >>> clf.fit([[1, 2, 3], [1, 1.2, 3.2], [3, 2, 1]],
     ...         y=[0, 0, 1]).predict([[1, 2.2, 3.5]])
     array([0])
+    >>> clf = KNeighborsTimeSeriesClassifier(n_neighbors=2,
+    ...                                      metric="dtw",
+    ...                                      metric_params={
+    ...                                          "itakura_max_slope": 2.},
+    ...                                      n_jobs=2)
+    >>> clf.fit([[1, 2, 3], [1, 1.2, 3.2], [3, 2, 1]],
+    ...         y=[0, 0, 1]).predict([[1, 2.2, 3.5]])
+    array([0])
     """
     def __init__(self,
                  n_neighbors=5,

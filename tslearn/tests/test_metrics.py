@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.spatial.distance import cdist
 import tslearn.metrics
+import tslearn.clustering
 from tslearn.utils import to_time_series
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -115,6 +116,62 @@ def test_masks():
                                [np.inf, np.inf, np.inf, 0., 0., np.inf],
                                [np.inf, np.inf, np.inf, np.inf, np.inf,  0.]])
     np.testing.assert_allclose(i_mask, reference_mask)
+
+    # Test masks for different combinations of global_constraints /
+    # sakoe_chiba_radius / itakura_max_slope
+    sz = 10
+    ts0 = np.empty((sz, 1))
+    ts1 = np.empty((sz, 1))
+    mask_no_constraint = tslearn.metrics.compute_mask(ts0, ts1,
+                                                      global_constraint=0)
+    np.testing.assert_allclose(mask_no_constraint, np.zeros((sz, sz)))
+
+    mask_itakura = tslearn.metrics.compute_mask(ts0, ts1,
+                                                global_constraint=1)
+    mask_itakura_bis = tslearn.metrics.compute_mask(ts0, ts1,
+                                                    itakura_max_slope=2.)
+    np.testing.assert_allclose(mask_itakura, mask_itakura_bis)
+
+    mask_sakoe = tslearn.metrics.compute_mask(ts0, ts1,
+                                              global_constraint=2)
+
+    mask_sakoe_bis = tslearn.metrics.compute_mask(ts0, ts1,
+                                                  sakoe_chiba_radius=1)
+    np.testing.assert_allclose(mask_sakoe, mask_sakoe_bis)
+
+    np.testing.assert_raises(RuntimeWarning,
+                             tslearn.metrics.compute_mask,
+                             ts0, ts1,
+                             sakoe_chiba_radius=1,
+                             itakura_max_slope=2.)
+
+    # Tests for estimators that can set masks through metric_params
+    n, sz, d = 15, 10, 3
+    rng = np.random.RandomState(0)
+    time_series = rng.randn(n, sz, d)
+    estimator1 = tslearn.clustering.TimeSeriesKMeans(
+        metric="dtw",
+        metric_params={
+            "itakura_max_slope": 1.0
+        },
+        max_iter=5,
+        random_state=0
+    )
+    estimator2 = tslearn.clustering.TimeSeriesKMeans(metric="euclidean",
+                                                     max_iter=5,
+                                                     random_state=0)
+    estimator3 = tslearn.clustering.TimeSeriesKMeans(
+        metric="dtw",
+        metric_params={
+            "sakoe_chiba_radius": 0
+        },
+        max_iter=5,
+        random_state=0
+    )
+    np.testing.assert_allclose(estimator1.fit(time_series).labels_,
+                               estimator2.fit(time_series).labels_)
+    np.testing.assert_allclose(estimator1.fit(time_series).labels_,
+                               estimator3.fit(time_series).labels_)
 
 
 def test_gak():
