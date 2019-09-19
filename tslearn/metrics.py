@@ -18,7 +18,7 @@ from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, \
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
-GLOBAL_CONSTRAINT_CODE = {"": 0, "itakura": 1, "sakoe_chiba": 2}
+GLOBAL_CONSTRAINT_CODE = {None: 0, "": 0, "itakura": 1, "sakoe_chiba": 2}
 VARIABLE_LENGTH_METRICS = ["dtw", "gak", "softdtw"]
 
 
@@ -188,13 +188,8 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
     s1 = to_time_series(s1, remove_nans=True)
     s2 = to_time_series(s2, remove_nans=True)
 
-    if global_constraint is not None:
-        global_constraint_str = global_constraint
-    else:
-        global_constraint_str = ""
-
     mask = compute_mask(
-        s1, s2, GLOBAL_CONSTRAINT_CODE[global_constraint_str],
+        s1, s2, GLOBAL_CONSTRAINT_CODE[global_constraint],
         sakoe_chiba_radius, itakura_max_slope
     )
     acc_cost_mat = njit_accumulated_matrix(s1, s2, mask=mask)
@@ -267,14 +262,9 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
     s1 = to_time_series(s1, remove_nans=True)
     s2 = to_time_series(s2, remove_nans=True)
 
-    if global_constraint is not None:
-        global_constraint_str = global_constraint
-    else:
-        global_constraint_str = ""
-
     mask = compute_mask(
         s1, s2,
-        GLOBAL_CONSTRAINT_CODE[global_constraint_str],
+        GLOBAL_CONSTRAINT_CODE[global_constraint],
         sakoe_chiba_radius=sakoe_chiba_radius,
         itakura_max_slope=itakura_max_slope)
     return njit_dtw(s1, s2, mask=mask)
