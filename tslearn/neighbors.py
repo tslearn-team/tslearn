@@ -570,4 +570,5 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
             return super(KNeighborsTimeSeriesRegressor, self).predict(X_)
 
     def _get_tags(self):
-        return {'allow_nan': True, 'allow_variable_length': True}
+        return {'allow_nan': True, 'allow_variable_length': True,
+                'multioutput': True}
