@@ -17,6 +17,7 @@ tslearn.neighbors
    
       KNeighborsTimeSeries
       KNeighborsTimeSeriesClassifier
+      KNeighborsTimeSeriesRegressor
    
    
 

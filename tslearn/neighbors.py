@@ -5,7 +5,8 @@ time series metrics.
 
 import numpy
 from sklearn import neighbors
-from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
+from sklearn.neighbors import (KNeighborsClassifier, NearestNeighbors,
+                               KNeighborsRegressor)
 from sklearn.neighbors.base import KNeighborsMixin
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
@@ -291,6 +292,11 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             Training data.
         y : array-like, shape (n_ts, )
             Target values.
+
+        Returns
+        -------
+        KNeighborsTimeSeriesClassifier
+            The fitted estimator
         """
         if self.metric in VARIABLE_LENGTH_METRICS:
             self._ts_metric = self.metric
@@ -320,6 +326,11 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         ----------
         X : array-like, shape (n_ts, sz, d)
             Test samples.
+
+        Returns
+        -------
+        array, shape = (n_ts, )
+            Array of predicted class labels
         """
         if self.metric in VARIABLE_LENGTH_METRICS:
             self._ts_metric = self.metric
@@ -360,6 +371,11 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         ----------
         X : array-like, shape (n_ts, sz, d)
             Test samples.
+
+        Returns
+        -------
+        array, shape = (n_ts, n_classes)
+            Array of predicted class probabilities
         """
         if self.metric in VARIABLE_LENGTH_METRICS:
             self._ts_metric = self.metric
@@ -394,6 +410,164 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             X_ = check_dims(X_, self._X_fit, extend=False)
             return super(KNeighborsTimeSeriesClassifier,
                          self).predict_proba(X_)
+
+    def _get_tags(self):
+        return {'allow_nan': True, 'allow_variable_length': True}
+
+
+class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
+                                    KNeighborsRegressor):
+    """Classifier implementing the k-nearest neighbors vote for Time Series.
+
+    Parameters
+    ----------
+    n_neighbors : int (default: 5)
+        Number of nearest neighbors to be considered for the decision.
+    weights : str or callable, optional (default: 'uniform')
+        Weight function used in prediction. Possible values:
+
+        - 'uniform' : uniform weights. All points in each neighborhood are
+          weighted equally.
+        - 'distance' : weight points by the inverse of their distance. in this
+          case, closer neighbors of a query point
+          will have a greater influence than neighbors which are further away.
+        - [callable] : a user-defined function which accepts an array of
+          distances, and returns an array of the same
+          shape containing the weights.
+    metric : one of the metrics allowed for :class:`.KNeighborsTimeSeries`
+    class (default: 'dtw')
+        Metric to be used at the core of the nearest neighbor procedure
+    metric_params : dict or None (default: None)
+        Dictionnary of metric parameters.
+        For metrics that accept parallelization of the cross-distance matrix
+        computations, `n_jobs` key passed in `metric_params` is overridden by
+        the `n_jobs` argument.
+
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel for cross-distance matrix
+        computations.
+        Ignored if the cross-distance matrix cannot be computed using
+        parallelization.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See scikit-learns'
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        for more details.
+
+    Examples
+    --------
+    >>> clf = KNeighborsTimeSeriesRegressor(n_neighbors=2, metric="dtw")
+    >>> clf.fit([[1, 2, 3], [1, 1.2, 3.2], [3, 2, 1]],
+    ...         y=[0.1, 0.1, 1.1]).predict([[1, 2.2, 3.5]])
+    array([0.1])
+    >>> clf = KNeighborsTimeSeriesRegressor(n_neighbors=2,
+    ...                                     metric="dtw",
+    ...                                     n_jobs=2)
+    >>> clf.fit([[1, 2, 3], [1, 1.2, 3.2], [3, 2, 1]],
+    ...         y=[0.1, 0.1, 1.1]).predict([[1, 2.2, 3.5]])
+    array([0.1])
+    >>> clf = KNeighborsTimeSeriesRegressor(n_neighbors=2,
+    ...                                     metric="dtw",
+    ...                                     metric_params={
+    ...                                         "itakura_max_slope": 2.},
+    ...                                     n_jobs=2)
+    >>> clf.fit([[1, 2, 3], [1, 1.2, 3.2], [3, 2, 1]],
+    ...         y=[0.1, 0.1, 1.1]).predict([[1, 2.2, 3.5]])
+    array([0.1])
+    """
+    def __init__(self,
+                 n_neighbors=5,
+                 weights='uniform',
+                 metric='dtw',
+                 metric_params=None,
+                 n_jobs=None):
+        KNeighborsRegressor.__init__(self,
+                                     n_neighbors=n_neighbors,
+                                     weights=weights,
+                                     algorithm='brute')
+        self.metric = metric
+        self.metric_params = metric_params
+        self.n_jobs = n_jobs
+
+    def fit(self, X, y):
+        """Fit the model using X as training data and y as target values
+
+        Parameters
+        ----------
+        X : array-like, shape (n_ts, sz, d)
+            Training data.
+        y : array-like, shape (n_ts, ) or (n_ts, dim_y)
+            Target values.
+
+        Returns
+        -------
+        KNeighborsTimeSeriesRegressor
+            The fitted estimator
+        """
+        if self.metric in VARIABLE_LENGTH_METRICS:
+            self._ts_metric = self.metric
+            self.metric = "precomputed"
+
+        X = check_array(X,
+                        allow_nd=True,
+                        force_all_finite=(self.metric != "precomputed"))
+        X = to_time_series_dataset(X)
+        X = check_dims(X, X_fit=None)
+        if self.metric == "precomputed" and hasattr(self, '_ts_metric'):
+            self._ts_fit = X
+            self._d = X.shape[2]
+            self._X_fit = numpy.zeros((self._ts_fit.shape[0],
+                                       self._ts_fit.shape[0]))
+        else:
+            self._X_fit, self._d = to_sklearn_dataset(X, return_dim=True)
+        super(KNeighborsTimeSeriesRegressor, self).fit(self._X_fit, y)
+        if hasattr(self, '_ts_metric'):
+            self.metric = self._ts_metric
+        return self
+
+    def predict(self, X):
+        """Predict the target for the provided data
+
+        Parameters
+        ----------
+        X : array-like, shape (n_ts, sz, d)
+            Test samples.
+
+        Returns
+        -------
+        array, shape = (n_ts, ) or (n_ts, dim_y)
+            Array of predicted targets
+        """
+        if self.metric in VARIABLE_LENGTH_METRICS:
+            self._ts_metric = self.metric
+            self.metric = "precomputed"
+
+            if self.metric_params is None:
+                metric_params = {}
+            else:
+                metric_params = self.metric_params.copy()
+                if "n_jobs" in metric_params.keys():
+                    del metric_params["n_jobs"]
+            check_is_fitted(self, '_ts_fit')
+            X = check_array(X, allow_nd=True, force_all_finite=False)
+            X = to_time_series_dataset(X)
+            if self._ts_metric == "dtw":
+                X_ = cdist_dtw(X, self._ts_fit, n_jobs=self.n_jobs,
+                               **metric_params)
+            elif self._ts_metric == "softdtw":
+                X_ = cdist_soft_dtw(X, self._ts_fit, **metric_params)
+            else:
+                raise ValueError("Invalid metric recorded: %s" %
+                                 self._ts_metric)
+            pred = super(KNeighborsTimeSeriesRegressor, self).predict(X_)
+            self.metric = self._ts_metric
+            return pred
+        else:
+            check_is_fitted(self, '_X_fit')
+            X = check_array(X, allow_nd=True)
+            X = to_time_series_dataset(X)
+            X_ = to_sklearn_dataset(X)
+            X_ = check_dims(X_, self._X_fit, extend=False)
+            return super(KNeighborsTimeSeriesRegressor, self).predict(X_)
 
     def _get_tags(self):
         return {'allow_nan': True, 'allow_variable_length': True}

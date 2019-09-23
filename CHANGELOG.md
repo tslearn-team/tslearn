@@ -12,6 +12,9 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ### Added
 
+* `KNeighborsTimeSeriesRegressor` is a new regressor based on 
+k-nearest-neighbors that accepts the same metrics as 
+`KNeighborsTimeSeriesClassifier`
 * A `set_weights` method is added to the `ShapeletModel` and  
 `SerializableShapeletModel` estimators
 * `subsequence_path` and `subsequence_cost_matrix` are now part of the public 
