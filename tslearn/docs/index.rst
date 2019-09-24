@@ -14,10 +14,6 @@ If you plan to use the ``shapelets`` module from ``tslearn``, ``keras`` and ``te
 Installation
 ------------
 
-Pre-requisites 
-``````````````
-C++ build tools should be available to perform installation.
-
 Using conda
 ```````````
 
@@ -35,6 +31,11 @@ Using ``pip`` should also work fine:
 .. code-block:: bash
   
     pip install tslearn
+
+Pre-requisites
+..............
+
+When using PyPI, C++ build tools should be available to perform installation.
 
 
 Using latest github-hosted version
@@ -58,14 +59,8 @@ If you experiment such an issue, try installing it with the following command:
     pip install cython
 
 
-or (depending on your preferred python package manager):
-
-.. code-block:: bash
-
-    conda install -c anaconda cython
-
-
 before you start installing ``tslearn``.
+If it still does not work, we suggest you switch to `conda` installation.
 
 
 Navigation

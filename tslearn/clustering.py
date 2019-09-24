@@ -14,7 +14,7 @@ import numpy
 import warnings
 
 from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw, \
-    cdist_soft_dtw_normalized, dtw
+    cdist_soft_dtw_normalized
 from tslearn.barycenters import euclidean_barycenter, \
     dtw_barycenter_averaging, softdtw_barycenter
 from sklearn.utils import check_array
@@ -733,6 +733,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
                     X=X[self.labels_ == k],
                     barycenter_size=None,
                     init_barycenter=self.cluster_centers_[k],
+                    metric_params=metric_params,
                     verbose=False)
             elif self.metric == "softdtw":
                 self.cluster_centers_[k] = softdtw_barycenter(

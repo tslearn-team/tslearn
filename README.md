@@ -25,10 +25,6 @@ If you plan to use the `shapelets` module, `keras` and `tensorflow` should also 
 
 # Installation
 
-## Pre-requisites 
-
-C++ build tools should be available to perform installation.
-
 ## Using conda
 
 The easiest way to install `tslearn` is probably via `conda`:
@@ -37,6 +33,10 @@ conda install -c conda-forge tslearn
 ```
 
 ## Using PyPI
+
+### Pre-requisites 
+
+When using PyPI, C++ build tools should be available to perform installation.
 
 Using `pip` should also work fine:
 ```bash
@@ -59,12 +59,8 @@ If you experiment such an issue, try installing it with the following command:
 pip install cython
 ```
 
-or (depending on your preferred python package manager):
-```bash
-conda install -c anaconda cython
-```
-
 before you start installing `tslearn`.
+If it still does not work, we suggest you switch to `conda` installation.
 
 # Documentation and API reference
 

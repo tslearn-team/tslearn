@@ -421,8 +421,7 @@ def check_estimators_pickle(name, estimator_orig):
 
 @ignore_warnings(category=(DeprecationWarning, FutureWarning))
 def check_supervised_y_2d(name, estimator_orig):
-
-    tags = {'multioutput': False, 'binary_only': False}
+    tags = _safe_tags(estimator_orig)
     X, y = _create_small_ts_dataset()
     if tags['binary_only']:
         X = X[y != 2]
