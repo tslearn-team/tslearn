@@ -490,6 +490,22 @@ def check_dataset(X, force_univariate=False, force_equal_length=False):
     ValueError
         Raised if X is not a valid dataset, or one of the constraints is not
         satisfied.
+
+    Examples
+    --------
+    >>> X = [[1, 2, 3], [1, 2, 3, 4]]
+    >>> X_new = check_dataset(X)
+    >>> X_new.shape
+    (2, 4, 1)
+    >>> check_dataset(X, force_equal_length=True)  # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+    ...
+    ValueError: All the time series in the array should be of equal lengths.
+    >>> other_X = numpy.random.randn(3, 10, 2)
+    >>> check_dataset(other_X, force_univariate=True)  # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+    ...
+    ValueError: Array should be univariate and is of shape: (3, 10, 2)
     """
     X_ = to_time_series_dataset(X)
     if force_univariate and X_.shape[2] != 1:
