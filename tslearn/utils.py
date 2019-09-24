@@ -4,7 +4,7 @@ The :mod:`tslearn.utils` module includes various utilities.
 
 import numpy
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.utils import column_or_1d
+from sklearn.utils import column_or_1d, check_array
 from sklearn.utils.validation import check_is_fitted
 import warnings
 
@@ -465,6 +465,107 @@ def ts_zeros(sz, d=1):
     (5, 1)
     """
     return numpy.zeros((sz, d))
+
+
+def check_dataset(X, force_univariate=False, force_equal_length=False):
+    """Check if X is a valid tslearn dataset, with possibly additional extra
+    constraints.
+
+    Parameters
+    ----------
+    X: array, shape = (n_ts, sz, d)
+        Time series dataset.
+    force_univariate: bool (default: False)
+        If True, only univariate datasets are considered valid.
+    force_equal_length: bool (default: False)
+        If True, only equal-length datasets are considered valid.
+
+    Returns
+    -------
+    array, shape = (n_ts, sz, d)
+        Formatted dataset, if it is valid
+
+    Raises
+    ------
+    ValueError
+        Raised if X is not a valid dataset, or one of the constraints is not
+        satisfied.
+    """
+    X_ = to_time_series_dataset(X)
+    if force_univariate and X_.shape[2] != 1:
+        raise ValueError(
+            "Array should be univariate and is of shape: {}".format(
+                X_.shape
+            )
+        )
+    if force_equal_length and not check_equal_size(X_):
+        raise ValueError("All the time series in the array should be of "
+                         "equal lengths")
+    return X_
+
+
+def to_pyts_dataset(X):
+    """Transform a tslearn-compatible dataset into a pyts dataset.
+
+    Parameters
+    ----------
+    X: array, shape = (n_ts, sz, d) where d=1
+        tslearn-formatted dataset to be cast to pyts format
+
+    Returns
+    -------
+    array, shape=(n_ts, sz)
+        pyts-formatted dataset
+
+    Notes
+    -----
+    This will raise an error if the input dataset is multivariate since pyts
+    datasets are assumed to be univariate.
+
+    Examples
+    --------
+    >>> tslearn_arr = numpy.random.randn(10, 16, 1)
+    >>> pyts_arr = to_pyts_dataset(tslearn_arr)
+    >>> pyts_arr.shape
+    (10, 16)
+    >>> tslearn_arr = numpy.random.randn(10, 16, 2)
+    >>> to_pyts_dataset(tslearn_arr)  # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+    ...
+    ValueError: Array should be univariate and is of shape: (10, 16, 2)
+    """
+    X_ = check_dataset(X, force_univariate=True)
+    n_ts, sz = X_.shape[:2]
+    return X_.reshape((n_ts, sz))
+
+
+def from_pyts_dataset(X):
+    """Transform a pyts-compatible dataset into a tslearn dataset.
+
+    Parameters
+    ----------
+    X: array, shape = (n_ts, sz)
+        pyts-formatted dataset
+
+    Returns
+    -------
+    array, shape=(n_ts, sz, d) with d=1
+        tslearn-formatted dataset
+
+    Examples
+    --------
+    >>> pyts_arr = numpy.random.randn(10, 16)
+    >>> tslearn_arr = from_pyts_dataset(pyts_arr)
+    >>> tslearn_arr.shape
+    (10, 16, 1)
+    >>> from_pyts_dataset(pyts_arr[0])  # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+    ...
+    ValueError: Expected 2D array, got 1D array instead
+    """
+    X_ = check_array(X, ensure_2d=True)
+    shape = list(X_.shape) + [1]
+    return X_.reshape(shape)
 
 
 class LabelCategorizer(BaseEstimator, TransformerMixin):
