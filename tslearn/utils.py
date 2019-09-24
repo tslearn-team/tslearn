@@ -592,6 +592,72 @@ def from_pyts_dataset(X):
                          "are {}".format(X_.shape))
 
 
+def to_sktime_dataset(X):
+    """Transform a tslearn-compatible dataset into a sktime dataset.
+
+    Parameters
+    ----------
+    X: array, shape = (n_ts, sz, d)
+        tslearn-formatted dataset to be cast to sktime format
+
+    Returns
+    -------
+    array, shape=(n_ts, d, sz)
+        sktime-formatted dataset
+
+    Examples
+    --------
+    >>> tslearn_arr = numpy.random.randn(10, 16, 1)
+    >>> sktime_arr = to_sktime_dataset(tslearn_arr)
+    >>> sktime_arr.shape
+    (10, 1, 16)
+    >>> tslearn_arr = numpy.random.randn(10, 16, 2)
+    >>> sktime_arr = to_sktime_dataset(tslearn_arr)
+    >>> sktime_arr.shape
+    (10, 2, 16)
+    """
+    X_ = check_dataset(X)  # TODO: unequal-length case???
+    return X_.transpose((0, 2, 1))
+
+
+def from_sktime_dataset(X):
+    """Transform a sktime-compatible dataset into a tslearn dataset.
+
+    Parameters
+    ----------
+    X: array, shape = (n_ts, d, sz)
+        sktime-formatted dataset
+
+    Returns
+    -------
+    array, shape=(n_ts, sz, d)
+        tslearn-formatted dataset
+
+    Examples
+    --------
+    >>> sktime_arr = numpy.random.randn(10, 1, 16)
+    >>> tslearn_arr = from_sktime_dataset(sktime_arr)
+    >>> tslearn_arr.shape
+    (10, 16, 1)
+    >>> sktime_arr = numpy.random.randn(10, 2, 16)
+    >>> tslearn_arr = from_sktime_dataset(sktime_arr)
+    >>> tslearn_arr.shape
+    (10, 16, 2)
+    >>> sktime_arr = numpy.random.randn(10)
+    >>> from_sktime_dataset(sktime_arr)  # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+    ...
+    ValueError: X is not a valid input sktime array.
+    """
+    X_ = check_array(X, ensure_2d=False, allow_nd=True)
+    if X_.ndim == 3:
+        return X_.transpose((0, 2, 1))
+    else:
+        raise ValueError("X is not a valid input sktime array. "
+                         "Its dimensions, once cast to numpy.ndarray "
+                         "are {}".format(X_.shape))
+
+
 class LabelCategorizer(BaseEstimator, TransformerMixin):
     """Transformer to transform indicator-based labels into categorical ones.
 
