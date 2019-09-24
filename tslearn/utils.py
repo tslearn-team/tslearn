@@ -509,18 +509,13 @@ def to_pyts_dataset(X):
 
     Parameters
     ----------
-    X: array, shape = (n_ts, sz, d) where d=1
+    X: array, shape = (n_ts, sz, d)
         tslearn-formatted dataset to be cast to pyts format
 
     Returns
     -------
-    array, shape=(n_ts, sz)
+    array, shape=(n_ts, sz) if d=1, (n_ts, d, sz) otherwise
         pyts-formatted dataset
-
-    Notes
-    -----
-    This will raise an error if the input dataset is multivariate since pyts
-    datasets are assumed to be univariate.
 
     Examples
     --------
@@ -529,14 +524,15 @@ def to_pyts_dataset(X):
     >>> pyts_arr.shape
     (10, 16)
     >>> tslearn_arr = numpy.random.randn(10, 16, 2)
-    >>> to_pyts_dataset(tslearn_arr)  # doctest: +IGNORE_EXCEPTION_DETAIL
-    Traceback (most recent call last):
-    ...
-    ValueError: Array should be univariate and is of shape: (10, 16, 2)
+    >>> pyts_arr = to_pyts_dataset(tslearn_arr)
+    >>> pyts_arr.shape
+    (10, 2, 16)
     """
-    X_ = check_dataset(X, force_univariate=True)
-    n_ts, sz = X_.shape[:2]
-    return X_.reshape((n_ts, sz))
+    X_ = check_dataset(X)
+    if X_.shape[2] == 1:
+        return X_.reshape((X_.shape[0], -1))
+    else:
+        return X_.transpose((0, 2, 1))
 
 
 def from_pyts_dataset(X):
@@ -544,12 +540,12 @@ def from_pyts_dataset(X):
 
     Parameters
     ----------
-    X: array, shape = (n_ts, sz)
+    X: array, shape = (n_ts, sz) or (n_ts, d, sz)
         pyts-formatted dataset
 
     Returns
     -------
-    array, shape=(n_ts, sz, d) with d=1
+    array, shape=(n_ts, sz, d)
         tslearn-formatted dataset
 
     Examples
@@ -558,14 +554,26 @@ def from_pyts_dataset(X):
     >>> tslearn_arr = from_pyts_dataset(pyts_arr)
     >>> tslearn_arr.shape
     (10, 16, 1)
-    >>> from_pyts_dataset(pyts_arr[0])  # doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> pyts_arr = numpy.random.randn(10, 2, 16)
+    >>> tslearn_arr = from_pyts_dataset(pyts_arr)
+    >>> tslearn_arr.shape
+    (10, 16, 2)
+    >>> pyts_arr = numpy.random.randn(10)
+    >>> from_pyts_dataset(pyts_arr)  # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ...
-    ValueError: Expected 2D array, got 1D array instead
+    ValueError: X is not a valid input pyts array.
     """
-    X_ = check_array(X, ensure_2d=True)
-    shape = list(X_.shape) + [1]
-    return X_.reshape(shape)
+    X_ = check_array(X, ensure_2d=False, allow_nd=True)
+    if X_.ndim == 2:
+        shape = list(X_.shape) + [1]
+        return X_.reshape(shape)
+    elif X_.ndim == 3:
+        return X_.transpose((0, 2, 1))
+    else:
+        raise ValueError("X is not a valid input pyts array. "
+                         "Its dimensions, once cast to numpy.ndarray "
+                         "are {}".format(X_.shape))
 
 
 class LabelCategorizer(BaseEstimator, TransformerMixin):
