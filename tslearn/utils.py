@@ -658,6 +658,76 @@ def from_sktime_dataset(X):
                          "are {}".format(X_.shape))
 
 
+def to_seglearn_dataset(X):
+    """Transform a tslearn-compatible dataset into a seglearn dataset.
+
+    Parameters
+    ----------
+    X: array, shape = (n_ts, sz, d)
+        tslearn-formatted dataset to be cast to seglearn format
+
+    Returns
+    -------
+    array of arrays, shape=(n_ts, )
+        seglearn-formatted dataset. i-th sub-array in the list has shape
+        (sz_i, d)
+
+    Examples
+    --------
+    >>> tslearn_arr = numpy.random.randn(10, 16, 1)
+    >>> seglearn_arr = to_seglearn_dataset(tslearn_arr)
+    >>> seglearn_arr.shape
+    (10, 16, 1)
+    >>> tslearn_arr = numpy.random.randn(10, 16, 2)
+    >>> seglearn_arr = to_seglearn_dataset(tslearn_arr)
+    >>> seglearn_arr.shape
+    (10, 16, 2)
+    >>> tslearn_arr = [numpy.random.randn(16, 2), numpy.random.randn(10, 2)]
+    >>> seglearn_arr = to_seglearn_dataset(tslearn_arr)
+    >>> seglearn_arr.shape
+    (2,)
+    >>> seglearn_arr[0].shape
+    (16, 2)
+    >>> seglearn_arr[1].shape
+    (10, 2)
+    """
+    X_ = to_time_series_dataset(X)
+    return numpy.array([Xi[:ts_size(Xi)] for Xi in X_])
+
+
+def from_seglearn_dataset(X):
+    """Transform a seglearn-compatible dataset into a tslearn dataset.
+
+    Parameters
+    ----------
+    X: list of arrays, or array of arrays, shape = (n_ts, )
+        seglearn-formatted dataset. i-th sub-array in the list has shape
+        (sz_i, d)
+
+    Returns
+    -------
+    array, shape=(n_ts, sz, d), where sz is the maximum of all array lengths
+        tslearn-formatted dataset
+
+    Examples
+    --------
+    >>> seglearn_arr = [numpy.random.randn(10, 1), numpy.random.randn(10, 1)]
+    >>> tslearn_arr = from_seglearn_dataset(seglearn_arr)
+    >>> tslearn_arr.shape
+    (2, 10, 1)
+    >>> seglearn_arr = [numpy.random.randn(10, 1), numpy.random.randn(5, 1)]
+    >>> tslearn_arr = from_seglearn_dataset(seglearn_arr)
+    >>> tslearn_arr.shape
+    (2, 10, 1)
+    >>> seglearn_arr = numpy.random.randn(2, 10, 1)
+    >>> tslearn_arr = from_seglearn_dataset(seglearn_arr)
+    >>> tslearn_arr.shape
+    (2, 10, 1)
+    """
+    return to_time_series_dataset(X)
+
+
+
 class LabelCategorizer(BaseEstimator, TransformerMixin):
     """Transformer to transform indicator-based labels into categorical ones.
 
