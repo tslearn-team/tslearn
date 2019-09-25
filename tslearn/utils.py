@@ -543,8 +543,13 @@ def to_pyts_dataset(X):
     >>> pyts_arr = to_pyts_dataset(tslearn_arr)
     >>> pyts_arr.shape
     (10, 2, 16)
+    >>> tslearn_arr = [numpy.random.randn(16, 1), numpy.random.randn(10, 1)]
+    >>> to_pyts_dataset(tslearn_arr)  # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+    ...
+    ValueError: All the time series in the array should be of equal lengths
     """
-    X_ = check_dataset(X)
+    X_ = check_dataset(X, force_equal_length=True)
     if X_.shape[2] == 1:
         return X_.reshape((X_.shape[0], -1))
     else:
