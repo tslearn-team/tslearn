@@ -691,7 +691,7 @@ def to_seglearn_dataset(X):
     >>> seglearn_arr[1].shape
     (10, 2)
     """
-    X_ = to_time_series_dataset(X)
+    X_ = check_dataset(X)
     return numpy.array([Xi[:ts_size(Xi)] for Xi in X_])
 
 
@@ -725,6 +725,75 @@ def from_seglearn_dataset(X):
     (2, 10, 1)
     """
     return to_time_series_dataset(X)
+
+
+def to_stumpy_dataset(X):
+    """Transform a tslearn-compatible dataset into a stumpy dataset.
+
+    Parameters
+    ----------
+    X: array, shape = (n_ts, sz, d)
+        tslearn-formatted dataset to be cast to stumpy format
+
+    Returns
+    -------
+    list of arrays of shape=(d, sz_i) if d > 1 or (sz_i, ) otherwise
+        stumpy-formatted dataset.
+
+    Examples
+    --------
+    >>> tslearn_arr = numpy.random.randn(10, 16, 1)
+    >>> stumpy_arr = to_stumpy_dataset(tslearn_arr)
+    >>> len(stumpy_arr)
+    10
+    >>> stumpy_arr[0].shape
+    (16,)
+    >>> tslearn_arr = numpy.random.randn(10, 16, 2)
+    >>> stumpy_arr = to_stumpy_dataset(tslearn_arr)
+    >>> len(stumpy_arr)
+    10
+    >>> stumpy_arr[0].shape
+    (2, 16)
+    """
+    X_ = check_dataset(X)
+    def transpose_or_flatten(ts):
+        if ts.shape[1] == 1:
+            return ts.reshape((-1, ))
+        else:
+            return ts.transpose()
+    return [transpose_or_flatten(Xi[:ts_size(Xi)]) for Xi in X_]
+
+
+def from_stumpy_dataset(X):
+    """Transform a stumpy-compatible dataset into a tslearn dataset.
+
+    Parameters
+    ----------
+    X: list of arrays of shapes (d, sz_i) if d > 1 or (sz_i, ) otherwise
+        stumpy-formatted dataset.
+
+    Returns
+    -------
+    array, shape=(n_ts, sz, d), where sz is the maximum of all array lengths
+        tslearn-formatted dataset
+
+    Examples
+    --------
+    >>> stumpy_arr = [numpy.random.randn(10), numpy.random.randn(10)]
+    >>> tslearn_arr = from_stumpy_dataset(stumpy_arr)
+    >>> tslearn_arr.shape
+    (2, 10, 1)
+    >>> stumpy_arr = [numpy.random.randn(3, 10), numpy.random.randn(3, 5)]
+    >>> tslearn_arr = from_stumpy_dataset(stumpy_arr)
+    >>> tslearn_arr.shape
+    (2, 10, 3)
+    """
+    def transpose_or_expand(ts):
+        if ts.ndim == 1:
+            return ts.reshape((-1, 1))
+        else:
+            return ts.transpose()
+    return to_time_series_dataset([transpose_or_expand(Xi) for Xi in X])
 
 
 
