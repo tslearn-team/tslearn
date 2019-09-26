@@ -721,6 +721,7 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
         ``-1`` means using all processors. See scikit-learns'
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
         for more details.
+        
     verbose : int, optional (default=0)
         The verbosity level: if non zero, progress messages are printed. 
         Above 50, the output is sent to stdout. 
