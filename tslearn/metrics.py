@@ -727,7 +727,7 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
         Above 50, the output is sent to stdout. 
         The frequency of the messages increases with the verbosity level. 
         If it more than 10, all iterations are reported.
-        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_  # noqa: E501
+        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_  
         for more details.
 
     Returns
@@ -754,7 +754,7 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
            spoken word recognition," IEEE Transactions on Acoustics, Speech and
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
 
-    """
+    """ # noqa: E501
     dataset1 = to_time_series_dataset(dataset1)
 
     if dataset2 is None:
@@ -926,7 +926,7 @@ def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None, verbose=0):
         Above 50, the output is sent to stdout. 
         The frequency of the messages increases with the verbosity level. 
         If it more than 10, all iterations are reported.
-        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_  # noqa: E501
+        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_  
         for more details.
 
     Returns
@@ -952,7 +952,7 @@ def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None, verbose=0):
     References
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
-    """
+    """ # noqa: E501
     dataset1 = to_time_series_dataset(dataset1)
 
     if dataset2 is None:

@@ -257,7 +257,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         Above 50, the output is sent to stdout. 
         The frequency of the messages increases with the verbosity level. 
         If it more than 10, all iterations are reported.
-        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_  # noqa: E501
+        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_ 
         for more details.
 
     Examples
@@ -280,7 +280,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
     >>> clf.fit([[1, 2, 3], [1, 1.2, 3.2], [3, 2, 1]],
     ...         y=[0, 0, 1]).predict([[1, 2.2, 3.5]])
     array([0])
-    """
+    """ # noqa: E501
     def __init__(self,
                  n_neighbors=5,
                  weights='uniform',
@@ -476,7 +476,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         Above 50, the output is sent to stdout. 
         The frequency of the messages increases with the verbosity level. 
         If it more than 10, all iterations are reported.
-        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_  # noqa: E501
+        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_  
         for more details.
 
     Examples
@@ -499,7 +499,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
     >>> clf.fit([[1, 2, 3], [1, 1.2, 3.2], [3, 2, 1]],
     ...         y=[0.1, 0.1, 1.1]).predict([[1, 2.2, 3.5]])
     array([0.1])
-    """
+    """ # noqa: E501
     def __init__(self,
                  n_neighbors=5,
                  weights='uniform',
