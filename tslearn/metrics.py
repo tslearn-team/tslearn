@@ -721,13 +721,13 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
         ``-1`` means using all processors. See scikit-learns'
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
         for more details.
-        
+
     verbose : int, optional (default=0)
         The verbosity level: if non zero, progress messages are printed. 
         Above 50, the output is sent to stdout. 
         The frequency of the messages increases with the verbosity level. 
         If it more than 10, all iterations are reported.
-        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_
+        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_  # noqa: E501
         for more details.
 
     Returns
@@ -926,7 +926,7 @@ def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None, verbose=0):
         Above 50, the output is sent to stdout. 
         The frequency of the messages increases with the verbosity level. 
         If it more than 10, all iterations are reported.
-        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_
+        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_  # noqa: E501
         for more details.
 
     Returns

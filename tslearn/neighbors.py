@@ -161,13 +161,14 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
            [0, 1]])
     """
     def __init__(self, n_neighbors=5, metric="dtw", metric_params=None,
-                 n_jobs=None):
+                 n_jobs=None, verbose=0):
         NearestNeighbors.__init__(self,
                                   n_neighbors=n_neighbors,
                                   algorithm='brute')
         self.metric = metric
         self.metric_params = metric_params
         self.n_jobs = n_jobs
+        self.verbose = verbose
 
     def fit(self, X, y=None):
         """Fit the model using X as training data
@@ -240,7 +241,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         For metrics that accept parallelization of the cross-distance matrix
         computations, `n_jobs` and `verbose` keys passed in `metric_params` 
         are overridden by the `n_jobs` and `verbose` arguments.
-        
+
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel for cross-distance matrix
         computations.
@@ -256,7 +257,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         Above 50, the output is sent to stdout. 
         The frequency of the messages increases with the verbosity level. 
         If it more than 10, all iterations are reported.
-        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_
+        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_  # noqa: E501
         for more details.
 
     Examples
@@ -475,7 +476,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         Above 50, the output is sent to stdout. 
         The frequency of the messages increases with the verbosity level. 
         If it more than 10, all iterations are reported.
-        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_
+        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_  # noqa: E501
         for more details.
 
     Examples

@@ -280,10 +280,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         for more details.
 
     verbose : int (default: 0)
-        If nonzero, print information about the inertia while learning
-        the model and joblib progress messages are printed.  
-
-
+        If nonzero, joblib progress messages are printed.  
 
     random_state : integer or numpy.RandomState, optional
         Generator used to initialize the centers. If an integer is given, it
