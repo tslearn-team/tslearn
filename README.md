@@ -43,32 +43,24 @@ Using `pip` should also work fine:
 pip install tslearn
 ```
 
+In this case, you should have `numpy`, `cython` and C++ build tools available
+at build time.
+
 ## Using latest github-hosted version
 
-If you want to get `tslearn`'s latest version, you can refer to the repository hosted at github:
+If you want to get `tslearn`'s latest version, you can refer to the repository 
+hosted at github:
 ```bash
 pip install git+https://github.com/rtavenar/tslearn.git
 ```
 
-## Troubleshooting
-
-It seems on some platforms `Cython` dependency does not install properly.
-If you experiment such an issue, try installing it with the following command:
-
-```bash
-pip install cython
-```
-
-or (depending on your preferred python package manager):
-```bash
-conda install -c anaconda cython
-```
-
-before you start installing `tslearn`.
+In this case, you should have `numpy`, `cython` and C++ build tools available
+at build time.
 
 # Documentation and API reference
 
-The documentation, including a gallery of examples, is hosted at [readthedocs](http://tslearn.readthedocs.io/en/latest/index.html).
+The documentation, including a gallery of examples, is hosted at 
+[readthedocs](http://tslearn.readthedocs.io/en/latest/index.html).
 
 # Already available
 
