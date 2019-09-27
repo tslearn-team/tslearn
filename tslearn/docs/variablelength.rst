@@ -118,3 +118,24 @@ data, in a standard way, such as:
     clf = GridSearchCV(estimator=knn, param_grid=p_grid, cv=cv)
     clf.fit(X, y)
 
+
+Resampling
+----------
+
+* :ref:`TimeSeriesResampler <class-tslearn.preprocessing.TimeSeriesResampler>`
+
+Finally, if you want to use a method that cannot run on variable-length time
+series, one option would be to first resample your data so that all your
+time series have the same length and then run your method on this resampled 
+version of your dataset.
+
+Note however that resampling will introduce temporal distortions in your 
+data. Use with great care!
+
+.. code-block:: python
+
+    from tslearn.preprocessing import TimeSeriesResampler
+
+    resampled_X = TimeSeriesResampler(sz=X.shape[1]).fit_transform(X)
+
+
