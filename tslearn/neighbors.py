@@ -87,16 +87,18 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
                 fit_X = self._X_fit.reshape((self._X_fit.shape[0],
                                              -1,
                                              self._d))
-            elif self._ts_fit is not None:
+            elif hasattr(self, '_ts_fit') and self._ts_fit is not None:
                 fit_X = self._ts_fit
             else:
                 fit_X = self._X_fit
-            if parallelize:
+            if parallelize and 'n_jobs' in cdist_fun.__code__.co_varnames:
                 full_dist_matrix = cdist_fun(X, fit_X, n_jobs=self.n_jobs,
                                              **metric_params)
             else:
                 full_dist_matrix = cdist_fun(X, fit_X, **metric_params)
-        ind = numpy.argpartition(full_dist_matrix, n_neighbors - 1, axis=1)
+
+        kbin = min(n_neighbors - 1, full_dist_matrix.shape[0] - 1)
+        ind = numpy.argpartition(full_dist_matrix, kbin, axis=1)
 
         if self_neighbors:
             ind = ind[:, 1:]
@@ -331,7 +333,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             X_ = cdist_dtw(X, self._ts_fit, n_jobs=self.n_jobs,
                            **metric_params)
         elif self._ts_metric == "softdtw":
-            X_ = cdist_soft_dtw(X, self._ts_fit, n_jobs=self.n_jobs,
+            X_ = cdist_soft_dtw(X, self._ts_fit,
                                 **metric_params)
         elif self._ts_metric == "sax":
             X_ = cdist_sax(X, self._ts_fit, n_jobs=self.n_jobs,

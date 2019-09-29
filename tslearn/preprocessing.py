@@ -145,30 +145,31 @@ class TimeSeriesScalerMinMax(BaseEstimator, TransformerMixin):
         numpy.ndarray
             Rescaled time series dataset.
         """
+        value_range = self.value_range
         if self.min_ is not None:
             warnings.warn(
                 "'min' is deprecated in version 0.2 and will be "
                 "removed in 0.4. Use value_range instead.",
                 DeprecationWarning, stacklevel=2)
-            self.value_range = (self.min_, self.value_range[1])
+            value_range = (self.min_, value_range[1])
 
         if self.max_ is not None:
             warnings.warn(
                 "'max' is deprecated in version 0.2 and will be "
                 "removed in 0.4. Use value_range instead.",
                 DeprecationWarning, stacklevel=2)
-            self.value_range = (self.value_range[0], self.max_)
+            value_range = (value_range[0], self.max_)
 
-        if self.value_range[0] >= self.value_range[1]:
+        if value_range[0] >= value_range[1]:
             raise ValueError("Minimum of desired range must be smaller"
-                             " than maximum. Got %s." % str(self.value_range))
+                             " than maximum. Got %s." % str(value_range))
 
         X_ = to_time_series_dataset(X)
         min_t = numpy.min(X_, axis=1)[:, numpy.newaxis, :]
         max_t = numpy.max(X_, axis=1)[:, numpy.newaxis, :]
         range_t = max_t - min_t
-        nomin = (X_ - min_t) * (self.value_range[1] - self.value_range[0])
-        X_ = nomin / range_t + self.value_range[0]
+        nomin = (X_ - min_t) * (value_range[1] - value_range[0])
+        X_ = nomin / range_t + value_range[0]
         return X_
 
 

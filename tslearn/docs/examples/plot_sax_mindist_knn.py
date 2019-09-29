@@ -33,25 +33,6 @@ from scipy.stats import norm
 import warnings
 warnings.filterwarnings('ignore')
 
-numpy.random.seed(0)
-# Generate a random walk time series
-data_loader = UCR_UEA_datasets()
-datasets = [
-    ('SyntheticControl', 16),
-    ('GunPoint', 64),
-    ('OSULeaf', 128),
-    ('Trace', 128),
-    ('FaceFour', 128),
-    ('Lightning2', 256),
-    ('Lightning7', 128),
-    ('ECG200', 32),
-    ('Fish', 128),
-    ('Plane', 64),
-    ('Car', 256),
-    ('Beef', 128),
-    ('Coffee', 128),
-    ('OliveOil', 256)
-]
 
 def print_table(accuracies, times):
     header_str = '|'
@@ -72,12 +53,30 @@ def print_table(accuracies, times):
         s = '|'
         s += '{:>20}|'.format(dataset)
         s += '{:>12}|'.format(sax_error)
-        s += '{:>12}|'.format(eucl_error)
+        s += '{:>12}|'.format(time_sax)
         s += '{:>12}|'.format(eucl_error)
         s += '{:>12}|'.format(time_euclidean)
         print(s.strip())
 
     print('-'*(len(columns) * 13 + 22))
+
+
+numpy.random.seed(0)
+# Generate a random walk time series
+data_loader = UCR_UEA_datasets()
+datasets = [
+    ('SyntheticControl', 16),
+    ('GunPoint', 64),
+    ('FaceFour', 128),
+    ('Lightning2', 256),
+    ('Lightning7', 128),
+    ('ECG200', 32),
+    ('Plane', 64),
+    ('Car', 256),
+    ('Beef', 128),
+    ('Coffee', 128),
+    ('OliveOil', 256)
+]
 
 accuracies = {}
 times = {}
@@ -94,8 +93,7 @@ for dataset, w in datasets:
     knn = KNeighborsTimeSeriesClassifier(n_neighbors=1, metric='euclidean')
     start = time.time()
     knn.fit(X_train, y_train)
-    predictions = knn.predict(X_test)
-    acc_euclidean = accuracy_score(y_test, predictions)
+    acc_euclidean = accuracy_score(y_test, knn.predict(X_test))
     time_euclidean = time.time() - start
 
     accuracies[dataset] = (acc_sax, acc_euclidean)
