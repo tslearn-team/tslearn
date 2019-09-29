@@ -12,11 +12,12 @@ from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 from scipy.spatial.distance import cdist as scipy_cdist
 
-from tslearn.metrics import cdist_dtw, cdist_soft_dtw, VARIABLE_LENGTH_METRICS
+from tslearn.metrics import cdist_dtw, cdist_soft_dtw, \
+    cdist_sax, VARIABLE_LENGTH_METRICS
 from tslearn.utils import (to_time_series_dataset, to_sklearn_dataset,
                            check_dims)
 
-neighbors.VALID_METRICS['brute'].extend(['dtw', 'softdtw'])
+neighbors.VALID_METRICS['brute'].extend(['dtw', 'softdtw', 'sax'])
 
 
 class KNeighborsTimeSeriesMixin(KNeighborsMixin):
@@ -55,7 +56,7 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
             metric_params = {}
         self_neighbors = False
         if n_neighbors is None:
-            n_neighbors = self.n_neighbors
+            n_neighbors = self.n_neighbors 
         if X is None:
             X = self._X_fit
             self_neighbors = True
@@ -68,6 +69,8 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
                 parallelize = True
             elif self.metric == "softdtw" or self.metric == cdist_soft_dtw:
                 cdist_fun = cdist_soft_dtw
+            elif self.metric == "sax" or self.metric == cdist_sax:
+                cdist_fun = cdist_sax
             elif self.metric in ["euclidean", "sqeuclidean", "cityblock"]:
                 def cdist_fun(X, Xp):
                     return scipy_cdist(X.reshape((X.shape[0], -1)),
@@ -76,7 +79,7 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
             else:
                 raise ValueError("Unrecognized time series metric string: %s "
                                  "(should be one of 'dtw', 'softdtw', "
-                                 "'euclidean', 'sqeuclidean' "
+                                 "'sax', 'euclidean', 'sqeuclidean' "
                                  "or 'cityblock')" % self.metric)
 
             if X.ndim == 2:  # sklearn-format case
@@ -84,6 +87,8 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
                 fit_X = self._X_fit.reshape((self._X_fit.shape[0],
                                              -1,
                                              self._d))
+            elif self._ts_fit is not None:
+                fit_X = self._ts_fit
             else:
                 fit_X = self._X_fit
             if parallelize:
@@ -91,7 +96,7 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
                                              **metric_params)
             else:
                 full_dist_matrix = cdist_fun(X, fit_X, **metric_params)
-        ind = numpy.argsort(full_dist_matrix, axis=1)
+        ind = numpy.argpartition(full_dist_matrix, n_neighbors - 1, axis=1)#numpy.argsort(full_dist_matrix, axis=1)
 
         if self_neighbors:
             ind = ind[:, 1:]
@@ -101,6 +106,8 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
 
         n_ts = X.shape[0]
         sample_range = numpy.arange(n_ts)[:, None]
+        ind = ind[
+            sample_range, numpy.argsort(full_dist_matrix[sample_range, ind])]
         dist = full_dist_matrix[sample_range, ind]
 
         if return_distance:
@@ -319,6 +326,22 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             self.metric = self._ts_metric
         return self
 
+    def _calculate_X_(self, X, metric_params):
+        if self._ts_metric == "dtw":
+            X_ = cdist_dtw(X, self._ts_fit, n_jobs=self.n_jobs,
+                           **metric_params)
+        elif self._ts_metric == "softdtw":
+            X_ = cdist_soft_dtw(X, self._ts_fit, n_jobs=self.n_jobs, 
+                                **metric_params)
+        elif self._ts_metric == "sax":
+            X_ = cdist_sax(X, self._ts_fit, n_jobs=self.n_jobs, 
+                           **metric_params)
+        else:
+            raise ValueError("Invalid metric recorded: %s" %
+                             self._ts_metric)
+
+        return X_
+
     def predict(self, X):
         """Predict the class labels for the provided data
 
@@ -345,14 +368,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             check_is_fitted(self, '_ts_fit')
             X = check_array(X, allow_nd=True, force_all_finite=False)
             X = to_time_series_dataset(X)
-            if self._ts_metric == "dtw":
-                X_ = cdist_dtw(X, self._ts_fit, n_jobs=self.n_jobs,
-                               **metric_params)
-            elif self._ts_metric == "softdtw":
-                X_ = cdist_soft_dtw(X, self._ts_fit, **metric_params)
-            else:
-                raise ValueError("Invalid metric recorded: %s" %
-                                 self._ts_metric)
+            X_ = self._calculate_X_(X, metric_params)
             pred = super(KNeighborsTimeSeriesClassifier, self).predict(X_)
             self.metric = self._ts_metric
             return pred
@@ -390,14 +406,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             check_is_fitted(self, '_ts_fit')
             X = check_array(X, allow_nd=True, force_all_finite=False)
             X = to_time_series_dataset(X)
-            if self._ts_metric == "dtw":
-                X_ = cdist_dtw(X, self._ts_fit, n_jobs=self.n_jobs,
-                               **metric_params)
-            elif self._ts_metric == "softdtw":
-                X_ = cdist_soft_dtw(X, self._ts_fit, **metric_params)
-            else:
-                raise ValueError("Invalid metric recorded: %s" %
-                                 self._ts_metric)
+            X_ = self._calculate_X_(X, metric_params)
             pred = super(KNeighborsTimeSeriesClassifier,
                          self).predict_proba(X_)
             self.metric = self._ts_metric
@@ -555,6 +564,8 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
                                **metric_params)
             elif self._ts_metric == "softdtw":
                 X_ = cdist_soft_dtw(X, self._ts_fit, **metric_params)
+            elif self._ts_metric == "sax":
+                X_ = cdist_sax(X, self._ts_fit, **metric_params)
             else:
                 raise ValueError("Invalid metric recorded: %s" %
                                  self._ts_metric)

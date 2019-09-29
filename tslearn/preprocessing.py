@@ -3,7 +3,7 @@ The :mod:`tslearn.preprocessing` module gathers time series scalers.
 """
 
 import numpy
-from sklearn.base import TransformerMixin
+from sklearn.base import BaseEstimator, TransformerMixin
 from scipy.interpolate import interp1d
 import warnings
 
@@ -76,7 +76,7 @@ class TimeSeriesResampler(TransformerMixin):
         return X_out
 
 
-class TimeSeriesScalerMinMax(TransformerMixin):
+class TimeSeriesScalerMinMax(BaseEstimator, TransformerMixin):
     """Scaler for time series. Scales time series so that their span in each
     dimension is between ``min`` and ``max``.
 
@@ -172,7 +172,7 @@ class TimeSeriesScalerMinMax(TransformerMixin):
         return X_
 
 
-class TimeSeriesScalerMeanVariance(TransformerMixin):
+class TimeSeriesScalerMeanVariance(BaseEstimator, TransformerMixin):
     """Scaler for time series. Scales time series so that their mean (resp.
     standard deviation) in each dimension is
     mu (resp. std).
