@@ -26,7 +26,7 @@ VARIABLE_LENGTH_METRICS = ["dtw", "gak", "softdtw", "sax"]
 
 def cdist_sax(dataset1, dataset2=None, n_segments=None, alphabet_size_avg=4,
               n_jobs=None):
-    r"""Calculates a matrix of distances (MINDIST) on SAX transformations of 
+    r"""Calculates a matrix of distances (MINDIST) on SAX transformations of
     the provided datasets, as presented in [1]_.
 
     Parameters
@@ -58,8 +58,8 @@ def cdist_sax(dataset1, dataset2=None, n_segments=None, alphabet_size_avg=4,
 
     References
     ----------
-    .. [1] Lin, Jessica, et al. "Experiencing SAX: a novel symbolic 
-           representation of time series." Data Mining and knowledge 
+    .. [1] Lin, Jessica, et al. "Experiencing SAX: a novel symbolic
+           representation of time series." Data Mining and knowledge
            discovery 15.2 (2007): 107-144.
 
     """
@@ -429,7 +429,8 @@ def subsequence_path(acc_cost_mat, idx_path_end):
     Parameters
     ----------
     acc_cost_mat: array, shape = (sz1, sz2)
-        The accumulated cost matrix comparing subsequence from a longer sequence
+        The accumulated cost matrix comparing subsequence from a longer 
+        sequence.
     idx_path_end: int
         The end position of the matched subsequence in the longer sequence.
 

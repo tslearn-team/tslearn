@@ -56,7 +56,7 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
             metric_params = {}
         self_neighbors = False
         if n_neighbors is None:
-            n_neighbors = self.n_neighbors 
+            n_neighbors = self.n_neighbors
         if X is None:
             X = self._X_fit
             self_neighbors = True
@@ -96,7 +96,7 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
                                              **metric_params)
             else:
                 full_dist_matrix = cdist_fun(X, fit_X, **metric_params)
-        ind = numpy.argpartition(full_dist_matrix, n_neighbors - 1, axis=1)#numpy.argsort(full_dist_matrix, axis=1)
+        ind = numpy.argpartition(full_dist_matrix, n_neighbors - 1, axis=1)
 
         if self_neighbors:
             ind = ind[:, 1:]
@@ -331,10 +331,10 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             X_ = cdist_dtw(X, self._ts_fit, n_jobs=self.n_jobs,
                            **metric_params)
         elif self._ts_metric == "softdtw":
-            X_ = cdist_soft_dtw(X, self._ts_fit, n_jobs=self.n_jobs, 
+            X_ = cdist_soft_dtw(X, self._ts_fit, n_jobs=self.n_jobs,
                                 **metric_params)
         elif self._ts_metric == "sax":
-            X_ = cdist_sax(X, self._ts_fit, n_jobs=self.n_jobs, 
+            X_ = cdist_sax(X, self._ts_fit, n_jobs=self.n_jobs,
                            **metric_params)
         else:
             raise ValueError("Invalid metric recorded: %s" %

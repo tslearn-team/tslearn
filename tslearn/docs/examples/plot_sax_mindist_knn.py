@@ -3,7 +3,7 @@
 1-NN with SAX + MINDIST
 =======================
 
-This example presents a comparison performs kNN with k=1 on SAX 
+This example presents a comparison performs kNN with k=1 on SAX
 transformations of the SyntheticControl dataset. MINDIST from the original
 paper is used as a distance metric.
 """
@@ -39,19 +39,12 @@ data_loader = UCR_UEA_datasets()
 datasets = [
     ('SyntheticControl', 16),
     ('GunPoint', 64),
-    #('CBF', 32),
-    #('FaceAll', 64),
     ('OSULeaf', 128),
-    #('SwedishLeaf', 32),
-    #('FiftyWords', 128),
     ('Trace', 128),
-    #('TwoPatterns', 32),
     ('FaceFour', 128),
     ('Lightning2', 256),
     ('Lightning7', 128),
     ('ECG200', 32),
-    #('Adiac', 64),
-    #('Yoga', 128),
     ('Fish', 128),
     ('Plane', 64),
     ('Car', 256),
