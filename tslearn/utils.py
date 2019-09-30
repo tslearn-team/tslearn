@@ -497,12 +497,18 @@ def check_dataset(X, force_univariate=False, force_equal_length=False):
     >>> X_new = check_dataset(X)
     >>> X_new.shape
     (2, 4, 1)
-    >>> check_dataset(X, force_equal_length=True)  # doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> check_dataset(
+    ...     X,
+    ...     force_equal_length=True
+    ... )  # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ...
     ValueError: All the time series in the array should be of equal lengths.
     >>> other_X = numpy.random.randn(3, 10, 2)
-    >>> check_dataset(other_X, force_univariate=True)  # doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> check_dataset(
+    ...     other_X,
+    ...     force_univariate=True
+    ... )  # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ...
     ValueError: Array should be univariate and is of shape: (3, 10, 2)
@@ -695,11 +701,13 @@ def to_stumpy_dataset(X):
     (2, 16)
     """
     X_ = check_dataset(X)
+
     def transpose_or_flatten(ts):
         if ts.shape[1] == 1:
             return ts.reshape((-1, ))
         else:
             return ts.transpose()
+
     return [transpose_or_flatten(Xi[:ts_size(Xi)]) for Xi in X_]
 
 
@@ -735,11 +743,8 @@ def from_stumpy_dataset(X):
     return to_time_series_dataset([transpose_or_expand(Xi) for Xi in X])
 
 
-
-
 try:  # Ugly hack, not sure how to to it better
     import pandas as pd
-
 
     def to_sktime_dataset(X):
         """Transform a tslearn-compatible dataset into a sktime dataset.
@@ -777,7 +782,6 @@ try:  # Ugly hack, not sure how to to it better
                                        for Xi in X_]
         return X_pd
 
-
     def from_sktime_dataset(X):
         """Transform a sktime-compatible dataset into a tslearn dataset.
 
@@ -807,7 +811,9 @@ try:  # Ugly hack, not sure how to to it better
         >>> tslearn_arr.shape
         (2, 4, 2)
         >>> sktime_arr = numpy.random.randn(10, 1, 16)
-        >>> from_sktime_dataset(sktime_arr)  # doctest: +IGNORE_EXCEPTION_DETAIL
+        >>> from_sktime_dataset(
+        ...     sktime_arr
+        ... )  # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         ...
         ValueError: X is not a valid input sktime array.
@@ -847,7 +853,6 @@ except ImportError:
     def from_sktime_dataset(X):
         raise ImportWarning("Conversion from/to sktime cannot be performed "
                             "if pandas is not installed.")
-
 
 
 class LabelCategorizer(BaseEstimator, TransformerMixin):
