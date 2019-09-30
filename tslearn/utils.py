@@ -751,8 +751,9 @@ try:  # Ugly hack, not sure how to to it better
 
         Returns
         -------
-        array, shape=(n_ts, d, sz)
-            sktime-formatted dataset
+        Pandas data-frame
+            sktime-formatted dataset (cf.
+            https://alan-turing-institute.github.io/sktime/examples/loading_data.html)
 
         Examples
         --------
@@ -782,7 +783,7 @@ try:  # Ugly hack, not sure how to to it better
 
         Parameters
         ----------
-        X: array, shape = (n_ts, d, sz)
+        X: pandas data-frame
             sktime-formatted dataset
 
         Returns
@@ -792,27 +793,52 @@ try:  # Ugly hack, not sure how to to it better
 
         Examples
         --------
+        >>> sktime_df = pd.DataFrame()
+        >>> sktime_df["dim_0"] = [pd.Series([1, 2, 3]), pd.Series([4, 5, 6])]
+        >>> tslearn_arr = from_sktime_dataset(sktime_df)
+        >>> tslearn_arr.shape
+        (2, 3, 1)
+        >>> sktime_df = pd.DataFrame()
+        >>> sktime_df["dim_0"] = [pd.Series([1, 2, 3]),
+        ...                       pd.Series([4, 5, 6, 7])]
+        >>> sktime_df["dim_1"] = [pd.Series([8, 9, 10]),
+        ...                       pd.Series([11, 12, 13, 14])]
+        >>> tslearn_arr = from_sktime_dataset(sktime_df)
+        >>> tslearn_arr.shape
+        (2, 4, 2)
         >>> sktime_arr = numpy.random.randn(10, 1, 16)
-        >>> tslearn_arr = from_sktime_dataset(sktime_arr)
-        >>> tslearn_arr.shape
-        (10, 16, 1)
-        >>> sktime_arr = numpy.random.randn(10, 2, 16)
-        >>> tslearn_arr = from_sktime_dataset(sktime_arr)
-        >>> tslearn_arr.shape
-        (10, 16, 2)
-        >>> sktime_arr = numpy.random.randn(10)
         >>> from_sktime_dataset(sktime_arr)  # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         ...
         ValueError: X is not a valid input sktime array.
         """
-        X_ = check_array(X, ensure_2d=False, allow_nd=True)
-        if X_.ndim == 3:
-            return X_.transpose((0, 2, 1))
-        else:
+        if not isinstance(X, pd.DataFrame):
             raise ValueError("X is not a valid input sktime array. "
-                             "Its dimensions, once cast to numpy.ndarray "
-                             "are {}".format(X_.shape))
+                             "A pandas DataFrame is expected.")
+        data_dimensions = [col_name
+                           for col_name in X.columns
+                           if col_name.startswith("dim_")]
+        d = len(data_dimensions)
+        ordered_data_dimensions = ["dim_%d" % di for di in range(d)]
+        if sorted(ordered_data_dimensions) != sorted(data_dimensions):
+            raise ValueError("X is not a valid input sktime array. "
+                             "Provided dimensions are not conitiguous."
+                             "{}".format(data_dimensions))
+        n = X["dim_0"].shape[0]
+        max_sz = -1
+        for dim_name in ordered_data_dimensions:
+            for i in range(n):
+                if X[dim_name][i].size > max_sz:
+                    max_sz = X[dim_name][i].size
+
+        tslearn_arr = numpy.empty((n, max_sz, d))
+        tslearn_arr[:] = numpy.nan
+        for di in range(d):
+            for i in range(n):
+                sz = X["dim_%d" % di][i].size
+                tslearn_arr[i, :sz, di] = X["dim_%d" % di][i].to_numpy()
+        return tslearn_arr
+
 except ImportError:
     def to_sktime_dataset(X):
         raise ImportWarning("Conversion from/to sktime cannot be performed "
