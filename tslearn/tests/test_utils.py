@@ -76,3 +76,11 @@ def test_conversions():
             tslearn.utils.to_stumpy_dataset(tslearn_dataset)
         )
     )
+
+    tslearn_dataset = rng.randn(1, sz, d)
+    np.testing.assert_allclose(
+        tslearn_dataset,
+        tslearn.utils.from_pyflux_dataset(
+            tslearn.utils.to_pyflux_dataset(tslearn_dataset)
+        )
+    )

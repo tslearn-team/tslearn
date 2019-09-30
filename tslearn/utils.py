@@ -467,7 +467,8 @@ def ts_zeros(sz, d=1):
     return numpy.zeros((sz, d))
 
 
-def check_dataset(X, force_univariate=False, force_equal_length=False):
+def check_dataset(X, force_univariate=False, force_equal_length=False,
+                  force_single_time_series=False):
     """Check if X is a valid tslearn dataset, with possibly additional extra
     constraints.
 
@@ -479,6 +480,9 @@ def check_dataset(X, force_univariate=False, force_equal_length=False):
         If True, only univariate datasets are considered valid.
     force_equal_length: bool (default: False)
         If True, only equal-length datasets are considered valid.
+    force_single_time_series: bool (default: False)
+        If True, only datasets made of a single time series are considered
+        valid.
 
     Returns
     -------
@@ -512,6 +516,14 @@ def check_dataset(X, force_univariate=False, force_equal_length=False):
     Traceback (most recent call last):
     ...
     ValueError: Array should be univariate and is of shape: (3, 10, 2)
+    >>> other_X = numpy.random.randn(3, 10, 2)
+    >>> check_dataset(
+    ...     other_X,
+    ...     force_single_time_series=True
+    ... )  # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+    ...
+    ValueError: Array should be made of a single time series (3 here)
     """
     X_ = to_time_series_dataset(X)
     if force_univariate and X_.shape[2] != 1:
@@ -523,6 +535,9 @@ def check_dataset(X, force_univariate=False, force_equal_length=False):
     if force_equal_length and not check_equal_size(X_):
         raise ValueError("All the time series in the array should be of "
                          "equal lengths")
+    if force_single_time_series and X_.shape[0] != 1:
+        raise ValueError("Array should be made of a single time series "
+                         "({} here)".format(X_.shape[0]))
     return X_
 
 
@@ -845,6 +860,103 @@ try:  # Ugly hack, not sure how to to it better
                 tslearn_arr[i, :sz, di] = X["dim_%d" % di][i].to_numpy()
         return tslearn_arr
 
+    def to_pyflux_dataset(X):
+        """Transform a tslearn-compatible dataset into a pyflux dataset.
+
+        Parameters
+        ----------
+        X: array, shape = (n_ts, sz, d), where n_ts=1
+            tslearn-formatted dataset to be cast to pyflux format
+
+        Returns
+        -------
+        Pandas data-frame
+            pyflux-formatted dataset (cf.
+            https://pyflux.readthedocs.io/en/latest/getting_started.html)
+
+        Examples
+        --------
+        >>> tslearn_arr = numpy.random.randn(1, 16, 1)
+        >>> pyflux_df = to_pyflux_dataset(tslearn_arr)
+        >>> pyflux_df.shape
+        (16, 1)
+        >>> pyflux_df.columns[0]
+        'dim_0'
+        >>> tslearn_arr = numpy.random.randn(1, 16, 2)
+        >>> pyflux_df = to_pyflux_dataset(tslearn_arr)
+        >>> pyflux_df.shape
+        (16, 2)
+        >>> pyflux_df.columns[1]
+        'dim_1'
+        >>> tslearn_arr = numpy.random.randn(10, 16, 1)
+        >>> to_pyflux_dataset(tslearn_arr)  # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+        ...
+        ValueError: Array should be made of a single time series (10 here)
+        """
+        X_ = check_dataset(X,
+                           force_equal_length=True,
+                           force_single_time_series=True)
+        X_pd = pd.DataFrame(X[0], dtype=numpy.float32)
+        X_pd.columns = ["dim_%d" % di for di in range(X_.shape[2])]
+        return X_pd
+
+    def from_pyflux_dataset(X):
+        """Transform a pyflux-compatible dataset into a tslearn dataset.
+
+        Parameters
+        ----------
+        X: pandas data-frame
+            pyflux-formatted dataset
+
+        Returns
+        -------
+        array, shape=(n_ts, sz, d), where n_ts=1
+            tslearn-formatted dataset.
+            Column order is kept the same as in the original data frame.
+
+        Examples
+        --------
+        >>> pyflux_df = pd.DataFrame()
+        >>> pyflux_df["dim_0"] = numpy.random.rand(10)
+        >>> tslearn_arr = from_pyflux_dataset(pyflux_df)
+        >>> tslearn_arr.shape
+        (1, 10, 1)
+        >>> pyflux_df = pd.DataFrame()
+        >>> pyflux_df["dim_0"] = numpy.random.rand(10)
+        >>> pyflux_df["dim_1"] = numpy.random.rand(10)
+        >>> pyflux_df["dim_2"] = numpy.random.rand(10)
+        >>> tslearn_arr = from_pyflux_dataset(pyflux_df)
+        >>> tslearn_arr.shape
+        (1, 10, 3)
+        >>> pyflux_arr = numpy.random.randn(10, 1, 16)
+        >>> from_pyflux_dataset(
+        ...     pyflux_arr
+        ... )  # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+        ...
+        ValueError: X is not a valid input pyflux array.
+        """
+        if not isinstance(X, pd.DataFrame):
+            raise ValueError("X is not a valid input pyflux array. "
+                             "A pandas DataFrame is expected.")
+        data_dimensions = sorted([col_name for col_name in X.columns])
+        d = len(data_dimensions)
+        n = 1
+
+        max_sz = -1
+        for dim_name in data_dimensions:
+            if X[dim_name].size > max_sz:
+                max_sz = X[dim_name].size
+
+        tslearn_arr = numpy.empty((n, max_sz, d))
+        tslearn_arr[:] = numpy.nan
+        for di, dim_name in enumerate(data_dimensions):
+            data = X[dim_name].to_numpy()
+            sz = len(data)
+            tslearn_arr[0, :sz, di] = data
+        return tslearn_arr
+
 except ImportError:
     def to_sktime_dataset(X):
         raise ImportWarning("Conversion from/to sktime cannot be performed "
@@ -852,6 +964,14 @@ except ImportError:
 
     def from_sktime_dataset(X):
         raise ImportWarning("Conversion from/to sktime cannot be performed "
+                            "if pandas is not installed.")
+
+    def to_pyflux_dataset(X):
+        raise ImportWarning("Conversion from/to pyflux cannot be performed "
+                            "if pandas is not installed.")
+
+    def from_pyflux_dataset(X):
+        raise ImportWarning("Conversion from/to pyflux cannot be performed "
                             "if pandas is not installed.")
 
 
