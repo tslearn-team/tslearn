@@ -17,10 +17,6 @@ If you plan to use the ``shapelets`` module from ``tslearn``, ``keras`` and
 Installation
 ------------
 
-Pre-requisites 
-``````````````
-C++ build tools should be available to perform installation.
-
 Using conda
 ```````````
 
