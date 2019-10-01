@@ -7,7 +7,7 @@ tslearn.utils
 
    
    
-   .. rubric:: Functions
+   .. rubric:: Generic functions
 
    .. autosummary::
       :toctree: utils
@@ -22,6 +22,17 @@ tslearn.utils
       save_timeseries_txt
       check_equal_size
       check_dims
+
+   .. rubric:: Conversion functions
+
+   The following functions are provided in order to provide some level of
+   interoperability between standard Python packages for time series.
+   They allow conversion between `tslearn` format and other libraries' formats.
+
+   .. autosummary::
+      :toctree: utils_conv
+      :template: function.rst
+
       to_pyts_dataset
       from_pyts_dataset
       to_sktime_dataset

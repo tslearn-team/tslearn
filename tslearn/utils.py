@@ -1011,7 +1011,7 @@ try:  # Ugly hack, not sure how to to it better
             Xi_ = Xi[:ts_size(Xi)]
             sz = Xi_.shape[0]
             df["time"] = numpy.arange(sz)
-            df["id"] = numpy.zeros((sz, ))
+            df["id"] = numpy.zeros((sz, ), dtype=numpy.int32) + i
             for di in range(d):
                 df["dim_%d" % di] = Xi_[:, di]
             dataframes.append(df)
