@@ -25,7 +25,7 @@ tslearn.utils
 
    .. rubric:: Conversion functions
 
-   The following functions are provided in order to provide some level of
+   The following functions are provided for the sake of
    interoperability between standard Python packages for time series.
    They allow conversion between `tslearn` format and other libraries' formats.
 

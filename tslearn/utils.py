@@ -773,7 +773,7 @@ try:  # Ugly hack, not sure how to to it better
         -------
         Pandas data-frame
             sktime-formatted dataset (cf.
-            [link](https://alan-turing-institute.github.io/sktime/examples/loading_data.html))
+            `link <https://alan-turing-institute.github.io/sktime/examples/loading_data.html>`_)
 
         Examples
         --------
@@ -808,7 +808,7 @@ try:  # Ugly hack, not sure how to to it better
         ----------
         X: pandas data-frame
             sktime-formatted dataset (cf.
-            [link](https://alan-turing-institute.github.io/sktime/examples/loading_data.html))
+            `link <https://alan-turing-institute.github.io/sktime/examples/loading_data.html>`_)
 
         Returns
         -------
@@ -881,7 +881,7 @@ try:  # Ugly hack, not sure how to to it better
         -------
         Pandas data-frame
             pyflux-formatted dataset (cf.
-            [link](https://pyflux.readthedocs.io/en/latest/getting_started.html))
+            `link <https://pyflux.readthedocs.io/en/latest/getting_started.html>`_)
 
         Examples
         --------
@@ -986,7 +986,7 @@ try:  # Ugly hack, not sure how to to it better
         -------
         Pandas data-frame
             tsfresh-formatted dataset ("flat" data frame, as described
-            [there](https://tsfresh.readthedocs.io/en/latest/text/data_formats.html#input-option-1-flat-dataframe))
+            `there <https://tsfresh.readthedocs.io/en/latest/text/data_formats.html#input-option-1-flat-dataframe>`_)
 
         Examples
         --------
@@ -1025,7 +1025,7 @@ try:  # Ugly hack, not sure how to to it better
         ----------
         X: pandas data-frame
             tsfresh-formatted dataset ("flat" data frame, as described
-            [there](https://tsfresh.readthedocs.io/en/latest/text/data_formats.html#input-option-1-flat-dataframe))
+            `there <https://tsfresh.readthedocs.io/en/latest/text/data_formats.html#input-option-1-flat-dataframe>`_)
 
         Returns
         -------
@@ -1120,7 +1120,7 @@ try:
         -------
         list of cesium TimeSeries
             cesium-formatted dataset (cf.
-            [linl](http://cesium-ml.org/docs/api/cesium.time_series.html#cesium.time_series.TimeSeries))
+            `link <http://cesium-ml.org/docs/api/cesium.time_series.html#cesium.time_series.TimeSeries>`_)
 
         Examples
         --------
@@ -1164,7 +1164,7 @@ try:
         ----------
         X: list of cesium TimeSeries
             cesium-formatted dataset (cf.
-            [linl](http://cesium-ml.org/docs/api/cesium.time_series.html#cesium.time_series.TimeSeries))
+            `link <http://cesium-ml.org/docs/api/cesium.time_series.html#cesium.time_series.TimeSeries>`_)
 
         Returns
         -------
