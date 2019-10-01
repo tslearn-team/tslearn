@@ -793,7 +793,7 @@ try:  # Ugly hack, not sure how to to it better
         Notes
         -----
         Conversion from/to sktime format requires pandas to be installed.
-        """
+        """  # noqa: E501
         X_ = check_dataset(X)
         X_pd = pd.DataFrame(dtype=numpy.float32)
         for dim in range(X_.shape[2]):
@@ -841,7 +841,7 @@ try:  # Ugly hack, not sure how to to it better
         Notes
         -----
         Conversion from/to sktime format requires pandas to be installed.
-        """
+        """  # noqa: E501
         if not isinstance(X, pd.DataFrame):
             raise ValueError("X is not a valid input sktime array. "
                              "A pandas DataFrame is expected.")
@@ -906,7 +906,7 @@ try:  # Ugly hack, not sure how to to it better
         Notes
         -----
         Conversion from/to pyflux format requires pandas to be installed.
-        """
+        """  # noqa: E501
         X_ = check_dataset(X,
                            force_equal_length=True,
                            force_single_time_series=True)
@@ -1002,7 +1002,7 @@ try:  # Ugly hack, not sure how to to it better
         Notes
         -----
         Conversion from/to tsfresh format requires pandas to be installed.
-        """
+        """  # noqa: E501
         X_ = check_dataset(X)
         n, sz, d = X_.shape
         dataframes = []
@@ -1061,7 +1061,7 @@ try:  # Ugly hack, not sure how to to it better
         Notes
         -----
         Conversion from/to tsfresh format requires pandas to be installed.
-        """
+        """  # noqa: E501
         if not isinstance(X, pd.DataFrame):
             raise ValueError("X is not a valid input tsfresh array. "
                              "A pandas DataFrame is expected.")
@@ -1146,7 +1146,7 @@ try:
         Notes
         -----
         Conversion from/to cesium format requires cesium to be installed.
-        """
+        """  # noqa: E501
         def transpose_or_flatten(ts):
             ts_ = ts[:ts_size(ts)]
             if ts.shape[1] == 1:
@@ -1188,7 +1188,7 @@ try:
         Notes
         -----
         Conversion from/to cesium format requires cesium to be installed.
-        """
+        """  # noqa: E501
         def format_to_tslearn(ts):
             try:
                 ts.sort()
