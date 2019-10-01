@@ -857,7 +857,7 @@ try:  # Ugly hack, not sure how to to it better
         for di in range(d):
             for i in range(n):
                 sz = X["dim_%d" % di][i].size
-                tslearn_arr[i, :sz, di] = X["dim_%d" % di][i].to_numpy()
+                tslearn_arr[i, :sz, di] = X["dim_%d" % di][i].array.copy()
         return tslearn_arr
 
     def to_pyflux_dataset(X):
@@ -952,7 +952,7 @@ try:  # Ugly hack, not sure how to to it better
         tslearn_arr = numpy.empty((n, max_sz, d))
         tslearn_arr[:] = numpy.nan
         for di, dim_name in enumerate(data_dimensions):
-            data = X[dim_name].to_numpy()
+            data = X[dim_name].array.copy()
             sz = len(data)
             tslearn_arr[0, :sz, di] = data
         return tslearn_arr
