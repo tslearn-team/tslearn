@@ -1062,7 +1062,7 @@ try:
             return tslearn_ts
 
         if not isinstance(X, list) or \
-            [type(ts) for ts in X] != [TimeSeries] * len(X):
+                [type(ts) for ts in X] != [TimeSeries] * len(X):
             raise ValueError("X is not a valid input cesium array. "
                              "A list of cesium TimeSeries is expected.")
         dataset = [format_to_tslearn(ts) for ts in X]
