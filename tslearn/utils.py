@@ -958,14 +958,6 @@ try:  # Ugly hack, not sure how to to it better
         return tslearn_arr
 
 except ImportError:
-    def to_sktime_dataset(X):
-        raise ImportWarning("Conversion from/to sktime cannot be performed "
-                            "if pandas is not installed.")
-
-    def from_sktime_dataset(X):
-        raise ImportWarning("Conversion from/to sktime cannot be performed "
-                            "if pandas is not installed.")
-
     def to_pyflux_dataset(X):
         raise ImportWarning("Conversion from/to pyflux cannot be performed "
                             "if pandas is not installed.")
@@ -973,6 +965,116 @@ except ImportError:
     def from_pyflux_dataset(X):
         raise ImportWarning("Conversion from/to pyflux cannot be performed "
                             "if pandas is not installed.")
+
+try:
+    from cesium.time_series import TimeSeries
+
+    def to_cesium_dataset(X):
+        """Transform a tslearn-compatible dataset into a cesium dataset.
+
+        Parameters
+        ----------
+        X: array, shape = (n_ts, sz, d), where n_ts=1
+            tslearn-formatted dataset to be cast to cesium format
+
+        Returns
+        -------
+        list of cesium TimeSeries
+            cesium-formatted dataset (cf.
+            http://cesium-ml.org/docs/api/cesium.time_series.html#cesium.time_series.TimeSeries)
+
+        Examples
+        --------
+        >>> tslearn_arr = numpy.random.randn(3, 16, 1)
+        >>> cesium_ds = to_cesium_dataset(tslearn_arr)
+        >>> len(cesium_ds)
+        3
+        >>> cesium_ds[0].measurement.shape
+        (16,)
+        >>> tslearn_arr = numpy.random.randn(3, 16, 2)
+        >>> cesium_ds = to_cesium_dataset(tslearn_arr)
+        >>> len(cesium_ds)
+        3
+        >>> cesium_ds[0].measurement.shape
+        (2, 16)
+        >>> tslearn_arr = [[1, 2, 3], [1, 2, 3, 4]]
+        >>> cesium_ds = to_cesium_dataset(tslearn_arr)
+        >>> len(cesium_ds)
+        2
+        >>> cesium_ds[0].measurement.shape
+        (3,)
+        """
+        def transpose_or_flatten(ts):
+            ts_ = ts[:ts_size(ts)]
+            if ts.shape[1] == 1:
+                return ts_.reshape((-1, ))
+            else:
+                return ts_.transpose()
+
+        X_ = check_dataset(X)
+        return [TimeSeries(m=transpose_or_flatten(Xi)) for Xi in X_]
+
+    def from_cesium_dataset(X):
+        """Transform a cesium-compatible dataset into a tslearn dataset.
+
+        Parameters
+        ----------
+        X: list of cesium TimeSeries
+            cesium-formatted dataset
+
+        Returns
+        -------
+        array, shape=(n_ts, sz, d)
+            tslearn-formatted dataset.
+
+        Examples
+        --------
+        >>> cesium_ds = [TimeSeries(m=numpy.array([1, 2, 3, 4]))]
+        >>> tslearn_arr = from_cesium_dataset(cesium_ds)
+        >>> tslearn_arr.shape
+        (1, 4, 1)
+        >>> cesium_ds = [
+        ...     TimeSeries(m=numpy.array([[1, 2, 3, 4],
+        ...                               [5, 6, 7, 8]]))
+        ... ]
+        >>> tslearn_arr = from_cesium_dataset(cesium_ds)
+        >>> tslearn_arr.shape
+        (1, 4, 2)
+        """
+        def format_to_tslearn(ts):
+            try:
+                ts.sort()
+            except ValueError:
+                warnings.warn("Cesium dataset could not be sorted, assuming "
+                              "it is already sorted before casting to "
+                              "tslearn format.")
+            if ts.measurement.ndim == 1:
+                data = ts.measurement.reshape((1, -1))
+            else:
+                data = ts.measurement
+            d = len(data)
+            max_sz = max([len(ts_di) for ts_di in data])
+            tslearn_ts = numpy.empty((max_sz, d))
+            tslearn_ts[:] = numpy.nan
+            for di in range(d):
+                sz = data[di].shape[0]
+                tslearn_ts[:sz, di] = data[di]
+            return tslearn_ts
+
+        if not isinstance(X, list) or \
+            [type(ts) for ts in X] != [TimeSeries] * len(X):
+            raise ValueError("X is not a valid input cesium array. "
+                             "A list of cesium TimeSeries is expected.")
+        dataset = [format_to_tslearn(ts) for ts in X]
+        return to_time_series_dataset(dataset=dataset)
+except ImportError:
+    def to_cesium_dataset(X):
+        raise ImportWarning("Conversion from/to cesium cannot be performed "
+                            "if cesium is not installed.")
+
+    def from_cesium_dataset(X):
+        raise ImportWarning("Conversion from/to cesium cannot be performed "
+                            "if cesium is not installed.")
 
 
 class LabelCategorizer(BaseEstimator, TransformerMixin):

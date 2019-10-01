@@ -77,6 +77,13 @@ def test_conversions():
         )
     )
 
+    np.testing.assert_allclose(
+        tslearn_dataset,
+        tslearn.utils.from_cesium_dataset(
+            tslearn.utils.to_cesium_dataset(tslearn_dataset)
+        )
+    )
+
     tslearn_dataset = rng.randn(1, sz, d)
     np.testing.assert_allclose(
         tslearn_dataset,
