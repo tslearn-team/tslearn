@@ -789,6 +789,10 @@ try:  # Ugly hack, not sure how to to it better
         (10, 2)
         >>> sktime_arr["dim_1"][0].shape
         (16,)
+
+        Notes
+        -----
+        Conversion from/to sktime format requires pandas to be installed.
         """
         X_ = check_dataset(X)
         X_pd = pd.DataFrame(dtype=numpy.float32)
@@ -832,6 +836,10 @@ try:  # Ugly hack, not sure how to to it better
         Traceback (most recent call last):
         ...
         ValueError: X is not a valid input sktime array.
+
+        Notes
+        -----
+        Conversion from/to sktime format requires pandas to be installed.
         """
         if not isinstance(X, pd.DataFrame):
             raise ValueError("X is not a valid input sktime array. "
@@ -893,6 +901,10 @@ try:  # Ugly hack, not sure how to to it better
         Traceback (most recent call last):
         ...
         ValueError: Array should be made of a single time series (10 here)
+
+        Notes
+        -----
+        Conversion from/to pyflux format requires pandas to be installed.
         """
         X_ = check_dataset(X,
                            force_equal_length=True,
@@ -936,11 +948,15 @@ try:  # Ugly hack, not sure how to to it better
         Traceback (most recent call last):
         ...
         ValueError: X is not a valid input pyflux array.
+
+        Notes
+        -----
+        Conversion from/to pyflux format requires pandas to be installed.
         """
         if not isinstance(X, pd.DataFrame):
             raise ValueError("X is not a valid input pyflux array. "
                              "A pandas DataFrame is expected.")
-        data_dimensions = sorted([col_name for col_name in X.columns])
+        data_dimensions = [col_name for col_name in X.columns]
         d = len(data_dimensions)
         n = 1
 
@@ -957,6 +973,120 @@ try:  # Ugly hack, not sure how to to it better
             tslearn_arr[0, :sz, di] = data
         return tslearn_arr
 
+    def to_tsfresh_dataset(X):
+        """Transform a tslearn-compatible dataset into a tsfresh dataset.
+
+        Parameters
+        ----------
+        X: array, shape = (n_ts, sz, d)
+            tslearn-formatted dataset to be cast to tsfresh format
+
+        Returns
+        -------
+        Pandas data-frame
+            tsfresh-formatted dataset ("flat" data frame, as described there:
+            https://tsfresh.readthedocs.io/en/latest/text/data_formats.html#input-option-1-flat-dataframe)
+
+        Examples
+        --------
+        >>> tslearn_arr = numpy.random.randn(1, 16, 1)
+        >>> tsfresh_df = to_tsfresh_dataset(tslearn_arr)
+        >>> tsfresh_df.shape
+        (16, 3)
+        >>> tslearn_arr = numpy.random.randn(1, 16, 2)
+        >>> tsfresh_df = to_tsfresh_dataset(tslearn_arr)
+        >>> tsfresh_df.shape
+        (16, 4)
+
+        Notes
+        -----
+        Conversion from/to tsfresh format requires pandas to be installed.
+        """
+        X_ = check_dataset(X)
+        n, sz, d = X_.shape
+        dataframes = []
+        for i, Xi in enumerate(X_):
+            df = pd.DataFrame(columns=["id", "time"] +
+                                      ["dim_%d" % di for di in range(d)])
+            Xi_ = Xi[:ts_size(Xi)]
+            sz = Xi_.shape[0]
+            df["time"] = numpy.arange(sz)
+            df["id"] = numpy.zeros((sz, ))
+            for di in range(d):
+                df["dim_%d" % di] = Xi_[:, di]
+            dataframes.append(df)
+        return pd.concat(dataframes)
+
+    def from_tsfresh_dataset(X):
+        """Transform a tsfresh-compatible dataset into a tslearn dataset.
+
+        Parameters
+        ----------
+        X: pandas data-frame
+            tsfresh-formatted dataset ("flat" data frame, as described there:
+            https://tsfresh.readthedocs.io/en/latest/text/data_formats.html#input-option-1-flat-dataframe)
+
+        Returns
+        -------
+        array, shape=(n_ts, sz, d)
+            tslearn-formatted dataset.
+            Column order is kept the same as in the original data frame.
+
+        Examples
+        --------
+        >>> tsfresh_df = pd.DataFrame(columns=["id", "time", "a", "b"])
+        >>> tsfresh_df["id"] = [0, 0, 0]
+        >>> tsfresh_df["time"] = [0, 1, 2]
+        >>> tsfresh_df["a"] = [-1, 4, 7]
+        >>> tsfresh_df["b"] = [8, -3, 2]
+        >>> tslearn_arr = from_tsfresh_dataset(tsfresh_df)
+        >>> tslearn_arr.shape
+        (1, 3, 2)
+        >>> tsfresh_df = pd.DataFrame(columns=["id", "time", "a"])
+        >>> tsfresh_df["id"] = [0, 0, 0, 1, 1]
+        >>> tsfresh_df["time"] = [0, 1, 2, 0, 1]
+        >>> tsfresh_df["a"] = [-1, 4, 7, 9, 1]
+        >>> tslearn_arr = from_tsfresh_dataset(tsfresh_df)
+        >>> tslearn_arr.shape
+        (2, 3, 1)
+        >>> tsfresh_df = numpy.random.randn(10, 1, 16)
+        >>> from_tsfresh_dataset(
+        ...     tsfresh_df
+        ... )  # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+        ...
+        ValueError: X is not a valid input tsfresh array.
+
+        Notes
+        -----
+        Conversion from/to tsfresh format requires pandas to be installed.
+        """
+        if not isinstance(X, pd.DataFrame):
+            raise ValueError("X is not a valid input tsfresh array. "
+                             "A pandas DataFrame is expected.")
+        data_dimensions = [col_name
+                           for col_name in X.columns
+                           if col_name not in ["id", "time"]]
+        d = len(data_dimensions)
+        all_ids = set(X["id"])
+        n = len(all_ids)
+
+        max_sz = -1
+        for ind_id in all_ids:
+            sz = X[X["id"] == ind_id].shape[0]
+            if sz > max_sz:
+                max_sz = sz
+
+        tslearn_arr = numpy.empty((n, max_sz, d))
+        tslearn_arr[:] = numpy.nan
+        for di, dim_name in enumerate(data_dimensions):
+            for i, ind_id in enumerate(all_ids):
+                data_ind = X[X["id"] == ind_id]
+                data = data_ind[dim_name]
+                sz = data_ind.shape[0]
+                tslearn_arr[i, :sz, di] = data
+        return tslearn_arr
+
 except ImportError:
     def to_pyflux_dataset(X):
         raise ImportWarning("Conversion from/to pyflux cannot be performed "
@@ -964,6 +1094,14 @@ except ImportError:
 
     def from_pyflux_dataset(X):
         raise ImportWarning("Conversion from/to pyflux cannot be performed "
+                            "if pandas is not installed.")
+
+    def to_sktime_dataset(X):
+        raise ImportWarning("Conversion from/to sktime cannot be performed "
+                            "if pandas is not installed.")
+
+    def from_sktime_dataset(X):
+        raise ImportWarning("Conversion from/to sktime cannot be performed "
                             "if pandas is not installed.")
 
 try:
@@ -1003,6 +1141,10 @@ try:
         2
         >>> cesium_ds[0].measurement.shape
         (3,)
+
+        Notes
+        -----
+        Conversion from/to cesium format requires cesium to be installed.
         """
         def transpose_or_flatten(ts):
             ts_ = ts[:ts_size(ts)]
@@ -1040,6 +1182,10 @@ try:
         >>> tslearn_arr = from_cesium_dataset(cesium_ds)
         >>> tslearn_arr.shape
         (1, 4, 2)
+
+        Notes
+        -----
+        Conversion from/to cesium format requires cesium to be installed.
         """
         def format_to_tslearn(ts):
             try:
