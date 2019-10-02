@@ -8,6 +8,13 @@ and this project adheres to
 
 Changelogs for this project are recorded in this file since v0.2.0.
 
+## [v0.2.4]
+
+### Fixed
+
+* The `tests` subdirectory is now made a python package and hence included in 
+wheels
+
 ## [v0.2.2]
 
 ### Fixed
