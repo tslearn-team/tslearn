@@ -18,7 +18,8 @@ from sklearn.utils.estimator_checks import (
     check_no_attributes_set_in_init,
     check_parameters_default_constructible
 )
-from sklearn_patches import (check_clustering,
+from tslearn.tests.sklearn_patches import (
+                             check_clustering,
                              check_non_transf_est_n_iter,
                              check_fit_idempotent,
                              check_classifiers_classes,
@@ -30,7 +31,7 @@ from sklearn_patches import (check_clustering,
                              check_classifiers_cont_target,
                              check_pipeline_consistency,
                              yield_all_checks)
-from sklearn_patches import _safe_tags
+from tslearn.tests.sklearn_patches import _safe_tags
 import warnings
 import pytest
 
