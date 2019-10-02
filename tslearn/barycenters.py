@@ -12,7 +12,7 @@ from sklearn.exceptions import ConvergenceWarning
 import warnings
 
 from tslearn.utils import to_time_series_dataset, check_equal_size, \
-    to_time_series
+    to_time_series, ts_size
 from tslearn.preprocessing import TimeSeriesResampler
 from tslearn.metrics import dtw_path, SquaredEuclidean, SoftDTW
 
@@ -212,6 +212,156 @@ def dtw_barycenter_averaging(X, barycenter_size=None, init_barycenter=None,
             print("[DBA] epoch %d, cost: %.3f" % (it + 1, cost))
         barycenter = _petitjean_update_barycenter(X_, assign, barycenter_size,
                                                   weights)
+        if abs(cost_prev - cost) < tol:
+            break
+        elif cost_prev < cost:
+            warnings.warn("DBA loss is increasing while it should not be. "
+                          "Stopping optimization.", ConvergenceWarning)
+            break
+        else:
+            cost_prev = cost
+    return barycenter
+
+
+def _mm_assignment(X, barycenter, metric_params=None):
+    if metric_params is None:
+        metric_params = {}
+    n = X.shape[0]
+    cost = 0.
+    list_p_k = []
+    for i in range(n):
+        path, dist_i = dtw_path(barycenter, X[i], **metric_params)
+        cost += dist_i ** 2
+        list_p_k.append(path)
+    return list_p_k, cost
+
+
+def _mm_valence_warping(list_p_k, barycenter_size):
+    diag_sum_v_k = numpy.zeros((barycenter_size, ))
+    list_w_k = []
+    for k, p_k in enumerate(list_p_k):
+        sz_k = p_k[-1][1] + 1
+        w_k = numpy.zeros((barycenter_size, sz_k))
+        for i, j in p_k:
+            w_k[i, j] = 1.
+        list_w_k.append(w_k)
+        diag_sum_v_k += w_k.sum(axis=1)
+    return diag_sum_v_k, list_w_k
+
+
+def _mm_update_barycenter(X, diag_sum_v_k, list_w_k, weights):  # TODO: weight is ignored for now
+    d = X.shape[2]
+    barycenter_size = diag_sum_v_k.shape[0]
+    sum_w_x = numpy.zeros((barycenter_size, d))
+    for w_k, x_k in zip(list_w_k, X):
+        sum_w_x += w_k.dot(x_k[:ts_size(x_k)])
+    barycenter = numpy.diag(1. / diag_sum_v_k).dot(sum_w_x)
+    return barycenter
+
+
+def dtw_barycenter_averaging_mm(X, barycenter_size=None, init_barycenter=None,
+                                max_iter=30, tol=1e-5, weights=None,
+                                metric_params=None,
+                                verbose=False):
+    """DTW Barycenter Averaging (DBA) method.
+
+    DBA was originally presented in [1]_.
+    This implementation is based on a idea from [2]_.
+
+    Parameters
+    ----------
+    X : array-like, shape=(n_ts, sz, d)
+        Time series dataset.
+
+    barycenter_size : int or None (default: None)
+        Size of the barycenter to generate. If None, the size of the barycenter
+        is that of the data provided at fit
+        time or that of the initial barycenter if specified.
+
+    init_barycenter : array or None (default: None)
+        Initial barycenter to start from for the optimization process.
+
+    max_iter : int (default: 30)
+        Number of iterations of the Expectation-Maximization optimization
+        procedure.
+
+    tol : float (default: 1e-5)
+        Tolerance to use for early stopping: if the decrease in cost is lower
+        than this value, the
+        Expectation-Maximization procedure stops.
+
+    weights: None or array
+        Weights of each X[i]. Must be the same size as len(X).
+        If None, uniform weights are used.
+
+    metric_params: dict or None (default: None)
+        DTW constraint parameters to be used.
+        See :ref:`tslearn.metrics.dtw_path <fun-tslearn.metrics.dtw_path>` for
+        a list of accepted parameters
+        If None, no constraint is used for DTW computations.
+
+    verbose : boolean (default: False)
+        Whether to print information about the cost at each iteration or not.
+
+    Returns
+    -------
+    numpy.array of shape (barycenter_size, d) or (sz, d) if barycenter_size \
+            is None
+        DBA barycenter of the provided time series dataset.
+
+    Examples
+    --------
+    >>> time_series = [[1, 2, 3, 4], [1, 2, 4, 5]]
+    >>> dtw_barycenter_averaging_mm(time_series, max_iter=5)
+    array([[1. ],
+           [2. ],
+           [3.5],
+           [4.5]])
+    >>> time_series = [[1, 2, 3, 4], [1, 2, 3, 4, 5]]
+    >>> dtw_barycenter_averaging_mm(time_series, max_iter=5)
+    array([[1. ],
+           [2. ],
+           [3. ],
+           [4. ],
+           [4.5]])
+    >>> dtw_barycenter_averaging_mm(time_series, max_iter=5,
+    ...                             metric_params={"itakura_max_slope": 2})
+    array([[1. ],
+           [2. ],
+           [3. ],
+           [3.5],
+           [4.5]])
+    >>> dtw_barycenter_averaging_mm(time_series, max_iter=5, barycenter_size=3)
+    array([[1.5       ],
+           [3.        ],
+           [4.33333333]])
+
+    References
+    ----------
+    .. [1] F. Petitjean, A. Ketterlin & P. Gancarski. A global averaging method
+       for dynamic time warping, with applications to clustering. Pattern
+       Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
+       [2] D. Schultz and B. Jain. Nonsmooth Analysis and Subgradient Methods
+       for Averaging in Dynamic Time Warping Spaces.
+       TODO: where was it published?
+
+    """
+    X_ = to_time_series_dataset(X)
+    if barycenter_size is None:
+        barycenter_size = X_.shape[1]
+    weights = _set_weights(weights, X_.shape[0])
+    if init_barycenter is None:
+        barycenter = _init_avg(X_, barycenter_size)
+    else:
+        barycenter_size = init_barycenter.shape[0]
+        barycenter = init_barycenter
+    cost_prev, cost = numpy.inf, numpy.inf
+    for it in range(max_iter):
+        list_p_k, cost = _mm_assignment(X_, barycenter, metric_params)
+        diag_sum_v_k, list_w_k = _mm_valence_warping(list_p_k, barycenter_size)
+        if verbose:
+            print("[DBA-MM] epoch %d, cost: %.3f" % (it + 1, cost))
+        barycenter = _mm_update_barycenter(X_, diag_sum_v_k, list_w_k, weights)
         if abs(cost_prev - cost) < tol:
             break
         elif cost_prev < cost:
