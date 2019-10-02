@@ -223,7 +223,35 @@ def dtw_barycenter_averaging(X, barycenter_size=None, init_barycenter=None,
     return barycenter
 
 
-def _mm_assignment(X, barycenter, metric_params=None):
+def _mm_assignment(X, barycenter, weights, metric_params=None):
+    """Computes item assignement based on DTW alignments and return cost as a
+    bonus.
+
+    Parameters
+    ----------
+    X : numpy.array of shape (n, sz, d)
+        Time-series to be averaged
+
+    barycenter : numpy.array of shape (barycenter_size, d)
+        Barycenter as computed at the current step of the algorithm.
+
+    weights: array
+        Weights of each X[i]. Must be the same size as len(X).
+
+    metric_params: dict or None (default: None)
+        DTW constraint parameters to be used.
+        See :ref:`tslearn.metrics.dtw_path <fun-tslearn.metrics.dtw_path>` for
+        a list of accepted parameters
+        If None, no constraint is used for DTW computations.
+
+    Returns
+    -------
+    list of index pairs
+        Warping paths
+
+    float
+        Current alignment cost
+    """
     if metric_params is None:
         metric_params = {}
     n = X.shape[0]
@@ -231,12 +259,47 @@ def _mm_assignment(X, barycenter, metric_params=None):
     list_p_k = []
     for i in range(n):
         path, dist_i = dtw_path(barycenter, X[i], **metric_params)
-        cost += dist_i ** 2
+        cost += dist_i ** 2 * weights[i]
         list_p_k.append(path)
+    cost /= weights.sum()
     return list_p_k, cost
 
 
-def _mm_valence_warping(list_p_k, barycenter_size):
+def _mm_valence_warping(list_p_k, barycenter_size, weights):
+    """Compute Valence and Warping matrices from paths.
+
+    Valence matrices are denoted :math:`V^{(k)}` and Warping matrices are
+    :math:`W^{(k)}` in [1]_.
+
+    This function returns the sum of :math:`V^{(k)}` diagonals (as a vector)
+    and a list of :math:`W^{(k)}` matrices.
+
+    Parameters
+    ----------
+    list_p_k : list of index pairs
+        Warping paths
+
+    barycenter_size : int
+        Size of the barycenter to generate.
+
+    weights: array
+        Weights of each X[i]. Must be the same size as len(X).
+
+    Returns
+    -------
+    numpy.array of shape (barycenter_size, )
+        sum of weighted :math:`V^{(k)}` diagonals (as a vector)
+
+    list of numpy.array of shape (barycenter_size, sz_k)
+        list of weighted :math:`W^{(k)}` matrices
+
+    References
+    ----------
+
+    .. [1] D. Schultz and B. Jain. Nonsmooth Analysis and Subgradient Methods
+       for Averaging in Dynamic Time Warping Spaces.
+       TODO: where was it published?
+    """
     diag_sum_v_k = numpy.zeros((barycenter_size, ))
     list_w_k = []
     for k, p_k in enumerate(list_p_k):
@@ -244,16 +307,44 @@ def _mm_valence_warping(list_p_k, barycenter_size):
         w_k = numpy.zeros((barycenter_size, sz_k))
         for i, j in p_k:
             w_k[i, j] = 1.
-        list_w_k.append(w_k)
+        list_w_k.append(w_k * weights[k])
         diag_sum_v_k += w_k.sum(axis=1)
     return diag_sum_v_k, list_w_k
 
 
-def _mm_update_barycenter(X, diag_sum_v_k, list_w_k, weights):  # TODO: weight is ignored for now
+def _mm_update_barycenter(X, diag_sum_v_k, list_w_k):
+    """Update barycenters using the formula from Algorithm 2 in [1]_.
+
+    Parameters
+    ----------
+    X : numpy.array of shape (n, sz, d)
+        Time-series to be averaged
+
+    diag_sum_v_k : numpy.array of shape (barycenter_size, )
+        sum of weighted :math:`V^{(k)}` diagonals (as a vector)
+
+    list_w_k : list of numpy.array of shape (barycenter_size, sz_k)
+        list of weighted :math:`W^{(k)}` matrices
+
+    Returns
+    -------
+    list of index pairs
+        Warping paths
+
+    float
+        Current alignment cost
+
+    References
+    ----------
+
+    .. [1] D. Schultz and B. Jain. Nonsmooth Analysis and Subgradient Methods
+       for Averaging in Dynamic Time Warping Spaces.
+       TODO: where was it published?
+    """
     d = X.shape[2]
     barycenter_size = diag_sum_v_k.shape[0]
     sum_w_x = numpy.zeros((barycenter_size, d))
-    for w_k, x_k in zip(list_w_k, X):
+    for k, (w_k, x_k) in enumerate(zip(list_w_k, X)):
         sum_w_x += w_k.dot(x_k[:ts_size(x_k)])
     barycenter = numpy.diag(1. / diag_sum_v_k).dot(sum_w_x)
     return barycenter
@@ -266,7 +357,8 @@ def dtw_barycenter_averaging_mm(X, barycenter_size=None, init_barycenter=None,
     """DTW Barycenter Averaging (DBA) method.
 
     DBA was originally presented in [1]_.
-    This implementation is based on a idea from [2]_.
+    This implementation is based on a idea from [2]_ (Majorize-Minimize Mean
+    Algorithm).
 
     Parameters
     ----------
@@ -341,10 +433,10 @@ def dtw_barycenter_averaging_mm(X, barycenter_size=None, init_barycenter=None,
     .. [1] F. Petitjean, A. Ketterlin & P. Gancarski. A global averaging method
        for dynamic time warping, with applications to clustering. Pattern
        Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
-       [2] D. Schultz and B. Jain. Nonsmooth Analysis and Subgradient Methods
-       for Averaging in Dynamic Time Warping Spaces.
-       TODO: where was it published?
 
+    .. [2] D. Schultz and B. Jain. Nonsmooth Analysis and Subgradient Methods
+       for Averaging in Dynamic Time Warping Spaces.
+       Pattern Recognition, 74, 340-358.
     """
     X_ = to_time_series_dataset(X)
     if barycenter_size is None:
@@ -357,11 +449,12 @@ def dtw_barycenter_averaging_mm(X, barycenter_size=None, init_barycenter=None,
         barycenter = init_barycenter
     cost_prev, cost = numpy.inf, numpy.inf
     for it in range(max_iter):
-        list_p_k, cost = _mm_assignment(X_, barycenter, metric_params)
-        diag_sum_v_k, list_w_k = _mm_valence_warping(list_p_k, barycenter_size)
+        list_p_k, cost = _mm_assignment(X_, barycenter, weights, metric_params)
+        diag_sum_v_k, list_w_k = _mm_valence_warping(list_p_k, barycenter_size,
+                                                     weights)
         if verbose:
-            print("[DBA-MM] epoch %d, cost: %.3f" % (it + 1, cost))
-        barycenter = _mm_update_barycenter(X_, diag_sum_v_k, list_w_k, weights)
+            print("[DBA] epoch %d, cost: %.3f" % (it + 1, cost))
+        barycenter = _mm_update_barycenter(X_, diag_sum_v_k, list_w_k)
         if abs(cost_prev - cost) < tol:
             break
         elif cost_prev < cost:
