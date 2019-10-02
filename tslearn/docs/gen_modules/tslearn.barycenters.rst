@@ -13,6 +13,5 @@ tslearn.barycenters
 
       euclidean_barycenter
       dtw_barycenter_averaging
-      dtw_barycenter_averaging_mm
       softdtw_barycenter
 

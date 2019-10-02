@@ -113,10 +113,11 @@ def _petitjean_cost(X, barycenter, assign, weights):
     return cost / weights.sum()
 
 
-def dtw_barycenter_averaging(X, barycenter_size=None, init_barycenter=None,
-                             max_iter=30, tol=1e-5, weights=None,
-                             metric_params=None,
-                             verbose=False):
+def dtw_barycenter_averaging_petitjean(X, barycenter_size=None,
+                                       init_barycenter=None,
+                                       max_iter=30, tol=1e-5, weights=None,
+                                       metric_params=None,
+                                       verbose=False):
     """DTW Barycenter Averaging (DBA) method.
 
     DBA was originally presented in [1]_.
@@ -165,26 +166,27 @@ def dtw_barycenter_averaging(X, barycenter_size=None, init_barycenter=None,
     Examples
     --------
     >>> time_series = [[1, 2, 3, 4], [1, 2, 4, 5]]
-    >>> dtw_barycenter_averaging(time_series, max_iter=5)
+    >>> dtw_barycenter_averaging_petitjean(time_series, max_iter=5)
     array([[1. ],
            [2. ],
            [3.5],
            [4.5]])
     >>> time_series = [[1, 2, 3, 4], [1, 2, 3, 4, 5]]
-    >>> dtw_barycenter_averaging(time_series, max_iter=5)
+    >>> dtw_barycenter_averaging_petitjean(time_series, max_iter=5)
     array([[1. ],
            [2. ],
            [3. ],
            [4. ],
            [4.5]])
-    >>> dtw_barycenter_averaging(time_series, max_iter=5,
+    >>> dtw_barycenter_averaging_petitjean(time_series, max_iter=5,
     ...                          metric_params={"itakura_max_slope": 2})
     array([[1. ],
            [2. ],
            [3. ],
            [3.5],
            [4.5]])
-    >>> dtw_barycenter_averaging(time_series, max_iter=5, barycenter_size=3)
+    >>> dtw_barycenter_averaging_petitjean(time_series, max_iter=5,
+    ...                                    barycenter_size=3)
     array([[1.5       ],
            [3.        ],
            [4.33333333]])
@@ -298,7 +300,7 @@ def _mm_valence_warping(list_p_k, barycenter_size, weights):
 
     .. [1] D. Schultz and B. Jain. Nonsmooth Analysis and Subgradient Methods
        for Averaging in Dynamic Time Warping Spaces.
-       TODO: where was it published?
+       Pattern Recognition, 74, 340-358.
     """
     diag_sum_v_k = numpy.zeros((barycenter_size, ))
     list_w_k = []
@@ -339,7 +341,7 @@ def _mm_update_barycenter(X, diag_sum_v_k, list_w_k):
 
     .. [1] D. Schultz and B. Jain. Nonsmooth Analysis and Subgradient Methods
        for Averaging in Dynamic Time Warping Spaces.
-       TODO: where was it published?
+       Pattern Recognition, 74, 340-358.
     """
     d = X.shape[2]
     barycenter_size = diag_sum_v_k.shape[0]
@@ -350,10 +352,10 @@ def _mm_update_barycenter(X, diag_sum_v_k, list_w_k):
     return barycenter
 
 
-def dtw_barycenter_averaging_mm(X, barycenter_size=None, init_barycenter=None,
-                                max_iter=30, tol=1e-5, weights=None,
-                                metric_params=None,
-                                verbose=False):
+def dtw_barycenter_averaging(X, barycenter_size=None, init_barycenter=None,
+                             max_iter=30, tol=1e-5, weights=None,
+                             metric_params=None,
+                             verbose=False):
     """DTW Barycenter Averaging (DBA) method.
 
     DBA was originally presented in [1]_.
@@ -404,26 +406,26 @@ def dtw_barycenter_averaging_mm(X, barycenter_size=None, init_barycenter=None,
     Examples
     --------
     >>> time_series = [[1, 2, 3, 4], [1, 2, 4, 5]]
-    >>> dtw_barycenter_averaging_mm(time_series, max_iter=5)
+    >>> dtw_barycenter_averaging(time_series, max_iter=5)
     array([[1. ],
            [2. ],
            [3.5],
            [4.5]])
     >>> time_series = [[1, 2, 3, 4], [1, 2, 3, 4, 5]]
-    >>> dtw_barycenter_averaging_mm(time_series, max_iter=5)
+    >>> dtw_barycenter_averaging(time_series, max_iter=5)
     array([[1. ],
            [2. ],
            [3. ],
            [4. ],
            [4.5]])
-    >>> dtw_barycenter_averaging_mm(time_series, max_iter=5,
-    ...                             metric_params={"itakura_max_slope": 2})
+    >>> dtw_barycenter_averaging(time_series, max_iter=5,
+    ...                          metric_params={"itakura_max_slope": 2})
     array([[1. ],
            [2. ],
            [3. ],
            [3.5],
            [4.5]])
-    >>> dtw_barycenter_averaging_mm(time_series, max_iter=5, barycenter_size=3)
+    >>> dtw_barycenter_averaging(time_series, max_iter=5, barycenter_size=3)
     array([[1.5       ],
            [3.        ],
            [4.33333333]])
