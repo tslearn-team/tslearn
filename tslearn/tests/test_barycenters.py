@@ -59,6 +59,14 @@ def test_dba():
                     [-0.32249566, 0.09109832, 0.55489214]])
     np.testing.assert_allclose(dba_bar, ref, atol=1e-6)
 
+    dba_bar = tslearn.barycenters.dtw_barycenter_averaging_petitjean(
+        time_series,
+        max_iter=5)
+    dba_bar_mm = tslearn.barycenters.dtw_barycenter_averaging(
+        time_series,
+        max_iter=5)
+    np.testing.assert_allclose(dba_bar, dba_bar_mm)
+
     weights = rng.rand(n)
     dba_bar = tslearn.barycenters.dtw_barycenter_averaging_petitjean(
         time_series,

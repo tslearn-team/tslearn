@@ -330,11 +330,8 @@ def _mm_update_barycenter(X, diag_sum_v_k, list_w_k):
 
     Returns
     -------
-    list of index pairs
-        Warping paths
-
-    float
-        Current alignment cost
+    numpy.array of shape (barycenter_size, d)
+        Updated barycenter
 
     References
     ----------
