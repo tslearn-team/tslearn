@@ -8,7 +8,7 @@ from sklearn.utils import check_array
 from scipy.interpolate import interp1d
 import warnings
 
-from tslearn.utils import (to_time_series_dataset, check_equal_size, ts_size, 
+from tslearn.utils import (to_time_series_dataset, check_equal_size, ts_size,
                            check_dims)
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -178,7 +178,7 @@ class TimeSeriesScalerMinMax(BaseEstimator, TransformerMixin):
         X_ = nomin / range_t + value_range[0]
         return X_
 
-    def _more_tags(self):
+    def _get_tags(self):
         return {'allow_nan': True}
 
 
@@ -251,5 +251,5 @@ class TimeSeriesScalerMeanVariance(BaseEstimator, TransformerMixin):
 
         return X_
 
-    def _more_tags(self):
+    def _get_tags(self):
         return {'allow_nan': True}

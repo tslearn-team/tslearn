@@ -128,8 +128,8 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
     ----------
     n_neighbors : int (default: 5)
         Number of nearest neighbors to be considered for the decision.
-    metric : {'dtw', 'softdtw', 'euclidean', 'sqeuclidean', 'cityblock'}
-    (default: 'dtw')
+    metric : {'dtw', 'softdtw', 'euclidean', 'sqeuclidean', 'cityblock',
+              'sax'} (default: 'dtw')
         Metric to be used at the core of the nearest neighbor procedure.
         DTW is described in more details in :mod:`tslearn.metrics`.
         Other metrics are described in `scipy.spatial.distance doc
