@@ -52,6 +52,8 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
             metric_params = self.metric_params.copy()
             if "n_jobs" in metric_params.keys():
                 del metric_params["n_jobs"]
+            if "verbose" in metric_params.keys():
+                del metric_params["verbose"]
         else:
             metric_params = {}
         self_neighbors = False
@@ -93,6 +95,7 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
                 fit_X = self._X_fit
             if parallelize and 'n_jobs' in cdist_fun.__code__.co_varnames:
                 full_dist_matrix = cdist_fun(X, fit_X, n_jobs=self.n_jobs,
+                                             verbose=self.verbose, 
                                              **metric_params)
             else:
                 full_dist_matrix = cdist_fun(X, fit_X, **metric_params)
@@ -134,8 +137,8 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
     metric_params : dict or None (default: None)
         Dictionnary of metric parameters.
         For metrics that accept parallelization of the cross-distance matrix
-        computations, `n_jobs` key passed in `metric_params` is overridden by
-        the `n_jobs` argument.
+        computations, `n_jobs` and `verbose` keys passed in `metric_params` 
+        are overridden by the `n_jobs` and `verbose` arguments.
 
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel for cross-distance matrix
@@ -167,13 +170,14 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
            [0, 1]])
     """
     def __init__(self, n_neighbors=5, metric="dtw", metric_params=None,
-                 n_jobs=None):
+                 n_jobs=None, verbose=0):
         NearestNeighbors.__init__(self,
                                   n_neighbors=n_neighbors,
                                   algorithm='brute')
         self.metric = metric
         self.metric_params = metric_params
         self.n_jobs = n_jobs
+        self.verbose = verbose
 
     def fit(self, X, y=None):
         """Fit the model using X as training data
@@ -244,8 +248,8 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
     metric_params : dict or None (default: None)
         Dictionnary of metric parameters.
         For metrics that accept parallelization of the cross-distance matrix
-        computations, `n_jobs` key passed in `metric_params` is overridden by
-        the `n_jobs` argument.
+        computations, `n_jobs` and `verbose` keys passed in `metric_params` 
+        are overridden by the `n_jobs` and `verbose` arguments.
 
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel for cross-distance matrix
@@ -255,6 +259,14 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors. See scikit-learns'
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        for more details.
+
+    verbose : int, optional (default=0)
+        The verbosity level: if non zero, progress messages are printed. 
+        Above 50, the output is sent to stdout. 
+        The frequency of the messages increases with the verbosity level. 
+        If it more than 10, all iterations are reported.
+        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_ 
         for more details.
 
     Examples
@@ -277,13 +289,14 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
     >>> clf.fit([[1, 2, 3], [1, 1.2, 3.2], [3, 2, 1]],
     ...         y=[0, 0, 1]).predict([[1, 2.2, 3.5]])
     array([0])
-    """
+    """ # noqa: E501
     def __init__(self,
                  n_neighbors=5,
                  weights='uniform',
                  metric='dtw',
                  metric_params=None,
-                 n_jobs=None):
+                 n_jobs=None,
+                 verbose=0):
         KNeighborsClassifier.__init__(self,
                                       n_neighbors=n_neighbors,
                                       weights=weights,
@@ -291,6 +304,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         self.metric = metric
         self.metric_params = metric_params
         self.n_jobs = n_jobs
+        self.verbose = verbose
 
     def fit(self, X, y):
         """Fit the model using X as training data and y as target values
@@ -366,6 +380,8 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
                 metric_params = self.metric_params.copy()
                 if "n_jobs" in metric_params.keys():
                     del metric_params["n_jobs"]
+                if "verbose" in metric_params.keys():
+                    del metric_params["verbose"]
             check_is_fitted(self, '_ts_fit')
             X = check_array(X, allow_nd=True, force_all_finite=False)
             X = to_time_series_dataset(X)
@@ -404,6 +420,8 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
                 metric_params = self.metric_params.copy()
                 if "n_jobs" in metric_params.keys():
                     del metric_params["n_jobs"]
+                if "verbose" in metric_params.keys():
+                    del metric_params["verbose"]
             check_is_fitted(self, '_ts_fit')
             X = check_array(X, allow_nd=True, force_all_finite=False)
             X = to_time_series_dataset(X)
@@ -450,8 +468,8 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
     metric_params : dict or None (default: None)
         Dictionnary of metric parameters.
         For metrics that accept parallelization of the cross-distance matrix
-        computations, `n_jobs` key passed in `metric_params` is overridden by
-        the `n_jobs` argument.
+        computations, `n_jobs` and `verbose` keys passed in `metric_params` 
+        are overridden by the `n_jobs` and `verbose` arguments.
 
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel for cross-distance matrix
@@ -461,6 +479,14 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors. See scikit-learns'
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        for more details.
+
+    verbose : int, optional (default=0)
+        The verbosity level: if non zero, progress messages are printed. 
+        Above 50, the output is sent to stdout. 
+        The frequency of the messages increases with the verbosity level. 
+        If it more than 10, all iterations are reported.
+        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_  
         for more details.
 
     Examples
@@ -483,13 +509,14 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
     >>> clf.fit([[1, 2, 3], [1, 1.2, 3.2], [3, 2, 1]],
     ...         y=[0.1, 0.1, 1.1]).predict([[1, 2.2, 3.5]])
     array([0.1])
-    """
+    """ # noqa: E501
     def __init__(self,
                  n_neighbors=5,
                  weights='uniform',
                  metric='dtw',
                  metric_params=None,
-                 n_jobs=None):
+                 n_jobs=None,
+                 verbose=0):
         KNeighborsRegressor.__init__(self,
                                      n_neighbors=n_neighbors,
                                      weights=weights,
@@ -497,6 +524,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         self.metric = metric
         self.metric_params = metric_params
         self.n_jobs = n_jobs
+        self.verbose = verbose
 
     def fit(self, X, y):
         """Fit the model using X as training data and y as target values
@@ -557,12 +585,14 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
                 metric_params = self.metric_params.copy()
                 if "n_jobs" in metric_params.keys():
                     del metric_params["n_jobs"]
+                if "verbose" in metric_params.keys():
+                    del metric_params["verbose"]
             check_is_fitted(self, '_ts_fit')
             X = check_array(X, allow_nd=True, force_all_finite=False)
             X = to_time_series_dataset(X)
             if self._ts_metric == "dtw":
                 X_ = cdist_dtw(X, self._ts_fit, n_jobs=self.n_jobs,
-                               **metric_params)
+                               verbose=self.verbose, **metric_params)
             elif self._ts_metric == "softdtw":
                 X_ = cdist_soft_dtw(X, self._ts_fit, **metric_params)
             elif self._ts_metric == "sax":

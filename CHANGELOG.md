@@ -20,6 +20,11 @@ k-nearest-neighbors that accepts the same metrics as
 * `subsequence_path` and `subsequence_cost_matrix` are now part of the public 
 API and properly documented as such with an example use case in which more than
 one path could be of interest (cf. `plot_sdtw.py`)
+* `verbose` levels can be set for all functions / classes that use `joblib`
+for parallel computations and `joblib` levels are used;
+* conversion functions are provided in the `utils` module to interact with
+other Python time series packages (`pyts`, `sktime`, `cesium`, `seglearn`, 
+`tsfresh`, `stumpy`, `pyflux`)
 
 ### Changed
  
