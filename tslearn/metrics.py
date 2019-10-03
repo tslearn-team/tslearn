@@ -743,7 +743,7 @@ def compute_mask(s1, s2, global_constraint=0,
 
 
 def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
-              sakoe_chiba_radius=None, itakura_max_slope=None, n_jobs=None):
+              sakoe_chiba_radius=None, itakura_max_slope=None, n_jobs=None, verbose=0):
     r"""Compute cross-similarity matrix using Dynamic Time Warping (DTW)
     similarity measure.
 
@@ -795,6 +795,14 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
         for more details.
 
+    verbose : int, optional (default=0)
+        The verbosity level: if non zero, progress messages are printed. 
+        Above 50, the output is sent to stdout. 
+        The frequency of the messages increases with the verbosity level. 
+        If it more than 10, all iterations are reported.
+        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_  
+        for more details.
+
     Returns
     -------
     cdist : numpy.ndarray
@@ -819,7 +827,7 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
            spoken word recognition," IEEE Transactions on Acoustics, Speech and
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
 
-    """
+    """ # noqa: E501
     dataset1 = to_time_series_dataset(dataset1)
 
     if dataset2 is None:
@@ -827,7 +835,7 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
         # https://github.com/rtavenar/tslearn/pull/128#discussion_r314978479
         matrix = numpy.zeros((len(dataset1), len(dataset1)))
         indices = numpy.triu_indices(len(dataset1), k=1, m=len(dataset1))
-        matrix[indices] = Parallel(n_jobs=n_jobs, prefer="threads")(
+        matrix[indices] = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
             delayed(dtw)(
                 dataset1[i], dataset1[j],
                 global_constraint=global_constraint,
@@ -838,7 +846,7 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
         return matrix + matrix.T
     else:
         dataset2 = to_time_series_dataset(dataset2)
-        matrix = Parallel(n_jobs=n_jobs, prefer="threads")(
+        matrix = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
             delayed(dtw)(
                 dataset1[i], dataset2[j],
                 global_constraint=global_constraint,
@@ -967,7 +975,7 @@ def gak(s1, s2, sigma=1.):  # TODO: better doc (formula for the kernel)
     return unnormalized_gak(s1, s2, sigma=sigma) / denom
 
 
-def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None):
+def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None, verbose=0):
     r"""Compute cross-similarity matrix using Global Alignment kernel (GAK).
 
     GAK was originally presented in [1]_.
@@ -985,6 +993,13 @@ def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None):
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors. See scikit-learns'
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        for more details.
+    verbose : int, optional (default=0)
+        The verbosity level: if non zero, progress messages are printed. 
+        Above 50, the output is sent to stdout. 
+        The frequency of the messages increases with the verbosity level. 
+        If it more than 10, all iterations are reported.
+        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_  
         for more details.
 
     Returns
@@ -1010,7 +1025,7 @@ def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None):
     References
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
-    """
+    """ # noqa: E501
     dataset1 = to_time_series_dataset(dataset1)
 
     if dataset2 is None:
@@ -1018,7 +1033,7 @@ def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None):
         # https://github.com/rtavenar/tslearn/pull/128#discussion_r314978479
         matrix = numpy.zeros((len(dataset1), len(dataset1)))
         indices = numpy.triu_indices(len(dataset1), k=0, m=len(dataset1))
-        matrix[indices] = Parallel(n_jobs=n_jobs, prefer="threads")(
+        matrix[indices] = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
             delayed(unnormalized_gak)(dataset1[i], dataset1[j], sigma=sigma)
             for i in range(len(dataset1)) for j in range(i, len(dataset1))
         )
@@ -1028,16 +1043,16 @@ def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None):
         diagonal_left = diagonal_right = diagonal
     else:
         dataset2 = to_time_series_dataset(dataset2)
-        matrix = Parallel(n_jobs=n_jobs, prefer="threads")(
+        matrix = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
             delayed(unnormalized_gak)(dataset1[i], dataset2[j], sigma=sigma)
             for i in range(len(dataset1)) for j in range(len(dataset2))
         )
         matrix = numpy.array(matrix).reshape((len(dataset1), -1))
-        diagonal_left = Parallel(n_jobs=n_jobs, prefer="threads")(
+        diagonal_left = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
             delayed(unnormalized_gak)(dataset1[i], dataset1[i], sigma=sigma)
             for i in range(len(dataset1))
         )
-        diagonal_right = Parallel(n_jobs=n_jobs, prefer="threads")(
+        diagonal_right = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
             delayed(unnormalized_gak)(dataset2[j], dataset2[j], sigma=sigma)
             for j in range(len(dataset2))
         )
