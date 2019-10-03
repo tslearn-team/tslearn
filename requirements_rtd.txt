@@ -8,7 +8,7 @@ ipykernel
 nbsphinx
 sphinx-gallery
 pillow
-tensorflow<=1.9
+tensorflow<2
 keras
 Pygments
 numba
