@@ -97,7 +97,7 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
             else:
                 full_dist_matrix = cdist_fun(X, fit_X, **metric_params)
 
-        kbin = min(n_neighbors - 1, full_dist_matrix.shape[0] - 1)
+        kbin = min(n_neighbors - 1, full_dist_matrix.shape[1] - 1)
         ind = numpy.argpartition(full_dist_matrix, kbin, axis=1)
 
         if self_neighbors:
@@ -333,8 +333,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             X_ = cdist_dtw(X, self._ts_fit, n_jobs=self.n_jobs,
                            **metric_params)
         elif self._ts_metric == "softdtw":
-            X_ = cdist_soft_dtw(X, self._ts_fit,
-                                **metric_params)
+            X_ = cdist_soft_dtw(X, self._ts_fit, **metric_params)
         elif self._ts_metric == "sax":
             X_ = cdist_sax(X, self._ts_fit, n_jobs=self.n_jobs,
                            **metric_params)

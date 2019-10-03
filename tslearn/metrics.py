@@ -429,7 +429,7 @@ def subsequence_path(acc_cost_mat, idx_path_end):
     Parameters
     ----------
     acc_cost_mat: array, shape = (sz1, sz2)
-        The accumulated cost matrix comparing subsequence from a longer 
+        The accumulated cost matrix comparing subsequence from a longer
         sequence.
     idx_path_end: int
         The end position of the matched subsequence in the longer sequence.
