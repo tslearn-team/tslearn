@@ -121,6 +121,8 @@ def dtw_barycenter_averaging_petitjean(X, barycenter_size=None,
     """DTW Barycenter Averaging (DBA) method.
 
     DBA was originally presented in [1]_.
+    This implementation is not the one documented in the API, but is kept
+    in the codebase to check the documented one for non-regression.
 
     Parameters
     ----------
@@ -190,6 +192,11 @@ def dtw_barycenter_averaging_petitjean(X, barycenter_size=None,
     array([[1.5       ],
            [3.        ],
            [4.33333333]])
+    >>> dtw_barycenter_averaging_petitjean([[0, 0, 0], [10, 10, 10]],
+    ...                                    weights=numpy.array([0.75, 0.25]))
+    array([[2.5],
+           [2.5],
+           [2.5]])
 
     References
     ----------
@@ -310,7 +317,7 @@ def _mm_valence_warping(list_p_k, barycenter_size, weights):
         for i, j in p_k:
             w_k[i, j] = 1.
         list_w_k.append(w_k * weights[k])
-        diag_sum_v_k += w_k.sum(axis=1)
+        diag_sum_v_k += w_k.sum(axis=1) * weights[k]
     return diag_sum_v_k, list_w_k
 
 
@@ -426,6 +433,11 @@ def dtw_barycenter_averaging(X, barycenter_size=None, init_barycenter=None,
     array([[1.5       ],
            [3.        ],
            [4.33333333]])
+    >>> dtw_barycenter_averaging([[0, 0, 0], [10, 10, 10]], max_iter=1,
+    ...                          weights=numpy.array([0.75, 0.25]))
+    array([[2.5],
+           [2.5],
+           [2.5]])
 
     References
     ----------
