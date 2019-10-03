@@ -75,5 +75,4 @@ From here, you can navigate to:
     variablelength
     reference
     auto_examples/index
-    citing
 
