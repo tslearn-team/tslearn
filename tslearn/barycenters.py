@@ -275,6 +275,7 @@ def _mm_assignment(X, barycenter, weights, metric_params=None):
     cost /= weights.sum()
     return list_p_k, cost
 
+
 def _subgradient_valence_warping(list_p_k, barycenter_size, weights):
     """Compute Valence and Warping matrices from paths.
 
@@ -321,6 +322,7 @@ def _subgradient_valence_warping(list_p_k, barycenter_size, weights):
         list_v_k.append(w_k.sum(axis=1) * weights[k])
     return list_v_k, list_w_k
 
+
 def _mm_valence_warping(list_p_k, barycenter_size, weights):
     """Compute Valence and Warping matrices from paths.
 
@@ -365,6 +367,7 @@ def _mm_valence_warping(list_p_k, barycenter_size, weights):
         diag_sum_v_k += v_k
     return diag_sum_v_k, list_w_k
 
+
 def _mm_update_barycenter(X, diag_sum_v_k, list_w_k):
     """Update barycenters using the formula from Algorithm 2 in [1]_.
 
@@ -398,6 +401,7 @@ def _mm_update_barycenter(X, diag_sum_v_k, list_w_k):
         sum_w_x += w_k.dot(x_k[:ts_size(x_k)])
     barycenter = numpy.diag(1. / diag_sum_v_k).dot(sum_w_x)
     return barycenter
+
 
 def _subgradient_update_barycenter(X, list_diag_v_k, list_w_k, weights_sum,
                                    barycenter, eta):
