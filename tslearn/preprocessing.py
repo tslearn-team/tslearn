@@ -4,10 +4,12 @@ The :mod:`tslearn.preprocessing` module gathers time series scalers.
 
 import numpy
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.utils import check_array
 from scipy.interpolate import interp1d
 import warnings
 
-from tslearn.utils import to_time_series_dataset, check_equal_size, ts_size
+from tslearn.utils import (to_time_series_dataset, check_equal_size, ts_size, 
+                           check_dims)
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -112,8 +114,8 @@ class TimeSeriesScalerMinMax(BaseEstimator, TransformerMixin):
     """
     def __init__(self, value_range=(0., 1.), min=None, max=None):
         self.value_range = value_range
-        self.min_ = min
-        self.max_ = max
+        self.min = min
+        self.max = max
 
     def fit(self, X, y=None, **kwargs):
         """A dummy method such that it complies to the sklearn requirements.
@@ -128,6 +130,8 @@ class TimeSeriesScalerMinMax(BaseEstimator, TransformerMixin):
         -------
         self
         """
+        X = check_array(X, allow_nd=True, force_all_finite=False)
+        self._X_fit = X
         return self
 
     def transform(self, X, y=None, **kwargs):
@@ -146,24 +150,26 @@ class TimeSeriesScalerMinMax(BaseEstimator, TransformerMixin):
             Rescaled time series dataset.
         """
         value_range = self.value_range
-        if self.min_ is not None:
+        if self.min is not None:
             warnings.warn(
                 "'min' is deprecated in version 0.2 and will be "
                 "removed in 0.4. Use value_range instead.",
                 DeprecationWarning, stacklevel=2)
-            value_range = (self.min_, value_range[1])
+            value_range = (self.min, value_range[1])
 
-        if self.max_ is not None:
+        if self.max is not None:
             warnings.warn(
                 "'max' is deprecated in version 0.2 and will be "
                 "removed in 0.4. Use value_range instead.",
                 DeprecationWarning, stacklevel=2)
-            value_range = (value_range[0], self.max_)
+            value_range = (value_range[0], self.max)
 
         if value_range[0] >= value_range[1]:
             raise ValueError("Minimum of desired range must be smaller"
                              " than maximum. Got %s." % str(value_range))
 
+        X = check_array(X, allow_nd=True, force_all_finite=False)
+        X = check_dims(X, self._X_fit, extend=False)
         X_ = to_time_series_dataset(X)
         min_t = numpy.min(X_, axis=1)[:, numpy.newaxis, :]
         max_t = numpy.max(X_, axis=1)[:, numpy.newaxis, :]
@@ -171,6 +177,9 @@ class TimeSeriesScalerMinMax(BaseEstimator, TransformerMixin):
         nomin = (X_ - min_t) * (value_range[1] - value_range[0])
         X_ = nomin / range_t + value_range[0]
         return X_
+
+    def _more_tags(self):
+        return {'allow_nan': True}
 
 
 class TimeSeriesScalerMeanVariance(BaseEstimator, TransformerMixin):
@@ -198,10 +207,8 @@ class TimeSeriesScalerMeanVariance(BaseEstimator, TransformerMixin):
             [ 1.22474487]]])
     """
     def __init__(self, mu=0., std=1.):
-        self.mu_ = mu
-        self.std_ = std
-        self.global_mean = None
-        self.global_std = None
+        self.mu = mu
+        self.std = std
 
     def fit(self, X, y=None, **kwargs):
         """A dummy method such that it complies to the sklearn requirements.
@@ -216,6 +223,8 @@ class TimeSeriesScalerMeanVariance(BaseEstimator, TransformerMixin):
         -------
         self
         """
+        X = check_array(X, allow_nd=True, force_all_finite=False)
+        self._X_fit = X
         return self
 
     def transform(self, X, **kwargs):
@@ -231,11 +240,16 @@ class TimeSeriesScalerMeanVariance(BaseEstimator, TransformerMixin):
         numpy.ndarray
             Rescaled time series dataset
         """
+        X = check_array(X, allow_nd=True, force_all_finite=False)
+        X = check_dims(X, self._X_fit, extend=False)
         X_ = to_time_series_dataset(X)
         mean_t = numpy.mean(X_, axis=1)[:, numpy.newaxis, :]
         std_t = numpy.std(X_, axis=1)[:, numpy.newaxis, :]
         std_t[std_t == 0.] = 1.
 
-        X_ = (X_ - mean_t) * self.std_ / std_t + self.mu_
+        X_ = (X_ - mean_t) * self.std / std_t + self.mu
 
         return X_
+
+    def _more_tags(self):
+        return {'allow_nan': True}
