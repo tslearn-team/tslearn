@@ -753,7 +753,7 @@ def compute_mask(s1, s2, global_constraint=0,
 
 
 def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
-              sakoe_chiba_radius=None, itakura_max_slope=None, n_jobs=None, 
+              sakoe_chiba_radius=None, itakura_max_slope=None, n_jobs=None,
               verbose=0):
     r"""Compute cross-similarity matrix using Dynamic Time Warping (DTW)
     similarity measure.
