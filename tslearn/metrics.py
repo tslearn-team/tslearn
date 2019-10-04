@@ -73,6 +73,7 @@ def cdist_sax(dataset1, dataset2=None, n_segments=None, alphabet_size_avg=4,
     dataset1 = sax.fit_transform(dataset1)
 
     if dataset2 is None:
+        # Calculate the self-distances
         matrix = numpy.zeros((len(dataset1), len(dataset1)))
         indices = numpy.triu_indices(len(dataset1), k=1, m=len(dataset1))
         matrix[indices] = Parallel(n_jobs=n_jobs, prefer="threads")(
@@ -83,6 +84,7 @@ def cdist_sax(dataset1, dataset2=None, n_segments=None, alphabet_size_avg=4,
         )
         return matrix + matrix.T
     else:
+        # Calculate the distances from dataset1 to dataset2
         dataset2 = to_time_series_dataset(dataset2)
         dataset2 = sax.fit_transform(dataset2)
         matrix = Parallel(n_jobs=n_jobs, prefer="threads")(
