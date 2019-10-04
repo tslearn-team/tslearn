@@ -18,7 +18,7 @@ def test_constrained_paths():
         metric="dtw",
         metric_params={
             "global_constraint": "sakoe_chiba",
-            "sakoe_chiba_radius":0
+            "sakoe_chiba_radius": 0
         }
     )
     y_pred_sakoe = model_dtw_sakoe.fit(X, y).predict(X)

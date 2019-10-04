@@ -38,11 +38,11 @@ def cdist_sax(dataset1, dataset2=None, n_segments=None, alphabet_size_avg=4,
         Another dataset of time series. If `None`, self-similarity of
         `dataset1` is returned.
 
-    n_segments : {"itakura", "sakoe_chiba"} or None (default: None)
-        The number of remaining measurements after SAX transformation
+    n_segments : int or None (default: None)
+        The number of SAX segments to discretize the signal in.
 
-    alphabet_size_avg : int or None (default: None)
-        The size of the alphabet used for SAX
+    alphabet_size_avg : int or None (default: 4)
+        The size of the alphabet used for the SAX transformation
 
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel.
@@ -67,13 +67,19 @@ def cdist_sax(dataset1, dataset2=None, n_segments=None, alphabet_size_avg=4,
     if n_segments is None:
         n_segments = dataset1.shape[1] // 10
 
+    if n_segments > dataset1.shape[1]:
+        warnings.warn("The provided 'n_segments' is larger than "
+                      "the number of timesteps in the provided data",
+                      RuntimeWarning)
+        n_segments = dataset1.shape[1]
+
     sax = SymbolicAggregateApproximation(n_segments=n_segments,
                                          alphabet_size_avg=alphabet_size_avg)
     dataset1 = to_time_series_dataset(dataset1)
     dataset1 = sax.fit_transform(dataset1)
 
     if dataset2 is None:
-        # Calculate the self-distances
+        # Calculate the self-distances of the SAX-transformed timeseries
         matrix = numpy.zeros((len(dataset1), len(dataset1)))
         indices = numpy.triu_indices(len(dataset1), k=1, m=len(dataset1))
         matrix[indices] = Parallel(n_jobs=n_jobs, prefer="threads")(
@@ -84,7 +90,9 @@ def cdist_sax(dataset1, dataset2=None, n_segments=None, alphabet_size_avg=4,
         )
         return matrix + matrix.T
     else:
-        # Calculate the distances from dataset1 to dataset2
+        # Calculate the distances from SAX transformations of
+        # dataset1 to SAX transformations of dataset2 to produce
+        # a |dataset1| x |dataset2| distance matrix
         dataset2 = to_time_series_dataset(dataset2)
         dataset2 = sax.fit_transform(dataset2)
         matrix = Parallel(n_jobs=n_jobs, prefer="threads")(
@@ -745,7 +753,8 @@ def compute_mask(s1, s2, global_constraint=0,
 
 
 def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
-              sakoe_chiba_radius=None, itakura_max_slope=None, n_jobs=None, verbose=0):
+              sakoe_chiba_radius=None, itakura_max_slope=None, n_jobs=None, 
+              verbose=0):
     r"""Compute cross-similarity matrix using Dynamic Time Warping (DTW)
     similarity measure.
 

@@ -95,7 +95,7 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
                 fit_X = self._X_fit
             if parallelize and 'n_jobs' in cdist_fun.__code__.co_varnames:
                 full_dist_matrix = cdist_fun(X, fit_X, n_jobs=self.n_jobs,
-                                             verbose=self.verbose, 
+                                             verbose=self.verbose,
                                              **metric_params)
             else:
                 full_dist_matrix = cdist_fun(X, fit_X, **metric_params)
@@ -131,15 +131,14 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
     metric : {'dtw', 'softdtw', 'euclidean', 'sqeuclidean', 'cityblock',
               'sax'} (default: 'dtw')
         Metric to be used at the core of the nearest neighbor procedure.
-        DTW is described in more details in :mod:`tslearn.metrics`.
+        DTW and SAX are described in more detail in :mod:`tslearn.metrics`.
         Other metrics are described in `scipy.spatial.distance doc
         <https://docs.scipy.org/doc/scipy/reference/spatial.distance.html>`_.
     metric_params : dict or None (default: None)
         Dictionnary of metric parameters.
         For metrics that accept parallelization of the cross-distance matrix
-        computations, `n_jobs` and `verbose` keys passed in `metric_params` 
+        computations, `n_jobs` and `verbose` keys passed in `metric_params`
         are overridden by the `n_jobs` and `verbose` arguments.
-
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel for cross-distance matrix
         computations.

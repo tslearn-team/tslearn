@@ -3,9 +3,10 @@
 1-NN with SAX + MINDIST
 =======================
 
-This example presents a comparison performs kNN with k=1 on SAX
-transformations of the SyntheticControl dataset. MINDIST from the original
-paper is used as a distance metric.
+This example presents a comparison performs kNN with k=1, using MINDIST from
+the original paper as a distance function, on SAX transformations using
+different benchmark datasets. It compares its accuracy on a test set with
+the accuracy of kNN (k=1) using euclidean distance on the raw data.
 """
 
 # Author: Gilles Vandewiele
