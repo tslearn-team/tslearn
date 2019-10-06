@@ -24,6 +24,63 @@ neighbors.VALID_METRICS['brute'].extend(['dtw', 'softdtw', 'sax'])
 class KNeighborsTimeSeriesMixin(KNeighborsMixin):
     """Mixin for k-neighbors searches on Time Series."""
 
+    def _sax_preprocess(self, X, n_segments=None, alphabet_size_avg=None):
+        # First, we standard-normalize the data using mu and sigma
+        # of entire dataset, as opposed to timeseries-wise.
+        if not hasattr(self, '_sax_mu') or self._sax_mu is None:
+            self._sax_mu = numpy.mean(X)
+        if not hasattr(self, '_sax_sigma') or self._sax_sigma is None:
+            self._sax_sigma = numpy.std(X)
+
+        X = (X - self._sax_mu) / self._sax_sigma 
+
+        # Now SAX-transform the timeseries
+        if not hasattr(self, '_sax') or self._sax is None:
+            self._sax = SymbolicAggregateApproximation(
+                n_segments=n_segments,
+                alphabet_size_avg=alphabet_size_avg
+            )
+
+        X = to_time_series_dataset(X)
+        X = self._sax.fit_transform(X)
+
+        return X
+
+    def _calculate_X_(self, X, other_X=None):
+        if other_X is None:
+            other_X = self._ts_fit
+
+        self._ts_metric = self.metric
+        self.metric = "precomputed"
+
+        if self.metric_params is None:
+            metric_params = {}
+        else:
+            metric_params = self.metric_params.copy()
+            if "n_jobs" in metric_params.keys():
+                del metric_params["n_jobs"]
+            if "verbose" in metric_params.keys():
+                del metric_params["verbose"]
+
+        X = check_array(X, allow_nd=True, force_all_finite=False)
+        X = to_time_series_dataset(X)
+
+        if self._ts_metric == "dtw":
+            X_ = cdist_dtw(X, other_X, n_jobs=self.n_jobs,
+                           **metric_params)
+        elif self._ts_metric == "softdtw":
+            X_ = cdist_soft_dtw(X, other_X, **metric_params)
+        elif self._ts_metric == "sax":
+            X = self._sax_preprocess(X, **metric_params)
+            X_ = cdist_sax(X, self._sax.breakpoints_avg_,
+                           self._sax.size_fitted_, other_X, 
+                           n_jobs=self.n_jobs)
+        else:
+            raise ValueError("Invalid metric recorded: %s" %
+                             self._ts_metric)
+
+        return X_
+
     def kneighbors(self, X=None, n_neighbors=None, return_distance=True):
         """Finds the K-neighbors of a point.
 
@@ -66,24 +123,6 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
         if self.metric == "precomputed":
             full_dist_matrix = X
         else:
-            parallelize = False
-            if self.metric == "dtw" or self.metric == cdist_dtw:
-                cdist_fun = cdist_dtw
-                parallelize = True
-            elif self.metric == "softdtw" or self.metric == cdist_soft_dtw:
-                cdist_fun = cdist_soft_dtw
-            elif self.metric == "sax" or self.metric == cdist_sax:
-                cdist_fun = cdist_sax
-            elif self.metric in ["euclidean", "sqeuclidean", "cityblock"]:
-                def cdist_fun(X, Xp):
-                    return scipy_cdist(X.reshape((X.shape[0], -1)),
-                                       Xp.reshape((Xp.shape[0], -1)),
-                                       metric=self.metric)
-            else:
-                raise ValueError("Unrecognized time series metric string: %s "
-                                 "(should be one of 'dtw', 'softdtw', "
-                                 "'sax', 'euclidean', 'sqeuclidean' "
-                                 "or 'cityblock')" % self.metric)
 
             if X.ndim == 2:  # sklearn-format case
                 X = X.reshape((X.shape[0], -1, self._d))
@@ -94,12 +133,19 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
                 fit_X = self._ts_fit
             else:
                 fit_X = self._X_fit
-            if parallelize and 'n_jobs' in cdist_fun.__code__.co_varnames:
-                full_dist_matrix = cdist_fun(X, fit_X, n_jobs=self.n_jobs,
-                                             verbose=self.verbose,
-                                             **metric_params)
+
+            if (self.metric in VARIABLE_LENGTH_METRICS or
+                self.metric in [cdist_dtw, cdist_soft_dtw, cdist_sax]):
+                full_dist_matrix = self._calculate_X_(X, other_X=fit_X)
+            elif self.metric in ["euclidean", "sqeuclidean", "cityblock"]:
+                full_dist_matrix = scipy_cdist(X.reshape((X.shape[0], -1)),
+                                               fit_X.reshape((fit_X.shape[0], -1)),
+                                               metric=self.metric)
             else:
-                full_dist_matrix = cdist_fun(X, fit_X, **metric_params)
+                raise ValueError("Unrecognized time series metric string: %s "
+                                 "(should be one of 'dtw', 'softdtw', "
+                                 "'sax', 'euclidean', 'sqeuclidean' "
+                                 "or 'cityblock')" % self.metric)
 
         kbin = min(n_neighbors - 1, full_dist_matrix.shape[1] - 1)
         ind = numpy.argpartition(full_dist_matrix, kbin, axis=1)
@@ -349,45 +395,6 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             self.metric = self._ts_metric
         return self
 
-    def _sax_preprocess(self, X, n_segments=None, alphabet_size_avg=None):
-        # First, we standard-normalize the data using mu and sigma
-        # of entire dataset, as opposed to timeseries-wise.
-        if not hasattr(self, '_sax_mu') or self._sax_mu is None:
-            self._sax_mu = numpy.mean(X)
-        if not hasattr(self, '_sax_sigma') or self._sax_sigma is None:
-            self._sax_sigma = numpy.std(X)
-
-        X = (X - self._sax_mu) / self._sax_sigma 
-
-        # Now SAX-transform the timeseries
-        if not hasattr(self, '_sax') or self._sax is None:
-            self._sax = SymbolicAggregateApproximation(
-                n_segments=n_segments,
-                alphabet_size_avg=alphabet_size_avg
-            )
-
-        X = to_time_series_dataset(X)
-        X = self._sax.fit_transform(X)
-
-        return X
-
-    def _calculate_X_(self, X, metric_params):
-        if self._ts_metric == "dtw":
-            X_ = cdist_dtw(X, self._ts_fit, n_jobs=self.n_jobs,
-                           **metric_params)
-        elif self._ts_metric == "softdtw":
-            X_ = cdist_soft_dtw(X, self._ts_fit, **metric_params)
-        elif self._ts_metric == "sax":
-            X = self._sax_preprocess(X, **metric_params)
-            X_ = cdist_sax(X, self._sax.breakpoints_avg_,
-                           self._sax.size_fitted_, self._ts_fit, 
-                           n_jobs=self.n_jobs)
-        else:
-            raise ValueError("Invalid metric recorded: %s" %
-                             self._ts_metric)
-
-        return X_
-
     def predict(self, X):
         """Predict the class labels for the provided data
 
@@ -402,21 +409,8 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             Array of predicted class labels
         """
         if self.metric in VARIABLE_LENGTH_METRICS:
-            self._ts_metric = self.metric
-            self.metric = "precomputed"
-
-            if self.metric_params is None:
-                metric_params = {}
-            else:
-                metric_params = self.metric_params.copy()
-                if "n_jobs" in metric_params.keys():
-                    del metric_params["n_jobs"]
-                if "verbose" in metric_params.keys():
-                    del metric_params["verbose"]
             check_is_fitted(self, '_ts_fit')
-            X = check_array(X, allow_nd=True, force_all_finite=False)
-            X = to_time_series_dataset(X)
-            X_ = self._calculate_X_(X, metric_params)
+            X_ = self._calculate_X_(X)
             pred = super(KNeighborsTimeSeriesClassifier, self).predict(X_)
             self.metric = self._ts_metric
             return pred
@@ -442,21 +436,8 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             Array of predicted class probabilities
         """
         if self.metric in VARIABLE_LENGTH_METRICS:
-            self._ts_metric = self.metric
-            self.metric = "precomputed"
-
-            if self.metric_params is None:
-                metric_params = {}
-            else:
-                metric_params = self.metric_params.copy()
-                if "n_jobs" in metric_params.keys():
-                    del metric_params["n_jobs"]
-                if "verbose" in metric_params.keys():
-                    del metric_params["verbose"]
             check_is_fitted(self, '_ts_fit')
-            X = check_array(X, allow_nd=True, force_all_finite=False)
-            X = to_time_series_dataset(X)
-            X_ = self._calculate_X_(X, metric_params)
+            X_ = self._calculate_X_(X)
             pred = super(KNeighborsTimeSeriesClassifier,
                          self).predict_proba(X_)
             self.metric = self._ts_metric
@@ -607,30 +588,8 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
             Array of predicted targets
         """
         if self.metric in VARIABLE_LENGTH_METRICS:
-            self._ts_metric = self.metric
-            self.metric = "precomputed"
-
-            if self.metric_params is None:
-                metric_params = {}
-            else:
-                metric_params = self.metric_params.copy()
-                if "n_jobs" in metric_params.keys():
-                    del metric_params["n_jobs"]
-                if "verbose" in metric_params.keys():
-                    del metric_params["verbose"]
             check_is_fitted(self, '_ts_fit')
-            X = check_array(X, allow_nd=True, force_all_finite=False)
-            X = to_time_series_dataset(X)
-            if self._ts_metric == "dtw":
-                X_ = cdist_dtw(X, self._ts_fit, n_jobs=self.n_jobs,
-                               verbose=self.verbose, **metric_params)
-            elif self._ts_metric == "softdtw":
-                X_ = cdist_soft_dtw(X, self._ts_fit, **metric_params)
-            elif self._ts_metric == "sax":
-                X_ = cdist_sax(X, self._ts_fit, **metric_params)
-            else:
-                raise ValueError("Invalid metric recorded: %s" %
-                                 self._ts_metric)
+            X_ = self._calculate_X_(X)
             pred = super(KNeighborsTimeSeriesRegressor, self).predict(X_)
             self.metric = self._ts_metric
             return pred
