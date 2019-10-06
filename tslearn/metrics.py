@@ -23,7 +23,7 @@ GLOBAL_CONSTRAINT_CODE = {None: 0, "": 0, "itakura": 1, "sakoe_chiba": 2}
 VARIABLE_LENGTH_METRICS = ["dtw", "gak", "softdtw", "sax"]
 
 
-def cdist_sax(dataset1, breakpoints_avg, size_fitted, dataset2=None, 
+def cdist_sax(dataset1, breakpoints_avg, size_fitted, dataset2=None,
               n_jobs=None):
     r"""Calculates a matrix of distances (MINDIST) on SAX-transformed data,
     as presented in [1]_.

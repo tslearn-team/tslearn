@@ -32,7 +32,7 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
         if not hasattr(self, '_sax_sigma') or self._sax_sigma is None:
             self._sax_sigma = numpy.std(X)
 
-        X = (X - self._sax_mu) / self._sax_sigma 
+        X = (X - self._sax_mu) / self._sax_sigma
 
         # Now SAX-transform the timeseries
         if not hasattr(self, '_sax') or self._sax is None:
@@ -73,7 +73,7 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
         elif self._ts_metric == "sax":
             X = self._sax_preprocess(X, **metric_params)
             X_ = cdist_sax(X, self._sax.breakpoints_avg_,
-                           self._sax.size_fitted_, other_X, 
+                           self._sax.size_fitted_, other_X,
                            n_jobs=self.n_jobs)
         else:
             raise ValueError("Invalid metric recorded: %s" %
@@ -135,11 +135,12 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
                 fit_X = self._X_fit
 
             if (self.metric in VARIABLE_LENGTH_METRICS or
-                self.metric in [cdist_dtw, cdist_soft_dtw, cdist_sax]):
+                  self.metric in [cdist_dtw, cdist_soft_dtw, cdist_sax]):
                 full_dist_matrix = self._calculate_X_(X, other_X=fit_X)
             elif self.metric in ["euclidean", "sqeuclidean", "cityblock"]:
                 full_dist_matrix = scipy_cdist(X.reshape((X.shape[0], -1)),
-                                               fit_X.reshape((fit_X.shape[0], -1)),
+                                               fit_X.reshape((fit_X.shape[0], 
+                                                              -1)),
                                                metric=self.metric)
             else:
                 raise ValueError("Unrecognized time series metric string: %s "
@@ -180,7 +181,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
         Metric to be used at the core of the nearest neighbor procedure.
         DTW and SAX are described in more detail in :mod:`tslearn.metrics`.
         When SAX is provided as a metric, each timeseries standard-normalized
-        using the mean and std deviation of the training data. 
+        using the mean and std deviation of the training data.
         Other metrics are described in `scipy.spatial.distance doc
         <https://docs.scipy.org/doc/scipy/reference/spatial.distance.html>`_.
     metric_params : dict or None (default: None)

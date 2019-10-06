@@ -16,7 +16,7 @@ from sklearn.metrics import accuracy_score
 
 from tslearn.generators import random_walk_blobs
 from tslearn.preprocessing import TimeSeriesScalerMinMax, \
-	TimeSeriesScalerMeanVariance
+    TimeSeriesScalerMeanVariance
 from tslearn.neighbors import KNeighborsTimeSeriesClassifier, \
     KNeighborsTimeSeries
 
@@ -64,8 +64,8 @@ print("Correct classification rate:", accuracy_score(y_test, predicted_labels))
 
 # Nearest neighbor classification based on SAX representation
 metric_params = {'n_segments': 10, 'alphabet_size_avg': 5}
-knn_clf = KNeighborsTimeSeriesClassifier(n_neighbors=3, metric="sax", 
-										 metric_params=metric_params)
+knn_clf = KNeighborsTimeSeriesClassifier(n_neighbors=3, metric="sax",
+                                         metric_params=metric_params)
 knn_clf.fit(X_train, y_train)
 predicted_labels = knn_clf.predict(X_test)
 print("\n4. Nearest neighbor classification using SAX+MINDIST")
