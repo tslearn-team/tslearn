@@ -14,6 +14,7 @@ from scipy.spatial.distance import cdist as scipy_cdist
 
 from tslearn.metrics import cdist_dtw, cdist_soft_dtw, \
     cdist_sax, VARIABLE_LENGTH_METRICS
+from tslearn.piecewise import SymbolicAggregateApproximation
 from tslearn.utils import (to_time_series_dataset, to_sklearn_dataset,
                            check_dims)
 
@@ -132,6 +133,8 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
               'sax'} (default: 'dtw')
         Metric to be used at the core of the nearest neighbor procedure.
         DTW and SAX are described in more detail in :mod:`tslearn.metrics`.
+        When SAX is provided as a metric, each timeseries standard-normalized
+        using the mean and std deviation of the training data. 
         Other metrics are described in `scipy.spatial.distance doc
         <https://docs.scipy.org/doc/scipy/reference/spatial.distance.html>`_.
     metric_params : dict or None (default: None)
@@ -331,6 +334,11 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         X = check_dims(X, X_fit=None)
         if self.metric == "precomputed" and hasattr(self, '_ts_metric'):
             self._ts_fit = X
+            if self._ts_metric == 'sax':
+                self._sax_mu = None
+                self._sax_sigma = None
+                self._ts_fit = self._sax_preprocess(X, **self.metric_params)
+
             self._d = X.shape[2]
             self._X_fit = numpy.zeros((self._ts_fit.shape[0],
                                        self._ts_fit.shape[0]))
@@ -341,6 +349,28 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             self.metric = self._ts_metric
         return self
 
+    def _sax_preprocess(self, X, n_segments=None, alphabet_size_avg=None):
+        # First, we standard-normalize the data using mu and sigma
+        # of entire dataset, as opposed to timeseries-wise.
+        if not hasattr(self, '_sax_mu') or self._sax_mu is None:
+            self._sax_mu = numpy.mean(X)
+        if not hasattr(self, '_sax_sigma') or self._sax_sigma is None:
+            self._sax_sigma = numpy.std(X)
+
+        X = (X - self._sax_mu) / self._sax_sigma 
+
+        # Now SAX-transform the timeseries
+        if not hasattr(self, '_sax') or self._sax is None:
+            self._sax = SymbolicAggregateApproximation(
+                n_segments=n_segments,
+                alphabet_size_avg=alphabet_size_avg
+            )
+
+        X = to_time_series_dataset(X)
+        X = self._sax.fit_transform(X)
+
+        return X
+
     def _calculate_X_(self, X, metric_params):
         if self._ts_metric == "dtw":
             X_ = cdist_dtw(X, self._ts_fit, n_jobs=self.n_jobs,
@@ -348,8 +378,10 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         elif self._ts_metric == "softdtw":
             X_ = cdist_soft_dtw(X, self._ts_fit, **metric_params)
         elif self._ts_metric == "sax":
-            X_ = cdist_sax(X, self._ts_fit, n_jobs=self.n_jobs,
-                           **metric_params)
+            X = self._sax_preprocess(X, **metric_params)
+            X_ = cdist_sax(X, self._sax.breakpoints_avg_,
+                           self._sax.size_fitted_, self._ts_fit, 
+                           n_jobs=self.n_jobs)
         else:
             raise ValueError("Invalid metric recorded: %s" %
                              self._ts_metric)

@@ -16,7 +16,6 @@ from tslearn.cysax import cydist_sax
 
 from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, \
     check_equal_size
-from tslearn.piecewise import SymbolicAggregateApproximation
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -24,10 +23,10 @@ GLOBAL_CONSTRAINT_CODE = {None: 0, "": 0, "itakura": 1, "sakoe_chiba": 2}
 VARIABLE_LENGTH_METRICS = ["dtw", "gak", "softdtw", "sax"]
 
 
-def cdist_sax(dataset1, dataset2=None, n_segments=None, alphabet_size_avg=4,
+def cdist_sax(dataset1, breakpoints_avg, size_fitted, dataset2=None, 
               n_jobs=None):
-    r"""Calculates a matrix of distances (MINDIST) on SAX transformations of
-    the provided datasets, as presented in [1]_.
+    r"""Calculates a matrix of distances (MINDIST) on SAX-transformed data,
+    as presented in [1]_.
 
     Parameters
     ----------
@@ -38,11 +37,10 @@ def cdist_sax(dataset1, dataset2=None, n_segments=None, alphabet_size_avg=4,
         Another dataset of time series. If `None`, self-similarity of
         `dataset1` is returned.
 
-    n_segments : int or None (default: None)
-        The number of SAX segments to discretize the signal in.
+    breakpoints_avg: The breakpoints used to assign the alphabet symbols.
 
-    alphabet_size_avg : int or None (default: 4)
-        The size of the alphabet used for the SAX transformation
+    size_fitted: The original timesteps in the timeseries, before
+    discretizing through SAX.
 
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel.
@@ -63,21 +61,6 @@ def cdist_sax(dataset1, dataset2=None, n_segments=None, alphabet_size_avg=4,
            discovery 15.2 (2007): 107-144.
 
     """
-
-    if n_segments is None:
-        n_segments = dataset1.shape[1] // 10
-
-    if n_segments > dataset1.shape[1]:
-        warnings.warn("The provided 'n_segments' is larger than "
-                      "the number of timesteps in the provided data",
-                      RuntimeWarning)
-        n_segments = dataset1.shape[1]
-
-    sax = SymbolicAggregateApproximation(n_segments=n_segments,
-                                         alphabet_size_avg=alphabet_size_avg)
-    dataset1 = to_time_series_dataset(dataset1)
-    dataset1 = sax.fit_transform(dataset1)
-
     if dataset2 is None:
         # Calculate the self-distances of the SAX-transformed timeseries
         matrix = numpy.zeros((len(dataset1), len(dataset1)))
@@ -85,7 +68,7 @@ def cdist_sax(dataset1, dataset2=None, n_segments=None, alphabet_size_avg=4,
         matrix[indices] = Parallel(n_jobs=n_jobs, prefer="threads")(
             delayed(cydist_sax)(
                 dataset1[i], dataset1[j],
-                sax.breakpoints_avg_, sax.size_fitted_)
+                breakpoints_avg, size_fitted)
             for i in range(len(dataset1)) for j in range(i + 1, len(dataset1))
         )
         return matrix + matrix.T
@@ -93,12 +76,10 @@ def cdist_sax(dataset1, dataset2=None, n_segments=None, alphabet_size_avg=4,
         # Calculate the distances from SAX transformations of
         # dataset1 to SAX transformations of dataset2 to produce
         # a |dataset1| x |dataset2| distance matrix
-        dataset2 = to_time_series_dataset(dataset2)
-        dataset2 = sax.fit_transform(dataset2)
         matrix = Parallel(n_jobs=n_jobs, prefer="threads")(
             delayed(cydist_sax)(
                 dataset1[i], dataset2[j],
-                sax.breakpoints_avg_, sax.size_fitted_)
+                breakpoints_avg, size_fitted)
             for i in range(len(dataset1)) for j in range(len(dataset2))
         )
         return numpy.array(matrix).reshape((len(dataset1), -1))
