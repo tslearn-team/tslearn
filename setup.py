@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 from codecs import open
 import numpy
 import os
@@ -22,7 +22,7 @@ setup(
     long_description=README,
     long_description_content_type='text/markdown',
     include_dirs=[numpy.get_include()],
-    packages=['tslearn'],
+    packages=find_packages(),
     package_data={"tslearn": [".cached_datasets/Trace.npz"]},
     data_files=[("", ["LICENSE"])],
     install_requires=['numpy', 'scipy', 'scikit-learn', 'Cython', 'numba',
