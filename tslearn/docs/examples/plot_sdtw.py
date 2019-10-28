@@ -62,7 +62,8 @@ cost_func = mat[-1, :]
 # fit this example)
 potential_matches = find_peaks(-cost_func, distance=sz * 0.75, height=-50)[0]
 
-# Calculate the optimal warping path starting from each of the minima
+# Calculate the optimal warping path starting from each of the 
+# identified minima
 paths = [metrics.subsequence_path(mat, match) for match in
          potential_matches]
 
