@@ -3,14 +3,23 @@
 1-NN with SAX + MINDIST
 =======================
 
-This example presents a comparison performs kNN with k=1, using MINDIST from
-the original paper as a distance function, on SAX transformations using
-different benchmark datasets. It compares its accuracy on a test set with
-the accuracy of kNN (k=1) using euclidean distance on the raw data.
+This example presents a comparison between k-Nearest Neighbor runs with k=1.
+It compares the use of:
+* MINDIST (see [1]) on SAX representations of the data.
+* Euclidean distance on the raw values of the time series.
+
+The comparison is based on test accuracy using several benchmark datasets.
+
+[1] Lin, Jessica, et al. "Experiencing SAX: a novel symbolic
+    representation of time series." Data Mining and knowledge
+    discovery 15.2 (2007): 107-144.
 """
 
 # Author: Gilles Vandewiele
 # License: BSD 3 clause
+
+import warnings
+warnings.filterwarnings('ignore')
 
 import numpy
 import matplotlib.pyplot as plt
@@ -23,6 +32,7 @@ from tslearn.piecewise import PiecewiseAggregateApproximation, \
     SymbolicAggregateApproximation, \
     OneD_SymbolicAggregateApproximation
 
+from sklearn.base import clone
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import pairwise_distances, accuracy_score, \
     confusion_matrix
@@ -31,11 +41,9 @@ from sklearn.neighbors import KNeighborsClassifier
 
 from scipy.stats import norm
 
-import warnings
-warnings.filterwarnings('ignore')
-
 
 def print_table(accuracies, times):
+    """Utility function to pretty print the obtained accuracies"""
     header_str = '|'
     header_str += '{:^20}|'.format('dataset')
     columns = ['sax error', 'sax time', 'eucl error', 'eucl time']
@@ -61,9 +69,10 @@ def print_table(accuracies, times):
 
     print('-'*(len(columns) * 13 + 22))
 
-
+# Set seed
 numpy.random.seed(0)
-# Generate a random walk time series
+
+# Defining dataset and the number of segments 
 data_loader = UCR_UEA_datasets()
 datasets = [
     ('SyntheticControl', 16),
@@ -79,22 +88,29 @@ datasets = [
     ('OliveOil', 256)
 ]
 
+# We will compare the accuracies & execution times of 1-NN using:
+# (i) MINDIST on SAX representations, and 
+# (ii) euclidean distance on raw values
+knn_sax = KNeighborsTimeSeriesClassifier(n_neighbors=1, metric='sax')
+knn_eucl = KNeighborsTimeSeriesClassifier(n_neighbors=1, metric='euclidean')
+
 accuracies = {}
 times = {}
 for dataset, w in datasets:
     X_train, y_train, X_test, y_test = data_loader.load_dataset(dataset)
+
+    # Fit 1-NN using SAX representation & MINDIST
     metric_params = {'n_segments': w, 'alphabet_size_avg': 10}
-    knn = KNeighborsTimeSeriesClassifier(n_neighbors=1, metric='sax',
-                                         metric_params=metric_params)
+    knn_sax = clone(knn_sax).set_params(metric_params=metric_params)
     start = time.time()
-    knn.fit(X_train, y_train)
-    acc_sax = accuracy_score(y_test, knn.predict(X_test))
+    knn_sax.fit(X_train, y_train)
+    acc_sax = accuracy_score(y_test, knn_sax.predict(X_test))
     time_sax = time.time() - start
 
-    knn = KNeighborsTimeSeriesClassifier(n_neighbors=1, metric='euclidean')
+    # Fit 1-NN using euclidean distance on raw values
     start = time.time()
-    knn.fit(X_train, y_train)
-    acc_euclidean = accuracy_score(y_test, knn.predict(X_test))
+    knn_eucl.fit(X_train, y_train)
+    acc_euclidean = accuracy_score(y_test, knn_eucl.predict(X_test))
     time_euclidean = time.time() - start
 
     accuracies[dataset] = (acc_sax, acc_euclidean)
