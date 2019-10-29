@@ -64,7 +64,7 @@ If you want to import other time series from text files, the expected format is:
 
 * each line represents a single time series (and time series from a dataset are not forced to be the same length);
 * in each line, modalities are separated by a `|` character (useless if you only have one modality in your data);
-* in each modality, observations are sparated by a space character.
+* in each modality, observations are separated by a space character.
 
 Here is an example of such a file storing two time series of dimension 2 (the first time series is of length 3 and
 the second one is of length 2).
@@ -85,8 +85,8 @@ To read from / write to this format, have a look at the :ref:`tslearn.utils <mod
 Playing with your data
 ----------------------
 
-Once your data is loaded and formatted according to `tslearn` standards, the next step is to feed machine learning
-models with it. Most `tslearn` models inherit from `scikit-learn` base classes, hence interacting with them is very
+Once your data is loaded and formatted according to `tslearn` standards, the next step is to feeding to machine learning
+models. Most `tslearn` models inherit from `scikit-learn` base classes, hence interacting with them is very
 similar to interacting with a `scikit-learn` model, except that datasets are not two-dimensional arrays, but rather
 `tslearn` time series datasets (`i.e.` three-dimensional arrays or lists of two-dimensional arrays).
 
