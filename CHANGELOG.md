@@ -13,6 +13,8 @@ Changelogs for this project are recorded in this file since v0.2.0.
 ### Changed
 
 * `dtw_barycenter_averaging` is made faster by using vectorized computations
+* `dtw_barycenter_averaging` can be restarted several times to reach better
+local optima using a parameter `n_init` set to 1 by default
 
 ### Added
 
