@@ -41,7 +41,7 @@ install:
 - conda config --set always_yes yes --set changeps1 no
 - conda update -q conda
 - conda info -a
-- conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy>=1.14 scipy tensorflow==1.13 keras
+- conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy>=1.14 scipy tensorflow==1.* keras
   scikit-learn numba joblib>=0.12 pandas
 - source activate test-environment
 - pip install cesium pytest
