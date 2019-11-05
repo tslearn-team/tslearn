@@ -566,7 +566,7 @@ def dtw_barycenter_averaging(X, barycenter_size=None, init_barycenter=None,
         if loss < best_cost:
             best_cost = loss
             best_barycenter = bary
-    return best_barycenter, best_cost
+    return best_barycenter
 
 
 def dtw_barycenter_averaging_one_init(X, barycenter_size=None,
