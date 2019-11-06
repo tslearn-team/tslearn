@@ -196,7 +196,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
         parallelization.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors. See scikit-learns'
-        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`__
         for more details.
 
     Examples
@@ -217,7 +217,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
     array([[2, 1],
            [2, 0],
            [0, 1]])
-    """
+    """  # noqa: E501
     def __init__(self, n_neighbors=5, metric="dtw", metric_params=None,
                  n_jobs=None, verbose=0):
         NearestNeighbors.__init__(self,
@@ -307,7 +307,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         parallelization.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors. See scikit-learns'
-        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`__
         for more details.
 
     verbose : int, optional (default=0)
@@ -315,7 +315,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         Above 50, the output is sent to stdout. 
         The frequency of the messages increases with the verbosity level. 
         If it more than 10, all iterations are reported.
-        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_ 
+        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`__
         for more details.
 
     Examples
@@ -491,7 +491,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         parallelization.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors. See scikit-learns'
-        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`__
         for more details.
 
     verbose : int, optional (default=0)
@@ -499,7 +499,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         Above 50, the output is sent to stdout. 
         The frequency of the messages increases with the verbosity level. 
         If it more than 10, all iterations are reported.
-        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_  
+        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`__
         for more details.
 
     Examples
