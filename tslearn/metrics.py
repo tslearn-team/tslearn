@@ -12,6 +12,7 @@ from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.utils import check_random_state
 from tslearn.soft_dtw_fast import _soft_dtw, _soft_dtw_grad, \
     _jacobian_product_sq_euc
+from tslearn.cysax import cydist_sax
 
 from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, \
     check_equal_size
@@ -1186,7 +1187,8 @@ def cdist_sax(dataset1, breakpoints_avg, size_fitted, dataset2=None,
            discovery 15.2 (2007): 107-144.
 
     """ # noqa: E501
-    return _cdist_generic(dist_fun=dtw, dataset1=dataset1, dataset2=dataset2,
+    return _cdist_generic(dist_fun=cydist_sax, dataset1=dataset1,
+                          dataset2=dataset2,
                           n_jobs=n_jobs, verbose=verbose,
                           compute_diagonal=False,
                           breakpoints_avg=breakpoints_avg,
