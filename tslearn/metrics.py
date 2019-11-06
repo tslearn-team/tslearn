@@ -12,7 +12,6 @@ from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.utils import check_random_state
 from tslearn.soft_dtw_fast import _soft_dtw, _soft_dtw_grad, \
     _jacobian_product_sq_euc
-from tslearn.cysax import cydist_sax
 
 from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, \
     check_equal_size
@@ -21,68 +20,6 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 GLOBAL_CONSTRAINT_CODE = {None: 0, "": 0, "itakura": 1, "sakoe_chiba": 2}
 VARIABLE_LENGTH_METRICS = ["dtw", "gak", "softdtw", "sax"]
-
-
-def cdist_sax(dataset1, breakpoints_avg, size_fitted, dataset2=None,
-              n_jobs=None):
-    r"""Calculates a matrix of distances (MINDIST) on SAX-transformed data,
-    as presented in [1]_.
-
-    Parameters
-    ----------
-    dataset1 : array-like
-        A dataset of time series
-
-    dataset2 : array-like (default: None)
-        Another dataset of time series. If `None`, self-similarity of
-        `dataset1` is returned.
-
-    breakpoints_avg: The breakpoints used to assign the alphabet symbols.
-
-    size_fitted: The original timesteps in the timeseries, before
-    discretizing through SAX.
-
-    n_jobs : int or None, optional (default=None)
-        The number of jobs to run in parallel.
-        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
-        ``-1`` means using all processors. See scikit-learns'
-        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
-        for more details.
-
-    Returns
-    -------
-    cdist : numpy.ndarray
-        Cross-similarity matrix
-
-    References
-    ----------
-    .. [1] Lin, Jessica, et al. "Experiencing SAX: a novel symbolic
-           representation of time series." Data Mining and knowledge
-           discovery 15.2 (2007): 107-144.
-
-    """
-    if dataset2 is None:
-        # Calculate the self-distances of the SAX-transformed timeseries
-        matrix = numpy.zeros((len(dataset1), len(dataset1)))
-        indices = numpy.triu_indices(len(dataset1), k=1, m=len(dataset1))
-        matrix[indices] = Parallel(n_jobs=n_jobs, prefer="threads")(
-            delayed(cydist_sax)(
-                dataset1[i], dataset1[j],
-                breakpoints_avg, size_fitted)
-            for i in range(len(dataset1)) for j in range(i + 1, len(dataset1))
-        )
-        return matrix + matrix.T
-    else:
-        # Calculate the distances from SAX transformations of
-        # dataset1 to SAX transformations of dataset2 to produce
-        # a |dataset1| x |dataset2| distance matrix
-        matrix = Parallel(n_jobs=n_jobs, prefer="threads")(
-            delayed(cydist_sax)(
-                dataset1[i], dataset2[j],
-                breakpoints_avg, size_fitted)
-            for i in range(len(dataset1)) for j in range(len(dataset2))
-        )
-        return numpy.array(matrix).reshape((len(dataset1), -1))
 
 
 @njit()
@@ -733,6 +670,86 @@ def compute_mask(s1, s2, global_constraint=0,
     return mask
 
 
+def _cdist_generic(dist_fun, dataset1, dataset2, n_jobs, verbose,
+                   compute_diagonal=True, *args, **kwargs):
+    """Compute cross-similarity matrix with joblib parallelization for a given
+    similarity function.
+
+    Parameters
+    ----------
+    dist_fun : function
+        Similarity function to be used
+
+    dataset1 : array-like
+        A dataset of time series
+
+    dataset2 : array-like (default: None)
+        Another dataset of time series. If `None`, self-similarity of
+        `dataset1` is returned.
+
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See scikit-learns'
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        for more details.
+
+    verbose : int, optional (default=0)
+        The verbosity level: if non zero, progress messages are printed.
+        Above 50, the output is sent to stdout.
+        The frequency of the messages increases with the verbosity level.
+        If it more than 10, all iterations are reported.
+        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_
+        for more details.
+
+    compute_diagonal : bool (default: True)
+        Whether diagonal terms should be computed or assumed to be 0 in the
+        self-similarity case. Used only if `dataset2` is `None`.
+
+    *args and **kwargs :
+        Optional additional parameters to be passed to the similarity function.
+
+
+    Returns
+    -------
+    cdist : numpy.ndarray
+        Cross-similarity matrix
+    """ # noqa: E501
+    dataset1 = to_time_series_dataset(dataset1)
+
+    if dataset2 is None:
+        # Inspired from code by @GillesVandewiele:
+        # https://github.com/rtavenar/tslearn/pull/128#discussion_r314978479
+        matrix = numpy.zeros((len(dataset1), len(dataset1)))
+        indices = numpy.triu_indices(len(dataset1),
+                                     k=0 if compute_diagonal else 1,
+                                     m=len(dataset1))
+        matrix[indices] = Parallel(n_jobs=n_jobs,
+                                   prefer="threads",
+                                   verbose=verbose)(
+            delayed(dist_fun)(
+                dataset1[i], dataset1[j],
+                *args, **kwargs
+            )
+            for i in range(len(dataset1))
+            for j in range(i if compute_diagonal else i + 1,
+                           len(dataset1))
+        )
+        indices = numpy.tril_indices(len(dataset1), k=-1, m=len(dataset1))
+        matrix[indices] = matrix.T[indices]
+        return matrix
+    else:
+        dataset2 = to_time_series_dataset(dataset2)
+        matrix = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
+            delayed(dist_fun)(
+                dataset1[i], dataset2[j],
+                *args, **kwargs
+            )
+            for i in range(len(dataset1)) for j in range(len(dataset2))
+        )
+        return numpy.array(matrix).reshape((len(dataset1), -1))
+
+
 def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
               sakoe_chiba_radius=None, itakura_max_slope=None, n_jobs=None,
               verbose=0):
@@ -788,11 +805,11 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
         for more details.
 
     verbose : int, optional (default=0)
-        The verbosity level: if non zero, progress messages are printed. 
-        Above 50, the output is sent to stdout. 
-        The frequency of the messages increases with the verbosity level. 
+        The verbosity level: if non zero, progress messages are printed.
+        Above 50, the output is sent to stdout.
+        The frequency of the messages increases with the verbosity level.
         If it more than 10, all iterations are reported.
-        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_  
+        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_
         for more details.
 
     Returns
@@ -820,33 +837,12 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
 
     """ # noqa: E501
-    dataset1 = to_time_series_dataset(dataset1)
-
-    if dataset2 is None:
-        # Inspired from code by @GillesVandewiele:
-        # https://github.com/rtavenar/tslearn/pull/128#discussion_r314978479
-        matrix = numpy.zeros((len(dataset1), len(dataset1)))
-        indices = numpy.triu_indices(len(dataset1), k=1, m=len(dataset1))
-        matrix[indices] = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
-            delayed(dtw)(
-                dataset1[i], dataset1[j],
-                global_constraint=global_constraint,
-                sakoe_chiba_radius=sakoe_chiba_radius,
-                itakura_max_slope=itakura_max_slope)
-            for i in range(len(dataset1)) for j in range(i + 1, len(dataset1))
-        )
-        return matrix + matrix.T
-    else:
-        dataset2 = to_time_series_dataset(dataset2)
-        matrix = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
-            delayed(dtw)(
-                dataset1[i], dataset2[j],
-                global_constraint=global_constraint,
-                sakoe_chiba_radius=sakoe_chiba_radius,
-                itakura_max_slope=itakura_max_slope)
-            for i in range(len(dataset1)) for j in range(len(dataset2))
-        )
-        return numpy.array(matrix).reshape((len(dataset1), -1))
+    return _cdist_generic(dist_fun=dtw, dataset1=dataset1, dataset2=dataset2,
+                          n_jobs=n_jobs, verbose=verbose,
+                          compute_diagonal=False,
+                          global_constraint=global_constraint,
+                          sakoe_chiba_radius=sakoe_chiba_radius,
+                          itakura_max_slope=itakura_max_slope)
 
 
 @njit(nogil=True)
@@ -1018,39 +1014,35 @@ def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None, verbose=0):
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """ # noqa: E501
+    unnormalized_matrix = _cdist_generic(dist_fun=unnormalized_gak,
+                                         dataset1=dataset1,
+                                         dataset2=dataset2,
+                                         n_jobs=n_jobs,
+                                         verbose=verbose,
+                                         sigma=sigma,
+                                         compute_diagonal=True)
+    # print(unnormalized_matrix)
     dataset1 = to_time_series_dataset(dataset1)
-
     if dataset2 is None:
-        # Inspired from code by @GillesVandewiele:
-        # https://github.com/rtavenar/tslearn/pull/128#discussion_r314978479
-        matrix = numpy.zeros((len(dataset1), len(dataset1)))
-        indices = numpy.triu_indices(len(dataset1), k=0, m=len(dataset1))
-        matrix[indices] = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
-            delayed(unnormalized_gak)(dataset1[i], dataset1[j], sigma=sigma)
-            for i in range(len(dataset1)) for j in range(i, len(dataset1))
-        )
-        indices = numpy.tril_indices(len(dataset1), k=-1, m=len(dataset1))
-        matrix[indices] = matrix.T[indices]
-        diagonal = numpy.diag(numpy.sqrt(1. / numpy.diag(matrix)))
+        diagonal = numpy.diag(numpy.sqrt(1. / numpy.diag(unnormalized_matrix)))
         diagonal_left = diagonal_right = diagonal
     else:
         dataset2 = to_time_series_dataset(dataset2)
-        matrix = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
-            delayed(unnormalized_gak)(dataset1[i], dataset2[j], sigma=sigma)
-            for i in range(len(dataset1)) for j in range(len(dataset2))
-        )
-        matrix = numpy.array(matrix).reshape((len(dataset1), -1))
-        diagonal_left = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
+        diagonal_left = Parallel(n_jobs=n_jobs,
+                                 prefer="threads",
+                                 verbose=verbose)(
             delayed(unnormalized_gak)(dataset1[i], dataset1[i], sigma=sigma)
             for i in range(len(dataset1))
         )
-        diagonal_right = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
+        diagonal_right = Parallel(n_jobs=n_jobs,
+                                  prefer="threads",
+                                  verbose=verbose)(
             delayed(unnormalized_gak)(dataset2[j], dataset2[j], sigma=sigma)
             for j in range(len(dataset2))
         )
         diagonal_left = numpy.diag(1. / numpy.sqrt(diagonal_left))
         diagonal_right = numpy.diag(1. / numpy.sqrt(diagonal_right))
-    return (diagonal_left.dot(matrix)).dot(diagonal_right)
+    return (diagonal_left.dot(unnormalized_matrix)).dot(diagonal_right)
 
 
 def sigma_gak(dataset, n_samples=100, random_state=None):
@@ -1146,6 +1138,59 @@ def gamma_soft_dtw(dataset, n_samples=100, random_state=None):
     return 2. * sigma_gak(dataset=dataset,
                           n_samples=n_samples,
                           random_state=random_state) ** 2
+
+
+def cdist_sax(dataset1, breakpoints_avg, size_fitted, dataset2=None,
+              n_jobs=None, verbose=0):
+    r"""Calculates a matrix of distances (MINDIST) on SAX-transformed data,
+    as presented in [1]_.
+
+    Parameters
+    ----------
+    dataset1 : array-like
+        A dataset of time series
+
+    dataset2 : array-like (default: None)
+        Another dataset of time series. If `None`, self-similarity of
+        `dataset1` is returned.
+
+    breakpoints_avg: The breakpoints used to assign the alphabet symbols.
+
+    size_fitted: The original timesteps in the timeseries, before
+    discretizing through SAX.
+
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See scikit-learns'
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        for more details.
+
+    verbose : int, optional (default=0)
+        The verbosity level: if non zero, progress messages are printed.
+        Above 50, the output is sent to stdout.
+        The frequency of the messages increases with the verbosity level.
+        If it more than 10, all iterations are reported.
+        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`_
+        for more details.
+
+    Returns
+    -------
+    cdist : numpy.ndarray
+        Cross-similarity matrix
+
+    References
+    ----------
+    .. [1] Lin, Jessica, et al. "Experiencing SAX: a novel symbolic
+           representation of time series." Data Mining and knowledge
+           discovery 15.2 (2007): 107-144.
+
+    """ # noqa: E501
+    return _cdist_generic(dist_fun=dtw, dataset1=dataset1, dataset2=dataset2,
+                          n_jobs=n_jobs, verbose=verbose,
+                          compute_diagonal=False,
+                          breakpoints_avg=breakpoints_avg,
+                          size_fitted=size_fitted)
 
 
 def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
