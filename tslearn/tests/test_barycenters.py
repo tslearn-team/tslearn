@@ -38,13 +38,15 @@ def test_dba():
 
     # Equal length, 0 iterations -> Euclidean
     euc_bar = tslearn.barycenters.euclidean_barycenter(time_series)
-    dba_bar = tslearn.barycenters.dtw_barycenter_averaging(time_series,
-                                                           max_iter=0)
+    dba_bar = tslearn.barycenters.dtw_barycenter_averaging_petitjean(
+        time_series,
+        max_iter=0)
     np.testing.assert_allclose(euc_bar, dba_bar)
 
     # Equal length, >0 iterations
-    dba_bar = tslearn.barycenters.dtw_barycenter_averaging(time_series,
-                                                           max_iter=5)
+    dba_bar = tslearn.barycenters.dtw_barycenter_averaging_petitjean(
+        time_series,
+        max_iter=5)
     ref = np.array([[0.33447722, 0.0418787, -0.03953774],
                     [-0.75757987, -0.26841384, -0.22418874],
                     [-0.0473153, 0.41030073, 0.06069343],
@@ -56,6 +58,25 @@ def test_dba():
                     [0.67493146, -0.37714421, 0.16604165],
                     [-0.32249566, 0.09109832, 0.55489214]])
     np.testing.assert_allclose(dba_bar, ref, atol=1e-6)
+
+    dba_bar = tslearn.barycenters.dtw_barycenter_averaging_petitjean(
+        time_series,
+        max_iter=5)
+    dba_bar_mm = tslearn.barycenters.dtw_barycenter_averaging(
+        time_series,
+        max_iter=5)
+    np.testing.assert_allclose(dba_bar, dba_bar_mm)
+
+    weights = rng.rand(n)
+    dba_bar = tslearn.barycenters.dtw_barycenter_averaging_petitjean(
+        time_series,
+        weights=weights,
+        max_iter=5)
+    dba_bar_mm = tslearn.barycenters.dtw_barycenter_averaging(
+        time_series,
+        weights=weights,
+        max_iter=5)
+    np.testing.assert_allclose(dba_bar, dba_bar_mm)
 
 
 def test_softdtw_barycenter():

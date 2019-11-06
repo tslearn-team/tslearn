@@ -10,6 +10,12 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ## [Towards v0.3.0]
 
+### Changed
+
+* `dtw_barycenter_averaging` is made faster by using vectorized computations
+* `dtw_barycenter_averaging` can be restarted several times to reach better
+local optima using a parameter `n_init` set to 1 by default
+
 ### Added
 
 * `KNeighborsTimeSeriesRegressor` is a new regressor based on 
@@ -25,6 +31,8 @@ for parallel computations and `joblib` levels are used;
 * conversion functions are provided in the `utils` module to interact with
 other Python time series packages (`pyts`, `sktime`, `cesium`, `seglearn`, 
 `tsfresh`, `stumpy`, `pyflux`)
+* `dtw_barycenter_averaging_subgradient` is now available to compute DTW
+barycenter based on subgradient descent
 
 ### Changed
  
