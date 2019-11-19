@@ -15,6 +15,10 @@ Changelogs for this project are recorded in this file since v0.2.0.
 * `dtw_barycenter_averaging` is made faster by using vectorized computations
 * `dtw_barycenter_averaging` can be restarted several times to reach better
 local optima using a parameter `n_init` set to 1 by default
+* Functions `load_timeseries_txt` and `save_timeseries_txt` from the utils
+module have changed their names to `load_time_series_txt` and 
+`save_time_series_txt`. Old names can still be used but considered deprecated
+ and removed from the public API documentation for the sake of harmonization
 
 ### Added
 

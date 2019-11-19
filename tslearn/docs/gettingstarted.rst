@@ -78,9 +78,9 @@ To read from / write to this format, have a look at the :ref:`tslearn.utils <mod
 
 .. code-block:: python
 
-    >>> from tslearn.utils import save_timeseries_txt, load_timeseries_txt
-    >>> time_series_dataset = load_timeseries_txt("path/to/your/file.txt")
-    >>> save_timeseries_txt("path/to/another/file.txt", dataset_to_be_saved)
+    >>> from tslearn.utils import save_time_series_txt, load_time_series_txt
+    >>> time_series_dataset = load_time_series_txt("path/to/your/file.txt")
+    >>> save_time_series_txt("path/to/another/file.txt", dataset_to_be_saved)
 
 Playing with your data
 ----------------------

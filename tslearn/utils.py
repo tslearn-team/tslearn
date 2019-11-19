@@ -239,7 +239,7 @@ def to_sklearn_dataset(dataset, dtype=numpy.float, return_dim=False):
         return tslearn_dataset.reshape((n_ts, -1))
 
 
-def timeseries_to_str(ts, fmt="%.18e"):
+def time_series_to_str(ts, fmt="%.18e"):
     """Transforms a time series to its representation as a string (used when
     saving time series to disk).
 
@@ -257,15 +257,15 @@ def timeseries_to_str(ts, fmt="%.18e"):
 
     Examples
     --------
-    >>> timeseries_to_str([1, 2, 3, 4], fmt="%.1f")
+    >>> time_series_to_str([1, 2, 3, 4], fmt="%.1f")
     '1.0 2.0 3.0 4.0'
-    >>> timeseries_to_str([[1, 3], [2, 4]], fmt="%.1f")
+    >>> time_series_to_str([[1, 3], [2, 4]], fmt="%.1f")
     '1.0 2.0|3.0 4.0'
 
     See Also
     --------
-    load_timeseries_txt : Load time series from disk
-    str_to_timeseries : Transform a string into a time series
+    load_time_series_txt : Load time series from disk
+    str_to_time_series : Transform a string into a time series
     """
     ts_ = to_time_series(ts)
     dim = ts_.shape[1]
@@ -277,7 +277,10 @@ def timeseries_to_str(ts, fmt="%.18e"):
     return s
 
 
-def str_to_timeseries(ts_str):
+timeseries_to_str = time_series_to_str
+
+
+def str_to_time_series(ts_str):
     """Reads a time series from its string representation (used when loading
     time series from disk).
 
@@ -293,26 +296,29 @@ def str_to_timeseries(ts_str):
 
     Examples
     --------
-    >>> str_to_timeseries("1 2 3 4")
+    >>> str_to_time_series("1 2 3 4")
     array([[1.],
            [2.],
            [3.],
            [4.]])
-    >>> str_to_timeseries("1 2|3 4")
+    >>> str_to_time_series("1 2|3 4")
     array([[1., 3.],
            [2., 4.]])
 
     See Also
     --------
-    load_timeseries_txt : Load time series from disk
-    timeseries_to_str : Transform a time series into a string
+    load_time_series_txt : Load time series from disk
+    time_series_to_str : Transform a time series into a string
     """
     dimensions = ts_str.split("|")
     ts = [dim_str.split(" ") for dim_str in dimensions]
     return to_time_series(numpy.transpose(ts))
 
 
-def save_timeseries_txt(fname, dataset, fmt="%.18e"):
+str_to_timeseries = str_to_time_series
+
+
+def save_time_series_txt(fname, dataset, fmt="%.18e"):
     """Writes a time series dataset to disk.
 
     Parameters
@@ -327,19 +333,22 @@ def save_timeseries_txt(fname, dataset, fmt="%.18e"):
     Examples
     --------
     >>> dataset = to_time_series_dataset([[1, 2, 3, 4], [1, 2, 3]])
-    >>> save_timeseries_txt("tmp-tslearn-test.txt", dataset)
+    >>> save_time_series_txt("tmp-tslearn-test.txt", dataset)
 
     See Also
     --------
-    load_timeseries_txt : Load time series from disk
+    load_time_series_txt : Load time series from disk
     """
     fp = open(fname, "wt")
     for ts in dataset:
-        fp.write(timeseries_to_str(ts, fmt=fmt) + "\n")
+        fp.write(time_series_to_str(ts, fmt=fmt) + "\n")
     fp.close()
 
 
-def load_timeseries_txt(fname):
+save_timeseries_txt = save_time_series_txt
+
+
+def load_time_series_txt(fname):
     """Loads a time series dataset from disk.
 
     Parameters
@@ -355,20 +364,23 @@ def load_timeseries_txt(fname):
     Examples
     --------
     >>> dataset = to_time_series_dataset([[1, 2, 3, 4], [1, 2, 3]])
-    >>> save_timeseries_txt("tmp-tslearn-test.txt", dataset)
-    >>> reloaded_dataset = load_timeseries_txt("tmp-tslearn-test.txt")
+    >>> save_time_series_txt("tmp-tslearn-test.txt", dataset)
+    >>> reloaded_dataset = load_time_series_txt("tmp-tslearn-test.txt")
 
     See Also
     --------
-    save_timeseries_txt : Save time series to disk
+    save_time_series_txt : Save time series to disk
     """
     dataset = []
     fp = open(fname, "rt")
     for row in fp.readlines():
-        ts = str_to_timeseries(row)
+        ts = str_to_time_series(row)
         dataset.append(ts)
     fp.close()
     return to_time_series_dataset(dataset)
+
+
+load_timeseries_txt = load_time_series_txt
 
 
 def check_equal_size(dataset):
