@@ -716,10 +716,7 @@ def _cdist_generic(dist_fun, dataset1, dataset2, n_jobs, verbose,
     cdist : numpy.ndarray
         Cross-similarity matrix
     """ # noqa: E501
-    print(dataset1.dtype)
     dataset1 = to_time_series_dataset(dataset1, dtype=dataset1.dtype)
-    print(dataset1.dtype)
-    print(*kwargs.values())
 
     if dataset2 is None:
         # Inspired from code by @GillesVandewiele:
@@ -733,7 +730,7 @@ def _cdist_generic(dist_fun, dataset1, dataset2, n_jobs, verbose,
                                    verbose=verbose)(
             delayed(dist_fun)(
                 dataset1[i], dataset1[j],
-                *args, *kwargs.values()
+                *args, **kwargs
             )
             for i in range(len(dataset1))
             for j in range(i if compute_diagonal else i + 1,
@@ -747,7 +744,7 @@ def _cdist_generic(dist_fun, dataset1, dataset2, n_jobs, verbose,
         matrix = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
             delayed(dist_fun)(
                 dataset1[i], dataset2[j],
-                *args, *kwargs.values()
+                *args, **kwargs
             )
             for i in range(len(dataset1)) for j in range(len(dataset2))
         )
@@ -1025,7 +1022,6 @@ def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None, verbose=0):
                                          verbose=verbose,
                                          sigma=sigma,
                                          compute_diagonal=True)
-    # print(unnormalized_matrix)
     dataset1 = to_time_series_dataset(dataset1)
     if dataset2 is None:
         diagonal = numpy.diag(numpy.sqrt(1. / numpy.diag(unnormalized_matrix)))
@@ -1190,12 +1186,8 @@ def cdist_sax(dataset1, breakpoints_avg, size_fitted, dataset2=None,
            discovery 15.2 (2007): 107-144.
 
     """ # noqa: E501
-    return _cdist_generic(dist_fun=cydist_sax, dataset1=dataset1,
-                          dataset2=dataset2,
-                          n_jobs=n_jobs, verbose=verbose,
-                          compute_diagonal=False,
-                          breakpoints_avg=breakpoints_avg,
-                          size_fitted=size_fitted)
+    return _cdist_generic(cydist_sax, dataset1, dataset2, n_jobs, verbose,
+                          False, breakpoints_avg, size_fitted)
 
 
 def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
