@@ -148,7 +148,12 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
                                  "'sax', 'euclidean', 'sqeuclidean' "
                                  "or 'cityblock')" % self.metric)
 
+        # Code similar to sklearn (sklearn/neighbors/base.py), to make sure
+        # that TimeSeriesKNeighbor~(metric='euclidean') has the same results as
+        # feeding a distance matrix to sklearn.KNeighbors~(metric='euclidean')
         kbin = min(n_neighbors - 1, full_dist_matrix.shape[1] - 1)
+        # argpartition will make sure the first `kbin` entries are the 
+        # `kbin` smallest ones (but in arbitrary order) --> complexity: O(n)
         ind = numpy.argpartition(full_dist_matrix, kbin, axis=1)
 
         if self_neighbors:
@@ -159,6 +164,7 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
 
         n_ts = X.shape[0]
         sample_range = numpy.arange(n_ts)[:, None]
+        # Sort the `kbin` nearest neighbors according to distance
         ind = ind[
             sample_range, numpy.argsort(full_dist_matrix[sample_range, ind])]
         dist = full_dist_matrix[sample_range, ind]
