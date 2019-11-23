@@ -135,11 +135,12 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
                 fit_X = self._X_fit
 
             if (self.metric in VARIABLE_LENGTH_METRICS or
-                  self.metric in [cdist_dtw, cdist_soft_dtw, cdist_sax]):
-                full_dist_matrix = self._precompute_cross_dist(X, other_X=fit_X)
+                self.metric in [cdist_dtw, cdist_soft_dtw, cdist_sax]):
+                full_dist_matrix = self._precompute_cross_dist(X,
+                                                               other_X=fit_X)
             elif self.metric in ["euclidean", "sqeuclidean", "cityblock"]:
                 full_dist_matrix = scipy_cdist(X.reshape((X.shape[0], -1)),
-                                               fit_X.reshape((fit_X.shape[0], 
+                                               fit_X.reshape((fit_X.shape[0],
                                                               -1)),
                                                metric=self.metric)
             else:
@@ -152,7 +153,7 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
         # that TimeSeriesKNeighbor~(metric='euclidean') has the same results as
         # feeding a distance matrix to sklearn.KNeighbors~(metric='euclidean')
         kbin = min(n_neighbors - 1, full_dist_matrix.shape[1] - 1)
-        # argpartition will make sure the first `kbin` entries are the 
+        # argpartition will make sure the first `kbin` entries are the
         # `kbin` smallest ones (but in arbitrary order) --> complexity: O(n)
         ind = numpy.argpartition(full_dist_matrix, kbin, axis=1)
 

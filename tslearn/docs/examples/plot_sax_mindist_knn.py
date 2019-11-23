@@ -36,6 +36,7 @@ from sklearn.neighbors import KNeighborsClassifier
 
 warnings.filterwarnings('ignore')
 
+
 def print_table(accuracies, times):
     """Utility function to pretty print the obtained accuracies"""
     header_str = '|'

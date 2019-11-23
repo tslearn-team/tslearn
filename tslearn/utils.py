@@ -193,7 +193,7 @@ def to_time_series_dataset(dataset, dtype=numpy.float):
     for i in range(n_ts):
         ts = to_time_series(dataset[i], remove_nans=True)
         dataset_out[i, :ts.shape[0]] = ts
-    return dataset_out
+    return dataset_out.astype(dtype)
 
 
 def to_sklearn_dataset(dataset, dtype=numpy.float, return_dim=False):
