@@ -34,7 +34,7 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
 
         X = (X - self._sax_mu) / self._sax_sigma
 
-        # Now SAX-transform the timeseries
+        # Now SAX-transform the time series
         if not hasattr(self, '_sax') or self._sax is None:
             self._sax = SymbolicAggregateApproximation(
                 n_segments=n_segments,
@@ -46,7 +46,7 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
 
         return X
 
-    def _calculate_X_(self, X, other_X=None):
+    def _precompute_cross_dist(self, X, other_X=None):
         if other_X is None:
             other_X = self._ts_fit
 
@@ -136,7 +136,7 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
 
             if (self.metric in VARIABLE_LENGTH_METRICS or
                   self.metric in [cdist_dtw, cdist_soft_dtw, cdist_sax]):
-                full_dist_matrix = self._calculate_X_(X, other_X=fit_X)
+                full_dist_matrix = self._precompute_cross_dist(X, other_X=fit_X)
             elif self.metric in ["euclidean", "sqeuclidean", "cityblock"]:
                 full_dist_matrix = scipy_cdist(X.reshape((X.shape[0], -1)),
                                                fit_X.reshape((fit_X.shape[0], 
@@ -180,9 +180,9 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
               'sax'} (default: 'dtw')
         Metric to be used at the core of the nearest neighbor procedure.
         DTW and SAX are described in more detail in :mod:`tslearn.metrics`.
-        When SAX is provided as a metric, each timeseries standard-normalized
-        using the mean and std deviation of the training data.
-        Other metrics are described in `scipy.spatial.distance doc
+        When SAX is provided as a metric, each time series is
+        standard-normalized using the mean and std deviation of the training 
+        data. Other metrics are described in `scipy.spatial.distance doc
         <https://docs.scipy.org/doc/scipy/reference/spatial.distance.html>`_.
     metric_params : dict or None (default: None)
         Dictionnary of metric parameters.
@@ -411,7 +411,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         """
         if self.metric in VARIABLE_LENGTH_METRICS:
             check_is_fitted(self, '_ts_fit')
-            X_ = self._calculate_X_(X)
+            X_ = self._precompute_cross_dist(X)
             pred = super(KNeighborsTimeSeriesClassifier, self).predict(X_)
             self.metric = self._ts_metric
             return pred
@@ -438,7 +438,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         """
         if self.metric in VARIABLE_LENGTH_METRICS:
             check_is_fitted(self, '_ts_fit')
-            X_ = self._calculate_X_(X)
+            X_ = self._precompute_cross_dist(X)
             pred = super(KNeighborsTimeSeriesClassifier,
                          self).predict_proba(X_)
             self.metric = self._ts_metric
@@ -590,7 +590,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         """
         if self.metric in VARIABLE_LENGTH_METRICS:
             check_is_fitted(self, '_ts_fit')
-            X_ = self._calculate_X_(X)
+            X_ = self._precompute_cross_dist(X)
             pred = super(KNeighborsTimeSeriesRegressor, self).predict(X_)
             self.metric = self._ts_metric
             return pred

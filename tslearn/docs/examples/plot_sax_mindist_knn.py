@@ -19,28 +19,22 @@ The comparison is based on test accuracy using several benchmark datasets.
 # License: BSD 3 clause
 
 import warnings
-warnings.filterwarnings('ignore')
+import time
 
 import numpy
 import matplotlib.pyplot as plt
-import time
+from scipy.stats import norm
 
 from tslearn.datasets import UCR_UEA_datasets
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.neighbors import KNeighborsTimeSeriesClassifier
-from tslearn.piecewise import PiecewiseAggregateApproximation, \
-    SymbolicAggregateApproximation, \
-    OneD_SymbolicAggregateApproximation
 
 from sklearn.base import clone
-from sklearn.pipeline import Pipeline
-from sklearn.metrics import pairwise_distances, accuracy_score, \
-    confusion_matrix
-from sklearn.preprocessing import FunctionTransformer
+from sklearn.metrics import pairwise_distances, accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
 
-from scipy.stats import norm
 
+warnings.filterwarnings('ignore')
 
 def print_table(accuracies, times):
     """Utility function to pretty print the obtained accuracies"""
@@ -69,10 +63,11 @@ def print_table(accuracies, times):
 
     print('-'*(len(columns) * 13 + 22))
 
+
 # Set seed
 numpy.random.seed(0)
 
-# Defining dataset and the number of segments 
+# Defining dataset and the number of segments
 data_loader = UCR_UEA_datasets()
 datasets = [
     ('SyntheticControl', 16),
@@ -89,7 +84,7 @@ datasets = [
 ]
 
 # We will compare the accuracies & execution times of 1-NN using:
-# (i) MINDIST on SAX representations, and 
+# (i) MINDIST on SAX representations, and
 # (ii) euclidean distance on raw values
 knn_sax = KNeighborsTimeSeriesClassifier(n_neighbors=1, metric='sax')
 knn_eucl = KNeighborsTimeSeriesClassifier(n_neighbors=1, metric='euclidean')
