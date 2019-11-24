@@ -171,8 +171,8 @@ class TimeSeriesScalerMinMax(BaseEstimator, TransformerMixin):
         X = check_array(X, allow_nd=True, force_all_finite=False)
         X = check_dims(X, self._X_fit, extend=False)
         X_ = to_time_series_dataset(X)
-        min_t = numpy.min(X_, axis=1)[:, numpy.newaxis, :]
-        max_t = numpy.max(X_, axis=1)[:, numpy.newaxis, :]
+        min_t = numpy.nanmin(X_, axis=1)[:, numpy.newaxis, :]
+        max_t = numpy.nanmax(X_, axis=1)[:, numpy.newaxis, :]
         range_t = max_t - min_t
         nomin = (X_ - min_t) * (value_range[1] - value_range[0])
         X_ = nomin / range_t + value_range[0]
@@ -243,8 +243,8 @@ class TimeSeriesScalerMeanVariance(BaseEstimator, TransformerMixin):
         X = check_array(X, allow_nd=True, force_all_finite=False)
         X = check_dims(X, self._X_fit, extend=False)
         X_ = to_time_series_dataset(X)
-        mean_t = numpy.mean(X_, axis=1)[:, numpy.newaxis, :]
-        std_t = numpy.std(X_, axis=1)[:, numpy.newaxis, :]
+        mean_t = numpy.nanmean(X_, axis=1)[:, numpy.newaxis, :]
+        std_t = numpy.nanstd(X_, axis=1)[:, numpy.newaxis, :]
         std_t[std_t == 0.] = 1.
 
         X_ = (X_ - mean_t) * self.std / std_t + self.mu
