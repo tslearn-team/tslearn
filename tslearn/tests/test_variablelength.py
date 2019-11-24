@@ -31,8 +31,6 @@ def test_variable_length_knn():
     clf.fit(X, y)
     assert_allclose(clf.predict(X), [0, 0, 1, 1])
 
-    assert False
-
 def test_variable_length_svm():
     X = to_time_series_dataset([[1, 2, 3, 4],
                                 [1, 2, 3],
