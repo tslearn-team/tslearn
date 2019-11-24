@@ -24,13 +24,13 @@ neighbors.VALID_METRICS['brute'].extend(['dtw', 'softdtw', 'sax'])
 class KNeighborsTimeSeriesMixin(KNeighborsMixin):
     """Mixin for k-neighbors searches on Time Series."""
 
-    def _sax_preprocess(self, X, n_segments=None, alphabet_size_avg=None):
+    def _sax_preprocess(self, X, n_segments=10, alphabet_size_avg=4):
         # First, we standard-normalize the data using mu and sigma
         # of entire dataset, as opposed to timeseries-wise.
         if not hasattr(self, '_sax_mu') or self._sax_mu is None:
-            self._sax_mu = numpy.mean(X)
+            self._sax_mu = numpy.nanmean(X)
         if not hasattr(self, '_sax_sigma') or self._sax_sigma is None:
-            self._sax_sigma = numpy.std(X)
+            self._sax_sigma = numpy.nanstd(X)
 
         X = (X - self._sax_mu) / self._sax_sigma
 
@@ -169,6 +169,9 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
         ind = ind[
             sample_range, numpy.argsort(full_dist_matrix[sample_range, ind])]
         dist = full_dist_matrix[sample_range, ind]
+        
+        if hasattr(self, '_ts_metric'):
+            self.metric = self._ts_metric
 
         if return_distance:
             return dist, ind
@@ -391,7 +394,11 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             if self._ts_metric == 'sax':
                 self._sax_mu = None
                 self._sax_sigma = None
-                self._ts_fit = self._sax_preprocess(X, **self.metric_params)
+                if self.metric_params is not None:
+                    self._ts_fit = self._sax_preprocess(X, 
+                                                        **self.metric_params)
+                else:
+                    self._ts_fit = self._sax_preprocess(X)
 
             self._d = X.shape[2]
             self._X_fit = numpy.zeros((self._ts_fit.shape[0],

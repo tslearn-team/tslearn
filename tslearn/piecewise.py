@@ -140,11 +140,21 @@ class PiecewiseAggregateApproximation(TransformerMixin):
     def _transform(self, X, y=None):
         n_ts, sz, d = X.shape
         X_transformed = numpy.empty((n_ts, self.n_segments, d))
-        sz_segment = sz // self.n_segments
-        for i_seg in range(self.n_segments):
-            start = i_seg * sz_segment
-            end = start + sz_segment
-            X_transformed[:, i_seg, :] = X[:, start:end, :].mean(axis=1)
+        for i_ts in range(n_ts):
+            for i_dim in range(d):
+                sz = numpy.sum(~numpy.isnan(X[i_ts, :, i_dim]))
+                sz_segment = sz // self.n_segments
+                for i_seg in range(self.n_segments):
+                    start = i_seg * sz_segment
+                    end = start + sz_segment
+                    segment = X[i_ts, start:end, i_dim]
+                    X_transformed[i_ts, i_seg, i_dim] = numpy.nanmean(segment)
+
+        # sz_segment = sz // self.n_segments
+        # for i_seg in range(self.n_segments):
+        #     start = i_seg * sz_segment
+        #     end = start + sz_segment
+        #     X_transformed[:, i_seg, :] = X[:, start:end, :].mean(axis=1)
         return X_transformed
 
     def transform(self, X, y=None):

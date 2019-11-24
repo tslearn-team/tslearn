@@ -16,6 +16,7 @@ def test_variable_length_knn():
                                 [2, 5, 6, 7, 8, 9],
                                 [3, 5, 6, 7, 8]])
     y = [0, 0, 1, 1]
+
     clf = KNeighborsTimeSeriesClassifier(metric="dtw", n_neighbors=1)
     clf.fit(X, y)
     assert_allclose(clf.predict(X), [0, 0, 1, 1])
@@ -24,9 +25,13 @@ def test_variable_length_knn():
     clf.fit(X, y)
     assert_allclose(clf.predict(X), [0, 0, 1, 1])
 
-    clf = KNeighborsTimeSeriesClassifier(metric="sax", n_neighbors=1)
+    clf = KNeighborsTimeSeriesClassifier(metric="sax", n_neighbors=1, 
+                                         metric_params={'n_segments': 2,
+                                                        'alphabet_size_avg': 4})
     clf.fit(X, y)
     assert_allclose(clf.predict(X), [0, 0, 1, 1])
+
+    assert False
 
 def test_variable_length_svm():
     X = to_time_series_dataset([[1, 2, 3, 4],
@@ -77,7 +82,7 @@ def test_variable_cross_val():
     y = [0, 0, 0, 0, 1, 1, 1, 1]
     rng = np.random.RandomState(0)
 
-    cv = KFold(n_splits=2, shuffle=True)
+    cv = KFold(n_splits=2, shuffle=True, random_state=rng)
     for estimator in [
         TimeSeriesSVC(kernel="gak", random_state=rng),
         TimeSeriesSVR(kernel="gak"),

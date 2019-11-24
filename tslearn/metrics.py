@@ -672,7 +672,7 @@ def compute_mask(s1, s2, global_constraint=0,
 
 
 def _cdist_generic(dist_fun, dataset1, dataset2, n_jobs, verbose,
-                   compute_diagonal=True, *args, **kwargs):
+                   compute_diagonal=True, dtype=numpy.float, *args, **kwargs):
     """Compute cross-similarity matrix with joblib parallelization for a given
     similarity function.
 
@@ -716,7 +716,7 @@ def _cdist_generic(dist_fun, dataset1, dataset2, n_jobs, verbose,
     cdist : numpy.ndarray
         Cross-similarity matrix
     """ # noqa: E501
-    dataset1 = to_time_series_dataset(dataset1, dtype=dataset1.dtype)
+    dataset1 = to_time_series_dataset(dataset1, dtype=dtype)
 
     if dataset2 is None:
         # Inspired from code by @GillesVandewiele:
@@ -740,7 +740,7 @@ def _cdist_generic(dist_fun, dataset1, dataset2, n_jobs, verbose,
         matrix[indices] = matrix.T[indices]
         return matrix
     else:
-        dataset2 = to_time_series_dataset(dataset2, dtype=dataset2.dtype)
+        dataset2 = to_time_series_dataset(dataset2, dtype=dtype)
         matrix = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
             delayed(dist_fun)(
                 dataset1[i], dataset2[j],
@@ -1187,7 +1187,7 @@ def cdist_sax(dataset1, breakpoints_avg, size_fitted, dataset2=None,
 
     """ # noqa: E501
     return _cdist_generic(cydist_sax, dataset1, dataset2, n_jobs, verbose,
-                          False, breakpoints_avg, size_fitted)
+                          False, int, breakpoints_avg, size_fitted)
 
 
 def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
