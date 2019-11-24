@@ -25,9 +25,8 @@ def test_variable_length_knn():
     clf.fit(X, y)
     assert_allclose(clf.predict(X), [0, 0, 1, 1])
 
-    clf = KNeighborsTimeSeriesClassifier(metric="sax", n_neighbors=1, 
-                                         metric_params={'n_segments': 2,
-                                                        'alphabet_size_avg': 4})
+    clf = KNeighborsTimeSeriesClassifier(metric="sax", n_neighbors=1,
+                                         metric_params={'n_segments': 2})
     clf.fit(X, y)
     assert_allclose(clf.predict(X), [0, 0, 1, 1])
 

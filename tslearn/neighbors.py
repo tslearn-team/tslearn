@@ -135,7 +135,7 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
                 fit_X = self._X_fit
 
             if (self.metric in VARIABLE_LENGTH_METRICS or
-                self.metric in [cdist_dtw, cdist_soft_dtw, cdist_sax]):
+                    self.metric in [cdist_dtw, cdist_soft_dtw, cdist_sax]):
                 full_dist_matrix = self._precompute_cross_dist(X,
                                                                other_X=fit_X)
             elif self.metric in ["euclidean", "sqeuclidean", "cityblock"]:
@@ -169,7 +169,7 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
         ind = ind[
             sample_range, numpy.argsort(full_dist_matrix[sample_range, ind])]
         dist = full_dist_matrix[sample_range, ind]
-        
+
         if hasattr(self, '_ts_metric'):
             self.metric = self._ts_metric
 
@@ -395,7 +395,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
                 self._sax_mu = None
                 self._sax_sigma = None
                 if self.metric_params is not None:
-                    self._ts_fit = self._sax_preprocess(X, 
+                    self._ts_fit = self._sax_preprocess(X,
                                                         **self.metric_params)
                 else:
                     self._ts_fit = self._sax_preprocess(X)

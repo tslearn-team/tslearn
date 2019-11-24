@@ -715,7 +715,7 @@ def _cdist_generic(dist_fun, dataset1, dataset2, n_jobs, verbose,
     -------
     cdist : numpy.ndarray
         Cross-similarity matrix
-    """ # noqa: E501
+    """  # noqa: E501
     dataset1 = to_time_series_dataset(dataset1, dtype=dtype)
 
     if dataset2 is None:
@@ -1185,7 +1185,7 @@ def cdist_sax(dataset1, breakpoints_avg, size_fitted, dataset2=None,
            representation of time series." Data Mining and knowledge
            discovery 15.2 (2007): 107-144.
 
-    """ # noqa: E501
+    """  # noqa: E501
     return _cdist_generic(cydist_sax, dataset1, dataset2, n_jobs, verbose,
                           False, int, breakpoints_avg, size_fitted)
 
