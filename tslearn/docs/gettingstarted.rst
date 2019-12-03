@@ -64,7 +64,7 @@ If you want to import other time series from text files, the expected format is:
 
 * each line represents a single time series (and time series from a dataset are not forced to be the same length);
 * in each line, modalities are separated by a `|` character (useless if you only have one modality in your data);
-* in each modality, observations are sparated by a space character.
+* in each modality, observations are separated by a space character.
 
 Here is an example of such a file storing two time series of dimension 2 (the first time series is of length 3 and
 the second one is of length 2).

@@ -17,7 +17,7 @@ from keras.initializers import Initializer
 import keras.backend as K
 from keras.engine import InputSpec
 import numpy
-from tensorflow import set_random_seed
+from tensorflow.compat.v1 import set_random_seed
 
 import warnings
 
@@ -117,7 +117,7 @@ class LocalSquaredDistanceLayer(Layer):
         if X is None or K.backend() != "tensorflow":
             self.initializer = "uniform"
         else:
-            self.initializer = KMeansShapeletInitializer(X)
+            self.initializer = KMeansShapeletInitializer(X)  # TODO: v2-compatible initializer
         super(LocalSquaredDistanceLayer, self).__init__(**kwargs)
         self.input_spec = InputSpec(ndim=3)
 
