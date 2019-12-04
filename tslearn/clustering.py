@@ -23,7 +23,7 @@ from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.utils import (to_time_series_dataset, to_time_series,
                            ts_size, check_dims)
 from tslearn.cycc import cdist_normalized_cc, y_shifted_sbd_vec
-
+from .bases import BaseModelPackage
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 # Kernel k-means is derived from https://gist.github.com/mblondel/6230787 by
@@ -842,7 +842,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         return {'allow_nan': True, 'allow_variable_length': True}
 
 
-class KShape(BaseEstimator, ClusterMixin,
+class KShape(BaseModelPackage, ClusterMixin,
              TimeSeriesCentroidBasedClusteringMixin):
     """KShape clustering for time series.
 
@@ -897,6 +897,9 @@ class KShape(BaseEstimator, ClusterMixin,
     n_iter_ : int
         The number of iterations performed during fit.
 
+    model :
+        Used for loading a saved model. Do not use directly, use from_hdf5, from_json, or from_pickle
+
     Notes
     -----
         This method requires a dataset of equal-sized time series.
@@ -915,8 +918,12 @@ class KShape(BaseEstimator, ClusterMixin,
     .. [1] J. Paparrizos & L. Gravano. k-Shape: Efficient and Accurate
        Clustering of Time Series. SIGMOD 2015. pp. 1855-1870.
     """
+
+    model_attrs = ['inertia_', 'cluster_centers_', '_X_fit', '_norms', '_norms_centroids']
+
     def __init__(self, n_clusters=3, max_iter=100, tol=1e-6, n_init=1,
-                 verbose=False, random_state=None, init='random'):
+                 verbose=False, random_state=None, init='random', model=None):
+        super(KShape, self).__init__()
         self.n_clusters = n_clusters
         self.max_iter = max_iter
         self.tol = tol
@@ -924,6 +931,21 @@ class KShape(BaseEstimator, ClusterMixin,
         self.n_init = n_init
         self.verbose = verbose
         self.init = init
+
+        self.labels_ = None
+        self.inertia_ = None
+        self.cluster_centers_ = None
+        self._X_fit = None
+        self._norms = None
+        self._norms_centroids = None
+        self.n_iter_ = None
+
+        if model is not None:
+            for k in model.keys():
+                setattr(self, k, model[k])
+
+    def is_fitted(self):
+        check_is_fitted(self, '_X_fit')
 
     def _shape_extraction(self, X, k):
         sz = X.shape[1]
