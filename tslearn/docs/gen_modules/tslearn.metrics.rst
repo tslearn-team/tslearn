@@ -3,25 +3,11 @@
 tslearn.metrics
 ===============
 
-This modules delivers time-series specific metrics to be used at the core of machine learning algorithms.
+This modules delivers time-series specific metrics to be used at the core of
+machine learning algorithms.
+Dynamic Time Warping (DTW) is described in more details in `a dedicated page`_.
 
-
-Dynamic Time Warping
---------------------
-
-Dynamic Time Warping (DTW) is one of the most popular time-series dissimilarity scores.
-It consists in computing Euclidean distance between aligned time series.
-To do so, it needs to both determine the optimal alignment between time series and compute the associated cost, which is
-done (using dynamic programming) by computing the optimal path in a similarity matrix.
-
-In the implementation included in ``tslearn``, standard transition steps are used: diagonal, horizontal and vertical
-and DTW is computed as the Euclidean distance along the optimal path.
-
-.. figure:: ../fig/dtw.png
-    :width: 30%
-    :align: center
-
-    Example DTW path.
+.. _a dedicated page: ../dtw.html
 
 .. automodule:: tslearn.metrics
 
