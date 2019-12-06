@@ -17,7 +17,10 @@ from keras.initializers import Initializer
 import keras.backend as K
 from keras.engine import InputSpec
 import numpy
-from tensorflow.compat.v1 import set_random_seed
+try:
+    from tensorflow.compat.v1 import set_random_seed
+except ImportError:
+    from tensorflow import set_random_seed
 
 import warnings
 
