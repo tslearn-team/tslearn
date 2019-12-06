@@ -70,6 +70,14 @@ def test_ldtw():
         tslearn.metrics.dtw_limited_warping_length(x, y, len(path) + 1)
     )
 
+    # test dtw_path_limited_warping_length
+    path, cost = tslearn.metrics.dtw_path_limited_warping_length(x, y, n1 + 2)
+    np.testing.assert_allclose(
+        cost,
+        tslearn.metrics.dtw_limited_warping_length(x, y, n1 + 2)
+    )
+    assert len(path) <= n1 + 2
+
 
 def test_constrained_paths():
     n, d = 10, 3

@@ -123,7 +123,7 @@ paths, which leads to a parallelogram-shaped constraint:
     :math:`n = m = 10, s = 2`. Diagonal is marked in grey for better
     readability.
 
-Alternately, one can put an upper bound on the warping path length so as to
+Alternatively, one can put an upper bound on the warping path length so as to
 discard complex paths, as described in [2]_:
 
 .. code-block:: python

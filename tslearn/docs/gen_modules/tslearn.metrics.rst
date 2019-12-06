@@ -5,7 +5,8 @@ tslearn.metrics
 
 This modules delivers time-series specific metrics to be used at the core of
 machine learning algorithms.
-Dynamic Time Warping (DTW) is described in more details in `a dedicated page`_.
+Dynamic Time Warping (DTW) and variants are described in more details in
+`a dedicated page`_.
 
 .. _a dedicated page: ../dtw.html
 
@@ -24,6 +25,7 @@ Dynamic Time Warping (DTW) is described in more details in `a dedicated page`_.
       dtw
       dtw_path
       dtw_limited_warping_length
+      dtw_path_limited_warping_length
       subsequence_path
       subsequence_cost_matrix
       dtw_subsequence_path
