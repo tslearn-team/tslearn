@@ -1,5 +1,6 @@
 import numpy as np
 import pickle
+import os
 
 import tslearn.utils
 
@@ -77,12 +78,13 @@ def test_conversions():
         )
     )
 
-    np.testing.assert_allclose(
-        tslearn_dataset,
-        tslearn.utils.from_cesium_dataset(
-            tslearn.utils.to_cesium_dataset(tslearn_dataset)
+    if os.environ.get("DO_NOT_TEST_CESIUM_CAST", None) is None:
+        np.testing.assert_allclose(
+            tslearn_dataset,
+            tslearn.utils.from_cesium_dataset(
+                tslearn.utils.to_cesium_dataset(tslearn_dataset)
+            )
         )
-    )
 
     np.testing.assert_allclose(
         tslearn_dataset,
