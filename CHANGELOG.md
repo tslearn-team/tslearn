@@ -37,6 +37,8 @@ other Python time series packages (`pyts`, `sktime`, `cesium`, `seglearn`,
 `tsfresh`, `stumpy`, `pyflux`)
 * `dtw_barycenter_averaging_subgradient` is now available to compute DTW
 barycenter based on subgradient descent
+* `dtw_limited_warping_length` is provided as a way to compute DTW under upper
+bound constraint on warping path length
 
 ### Changed
  
