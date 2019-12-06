@@ -123,6 +123,15 @@ paths, which leads to a parallelogram-shaped constraint:
     :math:`n = m = 10, s = 2`. Diagonal is marked in grey for better
     readability.
 
+Alternately, one can put an upper bound on the warping path length so as to
+discard complex paths, as described in [2]_:
+
+.. code-block:: python
+
+    from tslearn.metrics import dtw_limited_warping_length
+    cost = dtw_limited_warping_length(x, y, max_length)
+
+
 Barycenters
 -----------
 
@@ -135,7 +144,7 @@ for DTW corresponds to the following optimization problem:
 
 
 Optimizing this quantity can be done through the DTW Barycenter Averaging (DBA)
-algorithm presented in [2]_.
+algorithm presented in [3]_.
 
 .. code-block:: python
 
@@ -152,7 +161,7 @@ soft-DTW
 
 DTW is not differentiable with respect to its inputs because of the
 non-differentiability of the ``min`` operation.
-A differentiable extension has been presented in [3]_ in which the ``min``
+A differentiable extension has been presented in [4]_ in which the ``min``
 operator is replaced by ``soft-min``, using the log-sum-exp formulation:
 
 .. math::
@@ -189,8 +198,11 @@ References
 .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
            spoken word recognition," IEEE Transactions on Acoustics, Speech and
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
-.. [2] F. Petitjean, A. Ketterlin & P. Gancarski. A global averaging method
+.. [2] Z. Zhang, R. Tavenard, A. Bailly, X. Tang, P. Tang, T. Corpetti
+           Dynamic time warping under limited warping path length.
+           Information Sciences, vol. 393, pp. 91--107, 2017.
+.. [3] F. Petitjean, A. Ketterlin & P. Gancarski. A global averaging method
        for dynamic time warping, with applications to clustering. Pattern
        Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
-.. [3] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
+.. [4] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
        Time-Series," ICML 2017.

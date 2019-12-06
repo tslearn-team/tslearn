@@ -38,6 +38,39 @@ def test_dtw():
                                atol=1e-5)
 
 
+def test_ldtw():
+    n1, n2, d = 15, 10, 3
+    rng = np.random.RandomState(0)
+    x = rng.randn(n1, d)
+    y = rng.randn(n2, d)
+
+    # LDTW >= DTW
+    assert tslearn.metrics.dtw(x, y) <= \
+           tslearn.metrics.dtw_limited_warping_length(x, y, n1 + 2)
+
+    # if path is too short, LDTW raises a ValueError
+    np.testing.assert_raises(ValueError,
+                             tslearn.metrics.dtw_limited_warping_length,
+                             x, y, max(n1, n2) - 1)
+
+    # if max_length is smaller than length of optimal DTW path, LDTW > DTW
+    path, cost = tslearn.metrics.dtw_path(x, y)
+    np.testing.assert_array_less(
+        cost,
+        tslearn.metrics.dtw_limited_warping_length(x, y, len(path) - 1)
+    )
+
+    # if max_length is geq than length of optimal DTW path, LDTW = DTW
+    np.testing.assert_allclose(
+        cost,
+        tslearn.metrics.dtw_limited_warping_length(x, y, len(path))
+    )
+    np.testing.assert_allclose(
+        cost,
+        tslearn.metrics.dtw_limited_warping_length(x, y, len(path) + 1)
+    )
+
+
 def test_constrained_paths():
     n, d = 10, 3
     rng = np.random.RandomState(0)

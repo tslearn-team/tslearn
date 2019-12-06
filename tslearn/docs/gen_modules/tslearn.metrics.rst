@@ -23,6 +23,7 @@ Dynamic Time Warping (DTW) is described in more details in `a dedicated page`_.
       cdist_gak
       dtw
       dtw_path
+      dtw_limited_warping_length
       subsequence_path
       subsequence_cost_matrix
       dtw_subsequence_path

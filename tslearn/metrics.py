@@ -433,6 +433,10 @@ def dtw_limited_warping_length(s1, s2, max_length):
     s1 = to_time_series(s1, remove_nans=True)
     s2 = to_time_series(s2, remove_nans=True)
 
+    if max_length < max(s1.shape[0], s2.shape[0]):
+        raise ValueError("Cannot find a path of length {} to align given "
+                         "time series.".format(max_length))
+
     accumulated_costs = _limited_warping_length_cost(s1, s2, max_length)
     idx_pair = (s1.shape[0] - 1, s2.shape[0] - 1)
     optimal_cost = min(accumulated_costs[idx_pair].values())
