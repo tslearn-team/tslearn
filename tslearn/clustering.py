@@ -919,10 +919,10 @@ class KShape(BaseModelPackage, ClusterMixin,
        Clustering of Time Series. SIGMOD 2015. pp. 1855-1870.
     """
 
-    model_attrs = ['inertia_', 'cluster_centers_', '_X_fit', '_norms', '_norms_centroids']
+    model_params = ['cluster_centers_', 'norms_', 'norms_centroids_']
 
     def __init__(self, n_clusters=3, max_iter=100, tol=1e-6, n_init=1,
-                 verbose=False, random_state=None, init='random', model=None):
+                 verbose=False, random_state=None, init='random'):
         super(KShape, self).__init__()
         self.n_clusters = n_clusters
         self.max_iter = max_iter
@@ -931,18 +931,20 @@ class KShape(BaseModelPackage, ClusterMixin,
         self.n_init = n_init
         self.verbose = verbose
         self.init = init
+        self.norms_ = None
+        self.norms_centroids_ = None
 
         self.labels_ = None
         self.inertia_ = None
         self.cluster_centers_ = None
         self._X_fit = None
-        self._norms = None
-        self._norms_centroids = None
         self.n_iter_ = None
 
-        if model is not None:
-            for k in model.keys():
-                setattr(self, k, model[k])
+    def get_model_params(self):
+        return {'cluster_centers_': self.cluster_centers_,
+                'norms_': self.norms_,
+                'norms_centroids_': self.norms_centroids_
+                }
 
     def is_fitted(self):
         check_is_fitted(self, '_X_fit')
@@ -951,7 +953,7 @@ class KShape(BaseModelPackage, ClusterMixin,
         sz = X.shape[1]
         Xp = y_shifted_sbd_vec(self.cluster_centers_[k], X[self.labels_ == k],
                                norm_ref=-1,
-                               norms_dataset=self._norms[self.labels_ == k])
+                               norms_dataset=self.norms_[self.labels_ == k])
         S = numpy.dot(Xp[:, :, 0].T, Xp[:, :, 0])
         Q = numpy.eye(sz) - numpy.ones((sz, sz)) / sz
         M = numpy.dot(Q.T, numpy.dot(S, Q))
@@ -973,13 +975,13 @@ class KShape(BaseModelPackage, ClusterMixin,
             self.cluster_centers_[k] = self._shape_extraction(X, k)
         self.cluster_centers_ = TimeSeriesScalerMeanVariance(
             mu=0., std=1.).fit_transform(self.cluster_centers_)
-        self._norms_centroids = numpy.linalg.norm(self.cluster_centers_,
+        self.norms_centroids_ = numpy.linalg.norm(self.cluster_centers_,
                                                   axis=(1, 2))
 
     def _cross_dists(self, X):
         return 1. - cdist_normalized_cc(X, self.cluster_centers_,
-                                        norms1=self._norms,
-                                        norms2=self._norms_centroids,
+                                        norms1=self.norms_,
+                                        norms2=self.norms_centroids_,
                                         self_similarity=False)
 
     def _assign(self, X):
@@ -997,7 +999,7 @@ class KShape(BaseModelPackage, ClusterMixin,
         else:
             raise ValueError("Value %r for parameter 'init' is "
                              "invalid" % self.init)
-        self._norms_centroids = numpy.linalg.norm(self.cluster_centers_,
+        self.norms_centroids_ = numpy.linalg.norm(self.cluster_centers_,
                                                   axis=(1, 2))
         self._assign(X)
         old_inertia = numpy.inf
@@ -1042,14 +1044,14 @@ class KShape(BaseModelPackage, ClusterMixin,
         self.inertia_ = numpy.inf
         self.cluster_centers_ = None
 
-        self._norms = 0.
-        self._norms_centroids = 0.
+        self.norms_ = 0.
+        self.norms_centroids_ = 0.
 
         self.n_iter_ = 0
 
         X_ = to_time_series_dataset(X)
         self._X_fit = X_
-        self._norms = numpy.linalg.norm(X_, axis=(1, 2))
+        self.norms_ = numpy.linalg.norm(X_, axis=(1, 2))
 
         _check_initial_guess(self.init, self.n_clusters)
 
@@ -1073,7 +1075,7 @@ class KShape(BaseModelPackage, ClusterMixin,
             except EmptyClusterError:
                 if self.verbose:
                     print("Resumed because of empty cluster")
-        self._norms_centroids = numpy.linalg.norm(self.cluster_centers_,
+        self.norms_centroids_ = numpy.linalg.norm(self.cluster_centers_,
                                                   axis=(1, 2))
         self._post_fit(X_, best_correct_centroids, min_inertia)
         return self
