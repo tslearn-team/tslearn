@@ -94,10 +94,6 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
         """Load from an HDF5 file"""
         model = hdftools.load_dict(path, 'data')
         return BaseModelPackage._organize_model(cls, model)
-        # params, model = BaseModelPackage._organize_model(cls, model)
-
-        # inst = cls(**params)
-
 
     def to_json(self, path: str):
         """Save as a json file"""
@@ -114,9 +110,7 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
             if model['model_params']['attr_types'][attr] == 'ndarray':
                 model['model_params'][attr] = np.array(model[attr])
 
-        params, model = BaseModelPackage._organize_model(model)
-
-        return cls(**params, model=model)
+        return BaseModelPackage._organize_model(cls, model)
 
     def to_pickle(self, path: str):
         """Save as a pickle"""
@@ -127,6 +121,4 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
     def from_pickle(cls, path: str):
         """Load from a pickle"""
         model = pickle.load(open(path, 'rb'))
-        params, model = BaseModelPackage._organize_model(model)
-
-        return cls(**params, model=model)
+        return BaseModelPackage._organize_model(cls, model)
