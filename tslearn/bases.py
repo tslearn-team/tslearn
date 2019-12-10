@@ -7,13 +7,6 @@ import numpy as np
 
 
 class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
-    # def __init_subclass__(cls, **kwargs):
-    #     """
-    #     Raises an exception if 'model_attrs' is not defined as a class attribute
-    #     """
-    #     if not hasattr(cls, 'model_attrs'):
-    #         raise AttributeError('Must define class attribute "model_attrs"')
-
     @abstractmethod
     def is_fitted(self) -> bool:
         """
@@ -68,21 +61,25 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
     @staticmethod
     def _organize_model(cls, model):
         """
-        Remove some keys and organize the params so it can be
-        directly passed as kwargs
+        Instantiate the model with all hyper-parameters
+        and then set all model parameters
+
+        :param cls:    The model class, meant to be passed from classmethod decorators
+        :param model:  Model dict containing hyper-parameters and model parameters
+        :return: instance of the model class with hyper-parameters and model parameters set
         """
 
         model_params = model.pop('model_params')
-        params = model.pop('params')
+        params = model.pop('params')  # hyper-params
 
+        # instantiate with hyper-parameters
         inst = cls(**params)
 
+        # set all model params
         for p in model_params.keys():
             setattr(inst, p, model_params[p])
 
         return inst
-
-        # return params, model
 
     def to_hdf5(self, path: str):
         """Save as an HDF5 file"""
@@ -113,7 +110,7 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
         return BaseModelPackage._organize_model(cls, model)
 
     def to_pickle(self, path: str):
-        """Save as a pickle"""
+        """Save as a pickle. Not recommended."""
         d = self.to_dict()
         pickle.dump(d, open(path, 'wb'), protocol=4)
 
