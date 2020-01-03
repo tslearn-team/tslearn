@@ -39,24 +39,20 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
 
         # This is just for json support to convert numpy arrays to lists
         if arrays_to_lists:
-            d['model_params'] = BaseModelPackage._listify(model_params, d)
+            d['model_params'] = BaseModelPackage._listify(model_params)
 
         return d
 
     @staticmethod
-    def _listify(model_params, d) -> dict:
-        d['attr_types'] = dict.fromkeys(model_params)
-
-        for param_name in model_params.keys():
-            param = model_params[param_name]
+    def _listify(model_params) -> dict:
+        for k in model_params.keys():
+            param = model_params[k]
 
             if isinstance(param, np.ndarray):
-                d[param_name] = param.tolist()  # for json support
-                d['attr_types'][param_name] = 'ndarray'
+                model_params[k] = param.tolist()  # for json support
             else:
-                d[param_name] = param
-                d['attr_types'][param_name] = str(type(d[param]))
-        return d
+                model_params[k] = param
+        return model_params
 
     @staticmethod
     def _organize_model(cls, model):
@@ -103,9 +99,10 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
         model = json.load(open(path, 'r'))
 
         # Convert the lists back to arrays
-        for attr in model['model_params']['attr_types'].keys():
-            if model['model_params']['attr_types'][attr] == 'ndarray':
-                model['model_params'][attr] = np.array(model[attr])
+        for k in model['model_params'].keys():
+            param = model['model_params'][k]
+            if type(param) is list:
+                model['model_params'][k] = np.array(param)
 
         return BaseModelPackage._organize_model(cls, model)
 
