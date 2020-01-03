@@ -10,6 +10,16 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ## [Towards v0.3.0]
 
+### Changed
+
+* `dtw_barycenter_averaging` is made faster by using vectorized computations
+* `dtw_barycenter_averaging` can be restarted several times to reach better
+local optima using a parameter `n_init` set to 1 by default
+* Functions `load_timeseries_txt` and `save_timeseries_txt` from the utils
+module have changed their names to `load_time_series_txt` and 
+`save_time_series_txt`. Old names can still be used but considered deprecated
+ and removed from the public API documentation for the sake of harmonization
+
 ### Added
 
 * `KNeighborsTimeSeriesRegressor` is a new regressor based on 
@@ -20,6 +30,15 @@ k-nearest-neighbors that accepts the same metrics as
 * `subsequence_path` and `subsequence_cost_matrix` are now part of the public 
 API and properly documented as such with an example use case in which more than
 one path could be of interest (cf. `plot_sdtw.py`)
+* `verbose` levels can be set for all functions / classes that use `joblib`
+for parallel computations and `joblib` levels are used;
+* conversion functions are provided in the `utils` module to interact with
+other Python time series packages (`pyts`, `sktime`, `cesium`, `seglearn`, 
+`tsfresh`, `stumpy`, `pyflux`)
+* `dtw_barycenter_averaging_subgradient` is now available to compute DTW
+barycenter based on subgradient descent
+* `dtw_limited_warping_length` is provided as a way to compute DTW under upper
+bound constraint on warping path length
 
 ### Changed
  
