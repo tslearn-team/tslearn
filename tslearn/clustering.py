@@ -944,7 +944,7 @@ class KShape(BaseModelPackage, ClusterMixin,
                 }
 
     def is_fitted(self):
-        check_is_fitted(self, '_X_fit')
+        check_is_fitted(self, ['cluster_centers_', 'norms_', 'norms_centroids_'])
         return True
 
     def _shape_extraction(self, X, k):
@@ -1114,9 +1114,10 @@ class KShape(BaseModelPackage, ClusterMixin,
             Index of the cluster each sample belongs to.
         """
         X = check_array(X, allow_nd=True)
-        check_is_fitted(self, '_X_fit')
+        check_is_fitted(self, ['cluster_centers_', 'norms_', 'norms_centroids_'])
         X_ = to_time_series_dataset(X)
-        X = check_dims(X, self._X_fit)
+        if hasattr(self, '_X_fit'):
+            X = check_dims(X, self._X_fit)  # I'm not exactly sure what the purpose of this line is since X isn't used?
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
         dists = self._cross_dists(X_)
         return dists.argmin(axis=1)
