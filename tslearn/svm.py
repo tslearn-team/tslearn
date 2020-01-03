@@ -71,6 +71,15 @@ class TimeSeriesSVMMixin:
         else:
             return sklearn_X, y
 
+    def _check_test_data(self, X):
+        n_samples, n_seqlen, n_features = X.shape
+        expected_n_features = self._X_fit.shape[2]
+        if not n_features == expected_n_features:
+            raise ValueError("Incorrect number of features. "
+                             "Got %d features, expected %d" % (
+                                 n_features, expected_n_features))
+
+        return X
 
 class TimeSeriesSVC(TimeSeriesSVMMixin, BaseEstimator, ClassifierMixin):
     """Time-series specific Support Vector Classifier.
@@ -263,26 +272,31 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, BaseEstimator, ClassifierMixin):
 
     def predict(self, X):
         check_is_fitted(self, ['svm_estimator_', '_X_fit'])
+        X = self._check_test_data(X)
         sklearn_X = self._preprocess_sklearn(X, fit_time=False)
         return self.svm_estimator_.predict(sklearn_X)
 
     def decision_function(self, X):
         check_is_fitted(self, ['svm_estimator_', '_X_fit'])
+        X = self._check_test_data(_X_fit)
         sklearn_X = self._preprocess_sklearn(X, fit_time=False)
         return self.svm_estimator_.decision_function(sklearn_X)
 
     def predict_log_proba(self, X):
         check_is_fitted(self, ['svm_estimator_', '_X_fit'])
+        X = self._check_test_data(X)
         sklearn_X = self._preprocess_sklearn(X, fit_time=False)
         return self.svm_estimator_.predict_log_proba(sklearn_X)
 
     def predict_proba(self, X):
         check_is_fitted(self, ['svm_estimator_', '_X_fit'])
+        X = self._check_test_data(X)
         sklearn_X = self._preprocess_sklearn(X, fit_time=False)
         return self.svm_estimator_.predict_proba(sklearn_X)
 
     def score(self, X, y, sample_weight=None):
         check_is_fitted(self, ['svm_estimator_', '_X_fit'])
+        X = self._check_test_data(X)
         sklearn_X = self._preprocess_sklearn(X, fit_time=False)
         return self.svm_estimator_.score(sklearn_X, y,
                                          sample_weight=sample_weight)
@@ -439,11 +453,13 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, BaseEstimator, RegressorMixin):
 
     def predict(self, X):
         check_is_fitted(self, ['svm_estimator_', '_X_fit'])
+        X = self._check_test_data(X)
         sklearn_X = self._preprocess_sklearn(X, fit_time=False)
         return self.svm_estimator_.predict(sklearn_X)
 
     def score(self, X, y, sample_weight=None):
         check_is_fitted(self, ['svm_estimator_', '_X_fit'])
+        X = self._check_test_data(X)
         sklearn_X = self._preprocess_sklearn(X, fit_time=False)
         return self.svm_estimator_.score(sklearn_X, y,
                                          sample_weight=sample_weight)
