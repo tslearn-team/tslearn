@@ -897,9 +897,6 @@ class KShape(BaseModelPackage, ClusterMixin,
     n_iter_ : int
         The number of iterations performed during fit.
 
-    model :
-        Used for loading a saved model. Do not use directly, use from_hdf5, from_json, or from_pickle
-
     Notes
     -----
         This method requires a dataset of equal-sized time series.
