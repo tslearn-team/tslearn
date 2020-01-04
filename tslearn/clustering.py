@@ -935,12 +935,29 @@ class KShape(BaseModelPackage, ClusterMixin,
         self.n_iter_ = None
 
     def get_model_params(self):
+        """
+        Get the model parameters
+
+        Returns
+        -------
+        params : dict
+            Model parameters (attributes) that are sufficient to recapitulate the model
+        """
+        
         return {'cluster_centers_': self.cluster_centers_,
                 'norms_': self.norms_,
                 'norms_centroids_': self.norms_centroids_
                 }
 
     def is_fitted(self):
+        """
+        Check if the model has been fit.
+
+        Returns
+        -------
+        bool
+        """
+
         check_is_fitted(self, ['cluster_centers_', 'norms_', 'norms_centroids_'])
         return True
 
