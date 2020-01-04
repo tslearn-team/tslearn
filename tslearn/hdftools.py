@@ -22,7 +22,8 @@ def save_dict(d: dict, filename: str, group: str, raise_type_fail=True):
 
     raise_type_fail : bool
         If True: raise an exception if saving a part of the dict fails.
-        If False: prints a warning instead and saves the object's __str__() return value.
+        If False: prints a warning instead and saves the
+        object's __str__() return value.
 
     Returns
     -------
@@ -34,17 +35,21 @@ def save_dict(d: dict, filename: str, group: str, raise_type_fail=True):
         If the path specified by the `filename` parameter already exists.
 
     TypeError
-        If a particular entry within the dict cannot be saved to hdf5 AND the parameter raise_type_fail is set to `True`
+        If a particular entry within the dict cannot be saved to hdf5 AND
+        the argument `raise_type_fail` is set to `True`
     """
 
     if os.path.isfile(filename):
         raise FileExistsError
 
     with h5py.File(filename, 'w') as h5file:
-        _dicts_to_group(h5file, f'{group}/', d, raise_meta_fail=raise_type_fail)
+        _dicts_to_group(h5file, f'{group}/', d,
+                        raise_meta_fail=raise_type_fail)
 
 
-def _dicts_to_group(h5file: h5py.File, path: str, d: dict, raise_meta_fail: bool):
+def _dicts_to_group(h5file: h5py.File, path: str,
+                    d: dict, raise_meta_fail: bool):
+
     for key, item in d.items():
 
         if isinstance(item, np.ndarray):
@@ -55,7 +60,8 @@ def _dicts_to_group(h5file: h5py.File, path: str, d: dict, raise_meta_fail: bool
                     h5file[path + key] = item
                     # h5file[path + key].attrs['dtype'] = item.dtype.str
                 except:
-                    msg = f"numpy dtype 'O' for item: {item} not supported by HDF5\n{traceback.format_exc()}"
+                    msg = f"numpy dtype 'O' for item: {item} " \
+                          f"not supported by HDF5\n{traceback.format_exc()}"
 
                     if raise_meta_fail:
                         raise TypeError(msg)
@@ -66,7 +72,9 @@ def _dicts_to_group(h5file: h5py.File, path: str, d: dict, raise_meta_fail: bool
             # numpy array of unicode strings
             elif item.dtype.str.startswith('<U'):
                 h5file[path + key] = item.astype(h5py.special_dtype(vlen=str))
-                h5file[path + key].attrs['dtype'] = item.dtype.str  # otherwise h5py doesn't restore the right dtype for str types
+
+                # otherwise h5py doesn't restore the right dtype for str types
+                h5file[path + key].attrs['dtype'] = item.dtype.str
 
             # other types
             else:
@@ -74,19 +82,24 @@ def _dicts_to_group(h5file: h5py.File, path: str, d: dict, raise_meta_fail: bool
                 # h5file[path + key].attrs['dtype'] = item.dtype.str
 
         # single pieces of data
-        elif isinstance(item, (str, bytes, int, float, np.int, np.int8, np.int16, np.int32, np.int64, np.float,
-                               np.float16, np.float32, np.float64, np.float128, np.complex)):
+        elif isinstance(item, (str, bytes, int, float, np.int, np.int8,
+                               np.int16, np.int32, np.int64, np.float,
+                               np.float16, np.float32, np.float64,
+                               np.float128, np.complex)):
             h5file[path + key] = item
 
         elif isinstance(item, dict):
             _dicts_to_group(h5file, path + key + '/', item, raise_meta_fail)
 
-        # last resort, try to convert this object to a dict and save its attributes
+        # last resort, try to convert this object
+        # to a dict and save its attributes
         elif hasattr(item, '__dict__'):
-            _dicts_to_group(h5file, path + key + '/', item.__dict__, raise_meta_fail)
+            _dicts_to_group(h5file, path + key + '/',
+                            item.__dict__, raise_meta_fail)
 
         else:
-            msg = f"{type(item)} for item: {item} not supported not supported by HDF5"
+            msg = f"{type(item)} for item: {item} " \
+                  f"not supported not supported by HDF5"
 
             if raise_meta_fail:
                 raise TypeError(msg)
