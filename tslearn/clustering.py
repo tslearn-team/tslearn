@@ -941,9 +941,10 @@ class KShape(BaseModelPackage, ClusterMixin,
         Returns
         -------
         params : dict
-            Model parameters (attributes) that are sufficient to recapitulate the model
+            Model parameters (attributes) that are sufficient
+            to recapitulate the model
         """
-        
+
         return {'cluster_centers_': self.cluster_centers_,
                 'norms_': self.norms_,
                 'norms_centroids_': self.norms_centroids_
@@ -958,7 +959,8 @@ class KShape(BaseModelPackage, ClusterMixin,
         bool
         """
 
-        check_is_fitted(self, ['cluster_centers_', 'norms_', 'norms_centroids_'])
+        check_is_fitted(self,
+                        ['cluster_centers_', 'norms_', 'norms_centroids_'])
         return True
 
     def _shape_extraction(self, X, k):
@@ -1128,10 +1130,14 @@ class KShape(BaseModelPackage, ClusterMixin,
             Index of the cluster each sample belongs to.
         """
         X = check_array(X, allow_nd=True)
-        check_is_fitted(self, ['cluster_centers_', 'norms_', 'norms_centroids_'])
+        check_is_fitted(self,
+                        ['cluster_centers_', 'norms_', 'norms_centroids_'])
+
         X_ = to_time_series_dataset(X)
+
         if hasattr(self, '_X_fit'):
-            X = check_dims(X, self._X_fit)  # I'm not exactly sure what the purpose of this line is since X isn't used?
+            X = check_dims(X, self._X_fit)
+
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
         dists = self._cross_dists(X_)
         return dists.argmin(axis=1)
