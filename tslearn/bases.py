@@ -10,8 +10,11 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
     @abstractmethod
     def is_fitted(self) -> bool:
         """
-        Implement this method in a subclass to check if the model has been fit.
-        Usually a model specific call to sklearn.utils.validation.check_is_fitted
+        Implement this method in a subclass to check
+        if the model has been fit.
+
+        Usually implements a model specific call to
+        sklearn.utils.validation.check_is_fitted
 
         Returns
         -------
@@ -26,12 +29,13 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
 
     def to_dict(self, arrays_to_lists=False) -> dict:
         """
-        Get model hyper-parameters and model-parameters as a dict that can be saved to disk.
+        Get model hyper-parameters and model-parameters
+        as a dict that can be saved to disk.
 
         Returns
         -------
         params : dict
-            dict with relevant attributes that are sufficient to describe the model.
+            dict with relevant attributes sufficient to describe the model.
         """
 
         if not self.is_fitted:
@@ -48,7 +52,10 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
 
     @staticmethod
     def _listify(model_params) -> dict:
-        """Convert all numpy arrays in model-parameters to lists. Used for json support"""
+        """
+        Convert all numpy arrays in model-parameters to lists.
+        Used for json support
+        """
         for k in model_params.keys():
             param = model_params[k]
 
@@ -61,13 +68,15 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
     @staticmethod
     def _organize_model(cls, model):
         """
-        Instantiate the model with all hyper-parameters, set all model parameters and then return the model.
+        Instantiate the model with all hyper-parameters,
+        set all model parameters and then return the model.
+
         Do not use directly. Use the designated classmethod to load a model.
 
         Parameters
         ----------
         cls : instance of model that inherits from `BaseModelPackage`
-            The model class, meant to be passed from a `BaseModelPackage` classmethod
+            a model instance
 
         model : dict
             Model dict containing hyper-parameters and model-parameters
@@ -75,7 +84,8 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
         Returns
         -------
         model: instance of model that inherits from `BaseModelPackage`
-            instance of the model class with hyper-parameters and model parameters set from the passed model dict
+            instance of the model class with hyper-parameters and
+            model parameters set from the passed model dict
         """
 
         model_params = model.pop('model_params')
