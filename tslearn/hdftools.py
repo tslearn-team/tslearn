@@ -1,120 +1,40 @@
-from typing import *
 import h5py
-import json
 import os
 import numpy as np
-import pandas as pd
 import traceback
 from warnings import warn
 
 
-def save_dataframe(path: str, dataframe: pd.DataFrame, metadata: Optional[dict] = None,
-                   metadata_method: str = 'json', raise_meta_fail: bool = True):
-    """
-    Save DataFrame to hdf5 file along with a meta data dict.
-
-    Meta data dict can either be serialized with json and stored as a str in the hdf5 file, or recursively saved
-    into hdf5 groups if the dict contains types that hdf5 can deal with. Experiment with both methods and see what works best
-
-    Currently the hdf5 method can work with these types: [str, bytes, int, float, np.int, np.int8, np.int16,
-    np.int32, np.int64, np.float, np.float16, np.float32, np.float64, np.float128, np.complex].
-
-    If it encounters an object that is not of these types it will store whatever that object's __str__() method
-    returns if on_meta_fail is False, else it will raise an exception.
-
-    :param path:            path to save the file to
-    :type path:             str
-
-    :param dataframe:       DataFrame to save in the hdf5 file
-    :type dataframe:        pd.DataFrame
-
-    :param metadata:        Any associated meta data to store along with the DataFrame in the hdf5 file
-    :type metadata:         Optional[dict]
-
-    :param metadata_method: method for storing the metadata dict, either 'json' or 'recursive'
-    :type metadata_method:  str
-
-    :param raise_meta_fail: raise an exception if recursive metadata saving encounters an unsupported object
-                            If false, it will save the unsupported object's __str__() return value
-    :type raise_meta_fail:  bool
-    """
-
-    if os.path.isfile(path):
-        raise FileExistsError
-
-    f = h5py.File(path, mode='w')
-
-    f.create_group('DATAFRAME')
-
-    if metadata is not None:
-        mg = f.create_group('META')
-        mg.attrs['method'] = metadata_method
-
-        if metadata_method == 'json':
-            bad_keys = []
-            for k in metadata.keys():
-                try:
-                    mg.create_dataset(k, data=json.dumps(metadata[k]))
-                except TypeError as e:
-                    bad_keys.append(str(e))
-
-            if len(bad_keys) > 0:
-                bad_keys = '\n'.join(bad_keys)
-                raise TypeError(f"The following meta data keys are not JSON serializable\n{bad_keys}")
-
-        elif metadata_method == 'recursive':
-            _dicts_to_group(h5file=f, path='META/', d=metadata, raise_meta_fail=raise_meta_fail)
-
-    f.close()
-
-    dataframe.to_hdf(path, key='DATAFRAME', mode='r+')
-
-
-def load_dataframe(filepath: str) -> Tuple[pd.DataFrame, Union[dict, None]]:
-    """
-    Load a DataFrame along with meta data that were saved using ``HdfTools.save_dataframe``
-
-    :param filepath: file path to the hdf5 file
-    :type filepath:  str
-
-    :return: tuple, (DataFrame, meta data dict if present else None)
-    :rtype: Tuple[pd.DataFrame, Union[dict, None]]
-    """
-
-    with h5py.File(filepath, 'r') as f:
-        if 'META' in f.keys():
-
-            if f['META'].attrs['method'] == 'json':
-                ks = f['META'].keys()
-                metadata = dict.fromkeys(ks)
-                for k in ks:
-                    metadata[k] = json.loads(f['META'][k][()])
-
-            elif f['META'].attrs['method'] == 'recursive':
-                metadata = _dicts_from_group(f, 'META/')
-
-        else:
-            metadata = None
-    df = pd.read_hdf(filepath, key='DATAFRAME', mode='r')
-
-    return (df, metadata)
-
-
 def save_dict(d: dict, filename: str, group: str, raise_type_fail=True):
     """
-    Recursively save a dict to an hdf5 group.
+    Recursively save a dict to an hdf5 group in a new file.
 
-    :param d:        dict to save
-    :type d:         dict
+    Parameters
+    ----------
+    d: dict
+        dict to save as an hdf5 file
 
-    :param filename: filename
-    :type filename:  str
+    filename : str
+        Full path to save the file to. File must not already exist.
 
-    :param group:    group name to save the dict to
-    :type group:     str
+    group : str
+        group name to save the dict to
 
-    :param raise_type_fail: whether to raise if saving a piece of data fails
-    :type raise_type_fail:  bool
+    raise_type_fail : bool
+        If True: raise an exception if saving a part of the dict fails.
+        If False: prints a warning instead and saves the object's __str__() return value.
+
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    FileExistsError
+        If the path specified by the `filename` parameter already exists.
+
+    TypeError
+        If a particular entry within the dict cannot be saved to hdf5 AND the parameter raise_type_fail is set to `True`
     """
 
     if os.path.isfile(filename):
@@ -146,7 +66,7 @@ def _dicts_to_group(h5file: h5py.File, path: str, d: dict, raise_meta_fail: bool
             # numpy array of unicode strings
             elif item.dtype.str.startswith('<U'):
                 h5file[path + key] = item.astype(h5py.special_dtype(vlen=str))
-                h5file[path + key].attrs['dtype'] = item.dtype.str  # h5py doesn't restore the right dtype for str types
+                h5file[path + key].attrs['dtype'] = item.dtype.str  # otherwise h5py doesn't restore the right dtype for str types
 
             # other types
             else:
@@ -169,7 +89,7 @@ def _dicts_to_group(h5file: h5py.File, path: str, d: dict, raise_meta_fail: bool
             msg = f"{type(item)} for item: {item} not supported not supported by HDF5"
 
             if raise_meta_fail:
-                raise ValueError(msg)
+                raise TypeError(msg)
 
             else:
                 h5file[path + key] = str(item)
@@ -178,16 +98,20 @@ def _dicts_to_group(h5file: h5py.File, path: str, d: dict, raise_meta_fail: bool
 
 def load_dict(filename: str, group: str) -> dict:
     """
-    Recursively load a dict from an hdf5 group.
+    Recursively load a dict from an hdf5 group in a file.
 
-    :param filename: filename
-    :type filename:  str
+    Parameters
+    ----------
+    filename : str
+        full path to the hdf5 file
 
-    :param group:    group name of the dict
-    :type group:     str
+    group : str
+        Name of the group that contains the dict to load
 
-    :return:         dict recursively loaded from the hdf5 group
-    :rtype:          dict
+    Returns
+    -------
+    d : dict
+        dict loaded from the specified hdf5 group.
     """
 
     with h5py.File(filename, 'r') as h5file:
