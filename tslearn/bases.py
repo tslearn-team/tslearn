@@ -10,8 +10,12 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
     @abstractmethod
     def is_fitted(self) -> bool:
         """
-        Does something to check if the model has been fit.
+        Implement this method in a subclass to check if the model has been fit.
         Usually a model specific call to sklearn.utils.validation.check_is_fitted
+
+        Returns
+        -------
+        bool
         """
         pass
 
@@ -22,29 +26,29 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
 
     def to_dict(self, arrays_to_lists=False) -> dict:
         """
-        Package relevant attributes so it can be exported.
-        :return: dict with relevant attributes sufficient for describing the model.
+        Get model hyper-parameters and model-parameters as a dict that can be saved to disk.
+
+        Returns
+        -------
+        params : dict
+            dict with relevant attributes that are sufficient to describe the model.
         """
 
         if not self.is_fitted:
             raise ValueError("Model must be fit before it can be packaged")
 
-        d = dict.fromkeys(['params', 'model_params'])
-
-        params = self.get_params()
-        model_params = self.get_model_params()
-
-        d['params'] = params
-        d['model_params'] = model_params
+        d = {'hyper_params': self.get_params(),
+             'model_params': self.get_model_params()}
 
         # This is just for json support to convert numpy arrays to lists
         if arrays_to_lists:
-            d['model_params'] = BaseModelPackage._listify(model_params)
+            d['model_params'] = BaseModelPackage._listify(d['model_params'])
 
         return d
 
     @staticmethod
     def _listify(model_params) -> dict:
+        """Convert all numpy arrays in model-parameters to lists. Used for json support"""
         for k in model_params.keys():
             param = model_params[k]
 
@@ -57,19 +61,28 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
     @staticmethod
     def _organize_model(cls, model):
         """
-        Instantiate the model with all hyper-parameters
-        and then set all model parameters
+        Instantiate the model with all hyper-parameters, set all model parameters and then return the model.
+        Do not use directly. Use the designated classmethod to load a model.
 
-        :param cls:    The model class, meant to be passed from classmethod decorators
-        :param model:  Model dict containing hyper-parameters and model parameters
-        :return: instance of the model class with hyper-parameters and model parameters set
+        Parameters
+        ----------
+        cls : instance of model that inherits from `BaseModelPackage`
+            The model class, meant to be passed from a `BaseModelPackage` classmethod
+
+        model : dict
+            Model dict containing hyper-parameters and model-parameters
+
+        Returns
+        -------
+        model: instance of model that inherits from `BaseModelPackage`
+            instance of the model class with hyper-parameters and model parameters set from the passed model dict
         """
 
         model_params = model.pop('model_params')
-        params = model.pop('params')  # hyper-params
+        hyper_params = model.pop('hyper_params')  # hyper-params
 
         # instantiate with hyper-parameters
-        inst = cls(**params)
+        inst = cls(**hyper_params)
 
         # set all model params
         for p in model_params.keys():
@@ -78,24 +91,77 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
         return inst
 
     def to_hdf5(self, path: str):
-        """Save as an HDF5 file"""
+        """
+        Save this model as an HDF5 file.
+
+        Parameters
+        ----------
+        path : str
+            Full file path. File must not already exist.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        FileExistsError
+            If a file with the same path already exists.
+        """
+
         d = self.to_dict()
         hdftools.save_dict(d, path, 'data')
 
     @classmethod
     def from_hdf5(cls, path: str):
-        """Load from an HDF5 file"""
+        """
+        Load from an HDF5 file
+
+        Parameters
+        ----------
+        path : str
+            Full path to file.
+
+        Returns
+        -------
+        Model instance
+        """
+
         model = hdftools.load_dict(path, 'data')
         return BaseModelPackage._organize_model(cls, model)
 
     def to_json(self, path: str):
-        """Save as a json file"""
+        """
+        Save as a JSON file.
+
+        Parameters
+        ----------
+        path : str
+            Full file path.
+
+        Returns
+        -------
+        None
+        """
+
         d = self.to_dict(arrays_to_lists=True)
         json.dump(d, open(path, 'w'))
 
     @classmethod
     def from_json(cls, path: str):
-        """Load from a json file"""
+        """
+        Load from a json file.
+
+        Parameters
+        ----------
+        path : str
+            Full path to file.
+
+        Returns
+        -------
+        Model instance
+        """
+
         model = json.load(open(path, 'r'))
 
         # Convert the lists back to arrays
@@ -107,12 +173,35 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
         return BaseModelPackage._organize_model(cls, model)
 
     def to_pickle(self, path: str):
-        """Save as a pickle. Not recommended."""
+        """
+        Save as a pickle. Not recommended for interoperability.
+
+        Parameters
+        ----------
+        path : str
+            Full file path.
+
+        Returns
+        -------
+        None
+        """
+
         d = self.to_dict()
         pickle.dump(d, open(path, 'wb'), protocol=4)
 
     @classmethod
     def from_pickle(cls, path: str):
-        """Load from a pickle"""
+        """
+        Load from a pickle file.
+
+        Parameters
+        ----------
+        path : str
+            Full path to file.
+
+        Returns
+        -------
+        Model instance
+        """
         model = pickle.load(open(path, 'rb'))
         return BaseModelPackage._organize_model(cls, model)
