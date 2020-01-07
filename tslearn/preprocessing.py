@@ -103,11 +103,17 @@ class TimeSeriesScalerMinMax(TransformerMixin):
     -----
         This method requires a dataset of equal-sized time series.
 
+        NaNs within a time series are ignored when calculating min and max.
+
     Examples
     --------
     >>> TimeSeriesScalerMinMax(value_range=(1., 2.)).fit_transform([[0, 3, 6]])
     array([[[1. ],
             [1.5],
+            [2. ]]])
+    >>> TimeSeriesScalerMinMax(value_range=(1., 2.)).fit_transform([[numpy.nan, 3, 6]])
+    array([[[nan],
+            [1. ],
             [2. ]]])
     """
     def __init__(self, value_range=(0., 1.), min=None, max=None):
@@ -188,6 +194,8 @@ class TimeSeriesScalerMeanVariance(TransformerMixin):
     -----
         This method requires a dataset of equal-sized time series.
 
+        NaNs within a time series are ignored when calculating mu and std.
+
     Examples
     --------
     >>> TimeSeriesScalerMeanVariance(mu=0.,
@@ -195,6 +203,11 @@ class TimeSeriesScalerMeanVariance(TransformerMixin):
     array([[[-1.22474487],
             [ 0.        ],
             [ 1.22474487]]])
+    >>> TimeSeriesScalerMeanVariance(mu=0.,
+    ...                              std=1.).fit_transform([[numpy.nan, 3, 6]])
+    array([[[nan],
+            [-1.],
+            [ 1.]]])
     """
     def __init__(self, mu=0., std=1.):
         self.mu_ = mu
