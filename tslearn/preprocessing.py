@@ -164,8 +164,8 @@ class TimeSeriesScalerMinMax(TransformerMixin):
                              " than maximum. Got %s." % str(self.value_range))
 
         X_ = to_time_series_dataset(X)
-        min_t = numpy.min(X_, axis=1)[:, numpy.newaxis, :]
-        max_t = numpy.max(X_, axis=1)[:, numpy.newaxis, :]
+        min_t = numpy.nanmin(X_, axis=1)[:, numpy.newaxis, :]
+        max_t = numpy.nanmax(X_, axis=1)[:, numpy.newaxis, :]
         range_t = max_t - min_t
         nomin = (X_ - min_t) * (self.value_range[1] - self.value_range[0])
         X_ = nomin / range_t + self.value_range[0]
