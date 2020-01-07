@@ -111,7 +111,9 @@ class TimeSeriesScalerMinMax(TransformerMixin):
     array([[[1. ],
             [1.5],
             [2. ]]])
-    >>> TimeSeriesScalerMinMax(value_range=(1., 2.)).fit_transform([[numpy.nan, 3, 6]])
+    >>> TimeSeriesScalerMinMax(value_range=(1., 2.)).fit_transform(
+    ...     [[numpy.nan, 3, 6]]
+    ... )
     array([[[nan],
             [1. ],
             [2. ]]])
