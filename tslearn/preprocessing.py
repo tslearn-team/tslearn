@@ -231,8 +231,8 @@ class TimeSeriesScalerMeanVariance(TransformerMixin):
             Rescaled time series dataset
         """
         X_ = to_time_series_dataset(X)
-        mean_t = numpy.mean(X_, axis=1)[:, numpy.newaxis, :]
-        std_t = numpy.std(X_, axis=1)[:, numpy.newaxis, :]
+        mean_t = numpy.nanmean(X_, axis=1)[:, numpy.newaxis, :]
+        std_t = numpy.nanstd(X_, axis=1)[:, numpy.newaxis, :]
         std_t[std_t == 0.] = 1.
 
         X_ = (X_ - mean_t) * self.std_ / std_t + self.mu_
