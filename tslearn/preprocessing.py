@@ -103,11 +103,17 @@ class TimeSeriesScalerMinMax(TransformerMixin):
     -----
         This method requires a dataset of equal-sized time series.
 
+        NaNs within a time series are ignored when calculating min and max.
+
     Examples
     --------
     >>> TimeSeriesScalerMinMax(value_range=(1., 2.)).fit_transform([[0, 3, 6]])
     array([[[1. ],
             [1.5],
+            [2. ]]])
+    >>> TimeSeriesScalerMinMax(value_range=(1., 2.)).fit_transform([[numpy.nan, 3, 6]])
+    array([[[nan],
+            [1. ],
             [2. ]]])
     """
     def __init__(self, value_range=(0., 1.), min=None, max=None):
@@ -164,8 +170,8 @@ class TimeSeriesScalerMinMax(TransformerMixin):
                              " than maximum. Got %s." % str(self.value_range))
 
         X_ = to_time_series_dataset(X)
-        min_t = numpy.min(X_, axis=1)[:, numpy.newaxis, :]
-        max_t = numpy.max(X_, axis=1)[:, numpy.newaxis, :]
+        min_t = numpy.nanmin(X_, axis=1)[:, numpy.newaxis, :]
+        max_t = numpy.nanmax(X_, axis=1)[:, numpy.newaxis, :]
         range_t = max_t - min_t
         nomin = (X_ - min_t) * (self.value_range[1] - self.value_range[0])
         X_ = nomin / range_t + self.value_range[0]
@@ -188,6 +194,8 @@ class TimeSeriesScalerMeanVariance(TransformerMixin):
     -----
         This method requires a dataset of equal-sized time series.
 
+        NaNs within a time series are ignored when calculating mu and std.
+
     Examples
     --------
     >>> TimeSeriesScalerMeanVariance(mu=0.,
@@ -195,6 +203,11 @@ class TimeSeriesScalerMeanVariance(TransformerMixin):
     array([[[-1.22474487],
             [ 0.        ],
             [ 1.22474487]]])
+    >>> TimeSeriesScalerMeanVariance(mu=0.,
+    ...                              std=1.).fit_transform([[numpy.nan, 3, 6]])
+    array([[[nan],
+            [-1.],
+            [ 1.]]])
     """
     def __init__(self, mu=0., std=1.):
         self.mu_ = mu
@@ -231,8 +244,8 @@ class TimeSeriesScalerMeanVariance(TransformerMixin):
             Rescaled time series dataset
         """
         X_ = to_time_series_dataset(X)
-        mean_t = numpy.mean(X_, axis=1)[:, numpy.newaxis, :]
-        std_t = numpy.std(X_, axis=1)[:, numpy.newaxis, :]
+        mean_t = numpy.nanmean(X_, axis=1)[:, numpy.newaxis, :]
+        std_t = numpy.nanstd(X_, axis=1)[:, numpy.newaxis, :]
         std_t[std_t == 0.] = 1.
 
         X_ = (X_ - mean_t) * self.std_ / std_t + self.mu_
