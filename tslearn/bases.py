@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from sklearn.base import BaseEstimator
-from . import hdftools
+from tslearn import hdftools
 import json
 import pickle
 import numpy as np
@@ -8,7 +8,7 @@ import numpy as np
 
 class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
     @abstractmethod
-    def is_fitted(self) -> bool:
+    def _is_fitted(self) -> bool:
         """
         Implement this method in a subclass to check
         if the model has been fit.
@@ -23,11 +23,11 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_model_params(self) -> dict:
+    def _get_model_params(self) -> dict:
         """Get model parameters that are sufficient to recapitulate it."""
         pass
 
-    def to_dict(self, arrays_to_lists=False) -> dict:
+    def _to_dict(self, arrays_to_lists=False) -> dict:
         """
         Get model hyper-parameters and model-parameters
         as a dict that can be saved to disk.
@@ -38,11 +38,11 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
             dict with relevant attributes sufficient to describe the model.
         """
 
-        if not self.is_fitted:
+        if not self._is_fitted:
             raise ValueError("Model must be fit before it can be packaged")
 
         d = {'hyper_params': self.get_params(),
-             'model_params': self.get_model_params()}
+             'model_params': self._get_model_params()}
 
         # This is just for json support to convert numpy arrays to lists
         if arrays_to_lists:
@@ -119,7 +119,7 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
             If a file with the same path already exists.
         """
 
-        d = self.to_dict()
+        d = self._to_dict()
         hdftools.save_dict(d, path, 'data')
 
     @classmethod
@@ -154,7 +154,7 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
         None
         """
 
-        d = self.to_dict(arrays_to_lists=True)
+        d = self._to_dict(arrays_to_lists=True)
         json.dump(d, open(path, 'w'))
 
     @classmethod
@@ -196,7 +196,7 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
         None
         """
 
-        d = self.to_dict()
+        d = self._to_dict()
         pickle.dump(d, open(path, 'wb'), protocol=4)
 
     @classmethod

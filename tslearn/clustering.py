@@ -23,7 +23,7 @@ from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.utils import (to_time_series_dataset, to_time_series,
                            ts_size, check_dims)
 from tslearn.cycc import cdist_normalized_cc, y_shifted_sbd_vec
-from .bases import BaseModelPackage
+from tslearn.bases import BaseModelPackage
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 # Kernel k-means is derived from https://gist.github.com/mblondel/6230787 by
@@ -934,7 +934,7 @@ class KShape(BaseModelPackage, ClusterMixin,
         self.cluster_centers_ = None
         self.n_iter_ = None
 
-    def get_model_params(self):
+    def _get_model_params(self):
         """
         Get the model parameters
 
@@ -950,7 +950,7 @@ class KShape(BaseModelPackage, ClusterMixin,
                 'norms_centroids_': self.norms_centroids_
                 }
 
-    def is_fitted(self):
+    def _is_fitted(self):
         """
         Check if the model has been fit.
 
