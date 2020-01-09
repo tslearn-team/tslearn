@@ -104,7 +104,8 @@ These constraints typically consists in forcing paths to lie close to the
 diagonal.
 
 First, the Sakoe-Chiba band is parametrized by a radius :math:`r` (number of
-off-diagonal elements to consider), as illustrated below:
+off-diagonal elements to consider, also called warping window size sometimes), 
+as illustrated below:
 
 .. figure:: fig/sakoe_chiba.png
     :width: 30%
