@@ -8,7 +8,7 @@ import numpy as np
 
 class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
     @abstractmethod
-    def _is_fitted(self) -> bool:
+    def _is_fitted(self):
         """
         Implement this method in a subclass to check
         if the model has been fit.
@@ -23,11 +23,11 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _get_model_params(self) -> dict:
+    def _get_model_params(self):
         """Get model parameters that are sufficient to recapitulate it."""
         pass
 
-    def _to_dict(self, arrays_to_lists=False) -> dict:
+    def _to_dict(self, arrays_to_lists=False):
         """
         Get model hyper-parameters and model-parameters
         as a dict that can be saved to disk.
@@ -51,7 +51,7 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
         return d
 
     @staticmethod
-    def _listify(model_params) -> dict:
+    def _listify(model_params):
         """
         Convert all numpy arrays in model-parameters to lists.
         Used for json support
@@ -100,7 +100,7 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
 
         return inst
 
-    def to_hdf5(self, path: str):
+    def to_hdf5(self, path):
         """
         Save this model as an HDF5 file.
 
@@ -123,7 +123,7 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
         hdftools.save_dict(d, path, 'data')
 
     @classmethod
-    def from_hdf5(cls, path: str):
+    def from_hdf5(cls, path):
         """
         Load from an HDF5 file
 
@@ -140,7 +140,7 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
         model = hdftools.load_dict(path, 'data')
         return BaseModelPackage._organize_model(cls, model)
 
-    def to_json(self, path: str):
+    def to_json(self, path):
         """
         Save as a JSON file.
 
@@ -158,7 +158,7 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
         json.dump(d, open(path, 'w'))
 
     @classmethod
-    def from_json(cls, path: str):
+    def from_json(cls, path):
         """
         Load from a json file.
 
@@ -182,7 +182,7 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
 
         return BaseModelPackage._organize_model(cls, model)
 
-    def to_pickle(self, path: str):
+    def to_pickle(self, path):
         """
         Save as a pickle. Not recommended for interoperability.
 
@@ -200,7 +200,7 @@ class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
         pickle.dump(d, open(path, 'wb'), protocol=4)
 
     @classmethod
-    def from_pickle(cls, path: str):
+    def from_pickle(cls, path):
         """
         Load from a pickle file.
 

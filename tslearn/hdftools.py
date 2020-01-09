@@ -5,7 +5,7 @@ import traceback
 from warnings import warn
 
 
-def save_dict(d: dict, filename: str, group: str, raise_type_fail=True):
+def save_dict(d, filename, group, raise_type_fail=True):
     """
     Recursively save a dict to an hdf5 group in a new file.
 
@@ -47,8 +47,7 @@ def save_dict(d: dict, filename: str, group: str, raise_type_fail=True):
                         raise_meta_fail=raise_type_fail)
 
 
-def _dicts_to_group(h5file: h5py.File, path: str,
-                    d: dict, raise_meta_fail: bool):
+def _dicts_to_group(h5file, path, d, raise_meta_fail):
 
     for key, item in d.items():
 
@@ -109,7 +108,7 @@ def _dicts_to_group(h5file: h5py.File, path: str,
                 warn(f"{msg}, storing whatever str(obj) returns.")
 
 
-def load_dict(filename: str, group: str) -> dict:
+def load_dict(filename, group):
     """
     Recursively load a dict from an hdf5 group in a file.
 
@@ -131,7 +130,7 @@ def load_dict(filename: str, group: str) -> dict:
         return _dicts_from_group(h5file, f'{group}/')
 
 
-def _dicts_from_group(h5file: h5py.File, path: str) -> dict:
+def _dicts_from_group(h5file, path):
     ans = {}
     for key, item in h5file[path].items():
         if isinstance(item, h5py._hl.dataset.Dataset):
