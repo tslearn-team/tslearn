@@ -18,7 +18,9 @@ local optima using a parameter `n_init` set to 1 by default
 * Functions `load_timeseries_txt` and `save_timeseries_txt` from the utils
 module have changed their names to `load_time_series_txt` and 
 `save_time_series_txt`. Old names can still be used but considered deprecated
- and removed from the public API documentation for the sake of harmonization
+and removed from the public API documentation for the sake of harmonization
+* Default value for the maximum number of iterations to train `ShapeletModel` 
+and `SerializableShapeletModel` is now set to 10,000 (used to be 100)
 
 ### Added
 
