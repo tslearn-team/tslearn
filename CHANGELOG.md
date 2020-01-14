@@ -21,6 +21,9 @@ module have changed their names to `load_time_series_txt` and
 and removed from the public API documentation for the sake of harmonization
 * Default value for the maximum number of iterations to train `ShapeletModel` 
 and `SerializableShapeletModel` is now set to 10,000 (used to be 100)
+* `TimeSeriesScalerMeanVariance` and `TimeSeriesScalerMinMax` now ignore any
+NaNs when calling their respective `transform` methods in order to better
+mirror scikit-learn's handling of missing data in preprocessing.
 
 ### Added
 
