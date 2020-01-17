@@ -6,7 +6,9 @@ import pickle
 import numpy as np
 
 
-class BaseModelPackage(BaseEstimator, metaclass=ABCMeta):
+class BaseModelPackage(BaseEstimator):
+    __metaclass__ = ABCMeta
+
     @abstractmethod
     def _is_fitted(self):
         """
