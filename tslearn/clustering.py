@@ -918,7 +918,6 @@ class KShape(BaseModelPackage, ClusterMixin,
 
     def __init__(self, n_clusters=3, max_iter=100, tol=1e-6, n_init=1,
                  verbose=False, random_state=None, init='random'):
-        super(KShape, self).__init__()
         self.n_clusters = n_clusters
         self.max_iter = max_iter
         self.tol = tol
@@ -926,13 +925,6 @@ class KShape(BaseModelPackage, ClusterMixin,
         self.n_init = n_init
         self.verbose = verbose
         self.init = init
-
-        self.norms_ = None
-        self.norms_centroids_ = None
-        self.labels_ = None
-        self.inertia_ = None
-        self.cluster_centers_ = None
-        self.n_iter_ = None
 
     def _get_model_params(self):
         """
