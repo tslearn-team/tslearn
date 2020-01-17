@@ -14,7 +14,7 @@ import numpy
 import warnings
 
 from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw, \
-    cdist_soft_dtw_normalized, dtw
+    cdist_soft_dtw_normalized
 from tslearn.barycenters import euclidean_barycenter, \
     dtw_barycenter_averaging, softdtw_barycenter
 from sklearn.utils import check_array
@@ -90,8 +90,8 @@ def _compute_inertia(distances, assignments, squared=True):
 
 
 def silhouette_score(X, labels, metric=None, sample_size=None,
-                     metric_params=None, n_jobs=None, random_state=None,
-                     **kwds):
+                     metric_params=None, n_jobs=None, verbose=0, 
+                     random_state=None, **kwds):
     """Compute the mean Silhouette Coefficient of all samples (cf.  [1]_ and
     [2]_).
 
@@ -140,6 +140,10 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
         ``-1`` means using all processors. See scikit-learns'
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
         for more details.
+
+    verbose : int (default: 0)
+        If nonzero, print information about the inertia while learning
+        the model and joblib progress messages are printed.  
 
     random_state : int, RandomState instance or None, optional (default: None)
         The generator used to randomly select a subset of samples.  If int,
@@ -206,7 +210,8 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
     if metric == "precomputed":
         sklearn_X = X
     elif metric == "dtw" or metric is None:
-        sklearn_X = cdist_dtw(X, n_jobs=n_jobs, **metric_params_)
+        sklearn_X = cdist_dtw(X, n_jobs=n_jobs, verbose=verbose,
+                              **metric_params_)
     elif metric == "softdtw":
         sklearn_X = cdist_soft_dtw_normalized(X, **metric_params_)
     elif metric == "euclidean":
@@ -274,9 +279,8 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
         for more details.
 
-    verbose : bool (default: False)
-        Whether or not to print information about the inertia while learning
-        the model.
+    verbose : int (default: 0)
+        If nonzero, joblib progress messages are printed.  
 
     random_state : integer or numpy.RandomState, optional
         Generator used to initialize the centers. If an integer is given, it
@@ -317,7 +321,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
     """
 
     def __init__(self, n_clusters=3, max_iter=50, tol=1e-6, n_init=1, sigma=1.,
-                 n_jobs=None, verbose=False, random_state=None):
+                 n_jobs=None, verbose=0, random_state=None):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
         self.tol = tol
@@ -328,7 +332,8 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         self.random_state = random_state
 
     def _get_kernel(self, X, Y=None):
-        return cdist_gak(X, Y, sigma=self.sigma, n_jobs=self.n_jobs)
+        return cdist_gak(X, Y, sigma=self.sigma, n_jobs=self.n_jobs,
+                         verbose=self.verbose)
 
     def _fit_one_init(self, K, rs):
         n_samples = K.shape[0]
@@ -557,9 +562,9 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
     dtw_inertia: bool (default: False)
         Whether to compute DTW inertia even if DTW is not the chosen metric.
 
-    verbose : bool (default: False)
-        Whether or not to print information about the inertia while learning
-        the model.
+    verbose : int (default: 0)
+        If nonzero, print information about the inertia while learning
+        the model and joblib progress messages are printed.  
 
     random_state : integer or numpy.RandomState, optional
         Generator used to initialize the centers. If an integer is given, it
@@ -626,7 +631,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
     def __init__(self, n_clusters=3, max_iter=50, tol=1e-6, n_init=1,
                  metric="euclidean", max_iter_barycenter=100,
                  metric_params=None, n_jobs=None, dtw_inertia=False,
-                 verbose=False, random_state=None, init='k-means++'):
+                 verbose=0, random_state=None, init='k-means++'):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
         self.tol = tol
@@ -699,7 +704,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
                           metric="euclidean")
         elif self.metric == "dtw":
             dists = cdist_dtw(X, self.cluster_centers_, n_jobs=self.n_jobs,
-                              **metric_params)
+                              verbose=self.verbose, **metric_params)
         elif self.metric == "softdtw":
             dists = cdist_soft_dtw(X, self.cluster_centers_, **metric_params)
         else:
@@ -711,7 +716,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
             _check_no_empty_cluster(self.labels_, self.n_clusters)
             if self.dtw_inertia and self.metric != "dtw":
                 inertia_dists = cdist_dtw(X, self.cluster_centers_,
-                                          n_jobs=self.n_jobs)
+                                          n_jobs=self.n_jobs,
+                                          verbose=self.verbose)
             else:
                 inertia_dists = dists
             self.inertia_ = _compute_inertia(inertia_dists,
@@ -733,6 +739,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
                     X=X[self.labels_ == k],
                     barycenter_size=None,
                     init_barycenter=self.cluster_centers_[k],
+                    metric_params=metric_params,
                     verbose=False)
             elif self.metric == "softdtw":
                 self.cluster_centers_[k] = softdtw_barycenter(
