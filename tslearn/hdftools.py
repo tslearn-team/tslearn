@@ -43,7 +43,7 @@ def save_dict(d, filename, group, raise_type_fail=True):
         raise FileExistsError
 
     with h5py.File(filename, 'w') as h5file:
-        _dicts_to_group(h5file, f'{group}/', d,
+        _dicts_to_group(h5file, "{}/".format(group), d,
                         raise_meta_fail=raise_type_fail)
 
 
@@ -59,14 +59,16 @@ def _dicts_to_group(h5file, path, d, raise_meta_fail):
                     h5file[path + key] = item
                     # h5file[path + key].attrs['dtype'] = item.dtype.str
                 except:
-                    msg = f"numpy dtype 'O' for item: {item} " \
-                          f"not supported by HDF5\n{traceback.format_exc()}"
+                    msg = "numpy dtype 'O' for item: {}" \
+                          "not supported by HDF5\n{}" \
+                          "".format(item, traceback.format_exc())
 
                     if raise_meta_fail:
                         raise TypeError(msg)
                     else:
                         h5file[path + key] = str(item)
-                        warn(f"{msg}, storing whatever str(obj) returns.")
+                        warn("{}, storing whatever str(obj) returns"
+                             "".format(msg))
 
             # numpy array of unicode strings
             elif item.dtype.str.startswith('<U'):
@@ -88,24 +90,31 @@ def _dicts_to_group(h5file, path, d, raise_meta_fail):
             h5file[path + key] = item
 
         elif isinstance(item, dict):
-            _dicts_to_group(h5file, path + key + '/', item, raise_meta_fail)
+            _dicts_to_group(
+                h5file, "{}{}/".format(path, key), item, raise_meta_fail
+            )
 
         # last resort, try to convert this object
         # to a dict and save its attributes
         elif hasattr(item, '__dict__'):
-            _dicts_to_group(h5file, path + key + '/',
-                            item.__dict__, raise_meta_fail)
+            _dicts_to_group(
+                h5file,
+                "{}{}/".format(path, key),
+                item.__dict__,
+                raise_meta_fail
+            )
 
         else:
-            msg = f"{type(item)} for item: {item} " \
-                  f"not supported not supported by HDF5"
+            msg = "{} for item: {} not supported by HDF5" \
+                  "".format(type(item), item)
 
             if raise_meta_fail:
                 raise TypeError(msg)
 
             else:
                 h5file[path + key] = str(item)
-                warn(f"{msg}, storing whatever str(obj) returns.")
+                warn("{}, storing whatever str(obj) returns"
+                     "".format(msg))
 
 
 def load_dict(filename, group):
@@ -127,7 +136,7 @@ def load_dict(filename, group):
     """
 
     with h5py.File(filename, 'r') as h5file:
-        return _dicts_from_group(h5file, f'{group}/')
+        return _dicts_from_group(h5file, "{}/".format(group))
 
 
 def _dicts_from_group(h5file, path):
