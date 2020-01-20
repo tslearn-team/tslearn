@@ -7,7 +7,7 @@ import pickle
 import numpy as np
 
 
-class BaseModelPackage(BaseEstimator):
+class BaseModelPackage:
     __metaclass__ = ABCMeta
 
     @abstractmethod
@@ -28,6 +28,11 @@ class BaseModelPackage(BaseEstimator):
     @abstractmethod
     def _get_model_params(self):
         """Get model parameters that are sufficient to recapitulate it."""
+        pass
+
+    @abstractmethod
+    def get_params(self):
+        """Usually from `BaseEstimator`"""
         pass
 
     def _to_dict(self, output=None):

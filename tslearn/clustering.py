@@ -244,7 +244,7 @@ def _check_initial_guess(init, n_clusters):
             " {} given".format(n_clusters, init.shape[0])
 
 
-class GlobalAlignmentKernelKMeans(BaseModelPackage, ClusterMixin):
+class GlobalAlignmentKernelKMeans(BaseEstimator, BaseModelPackage, ClusterMixin):
     """Global Alignment Kernel K-means.
 
     Parameters
@@ -516,7 +516,7 @@ class TimeSeriesCentroidBasedClusteringMixin:
             self._X_fit = None
 
 
-class TimeSeriesKMeans(BaseModelPackage, ClusterMixin,
+class TimeSeriesKMeans(BaseEstimator, BaseModelPackage, ClusterMixin,
                        TimeSeriesCentroidBasedClusteringMixin):
     """K-means clustering for time-series data.
 
@@ -867,7 +867,7 @@ class TimeSeriesKMeans(BaseModelPackage, ClusterMixin,
         return {'allow_nan': True, 'allow_variable_length': True}
 
 
-class KShape(BaseModelPackage, ClusterMixin,
+class KShape(BaseEstimator, BaseModelPackage, ClusterMixin,
              TimeSeriesCentroidBasedClusteringMixin):
     """KShape clustering for time series.
 
