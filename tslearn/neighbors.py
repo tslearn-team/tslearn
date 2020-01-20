@@ -256,10 +256,13 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
             return pred
         else:
             check_is_fitted(self, '_X_fit')
-            X = check_array(X, allow_nd=True)
-            X = to_time_series_dataset(X)
-            X_ = to_sklearn_dataset(X)
-            X_ = check_dims(X_, self._X_fit, extend=False)
+            if X is None:
+                X_ = None
+            else:
+                X = check_array(X, allow_nd=True)
+                X = to_time_series_dataset(X)
+                X_ = to_sklearn_dataset(X)
+                X_ = check_dims(X_, self._X_fit, extend=False)
             return KNeighborsTimeSeriesMixin.kneighbors(
                 self,
                 X=X_,

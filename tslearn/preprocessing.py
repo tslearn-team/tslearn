@@ -115,8 +115,8 @@ class TimeSeriesScalerMinMax(TransformerMixin):
     ...     [[numpy.nan, 3, 6]]
     ... )
     array([[[nan],
-            [1. ],
-            [2. ]]])
+            [ 1.],
+            [ 2.]]])
     """
     def __init__(self, value_range=(0., 1.), min=None, max=None):
         self.value_range = value_range
