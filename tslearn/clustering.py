@@ -946,7 +946,8 @@ class KShape(BaseModelPackage, ClusterMixin,
 
         return {'cluster_centers_': self.cluster_centers_,
                 'norms_': self.norms_,
-                'norms_centroids_': self.norms_centroids_
+                'norms_centroids_': self.norms_centroids_,
+                '_X_fit': self._X_fit
                 }
 
     def _is_fitted(self):
@@ -1134,8 +1135,7 @@ class KShape(BaseModelPackage, ClusterMixin,
 
         X_ = to_time_series_dataset(X)
 
-        if hasattr(self, '_X_fit'):
-            X = check_dims(X, self._X_fit)
+        X = check_dims(X, self._X_fit)
 
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
         dists = self._cross_dists(X_)
