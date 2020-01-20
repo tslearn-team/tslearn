@@ -14,7 +14,7 @@ all_formats = ['json', 'hdf5', 'pickle']
 
 try:
     os.makedirs(tmp_dir)
-except FileExistsError:
+except (FileExistsError, OSError):
     pass
 
 

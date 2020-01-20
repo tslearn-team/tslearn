@@ -216,7 +216,7 @@ class BaseModelPackage(BaseEstimator):
         """
 
         d = self._to_dict()
-        pickle.dump(d, open(path, 'wb'), protocol=4)
+        pickle.dump(d, open(path, 'wb'), protocol=2)
 
     @classmethod
     def from_pickle(cls, path):
