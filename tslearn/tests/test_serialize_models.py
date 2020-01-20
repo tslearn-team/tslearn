@@ -1,6 +1,8 @@
 import os
 from glob import glob
 import numpy
+import pytest
+from sklearn.exceptions import NotFittedError
 from tslearn import hdftools
 from tslearn.clustering import KShape
 from tslearn.datasets import CachedDatasets
@@ -53,16 +55,27 @@ def test_serialize_kshape():
 
     # Euclidean k-means
     ks = KShape(n_clusters=3, verbose=True, random_state=seed)
-    y_pred = ks.fit_predict(X_train)
 
     formats = ['json', 'hdf5', 'pickle']
 
+    # not serializable if not fitted
+    with pytest.raises(NotFittedError):
+        for fmt in formats:
+            getattr(ks, "to_{}".format(fmt))(
+                os.path.join(tmp_dir, "ks.{}".format(fmt))
+            )
+
+    y_pred = ks.fit_predict(X_train)
+
+    # serialize to all formats
     for fmt in formats:
 
         getattr(ks, "to_{}".format(fmt))(
             os.path.join(tmp_dir, "ks.{}".format(fmt))
         )
 
+    # loaded models should have same model params
+    # and provide the same predictions
     for fmt in formats:
 
         sm = getattr(ks, "from_{}".format(fmt))(
