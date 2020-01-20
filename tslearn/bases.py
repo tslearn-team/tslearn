@@ -117,16 +117,12 @@ class BaseModelPackage(BaseEstimator):
 
     def to_hdf5(self, path):
         """
-        Save this model as an HDF5 file.
+        Save model to a HDF5 file.
 
         Parameters
         ----------
         path : str
             Full file path. File must not already exist.
-
-        Returns
-        -------
-        None
 
         Raises
         ------
@@ -140,7 +136,7 @@ class BaseModelPackage(BaseEstimator):
     @classmethod
     def from_hdf5(cls, path):
         """
-        Load from an HDF5 file
+        Load model from a HDF5 file.
 
         Parameters
         ----------
@@ -162,16 +158,12 @@ class BaseModelPackage(BaseEstimator):
 
     def to_json(self, path):
         """
-        Save as a JSON file.
+        Save model to a JSON file.
 
         Parameters
         ----------
         path : str
             Full file path.
-
-        Returns
-        -------
-        None
         """
 
         d = self._to_dict(output='json')
@@ -180,7 +172,7 @@ class BaseModelPackage(BaseEstimator):
     @classmethod
     def from_json(cls, path):
         """
-        Load from a json file.
+        Load model from a JSON file.
 
         Parameters
         ----------
@@ -204,16 +196,12 @@ class BaseModelPackage(BaseEstimator):
 
     def to_pickle(self, path):
         """
-        Save as a pickle. Not recommended for interoperability.
+        Save model to a pickle file.
 
         Parameters
         ----------
         path : str
             Full file path.
-
-        Returns
-        -------
-        None
         """
 
         d = self._to_dict()
@@ -222,7 +210,7 @@ class BaseModelPackage(BaseEstimator):
     @classmethod
     def from_pickle(cls, path):
         """
-        Load from a pickle file.
+        Load model from a pickle file.
 
         Parameters
         ----------
