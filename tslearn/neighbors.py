@@ -178,8 +178,25 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
         X : array-like, shape (n_ts, sz, d)
             Training data.
         """
-        X = check_array(X, allow_nd=True)
-        self._X_fit = to_time_series_dataset(X)
+        if self.metric in VARIABLE_LENGTH_METRICS:
+            self._ts_metric = self.metric
+            self.metric = "precomputed"
+
+        X = check_array(X,
+                        allow_nd=True,
+                        force_all_finite=(self.metric != "precomputed"))
+        X = to_time_series_dataset(X)
+        X = check_dims(X, X_fit=None)
+        if self.metric == "precomputed" and hasattr(self, '_ts_metric'):
+            self._ts_fit = X
+            self._d = X.shape[2]
+            self._X_fit = numpy.zeros((self._ts_fit.shape[0],
+                                       self._ts_fit.shape[0]))
+        else:
+            self._X_fit, self._d = to_sklearn_dataset(X, return_dim=True)
+        super(KNeighborsTimeSeries, self).fit(self._X_fit, y)
+        if hasattr(self, '_ts_metric'):
+            self.metric = self._ts_metric
         return self
 
     def kneighbors(self, X=None, n_neighbors=None, return_distance=True):
@@ -207,11 +224,47 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
         ind : array
             Indices of the nearest points in the population matrix.
         """
-        return KNeighborsTimeSeriesMixin.kneighbors(
-            self,
-            X=X,
-            n_neighbors=n_neighbors,
-            return_distance=return_distance)
+        if self.metric in VARIABLE_LENGTH_METRICS:
+            self._ts_metric = self.metric
+            self.metric = "precomputed"
+
+            if self.metric_params is None:
+                metric_params = {}
+            else:
+                metric_params = self.metric_params.copy()
+                if "n_jobs" in metric_params.keys():
+                    del metric_params["n_jobs"]
+                if "verbose" in metric_params.keys():
+                    del metric_params["verbose"]
+            check_is_fitted(self, '_ts_fit')
+            X = check_array(X, allow_nd=True, force_all_finite=False)
+            X = to_time_series_dataset(X)
+            if self._ts_metric == "dtw":
+                X_ = cdist_dtw(X, self._ts_fit, n_jobs=self.n_jobs,
+                               verbose=self.verbose, **metric_params)
+            elif self._ts_metric == "softdtw":
+                X_ = cdist_soft_dtw(X, self._ts_fit, **metric_params)
+            else:
+                raise ValueError("Invalid metric recorded: %s" %
+                                 self._ts_metric)
+            pred = KNeighborsTimeSeriesMixin.kneighbors(
+                self,
+                X=X_,
+                n_neighbors=n_neighbors,
+                return_distance=return_distance)
+            self.metric = self._ts_metric
+            return pred
+        else:
+            check_is_fitted(self, '_X_fit')
+            X = check_array(X, allow_nd=True)
+            X = to_time_series_dataset(X)
+            X_ = to_sklearn_dataset(X)
+            X_ = check_dims(X_, self._X_fit, extend=False)
+            return KNeighborsTimeSeriesMixin.kneighbors(
+                self,
+                X=X_,
+                n_neighbors=n_neighbors,
+                return_distance=return_distance)
 
 
 class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,

@@ -24,6 +24,8 @@ and `SerializableShapeletModel` is now set to 10,000 (used to be 100)
 * `TimeSeriesScalerMeanVariance` and `TimeSeriesScalerMinMax` now ignore any
 NaNs when calling their respective `transform` methods in order to better
 mirror scikit-learn's handling of missing data in preprocessing.
+* `KNeighborsTimeSeries` now accepts variable-length time series as inputs
+when used with metrics that can deal with it (eg. DTW)
 
 ### Added
 
