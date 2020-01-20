@@ -12,8 +12,10 @@ from tslearn.preprocessing import TimeSeriesScalerMeanVariance, TimeSeriesResamp
 tmp_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tmp')
 all_formats = ['json', 'hdf5', 'pickle']
 
-
-os.makedirs(tmp_dir, exist_ok=True)
+try:
+    os.makedirs(tmp_dir)
+except FileExistsError:
+    pass
 
 
 def teardown_module():
@@ -25,6 +27,7 @@ def clear_tmp():
     files = glob(os.path.join(tmp_dir, '*'))
     for f in files:
         os.remove(f)
+
 
 def test_hdftools():
     dtypes = [numpy.int, numpy.int8, numpy.int16, numpy.int32, numpy.int64,
