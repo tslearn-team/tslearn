@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from sklearn.base import BaseEstimator
+from sklearn.exceptions import NotFittedError
 from tslearn import hdftools
 import json
 import pickle
@@ -41,7 +42,7 @@ class BaseModelPackage(BaseEstimator):
         """
 
         if not self._is_fitted():
-            raise ValueError("Model must be fit before it can be packaged")
+            raise NotFittedError("Model must be fit before it can be packaged")
 
         d = {'hyper_params': self.get_params(),
              'model_params': self._get_model_params()}
