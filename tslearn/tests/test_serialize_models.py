@@ -10,10 +10,14 @@ from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 tmp_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tmp')
 
 
+os.makedirs(tmp_dir, exist_ok=True)
+
+
 def teardown_module():
     files = glob(os.path.join(tmp_dir, '*'))
     for f in files:
         os.remove(f)
+    os.removedirs(tmp_dir)
 
 
 def test_hdftools():
@@ -34,7 +38,7 @@ def test_hdftools():
 
     for k in d2.keys():
         numpy.testing.assert_equal(d[k], d2[k])
-        print(d2[k])
+
 
 def test_serialize_kshape():
     seed = 0
