@@ -4,11 +4,12 @@ import numpy
 import pytest
 from sklearn.exceptions import NotFittedError
 from tslearn import hdftools
-from tslearn.clustering import KShape, TimeSeriesKMeans, GlobalAlignmentKernelKMeans
 from tslearn.metrics import sigma_gak
 from tslearn.datasets import CachedDatasets
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance, TimeSeriesResampler
 
+from tslearn.neighbors import KNeighborsTimeSeries
+from tslearn.clustering import KShape, TimeSeriesKMeans, GlobalAlignmentKernelKMeans
 
 tmp_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tmp')
 all_formats = ['json', 'hdf5', 'pickle']
@@ -52,10 +53,12 @@ def test_hdftools():
 
 def _check_not_fitted(model):
     # not serializable if not fitted
-    with pytest.raises(NotFittedError):
-        for fmt in all_formats:
+    for fmt in all_formats:
+        with pytest.raises(NotFittedError):
             getattr(model, "to_{}".format(fmt))(
-                os.path.join(tmp_dir, "ks.{}".format(fmt))
+                os.path.join(
+                    tmp_dir, "{}.{}".format(model.__class__.__name__, fmt)
+                )
             )
 
 
@@ -63,14 +66,18 @@ def _check_params_predict(model, X):
     # serialize to all all_formats
     for fmt in all_formats:
         getattr(model, "to_{}".format(fmt))(
-            os.path.join(tmp_dir, "ks.{}".format(fmt))
+            os.path.join(
+                tmp_dir, "{}.{}".format(model.__class__.__name__, fmt)
+            )
         )
 
     # loaded models should have same model params
     # and provide the same predictions
     for fmt in all_formats:
         sm = getattr(model, "from_{}".format(fmt))(
-            os.path.join(tmp_dir, "ks.{}".format(fmt))
+            os.path.join(
+                tmp_dir, "{}.{}".format(model.__class__.__name__, fmt)
+            )
         )
 
         # make sure it's restored to the same class
@@ -92,7 +99,7 @@ def _check_params_predict(model, X):
     clear_tmp()
 
 
-def test_global_alignment_kernel_kmeans():
+def test_serialize_global_alignment_kernel_kmeans():
     seed = 0
     numpy.random.seed(seed)
     X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")
@@ -174,5 +181,54 @@ def test_serialize_kshape():
     _check_params_predict(ks, X_train)
 
 
+def test_serialize_knn():
+    seed = 0
+    numpy.random.seed(seed)
+    X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")
 
+    n_queries = 2
+    n_neighbors = 4
 
+    knn = KNeighborsTimeSeries(n_neighbors=n_neighbors)
+
+    _check_not_fitted(knn)
+
+    knn.fit(X_train)
+
+    # serialize to all all_formats
+    for fmt in all_formats:
+        getattr(knn, "to_{}".format(fmt))(
+            os.path.join(
+                tmp_dir, "{}.{}".format(knn.__class__.__name__, fmt)
+            )
+        )
+
+    # loaded models should have same model params
+    # and provide the same predictions
+    for fmt in all_formats:
+        sm = getattr(knn, "from_{}".format(fmt))(
+            os.path.join(
+                tmp_dir, "{}.{}".format(knn.__class__.__name__, fmt)
+            )
+        )
+
+        # make sure it's restored to the same class
+        assert isinstance(sm, knn.__class__)
+
+        # test that saved model gives same predictions
+        numpy.testing.assert_equal(
+            knn.kneighbors(X_test[:n_queries], return_distance=False),
+            sm.kneighbors(X_test[:n_queries], return_distance=False)
+        )
+
+        # check that the model-params are the same
+        model_params = knn._get_model_params()
+        for p in model_params.keys():
+            numpy.testing.assert_equal(getattr(knn, p), getattr(sm, p))
+
+        # check that hyper-params are the same
+        hyper_params = knn.get_params()
+        for p in hyper_params .keys():
+            numpy.testing.assert_equal(getattr(knn, p), getattr(sm, p))
+
+    clear_tmp()

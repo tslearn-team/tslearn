@@ -15,6 +15,7 @@ from scipy.spatial.distance import cdist as scipy_cdist
 from tslearn.metrics import cdist_dtw, cdist_soft_dtw, VARIABLE_LENGTH_METRICS
 from tslearn.utils import (to_time_series_dataset, to_sklearn_dataset,
                            check_dims)
+from tslearn.bases import BaseModelPackage
 
 neighbors.VALID_METRICS['brute'].extend(['dtw', 'softdtw'])
 
@@ -112,7 +113,8 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
             return ind
 
 
-class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
+class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
+                           BaseModelPackage):
     """Unsupervised learner for implementing neighbor searches for Time Series.
 
     Parameters
@@ -169,6 +171,15 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
         self.metric_params = metric_params
         self.n_jobs = n_jobs
         self.verbose = verbose
+
+    def _is_fitted(self):
+        if hasattr(self, '_X_fit'):
+            return True
+
+        return False
+
+    def _get_model_params(self):
+        return {'_X_fit': self._X_fit}
 
     def fit(self, X, y=None):
         """Fit the model using X as training data
