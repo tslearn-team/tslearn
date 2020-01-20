@@ -29,7 +29,7 @@ class BaseModelPackage(BaseEstimator):
         """Get model parameters that are sufficient to recapitulate it."""
         pass
 
-    def _to_dict(self, arrays_to_lists=False):
+    def _to_dict(self, output=None):
         """
         Get model hyper-parameters and model-parameters
         as a dict that can be saved to disk.
@@ -47,10 +47,22 @@ class BaseModelPackage(BaseEstimator):
              'model_params': self._get_model_params()}
 
         # This is just for json support to convert numpy arrays to lists
-        if arrays_to_lists:
+        if output == 'json':
             d['model_params'] = BaseModelPackage._listify(d['model_params'])
 
+        elif output == 'hdf5':
+            d['hyper_params'] = BaseModelPackage._none_to_str(d['hyper_params'])
+
         return d
+
+    @staticmethod
+    def _none_to_str(mp):
+        """Use str to store Nones. Used for HDF5"""
+        for k in mp.keys():
+            if mp[k] is None:
+                mp[k] = 'None'
+
+        return mp
 
     @staticmethod
     def _listify(model_params):
@@ -121,7 +133,7 @@ class BaseModelPackage(BaseEstimator):
             If a file with the same path already exists.
         """
 
-        d = self._to_dict()
+        d = self._to_dict(output='hdf5')
         hdftools.save_dict(d, path, 'data')
 
     @classmethod
@@ -140,6 +152,11 @@ class BaseModelPackage(BaseEstimator):
         """
 
         model = hdftools.load_dict(path, 'data')
+
+        for k in model['hyper_params'].keys():
+            if model['hyper_params'][k] == 'None':
+                model['hyper_params'][k] = None
+
         return BaseModelPackage._organize_model(cls, model)
 
     def to_json(self, path):
@@ -156,7 +173,7 @@ class BaseModelPackage(BaseEstimator):
         None
         """
 
-        d = self._to_dict(arrays_to_lists=True)
+        d = self._to_dict(output='json')
         json.dump(d, open(path, 'w'))
 
     @classmethod
