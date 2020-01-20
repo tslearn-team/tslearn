@@ -1,6 +1,7 @@
 import os
 from glob import glob
 import numpy
+from tslearn import hdftools
 from tslearn.clustering import KShape
 from tslearn.datasets import CachedDatasets
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
@@ -14,6 +15,26 @@ def teardown_module():
     for f in files:
         os.remove(f)
 
+
+def test_hdftools():
+    dtypes = [numpy.int, numpy.int8, numpy.int16, numpy.int32, numpy.int64,
+              numpy.float, numpy.float32, numpy.float64, numpy.float128]
+
+    d = {}
+
+    for dtype in dtypes:
+        name = numpy.dtype(dtype).name
+        d[name] = (numpy.random.rand(100, 100) * 10).astype(dtype)
+
+    fname = os.path.join(tmp_dir, 'hdf_test.hdf5')
+
+    hdftools.save_dict(d, filename=fname, group='data')
+
+    d2 = hdftools.load_dict(fname, 'data')
+
+    for k in d2.keys():
+        numpy.testing.assert_equal(d[k], d2[k])
+        print(d2[k])
 
 def test_serialize_kshape():
     seed = 0
