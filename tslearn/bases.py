@@ -40,7 +40,7 @@ class BaseModelPackage(BaseEstimator):
             dict with relevant attributes sufficient to describe the model.
         """
 
-        if not self._is_fitted:
+        if not self._is_fitted():
             raise ValueError("Model must be fit before it can be packaged")
 
         d = {'hyper_params': self.get_params(),
