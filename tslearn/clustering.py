@@ -244,7 +244,7 @@ def _check_initial_guess(init, n_clusters):
             " {} given".format(n_clusters, init.shape[0])
 
 
-class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
+class GlobalAlignmentKernelKMeans(BaseModelPackage, ClusterMixin):
     """Global Alignment Kernel K-means.
 
     Parameters
@@ -330,6 +330,17 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         self.n_jobs = n_jobs
         self.verbose = verbose
         self.random_state = random_state
+
+    def _is_fitted(self):
+        check_is_fitted(self, '_X_fit')
+        return True
+
+    def _get_model_params(self):
+        return {
+            '_X_fit': self._X_fit,
+            'sample_weight_': self.sample_weight_,
+            'labels_': self.labels_
+        }
 
     def _get_kernel(self, X, Y=None):
         return cdist_gak(X, Y, sigma=self.sigma, n_jobs=self.n_jobs,

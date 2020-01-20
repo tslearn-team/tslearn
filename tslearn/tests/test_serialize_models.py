@@ -4,7 +4,8 @@ import numpy
 import pytest
 from sklearn.exceptions import NotFittedError
 from tslearn import hdftools
-from tslearn.clustering import KShape, TimeSeriesKMeans
+from tslearn.clustering import KShape, TimeSeriesKMeans, GlobalAlignmentKernelKMeans
+from tslearn.metrics import sigma_gak
 from tslearn.datasets import CachedDatasets
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance, TimeSeriesResampler
 
@@ -49,7 +50,7 @@ def test_hdftools():
         numpy.testing.assert_equal(d[k], d2[k])
 
 
-def _not_fitted_check(model):
+def _check_not_fitted(model):
     # not serializable if not fitted
     with pytest.raises(NotFittedError):
         for fmt in all_formats:
@@ -58,7 +59,7 @@ def _not_fitted_check(model):
             )
 
 
-def _params_predict_check(model, X):
+def _check_params_predict(model, X):
     # serialize to all all_formats
     for fmt in all_formats:
         getattr(model, "to_{}".format(fmt))(
@@ -90,6 +91,31 @@ def _params_predict_check(model, X):
 
     clear_tmp()
 
+
+def test_global_alignment_kernel_kmeans():
+    seed = 0
+    numpy.random.seed(seed)
+    X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")
+    # Keep first 3 classes
+    X_train = X_train[y_train < 4]
+    numpy.random.shuffle(X_train)
+    # Keep only 50 time series
+    X_train = TimeSeriesScalerMeanVariance().fit_transform(X_train[:50])
+    sz = X_train.shape[1]
+
+    gak_km = GlobalAlignmentKernelKMeans(n_clusters=3,
+                                         sigma=sigma_gak(X_train),
+                                         n_init=20,
+                                         verbose=True,
+                                         random_state=seed)
+
+    _check_not_fitted(gak_km)
+
+    gak_km.fit(X_train)
+
+    _check_params_predict(gak_km, X_test)
+
+
 def test_serialize_timeserieskmeans():
     seed = 0
     numpy.random.seed(seed)
@@ -109,11 +135,11 @@ def test_serialize_timeserieskmeans():
                               max_iter_barycenter=10,
                               random_state=seed)
 
-    _not_fitted_check(dba_km)
+    _check_not_fitted(dba_km)
 
     dba_km.fit(X_train)
 
-    _params_predict_check(dba_km, X_train)
+    _check_params_predict(dba_km, X_train)
 
     sdtw_km = TimeSeriesKMeans(n_clusters=3,
                                metric="softdtw",
@@ -121,11 +147,11 @@ def test_serialize_timeserieskmeans():
                                verbose=True,
                                random_state=seed)
 
-    _not_fitted_check(sdtw_km)
+    _check_not_fitted(sdtw_km)
 
     sdtw_km.fit(X_train)
 
-    _params_predict_check(sdtw_km, X_train)
+    _check_params_predict(sdtw_km, X_train)
 
 
 def test_serialize_kshape():
@@ -141,11 +167,11 @@ def test_serialize_kshape():
 
     ks = KShape(n_clusters=3, verbose=True, random_state=seed)
 
-    _not_fitted_check(ks)
+    _check_not_fitted(ks)
 
     ks.fit(X_train)
 
-    _params_predict_check(ks, X_train)
+    _check_params_predict(ks, X_train)
 
 
 
