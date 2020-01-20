@@ -6,13 +6,18 @@ from sklearn.exceptions import NotFittedError
 from tslearn import hdftools
 from tslearn.metrics import sigma_gak
 from tslearn.datasets import CachedDatasets
-from tslearn.preprocessing import TimeSeriesScalerMeanVariance, TimeSeriesResampler
+from tslearn.preprocessing import TimeSeriesScalerMeanVariance, \
+    TimeSeriesResampler
 
-from tslearn.neighbors import KNeighborsTimeSeries
-from tslearn.clustering import KShape, TimeSeriesKMeans, GlobalAlignmentKernelKMeans
+from tslearn.neighbors import KNeighborsTimeSeries, \
+    KNeighborsTimeSeriesClassifier
+from tslearn.clustering import KShape, TimeSeriesKMeans, \
+    GlobalAlignmentKernelKMeans
+
 
 tmp_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tmp')
 all_formats = ['json', 'hdf5', 'pickle']
+
 
 try:
     os.makedirs(tmp_dir)
@@ -232,3 +237,17 @@ def test_serialize_knn():
             numpy.testing.assert_equal(getattr(knn, p), getattr(sm, p))
 
     clear_tmp()
+
+
+def test_serialize_knn_classifier():
+    seed = 0
+    numpy.random.seed(seed)
+    X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")
+
+    knc = KNeighborsTimeSeriesClassifier()
+
+    _check_not_fitted(knc)
+
+    knc.fit(X_train, y_train)
+
+    _check_params_predict(knc, X_test)

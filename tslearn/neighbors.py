@@ -226,7 +226,8 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
 
 
 class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
-                                     KNeighborsClassifier):
+                                     KNeighborsClassifier,
+                                     BaseModelPackage):
     """Classifier implementing the k-nearest neighbors vote for Time Series.
 
     Parameters
@@ -292,6 +293,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
     ...         y=[0, 0, 1]).predict([[1, 2.2, 3.5]])
     array([0])
     """ # noqa: E501
+
     def __init__(self,
                  n_neighbors=5,
                  weights='uniform',
@@ -307,6 +309,20 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         self.metric_params = metric_params
         self.n_jobs = n_jobs
         self.verbose = verbose
+
+    def _is_fitted(self):
+        check_is_fitted(self, '_ts_fit')
+        return True
+
+    def _get_model_params(self):
+        return {
+            '_X_fit': self._X_fit,
+            '_ts_fit': self._ts_fit,
+            '_d': self._d,
+            'classes_': self.classes_,
+            '_y': self._y,
+            'outputs_2d_': self.outputs_2d_
+        }
 
     def fit(self, X, y):
         """Fit the model using X as training data and y as target values
