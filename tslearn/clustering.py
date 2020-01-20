@@ -947,6 +947,7 @@ class KShape(BaseModelPackage, ClusterMixin,
         return {'cluster_centers_': self.cluster_centers_,
                 'norms_': self.norms_,
                 'norms_centroids_': self.norms_centroids_,
+                # needed to validate dims to run predict() in the future
                 '_X_fit': self._X_fit
                 }
 
