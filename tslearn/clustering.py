@@ -505,7 +505,7 @@ class TimeSeriesCentroidBasedClusteringMixin:
             self._X_fit = None
 
 
-class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
+class TimeSeriesKMeans(BaseModelPackage, ClusterMixin,
                        TimeSeriesCentroidBasedClusteringMixin):
     """K-means clustering for time-series data.
 
@@ -652,6 +652,13 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
                 "removed in 0.4. Use `gamma` instead of `gamma_sdtw` as a "
                 "`metric_params` key to remove this warning.",
                 DeprecationWarning, stacklevel=2)
+
+    def _is_fitted(self):
+        check_is_fitted(self, ['cluster_centers_'])
+        return True
+
+    def _get_model_params(self):
+        return {'cluster_centers_': self.cluster_centers_}
 
     def _fit_one_init(self, X, x_squared_norms, rs):
         n_ts, _, d = X.shape
@@ -840,8 +847,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
             Index of the cluster each sample belongs to.
         """
         X = check_array(X, allow_nd=True, force_all_finite='allow-nan')
-        check_is_fitted(self, '_X_fit')
-        X = check_dims(X, self._X_fit)
+        check_is_fitted(self, 'cluster_centers_')
+        X = check_dims(X, self.cluster_centers_)
         X_ = to_time_series_dataset(X)
         return self._assign(X_, update_class_attributes=False)
 
