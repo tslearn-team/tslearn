@@ -290,6 +290,280 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
     return njit_dtw(s1, s2, mask=mask)
 
 
+def _max_steps(i, j, max_length, length_1, length_2):
+    """Maximum number of steps required in a L-DTW process to reach a given
+    cell.
+
+    Parameters
+    ----------
+    i : int
+        Cell row index
+
+    j : int
+        Cell column index
+
+    max_length : int
+        Maximum allowed length
+
+    length_1 : int
+        Length of the first time series
+
+    length_2 : int
+        Length of the second time series
+
+    Returns
+    -------
+    int
+        Number of steps
+    """
+    candidate_1 = i + j
+    candidate_2 = max_length - max(length_1 - i - 1, length_2 - j - 1)
+    return min(candidate_1, candidate_2)
+
+
+def _limited_warping_length_cost(s1, s2, max_length):
+    r"""Compute accumulated scores necessary fo L-DTW.
+
+    Parameters
+    ----------
+    s1
+        A time series.
+
+    s2
+        Another time series.
+
+    max_length : int
+        Maximum allowed warping path length. Should be an integer between
+        XXX and YYY.  # TODO
+
+    Returns
+    -------
+    dict
+        Accumulated scores. This dict associates (i, j) pairs (keys) to
+        dictionnaries with desired length as key and associated score as value.
+    """
+    dict_costs = {}
+    for i in range(s1.shape[0]):
+        for j in range(s2.shape[0]):
+            dict_costs[i, j] = {}
+
+    # Init
+    dict_costs[0, 0][0] = _local_squared_dist(s1[0], s2[0])
+    for i in range(1, s1.shape[0]):
+        pred = dict_costs[i - 1, 0][i - 1]
+        dict_costs[i, 0][i] = pred + _local_squared_dist(s1[i], s2[0])
+    for j in range(1, s2.shape[0]):
+        pred = dict_costs[0, j - 1][j - 1]
+        dict_costs[0, j][j] = pred + _local_squared_dist(s1[0], s2[j])
+
+    # Main loop
+    for i in range(1, s1.shape[0]):
+        for j in range(1, s2.shape[0]):
+            min_s = max(i, j)
+            max_s = _max_steps(i, j, max_length - 1, s1.shape[0], s2.shape[0])
+            for s in range(min_s, max_s + 1):
+                dict_costs[i, j][s] = _local_squared_dist(s1[i], s2[j])
+                dict_costs[i, j][s] += min(
+                    dict_costs[i, j - 1].get(s - 1, numpy.inf),
+                    dict_costs[i - 1, j].get(s - 1, numpy.inf),
+                    dict_costs[i - 1, j - 1].get(s - 1, numpy.inf)
+                )
+    return dict_costs
+
+
+def dtw_limited_warping_length(s1, s2, max_length):
+    r"""Compute Dynamic Time Warping (DTW) similarity measure between
+    (possibly multidimensional) time series under an upper bound constraint on
+    the resulting path length and return the similarity cost.
+
+    DTW is computed as the Euclidean distance between aligned time series,
+    i.e., if :math:`P` is the optimal alignment path:
+
+    .. math::
+
+        DTW(X, Y) = \sqrt{\sum_{(i, j) \in P} \|X_{i} - Y_{j}\|^2}
+
+    Note that this formula is still valid for the multivariate case.
+
+    It is not required that both time series share the same size, but they must
+    be the same dimension. DTW was originally presented in [1]_.
+    This constrained-length variant was introduced in [2]_.
+
+    Parameters
+    ----------
+    s1
+        A time series.
+
+    s2
+        Another time series.
+
+    max_length : int
+        Maximum allowed warping path length.
+        If greater than len(s1) + len(s2), then it is equivalent to
+        unconstrained DTW.
+        If lower than max(len(s1), len(s2)), no path can be found and a
+        ValueError is raised.
+
+    Returns
+    -------
+    float
+        Similarity score
+
+    Examples
+    --------
+    >>> dtw_limited_warping_length([1, 2, 3], [1., 2., 2., 3.], 5)
+    0.0
+    >>> dtw_limited_warping_length([1, 2, 3], [1., 2., 2., 3., 4.], 5)
+    1.0
+
+    See Also
+    --------
+    dtw : Get the similarity score for DTW
+    dtw_path_limited_warping_length : Get both the warping path and the
+        similarity score for DTW with limited warping path length
+
+    References
+    ----------
+    .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
+           spoken word recognition," IEEE Transactions on Acoustics, Speech and
+           Signal Processing, vol. 26(1), pp. 43--49, 1978.
+    .. [2] Z. Zhang, R. Tavenard, A. Bailly, X. Tang, P. Tang, T. Corpetti
+           Dynamic time warping under limited warping path length.
+           Information Sciences, vol. 393, pp. 91--107, 2017.
+    """
+    s1 = to_time_series(s1, remove_nans=True)
+    s2 = to_time_series(s2, remove_nans=True)
+
+    if max_length < max(s1.shape[0], s2.shape[0]):
+        raise ValueError("Cannot find a path of length {} to align given "
+                         "time series.".format(max_length))
+
+    accumulated_costs = _limited_warping_length_cost(s1, s2, max_length)
+    idx_pair = (s1.shape[0] - 1, s2.shape[0] - 1)
+    optimal_cost = min(accumulated_costs[idx_pair].values())
+    return numpy.sqrt(optimal_cost)
+
+
+def _return_path_limited_warping_length(accum_costs, target_indices,
+                                        optimal_length):
+    path = [target_indices]
+    cur_length = optimal_length
+    while path[-1] != (0, 0):
+        i, j = path[-1]
+        if i == 0:
+            path.append((0, j - 1))
+        elif j == 0:
+            path.append((i - 1, 0))
+        else:
+            arr = numpy.array(
+                [accum_costs[i - 1, j - 1].get(cur_length - 1, numpy.inf),
+                 accum_costs[i - 1, j].get(cur_length - 1, numpy.inf),
+                 accum_costs[i, j - 1].get(cur_length - 1, numpy.inf)]
+            )
+            argmin = numpy.argmin(arr)
+            if argmin == 0:
+                path.append((i - 1, j - 1))
+            elif argmin == 1:
+                path.append((i - 1, j))
+            else:
+                path.append((i, j - 1))
+            cur_length -= 1
+    return path[::-1]
+
+
+def dtw_path_limited_warping_length(s1, s2, max_length):
+    r"""Compute Dynamic Time Warping (DTW) similarity measure between
+    (possibly multidimensional) time series under an upper bound constraint on
+    the resulting path length and return the path as well as the similarity
+    cost.
+
+    DTW is computed as the Euclidean distance between aligned time series,
+    i.e., if :math:`P` is the optimal alignment path:
+
+    .. math::
+
+        DTW(X, Y) = \sqrt{\sum_{(i, j) \in P} \|X_{i} - Y_{j}\|^2}
+
+    Note that this formula is still valid for the multivariate case.
+
+    It is not required that both time series share the same size, but they must
+    be the same dimension. DTW was originally presented in [1]_.
+    This constrained-length variant was introduced in [2]_.
+
+    Parameters
+    ----------
+    s1
+        A time series.
+
+    s2
+        Another time series.
+
+    max_length : int
+        Maximum allowed warping path length.
+        If greater than len(s1) + len(s2), then it is equivalent to
+        unconstrained DTW.
+        If lower than max(len(s1), len(s2)), no path can be found and a
+        ValueError is raised.
+
+    Returns
+    -------
+    list of integer pairs
+        Optimal path
+
+    float
+        Similarity score
+
+    Examples
+    --------
+    >>> path, cost = dtw_path_limited_warping_length([1, 2, 3],
+    ...                                              [1., 2., 2., 3.], 5)
+    >>> cost
+    0.0
+    >>> path
+    [(0, 0), (1, 1), (1, 2), (2, 3)]
+    >>> path, cost = dtw_path_limited_warping_length([1, 2, 3],
+    ...                                              [1., 2., 2., 3., 4.], 5)
+    >>> cost
+    1.0
+    >>> path
+    [(0, 0), (1, 1), (1, 2), (2, 3), (2, 4)]
+
+    See Also
+    --------
+    dtw_limited_warping_length : Get the similarity score for DTW with limited
+        warping path length
+    dtw_path : Get both the matching path and the similarity score for DTW
+
+    References
+    ----------
+    .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
+           spoken word recognition," IEEE Transactions on Acoustics, Speech and
+           Signal Processing, vol. 26(1), pp. 43--49, 1978.
+    .. [2] Z. Zhang, R. Tavenard, A. Bailly, X. Tang, P. Tang, T. Corpetti
+           Dynamic time warping under limited warping path length.
+           Information Sciences, vol. 393, pp. 91--107, 2017.
+    """
+    s1 = to_time_series(s1, remove_nans=True)
+    s2 = to_time_series(s2, remove_nans=True)
+
+    if max_length < max(s1.shape[0], s2.shape[0]):
+        raise ValueError("Cannot find a path of length {} to align given "
+                         "time series.".format(max_length))
+
+    accumulated_costs = _limited_warping_length_cost(s1, s2, max_length)
+    idx_pair = (s1.shape[0] - 1, s2.shape[0] - 1)
+    optimal_length = -1
+    optimal_cost = numpy.inf
+    for k, v in accumulated_costs[idx_pair].items():
+        if v < optimal_cost:
+            optimal_cost = v
+            optimal_length = k
+    path = _return_path_limited_warping_length(accumulated_costs,
+                                               idx_pair,
+                                               optimal_length)
+    return path, numpy.sqrt(optimal_cost)
+
+
 @njit()
 def _subsequence_cost_matrix(subseq, longseq):
     l1 = subseq.shape[0]
