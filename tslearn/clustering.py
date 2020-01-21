@@ -23,7 +23,7 @@ from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.utils import (to_time_series_dataset, to_time_series,
                            ts_size, check_dims)
 from tslearn.cycc import cdist_normalized_cc, y_shifted_sbd_vec
-
+from tslearn.bases import BaseModelPackage
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 # Kernel k-means is derived from https://gist.github.com/mblondel/6230787 by
@@ -244,7 +244,7 @@ def _check_initial_guess(init, n_clusters):
             " {} given".format(n_clusters, init.shape[0])
 
 
-class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
+class GlobalAlignmentKernelKMeans(BaseEstimator, BaseModelPackage, ClusterMixin):
     """Global Alignment Kernel K-means.
 
     Parameters
@@ -330,6 +330,17 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         self.n_jobs = n_jobs
         self.verbose = verbose
         self.random_state = random_state
+
+    def _is_fitted(self):
+        check_is_fitted(self, '_X_fit')
+        return True
+
+    def _get_model_params(self):
+        return {
+            '_X_fit': self._X_fit,
+            'sample_weight_': self.sample_weight_,
+            'labels_': self.labels_
+        }
 
     def _get_kernel(self, X, Y=None):
         return cdist_gak(X, Y, sigma=self.sigma, n_jobs=self.n_jobs,
@@ -505,7 +516,7 @@ class TimeSeriesCentroidBasedClusteringMixin:
             self._X_fit = None
 
 
-class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
+class TimeSeriesKMeans(BaseEstimator, BaseModelPackage, ClusterMixin,
                        TimeSeriesCentroidBasedClusteringMixin):
     """K-means clustering for time-series data.
 
@@ -652,6 +663,13 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
                 "removed in 0.4. Use `gamma` instead of `gamma_sdtw` as a "
                 "`metric_params` key to remove this warning.",
                 DeprecationWarning, stacklevel=2)
+
+    def _is_fitted(self):
+        check_is_fitted(self, ['cluster_centers_'])
+        return True
+
+    def _get_model_params(self):
+        return {'cluster_centers_': self.cluster_centers_}
 
     def _fit_one_init(self, X, x_squared_norms, rs):
         n_ts, _, d = X.shape
@@ -840,8 +858,8 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
             Index of the cluster each sample belongs to.
         """
         X = check_array(X, allow_nd=True, force_all_finite='allow-nan')
-        check_is_fitted(self, '_X_fit')
-        X = check_dims(X, self._X_fit)
+        check_is_fitted(self, 'cluster_centers_')
+        X = check_dims(X, self.cluster_centers_)
         X_ = to_time_series_dataset(X)
         return self._assign(X_, update_class_attributes=False)
 
@@ -849,7 +867,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         return {'allow_nan': True, 'allow_variable_length': True}
 
 
-class KShape(BaseEstimator, ClusterMixin,
+class KShape(BaseEstimator, BaseModelPackage, ClusterMixin,
              TimeSeriesCentroidBasedClusteringMixin):
     """KShape clustering for time series.
 
@@ -922,6 +940,7 @@ class KShape(BaseEstimator, ClusterMixin,
     .. [1] J. Paparrizos & L. Gravano. k-Shape: Efficient and Accurate
        Clustering of Time Series. SIGMOD 2015. pp. 1855-1870.
     """
+
     def __init__(self, n_clusters=3, max_iter=100, tol=1e-6, n_init=1,
                  verbose=False, random_state=None, init='random'):
         self.n_clusters = n_clusters
@@ -932,11 +951,40 @@ class KShape(BaseEstimator, ClusterMixin,
         self.verbose = verbose
         self.init = init
 
+    def _get_model_params(self):
+        """
+        Get the model parameters
+
+        Returns
+        -------
+        params : dict
+            Model parameters (attributes) that are sufficient
+            to recapitulate the model
+        """
+
+        return {'cluster_centers_': self.cluster_centers_,
+                'norms_': self.norms_,
+                'norms_centroids_': self.norms_centroids_,
+                }
+
+    def _is_fitted(self):
+        """
+        Check if the model has been fit.
+
+        Returns
+        -------
+        bool
+        """
+
+        check_is_fitted(self,
+                        ['cluster_centers_', 'norms_', 'norms_centroids_'])
+        return True
+
     def _shape_extraction(self, X, k):
         sz = X.shape[1]
         Xp = y_shifted_sbd_vec(self.cluster_centers_[k], X[self.labels_ == k],
                                norm_ref=-1,
-                               norms_dataset=self._norms[self.labels_ == k])
+                               norms_dataset=self.norms_[self.labels_ == k])
         S = numpy.dot(Xp[:, :, 0].T, Xp[:, :, 0])
         Q = numpy.eye(sz) - numpy.ones((sz, sz)) / sz
         M = numpy.dot(Q.T, numpy.dot(S, Q))
@@ -958,13 +1006,13 @@ class KShape(BaseEstimator, ClusterMixin,
             self.cluster_centers_[k] = self._shape_extraction(X, k)
         self.cluster_centers_ = TimeSeriesScalerMeanVariance(
             mu=0., std=1.).fit_transform(self.cluster_centers_)
-        self._norms_centroids = numpy.linalg.norm(self.cluster_centers_,
+        self.norms_centroids_ = numpy.linalg.norm(self.cluster_centers_,
                                                   axis=(1, 2))
 
     def _cross_dists(self, X):
         return 1. - cdist_normalized_cc(X, self.cluster_centers_,
-                                        norms1=self._norms,
-                                        norms2=self._norms_centroids,
+                                        norms1=self.norms_,
+                                        norms2=self.norms_centroids_,
                                         self_similarity=False)
 
     def _assign(self, X):
@@ -982,7 +1030,7 @@ class KShape(BaseEstimator, ClusterMixin,
         else:
             raise ValueError("Value %r for parameter 'init' is "
                              "invalid" % self.init)
-        self._norms_centroids = numpy.linalg.norm(self.cluster_centers_,
+        self.norms_centroids_ = numpy.linalg.norm(self.cluster_centers_,
                                                   axis=(1, 2))
         self._assign(X)
         old_inertia = numpy.inf
@@ -1027,14 +1075,14 @@ class KShape(BaseEstimator, ClusterMixin,
         self.inertia_ = numpy.inf
         self.cluster_centers_ = None
 
-        self._norms = 0.
-        self._norms_centroids = 0.
+        self.norms_ = 0.
+        self.norms_centroids_ = 0.
 
         self.n_iter_ = 0
 
         X_ = to_time_series_dataset(X)
         self._X_fit = X_
-        self._norms = numpy.linalg.norm(X_, axis=(1, 2))
+        self.norms_ = numpy.linalg.norm(X_, axis=(1, 2))
 
         _check_initial_guess(self.init, self.n_clusters)
 
@@ -1058,7 +1106,7 @@ class KShape(BaseEstimator, ClusterMixin,
             except EmptyClusterError:
                 if self.verbose:
                     print("Resumed because of empty cluster")
-        self._norms_centroids = numpy.linalg.norm(self.cluster_centers_,
+        self.norms_centroids_ = numpy.linalg.norm(self.cluster_centers_,
                                                   axis=(1, 2))
         self._post_fit(X_, best_correct_centroids, min_inertia)
         return self
@@ -1099,9 +1147,13 @@ class KShape(BaseEstimator, ClusterMixin,
             Index of the cluster each sample belongs to.
         """
         X = check_array(X, allow_nd=True)
-        check_is_fitted(self, '_X_fit')
+        check_is_fitted(self,
+                        ['cluster_centers_', 'norms_', 'norms_centroids_'])
+
         X_ = to_time_series_dataset(X)
-        X = check_dims(X, self._X_fit)
+
+        X = check_dims(X, self.cluster_centers_)
+
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
         dists = self._cross_dists(X_)
         return dists.argmin(axis=1)
