@@ -452,7 +452,7 @@ def _subgradient_update_barycenter(X, list_diag_v_k, list_w_k, weights_sum,
 def dtw_barycenter_averaging(X, barycenter_size=None, init_barycenter=None,
                              max_iter=30, tol=1e-5, weights=None,
                              metric_params=None,
-                             verbose=False):
+                             verbose=False, n_init=1):
     """DTW Barycenter Averaging (DBA) method estimated through
     Expectation-Maximization algorithm.
 
@@ -494,6 +494,11 @@ def dtw_barycenter_averaging(X, barycenter_size=None, init_barycenter=None,
 
     verbose : boolean (default: False)
         Whether to print information about the cost at each iteration or not.
+
+    n_init : int (default: 1)
+        Number of different initializations to be tried (useful only is
+        init_barycenter is set to None, otherwise, all trials will reach the
+        same performance)
 
     Returns
     -------
@@ -543,6 +548,92 @@ def dtw_barycenter_averaging(X, barycenter_size=None, init_barycenter=None,
        for Averaging in Dynamic Time Warping Spaces.
        Pattern Recognition, 74, 340-358.
     """
+    best_cost = numpy.inf
+    best_barycenter = None
+    for i in range(n_init):
+        if verbose:
+            print("Attempt {}".format(i + 1))
+        bary, loss = dtw_barycenter_averaging_one_init(
+            X=X,
+            barycenter_size=barycenter_size,
+            init_barycenter=init_barycenter,
+            max_iter=max_iter,
+            tol=tol,
+            weights=weights,
+            metric_params=metric_params,
+            verbose=verbose
+        )
+        if loss < best_cost:
+            best_cost = loss
+            best_barycenter = bary
+    return best_barycenter
+
+
+def dtw_barycenter_averaging_one_init(X, barycenter_size=None,
+                                      init_barycenter=None,
+                                      max_iter=30, tol=1e-5, weights=None,
+                                      metric_params=None,
+                                      verbose=False):
+    """DTW Barycenter Averaging (DBA) method estimated through
+    Expectation-Maximization algorithm.
+
+    DBA was originally presented in [1]_.
+    This implementation is based on a idea from [2]_ (Majorize-Minimize Mean
+    Algorithm).
+
+    Parameters
+    ----------
+    X : array-like, shape=(n_ts, sz, d)
+        Time series dataset.
+
+    barycenter_size : int or None (default: None)
+        Size of the barycenter to generate. If None, the size of the barycenter
+        is that of the data provided at fit
+        time or that of the initial barycenter if specified.
+
+    init_barycenter : array or None (default: None)
+        Initial barycenter to start from for the optimization process.
+
+    max_iter : int (default: 30)
+        Number of iterations of the Expectation-Maximization optimization
+        procedure.
+
+    tol : float (default: 1e-5)
+        Tolerance to use for early stopping: if the decrease in cost is lower
+        than this value, the
+        Expectation-Maximization procedure stops.
+
+    weights: None or array
+        Weights of each X[i]. Must be the same size as len(X).
+        If None, uniform weights are used.
+
+    metric_params: dict or None (default: None)
+        DTW constraint parameters to be used.
+        See :ref:`tslearn.metrics.dtw_path <fun-tslearn.metrics.dtw_path>` for
+        a list of accepted parameters
+        If None, no constraint is used for DTW computations.
+
+    verbose : boolean (default: False)
+        Whether to print information about the cost at each iteration or not.
+
+    Returns
+    -------
+    numpy.array of shape (barycenter_size, d) or (sz, d) if barycenter_size \
+            is None
+        DBA barycenter of the provided time series dataset.
+    float
+        Associated inertia
+
+    References
+    ----------
+    .. [1] F. Petitjean, A. Ketterlin & P. Gancarski. A global averaging method
+       for dynamic time warping, with applications to clustering. Pattern
+       Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
+
+    .. [2] D. Schultz and B. Jain. Nonsmooth Analysis and Subgradient Methods
+       for Averaging in Dynamic Time Warping Spaces.
+       Pattern Recognition, 74, 340-358.
+    """
     X_ = to_time_series_dataset(X)
     if barycenter_size is None:
         barycenter_size = X_.shape[1]
@@ -568,7 +659,7 @@ def dtw_barycenter_averaging(X, barycenter_size=None, init_barycenter=None,
             break
         else:
             cost_prev = cost
-    return barycenter
+    return barycenter, cost
 
 
 def dtw_barycenter_averaging_subgradient(X, barycenter_size=None,

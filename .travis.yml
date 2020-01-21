@@ -41,10 +41,14 @@ install:
 - conda config --set always_yes yes --set changeps1 no
 - conda update -q conda
 - conda info -a
-- conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy>=1.14 scipy tensorflow keras
+- conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy>=1.14 scipy tensorflow==1.* keras
   scikit-learn numba joblib>=0.12 pandas
 - source activate test-environment
-- pip install cesium pytest
+- pip install pytest
+- if [[ "$TRAVIS_PYTHON_VERSION" == 3.* ]];
+  then pip install cesium;
+  else export DO_NOT_TEST_CESIUM_CAST=1;
+  fi
 - if [[ "$NUMBA_DISABLE_JIT" == 1 ]]; then pip install coverage==4.3 "pytest-cov<2.6"; fi
 - pip install argparse
 - pip install codeclimate-test-reporter codecov
