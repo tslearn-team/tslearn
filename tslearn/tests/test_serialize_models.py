@@ -111,116 +111,95 @@ def _check_params_predict(model, X, test_methods):
 
 
 def test_serialize_global_alignment_kernel_kmeans():
-    seed = 0
-    numpy.random.seed(seed)
-    X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")
-    # Keep first 3 classes
-    X_train = X_train[y_train < 4]
-    numpy.random.shuffle(X_train)
-    # Keep only 50 time series
-    X_train = TimeSeriesScalerMeanVariance().fit_transform(X_train[:50])
-    sz = X_train.shape[1]
+    n, sz, d = 15, 10, 3
+    rng = numpy.random.RandomState(0)
+    X = rng.randn(n, sz, d)
 
-    gak_km = GlobalAlignmentKernelKMeans(n_clusters=3,
-                                         sigma=sigma_gak(X_train),
-                                         n_init=1,
-                                         verbose=True,
-                                         random_state=seed)
+    gak_km = GlobalAlignmentKernelKMeans(n_clusters=3, verbose=False,
+                                         max_iter=5)
+
 
     _check_not_fitted(gak_km)
 
-    gak_km.fit(X_train)
+    gak_km.fit(X)
 
-    _check_params_predict(gak_km, X_test, ['predict'])
+    _check_params_predict(gak_km, X, ['predict'])
 
 
 def test_serialize_timeserieskmeans():
-    seed = 0
-    numpy.random.seed(seed)
-    X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")
-    X_train = X_train[y_train < 4]  # Keep first 3 classes
-    numpy.random.shuffle(X_train)
-    # Keep only 50 time series
-    X_train = TimeSeriesScalerMeanVariance().fit_transform(X_train[:50])
-    # Make time series shorter
-    X_train = TimeSeriesResampler(sz=40).fit_transform(X_train)
-    sz = X_train.shape[1]
+    n, sz, d = 15, 10, 3
+    rng = numpy.random.RandomState(0)
+    X = rng.randn(n, sz, d)
 
     dba_km = TimeSeriesKMeans(n_clusters=3,
                               n_init=2,
                               metric="dtw",
                               verbose=True,
-                              max_iter_barycenter=10,
-                              random_state=seed)
+                              max_iter_barycenter=10)
 
     _check_not_fitted(dba_km)
 
-    dba_km.fit(X_train)
+    dba_km.fit(X)
 
-    _check_params_predict(dba_km, X_train, ['predict'])
+    _check_params_predict(dba_km, X, ['predict'])
 
     sdtw_km = TimeSeriesKMeans(n_clusters=3,
                                metric="softdtw",
                                metric_params={"gamma_sdtw": .01},
-                               verbose=True,
-                               random_state=seed)
+                               verbose=True)
 
     _check_not_fitted(sdtw_km)
 
-    sdtw_km.fit(X_train)
+    sdtw_km.fit(X)
 
-    _check_params_predict(sdtw_km, X_train, ['predict'])
+    _check_params_predict(sdtw_km, X, ['predict'])
 
 
 def test_serialize_kshape():
-    seed = 0
-    numpy.random.seed(seed)
-    X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")
-    # Keep first 3 classes
-    X_train = X_train[y_train < 4]
-    numpy.random.shuffle(X_train)
-    # Keep only 50 time series
-    X_train = TimeSeriesScalerMeanVariance().fit_transform(X_train[:50])
-    sz = X_train.shape[1]
+    n, sz, d = 15, 10, 3
+    rng = numpy.random.RandomState(0)
+    time_series = rng.randn(n, sz, d)
+    X = TimeSeriesScalerMeanVariance().fit_transform(time_series)
 
-    ks = KShape(n_clusters=3, verbose=True, random_state=seed)
+    ks = KShape(n_clusters=3, verbose=True)
 
     _check_not_fitted(ks)
 
-    ks.fit(X_train)
+    ks.fit(X)
 
-    _check_params_predict(ks, X_train, ['predict'])
+    _check_params_predict(ks, X, ['predict'])
 
 
 def test_serialize_knn():
-    seed = 0
-    numpy.random.seed(seed)
-    X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")
+    n, sz, d = 15, 10, 3
+    rng = numpy.random.RandomState(0)
+    X = rng.randn(n, sz, d)
+    y = rng.randint(low=0, high=3, size=n)
 
-    n_queries = 2
-    n_neighbors = 4
+    n_neighbors = 3
 
     knn = KNeighborsTimeSeries(n_neighbors=n_neighbors)
 
     _check_not_fitted(knn)
 
-    knn.fit(X_train)
+    knn.fit(X, y)
 
-    _check_params_predict(knn, X_test[:n_queries], ['kneighbors'])
+    _check_params_predict(knn, X, ['kneighbors'])
 
 
 def test_serialize_knn_classifier():
-    seed = 0
-    numpy.random.seed(seed)
-    X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")
+    n, sz, d = 15, 10, 3
+    rng = numpy.random.RandomState(0)
+    X = rng.randn(n, sz, d)
+    y = rng.randint(low=0, high=3, size=n)
 
     knc = KNeighborsTimeSeriesClassifier()
 
     _check_not_fitted(knc)
 
-    knc.fit(X_train, y_train)
+    knc.fit(X, y)
 
-    _check_params_predict(knc, X_test, ['predict'])
+    _check_params_predict(knc, X, ['predict'])
 
 
 def _get_random_walk():
