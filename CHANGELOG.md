@@ -46,6 +46,13 @@ other Python time series packages (`pyts`, `sktime`, `cesium`, `seglearn`,
 barycenter based on subgradient descent
 * `dtw_limited_warping_length` is provided as a way to compute DTW under upper
 bound constraint on warping path length
+* `BaseModelPackage` is a base class for serializing models to hdf5, json and 
+pickle. h5py is added to requirements for hdf5 support.
+* `BaseModelPackage` is used to add serialization functionality to the 
+following models: `GlobalAlignmentKernelKMeans`, `TimeSeriesKMeans`,
+`KShape`, `KNeighborsTimeSeries`, `KNeighborsTimeSeriesClassifier`,
+`PiecewiseAggregateApproximation`, `SymbolicAggregateApproximation`,
+and `OneD_SymbolicAggregateApproximation`
 
 ### Changed
  
