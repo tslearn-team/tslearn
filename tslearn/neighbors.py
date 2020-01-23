@@ -166,7 +166,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
     >>> knn2.kneighbors(return_distance=False)
     array([[2, 1],
            [2, 0],
-           [0, 1]])    
+           [0, 1]])
     """  # noqa: E501
     def __init__(self, n_neighbors=5, metric="dtw", metric_params=None,
                  n_jobs=None, verbose=0):
