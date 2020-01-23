@@ -1,5 +1,4 @@
 from abc import ABCMeta, abstractmethod
-from sklearn.base import BaseEstimator
 from sklearn.exceptions import NotFittedError
 from tslearn import hdftools
 import json
