@@ -63,8 +63,7 @@ def _bin_medians(n_bins, scale=1.):
                     scale=scale)
 
 
-class PiecewiseAggregateApproximation(TransformerMixin,
-                                      BaseEstimator, BaseModelPackage):
+class PiecewiseAggregateApproximation(TransformerMixin, BaseModelPackage):
     """Piecewise Aggregate Approximation (PAA) transformation.
 
     PAA was originally presented in [1]_.
@@ -127,6 +126,9 @@ class PiecewiseAggregateApproximation(TransformerMixin,
             return False
 
         return True
+
+    def get_params(self):
+        return {'n_segments': self.n_segments}
 
     def _get_model_params(self):
         return {'size_fitted_': self.size_fitted_}
@@ -339,6 +341,12 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation,
             return False
 
         return True
+
+    def get_params(self):
+        return {
+            'n_segments': self.n_segments,
+            'alphabet_size_avg': self.alphabet_size_avg
+        }
 
     def _get_model_params(self):
         p = {
@@ -557,6 +565,14 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
                 alphabet_size_avg=alphabet_size_avg)
         self.alphabet_size_slope = alphabet_size_slope
         self.sigma_l = sigma_l
+
+    def get_params(self):
+        return {
+            'n_segments': self.n_segments,
+            'alphabet_size_avg': self.alphabet_size_avg,
+            'alphabet_size_slope': self.alphabet_size_slope,
+            'sigma_l': self.sigma_l
+        }
 
     def _get_model_params(self):
         p = {
