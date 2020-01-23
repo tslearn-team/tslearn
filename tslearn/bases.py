@@ -31,7 +31,7 @@ class BaseModelPackage:
 
     @abstractmethod
     def get_params(self):
-        """Usually from `BaseEstimator`"""
+        """Get the hyper-parameters for this model"""
         pass
 
     def _to_dict(self, output=None):
