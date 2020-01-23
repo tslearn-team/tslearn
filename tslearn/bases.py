@@ -56,7 +56,8 @@ class BaseModelPackage:
             d['model_params'] = BaseModelPackage._listify(d['model_params'])
 
         elif output == 'hdf5':
-            d['hyper_params'] = BaseModelPackage._none_to_str(d['hyper_params'])
+            d['hyper_params'] = \
+                BaseModelPackage._none_to_str(d['hyper_params'])
 
         return d
 

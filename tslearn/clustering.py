@@ -244,7 +244,8 @@ def _check_initial_guess(init, n_clusters):
             " {} given".format(n_clusters, init.shape[0])
 
 
-class GlobalAlignmentKernelKMeans(BaseEstimator, BaseModelPackage, ClusterMixin):
+class GlobalAlignmentKernelKMeans(BaseEstimator, BaseModelPackage,
+                                  ClusterMixin):
     """Global Alignment Kernel K-means.
 
     Parameters

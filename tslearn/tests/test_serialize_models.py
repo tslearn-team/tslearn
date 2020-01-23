@@ -118,7 +118,6 @@ def test_serialize_global_alignment_kernel_kmeans():
     gak_km = GlobalAlignmentKernelKMeans(n_clusters=3, verbose=False,
                                          max_iter=5)
 
-
     _check_not_fitted(gak_km)
 
     gak_km.fit(X)
