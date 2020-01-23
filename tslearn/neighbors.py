@@ -142,6 +142,12 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
         ``-1`` means using all processors. See scikit-learns'
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`__
         for more details.
+        
+    Notes
+    -----
+        The training data are saved to disk if this model is
+        serialized and may result in a large model file if the training
+        dataset is large.
 
     Examples
     --------
@@ -160,7 +166,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
     >>> knn2.kneighbors(return_distance=False)
     array([[2, 1],
            [2, 0],
-           [0, 1]])
+           [0, 1]])    
     """  # noqa: E501
     def __init__(self, n_neighbors=5, metric="dtw", metric_params=None,
                  n_jobs=None, verbose=0):
@@ -332,7 +338,13 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         If it more than 10, all iterations are reported.
         `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`__
         for more details.
-
+    
+    Notes
+    -----
+        The training data are saved to disk if this model is
+        serialized and may result in a large model file if the training
+        dataset is large.
+    
     Examples
     --------
     >>> clf = KNeighborsTimeSeriesClassifier(n_neighbors=2, metric="dtw")

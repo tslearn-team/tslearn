@@ -302,6 +302,12 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, BaseModelPackage, ClusterMixin)
     n_iter_ : int
         The number of iterations performed during fit.
 
+    Notes
+    -----
+        The training data are saved to disk if this model is
+        serialized and may result in a large model file if the training
+        dataset is large.
+
     Examples
     --------
     >>> from tslearn.generators import random_walks
