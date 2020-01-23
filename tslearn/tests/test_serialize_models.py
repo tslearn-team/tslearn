@@ -13,6 +13,9 @@ from tslearn.neighbors import KNeighborsTimeSeries, \
     KNeighborsTimeSeriesClassifier
 from tslearn.clustering import KShape, TimeSeriesKMeans, \
     GlobalAlignmentKernelKMeans
+from tslearn.generators import random_walks
+from tslearn.piecewise import PiecewiseAggregateApproximation, \
+    SymbolicAggregateApproximation, OneD_SymbolicAggregateApproximation
 
 
 tmp_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tmp')
@@ -67,7 +70,7 @@ def _check_not_fitted(model):
             )
 
 
-def _check_params_predict(model, X):
+def _check_params_predict(model, X, test_methods):
     # serialize to all all_formats
     for fmt in all_formats:
         getattr(model, "to_{}".format(fmt))(
@@ -88,8 +91,11 @@ def _check_params_predict(model, X):
         # make sure it's restored to the same class
         assert isinstance(sm, model.__class__)
 
-        # test that saved model gives same predictions
-        numpy.testing.assert_equal(model.predict(X), sm.predict(X))
+        # test that predictions/transforms etc. are the same
+        for method in test_methods:
+            m1 = getattr(model, method)
+            m2 = getattr(sm, method)
+            numpy.testing.assert_equal(m1(X), m2(X))
 
         # check that the model-params are the same
         model_params = model._get_model_params()
@@ -117,7 +123,7 @@ def test_serialize_global_alignment_kernel_kmeans():
 
     gak_km = GlobalAlignmentKernelKMeans(n_clusters=3,
                                          sigma=sigma_gak(X_train),
-                                         n_init=20,
+                                         n_init=1,
                                          verbose=True,
                                          random_state=seed)
 
@@ -125,7 +131,7 @@ def test_serialize_global_alignment_kernel_kmeans():
 
     gak_km.fit(X_train)
 
-    _check_params_predict(gak_km, X_test)
+    _check_params_predict(gak_km, X_test, ['predict'])
 
 
 def test_serialize_timeserieskmeans():
@@ -151,7 +157,7 @@ def test_serialize_timeserieskmeans():
 
     dba_km.fit(X_train)
 
-    _check_params_predict(dba_km, X_train)
+    _check_params_predict(dba_km, X_train, ['predict'])
 
     sdtw_km = TimeSeriesKMeans(n_clusters=3,
                                metric="softdtw",
@@ -163,7 +169,7 @@ def test_serialize_timeserieskmeans():
 
     sdtw_km.fit(X_train)
 
-    _check_params_predict(sdtw_km, X_train)
+    _check_params_predict(sdtw_km, X_train, ['predict'])
 
 
 def test_serialize_kshape():
@@ -183,7 +189,7 @@ def test_serialize_kshape():
 
     ks.fit(X_train)
 
-    _check_params_predict(ks, X_train)
+    _check_params_predict(ks, X_train, ['predict'])
 
 
 def test_serialize_knn():
@@ -200,43 +206,7 @@ def test_serialize_knn():
 
     knn.fit(X_train)
 
-    # serialize to all all_formats
-    for fmt in all_formats:
-        getattr(knn, "to_{}".format(fmt))(
-            os.path.join(
-                tmp_dir, "{}.{}".format(knn.__class__.__name__, fmt)
-            )
-        )
-
-    # loaded models should have same model params
-    # and provide the same predictions
-    for fmt in all_formats:
-        sm = getattr(knn, "from_{}".format(fmt))(
-            os.path.join(
-                tmp_dir, "{}.{}".format(knn.__class__.__name__, fmt)
-            )
-        )
-
-        # make sure it's restored to the same class
-        assert isinstance(sm, knn.__class__)
-
-        # test that saved model gives same predictions
-        numpy.testing.assert_equal(
-            knn.kneighbors(X_test[:n_queries], return_distance=False),
-            sm.kneighbors(X_test[:n_queries], return_distance=False)
-        )
-
-        # check that the model-params are the same
-        model_params = knn._get_model_params()
-        for p in model_params.keys():
-            numpy.testing.assert_equal(getattr(knn, p), getattr(sm, p))
-
-        # check that hyper-params are the same
-        hyper_params = knn.get_params()
-        for p in hyper_params .keys():
-            numpy.testing.assert_equal(getattr(knn, p), getattr(sm, p))
-
-    clear_tmp()
+    _check_params_predict(knn, X_test[:n_queries], ['kneighbors'])
 
 
 def test_serialize_knn_classifier():
@@ -250,4 +220,60 @@ def test_serialize_knn_classifier():
 
     knc.fit(X_train, y_train)
 
-    _check_params_predict(knc, X_test)
+    _check_params_predict(knc, X_test, ['predict'])
+
+
+def _get_random_walk():
+    numpy.random.seed(0)
+    # Generate a random walk time series
+    n_ts, sz, d = 1, 100, 1
+    dataset = random_walks(n_ts=n_ts, sz=sz, d=d)
+    scaler = TimeSeriesScalerMeanVariance(mu=0., std=1.)
+    return scaler.fit_transform(dataset)
+
+
+def test_serialize_paa():
+    X = _get_random_walk()
+    # PAA transform (and inverse transform) of the data
+    n_paa_segments = 10
+    paa = PiecewiseAggregateApproximation(n_segments=n_paa_segments)
+
+    _check_not_fitted(paa)
+
+    paa.fit(X)
+
+    _check_params_predict(paa, X, ['transform'])
+
+
+def test_serialize_sax():
+    n_paa_segments = 10
+    n_sax_symbols = 8
+    sax = SymbolicAggregateApproximation(n_segments=n_paa_segments,
+                                         alphabet_size_avg=n_sax_symbols)
+
+    _check_not_fitted(sax)
+
+    X = _get_random_walk()
+
+    sax.fit(X)
+
+    _check_params_predict(sax, X, ['transform'])
+
+
+def test_serialize_1dsax():
+
+    n_paa_segments = 10
+    n_sax_symbols_avg = 8
+    n_sax_symbols_slope = 8
+
+    one_d_sax = OneD_SymbolicAggregateApproximation(
+        n_segments=n_paa_segments,
+        alphabet_size_avg=n_sax_symbols_avg,
+        alphabet_size_slope=n_sax_symbols_slope)
+
+    _check_not_fitted(one_d_sax)
+
+    X = _get_random_walk()
+    one_d_sax.fit(X)
+
+    _check_params_predict(one_d_sax, X, ['transform'])
