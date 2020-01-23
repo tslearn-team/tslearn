@@ -135,6 +135,7 @@ class BaseModelPackage:
     def to_hdf5(self, path):
         """
         Save model to a HDF5 file.
+        Requires ``h5py`` http://docs.h5py.org/
 
         Parameters
         ----------
@@ -156,6 +157,7 @@ class BaseModelPackage:
     def from_hdf5(cls, path):
         """
         Load model from a HDF5 file.
+        Requires ``h5py`` http://docs.h5py.org/
 
         Parameters
         ----------

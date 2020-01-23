@@ -22,6 +22,7 @@ numba
 ```
 
 If you plan to use the `shapelets` module, `keras` and `tensorflow` should also be installed.
+`h5py` is required for reading or writing models using the hdf5 file format.
 
 # Installation
 
