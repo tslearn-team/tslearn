@@ -3,8 +3,8 @@
 Model Persistence
 =================
 
-Many tslearn models can be saved to disk and used for predictions 
-at a later time. This can be particularly useful when a model takes 
+Many tslearn models can be saved to disk and used for predictions
+at a later time. This can be particularly useful when a model takes
 a long time to train.
 
 **Available formats:** hdf5, json, pickle
@@ -38,9 +38,9 @@ Load a model from disk::
 
 .. note::
 
-    For the following models the training data are saved to disk and 
-    may result in a large model file if the trainig dataset is large: 
-    ``KNeighborsTimeSeries``, ``KNeighborsTimeSeriesClassifier``, and 
+    For the following models the training data are saved to disk and
+    may result in a large model file if the trainig dataset is large:
+    ``KNeighborsTimeSeries``, ``KNeighborsTimeSeriesClassifier``, and
     ``GlobalAlignmentKernelKMeans``
 
 """
