@@ -58,8 +58,8 @@ def _dicts_to_group(h5file, path, d, raise_meta_fail):
                 try:
                     h5file[path + key] = item
                     # h5file[path + key].attrs['dtype'] = item.dtype.str
-                except:
-                    msg = "numpy dtype 'O' for item: {}" \
+                except TypeError:
+                    msg = "numpy dtype 'O' for item:\n{}\n" \
                           "not supported by HDF5\n{}" \
                           "".format(item, traceback.format_exc())
 

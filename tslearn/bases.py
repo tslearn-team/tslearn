@@ -1,9 +1,21 @@
 from abc import ABCMeta, abstractmethod
 from sklearn.exceptions import NotFittedError
-from tslearn import hdftools
 import json
 import pickle
 import numpy as np
+from warnings import warn
+
+h5py_msg = 'h5py not installed, hdf5 features will not be supported.\n'\
+           'Install h5py to use hdf5 features: http://docs.h5py.org/'
+
+try:
+    import h5py
+except ImportError:
+    warn(h5py_msg)
+    HDF5_INSTALLED = False
+else:
+    from tslearn import hdftools
+    HDF5_INSTALLED = True
 
 
 class BaseModelPackage:
@@ -134,6 +146,8 @@ class BaseModelPackage:
         FileExistsError
             If a file with the same path already exists.
         """
+        if not HDF5_INSTALLED:
+            raise ImportError(h5py_msg)
 
         d = self._to_dict(output='hdf5')
         hdftools.save_dict(d, path, 'data')
@@ -152,6 +166,8 @@ class BaseModelPackage:
         -------
         Model instance
         """
+        if not HDF5_INSTALLED:
+            raise ImportError(h5py_msg)
 
         model = hdftools.load_dict(path, 'data')
 
