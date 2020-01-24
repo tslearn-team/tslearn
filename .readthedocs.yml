@@ -21,6 +21,8 @@ python:
   version: 3.7
   install:
     - requirements: tslearn/docs/requirements_rtd.txt
+    - method: setuptools
+      path: .
 
 build:
   image: latest
