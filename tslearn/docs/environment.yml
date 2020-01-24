@@ -1,0 +1,23 @@
+name: tslearn
+
+channels:
+    - anaconda
+
+dependencies:
+    - python==3.7
+    - tensorflow<2
+    - keras
+    - Cython
+    - numpy
+    - scipy
+    - scikit-learn
+    - numba
+    - pip:
+        - sphinx>=1.6.1
+        - ipykernel
+        - nbsphinx
+        - sphinx-gallery
+        - pillow
+        - Pygments
+        - sphinx_bootstrap_theme
+        - numpydoc
