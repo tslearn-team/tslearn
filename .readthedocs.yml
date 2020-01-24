@@ -19,9 +19,8 @@ formats: all
 # Optionally set the version of Python and requirements required to build your docs
 python:
   version: 3.7
-
-conda:
-  environment: tslearn/docs/environment.yml
+  install:
+    - requirements: tslearn/docs/requirements_rtd.txt
 
 build:
   image: latest
