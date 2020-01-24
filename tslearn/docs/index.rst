@@ -6,10 +6,14 @@
 ``tslearn``'s documentation
 ===========================
 
-``tslearn`` is a Python package that provides machine learning tools for the analysis of time series.
-This package builds on (and hence depends on) ``scikit-learn``, ``numpy`` and ``scipy`` libraries.
+``tslearn`` is a Python package that provides machine learning tools for the
+analysis of time series.
+This package builds on (and hence depends on) ``scikit-learn``, ``numpy`` and
+``scipy`` libraries.
 
-If you plan to use the ``shapelets`` module from ``tslearn``, ``keras`` and ``tensorflow`` should also be installed.
+If you plan to use the ``shapelets`` module from ``tslearn``, ``keras`` and
+``tensorflow`` should also be installed.
+`h5py` is required for reading or writing models using the hdf5 file format.
 
 Installation
 ------------
@@ -41,7 +45,8 @@ When using PyPI, C++ build tools should be available to perform installation.
 Using latest github-hosted version
 ``````````````````````````````````
 
-If you want to get ``tslearn``'s latest version, you can refer to the repository hosted at github:
+If you want to get ``tslearn``'s latest version, you can refer to the
+repository hosted at github:
 
 .. code-block:: bash
   
@@ -73,6 +78,7 @@ From here, you can navigate to:
 
     gettingstarted
     variablelength
+    dtw
     reference
     auto_examples/index
 
