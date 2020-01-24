@@ -22,12 +22,9 @@ numba
 ```
 
 If you plan to use the `shapelets` module, `keras` and `tensorflow` should also be installed.
+`h5py` is required for reading or writing models using the hdf5 file format.
 
 # Installation
-
-## Pre-requisites 
-
-C++ build tools should be available to perform installation.
 
 ## Using conda
 
@@ -37,6 +34,10 @@ conda install -c conda-forge tslearn
 ```
 
 ## Using PyPI
+
+### Pre-requisites 
+
+When using PyPI, C++ build tools should be available to perform installation.
 
 Using `pip` should also work fine:
 ```bash
@@ -54,8 +55,17 @@ hosted at github:
 pip install git+https://github.com/rtavenar/tslearn.git
 ```
 
-In this case, you should have `numpy`, `cython` and C++ build tools available
-at build time.
+## Troubleshooting
+
+It seems on some platforms `Cython` dependency does not install properly.
+If you experiment such an issue, try installing it with the following command:
+
+```bash
+pip install cython
+```
+
+before you start installing `tslearn`.
+If it still does not work, we suggest you switch to `conda` installation.
 
 # Documentation and API reference
 

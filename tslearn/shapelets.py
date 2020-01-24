@@ -17,7 +17,10 @@ from keras.initializers import Initializer
 import keras.backend as K
 from keras.engine import InputSpec
 import numpy
-from tensorflow import set_random_seed
+try:
+    from tensorflow.compat.v1 import set_random_seed
+except ImportError:
+    from tensorflow import set_random_seed
 
 import warnings
 
@@ -117,7 +120,7 @@ class LocalSquaredDistanceLayer(Layer):
         if X is None or K.backend() != "tensorflow":
             self.initializer = "uniform"
         else:
-            self.initializer = KMeansShapeletInitializer(X)
+            self.initializer = KMeansShapeletInitializer(X)  # TODO: v2-compatible initializer
         super(LocalSquaredDistanceLayer, self).__init__(**kwargs)
         self.input_spec = InputSpec(ndim=3)
 
@@ -223,8 +226,12 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
     n_shapelets_per_size: dict (default: None)
         Dictionary giving, for each shapelet size (key),
         the number of such shapelets to be trained (value)
-    max_iter: int (default: 100)
+    max_iter: int (default: 10,000)
         Number of training epochs.
+
+        .. versionchanged:: 0.3
+            default value for max_iter is set to 10,000 instead of 100
+
     batch_size: int (default: 256)
         Batch size to be used.
     verbose_level: {0, 1, 2} (default: 0)
@@ -297,7 +304,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
     .. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
     """
     def __init__(self, n_shapelets_per_size=None,
-                 max_iter=100,
+                 max_iter=10000,
                  batch_size=256,
                  verbose=0,
                  verbose_level=None,
@@ -316,6 +323,13 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         self.shapelet_length = shapelet_length
         self.total_lengths = total_lengths
         self.random_state = random_state
+
+        if max_iter == 10000:
+            warnings.warn("The default value of max_iter has changed "
+                          "from 100 to 10000 starting from version 0.3 for "
+                          "the model to be more likely to converge. "
+                          "Explicitly set your max_iter value to "
+                          "avoid this warning.", FutureWarning)
 
     @property
     def _n_shapelet_sizes(self):
@@ -526,6 +540,25 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         -------
         array of shape=(n_ts, n_shapelets)
             Location of the shapelet matches for the provided time series.
+
+        Examples
+        --------
+        >>> from tslearn.generators import random_walk_blobs
+        >>> X = numpy.zeros((3, 10, 1))
+        >>> X[0, 4:7, 0] = numpy.array([1, 2, 3])
+        >>> y = [1, 0, 0]
+        >>> # Data is all zeros except a motif 1-2-3 in the first time series
+        >>> clf = ShapeletModel(n_shapelets_per_size={3: 1}, max_iter=0,
+        ...                     verbose=0)
+        >>> _ = clf.fit(X, y)
+        >>> weights_shapelet = [
+        ...     numpy.array([[1, 2, 3]])
+        ... ]
+        >>> clf.set_weights(weights_shapelet, layer_name="shapelets_0_0")
+        >>> clf.locate(X)
+        array([[4],
+               [0],
+               [0]])
         """
         X = check_dims(X, X_fit=self._X_fit)
         X = check_array(X, allow_nd=True)
@@ -636,11 +669,54 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         ...                     verbose=0)
         >>> clf.fit(X, y).get_weights("classification")[0].shape
         (5, 3)
+        >>> clf.get_weights("shapelets_0_0")[0].shape
+        (5, 10)
+        >>> len(clf.get_weights("shapelets_0_0"))
+        1
         """
         if layer_name is None:
             return self.model_.get_weights()
         else:
             return self.model_.get_layer(layer_name).get_weights()
+
+    def set_weights(self, weights, layer_name=None):
+        """Set model weights (or weights for a given layer if `layer_name`
+        is provided).
+
+        Parameters
+        ----------
+        weights: list of ndarrays
+            Weights to set for the model / target layer
+
+        layer_name: str or None (default: None)
+            Name of the layer for which  weights should be set.
+            If None, all model weights are set.
+            Available layer names with weights are:
+
+            - "shapelets_i_j" with i an integer for the shapelet id and j an
+              integer for the dimension
+            - "classification" for the final classification layer
+
+        Examples
+        --------
+        >>> from tslearn.generators import random_walk_blobs
+        >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=16, d=1, n_blobs=3)
+        >>> clf = ShapeletModel(n_shapelets_per_size={3: 1}, max_iter=0,
+        ...                     verbose=0)
+        >>> _ = clf.fit(X, y)
+        >>> weights_shapelet = [
+        ...     numpy.array([[1, 2, 3]])
+        ... ]
+        >>> clf.set_weights(weights_shapelet, layer_name="shapelets_0_0")
+        >>> clf.shapelets_as_time_series_
+        array([[[1.],
+                [2.],
+                [3.]]])
+        """
+        if layer_name is None:
+            return self.model_.set_weights(weights)
+        else:
+            return self.model_.get_layer(layer_name).set_weights(weights)
 
     def _get_tags(self):
         # This is added due to the fact that there are small rounding
@@ -661,8 +737,12 @@ class SerializableShapeletModel(ShapeletModel):
     n_shapelets_per_size: dict (default: None)
         Dictionary giving, for each shapelet size (key),
         the number of such shapelets to be trained (value)
-    max_iter: int (default: 100)
+    max_iter: int (default: 10,000)
         Number of training epochs.
+
+        .. versionchanged:: 0.3
+            default value for max_iter is set to 10,000 instead of 100
+
     batch_size: int (default:256)
         Batch size to be used.
     verbose_level: {0, 1, 2} (default: 0)
@@ -739,7 +819,7 @@ class SerializableShapeletModel(ShapeletModel):
     .. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
     """
     def __init__(self, n_shapelets_per_size=None,
-                 max_iter=100,
+                 max_iter=10000,
                  batch_size=256,
                  verbose=0,
                  verbose_level=None,

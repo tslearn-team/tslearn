@@ -20,7 +20,9 @@ import sphinx_bootstrap_theme
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 # Uncomment for local build
-# sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
+on_rtd = os.environ.get('READTHEDOCS') == 'True'
+if not on_rtd:
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
 
 # -- General configuration ------------------------------------------------
 

@@ -39,6 +39,21 @@ def test_shapelets():
         np.testing.assert_allclose(shp,
                                    to_time_series(shp_bis, remove_nans=True))
 
+    # Test set_weights / get_weights
+    clf = ShapeletModel(n_shapelets_per_size={2: 5},
+                        max_iter=1,
+                        verbose=0,
+                        random_state=0)
+    clf.fit(time_series, y)
+    preds_before = clf.predict_proba(time_series)
+    weights = clf.get_weights()
+    # Change number of iterations, then refit, then set weights
+    clf.max_iter *= 2
+    clf.fit(time_series, y)
+    clf.set_weights(weights)
+    np.testing.assert_allclose(preds_before,
+                               clf.predict_proba(time_series))
+
 
 def test_serializable_shapelets():
     pytest.importorskip('keras')
