@@ -1,5 +1,5 @@
-Methods for variable-length time series datasets
-================================================
+Methods for variable-length time series
+=======================================
 
 This page lists machine learning methods in `tslearn` that are able to deal
 with datasets containing time series of different lengths.

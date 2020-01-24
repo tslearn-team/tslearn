@@ -114,6 +114,14 @@ as illustrated below:
     :math:`n = m = 10, r = 3`. Diagonal is marked in grey for better
     readability.
 
+The corresponding code would be:
+
+.. code-block:: python
+
+    from tslearn.metrics import dtw
+    cost = dtw(x, y, global_constraint="sakoe_chiba", sakoe_chiba_radius=3)
+
+
 Second, the Itakura parallelogram sets a maximum slope :math:`s` for alignment
 paths, which leads to a parallelogram-shaped constraint:
 
@@ -123,6 +131,14 @@ paths, which leads to a parallelogram-shaped constraint:
 
     :math:`n = m = 10, s = 2`. Diagonal is marked in grey for better
     readability.
+
+The corresponding code would be:
+
+.. code-block:: python
+
+    from tslearn.metrics import dtw
+    cost = dtw(x, y, global_constraint="itakura", itakura_max_slope=2.)
+
 
 Alternatively, one can put an upper bound on the warping path length so as to
 discard complex paths, as described in [2]_:
