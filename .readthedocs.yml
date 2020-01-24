@@ -21,7 +21,7 @@ python:
   version: 3.7
 
 conda:
-  file: tslearn/docs/environment.yml
+  environment: tslearn/docs/environment.yml
 
 build:
   image: latest
