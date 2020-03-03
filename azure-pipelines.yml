@@ -35,6 +35,7 @@ steps:
     set -e
     # avoid CPU oversubscription
     export OMP_NUM_THREADS=2
+    export NUMBA_NUM_THREADS=2
     python -m pip install pytest pytest-azurepipelines
-    python -m pytest tslearn/ --durations 10
+    python -m pytest -v --durations 10 tslearn/
   displayName: 'Test'
