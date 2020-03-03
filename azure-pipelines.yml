@@ -33,6 +33,6 @@ steps:
 
 - script: |
     set -e
-    pip install pytest pytest-azurepipelines
-    pytest
+    python -m pip install pytest pytest-azurepipelines
+    python -m pytest tslearn/
   displayName: 'Test'
