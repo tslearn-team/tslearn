@@ -26,18 +26,21 @@ steps:
   displayName: 'Use Python $(python.version)'
 
 - script: |
-    set -e
+    set -xe
     python --version
     python -m pip install --upgrade pip
-    python -m pip install -r requirements.txt
+    # disable builds isolation in pip to allow installing numba
+    # for python 2.7
+    python -m pip install --no-build-isolation -r requirements.txt
   displayName: 'Install dependencies'
 
 - script: |
+    set -xe
     pip install -e .
   displayName: 'Install tslearn'
 
 - script: |
-    set -e
+    set -xe
     # avoid CPU oversubscription
     export OMP_NUM_THREADS=2
     export NUMBA_NUM_THREADS=2
