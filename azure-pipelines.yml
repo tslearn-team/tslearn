@@ -20,17 +20,19 @@ strategy:
       python.version: '3.7'
 
 steps:
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '$(python.version)'
-  displayName: 'Use Python $(python.version)'
-
 - script: |
+    set -e
+    python --version
     python -m pip install --upgrade pip
-    pip install -r requirements.txt
+    python -m pip install -r requirements.txt
   displayName: 'Install dependencies'
 
 - script: |
+    pip install -e .
+  displayName: 'Install tslearn'
+
+- script: |
+    set -e
     pip install pytest pytest-azurepipelines
     pytest
-  displayName: 'pytest'
+  displayName: 'Test'
