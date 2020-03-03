@@ -36,6 +36,6 @@ steps:
     # avoid CPU oversubscription
     export OMP_NUM_THREADS=2
     export NUMBA_NUM_THREADS=2
-    python -m pip install pytest pytest-azurepipelines
-    python -m pytest -v --durations 10 tslearn/
+    python -m pip install pytest pytest-azurepipelines pytest-timeout
+    python -m pytest -v --durations 10 --timeout 30 tslearn/
   displayName: 'Test'
