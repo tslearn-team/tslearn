@@ -2,6 +2,8 @@ import numpy as np
 import pickle
 import os
 
+import pytest
+
 import tslearn.utils
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -46,6 +48,7 @@ def test_label_categorizer():
 
 
 def test_conversions():
+    pytest.importorskip('pandas')
     n, sz, d = 15, 10, 3
     rng = np.random.RandomState(0)
     tslearn_dataset = rng.randn(n, sz, d)

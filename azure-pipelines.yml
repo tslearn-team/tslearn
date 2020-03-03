@@ -42,5 +42,5 @@ steps:
     export OMP_NUM_THREADS=2
     export NUMBA_NUM_THREADS=2
     python -m pip install pytest pytest-azurepipelines pytest-timeout
-    python -m pytest -v --durations 10 --timeout 30 tslearn/
+    python -m pytest -v --durations 10 --timeout 90 tslearn/
   displayName: 'Test'
