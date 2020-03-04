@@ -5,7 +5,7 @@ import traceback
 from warnings import warn
 
 
-def save_dict(d, filename, group, raise_type_fail=True):
+def save_dict(d, filename, group, raise_type_fail=True, over_write=False):
     """
     Recursively save a dict to an hdf5 group in a new file.
 
@@ -24,6 +24,9 @@ def save_dict(d, filename, group, raise_type_fail=True):
         If True: raise an exception if saving a part of the dict fails.
         If False: prints a warning instead and saves the
         object's __str__() return value.
+        
+    over_write : bool (default: False)
+        If True: overwrite the existing file in given filename
 
     Returns
     -------
