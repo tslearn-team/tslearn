@@ -132,7 +132,7 @@ class BaseModelPackage:
 
         return inst
 
-    def to_hdf5(self, path):
+    def to_hdf5(self, path, over_write=False):
         """
         Save model to a HDF5 file.
         Requires ``h5py`` http://docs.h5py.org/
@@ -141,6 +141,9 @@ class BaseModelPackage:
         ----------
         path : str
             Full file path. File must not already exist.
+        
+        over_write : bool (default: False)
+            If True: overwrite the existing file in given path.
 
         Raises
         ------
@@ -151,7 +154,7 @@ class BaseModelPackage:
             raise ImportError(h5py_msg)
 
         d = self._to_dict(output='hdf5')
-        hdftools.save_dict(d, path, 'data')
+        hdftools.save_dict(d, path, 'data', over_write)
 
     @classmethod
     def from_hdf5(cls, path):
