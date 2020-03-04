@@ -35,14 +35,14 @@ def save_dict(d, filename, group, raise_type_fail=True, over_write=False):
     Raises
     ------
     FileExistsError
-        If the path specified by the `filename` parameter already exists.
+        If the path specified by the `filename` parameter already exists and over_write is set to False.
 
     TypeError
         If a particular entry within the dict cannot be saved to hdf5 AND
         the argument `raise_type_fail` is set to `True`
     """
 
-    if os.path.isfile(filename):
+    if not over_write and os.path.isfile(filename):
         raise FileExistsError
 
     with h5py.File(filename, 'w') as h5file:
