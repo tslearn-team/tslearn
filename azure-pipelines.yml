@@ -9,15 +9,14 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 strategy:
-  matrix:
-    Python27:
-      python.version: '2.7'
     Python35:
       python.version: '3.5'
     Python36:
       python.version: '3.6'
     Python37:
       python.version: '3.7'
+    Python38:
+      python.version: '3.8'
 
 steps:
 - task: UsePythonVersion@0
@@ -45,5 +44,5 @@ steps:
     export OMP_NUM_THREADS=2
     export NUMBA_NUM_THREADS=2
     python -m pip install pytest pytest-azurepipelines pytest-timeout
-    python -m pytest -v --durations 10 --timeout 90 tslearn/
+    python -m pytest -v --durations 10 --timeout 90 tslearn/ -k 'not (test_all_estimators and Shapelet)'
   displayName: 'Test'
