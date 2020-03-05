@@ -9,6 +9,7 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 strategy:
+  matrix:
     Python35:
       python.version: '3.5'
     Python36:
