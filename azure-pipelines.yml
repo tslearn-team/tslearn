@@ -5,7 +5,7 @@
 
 jobs:
 
-- job: 'manylinux2010'
+- job: 'linux'
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
@@ -51,11 +51,11 @@ jobs:
   strategy:
     matrix:
       Python36:
+        python.version: '3.5'
+      Python36:
         python.version: '3.6'
       Python37:
         python.version: '3.7'
-      Python38:
-        python.version: '3.8'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -120,5 +120,5 @@ jobs:
   
   - script: |
       python -m pip install pytest pytest-azurepipelines pytest-timeout
-      python -m pytest -v --durations 10 --timeout 90 tslearn/ -k 'not (test_all_estimators and Shapelet)'
+      python -m pytest -v --durations 10 --timeout 90 tslearn/ -k "not (test_all_estimators and Shapelet)"
     displayName: 'Test'
