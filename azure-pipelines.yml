@@ -50,7 +50,7 @@ jobs:
     vmImage: 'macOS-10.14'
   strategy:
     matrix:
-      Python36:
+      Python35:
         python.version: '3.5'
       Python36:
         python.version: '3.6'
