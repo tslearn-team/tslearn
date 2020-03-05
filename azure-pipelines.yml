@@ -3,47 +3,122 @@
 # Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
 # https://docs.microsoft.com/azure/devops/pipelines/languages/python
 
-trigger:
-- master
+jobs:
 
-pool:
-  vmImage: 'ubuntu-latest'
-strategy:
-  matrix:
-    Python35:
-      python.version: '3.5'
-    Python36:
-      python.version: '3.6'
-    Python37:
-      python.version: '3.7'
-    Python38:
-      python.version: '3.8'
+- job: 'manylinux2010'
+  pool:
+    vmImage: 'ubuntu-latest'
+  strategy:
+    matrix:
+      Python35:
+        python.version: '3.5'
+      Python36:
+        python.version: '3.6'
+      Python37:
+        python.version: '3.7'
+  variables:
+    OMP_NUM_THREADS: '2'
+    NUMBA_NUM_THREADS: '2'
+  
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+    displayName: 'Use Python $(python.version)'
+  
+  - script: |
+      set -xe
+      python --version
+      python -m pip install --upgrade pip
+      python -m pip install -r requirements.txt
+    displayName: 'Install dependencies'
+  
+  - script: |
+      set -xe
+      pip install -e .
+    displayName: 'Install tslearn'
+  
+  - script: |
+      set -xe
+      python -m pip install pytest pytest-azurepipelines pytest-timeout
+      python -m pytest -v --durations 10 --timeout 90 tslearn/ -k 'not (test_all_estimators and Shapelet)'
+    displayName: 'Test'
 
-steps:
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '$(python.version)'
-  displayName: 'Use Python $(python.version)'
 
-- script: |
-    set -xe
-    python --version
-    python -m pip install --upgrade pip
-    # disable builds isolation in pip to allow installing numba
-    # for python 2.7
-    python -m pip install --no-build-isolation -r requirements.txt
-  displayName: 'Install dependencies'
+- job: 'macOS1014'
+  pool:
+    vmImage: 'macOS-10.14'
+  strategy:
+    matrix:
+      Python36:
+        python.version: '3.6'
+      Python37:
+        python.version: '3.7'
+      Python38:
+        python.version: '3.8'
+  variables:
+    OMP_NUM_THREADS: '2'
+    NUMBA_NUM_THREADS: '2'
 
-- script: |
-    set -xe
-    pip install -e .
-  displayName: 'Install tslearn'
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+    displayName: 'Use Python $(python.version)'
+  
+  - script: |
+      set -xe
+      python --version
+      python -m pip install --upgrade pip
+      python -m pip install -r requirements.txt
+    displayName: 'Install dependencies'
+  
+  - script: |
+      set -xe
+      pip install -e .
+    displayName: 'Install tslearn'
+  
+  - script: |
+      set -xe
+      python -m pip install pytest pytest-azurepipelines pytest-timeout
+      python -m pytest -v --durations 10 --timeout 90 tslearn/ -k 'not (test_all_estimators and Shapelet)'
+    displayName: 'Test'
 
-- script: |
-    set -xe
-    # avoid CPU oversubscription
-    export OMP_NUM_THREADS=2
-    export NUMBA_NUM_THREADS=2
-    python -m pip install pytest pytest-azurepipelines pytest-timeout
-    python -m pytest -v --durations 10 --timeout 90 tslearn/ -k 'not (test_all_estimators and Shapelet)'
-  displayName: 'Test'
+
+- job: 'win2016'
+  pool:
+    vmImage: 'vs2017-win2016'
+  strategy:
+    matrix:
+      Python35:
+        python_ver: '35'
+        python.version: '3.5'
+      Python36:
+        python_ver: '36'
+        python.version: '3.6'
+      Python37:
+        python_ver: '37'
+        python.version: '3.7'
+  variables:
+    OMP_NUM_THREADS: '2'
+    NUMBA_NUM_THREADS: '2'
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+  
+  - script: |
+      python --version
+      python -m pip install --upgrade pip
+      python -m pip install -r requirements.txt
+    displayName: 'Install dependencies'
+  
+  - script: |
+      pip install -e .
+    displayName: 'Install tslearn'
+  
+  - script: |
+      python -m pip install pytest pytest-azurepipelines pytest-timeout
+      python -m pytest -v --durations 10 --timeout 90 tslearn/ -k 'not (test_all_estimators and Shapelet)'
+    displayName: 'Test'
