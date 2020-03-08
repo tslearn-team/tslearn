@@ -20,6 +20,7 @@ from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, \
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 GLOBAL_CONSTRAINT_CODE = {None: 0, "": 0, "itakura": 1, "sakoe_chiba": 2}
+TSLEARN_VALID_METRICS = ["dtw", "gak", "softdtw", "sax"]
 VARIABLE_LENGTH_METRICS = ["dtw", "gak", "softdtw", "sax"]
 
 

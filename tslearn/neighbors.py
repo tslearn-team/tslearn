@@ -13,7 +13,7 @@ from sklearn.utils.validation import check_is_fitted
 from scipy.spatial.distance import cdist as scipy_cdist
 
 from tslearn.metrics import cdist_dtw, cdist_soft_dtw, \
-    cdist_sax, VARIABLE_LENGTH_METRICS
+    cdist_sax, TSLEARN_VALID_METRICS
 from tslearn.piecewise import SymbolicAggregateApproximation
 from tslearn.utils import (to_time_series_dataset, to_sklearn_dataset,
                            check_dims)
@@ -134,7 +134,7 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
             else:
                 fit_X = self._X_fit
 
-            if (self.metric in VARIABLE_LENGTH_METRICS or
+            if (self.metric in TSLEARN_VALID_METRICS or
                     self.metric in [cdist_dtw, cdist_soft_dtw, cdist_sax]):
                 full_dist_matrix = self._precompute_cross_dist(X,
                                                                other_X=fit_X)
@@ -380,7 +380,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         KNeighborsTimeSeriesClassifier
             The fitted estimator
         """
-        if self.metric in VARIABLE_LENGTH_METRICS:
+        if self.metric in TSLEARN_VALID_METRICS:
             self._ts_metric = self.metric
             self.metric = "precomputed"
 
@@ -423,7 +423,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         array, shape = (n_ts, )
             Array of predicted class labels
         """
-        if self.metric in VARIABLE_LENGTH_METRICS:
+        if self.metric in TSLEARN_VALID_METRICS:
             check_is_fitted(self, '_ts_fit')
             X_ = self._precompute_cross_dist(X)
             pred = super(KNeighborsTimeSeriesClassifier, self).predict(X_)
@@ -450,7 +450,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         array, shape = (n_ts, n_classes)
             Array of predicted class probabilities
         """
-        if self.metric in VARIABLE_LENGTH_METRICS:
+        if self.metric in TSLEARN_VALID_METRICS:
             check_is_fitted(self, '_ts_fit')
             X_ = self._precompute_cross_dist(X)
             pred = super(KNeighborsTimeSeriesClassifier,
@@ -568,7 +568,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         KNeighborsTimeSeriesRegressor
             The fitted estimator
         """
-        if self.metric in VARIABLE_LENGTH_METRICS:
+        if self.metric in TSLEARN_VALID_METRICS:
             self._ts_metric = self.metric
             self.metric = "precomputed"
 
@@ -602,7 +602,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         array, shape = (n_ts, ) or (n_ts, dim_y)
             Array of predicted targets
         """
-        if self.metric in VARIABLE_LENGTH_METRICS:
+        if self.metric in TSLEARN_VALID_METRICS:
             check_is_fitted(self, '_ts_fit')
             X_ = self._precompute_cross_dist(X)
             pred = super(KNeighborsTimeSeriesRegressor, self).predict(X_)
