@@ -48,6 +48,22 @@ Examples
     y_reg = [1.3, 5.2, -12.2]
     clf.fit(X, y_reg)
 
+Nearest-neighbor search
+-----------------------
+
+* :ref:`KNeighborsTimeSeries <class-tslearn.neighbors.KNeighborsTimeSeries>`
+
+Examples
+~~~~~~~~
+
+.. code-block:: python
+
+    from tslearn.neighbors import KNeighborsTimeSeries
+    knn = KNeighborsTimeSeries(n_neighbors=2)
+    knn.fit(X)
+    knn.kneighbors()    # Search for neighbors using series from `X` as queries
+    knn.kneighbors(X2)  # Search for neighbors using series from `X2` as queries
+
 Clustering
 ----------
 
