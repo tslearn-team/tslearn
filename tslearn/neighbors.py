@@ -247,7 +247,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
         self.verbose = verbose
 
     def _is_fitted(self):
-        if self.metric in VARIABLE_LENGTH_METRICS:
+        if self.metric in TSLEARN_VALID_METRICS:
             check_is_fitted(self, '_ts_fit')
         else:
             check_is_fitted(self, '_X_fit')
@@ -255,7 +255,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
         return True
 
     def _get_model_params(self):
-        if self.metric in VARIABLE_LENGTH_METRICS:
+        if self.metric in TSLEARN_VALID_METRICS:
             return {'_ts_fit': self._ts_fit}
         else:
             return {'_X_fit': self._X_fit}
@@ -268,7 +268,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
         X : array-like, shape (n_ts, sz, d)
             Training data.
         """
-        if self.metric in VARIABLE_LENGTH_METRICS:
+        if self.metric in TSLEARN_VALID_METRICS:
             self._ts_metric = self.metric
             self.metric = "precomputed"
 
@@ -314,7 +314,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
         ind : array
             Indices of the nearest points in the population matrix.
         """
-        if self.metric in VARIABLE_LENGTH_METRICS:
+        if self.metric in TSLEARN_VALID_METRICS:
             self._ts_metric = self.metric
             self.metric = "precomputed"
 
