@@ -17,7 +17,10 @@ from keras.initializers import Initializer
 import keras.backend as K
 from keras.engine import InputSpec
 import numpy
-from tensorflow import set_random_seed
+try:
+    from tensorflow.compat.v1 import set_random_seed
+except ImportError:
+    from tensorflow import set_random_seed
 
 import warnings
 
@@ -117,7 +120,7 @@ class LocalSquaredDistanceLayer(Layer):
         if X is None or K.backend() != "tensorflow":
             self.initializer = "uniform"
         else:
-            self.initializer = KMeansShapeletInitializer(X)
+            self.initializer = KMeansShapeletInitializer(X)  # TODO: v2-compatible initializer
         super(LocalSquaredDistanceLayer, self).__init__(**kwargs)
         self.input_spec = InputSpec(ndim=3)
 
@@ -223,8 +226,12 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
     n_shapelets_per_size: dict (default: None)
         Dictionary giving, for each shapelet size (key),
         the number of such shapelets to be trained (value)
-    max_iter: int (default: 100)
+    max_iter: int (default: 10,000)
         Number of training epochs.
+
+        .. versionchanged:: 0.3
+            default value for max_iter is set to 10,000 instead of 100
+
     batch_size: int (default: 256)
         Batch size to be used.
     verbose_level: {0, 1, 2} (default: 0)
@@ -297,7 +304,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
     .. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
     """
     def __init__(self, n_shapelets_per_size=None,
-                 max_iter=100,
+                 max_iter=10000,
                  batch_size=256,
                  verbose=0,
                  verbose_level=None,
@@ -316,6 +323,13 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         self.shapelet_length = shapelet_length
         self.total_lengths = total_lengths
         self.random_state = random_state
+
+        if max_iter == 10000:
+            warnings.warn("The default value of max_iter has changed "
+                          "from 100 to 10000 starting from version 0.3 for "
+                          "the model to be more likely to converge. "
+                          "Explicitly set your max_iter value to "
+                          "avoid this warning.", FutureWarning)
 
     @property
     def _n_shapelet_sizes(self):
@@ -722,8 +736,12 @@ class SerializableShapeletModel(ShapeletModel):
     n_shapelets_per_size: dict (default: None)
         Dictionary giving, for each shapelet size (key),
         the number of such shapelets to be trained (value)
-    max_iter: int (default: 100)
+    max_iter: int (default: 10,000)
         Number of training epochs.
+
+        .. versionchanged:: 0.3
+            default value for max_iter is set to 10,000 instead of 100
+
     batch_size: int (default:256)
         Batch size to be used.
     verbose_level: {0, 1, 2} (default: 0)
@@ -800,7 +818,7 @@ class SerializableShapeletModel(ShapeletModel):
     .. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
     """
     def __init__(self, n_shapelets_per_size=None,
-                 max_iter=100,
+                 max_iter=10000,
                  batch_size=256,
                  verbose=0,
                  verbose_level=None,

@@ -17,6 +17,7 @@ from tslearn.metrics import cdist_dtw, cdist_soft_dtw, \
 from tslearn.piecewise import SymbolicAggregateApproximation
 from tslearn.utils import (to_time_series_dataset, to_sklearn_dataset,
                            check_dims)
+from tslearn.bases import BaseModelPackage
 
 neighbors.VALID_METRICS['brute'].extend(['dtw', 'softdtw', 'sax'])
 
@@ -179,7 +180,8 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
             return ind
 
 
-class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
+class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
+                           BaseModelPackage):
     """Unsupervised learner for implementing neighbor searches for Time Series.
 
     Parameters
@@ -208,6 +210,12 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
         ``-1`` means using all processors. See scikit-learns'
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`__
         for more details.
+        
+    Notes
+    -----
+        The training data are saved to disk if this model is
+        serialized and may result in a large model file if the training
+        dataset is large.
 
     Examples
     --------
@@ -238,6 +246,20 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
         self.n_jobs = n_jobs
         self.verbose = verbose
 
+    def _is_fitted(self):
+        if self.metric in VARIABLE_LENGTH_METRICS:
+            check_is_fitted(self, '_ts_fit')
+        else:
+            check_is_fitted(self, '_X_fit')
+
+        return True
+
+    def _get_model_params(self):
+        if self.metric in VARIABLE_LENGTH_METRICS:
+            return {'_ts_fit': self._ts_fit}
+        else:
+            return {'_X_fit': self._X_fit}
+
     def fit(self, X, y=None):
         """Fit the model using X as training data
 
@@ -246,8 +268,25 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
         X : array-like, shape (n_ts, sz, d)
             Training data.
         """
-        X = check_array(X, allow_nd=True)
-        self._X_fit = to_time_series_dataset(X)
+        if self.metric in VARIABLE_LENGTH_METRICS:
+            self._ts_metric = self.metric
+            self.metric = "precomputed"
+
+        X = check_array(X,
+                        allow_nd=True,
+                        force_all_finite=(self.metric != "precomputed"))
+        X = to_time_series_dataset(X)
+        X = check_dims(X, X_fit=None)
+        if self.metric == "precomputed" and hasattr(self, '_ts_metric'):
+            self._ts_fit = X
+            self._d = X.shape[2]
+            self._X_fit = numpy.zeros((self._ts_fit.shape[0],
+                                       self._ts_fit.shape[0]))
+        else:
+            self._X_fit, self._d = to_sklearn_dataset(X, return_dim=True)
+        super(KNeighborsTimeSeries, self).fit(self._X_fit, y)
+        if hasattr(self, '_ts_metric'):
+            self.metric = self._ts_metric
         return self
 
     def kneighbors(self, X=None, n_neighbors=None, return_distance=True):
@@ -275,15 +314,55 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors):
         ind : array
             Indices of the nearest points in the population matrix.
         """
-        return KNeighborsTimeSeriesMixin.kneighbors(
-            self,
-            X=X,
-            n_neighbors=n_neighbors,
-            return_distance=return_distance)
+        if self.metric in VARIABLE_LENGTH_METRICS:
+            self._ts_metric = self.metric
+            self.metric = "precomputed"
+
+            if self.metric_params is None:
+                metric_params = {}
+            else:
+                metric_params = self.metric_params.copy()
+                if "n_jobs" in metric_params.keys():
+                    del metric_params["n_jobs"]
+                if "verbose" in metric_params.keys():
+                    del metric_params["verbose"]
+            check_is_fitted(self, '_ts_fit')
+            X = check_array(X, allow_nd=True, force_all_finite=False)
+            X = to_time_series_dataset(X)
+            if self._ts_metric == "dtw":
+                X_ = cdist_dtw(X, self._ts_fit, n_jobs=self.n_jobs,
+                               verbose=self.verbose, **metric_params)
+            elif self._ts_metric == "softdtw":
+                X_ = cdist_soft_dtw(X, self._ts_fit, **metric_params)
+            else:
+                raise ValueError("Invalid metric recorded: %s" %
+                                 self._ts_metric)
+            pred = KNeighborsTimeSeriesMixin.kneighbors(
+                self,
+                X=X_,
+                n_neighbors=n_neighbors,
+                return_distance=return_distance)
+            self.metric = self._ts_metric
+            return pred
+        else:
+            check_is_fitted(self, '_X_fit')
+            if X is None:
+                X_ = None
+            else:
+                X = check_array(X, allow_nd=True)
+                X = to_time_series_dataset(X)
+                X_ = to_sklearn_dataset(X)
+                X_ = check_dims(X_, self._X_fit, extend=False)
+            return KNeighborsTimeSeriesMixin.kneighbors(
+                self,
+                X=X_,
+                n_neighbors=n_neighbors,
+                return_distance=return_distance)
 
 
 class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
-                                     KNeighborsClassifier):
+                                     KNeighborsClassifier,
+                                     BaseModelPackage):
     """Classifier implementing the k-nearest neighbors vote for Time Series.
 
     Parameters
@@ -327,7 +406,13 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         If it more than 10, all iterations are reported.
         `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`__
         for more details.
-
+    
+    Notes
+    -----
+        The training data are saved to disk if this model is
+        serialized and may result in a large model file if the training
+        dataset is large.
+    
     Examples
     --------
     >>> clf = KNeighborsTimeSeriesClassifier(n_neighbors=2, metric="dtw")
@@ -364,6 +449,20 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         self.metric_params = metric_params
         self.n_jobs = n_jobs
         self.verbose = verbose
+
+    def _is_fitted(self):
+        check_is_fitted(self, '_ts_fit')
+        return True
+
+    def _get_model_params(self):
+        return {
+            '_X_fit': self._X_fit,
+            '_ts_fit': self._ts_fit,
+            '_d': self._d,
+            'classes_': self.classes_,
+            '_y': self._y,
+            'outputs_2d_': self.outputs_2d_
+        }
 
     def fit(self, X, y):
         """Fit the model using X as training data and y as target values
