@@ -276,7 +276,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
                         allow_nd=True,
                         force_all_finite=(self.metric != "precomputed"))
         X = to_time_series_dataset(X)
-        X = check_dims(X, X_fit=None)
+        X = check_dims(X, X_fit_dims=None)
         if self.metric == "precomputed" and hasattr(self, '_ts_metric'):
             self._ts_fit = X
             self._d = X.shape[2]
@@ -352,7 +352,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
                 X = check_array(X, allow_nd=True)
                 X = to_time_series_dataset(X)
                 X_ = to_sklearn_dataset(X)
-                X_ = check_dims(X_, self._X_fit, extend=False)
+                X_ = check_dims(X_, self._X_fit.shape, extend=False)
             return KNeighborsTimeSeriesMixin.kneighbors(
                 self,
                 X=X_,
