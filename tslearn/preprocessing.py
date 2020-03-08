@@ -131,7 +131,7 @@ class TimeSeriesScalerMinMax(BaseEstimator, TransformerMixin):
         self
         """
         X = check_array(X, allow_nd=True, force_all_finite=False)
-        self._X_fit = X
+        self._X_fit_dims = X.shape
         return self
 
     def transform(self, X, y=None, **kwargs):
@@ -169,7 +169,7 @@ class TimeSeriesScalerMinMax(BaseEstimator, TransformerMixin):
                              " than maximum. Got %s." % str(value_range))
 
         X = check_array(X, allow_nd=True, force_all_finite=False)
-        X = check_dims(X, self._X_fit, extend=False)
+        X = check_dims(X, self._X_fit_dims, extend=False)
         X_ = to_time_series_dataset(X)
         min_t = numpy.nanmin(X_, axis=1)[:, numpy.newaxis, :]
         max_t = numpy.nanmax(X_, axis=1)[:, numpy.newaxis, :]
@@ -224,7 +224,7 @@ class TimeSeriesScalerMeanVariance(BaseEstimator, TransformerMixin):
         self
         """
         X = check_array(X, allow_nd=True, force_all_finite=False)
-        self._X_fit = X
+        self._X_fit_dims = X.shape
         return self
 
     def transform(self, X, **kwargs):
@@ -241,7 +241,7 @@ class TimeSeriesScalerMeanVariance(BaseEstimator, TransformerMixin):
             Rescaled time series dataset
         """
         X = check_array(X, allow_nd=True, force_all_finite=False)
-        X = check_dims(X, self._X_fit, extend=False)
+        X = check_dims(X, self._X_fit_dims, extend=False)
         X_ = to_time_series_dataset(X)
         mean_t = numpy.nanmean(X_, axis=1)[:, numpy.newaxis, :]
         std_t = numpy.nanstd(X_, axis=1)[:, numpy.newaxis, :]
