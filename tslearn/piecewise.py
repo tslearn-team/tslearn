@@ -161,7 +161,7 @@ class PiecewiseAggregateApproximation(TransformerMixin, BaseModelPackage):
             for i_seg in range(self.n_segments):
                 start = i_seg * sz_segment
                 end = start + sz_segment
-                X_transformed[i_ts, i_seg, :] = X[i_ts, start:end, :].mean(axis=1)
+                X_transformed[i_ts, i_seg, :] = X[i_ts, start:end, :].mean(axis=0)
         return X_transformed
 
     def transform(self, X, y=None):

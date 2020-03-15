@@ -25,6 +25,19 @@ neighbors.VALID_METRICS['brute'].extend(['dtw', 'softdtw', 'sax'])
 class KNeighborsTimeSeriesMixin(KNeighborsMixin):
     """Mixin for k-neighbors searches on Time Series."""
 
+    def _sax_preprocess(self, X, n_segments=10, alphabet_size_avg=4):
+        # Now SAX-transform the time series
+        if not hasattr(self, '_sax') or self._sax is None:
+            self._sax = SymbolicAggregateApproximation(
+                n_segments=n_segments,
+                alphabet_size_avg=alphabet_size_avg
+            )
+
+        X = to_time_series_dataset(X)
+        X = self._sax.fit_transform(X)
+
+        return X
+
     def _precompute_cross_dist(self, X, other_X=None):
         if other_X is None:
             other_X = self._ts_fit
@@ -50,6 +63,7 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
         elif self._ts_metric == "softdtw":
             X_ = cdist_soft_dtw(X, other_X, **metric_params)
         elif self._ts_metric == "sax":
+            X = self._sax_preprocess(X, **metric_params)
             X_ = cdist_sax(X, self._sax.breakpoints_avg_,
                            self._sax.size_fitted_, other_X,
                            n_jobs=self.n_jobs)
@@ -470,7 +484,11 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             if self._ts_metric == 'sax':
                 self._sax_mu = None
                 self._sax_sigma = None
-                self._ts_fit = X
+                if self.metric_params is not None:
+                    self._ts_fit = self._sax_preprocess(X,
+                                                        **self.metric_params)
+                else:
+                    self._ts_fit = self._sax_preprocess(X)
 
             self._d = X.shape[2]
             self._X_fit = numpy.zeros((self._ts_fit.shape[0],
