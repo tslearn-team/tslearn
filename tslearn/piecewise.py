@@ -8,7 +8,7 @@ from scipy.stats import norm
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
-from tslearn.utils import to_time_series_dataset
+from tslearn.utils import to_time_series_dataset, ts_size
 from tslearn.cysax import (cydist_sax, cyslopes, cydist_1d_sax,
                            inv_transform_1d_sax, inv_transform_sax,
                            inv_transform_paa)
