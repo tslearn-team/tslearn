@@ -153,16 +153,16 @@ class PiecewiseAggregateApproximation(TransformerMixin, BaseModelPackage):
         X_ = to_time_series_dataset(X)
         return self._fit(X_, y)
 
-        def _transform(self, X, y=None):
-            n_ts, sz, d = X.shape
-            X_transformed = numpy.empty((n_ts, self.n_segments, d))
-            for i_ts in range(n_ts):
-                sz_segment = ts_size(X[i_ts]) // self.n_segments
-                for i_seg in range(self.n_segments):
-                    start = i_seg * sz_segment
-                    end = start + sz_segment
-                    X_transformed[i_ts, i_seg, :] = X[i_ts, start:end, :].mean(axis=1)
-            return X_transformed
+    def _transform(self, X, y=None):
+        n_ts, sz, d = X.shape
+        X_transformed = numpy.empty((n_ts, self.n_segments, d))
+        for i_ts in range(n_ts):
+            sz_segment = ts_size(X[i_ts]) // self.n_segments
+            for i_seg in range(self.n_segments):
+                start = i_seg * sz_segment
+                end = start + sz_segment
+                X_transformed[i_ts, i_seg, :] = X[i_ts, start:end, :].mean(axis=1)
+        return X_transformed
 
     def transform(self, X, y=None):
         """Transform a dataset of time series into its PAA representation.
