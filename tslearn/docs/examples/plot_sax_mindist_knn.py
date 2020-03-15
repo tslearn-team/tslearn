@@ -95,6 +95,10 @@ times = {}
 for dataset, w in datasets:
     X_train, y_train, X_test, y_test = data_loader.load_dataset(dataset)
 
+    ts_scaler = TimeSeriesScalerMeanVariance()
+    X_train = ts_scaler.fit_transform(X_train)
+    X_test = ts_scaler.fit_transform(X_test)
+
     # Fit 1-NN using SAX representation & MINDIST
     metric_params = {'n_segments': w, 'alphabet_size_avg': 10}
     knn_sax = clone(knn_sax).set_params(metric_params=metric_params)
