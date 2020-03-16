@@ -1120,6 +1120,14 @@ except ImportError:
         raise ImportWarning("Conversion from/to sktime cannot be performed "
                             "if pandas is not installed.")
 
+    def to_tsfresh_dataset(X):
+        raise ImportWarning("Conversion from/to tsfresh cannot be performed "
+                            "if pandas is not installed.")
+
+    def from_tsfresh_dataset(X):
+        raise ImportWarning("Conversion from/to tsfresh cannot be performed "
+                            "if pandas is not installed.")
+
 try:
     from cesium.time_series import TimeSeries
 
