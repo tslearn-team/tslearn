@@ -1420,7 +1420,7 @@ def cdist_sax(dataset1, breakpoints_avg, size_fitted, dataset2=None,
     r"""Calculates a matrix of distances (MINDIST) on SAX-transformed data,
     as presented in [1]_. It is important to note that this function
     expects the timeseries in dataset1 and dataset2 to be normalized
-    to have zero mean and unit variance.
+    to each have zero mean and unit variance.
 
     Parameters
     ----------
