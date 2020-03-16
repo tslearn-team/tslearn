@@ -40,7 +40,7 @@ class TimeSeriesSVMMixin:
         else:
             X, y = check_X_y(X, y, allow_nd=True,
                              force_all_finite=force_all_finite)
-        X = check_dims(X, X_fit=None)
+        X = check_dims(X, X_fit_dims=None)
         X = to_time_series_dataset(X)
 
         if fit_time:

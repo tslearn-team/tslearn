@@ -396,7 +396,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, BaseModelPackage,
         """
 
         X = check_array(X, allow_nd=True, force_all_finite=False)
-        X = check_dims(X, X_fit=None)
+        X = check_dims(X, X_fit_dims=None)
 
         if sample_weight is not None:
             sample_weight = check_array(sample_weight, ensure_2d=False)
@@ -500,7 +500,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, BaseModelPackage,
         """
         X = check_array(X, allow_nd=True, force_all_finite=False)
         check_is_fitted(self, '_X_fit')
-        X = check_dims(X, self._X_fit)
+        X = check_dims(X, self._X_fit.shape)
         K = self._get_kernel(X, self._X_fit)
         n_samples = X.shape[0]
         dist = numpy.zeros((n_samples, self.n_clusters))
@@ -866,7 +866,7 @@ class TimeSeriesKMeans(BaseEstimator, BaseModelPackage, ClusterMixin,
         """
         X = check_array(X, allow_nd=True, force_all_finite='allow-nan')
         check_is_fitted(self, 'cluster_centers_')
-        X = check_dims(X, self.cluster_centers_)
+        X = check_dims(X, self.cluster_centers_.shape)
         X_ = to_time_series_dataset(X)
         return self._assign(X_, update_class_attributes=False)
 
@@ -1158,9 +1158,7 @@ class KShape(BaseEstimator, BaseModelPackage, ClusterMixin,
                         ['cluster_centers_', 'norms_', 'norms_centroids_'])
 
         X_ = to_time_series_dataset(X)
-
-        X = check_dims(X, self.cluster_centers_)
-
+        X = check_dims(X, self.cluster_centers_.shape)
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
         dists = self._cross_dists(X_)
         return dists.argmin(axis=1)
