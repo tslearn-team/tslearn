@@ -1418,7 +1418,9 @@ def gamma_soft_dtw(dataset, n_samples=100, random_state=None):
 def cdist_sax(dataset1, breakpoints_avg, size_fitted, dataset2=None,
               n_jobs=None, verbose=0):
     r"""Calculates a matrix of distances (MINDIST) on SAX-transformed data,
-    as presented in [1]_.
+    as presented in [1]_. It is important to note that this function
+    expects dataset1 and dataset2 to be normalized to have zero mean
+    and unit variance.
 
     Parameters
     ----------
