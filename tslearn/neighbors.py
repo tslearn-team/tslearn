@@ -183,9 +183,9 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
               'sax'} (default: 'dtw')
         Metric to be used at the core of the nearest neighbor procedure.
         DTW and SAX are described in more detail in :mod:`tslearn.metrics`.
-        When SAX is provided as a metric, each time series is
-        standard-normalized using the mean and std deviation of the training 
-        data. Other metrics are described in `scipy.spatial.distance doc
+        When SAX is provided as a metric, the data is expected to be
+        normalized such that each time series has zero mean and unit
+        variance. Other metrics are described in `scipy.spatial.distance doc
         <https://docs.scipy.org/doc/scipy/reference/spatial.distance.html>`_.
     metric_params : dict or None (default: None)
         Dictionnary of metric parameters.
