@@ -8,6 +8,17 @@ and this project adheres to
 
 Changelogs for this project are recorded in this file since v0.2.0.
 
+## [Towards v0.4.0]
+
+### Changed
+* TimeSeriesScalerMeanVariance and TimeSeriesScalerMinMax are now completely sklearn-compliant
+* Bugfix in kneighbors() methods.
+
+### Added
+* Nearest Neighbors on SAX representation (with custom distance)
+* Calculate pairwise distance matrix between SAX representations
+* PiecewiseAggregateApproximation can now handle variable lengths
+
 ## [v0.3.0]
 
 ### Changed
