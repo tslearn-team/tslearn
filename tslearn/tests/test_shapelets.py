@@ -1,13 +1,16 @@
 import numpy as np
+import pytest
+from sklearn.model_selection import cross_validate
 
-from tslearn.shapelets import ShapeletModel, SerializableShapeletModel
 from tslearn.utils import to_time_series
-import tslearn
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 def test_shapelets():
+    pytest.importorskip('keras')
+    from tslearn.shapelets import ShapeletModel
+
     n, sz, d = 15, 10, 2
     rng = np.random.RandomState(0)
     time_series = rng.randn(n, sz, d)
@@ -26,7 +29,6 @@ def test_shapelets():
                                np.array([0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0,
                                          1, 0]))
 
-    from sklearn.model_selection import cross_validate
     cross_validate(clf, time_series, y, cv=2)
 
     model = ShapeletModel(n_shapelets_per_size={3: 2, 4: 1},
@@ -54,6 +56,9 @@ def test_shapelets():
 
 
 def test_serializable_shapelets():
+    pytest.importorskip('keras')
+    from tslearn.shapelets import SerializableShapeletModel
+
     n, sz, d = 15, 10, 2
     rng = np.random.RandomState(0)
     time_series = rng.randn(n, sz, d)

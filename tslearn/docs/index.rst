@@ -36,10 +36,8 @@ Using ``pip`` should also work fine:
 
     pip install tslearn
 
-Pre-requisites
-..............
-
-When using PyPI, C++ build tools should be available to perform installation.
+In this case, you should have ``numpy``, ``cython`` and C++ build tools
+available at build time.
 
 
 Using latest github-hosted version
@@ -52,9 +50,9 @@ repository hosted at github:
 
     pip install git+https://github.com/rtavenar/tslearn.git
 
+In this case, you should have ``numpy``, ``cython`` and C++ build tools
+available at build time.
 
-Troubleshooting
-```````````````
 
 It seems on some platforms ``Cython`` dependency does not install properly.
 If you experiment such an issue, try installing it with the following command:

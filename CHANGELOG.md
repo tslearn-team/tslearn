@@ -71,6 +71,13 @@ and `OneD_SymbolicAggregateApproximation`
 its parameter is set, that is now considered sufficient to identify the 
 constraint.
 
+## [v0.2.4]
+
+### Fixed
+
+* The `tests` subdirectory is now made a python package and hence included in 
+wheels
+
 ## [v0.2.2]
 
 ### Fixed

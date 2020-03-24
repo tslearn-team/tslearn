@@ -18,7 +18,8 @@ from sklearn.utils.estimator_checks import (
     check_no_attributes_set_in_init,
     check_parameters_default_constructible
 )
-from sklearn_patches import (check_clustering,
+from tslearn.tests.sklearn_patches import (
+                             check_clustering,
                              check_non_transf_est_n_iter,
                              check_fit_idempotent,
                              check_classifiers_classes,
@@ -30,7 +31,7 @@ from sklearn_patches import (check_clustering,
                              check_classifiers_cont_target,
                              check_pipeline_consistency,
                              yield_all_checks)
-from sklearn_patches import _safe_tags
+from tslearn.tests.sklearn_patches import _safe_tags
 import warnings
 import pytest
 
@@ -58,7 +59,19 @@ def _get_all_classes():
     base_path = tslearn.__path__
     for _, name, _ in pkgutil.walk_packages(path=base_path,
                                             prefix='tslearn.'):
-        module = __import__(name, fromlist="dummy")
+        try:
+            module = __import__(name, fromlist="dummy")
+        except ImportError:
+            if name.endswith('shapelets'):
+                # keras is likely not installed
+                warnings.warn('Skipped common tests for shapelets '
+                              'as it could not be imported. keras '
+                              '(and tensorflow) are probably not '
+                              'installed!')
+                continue
+            else:
+                raise
+
         all_classes.extend(inspect.getmembers(module, inspect.isclass))
     return all_classes
 
@@ -168,11 +181,11 @@ def check_estimator(Estimator):
             warnings.warn(str(exception), SkipTestWarning)
 
 
-@pytest.mark.parametrize('estimator', get_estimators('all'))
-def test_all_estimators(estimator):
+@pytest.mark.parametrize('name, Estimator', get_estimators('all'))
+def test_all_estimators(name, Estimator):
     """Test all the estimators in tslearn."""
     allow_nan = (hasattr(checks, 'ALLOW_NAN') and
-                 _safe_tags(estimator[1](), "allow_nan"))
+                 _safe_tags(Estimator(), "allow_nan"))
     if allow_nan:
-        checks.ALLOW_NAN.append(estimator[0])
-    check_estimator(estimator[1])
+        checks.ALLOW_NAN.append(name)
+    check_estimator(Estimator)

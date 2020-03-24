@@ -44,9 +44,13 @@ Using `pip` should also work fine:
 pip install tslearn
 ```
 
+In this case, you should have `numpy`, `cython` and C++ build tools available
+at build time.
+
 ## Using latest github-hosted version
 
-If you want to get `tslearn`'s latest version, you can refer to the repository hosted at github:
+If you want to get `tslearn`'s latest version, you can refer to the repository 
+hosted at github:
 ```bash
 pip install git+https://github.com/rtavenar/tslearn.git
 ```
@@ -65,7 +69,8 @@ If it still does not work, we suggest you switch to `conda` installation.
 
 # Documentation and API reference
 
-The documentation, including a gallery of examples, is hosted at [readthedocs](http://tslearn.readthedocs.io/en/latest/index.html).
+The documentation, including a gallery of examples, is hosted at 
+[readthedocs](http://tslearn.readthedocs.io/en/latest/index.html).
 
 # Already available
 
@@ -116,9 +121,13 @@ If you use `tslearn` in a scientific publication, we would appreciate citations:
 
 ```bibtex
 @misc{tslearn,
- title={tslearn: A machine learning toolkit dedicated to time-series data},
- author={Tavenard, Romain and Faouzi, Johann and Vandewiele, Gilles},
- year={2017},
- note={\url{https://github.com/rtavenar/tslearn}}
+      title={tslearn: A machine learning toolkit dedicated to time-series
+             data},
+      author={Romain Tavenard and Johann Faouzi and Gilles Vandewiele and
+              Felix Divo and Guillaume Androz and Chester Holtz and Marie
+              Payne and Roman Yurchak and Marc Ru{\ss}wurm and Kushal
+              Kolar and Eli Woods},
+      year={2017},
+      note={\url{https://github.com/rtavenar/tslearn}}
 }
 ```
