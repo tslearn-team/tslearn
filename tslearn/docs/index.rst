@@ -33,7 +33,7 @@ Using PyPI
 Using ``pip`` should also work fine:
 
 .. code-block:: bash
-  
+
     pip install tslearn
 
 Pre-requisites
@@ -49,7 +49,7 @@ If you want to get ``tslearn``'s latest version, you can refer to the
 repository hosted at github:
 
 .. code-block:: bash
-  
+
     pip install git+https://github.com/rtavenar/tslearn.git
 
 
@@ -81,4 +81,4 @@ From here, you can navigate to:
     dtw
     reference
     auto_examples/index
-
+    contributing
