@@ -27,7 +27,7 @@ scikit-learn
 `scikit-learn <https://scikit-learn.org>`_ is a popular Python package for
 machine learning.
 :func:`tslearn.utils.to_sklearn_dataset` converts a data set from ``tslearn``
-format to ``scikit-learnlearn`` format. To convert a data set from
+format to ``scikit-learn`` format. To convert a data set from
 ``scikit-learn``, you can use :func:`tslearn.utils.to_time_series_dataset`.
 
 .. code-block:: python
