@@ -77,7 +77,7 @@ From here, you can navigate to:
     gettingstarted
     variablelength
     dtw
+    integration_other_software
     reference
     auto_examples/index
     contributing
-    integration_other_software
