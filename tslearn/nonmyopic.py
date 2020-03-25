@@ -1,12 +1,10 @@
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import confusion_matrix
-from sklearn.model_selection import GridSearchCV
 from sklearn.base import BaseEstimator, ClassifierMixin
 from tslearn.utils import to_time_series_dataset
 from tslearn.clustering import TimeSeriesKMeans, silhouette_score
 import matplotlib.pyplot as plt
 import numpy as np
-from data_generator import generate_data
 import math
 from sklearn.metrics import roc_auc_score
 import argparse
@@ -16,19 +14,73 @@ parser.add_argument('--cost_time_parameter', type=float, default=0.01)
 args = parser.parse_args()
 
 
-class NonMyopic(BaseEstimator, ClassifierMixin):
+class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
+    """Early Classification modelling for time series using the model presented in [1]
+
+    Parameters
+    ------------------
+    number_cluster : int
+        Number of clusters to form.
+
+    solver :
+        The method of gradient descent used during training
+
+    hidden_layer_sizes : tuple of int
+        Size of the hidden layers
+
+    random_state : int
+        Seed of the MLP
+
+    maximum_iteration : int
+        Maximum number of iterations performed by the MLP
+
+    minimum_time_stamp : int
+        Earliest time at which a classification can be performed on a time series
+
+    lamb : float
+        Value of the hyper parameter lambda
+
+    cost_time_parameter : float
+        Parameter of the cost function of time
+
+    Attributes
+    --------------------
+    silhouette_ : float
+        The silhouette score from the clustering
+
+    classifier_ : list
+        A list containing all the classifiers trained for the model
+
+    clusters_ : dictionary
+        Contains the times series by clusters
+
+    pyhatyck_ : dictionary
+        Contains the probabilities of being classified as class y_hat given class y and cluster ck
+
+    indice_ck_ : list
+        Contains for each clusters the indexes of the time series in the dataset
+
+    number_classes_ : int
+        The number of classes in the series
+
+    len_X_ : int
+        The length of the time series
+
+    Examples
+    --------------------
+    >>>
+
+    References
+    --------------------
+    [1] A. Dachraoui, A. Bondu & A. Cornuéjols. Early classification of time series as a non myopic sequential decision
+    making problem. 2015 Conference paper
+
+
     """
-    >>> X_train, Y_train = generate_data(S=2500, t=50, omeg2=10.3, omeg1=10, sd=0.5)
-    >>> model = NonMyopic(number_cluster=2, solver="sgd", hidden_layer_sizes=26, random_state=1, maximum_iteration=400, minimum_time_stamp=30, lamb=10)
-    >>> model.fit(X_train, Y_train)
-    12
-    >>> X_test, Y_test = generate_data(S=100, t=50, omeg2=10.3, omeg1=10, sd=3)
-    >>> model.classification(X_test[1], model.cost_function)
-    (array([1]), 7)
-    """
+
     def __init__(self, number_cluster, solver, hidden_layer_sizes, random_state, maximum_iteration, minimum_time_stamp,
                  lamb, cost_time_parameter):
-        super(NonMyopic, self).__init__()
+        super(NonMyopicEarlyClassification, self).__init__()
         self.solver = solver
         self.hidden_layer_sizes = hidden_layer_sizes
         self.random_state = random_state
@@ -42,9 +94,17 @@ class NonMyopic(BaseEstimator, ClassifierMixin):
         """
         This function compute and fit clusters for a training dataset of time series using K-means and euclidean
         distances
-        :param X_train: a training dataset of time series
-        :return: a vector as long as the number of series in the training dataset that indicates in which cluster the
-        series at the same index belongs, the silhouette score of the fitting of the clustering
+        Parameters
+        -----------------
+        X_train: array-like
+            The training dataset of time series
+
+        Returns
+        -----------------
+        Vector : a vector as long as the number of series in the training dataset that indicates in which cluster the
+        series at the same index belongs
+
+         Float : the silhouette score of the fitting of the clustering
         """
         self.cluster_ = TimeSeriesKMeans(n_clusters=self.number_cluster)
         c_k = self.cluster_.fit_predict((to_time_series_dataset(X_train)))
@@ -52,47 +112,19 @@ class NonMyopic(BaseEstimator, ClassifierMixin):
 
         return c_k, silhouette
 
-    @staticmethod
-    def cross_validation(X_train, Y_train, fold, set_lamb, set_clus, cost_time_parameter):
-        index_sta = 0
-        index_end = index_sta + int(len(X_train) / fold)
-        retain = []
-        for fol in range(0, fold):
-            X_train_cv = np.concatenate((X_train[:index_sta], X_train[index_end:]), axis=0)
-            Y_train_cv = np.concatenate((Y_train[:index_sta], Y_train[index_end:]), axis=0)
-            X_test_cv = X_train[index_sta:index_end]
-            Y_test_cv = Y_train[index_sta:index_end]
-            total_cost = []
-            for lamb in set_lamb:
-                for clus in set_clus:
-                    model = NonMyopic(number_cluster=clus, solver="sgd", hidden_layer_sizes=26, random_state=100,
-                                      maximum_iteration=1000,
-                                      minimum_time_stamp=4, lamb=lamb, cost_time_parameter=cost_time_parameter)
-                    model.fit(X_train_cv, Y_train_cv)
-                    avg_pred, var_pred, auc, cost = model.predict(X_test_cv, Y_test_cv)
-                    total_cost.append([cost, clus, lamb])
-            total_cost = np.asarray(total_cost)
-            tot_cost = [item[0] for item in total_cost]
-            min_cost_index = np.argmin(tot_cost)
-            retain.append(total_cost[min_cost_index])
-            index_sta = index_end + 1
-            index_end = index_end + int(len(X_train) / fold)
-        fin_lamb = [item[-1] for item in retain]
-        fin_clus = [item[1] for item in retain]
-        final_lamb = sum(fin_lamb) / len(retain)
-        final_clus = int(sum(fin_clus) / len(retain))
-
-        return final_clus, final_lamb
-
     def fit(self, X_train, Y_train):
         """
         This function fits classifiers that are currently multilayer perceptrons to a training set of time series and
         associated classes. A classifier is fit for each time stamp above a minimum time stamp that is an attribute of
         the class of the model. Then some probabilities are computed using clusters already computed.
         This function should be divided among 2 or 3 functions.
-        :param X_train: a dataset of time series
-        :param Y_train: the associated classes of the series from X_train
-        :return: the number 12
+
+        Parameters
+        ---------------
+        X_train: Array-like
+            a dataset of time series
+        Y_train: vector
+            the associated classes of the series from X_train
         """
         classes_y = np.unique(Y_train)
         c_k, silhouette = self.clustering(X_train)
@@ -153,8 +185,16 @@ class NonMyopic(BaseEstimator, ClassifierMixin):
     def get_avg_dist(self, truncated_xt):
         """
         Compute the average euclidean distance of a given time series to the centroid of each cluster of the model
-        :param xt: a time series that may  be incomplete
-        :return: the average euclidean distance of the time series to the centroid of each cluster of the model
+
+        Parameters
+        --------------------
+        xt: Vector
+            A time series that may  be incomplete
+
+        Returns
+        -------------------
+        Float : the average euclidean distance of the time series to the centroid of each cluster of the model
+        Float : the minimum distance between the centroid of a cluster and the time series
         """
 
         sum_distances = 0
@@ -169,9 +209,16 @@ class NonMyopic(BaseEstimator, ClassifierMixin):
     def get_dist(self, truncated_xt, wanted_cluster):
         """
         Compute the euclidean distance between a time series xt and the centroid of a cluster of the model
-        :param xt: a time series that may be incomplete
-        :param wanted_cluster: a figure that represent a cluster for which the distance is wanted
-        :return: the expected euclidean distance
+        Parameters
+        ----------------
+        xt: vector
+            a time series that may be incomplete
+        wanted_cluster: int
+            the number of the cluster for which the distance is wanted
+
+        Returns
+        ----------------
+        Float: the expected euclidean distance
         """
 
         euclidean_dist = np.linalg.norm(truncated_xt - self.cluster_.cluster_centers_[wanted_cluster, :len(truncated_xt)])
@@ -181,8 +228,15 @@ class NonMyopic(BaseEstimator, ClassifierMixin):
     def get_cluster_prob(self, truncated_xt):
         """
         This function computes the probabilities of the time series xt to be in a cluster of the model
-        :param xt: a time series that may be incomplete
-        :return: the probabilities of the given time series to be in the clusters of the model
+
+        Parameters
+        -------------------
+        xt: vector
+            a time series that may be incomplete
+
+        Returns
+        ----------------
+        vector : the probabilities of the given time series to be in the clusters of the model
         """
         average_distance, minimum_distance = self.get_avg_dist(truncated_xt)
         minimum_distance_to_average = (average_distance - minimum_distance) / average_distance
@@ -201,9 +255,17 @@ class NonMyopic(BaseEstimator, ClassifierMixin):
         """
         From a incomplete series xt, this function compute the expected cost of a prediction made at time "last time of
         xt + tau"
-        :param xt: a time series that may be incomplete for which we want to have the cost
-        :param tau: gives the future time for which the cost is calculated
-        :return: the computed cost
+
+        Parameters
+        ------------------
+        xt: vector
+            a time series that may be incomplete for which we want to have the cost
+        tau: int
+            gives the future time for which the cost is calculated
+
+        Returns
+        -----------------------
+        float : the computed cost
         """
         cost = 0
         proba_clusters = self.get_cluster_prob(truncated_xt=truncated_xt)
@@ -226,10 +288,19 @@ class NonMyopic(BaseEstimator, ClassifierMixin):
     def minimize_integer(end_of_time, function_to_minimize, xt):
         """
         We want to minimize a function "funct" according a time series "xt" for a list of integers from 0 to "stop"
-        :param end_of_time: the highest integer at which the function to be minimized is calculated
-        :param function_to_minimize: the function of interest
-        :param xt: the time series related to the function "funct"
-        :return: The integer in {0,...,stop} that minimizes "funct"
+        Parameters
+        ---------------------
+        end_of_time: int
+            the highest integer at which the function to be minimized is calculated
+        function_to_minimize: funct
+            the function of interest
+        xt: vector
+            the time series related to the function "funct"
+
+        Returns
+         ---------------------
+         int : The integer in {0,...,stop} that minimizes "funct"
+         float : the so fat minimum cost
         """
         tau_star = 0
         so_far_minimum_cost = function_to_minimize(xt, tau_star)
@@ -243,9 +314,19 @@ class NonMyopic(BaseEstimator, ClassifierMixin):
     def classification(self, xt, cost_function):
         """
         This function classifies a single time series xt
-        :param xt: a time series that is probably incomplete but that nonetheless we want to classify
-        :param cost_function: The cost function that will be use to achieve our classification purpose
-        :return: The predicted classes and the time at which each of them has been predicted in two separate vectors
+
+        Parameters
+        ----------------------
+        xt: vector
+            a time series that is probably incomplete but that nonetheless we want to classify
+        cost_function: funct
+            The cost function that will be use to achieve our classification purpose
+        Returns
+        -----------------------
+        int: the class which is predicted
+        int : the time of the prediction
+        float : the probability used for computing the cost
+        float : the loss when classifying
         """
         time_stamp = xt.shape[0]
         xt = np.reshape(xt, (1, time_stamp))
@@ -275,30 +356,14 @@ class NonMyopic(BaseEstimator, ClassifierMixin):
 
     @staticmethod
     def avg_prediction(time_predictions):
-        """
-        Computes the average value of the given vector
-        :param time_predictions: The times at which the prediction have been made from the function "predict"
-        :return: The average value of the input vector
-        >>> model = NonMyopic(number_cluster=3, solver="sgd", hidden_layer_sizes=26, random_state=1, maximum_iteration=300, minimum_time_stamp=4, lamb=10)
-        >>> model.avg_prediction([4, 5, 6, 5])
-        5.0
-        """
+
         avgerage_time = sum(time_predictions)/len(time_predictions)
         variance_time = np.var(time_predictions)
         return avgerage_time, variance_time
 
     @staticmethod
     def accuracy_prediction(Y_test, Y_pred_test):
-        """
-        Computes the accuracy of a vector of classes' prediction using the true classes
-        :param Y_test: The true classes of the test dataset
-        :param Y_pred_test: The predicted classes for the function "predict"
-        :return: The accuracy of the predicted classes, that is, the part of correctly predicted series amongst all
-        series
-        >>> model = NonMyopic(number_cluster=3, solver="sgd", hidden_layer_sizes=26, random_state=1, maximum_iteration=300, minimum_time_stamp=4, lamb=10)
-        >>> model.accuracy_prediction([-1, 1, 1, -1], [-1, 1, -1, 1])
-        0.5
-        """
+
         good_prediction = 0
         for class_index in range(0, len(Y_test)):
             if Y_test[class_index] == Y_pred_test[class_index]:
@@ -307,13 +372,18 @@ class NonMyopic(BaseEstimator, ClassifierMixin):
 
     def predict(self, X_test):
         """
-                Predicts a test dataset of time series in an early fashion
-                :param X_test: The data set that needs to be predict
-                :param kwargs_up: The arguments that are needed for the cost function
-                :return: A vector of length len(X_test) containing the classes predicted for the data set and another
-                vector of
-                length len(X_test) containing the time at which the predictions hae been made
-                """
+        Predicts the classes of the series of the test dataset.
+
+        Parameters
+        ---------------------
+        X_test : Array-like
+            The test dataset
+
+        Returns
+        ----------------------
+        Vector : the predicted classes
+        """
+
         Y_pred_test = []
 
         for t in range(0, X_test.shape[0]):
@@ -323,11 +393,22 @@ class NonMyopic(BaseEstimator, ClassifierMixin):
 
     def predict_completed(self, X_test, Y_test):
         """
-        Predicts a test dataset of time series in an early fashion
-        :param X_test: The data set that needs to be predict
-        :param kwargs_up: The arguments that are needed for the cost function
-        :return: A vector of length len(X_test) containing the classes predicted for the data set and another vector of
-        length len(X_test) containing the time at which the predictions hae been made
+        Predicts the classes of the series of the test dataset and has also access the the true classes to establish
+        comparisons
+
+        Parameters
+        ---------------------
+        X_test: Array-like
+            The data set that needs to be predict
+        Y_test : Array-vector
+            The true classes
+
+        Returns
+        ------------------
+        float : average time of prediction
+        float : variance of the time of prediction
+        float : AUC
+        float : average cost
         """
         Y_pred_test = []
         time_predictions = []
@@ -367,23 +448,3 @@ class NonMyopic(BaseEstimator, ClassifierMixin):
         return time_stamp[t] * self.cost_time_parameter
 
 
-if __name__ == '__main__':
-
-    doctesting = False
-    if doctesting:
-        import doctest
-        doctest.testmod()
-    cost_time_parameter = args.cost_time_parameter
-    PATH = "/home/adr2.local/painblanc_f/Téléchargements/Base de données/UCRArchive_2018/TwoLeadECG/"
-    X_train = np.genfromtxt(PATH + "X_train.csv", delimiter=",")
-    Y_train = np.genfromtxt(PATH + "Y_train.csv", delimiter=",")
-    X_test = np.genfromtxt(PATH + "X_test.csv", delimiter=",")
-    Y_test = np.genfromtxt(PATH + "Y_test.csv", delimiter=",")
-
-    #Cross-validation part
-    model = NonMyopic(number_cluster=3, solver="sgd", hidden_layer_sizes=41, random_state=1, maximum_iteration=10,
-                      minimum_time_stamp=78, lamb=10, cost_time_parameter=cost_time_parameter)
-    parameters = {"number_cluster": [2, 3, 4], "lamb": [1, 10]}
-    CV = GridSearchCV(model, param_grid=parameters, cv=3)
-    CV.fit(X_train, Y_train)
-    CV.best_estimator_.predict_completed(X_test, Y_test)
