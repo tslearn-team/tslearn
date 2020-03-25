@@ -132,6 +132,7 @@ compatible Python toolbox for learning with time series.
 :func:`tslearn.utils.to_sktime_dataset` and :func:`tslearn.utils.from_sktime_dataset`
 allow users to convert a data set from ``tslearn`` format to ``sktime`` format
 and vice versa.
+``pandas`` is a required dependency to use these functions.
 
 .. code-block:: python
 
@@ -159,6 +160,7 @@ and prediction.
 :func:`tslearn.utils.to_pyflux_dataset` and :func:`tslearn.utils.from_pyflux_dataset`
 allow users to convert a data set from ``tslearn`` format to ``pyflux`` format
 and vice versa.
+``pandas`` is a required dependency to use these functions.
 
 .. code-block:: python
 
@@ -180,6 +182,7 @@ calculating a large number of time series characteristics.
 :func:`tslearn.utils.to_tsfresh_dataset` and :func:`tslearn.utils.from_tsfresh_dataset`
 allow users to convert a data set from ``tslearn`` format to ``tsfresh`` format
 and vice versa.
+``pandas`` is a required dependency to use these functions.
 
 .. code-block:: python
 
@@ -209,6 +212,7 @@ cesium
 :func:`tslearn.utils.to_cesium_dataset` and :func:`tslearn.utils.from_cesium_dataset`
 allow users to convert a data set from ``tslearn`` format to ``cesium`` format
 and vice versa.
+``cesium`` is a required dependency to use these functions.
 
 .. code-block:: python
 
