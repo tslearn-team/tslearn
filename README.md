@@ -52,7 +52,7 @@ at build time.
 If you want to get `tslearn`'s latest version, you can refer to the repository
 hosted at github:
 ```bash
-python -m pip install git+https://github.com/rtavenar/tslearn.git
+python -m pip install https://github.com/rtavenar/tslearn/archive/master.zip
 ```
 
 ## Troubleshooting
