@@ -26,7 +26,7 @@ def pytest_collection_modifyitems(config, items):
                 "tslearn.utils.to_cesium_dataset",
             ]:
                 item.add_marker(skip_marker)
-    elif cesium is None:
+    if cesium is None:
         skip_marker = pytest.mark.skip(reason="cesium not installed!")
         for item in items:
             if item.name in [

@@ -1208,6 +1208,7 @@ def from_cesium_dataset(X):
 
     Examples
     --------
+    >>> from cesium.time_series import TimeSeries
     >>> cesium_ds = [TimeSeries(m=numpy.array([1, 2, 3, 4]))]
     >>> tslearn_arr = from_cesium_dataset(cesium_ds)
     >>> tslearn_arr.shape
