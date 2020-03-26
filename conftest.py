@@ -16,10 +16,13 @@ def pytest_collection_modifyitems(config, items):
         for item in items:
             if item.name in [
                     "tslearn.utils.from_tsfresh_dataset",
+                    "tslearn.utils.to_tsfresh_dataset",
                     "tslearn.utils.from_sktime_dataset",
+                    "tslearn.utils.to_sktime_dataset",
                     "tslearn.utils.from_pyflux_dataset",
-                    "tslearn.utils.to_cesium_dataset",
+                    "tslearn.utils.to_pyflux_dataset",
                     "tslearn.utils.from_cesium_dataset",
+                    "tslearn.utils.to_cesium_dataset",
             ]:
                 item.add_marker(skip_marker)
     elif cesium is None:
