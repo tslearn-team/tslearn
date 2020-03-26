@@ -102,6 +102,7 @@ def test_conversions_with_pandas():
         )
     )
 
+
 def test_conversions_cesium():
     pytest.importorskip('cesium')
     n, sz, d = 15, 10, 3

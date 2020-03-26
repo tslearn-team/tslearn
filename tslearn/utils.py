@@ -805,15 +805,16 @@ def to_sktime_dataset(X):
     """  # noqa: E501
     try:
         import pandas as pd
-    except:
-        raise ImportWarning("Conversion from/to sktime cannot be performed"
-                            " if pandas is not installed.")
+    except ImportError:
+        raise ImportError("Conversion from/to sktime cannot be performed "
+                          "if pandas is not installed.")
     X_ = check_dataset(X)
     X_pd = pd.DataFrame(dtype=numpy.float32)
     for dim in range(X_.shape[2]):
         X_pd['dim_' + str(dim)] = [pd.Series(data=Xi[:ts_size(Xi), dim])
                                    for Xi in X_]
     return X_pd
+
 
 def from_sktime_dataset(X):
     """Transform a sktime-compatible dataset into a tslearn dataset.
@@ -858,9 +859,9 @@ def from_sktime_dataset(X):
     """  # noqa: E501
     try:
         import pandas as pd
-    except:
-        raise ImportWarning("Conversion from/to sktime cannot be performed"
-                            " if pandas is not installed.")
+    except ImportError:
+        raise ImportError("Conversion from/to sktime cannot be performed "
+                          "if pandas is not installed.")
     if not isinstance(X, pd.DataFrame):
         raise ValueError("X is not a valid input sktime array. "
                          "A pandas DataFrame is expected.")
@@ -887,6 +888,7 @@ def from_sktime_dataset(X):
             sz = X["dim_%d" % di][i].size
             tslearn_arr[i, :sz, di] = X["dim_%d" % di][i].values.copy()
     return tslearn_arr
+
 
 def to_pyflux_dataset(X):
     """Transform a tslearn-compatible dataset into a pyflux dataset.
@@ -928,15 +930,16 @@ def to_pyflux_dataset(X):
     """  # noqa: E501
     try:
         import pandas as pd
-    except:
-        raise ImportWarning("Conversion from/to pyflux cannot be performed"
-                            " if pandas is not installed.")
+    except ImportError:
+        raise ImportError("Conversion from/to pyflux cannot be performed "
+                          "if pandas is not installed.")
     X_ = check_dataset(X,
                        force_equal_length=True,
                        force_single_time_series=True)
     X_pd = pd.DataFrame(X[0], dtype=numpy.float32)
     X_pd.columns = ["dim_%d" % di for di in range(X_.shape[2])]
     return X_pd
+
 
 def from_pyflux_dataset(X):
     """Transform a pyflux-compatible dataset into a tslearn dataset.
@@ -980,9 +983,9 @@ def from_pyflux_dataset(X):
     """
     try:
         import pandas as pd
-    except:
-        raise ImportWarning("Conversion from/to pyflux cannot be performed"
-                            " if pandas is not installed.")
+    except ImportError:
+        raise ImportError("Conversion from/to pyflux cannot be performed "
+                          "if pandas is not installed.")
     if not isinstance(X, pd.DataFrame):
         raise ValueError("X is not a valid input pyflux array. "
                          "A pandas DataFrame is expected.")
@@ -1002,6 +1005,7 @@ def from_pyflux_dataset(X):
         sz = len(data)
         tslearn_arr[0, :sz, di] = data
     return tslearn_arr
+
 
 def to_tsfresh_dataset(X):
     """Transform a tslearn-compatible dataset into a tsfresh dataset.
@@ -1034,9 +1038,9 @@ def to_tsfresh_dataset(X):
     """  # noqa: E501
     try:
         import pandas as pd
-    except:
-        raise ImportWarning("Conversion from/to tsfresh cannot be performed"
-                            " if pandas is not installed.")
+    except ImportError:
+        raise ImportError("Conversion from/to tsfresh cannot be performed "
+                          "if pandas is not installed.")
     X_ = check_dataset(X)
     n, sz, d = X_.shape
     dataframes = []
@@ -1051,6 +1055,7 @@ def to_tsfresh_dataset(X):
             df["dim_%d" % di] = Xi_[:, di]
         dataframes.append(df)
     return pd.concat(dataframes)
+
 
 def from_tsfresh_dataset(X):
     """Transform a tsfresh-compatible dataset into a tslearn dataset.
@@ -1098,9 +1103,9 @@ def from_tsfresh_dataset(X):
     """  # noqa: E501
     try:
         import pandas as pd
-    except:
-        raise ImportWarning("Conversion from/to tsfresh cannot be performed"
-                            " if pandas is not installed.")
+    except ImportError:
+        raise ImportError("Conversion from/to tsfresh cannot be performed "
+                          "if pandas is not installed.")
     if not isinstance(X, pd.DataFrame):
         raise ValueError("X is not a valid input tsfresh array. "
                          "A pandas DataFrame is expected.")
@@ -1170,8 +1175,8 @@ def to_cesium_dataset(X):
     try:
         from cesium.time_series import TimeSeries
     except ImportError:
-        raise ImportWarning("Conversion from/to cesium cannot be performed"
-                            " if cesium is not installed.")
+        raise ImportError("Conversion from/to cesium cannot be performed "
+                          "if cesium is not installed.")
 
     def transpose_or_flatten(ts):
         ts_ = ts[:ts_size(ts)]
@@ -1182,6 +1187,7 @@ def to_cesium_dataset(X):
 
     X_ = check_dataset(X)
     return [TimeSeries(m=transpose_or_flatten(Xi)) for Xi in X_]
+
 
 def from_cesium_dataset(X):
     """Transform a cesium-compatible dataset into a tslearn dataset.
@@ -1217,9 +1223,9 @@ def from_cesium_dataset(X):
     """  # noqa: E501
     try:
         from cesium.time_series import TimeSeries
-    except:
-        raise ImportWarning("Conversion from/to cesium cannot be performed"
-                            " if cesium is not installed.")
+    except ImportError:
+        raise ImportError("Conversion from/to cesium cannot be performed "
+                          "if cesium is not installed.")
 
     def format_to_tslearn(ts):
         try:
