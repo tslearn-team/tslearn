@@ -832,6 +832,7 @@ def from_sktime_dataset(X):
 
     Examples
     --------
+    >>> import pandas as pd
     >>> sktime_df = pd.DataFrame()
     >>> sktime_df["dim_0"] = [pd.Series([1, 2, 3]), pd.Series([4, 5, 6])]
     >>> tslearn_arr = from_sktime_dataset(sktime_df)
@@ -957,6 +958,7 @@ def from_pyflux_dataset(X):
 
     Examples
     --------
+    >>> import pandas as pd
     >>> pyflux_df = pd.DataFrame()
     >>> pyflux_df["dim_0"] = numpy.random.rand(10)
     >>> tslearn_arr = from_pyflux_dataset(pyflux_df)
@@ -1074,6 +1076,7 @@ def from_tsfresh_dataset(X):
 
     Examples
     --------
+    >>> import pandas as pd
     >>> tsfresh_df = pd.DataFrame(columns=["id", "time", "a", "b"])
     >>> tsfresh_df["id"] = [0, 0, 0]
     >>> tsfresh_df["time"] = [0, 1, 2]
