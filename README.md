@@ -35,13 +35,13 @@ conda install -c conda-forge tslearn
 
 ## Using PyPI
 
-### Pre-requisites 
+### Pre-requisites
 
 When using PyPI, C++ build tools should be available to perform installation.
 
 Using `pip` should also work fine:
 ```bash
-pip install tslearn
+python -m pip install tslearn
 ```
 
 In this case, you should have `numpy`, `cython` and C++ build tools available
@@ -49,10 +49,10 @@ at build time.
 
 ## Using latest github-hosted version
 
-If you want to get `tslearn`'s latest version, you can refer to the repository 
+If you want to get `tslearn`'s latest version, you can refer to the repository
 hosted at github:
 ```bash
-pip install git+https://github.com/rtavenar/tslearn.git
+python -m pip install git+https://github.com/rtavenar/tslearn.git
 ```
 
 ## Troubleshooting
@@ -61,7 +61,7 @@ It seems on some platforms `Cython` dependency does not install properly.
 If you experiment such an issue, try installing it with the following command:
 
 ```bash
-pip install cython
+python -m pip install cython
 ```
 
 before you start installing `tslearn`.
@@ -69,7 +69,7 @@ If it still does not work, we suggest you switch to `conda` installation.
 
 # Documentation and API reference
 
-The documentation, including a gallery of examples, is hosted at 
+The documentation, including a gallery of examples, is hosted at
 [readthedocs](http://tslearn.readthedocs.io/en/latest/index.html).
 
 # Already available
