@@ -3,12 +3,17 @@
 SVM and GAK
 ===========
 
-This example illustrates the use of the global alignment kernel for support
-vector classification.
+This example illustrates the use of the global alignment kernel (GAK) for
+support vector classification.
 
 This metric is defined in the :ref:`tslearn.metrics <mod-metrics>` module and
-explained in details in "Fast global alignment kernels", by M. Cuturi
-(ICML 2011).
+explained in details in [1].
+
+In this example, a `TimeSeriesSVC` model that uses GAK as kernel is fit and the
+support vectors for each class are reported.
+
+
+[1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
 """
 
 # Author: Romain Tavenard
