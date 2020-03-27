@@ -232,15 +232,10 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         Float : the minimum distance between the centroid of a cluster and the time series
         """
 
-        sum_distances = 0
-        minimum_distance = 0
-        for current_cluster in range(0, self.number_cluster):
-            euclidean_distance = np.linalg.norm(
-                X - self.cluster_.cluster_centers_[current_cluster, : len(X)]
-            )
-            sum_distances = sum_distances + euclidean_distance
-            if minimum_distance < euclidean_distance:
-                minimum_distance = euclidean_distance
+        centroids = self.cluster_.cluster_centers_[:, :len(X)]
+        cluster_distances = np.array(list(map(lambda current_centre: np.linalg.norm(X - current_centre), centroids)))
+        sum_distances = cluster_distances.sum()
+        minimum_distance = cluster_distances.min()
         return sum_distances / self.number_cluster, minimum_distance
 
     def get_dist(self, X, wanted_cluster):
@@ -309,7 +304,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
             gives the future time for which the cost is calculated
 
         Returns
-        -------
+        --------
         float : the computed cost
         """
         cost = 0
