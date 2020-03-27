@@ -45,7 +45,10 @@ class TimeSeriesSVMMixin:
 
         if fit_time:
             self._X_fit = X
-            self.gamma_ = gamma_soft_dtw(X)
+            if self.gamma == "auto":
+                self.gamma_ = gamma_soft_dtw(X)
+            else:
+                self.gamma_ = self.gamma
             self.classes_ = numpy.unique(y)
 
         if self.kernel in VARIABLE_LENGTH_METRICS:
