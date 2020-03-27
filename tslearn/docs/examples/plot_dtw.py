@@ -5,6 +5,14 @@ DTW computation
 
 This example illustrates DTW computation between time series and plots the
 optimal alignment path.
+
+The image represents cost matrix, that is the squared Euclidean distance for
+each time point between both time series, which are represented
+at the left and at the top of the cost matrix.
+
+The optimal path, that is the path that minimizes the total cost to go from
+the first time point to the last one, is represented in white on the image.
+
 """
 
 # Author: Romain Tavenard
