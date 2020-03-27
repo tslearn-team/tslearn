@@ -74,8 +74,17 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
 
     """
 
-    def __init__(self, number_cluster, solver, hidden_layer_sizes, random_state, maximum_iteration, minimum_time_stamp,
-                 lamb, cost_time_parameter):
+    def __init__(
+        self,
+        number_cluster,
+        solver,
+        hidden_layer_sizes,
+        random_state,
+        maximum_iteration,
+        minimum_time_stamp,
+        lamb,
+        cost_time_parameter,
+    ):
         super(NonMyopicEarlyClassification, self).__init__()
         self.solver = solver
         self.hidden_layer_sizes = hidden_layer_sizes
@@ -104,7 +113,9 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         """
         self.cluster_ = TimeSeriesKMeans(n_clusters=self.number_cluster)
         c_k = self.cluster_.fit_predict((to_time_series_dataset(X)))
-        silhouette = silhouette_score(to_time_series_dataset(X), c_k, metric="euclidean")
+        silhouette = silhouette_score(
+            to_time_series_dataset(X), c_k, metric="euclidean"
+        )
 
         return c_k, silhouette
 
@@ -148,14 +159,20 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
                 if len(Y_current_cluster) == 0:
                     current_pyck = 0
                 else:
-                    current_pyck = len(Y_current_cluster[Y_current_cluster == value_current_class]) / \
-                                   len(Y_current_cluster)
+                    current_pyck = len(
+                        Y_current_cluster[Y_current_cluster == value_current_class]
+                    ) / len(Y_current_cluster)
                 self.pyck_[current_class][current_cluster] = current_pyck
 
         for i in range(self.minimum_time_stamp, X.shape[1] + 1):
-            self.classifier_.append(MLPClassifier(solver=self.solver, hidden_layer_sizes=self.hidden_layer_sizes,
-                                                  random_state=self.random_state,
-                                                  max_iter=self.maximum_iteration))
+            self.classifier_.append(
+                MLPClassifier(
+                    solver=self.solver,
+                    hidden_layer_sizes=self.hidden_layer_sizes,
+                    random_state=self.random_state,
+                    max_iter=self.maximum_iteration,
+                )
+            )
             self.classifier_[-1].fit(X1[:, :i], Y1)
             for current_cluster in range(0, self.number_cluster):
                 index_cluster = np.where(c_k2 == current_cluster)
@@ -163,19 +180,42 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
                     X2_current_cluster = np.squeeze(X2[index_cluster, :i], axis=0)
                     Y2_current_cluster = Y2[tuple(index_cluster)]
                     Y2_hat = self.classifier_[-1].predict(X2_current_cluster[:, :i])
-                    self.clusters_["ck_cm{0}".format(current_cluster)].append(confusion_matrix(Y2_current_cluster,
-                                                                                               Y2_hat,
-                                                                                               labels=classes_y))
-                    column_sum = self.clusters_["ck_cm{0}".format(current_cluster)][-1].sum(1)
+                    self.clusters_["ck_cm{0}".format(current_cluster)].append(
+                        confusion_matrix(Y2_current_cluster, Y2_hat, labels=classes_y)
+                    )
+                    column_sum = self.clusters_["ck_cm{0}".format(current_cluster)][
+                        -1
+                    ].sum(1)
                     for current_class in range(0, self.number_classes_):
                         if column_sum[current_class] == 0:
                             column_sum[current_class] = 1
-                    matrix_proba_current_cluster_class = \
-                        np.asarray([[self.clusters_["ck_cm{0}".format(current_cluster)][-1][0][0] / column_sum[0],
-                                     self.clusters_["ck_cm{0}".format(current_cluster)][-1][0][1] / column_sum[0]],
-                                    [self.clusters_["ck_cm{0}".format(current_cluster)][-1][1][0] / column_sum[1],
-                                     self.clusters_["ck_cm{0}".format(current_cluster)][-1][1][1] / column_sum[1]]])
-                    self.pyhatyck_["pyhatycks{0}".format(current_cluster)].append(matrix_proba_current_cluster_class)
+                    matrix_proba_current_cluster_class = np.asarray(
+                        [
+                            [
+                                self.clusters_["ck_cm{0}".format(current_cluster)][-1][
+                                    0
+                                ][0]
+                                / column_sum[0],
+                                self.clusters_["ck_cm{0}".format(current_cluster)][-1][
+                                    0
+                                ][1]
+                                / column_sum[0],
+                            ],
+                            [
+                                self.clusters_["ck_cm{0}".format(current_cluster)][-1][
+                                    1
+                                ][0]
+                                / column_sum[1],
+                                self.clusters_["ck_cm{0}".format(current_cluster)][-1][
+                                    1
+                                ][1]
+                                / column_sum[1],
+                            ],
+                        ]
+                    )
+                    self.pyhatyck_["pyhatycks{0}".format(current_cluster)].append(
+                        matrix_proba_current_cluster_class
+                    )
 
     def get_avg_dist(self, X):
         """
@@ -195,7 +235,9 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         sum_distances = 0
         minimum_distance = 0
         for current_cluster in range(0, self.number_cluster):
-            euclidean_distance = np.linalg.norm(X - self.cluster_.cluster_centers_[current_cluster, :len(X)])
+            euclidean_distance = np.linalg.norm(
+                X - self.cluster_.cluster_centers_[current_cluster, : len(X)]
+            )
             sum_distances = sum_distances + euclidean_distance
             if minimum_distance < euclidean_distance:
                 minimum_distance = euclidean_distance
@@ -216,7 +258,9 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         Float: the expected euclidean distance
         """
 
-        euclidean_dist = np.linalg.norm(X - self.cluster_.cluster_centers_[wanted_cluster, :len(X)])
+        euclidean_dist = np.linalg.norm(
+            X - self.cluster_.cluster_centers_[wanted_cluster, : len(X)]
+        )
 
         return euclidean_dist
 
@@ -234,13 +278,19 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         vector : the probabilities of the given time series to be in the clusters of the model
         """
         average_distance, minimum_distance = self.get_avg_dist(X)
-        minimum_distance_to_average = (average_distance - minimum_distance) / average_distance
+        minimum_distance_to_average = (
+            average_distance - minimum_distance
+        ) / average_distance
         sum_sk = 0
         sk = []
         for current_cluster in range(0, self.number_cluster):
             d_k = self.get_dist(X, current_cluster)
             Delta_k = (average_distance - d_k) / average_distance
-            proba_current_cluster = 1 / (math.exp(self.lamb * minimum_distance_to_average) + math.exp(self.lamb * (minimum_distance_to_average - Delta_k)) + 10e-6)
+            proba_current_cluster = 1 / (
+                math.exp(self.lamb * minimum_distance_to_average)
+                + math.exp(self.lamb * (minimum_distance_to_average - Delta_k))
+                + 10e-6
+            )
             sk.append(proba_current_cluster)
             sum_sk = sum_sk + sk[-1]
         final_sk = [(x / sum_sk) for x in sk]
@@ -271,8 +321,12 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
                 cost_y_hat = 0
                 for y_hat in range(0, self.number_classes_):
                     if y != y_hat:
-                        cost_y_hat = cost_y_hat + self.pyhatyck_["pyhatycks{0}".format(current_cluster)][
-                            truncated_t + tau - self.minimum_time_stamp][y][y_hat]
+                        cost_y_hat = (
+                            cost_y_hat
+                            + self.pyhatyck_["pyhatycks{0}".format(current_cluster)][
+                                truncated_t + tau - self.minimum_time_stamp
+                            ][y][y_hat]
+                        )
                 cost_y = cost_y + self.pyck_[y, current_cluster] * cost_y_hat
             cost = cost + proba_clusters[current_cluster] * cost_y
         cost = cost + self.cost_time(t=truncated_t + tau)
@@ -328,21 +382,28 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         time_prediction = self.minimum_time_stamp
         stop_criterion = False
         while stop_criterion is False:
-            minimum_tau, minimum_loss = self.minimize_integer(end_of_time=time_stamp - time_prediction,
-                                                              function_to_minimize=cost_function,
-                                                              xt=xt[:, :time_prediction])
+            minimum_tau, minimum_loss = self.minimize_integer(
+                end_of_time=time_stamp - time_prediction,
+                function_to_minimize=cost_function,
+                xt=xt[:, :time_prediction],
+            )
             if time_prediction == time_stamp:
                 result = self.classifier_[-1].predict(xt)
                 result_proba = self.classifier_[-1].predict_proba(xt)
                 stop_criterion = True
-                minimum_tau, minimum_loss = self.minimize_integer(end_of_time=time_stamp - time_prediction,
-                                                                  function_to_minimize=cost_function,
-                                                                  xt=xt[:, :time_prediction])
+                minimum_tau, minimum_loss = self.minimize_integer(
+                    end_of_time=time_stamp - time_prediction,
+                    function_to_minimize=cost_function,
+                    xt=xt[:, :time_prediction],
+                )
                 loss_exit = minimum_loss
             elif minimum_tau == time_prediction:
-                result = self.classifier_[time_prediction - self.minimum_time_stamp].predict(xt[:, :time_prediction])
-                result_proba = self.classifier_[time_prediction -
-                                                self.minimum_time_stamp].predict_proba(xt[:, :time_prediction])
+                result = self.classifier_[
+                    time_prediction - self.minimum_time_stamp
+                ].predict(xt[:, :time_prediction])
+                result_proba = self.classifier_[
+                    time_prediction - self.minimum_time_stamp
+                ].predict_proba(xt[:, :time_prediction])
                 loss_exit = minimum_loss
                 stop_criterion = True
             else:
@@ -352,7 +413,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
     @staticmethod
     def avg_prediction(time_predictions):
 
-        avgerage_time = sum(time_predictions)/len(time_predictions)
+        avgerage_time = sum(time_predictions) / len(time_predictions)
         variance_time = np.var(time_predictions)
         return avgerage_time, variance_time
 
@@ -382,7 +443,9 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         Y_pred = []
 
         for t in range(0, X.shape[0]):
-            new_classif, new_time, new_proba, new_cost = self.classification(X[t], self.cost_function)
+            new_classif, new_time, new_proba, new_cost = self.classification(
+                X[t], self.cost_function
+            )
             Y_pred.append(new_classif)
         return Y_pred
 
@@ -411,7 +474,9 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         cost_average = 0
 
         for current_serie in range(0, X.shape[0]):
-            new_classif, new_time, new_proba, new_cost = self.classification(X[current_serie], self.cost_function)
+            new_classif, new_time, new_proba, new_cost = self.classification(
+                X[current_serie], self.cost_function
+            )
             Y_pred.append(new_classif)
             time_predictions.append(new_time)
             pred_proba.append(new_proba)
@@ -428,8 +493,13 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
             for current_class in range(0, self.number_classes_):
                 for current_hat_class in range(0, self.number_classes_):
                     if current_class != current_hat_class:
-                        sum_prob = [self.pyck_[current_class][current_cluster] * item[current_class][current_hat_class]
-                                    for item in self.pyhatyck_["pyhatycks{0}".format(current_cluster)]]
+                        sum_prob = [
+                            self.pyck_[current_class][current_cluster]
+                            * item[current_class][current_hat_class]
+                            for item in self.pyhatyck_[
+                                "pyhatycks{0}".format(current_cluster)
+                            ]
+                        ]
                         lab = "y={} yhat={} ck={}".format(
                             current_class, current_hat_class, current_cluster
                         )
@@ -442,5 +512,3 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
     def cost_time(self, t):
         time_stamp = np.linspace(0, self.len_X_, num=self.len_X_)
         return time_stamp[t] * self.cost_time_parameter
-
-
