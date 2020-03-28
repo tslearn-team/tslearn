@@ -1,3 +1,5 @@
+from tempfile import NamedTemporaryFile
+
 import numpy as np
 import pickle
 
@@ -13,19 +15,21 @@ def test_arraylike_copy():
                                False)
 
 
-def test_save_load():
+def test_save_load_random():
     n, sz, d = 15, 10, 3
     rng = np.random.RandomState(0)
     dataset = rng.randn(n, sz, d)
-    tslearn.utils.save_timeseries_txt("tmp-tslearn-test.txt", dataset)
-    reloaded_dataset = tslearn.utils.load_timeseries_txt(
-        "tmp-tslearn-test.txt")
+    with NamedTemporaryFile(suffix=".txt") as text_file:
+        tslearn.utils.save_timeseries_txt(text_file.name, dataset)
+        reloaded_dataset = tslearn.utils.load_timeseries_txt(text_file.name)
     np.testing.assert_allclose(dataset, reloaded_dataset)
 
+
+def test_save_load_known():
     dataset = tslearn.utils.to_time_series_dataset([[1, 2, 3, 4], [1, 2, 3]])
-    tslearn.utils.save_timeseries_txt("tmp-tslearn-test.txt", dataset)
-    reloaded_dataset = tslearn.utils.load_timeseries_txt(
-        "tmp-tslearn-test.txt")
+    with NamedTemporaryFile(suffix=".txt") as text_file:
+        tslearn.utils.save_timeseries_txt(text_file.name, dataset)
+        reloaded_dataset = tslearn.utils.load_timeseries_txt(text_file.name)
     for ts0, ts1 in zip(dataset, reloaded_dataset):
         np.testing.assert_allclose(ts0[:tslearn.utils.ts_size(ts0)],
                                    ts1[:tslearn.utils.ts_size(ts1)])
