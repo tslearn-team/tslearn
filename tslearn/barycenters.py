@@ -3,16 +3,17 @@
 The :mod:`tslearn.barycenters` module gathers algorithms for time series
 barycenter computation.
 
-A barycenter (or *Fréchet mean*) is a time series which minimizes some
-distance metric to the time series of a given data set, much like a
-centroid minimizes the (euclidean) distances to a set of points.
+A barycenter (or *Fréchet mean*) is a time series :math:`b` which minimizes
+the sum of distances to the time series of a given data set :math:`x`:
+
+.. math:: \\min \\sum_i d^2( b, x_i )
 
 Only the methods :func:`dtw_barycenter_averaging` and
 :func:`softdtw_barycenter` can operate on variable-length time-series
 (see :ref:`here<variable-length-barycenter>`).
 
 See the :ref:`barycenter examples<sphx_glr_auto_examples_plot_barycenters.py>`
-for an overview over the four available methods.
+for an overview.
 """
 
 # Code for soft DTW is by Mathieu Blondel under Simplified BSD license
@@ -833,6 +834,8 @@ def softdtw_barycenter(X, gamma=1.0, weights=None, method="L-BFGS-B", tol=1e-3,
                        max_iter=50, init=None):
     """Compute barycenter (time series averaging) under the soft-DTW geometry.
 
+    Soft-DTW was originally presented in [1]_.
+
     Parameters
     ----------
     X : array-like, shape=(n_ts, sz, d)
@@ -875,6 +878,11 @@ def softdtw_barycenter(X, gamma=1.0, weights=None, method="L-BFGS-B", tol=1e-3,
            [2.67573269],
            [3.51057026],
            [4.33645802]])
+
+    References
+    ----------
+    .. [1] M. Cuturi, M. Blondel “Soft-DTW: a Differentiable Loss Function for
+       Time-Series,” ICML 2017.
     """
     X_ = to_time_series_dataset(X)
     weights = _set_weights(weights, X_.shape[0])

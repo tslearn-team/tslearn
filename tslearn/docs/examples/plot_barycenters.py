@@ -18,19 +18,26 @@ set of time series:
 * *DTW Barycenter Averaging (DBA)* is an iteratively refined barycenter,
   starting out with a (potentially) bad candidate and improving it
   until convergence criteria are met. The optimization can be accomplished
-  with (a) expectation-maximization and (b) stochastic subgradient descent.
-  Empirically, the latter "is [often] more stable and finds better
-  solutions in shorter time" [1].
+  with (a) expectation-maximization [1] and (b) stochastic subgradient
+  descent [2]. Empirically, the latter "is [often] more stable and finds better
+  solutions in shorter time" [2].
 * *Soft-DTW barycenter* uses a differentiable loss function to iteratively
-  find a barycenter. The method itself and the parameter :math:`\\gamma=1.0` is
-  described in more detail in the section on :ref:`DTW<dtw>`. There is also a
-  dedicated
+  find a barycenter [3]. The method itself and the parameter
+  :math:`\\gamma=1.0` is described in more detail in the section on
+  :ref:`DTW<dtw>`. There is also a dedicated
   :ref:`example<sphx_glr_auto_examples_plot_barycenter_interpolate.py>`
   available.
 
-[1] D. Schultz and B. Jain. Nonsmooth Analysis and Subgradient Methods
+[1] F. Petitjean, A. Ketterlin & P. Gancarski. A global averaging method
+for dynamic time warping, with applications to clustering. Pattern
+Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
+
+[2] D. Schultz and B. Jain. Nonsmooth Analysis and Subgradient Methods
 for Averaging in Dynamic Time Warping Spaces.
 Pattern Recognition, 74, 340-358.
+
+[3] M. Cuturi, M. Blondel “Soft-DTW: a Differentiable Loss Function for
+Time-Series,” ICML 2017.
 """
 
 # Author: Romain Tavenard, Felix Divo
