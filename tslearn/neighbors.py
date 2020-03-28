@@ -7,7 +7,7 @@ import numpy
 from sklearn import neighbors
 from sklearn.neighbors import (KNeighborsClassifier, NearestNeighbors,
                                KNeighborsRegressor)
-from sklearn.neighbors.base import KNeighborsMixin
+from sklearn.neighbors._base import KNeighborsMixin
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 from scipy.spatial.distance import cdist as scipy_cdist
@@ -91,7 +91,7 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
                 fit_X = self._X_fit
             if parallelize:
                 full_dist_matrix = cdist_fun(X, fit_X, n_jobs=self.n_jobs,
-                                             verbose=self.verbose, 
+                                             verbose=self.verbose,
                                              **metric_params)
             else:
                 full_dist_matrix = cdist_fun(X, fit_X, **metric_params)
@@ -130,7 +130,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
     metric_params : dict or None (default: None)
         Dictionnary of metric parameters.
         For metrics that accept parallelization of the cross-distance matrix
-        computations, `n_jobs` and `verbose` keys passed in `metric_params` 
+        computations, `n_jobs` and `verbose` keys passed in `metric_params`
         are overridden by the `n_jobs` and `verbose` arguments.
 
     n_jobs : int or None, optional (default=None)
@@ -142,7 +142,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
         ``-1`` means using all processors. See scikit-learns'
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`__
         for more details.
-        
+
     Notes
     -----
         The training data are saved to disk if this model is
@@ -318,7 +318,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
     metric_params : dict or None (default: None)
         Dictionnary of metric parameters.
         For metrics that accept parallelization of the cross-distance matrix
-        computations, `n_jobs` and `verbose` keys passed in `metric_params` 
+        computations, `n_jobs` and `verbose` keys passed in `metric_params`
         are overridden by the `n_jobs` and `verbose` arguments.
 
     n_jobs : int or None, optional (default=None)
@@ -332,19 +332,19 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         for more details.
 
     verbose : int, optional (default=0)
-        The verbosity level: if non zero, progress messages are printed. 
-        Above 50, the output is sent to stdout. 
-        The frequency of the messages increases with the verbosity level. 
+        The verbosity level: if non zero, progress messages are printed.
+        Above 50, the output is sent to stdout.
+        The frequency of the messages increases with the verbosity level.
         If it more than 10, all iterations are reported.
         `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`__
         for more details.
-    
+
     Notes
     -----
         The training data are saved to disk if this model is
         serialized and may result in a large model file if the training
         dataset is large.
-    
+
     Examples
     --------
     >>> clf = KNeighborsTimeSeriesClassifier(n_neighbors=2, metric="dtw")
@@ -365,7 +365,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
     >>> clf.fit([[1, 2, 3], [1, 1.2, 3.2], [3, 2, 1]],
     ...         y=[0, 0, 1]).predict([[1, 2.2, 3.5]])
     array([0])
-    """ # noqa: E501
+    """  # noqa: E501
     def __init__(self,
                  n_neighbors=5,
                  weights='uniform',
@@ -557,7 +557,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
     metric_params : dict or None (default: None)
         Dictionnary of metric parameters.
         For metrics that accept parallelization of the cross-distance matrix
-        computations, `n_jobs` and `verbose` keys passed in `metric_params` 
+        computations, `n_jobs` and `verbose` keys passed in `metric_params`
         are overridden by the `n_jobs` and `verbose` arguments.
 
     n_jobs : int or None, optional (default=None)
@@ -571,9 +571,9 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         for more details.
 
     verbose : int, optional (default=0)
-        The verbosity level: if non zero, progress messages are printed. 
-        Above 50, the output is sent to stdout. 
-        The frequency of the messages increases with the verbosity level. 
+        The verbosity level: if non zero, progress messages are printed.
+        Above 50, the output is sent to stdout.
+        The frequency of the messages increases with the verbosity level.
         If it more than 10, all iterations are reported.
         `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`__
         for more details.
@@ -598,7 +598,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
     >>> clf.fit([[1, 2, 3], [1, 1.2, 3.2], [3, 2, 1]],
     ...         y=[0.1, 0.1, 1.1]).predict([[1, 2.2, 3.5]])
     array([0.1])
-    """ # noqa: E501
+    """  # noqa: E501
     def __init__(self,
                  n_neighbors=5,
                  weights='uniform',
