@@ -20,7 +20,9 @@ import sphinx_bootstrap_theme
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 # Uncomment for local build
-# sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
+on_rtd = os.environ.get('READTHEDOCS') == 'True'
+if not on_rtd:
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
 
 # -- General configuration ------------------------------------------------
 
@@ -52,21 +54,22 @@ sphinx_gallery_conf = {
     'examples_dirs': ['./examples'],
     'gallery_dirs': ['./auto_examples'],
     'reference_url':  {'tslearn': None,
-                       'matplotlib': 'http://matplotlib.org',
-                       'numpy': 'http://docs.scipy.org/doc/numpy-1.9.1'},
+                       # 'matplotlib': 'http://matplotlib.org',
+                       # 'numpy': 'http://docs.scipy.org/doc/numpy-1.9.1'
+                       },
     # 'default_thumb_file': 'fig/logo.png',
     'backreferences_dir': 'gen_modules/backreferences',
     'doc_module': ('tslearn',),
-    'binder': {
-        # Required keys
-        'org': 'rtavenar',
-        'repo': 'tslearn',
-        'branch': 'master',
-        'binderhub_url': 'https://mybinder.org',
-        'dependencies': '../../requirements.txt',
-        # Optional keys
-        'use_jupyter_lab': True
-    }
+    # 'binder': {
+    #     # Required keys
+    #     'org': 'rtavenar',
+    #     'repo': 'tslearn',
+    #     'branch': 'master',
+    #     'binderhub_url': 'https://mybinder.org',
+    #     'dependencies': '../../requirements.txt',
+    #     # Optional keys
+    #     'use_jupyter_lab': True
+    # }
 }
 
 # Add any paths that contain templates here, relative to this directory.

@@ -1,8 +1,7 @@
 [![PyPI version](https://badge.fury.io/py/tslearn.svg)](https://badge.fury.io/py/tslearn)
 [![Documentation Status](https://readthedocs.org/projects/tslearn/badge/?version=latest)](http://tslearn.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.org/rtavenar/tslearn.svg?branch=master)](https://travis-ci.org/rtavenar/tslearn)
-[![Code Climate](https://codeclimate.com/github/rtavenar/tslearn/badges/gpa.svg)](https://codeclimate.com/github/rtavenar/tslearn)
-[![Test Coverage](https://codeclimate.com/github/rtavenar/tslearn/badges/coverage.svg)](https://codeclimate.com/github/rtavenar/tslearn/coverage)
+[![Codecov](https://codecov.io/gh/rtavenar/tslearn/branch/master/graph/badge.svg)](https://codecov.io/gh/rtavenar/tslearn)
 [![Downloads](https://pepy.tech/badge/tslearn)](https://pepy.tech/project/tslearn)
 
 `tslearn` is a Python package that provides machine learning tools for the analysis of time series.
@@ -23,12 +22,9 @@ numba
 ```
 
 If you plan to use the `shapelets` module, `keras` and `tensorflow` should also be installed.
+`h5py` is required for reading or writing models using the hdf5 file format.
 
 # Installation
-
-## Pre-requisites 
-
-C++ build tools should be available to perform installation.
 
 ## Using conda
 
@@ -39,16 +35,24 @@ conda install -c conda-forge tslearn
 
 ## Using PyPI
 
+### Pre-requisites
+
+When using PyPI, C++ build tools should be available to perform installation.
+
 Using `pip` should also work fine:
 ```bash
-pip install tslearn
+python -m pip install tslearn
 ```
+
+In this case, you should have `numpy`, `cython` and C++ build tools available
+at build time.
 
 ## Using latest github-hosted version
 
-If you want to get `tslearn`'s latest version, you can refer to the repository hosted at github:
+If you want to get `tslearn`'s latest version, you can refer to the repository
+hosted at github:
 ```bash
-pip install git+https://github.com/rtavenar/tslearn.git
+python -m pip install https://github.com/rtavenar/tslearn/archive/master.zip
 ```
 
 ## Troubleshooting
@@ -57,19 +61,16 @@ It seems on some platforms `Cython` dependency does not install properly.
 If you experiment such an issue, try installing it with the following command:
 
 ```bash
-pip install cython
-```
-
-or (depending on your preferred python package manager):
-```bash
-conda install -c anaconda cython
+python -m pip install cython
 ```
 
 before you start installing `tslearn`.
+If it still does not work, we suggest you switch to `conda` installation.
 
 # Documentation and API reference
 
-The documentation, including a gallery of examples, is hosted at [readthedocs](http://tslearn.readthedocs.io/en/latest/index.html).
+The documentation, including a gallery of examples, is hosted at
+[readthedocs](http://tslearn.readthedocs.io/en/latest/index.html).
 
 # Already available
 
@@ -120,9 +121,13 @@ If you use `tslearn` in a scientific publication, we would appreciate citations:
 
 ```bibtex
 @misc{tslearn,
- title={tslearn: A machine learning toolkit dedicated to time-series data},
- author={Tavenard, Romain and Faouzi, Johann and Vandewiele, Gilles},
- year={2017},
- note={\url{https://github.com/rtavenar/tslearn}}
+      title={tslearn: A machine learning toolkit dedicated to time-series
+             data},
+      author={Romain Tavenard and Johann Faouzi and Gilles Vandewiele and
+              Felix Divo and Guillaume Androz and Chester Holtz and Marie
+              Payne and Roman Yurchak and Marc Ru{\ss}wurm and Kushal
+              Kolar and Eli Woods},
+      year={2017},
+      note={\url{https://github.com/rtavenar/tslearn}}
 }
 ```

@@ -12,13 +12,28 @@ import sklearn
 from sklearn.base import (BaseEstimator, ClassifierMixin, ClusterMixin,
                           RegressorMixin, TransformerMixin)
 
-from sklearn.utils.testing import *
-from sklearn_patches import *
-from sklearn_patches import _safe_tags, _DEFAULT_TAGS
-
+from sklearn.utils.testing import SkipTest
+from sklearn.exceptions import SkipTestWarning
+from sklearn.utils.estimator_checks import (
+    check_no_attributes_set_in_init,
+    check_parameters_default_constructible
+)
+from tslearn.tests.sklearn_patches import (
+                             check_clustering,
+                             check_non_transf_est_n_iter,
+                             check_fit_idempotent,
+                             check_classifiers_classes,
+                             check_classifiers_train,
+                             check_estimators_pickle,
+                             check_supervised_y_2d,
+                             check_regressor_data_not_an_array,
+                             check_regressors_int_patched,
+                             check_classifiers_cont_target,
+                             check_pipeline_consistency,
+                             yield_all_checks)
+from tslearn.tests.sklearn_patches import _safe_tags
 import warnings
-
-import logging
+import pytest
 
 
 # Patching some check functions to work on ts data instead of tabular data.
@@ -37,7 +52,6 @@ checks.check_classifiers_regression_target = check_classifiers_cont_target
 checks.check_pipeline_consistency = check_pipeline_consistency
 
 
-
 def _get_all_classes():
     # Walk through all the packages from our base_path and
     # add all the classes to a list
@@ -45,7 +59,19 @@ def _get_all_classes():
     base_path = tslearn.__path__
     for _, name, _ in pkgutil.walk_packages(path=base_path,
                                             prefix='tslearn.'):
-        module = __import__(name, fromlist="dummy")
+        try:
+            module = __import__(name, fromlist="dummy")
+        except ImportError:
+            if name.endswith('shapelets'):
+                # keras is likely not installed
+                warnings.warn('Skipped common tests for shapelets '
+                              'as it could not be imported. keras '
+                              '(and tensorflow) are probably not '
+                              'installed!')
+                continue
+            else:
+                raise
+
         all_classes.extend(inspect.getmembers(module, inspect.isclass))
     return all_classes
 
@@ -64,7 +90,7 @@ def is_sklearn(x):
 
 def get_estimators(type_filter='all'):
     """Return a list of classes that inherit from `sklearn.BaseEstimator`.
-    This code is based on `sklearn,utils.testing.all_estimators`.
+    This code is based on `sklearn.utils.testing.all_estimators`.
 
     Parameters
     ----------
@@ -155,12 +181,11 @@ def check_estimator(Estimator):
             warnings.warn(str(exception), SkipTestWarning)
 
 
-@ignore_warnings()
-def test_all_estimators():
-    estimators = get_estimators('all')
-    for estimator in estimators:
-        if hasattr(checks, 'ALLOW_NAN') \
-                and _safe_tags(estimator[1](), "allow_nan"):
-            checks.ALLOW_NAN.append(estimator[0])
-        check_estimator(estimator[1])
-        print(estimator[0])
+@pytest.mark.parametrize('name, Estimator', get_estimators('all'))
+def test_all_estimators(name, Estimator):
+    """Test all the estimators in tslearn."""
+    allow_nan = (hasattr(checks, 'ALLOW_NAN') and
+                 _safe_tags(Estimator(), "allow_nan"))
+    if allow_nan:
+        checks.ALLOW_NAN.append(name)
+    check_estimator(Estimator)

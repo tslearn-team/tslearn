@@ -45,7 +45,10 @@ class TimeSeriesSVMMixin:
 
         if fit_time:
             self._X_fit = X
-            self.gamma_ = gamma_soft_dtw(X)
+            if self.gamma == "auto":
+                self.gamma_ = gamma_soft_dtw(X)
+            else:
+                self.gamma_ = self.gamma
             self.classes_ = numpy.unique(y)
 
         if self.kernel in VARIABLE_LENGTH_METRICS:
@@ -54,12 +57,14 @@ class TimeSeriesSVMMixin:
             if fit_time:
                 sklearn_X = cdist_gak(X,
                                       sigma=numpy.sqrt(self.gamma_ / 2.),
-                                      n_jobs=self.n_jobs)
+                                      n_jobs=self.n_jobs, 
+                                      verbose=self.verbose)
             else:
                 sklearn_X = cdist_gak(X,
                                       self._X_fit,
                                       sigma=numpy.sqrt(self.gamma_ / 2.),
-                                      n_jobs=self.n_jobs)
+                                      n_jobs=self.n_jobs,
+                                      verbose=self.verbose)
         else:
             self.estimator_kernel_ = self.kernel
             sklearn_X = _prepare_ts_datasets_sklearn(X)
@@ -130,7 +135,7 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, BaseEstimator, ClassifierMixin):
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
         for more details.
 
-    verbose : bool, default: False
+    verbose : int, default: 0
         Enable verbose output. Note that this setting takes advantage of a
         per-process runtime setting in libsvm that, if enabled, may not work
         properly in a multithreaded context.
@@ -208,7 +213,7 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, BaseEstimator, ClassifierMixin):
     """
     def __init__(self, C=1.0, kernel="gak", degree=3, gamma="auto", coef0=0.0,
                  shrinking=True, probability=False, tol=0.001, cache_size=200,
-                 class_weight=None, n_jobs=None, verbose=False, max_iter=-1,
+                 class_weight=None, n_jobs=None, verbose=0, max_iter=-1,
                  decision_function_shape="ovr", random_state=None):
         self.C = C
         self.kernel = kernel
@@ -344,7 +349,7 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, BaseEstimator, RegressorMixin):
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
         for more details.
 
-    verbose : bool, default: False
+    verbose : int, default: 0
         Enable verbose output. Note that this setting takes advantage of a
         per-process runtime setting in libsvm that, if enabled, may not work
         properly in a multithreaded context.
@@ -399,7 +404,7 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, BaseEstimator, RegressorMixin):
     """
     def __init__(self, C=1.0, kernel="gak", degree=3, gamma="auto",
                  coef0=0.0, tol=0.001, epsilon=0.1, shrinking=True,
-                 cache_size=200, n_jobs=None, verbose=False, max_iter=-1):
+                 cache_size=200, n_jobs=None, verbose=0, max_iter=-1):
         self.C = C
         self.kernel = kernel
         self.degree = degree
