@@ -4,7 +4,7 @@ LB_Keogh
 ========
 
 This example illustrates the principle of time series envelope and its
-relationship to the "LB_Keogh" lower bound.
+relationship to the "LB_Keogh" lower bound [1].
 
 The envelope of a time series consists of two time series such that the
 original time series is between the two time series. Denoting the original
@@ -35,6 +35,9 @@ defined as:
     }
 
 So it is simply the Euclidean distance between :math:`Q` and the envelope.
+
+[1] E. Keogh and C. A. Ratanamahatana, "Exact indexing of dynamic time
+warping". Knowledge and Information Systems, 7(3), 358-386 (2004).
 """
 
 # Author: Romain Tavenard

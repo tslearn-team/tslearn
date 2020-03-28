@@ -4,7 +4,7 @@ DTW computation
 ===============
 
 This example illustrates DTW computation between time series and plots the
-optimal alignment path.
+optimal alignment path [1].
 
 The image represents cost matrix, that is the squared Euclidean distance for
 each time point between both time series, which are represented
@@ -13,6 +13,9 @@ at the left and at the top of the cost matrix.
 The optimal path, that is the path that minimizes the total cost to go from
 the first time point to the last one, is represented in white on the image.
 
+[1] H. Sakoe and S. Chiba, "Dynamic programming algorithm optimization
+for spoken word recognition". IEEE Transactions on Acoustics, Speech, and
+Signal Processing, 26(1), 43-49 (1978).
 """
 
 # Author: Romain Tavenard
@@ -53,7 +56,7 @@ ax_s_y = plt.axes(rect_s_y)
 
 mat = cdist(dataset_scaled[0], dataset_scaled[1])
 
-ax_gram.imshow(mat)
+ax_gram.imshow(mat, origin='lower')
 ax_gram.axis("off")
 ax_gram.autoscale(False)
 ax_gram.plot([j for (i, j) in path], [i for (i, j) in path], "w-",
@@ -63,7 +66,7 @@ ax_s_x.plot(numpy.arange(sz), dataset_scaled[1], "b-", linewidth=3.)
 ax_s_x.axis("off")
 ax_s_x.set_xlim((0, sz - 1))
 
-ax_s_y.plot(- dataset_scaled[0], numpy.arange(sz)[::-1], "b-", linewidth=3.)
+ax_s_y.plot(- dataset_scaled[0], numpy.arange(sz), "b-", linewidth=3.)
 ax_s_y.axis("off")
 ax_s_y.set_ylim((0, sz - 1))
 
