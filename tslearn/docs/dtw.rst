@@ -1,3 +1,5 @@
+.. _dtw:
+
 Dynamic Time Warping
 ====================
 
