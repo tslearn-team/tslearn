@@ -1,35 +1,19 @@
+language: python
+
 env:
   global:
   - CODECLIMATE_REPO_TOKEN=d8c5ae082832ed947bc6e673ebfbd1592278fa04633401bf7d180687238fa397
   - GIT_COMMITTED_AT=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then git log -1 --pretty=format:%ct;
     else git log -1 --skip 1 --pretty=format:%ct; fi)
-language: python
-matrix:
-  include:
-    - python: '2.7'
-      env:
-      - KERAS_BACKEND=tensorflow
-      - NUMBA_DISABLE_JIT=0
-    - python: '3.5'
-      env:
-      - KERAS_BACKEND=tensorflow
-      - NUMBA_DISABLE_JIT=0
-    - python: '3.6'
-      env:
-      - KERAS_BACKEND=tensorflow
-      - NUMBA_DISABLE_JIT=0
-    - python: '2.7'
-      env:
-      - KERAS_BACKEND=tensorflow
-      - NUMBA_DISABLE_JIT=1
-    - python: '3.5'
-      env:
-      - KERAS_BACKEND=tensorflow
-      - NUMBA_DISABLE_JIT=1
-    - python: '3.6'
-      env:
-      - KERAS_BACKEND=tensorflow
-      - NUMBA_DISABLE_JIT=1
+  matrix:
+  - KERAS_BACKEND=tensorflow NUMBA_DISABLE_JIT=0
+  - KERAS_BACKEND=tensorflow NUMBA_DISABLE_JIT=1
+
+python:
+  - '2.7'
+  - '3.5'
+  - '3.6'
+
 install:
 - sudo apt-get update
 - if [[ "$TRAVIS_PYTHON_VERSION" == 2.* ]];
@@ -50,6 +34,7 @@ install:
 - pip install codeclimate-test-reporter
 - rm -f tslearn/*.c
 - python setup.py build_ext --inplace
+
 script:
 # run keras backend init to initialize backend config
 - python -c "import keras.backend";
@@ -59,5 +44,6 @@ script:
   python -m pytest -v tslearn tslearn/tests/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py --ignore tslearn/tests/test_estimators.py $KERAS_IGNORE --cov=tslearn;
   if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then codeclimate-test-reporter; fi
   else travis_wait 40 python -m pytest -v tslearn tslearn/tests/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py $KERAS_IGNORE; fi
+
 notifications:
   email: false
