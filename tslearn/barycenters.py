@@ -7,8 +7,9 @@ A barycenter (or *Fréchet mean*) is a time series which minimizes some
 distance metric to the time series of a given data set, much like a
 centroid minimizes the (euclidean) distances to a set of points.
 
-Only the methods :func:`dtw_barycenter_averaging` and :func:`softdtw_barycenter`
-can operate on variable-length time-series (see :ref:`here<variable-length-barycenter>`).
+Only the methods :func:`dtw_barycenter_averaging` and
+:func:`softdtw_barycenter` can operate on variable-length time-series
+(see :ref:`here<variable-length-barycenter>`).
 
 See the :ref:`barycenter examples<sphx_glr_auto_examples_plot_barycenters.py>`
 for an overview over the four available methods.

@@ -95,10 +95,11 @@ Examples
     labels = km.fit_predict(X)
     silhouette_score(X, labels, metric="dtw")
 
+.. _variable-length-barycenter:
+
 Barycenter computation
 ----------------------
 
-.. _variable-length-barycenter
 
 * :ref:`dtw_barycenter_averaging <fun-tslearn.barycenters.dtw_barycenter_averaging>`
 * :ref:`softdtw_barycenter <fun-tslearn.barycenters.softdtw_barycenter>`

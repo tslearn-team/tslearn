@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
+r"""
 Barycenters
 ===========
 
@@ -16,16 +16,16 @@ set of time series:
   DTW-based methods and may often be inappropriate. However, it is the
   fastest of the methods shown.
 * *DTW Barycenter Averaging (DBA)* is an iteratively refined barycenter,
-  starting out with a (potentially) very bad candidate and improving it
-  until convergence criteria are met, optionally trying multiple
-  initializations. The optimization can be accomplished with (a)
-  expectation-maximization and (b) stochastic subgradient descent.
+  starting out with a (potentially) bad candidate and improving it
+  until convergence criteria are met. The optimization can be accomplished
+  with (a) expectation-maximization and (b) stochastic subgradient descent.
   Empirically, the latter "is [often] more stable and finds better
   solutions in shorter time" [1].
 * *Soft-DTW barycenter* uses a differentiable loss function to iteratively
   find a barycenter. The method itself and the parameter :math:`\gamma=1.0` is
   described in more detail in the section on :ref:`DTW<dtw>`. There is also a
-  :ref:`dedicated example<sphx_glr_auto_examples_plot_barycenter_interpolate.py>`
+  dedicated
+  :ref:`example<sphx_glr_auto_examples_plot_barycenter_interpolate.py>`
   available.
 
 [1] D. Schultz and B. Jain. Nonsmooth Analysis and Subgradient Methods
@@ -61,22 +61,23 @@ def plot_helper(barycenter):
     plt.plot(barycenter.ravel(), "r-", linewidth=2)
 
 
-# plot the four variants
+# plot the four variants with the same number of iterations and a tolerance of
+# 1e-3 where applicable
 ax1 = plt.subplot(4, 1, 1)
 plt.title("Euclidean barycenter")
 plot_helper(euclidean_barycenter(X))
 
 plt.subplot(4, 1, 2, sharex=ax1)
 plt.title("DBA (vectorized version of Petitjean's EM)")
-plot_helper(dtw_barycenter_averaging(X, max_iter=100))
+plot_helper(dtw_barycenter_averaging(X, max_iter=50, tol=1e-3))
 
 plt.subplot(4, 1, 3, sharex=ax1)
 plt.title("DBA (subgradient descent approach)")
-plot_helper(dtw_barycenter_averaging_subgradient(X, max_iter=100))
+plot_helper(dtw_barycenter_averaging_subgradient(X, max_iter=50, tol=1e-3))
 
 plt.subplot(4, 1, 4, sharex=ax1)
 plt.title("Soft-DTW barycenter ($\gamma$=1.0)")
-plot_helper(softdtw_barycenter(X, gamma=1., max_iter=100))
+plot_helper(softdtw_barycenter(X, gamma=1., max_iter=50, tol=1e-3))
 
 # clip the axes for better readability
 ax1.set_xlim([0, length_of_sequence])
