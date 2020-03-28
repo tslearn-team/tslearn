@@ -7,7 +7,11 @@ import numpy
 from sklearn import neighbors
 from sklearn.neighbors import (KNeighborsClassifier, NearestNeighbors,
                                KNeighborsRegressor)
-from sklearn.neighbors._base import KNeighborsMixin
+try:
+    from sklearn.neighbors._base import KNeighborsMixin
+except ImportError:
+    from sklearn.neighbors.base import KNeighborsMixin
+
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 from scipy.spatial.distance import cdist as scipy_cdist
