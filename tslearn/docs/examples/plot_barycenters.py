@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-r"""
+"""
 Barycenters
 ===========
 
@@ -22,7 +22,7 @@ set of time series:
   Empirically, the latter "is [often] more stable and finds better
   solutions in shorter time" [1].
 * *Soft-DTW barycenter* uses a differentiable loss function to iteratively
-  find a barycenter. The method itself and the parameter :math:`\gamma=1.0` is
+  find a barycenter. The method itself and the parameter :math:`\\gamma=1.0` is
   described in more detail in the section on :ref:`DTW<dtw>`. There is also a
   dedicated
   :ref:`example<sphx_glr_auto_examples_plot_barycenter_interpolate.py>`
