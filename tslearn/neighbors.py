@@ -4,10 +4,10 @@ time series metrics.
 """
 
 import numpy
-from sklearn import neighbors
 from sklearn.neighbors import (KNeighborsClassifier, NearestNeighbors,
-                               KNeighborsRegressor)
-from sklearn.neighbors.base import KNeighborsMixin
+                               KNeighborsRegressor, VALID_METRICS,
+                               NearestNeighbors)
+from sklearn.neighbors._base import KNeighborsMixin
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 from scipy.spatial.distance import cdist as scipy_cdist
@@ -19,7 +19,7 @@ from tslearn.utils import (to_time_series_dataset, to_sklearn_dataset,
                            check_dims)
 from tslearn.bases import BaseModelPackage
 
-neighbors.VALID_METRICS['brute'].extend(['dtw', 'softdtw', 'sax'])
+VALID_METRICS['brute'].extend(['dtw', 'softdtw', 'sax'])
 
 
 class KNeighborsTimeSeriesMixin(KNeighborsMixin):
@@ -239,9 +239,9 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
 
     def _is_fitted(self):
         if self.metric in TSLEARN_VALID_METRICS:
-            check_is_fitted(self, '_ts_fit')
+            check_is_fitted(self)
         else:
-            check_is_fitted(self, '_X_fit')
+            check_is_fitted(self)
 
         return True
 
@@ -317,7 +317,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
                     del metric_params["n_jobs"]
                 if "verbose" in metric_params.keys():
                     del metric_params["verbose"]
-            check_is_fitted(self, '_ts_fit')
+            check_is_fitted(self)
             X = check_array(X, allow_nd=True, force_all_finite=False)
             X = to_time_series_dataset(X)
             if self._ts_metric == "dtw":
@@ -336,7 +336,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
             self.metric = self._ts_metric
             return pred
         else:
-            check_is_fitted(self, '_X_fit')
+            check_is_fitted(self)
             if X is None:
                 X_ = None
             else:
@@ -442,7 +442,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         self.verbose = verbose
 
     def _is_fitted(self):
-        check_is_fitted(self, '_ts_fit')
+        check_is_fitted(self)
         return True
 
     def _get_model_params(self):
@@ -514,13 +514,13 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             Array of predicted class labels
         """
         if self.metric in TSLEARN_VALID_METRICS:
-            check_is_fitted(self, '_ts_fit')
+            check_is_fitted(self)
             X_ = self._precompute_cross_dist(X)
             pred = super(KNeighborsTimeSeriesClassifier, self).predict(X_)
             self.metric = self._ts_metric
             return pred
         else:
-            check_is_fitted(self, '_X_fit')
+            check_is_fitted(self)
             X = check_array(X, allow_nd=True)
             X = to_time_series_dataset(X)
             X_ = to_sklearn_dataset(X)
@@ -541,14 +541,14 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             Array of predicted class probabilities
         """
         if self.metric in TSLEARN_VALID_METRICS:
-            check_is_fitted(self, '_ts_fit')
+            check_is_fitted(self)
             X_ = self._precompute_cross_dist(X)
             pred = super(KNeighborsTimeSeriesClassifier,
                          self).predict_proba(X_)
             self.metric = self._ts_metric
             return pred
         else:
-            check_is_fitted(self, '_X_fit')
+            check_is_fitted(self)
             X = check_array(X, allow_nd=True)
             X = to_time_series_dataset(X)
             X_ = to_sklearn_dataset(X)
@@ -693,13 +693,13 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
             Array of predicted targets
         """
         if self.metric in TSLEARN_VALID_METRICS:
-            check_is_fitted(self, '_ts_fit')
+            check_is_fitted(self)
             X_ = self._precompute_cross_dist(X)
             pred = super(KNeighborsTimeSeriesRegressor, self).predict(X_)
             self.metric = self._ts_metric
             return pred
         else:
-            check_is_fitted(self, '_X_fit')
+            check_is_fitted(self)
             X = check_array(X, allow_nd=True)
             X = to_time_series_dataset(X)
             X_ = to_sklearn_dataset(X)

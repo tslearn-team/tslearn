@@ -33,15 +33,14 @@ pipeline = GridSearchCV(
             ('knn', KNeighborsTimeSeriesClassifier())
     ]),
     {'knn__n_neighbors': [5, 25], 'knn__weights': ['uniform', 'distance']},
-    cv=StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42),
-    iid=True
+    cv=StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
 )
 
 X_train, y_train, _, _ = CachedDatasets().load_dataset("Trace")
 
 # Keep only timeseries of class 0, 1 or 2
-X_train = X_train[y_train < 4]
-y_train = y_train[y_train < 4]
+X_train = X_train[y_train > 0]
+y_train = y_train[y_train > 0]
 
 # Keep only the first 50 timeseries of both train and
 # retain only a small amount of each of the timeseries
@@ -51,13 +50,13 @@ X_train, y_train = X_train[:50, 50:150], y_train[:50]
 colors = ['g', 'b', 'r']
 plt.figure()
 for ts, label in zip(X_train, y_train):
-    plt.plot(ts, c=colors[label - 1], alpha=0.5)
+    plt.plot(ts, c=colors[label - 2], alpha=0.5)
 plt.title('The timeseries in the dataset')
 plt.tight_layout()
 plt.show()
 
 # Fit our pipeline
-print('Performing hyper-parameter tuning of KNN classifier...')
+print(end='Performing hyper-parameter tuning of KNN classifier...')
 pipeline.fit(X_train, y_train)
 results = pipeline.cv_results_
 
@@ -83,3 +82,11 @@ for i in range(len(results['params'])):
         score = np.around(score, 5)
         s += '{:>12}|'.format(score)
     print(s.strip())
+
+best_comb = np.argmax(results['mean_test_score'])
+best_params = results['params'][best_comb]
+
+print()
+print('Best parameter combination:')
+print('weights={}, n_neighbors={}'.format(best_params['knn__weights'],
+                                          best_params['knn__n_neighbors']))
