@@ -61,4 +61,3 @@ script:
   else travis_wait 40 python -m pytest -v tslearn tslearn/tests/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py $KERAS_IGNORE; fi
 notifications:
   email: false
-
