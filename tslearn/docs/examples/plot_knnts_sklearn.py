@@ -33,8 +33,7 @@ pipeline = GridSearchCV(
             ('knn', KNeighborsTimeSeriesClassifier())
     ]),
     {'knn__n_neighbors': [5, 25], 'knn__weights': ['uniform', 'distance']},
-    cv=StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42),
-    iid=True
+    cv=StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
 )
 
 X_train, y_train, _, _ = CachedDatasets().load_dataset("Trace")
