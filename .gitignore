@@ -104,3 +104,4 @@ ENV/
 tslearn/examples
 tslearn/docs/auto_examples
 .pytest_cache
+.mypy_cache
