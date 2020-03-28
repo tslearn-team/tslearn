@@ -819,7 +819,8 @@ def _softdtw_func(Z, X, weights, barycenter, gamma):
 
 def softdtw_barycenter(X, gamma=1.0, weights=None, method="L-BFGS-B", tol=1e-3,
                        max_iter=50, init=None):
-    """Compute barycenter (time series averaging) under the soft-DTW geometry.
+    """Compute barycenter (time series averaging) under the soft-DTW [1]
+    geometry.
 
     Parameters
     ----------
@@ -863,6 +864,11 @@ def softdtw_barycenter(X, gamma=1.0, weights=None, method="L-BFGS-B", tol=1e-3,
            [2.67573269],
            [3.51057026],
            [4.33645802]])
+
+    References
+    ----------
+    .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
+       Time-Series," ICML 2017.
     """
     X_ = to_time_series_dataset(X)
     weights = _set_weights(weights, X_.shape[0])
