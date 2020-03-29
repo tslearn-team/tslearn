@@ -41,22 +41,22 @@
 | [Contributing](#contributing) | A guide for heroes willing to contribute |
 | [Citation](#referencing-tslearn) | A citation for tslearn for scholarly articles |
 
-# Installation
+## Installation
 There are different alternatives to install tslearn:
 * PyPi: `python -m pip install tslearn`
 * Conda: `conda install -c conda-forge tslearn`
 * Git: `python -m pip install https://github.com/rtavenar/tslearn/archive/master.zip`
 
-In order for the installation to be successful, the required dependencies must be installed. For a more detailed guide on how to install tslearn, please see the [Documentation](https://tslearn.readthedocs.io/en/latest/?badge=latest#installation)
+In order for the installation to be successful, the required dependencies must be installed. For a more detailed guide on how to install tslearn, please see the [Documentation](https://tslearn.readthedocs.io/en/latest/?badge=latest#installation).
 
-# Getting started
+## Getting started
 
-## 1. Getting the data in the right format
+### 1. Getting the data in the right format
 tslearn expects a time series dataset to be formatted as a 3D `numpy` array. The three dimensions correspond to the number of time series, the number of measurements per time series and the number of dimensions respectively (`n_ts, max_sz, d`). In order to get the data in the right format, different solutions exist:
-* [You can use the utility functions such as `to_time_series_dataset`](https://tslearn.readthedocs.io/en/latest/gen_modules/tslearn.utils.html#module-tslearn.utils)
-* [You can convert from other popular time series toolkits in Python](https://tslearn.readthedocs.io/en/latest/integration_other_software.html)
+* [You can use the utility functions such as `to_time_series_dataset`.](https://tslearn.readthedocs.io/en/latest/gen_modules/tslearn.utils.html#module-tslearn.utils)
+* [You can convert from other popular time series toolkits in Python.](https://tslearn.readthedocs.io/en/latest/integration_other_software.html)
 * [You can load any of the UCR datasets in the required format.](https://tslearn.readthedocs.io/en/latest/gen_modules/tslearn.datasets.html#module-tslearn.datasets)
-* [You can generate synthetic data using the `generators` module](https://tslearn.readthedocs.io/en/latest/gen_modules/tslearn.generators.html#module-tslearn.generators)
+* [You can generate synthetic data using the `generators` module.](https://tslearn.readthedocs.io/en/latest/gen_modules/tslearn.generators.html#module-tslearn.generators)
 
 It should further be noted that tslearn [supports variable-length timeseries](https://tslearn.readthedocs.io/en/latest/variablelength.html).
 
@@ -71,7 +71,7 @@ It should further be noted that tslearn [supports variable-length timeseries](ht
 >>> y = [0, 1, 1]
 ```
 
-## 2. Data preprocessing and transformations
+### 2. Data preprocessing and transformations
 Optionally, tslearn has several utilities to preprocess the data. In order to facilitate the convergence of different algorithms, you can [scale time series](https://tslearn.readthedocs.io/en/latest/gen_modules/tslearn.preprocessing.html#module-tslearn.preprocessing). Alternatively, in order to speed up training times, one can [resample](https://tslearn.readthedocs.io/en/latest/gen_modules/preprocessing/tslearn.preprocessing.TimeSeriesResampler.html#tslearn.preprocessing.TimeSeriesResampler) the data or apply a [piece-wise transformation](https://tslearn.readthedocs.io/en/latest/gen_modules/tslearn.piecewise.html#module-tslearn.piecewise).
 
 ```python3
@@ -83,7 +83,7 @@ Optionally, tslearn has several utilities to preprocess the data. In order to fa
  [[0.] [0.333] [1.] [0.333] [0.333]]]
 ```
 
-## 3. Training a model
+### 3. Training a model
 
 After getting the data in the right format, a model can be trained. Depending on the use case, tslearn supports different tasks: classification, clustering and regression. For an extensive overview of possibilities, check out our [gallery of examples](https://tslearn.readthedocs.io/en/latest/auto_examples/index.html).
 
@@ -97,11 +97,11 @@ After getting the data in the right format, a model can be trained. Depending on
 
 As can be seen, the models in tslearn follow the same API as those of the well-known scikit-learn. Moreover, they are fully compatible with it, allowing to use different scikit-learn utilities such as [hyper-parameter tuning and pipelines](https://tslearn.readthedocs.io/en/latest/auto_examples/plot_knnts_sklearn.html#sphx-glr-auto-examples-plot-knnts-sklearn-py).
 
-## 4. More analyses
+### 4. More analyses
 
 tslearn further allows to perform all different types of analysis. Examples include [calculating barycenters](https://tslearn.readthedocs.io/en/latest/gen_modules/tslearn.barycenters.html#module-tslearn.barycenters) of a group of time series or calculate the distances between time series using a [variety of distance metrics](https://tslearn.readthedocs.io/en/latest/gen_modules/tslearn.metrics.html#module-tslearn.metrics).
 
-# Available features
+## Available features
 
 | data                                                                                                                                                                                         | processing                                                                                                              | clustering                                                                                                                                                                      | classification                                                                                                                                                                          | regression                                                                                                                                                                           | metrics                                                                                                                              |
 |----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
@@ -110,15 +110,15 @@ tslearn further allows to perform all different types of analysis. Examples incl
 | Conversion([1](https://tslearn.readthedocs.io/en/latest/gen_modules/tslearn.utils.html#module-tslearn.utils), [2](https://tslearn.readthedocs.io/en/latest/integration_other_software.html)) |                                                                                                                         | [GAKKmeans](https://tslearn.readthedocs.io/en/latest/gen_modules/clustering/tslearn.clustering.GlobalAlignmentKernelKMeans.html#tslearn.clustering.GlobalAlignmentKernelKMeans) | [ShapeletModel](https://tslearn.readthedocs.io/en/latest/gen_modules/shapelets/tslearn.shapelets.ShapeletModel.html#tslearn.shapelets.ShapeletModel)                                    |                                                                                                                                                                                      | [Barycenters](https://tslearn.readthedocs.io/en/latest/gen_modules/tslearn.barycenters.html#module-tslearn.barycenters)              |
 
 
-# Documentation
+## Documentation
 
 The documentation, including a gallery of examples, is hosted at [readthedocs](http://tslearn.readthedocs.io/en/latest/index.html).
 
-# Contributing
+## Contributing
 
 If you would like to contribute to `tslearn`, please have a look at [our contribution guidelines](CONTRIBUTING.md). A list of interesting TODO's can be found [here](https://github.com/rtavenar/tslearn/issues?utf8=✓&q=is%3Aissue%20is%3Aopen%20label%3A%22new%20feature%22%20). **If you want other ML methods for time series to be added to this TODO list, do not hesitate to [open an issue](https://github.com/rtavenar/tslearn/issues/new/choose)!**
 
-# Referencing tslearn
+## Referencing tslearn
 
 If you use `tslearn` in a scientific publication, we would appreciate citations:
 
@@ -135,5 +135,5 @@ If you use `tslearn` in a scientific publication, we would appreciate citations:
 }
 ```
 
-### Acknowledgments
+#### Acknowledgments
 Authors would like to thank Mathieu Blondel for providing code for [Kernel k-means](https://gist.github.com/mblondel/6230787) and [Soft-DTW](https://github.com/mblondel/soft-dtw).
