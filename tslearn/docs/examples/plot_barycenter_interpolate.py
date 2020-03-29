@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors
 
 from tslearn.preprocessing import TimeSeriesScalerMinMax
-from tslearn.barycenters import SoftDTWBarycenter
+from tslearn.barycenters import softdtw_barycenter
 from tslearn.datasets import CachedDatasets
 
 
@@ -69,7 +69,7 @@ for pos in range(2, 25):
     w[1] = (4 - idxr) * idxc / 16
     w[2] = idxr * (4 - idxc) / 16
     w[3] = idxr * idxc / 16
-    plt.plot(SoftDTWBarycenter(weights=w).fit(X_out).ravel(),
+    plt.plot(softdtw_barycenter(X=X_out, weights=w).ravel(),
              color=matplotlib.colors.rgb2hex(get_color(w)),
              linewidth=2)
     plt.xticks([])

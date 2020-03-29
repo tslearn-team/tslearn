@@ -97,8 +97,8 @@ class UCR_UEA_datasets(object):
     use_cache : bool (default: True)
         Whether a cached version of the dataset should be used, if found.
 
-    Note
-    ----
+    Notes
+    -----
         Downloading dataset files can be time-consuming, it is recommended
         using `use_cache=True` (default) in order to
         only experience downloading time once per dataset and work on a cached
@@ -117,8 +117,8 @@ class UCR_UEA_datasets(object):
         if not os.path.exists(self._data_dir):
             os.makedirs(self._data_dir)
         try:
-            url_baseline = "http://www.timeseriesclassification.com/" + \
-                           "singleTrainTest.csv"
+            url_baseline = ("http://www.timeseriesclassification.com/" +
+                            "singleTrainTest.csv")
             self._baseline_scores_filename = os.path.join(
                 self._data_dir, os.path.basename(url_baseline))
             urlretrieve(url_baseline, self._baseline_scores_filename)
@@ -157,8 +157,9 @@ class UCR_UEA_datasets(object):
         Examples
         --------
         >>> uea_ucr = UCR_UEA_datasets()
-        >>> dict_acc = uea_ucr.baseline_accuracy(list_datasets=["Adiac", "ChlorineConcentration"], \
-                                                 list_methods=["C45"])
+        >>> dict_acc = uea_ucr.baseline_accuracy(
+        ...         list_datasets=["Adiac", "ChlorineConcentration"],
+        ...         list_methods=["C45"])
         >>> len(dict_acc)
         2
         >>> dict_acc["Adiac"]  # doctest: +ELLIPSIS
@@ -177,7 +178,7 @@ class UCR_UEA_datasets(object):
                     if m != "" and (list_methods is None or m in list_methods):
                         try:
                             d_out[dataset_name][m] = float(perfs_dict[m])
-                        except ValueError:  # Missing score case (score is then "")
+                        except ValueError:  # Missing score case (score == "")
                             pass
         return d_out
 
@@ -231,28 +232,33 @@ class UCR_UEA_datasets(object):
 
         Examples
         --------
-        >>> X_train, y_train, X_test, y_test = UCR_UEA_datasets().load_dataset("TwoPatterns")
+        >>> data_loader = UCR_UEA_datasets()
+        >>> X_train, y_train, X_test, y_test = data_loader.load_dataset(
+        ...         "TwoPatterns")
         >>> print(X_train.shape)
         (1000, 128, 1)
         >>> print(y_train.shape)
         (1000,)
-        >>> X_train, y_train, X_test, y_test = UCR_UEA_datasets().load_dataset("StarLightCurves")
+        >>> X_train, y_train, X_test, y_test = data_loader.load_dataset(
+        ...         "StarLightCurves")
         >>> print(X_train.shape)
         (1000, 1024, 1)
-        >>> X_train, y_train, X_test, y_test = UCR_UEA_datasets().load_dataset("CinCECGTorso")
+        >>> X_train, y_train, X_test, y_test = data_loader.load_dataset(
+        ...         "CinCECGTorso")
         >>> print(X_train.shape)
         (40, 1639, 1)
-        >>> X_train, y_train, X_test, y_test = UCR_UEA_datasets().load_dataset("DatasetThatDoesNotExist")
+        >>> X_train, y_train, X_test, y_test = data_loader.load_dataset(
+        ...         "DatasetThatDoesNotExist")
         >>> print(X_train)
         None
         """
         full_path = os.path.join(self._data_dir, dataset_name)
         fname_train = dataset_name + "_TRAIN.txt"
         fname_test = dataset_name + "_TEST.txt"
-        if not os.path.exists(os.path.join(full_path, fname_train)) or \
-                not os.path.exists(os.path.join(full_path, fname_test)):
-            url = "http://www.timeseriesclassification.com/Downloads/%s.zip" \
-                  % dataset_name
+        if (not os.path.exists(os.path.join(full_path, fname_train)) or
+                not os.path.exists(os.path.join(full_path, fname_test))):
+            url = ("http://www.timeseriesclassification.com/Downloads/%s.zip"
+                   % dataset_name)
             for fname in [fname_train, fname_test]:
                 if os.path.exists(os.path.join(full_path, fname)):
                     os.remove(os.path.join(full_path, fname))
@@ -322,7 +328,9 @@ class CachedDatasets(object):
 
         Examples
         --------
-        >>> X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")
+        >>> data_loader = CachedDatasets()
+        >>> X_train, y_train, X_test, y_test = data_loader.load_dataset(
+        ...                                        "Trace")
         >>> print(X_train.shape)
         (100, 275, 1)
         >>> print(y_train.shape)
