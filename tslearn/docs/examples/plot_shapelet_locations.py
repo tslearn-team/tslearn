@@ -35,7 +35,7 @@ shapelet_sizes = grabocka_params_to_shapelet_size_dict(n_ts=n_ts,
                                                        ts_sz=ts_sz,
                                                        n_classes=n_classes,
                                                        l=0.1,
-                                                       r=2)
+                                                       r=1)
 
 shp_clf = ShapeletModel(n_shapelets_per_size=shapelet_sizes,
                         optimizer=Adagrad(lr=.1),
