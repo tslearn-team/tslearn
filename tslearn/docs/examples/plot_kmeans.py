@@ -45,6 +45,8 @@ for yi in range(3):
     plt.plot(km.cluster_centers_[yi].ravel(), "r-")
     plt.xlim(0, sz)
     plt.ylim(-4, 4)
+    plt.text(0.55, 0.85,'Cluster %d' % (yi + 1),
+             transform=plt.gca().transAxes)
     if yi == 1:
         plt.title("Euclidean $k$-means")
 
@@ -65,6 +67,8 @@ for yi in range(3):
     plt.plot(dba_km.cluster_centers_[yi].ravel(), "r-")
     plt.xlim(0, sz)
     plt.ylim(-4, 4)
+    plt.text(0.55, 0.85,'Cluster %d' % (yi + 1),
+             transform=plt.gca().transAxes)
     if yi == 1:
         plt.title("DBA $k$-means")
 
@@ -72,7 +76,7 @@ for yi in range(3):
 print("Soft-DTW k-means")
 sdtw_km = TimeSeriesKMeans(n_clusters=3,
                            metric="softdtw",
-                           metric_params={"gamma_sdtw": .01},
+                           metric_params={"gamma": .01},
                            verbose=True,
                            random_state=seed)
 y_pred = sdtw_km.fit_predict(X_train)
@@ -84,6 +88,8 @@ for yi in range(3):
     plt.plot(sdtw_km.cluster_centers_[yi].ravel(), "r-")
     plt.xlim(0, sz)
     plt.ylim(-4, 4)
+    plt.text(0.55, 0.85,'Cluster %d' % (yi + 1),
+             transform=plt.gca().transAxes)
     if yi == 1:
         plt.title("Soft-DTW $k$-means")
 

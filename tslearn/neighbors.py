@@ -233,7 +233,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
            [2, 0],
            [0, 1]])
     """  # noqa: E501
-
+    
     def __init__(self, n_neighbors=5, metric="dtw", metric_params=None,
                  n_jobs=None, verbose=0):
         NearestNeighbors.__init__(self,
@@ -451,12 +451,14 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
 
     def _is_fitted(self):
         check_is_fitted(self)
+
         return True
 
     def _get_model_params(self):
         return {
             'X_fit_': self.X_fit_,
             'ts_fit_': self.ts_fit_,
+
             '_d': self._d,
             'classes_': self.classes_,
             '_y': self._y,
@@ -504,6 +506,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         else:
             self.X_fit_, self._d = to_sklearn_dataset(X, return_dim=True)
         super(KNeighborsTimeSeriesClassifier, self).fit(self.X_fit_, y)
+
         if hasattr(self, '_ts_metric'):
             self.metric = self._ts_metric
         return self
