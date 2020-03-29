@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Learning Shapelets
-==================
+Aligning discovered shapelets with timeseries
+=============================================
 
 This example illustrates the use of the "Learning Shapelets" method in order
 to learn a collection of shapelets that linearly separates the timeseries.
