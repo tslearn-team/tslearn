@@ -74,7 +74,7 @@ for i, sz in enumerate(shapelet_sizes.keys()):
 plt.tight_layout()
 plt.show()
 
-# The loss history is accessible via the `model` that is a keras model
+# The loss history is accessible via the `model_` that is a keras model
 plt.figure()
 plt.plot(numpy.arange(1, 201), shp_clf.model_.history.history["loss"])
 plt.title("Evolution of cross-entropy loss during training")
