@@ -63,7 +63,7 @@ predicted_locations = shp_clf.locate(X_train)
 
 plt.figure()
 plt.title("Example locations of shapelet matches "
-          "(%d shapelets extracted)".format(n_shapelets))
+          "({} shapelets extracted)".format(n_shapelets))
 
 # Plot the test timeseries with the best matches with the shapelets
 test_ts_id = numpy.argmin(numpy.sum(distances, axis=1))
