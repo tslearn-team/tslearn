@@ -27,9 +27,7 @@ X_train = TimeSeriesScalerMinMax().fit_transform(X_train)
 X_test = TimeSeriesScalerMinMax().fit_transform(X_test)
 
 clf = TimeSeriesSVC(kernel="gak",
-                    gamma=.1,
-                    sz=X_train.shape[1],
-                    d=X_train.shape[2])
+                    gamma=.1)
 clf.fit(X_train, y_train)
 print("Correct classification rate:", clf.score(X_test, y_test))
 

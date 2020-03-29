@@ -11,6 +11,7 @@ optimal alignment path.
 # License: BSD 3 clause
 
 import numpy
+from scipy.spatial.distance import cdist
 import matplotlib.pyplot as plt
 
 from tslearn.generators import random_walks
@@ -25,17 +26,38 @@ dataset_scaled = scaler.fit_transform(dataset)
 
 path, sim = metrics.dtw_path(dataset_scaled[0], dataset_scaled[1])
 
-matrix_path = numpy.zeros((sz, sz), dtype=numpy.int)
-for i, j in path:
-    matrix_path[i, j] = 1
+plt.figure(1, figsize=(8, 8))
 
-plt.figure()
+# definitions for the axes
+left, bottom = 0.01, 0.1
+w_ts = h_ts = 0.2
+left_h = left + w_ts + 0.02
+width = height = 0.65
+bottom_h = bottom + height + 0.02
 
-plt.subplot2grid((1, 3), (0, 0), colspan=2)
-plt.plot(numpy.arange(sz), dataset_scaled[0, :, 0])
-plt.plot(numpy.arange(sz), dataset_scaled[1, :, 0])
-plt.subplot(1, 3, 3)
-plt.imshow(matrix_path, cmap="gray_r")
+rect_s_y = [left, bottom, w_ts, height]
+rect_gram = [left_h, bottom, width, height]
+rect_s_x = [left_h, bottom_h, width, h_ts]
+
+ax_gram = plt.axes(rect_gram)
+ax_s_x = plt.axes(rect_s_x)
+ax_s_y = plt.axes(rect_s_y)
+
+mat = cdist(dataset_scaled[0], dataset_scaled[1])
+
+ax_gram.imshow(mat)
+ax_gram.axis("off")
+ax_gram.autoscale(False)
+ax_gram.plot([j for (i, j) in path], [i for (i, j) in path], "w-",
+             linewidth=3.)
+
+ax_s_x.plot(numpy.arange(sz), dataset_scaled[1], "b-", linewidth=3.)
+ax_s_x.axis("off")
+ax_s_x.set_xlim((0, sz - 1))
+
+ax_s_y.plot(- dataset_scaled[0], numpy.arange(sz)[::-1], "b-", linewidth=3.)
+ax_s_y.axis("off")
+ax_s_y.set_ylim((0, sz - 1))
 
 plt.tight_layout()
 plt.show()
