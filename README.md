@@ -37,7 +37,7 @@
 | [Installing](#installation) | Installing the dependencies and tslearn |
 | [Getting started](#getting-started) | A quick introduction on how to use tslearn |
 | [Documentation](#documentation) | A link to our API reference and a gallery of examples |
-| [Contributing](#preparing-the-jsons) | A guide for heroes willing to contribute |
+| [Contributing](#contributing) | A guide for heroes willing to contribute |
 | [Citation](#referencing-tslearn) | A citation for tslearn for scholarly articles |
 
 # Installation
