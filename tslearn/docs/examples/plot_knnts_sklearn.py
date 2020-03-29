@@ -6,6 +6,8 @@ Hyper-parameter tuning of a Pipeline with KNeighborsTimeSeriesClassifier
 In this example, we demonstrate how it is possible to use the different
 algorithms of tslearn in combination with sklearn utilities, such as
 the `sklearn.pipeline.Pipeline` and `sklearn.model_selection.GridSearchCV`.
+In this specific example, we will tune two of the hyper-parameters
+of a `KNeighborsTimeSeriesClassifier`.
 
 """
 

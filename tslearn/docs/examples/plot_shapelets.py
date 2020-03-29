@@ -3,8 +3,9 @@
 Learning Shapelets
 ==================
 
-This example illustrates the use of the "Learning Shapelets" method for a
-time series classification task.
+This example illustrates how the "Learning Shapelets" method can quickly
+find a set of shapelets that results in excellent predictive performance
+when used for a shapelet transform.
 
 More information on the method can be found at:
 http://fs.ismll.de/publicspace/LearningShapelets/.

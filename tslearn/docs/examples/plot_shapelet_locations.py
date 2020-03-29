@@ -3,8 +3,12 @@
 Learning Shapelets
 ==================
 
-This example illustrates the use of the "Learning Shapelets" method for a time
-series classification task and ``tslearn``'s shapelet localization method.
+This example illustrates the use of the "Learning Shapelets" method in order
+to learn a collection of shapelets that linearly separates the timeseries.
+Afterwards, it shows how the discovered shapelets can be aligned on
+timeseries using a localization method which will return the indices of
+the input timeseries where the minimal distance to a certain shapelet
+are found.
 
 More information on the method can be found at:
 http://fs.ismll.de/publicspace/LearningShapelets/.
