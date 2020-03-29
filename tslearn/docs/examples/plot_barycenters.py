@@ -7,8 +7,8 @@ This example shows three methods to compute barycenters of time series.
 For an overview over the available methods see the :mod:`tslearn.barycenters`
 module.
 
-*tslearn* provides three methods for calculating barycenters for a given
-set of time series:
+*tslearn* provides three methods for calculating barycenters for a given set of
+time series:
 
 * *Euclidean barycenter* is simply the arithmetic mean for
   each individual point in time, minimizing the summed euclidean distance
@@ -28,16 +28,15 @@ set of time series:
   :ref:`example<sphx_glr_auto_examples_plot_barycenter_interpolate.py>`
   available.
 
-[1] F. Petitjean, A. Ketterlin & P. Gancarski. A global averaging method
-for dynamic time warping, with applications to clustering. Pattern
-Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
+[1] F. Petitjean, A. Ketterlin & P. Gancarski. A global averaging method for
+dynamic time warping, with applications to clustering. Pattern Recognition,
+Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693.
 
-[2] D. Schultz and B. Jain. Nonsmooth Analysis and Subgradient Methods
-for Averaging in Dynamic Time Warping Spaces.
-Pattern Recognition, 74, 340-358.
+[2] D. Schultz & B. Jain. Nonsmooth Analysis and Subgradient Methods for
+Averaging in Dynamic Time Warping Spaces. Pattern Recognition, 74, 340-358.
 
-[3] M. Cuturi, M. Blondel “Soft-DTW: a Differentiable Loss Function for
-Time-Series,” ICML 2017.
+[3] M. Cuturi & M. Blondel. Soft-DTW: a Differentiable Loss Function for
+Time-Series. ICML 2017.
 """
 
 # Author: Romain Tavenard, Felix Divo
