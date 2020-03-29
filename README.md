@@ -36,6 +36,7 @@
 |-|-|
 | [Installing](#installation) | Installing the dependencies and tslearn |
 | [Getting started](#getting-started) | A quick introduction on how to use tslearn |
+| [Available features](#available-features) | An extensive overview of tslearn's functionalities |
 | [Documentation](#documentation) | A link to our API reference and a gallery of examples |
 | [Contributing](#preparing-the-jsons) | A guide for heroes willing to contribute |
 | [Citation](#referencing-tslearn) | A citation for tslearn for scholarly articles |
@@ -51,7 +52,7 @@ In order for the installation to be successful, the required dependencies must b
 # Getting started
 
 ## 1. Getting the data in the right format
-tslearn expects the data to be 3D. The three dimensions correspond to the number of time series, the number of measurements per time series and the number of dimensions respectively (`n_ts, max_sz, d`). In order to get the data in the right format, different solutions exist:
+tslearn expects a time series dataset to be formatted as a 3D `numpy` array. The three dimensions correspond to the number of time series, the number of measurements per time series and the number of dimensions respectively (`n_ts, max_sz, d`). In order to get the data in the right format, different solutions exist:
 * [You can use the utility functions such as `to_time_series_dataset`](https://tslearn.readthedocs.io/en/latest/gen_modules/tslearn.utils.html#module-tslearn.utils)
 * [You can convert from other popular time series toolkits in Python](https://tslearn.readthedocs.io/en/latest/integration_other_software.html)
 * [You can load any of the UCR datasets in the required format.](https://tslearn.readthedocs.io/en/latest/gen_modules/tslearn.datasets.html#module-tslearn.datasets)
@@ -71,17 +72,15 @@ It should further be noted that tslearn [supports variable-length timeseries](ht
 ```
 
 ## 2. Data preprocessing and transformations
-Optionally, tslearn has several utilities to preprocess the data. In order to facilitate the convergence of different algorithms, you can [normalize time series](https://tslearn.readthedocs.io/en/latest/gen_modules/tslearn.preprocessing.html#module-tslearn.preprocessing). Alternatively, in order to speed up training times, one can [resample](https://tslearn.readthedocs.io/en/latest/gen_modules/preprocessing/tslearn.preprocessing.TimeSeriesResampler.html#tslearn.preprocessing.TimeSeriesResampler) the data or apply a [piece-wise transformation](https://tslearn.readthedocs.io/en/latest/gen_modules/tslearn.piecewise.html#module-tslearn.piecewise), such as SAX.
+Optionally, tslearn has several utilities to preprocess the data. In order to facilitate the convergence of different algorithms, you can [normalize time series](https://tslearn.readthedocs.io/en/latest/gen_modules/tslearn.preprocessing.html#module-tslearn.preprocessing). Alternatively, in order to speed up training times, one can [resample](https://tslearn.readthedocs.io/en/latest/gen_modules/preprocessing/tslearn.preprocessing.TimeSeriesResampler.html#tslearn.preprocessing.TimeSeriesResampler) the data or apply a [piece-wise transformation](https://tslearn.readthedocs.io/en/latest/gen_modules/tslearn.piecewise.html#module-tslearn.piecewise).
 
 ```python3
 >>> from tslearn.preprocessing import TimeSeriesScalerMinMax
->>> from tslearn.piecewise import SymbolicAggregateApproximation
->>> X_norm = TimeSeriesScalerMinMax().fit_transform(X)
->>> X_sax = SymbolicAggregateApproximation(4, 10).fit_transform(X_norm)
->>> print(X_sax)
-[[[5] [7] [8] [6]] 
- [[5] [6] [8] [6]]
- [[5] [6] [8] [6]]]
+>>> X_scaled = TimeSeriesScalerMinMax().fit_transform(X)
+>>> print(X_scaled)
+[[[0.] [0.667] [1.] [0.333] [nan]]
+ [[0.] [0.333] [1.] [0.333] [nan]]
+ [[0.] [0.333] [1.] [0.333] [0.333]]]
 ```
 
 ## 3. Training a model
@@ -89,17 +88,29 @@ Optionally, tslearn has several utilities to preprocess the data. In order to fa
 After getting the data in the right format, a model can be trained. Depending on the use case, tslearn supports different tasks: classification, clustering and regression. For an extensive overview of possibilities, check out our [gallery of examples](https://tslearn.readthedocs.io/en/latest/auto_examples/index.html).
 
 ```python3
->>> from tslearn.shapelets import ShapeletModel
->>> clf = ShapeletModel({3: 1})
->>> clf.fit(X_sax, y)
->>> print(clf.shapelets_)
-[[[4.8] [8] [6]]]
+>>> from tslearn.neighbors import KNeighborsTimeSeriesClassifier
+>>> knn = KNeighborsTimeSeriesClassifier(n_neighbors=1)
+>>> knn.fit(X_scaled, y)
+>>> print(knn.predict(X_scaled))
+[0 1 1]
 ```
-
 
 ## 4. Evaluation and analysis
 
 tslearn further allows to perform all different types of analysis. Examples include [calculating barycenters](https://tslearn.readthedocs.io/en/latest/gen_modules/tslearn.barycenters.html#module-tslearn.barycenters) of a group of time series or calculate the distances between time series using a [variety of distance metrics](https://tslearn.readthedocs.io/en/latest/gen_modules/tslearn.metrics.html#module-tslearn.metrics).
+
+# Available features
+
+||||||
+|----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
+| **data**           | [UCR Datasets](https://tslearn.readthedocs.io/en/latest/gen_modules/tslearn.datasets.html#module-tslearn.datasets)                                                                                      | [Generators](https://tslearn.readthedocs.io/en/latest/gen_modules/tslearn.generators.html#module-tslearn.generators)                 | [Integration](https://tslearn.readthedocs.io/en/latest/integration_other_software.html)                                                                                         | [Conversion](https://tslearn.readthedocs.io/en/latest/gen_modules/tslearn.utils.html#module-tslearn.utils) |
+| **processing**     | [Scaling](https://tslearn.readthedocs.io/en/latest/gen_modules/tslearn.preprocessing.html#module-tslearn.preprocessing)                                                                                 | [Piecewise](https://tslearn.readthedocs.io/en/latest/gen_modules/tslearn.piecewise.html#module-tslearn.piecewise)                    | [Barycenters](https://tslearn.readthedocs.io/en/latest/gen_modules/tslearn.barycenters.html#module-tslearn.barycenters)                                                         |                                                                                                            |
+| **clustering**     | [TimeSeriesKMeans](https://tslearn.readthedocs.io/en/latest/gen_modules/clustering/tslearn.clustering.TimeSeriesKMeans.html#tslearn.clustering.TimeSeriesKMeans)                                        | [KShape](https://tslearn.readthedocs.io/en/latest/gen_modules/clustering/tslearn.clustering.KShape.html#tslearn.clustering.KShape)   | [GAKKmeans](https://tslearn.readthedocs.io/en/latest/gen_modules/clustering/tslearn.clustering.GlobalAlignmentKernelKMeans.html#tslearn.clustering.GlobalAlignmentKernelKMeans) |                                                                                                            |
+| **classification** | [KNN Classifier](https://tslearn.readthedocs.io/en/latest/gen_modules/neighbors/tslearn.neighbors.KNeighborsTimeSeriesClassifier.html#tslearn.neighbors.KNeighborsTimeSeriesClassifier) | [TimeSeriesSVC](https://tslearn.readthedocs.io/en/latest/gen_modules/svm/tslearn.svm.TimeSeriesSVC.html#tslearn.svm.TimeSeriesSVC)   | [ShapeletModel](https://tslearn.readthedocs.io/en/latest/gen_modules/shapelets/tslearn.shapelets.ShapeletModel.html#tslearn.shapelets.ShapeletModel)                            |                                                                                                            |
+| **regression**     | [KNNRegressor](https://tslearn.readthedocs.io/en/latest/gen_modules/neighbors/tslearn.neighbors.KNeighborsTimeSeriesRegressor.html#tslearn.neighbors.KNeighborsTimeSeriesRegressor)    | [TimeSeriesSVR](https://tslearn.readthedocs.io/en/latest/gen_modules/svm/tslearn.svm.TimeSeriesSVR.html#tslearn.svm.TimeSeriesSVR)   |                                                                                                                                                                                 |                                                                                                            |
+| **metrics**        | [Dynamic Time Warping](https://tslearn.readthedocs.io/en/latest/gen_modules/metrics/tslearn.metrics.dtw.html#tslearn.metrics.dtw)                                                                       | [Global Alignment Kernel](https://tslearn.readthedocs.io/en/latest/gen_modules/metrics/tslearn.metrics.gak.html#tslearn.metrics.gak) |                                                                                                                                                                                 |                                                                                                            |
+|
+
 
 # Documentation
 
@@ -107,7 +118,7 @@ The documentation, including a gallery of examples, is hosted at [readthedocs](h
 
 # Contributing
 
-If you would like to contribute to `tslearn`, please have a look at [our contribution guidelines](CONTRIBUTING.md). A list of interesting TODO's can be found [here](https://github.com/rtavenar/tslearn/issues?utf8=✓&q=is%3Aissue%20is%3Aopen%20label%3A%22new%20feature%22%20). **If you want other ML methods for time series to be added to this TODO list, do not hesitate to open an issue!**
+If you would like to contribute to `tslearn`, please have a look at [our contribution guidelines](CONTRIBUTING.md). A list of interesting TODO's can be found [here](https://github.com/rtavenar/tslearn/issues?utf8=✓&q=is%3Aissue%20is%3Aopen%20label%3A%22new%20feature%22%20). **If you want other ML methods for time series to be added to this TODO list, do not hesitate to [open an issue](https://github.com/rtavenar/tslearn/issues/new/choose)!**
 
 # Referencing tslearn
 
