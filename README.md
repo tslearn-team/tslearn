@@ -38,7 +38,7 @@
 | [Getting started](#getting-started) | A quick introduction on how to use tslearn |
 | [Available features](#available-features) | An extensive overview of tslearn's functionalities |
 | [Documentation](#documentation) | A link to our API reference and a gallery of examples |
-| [Contributing](#preparing-the-jsons) | A guide for heroes willing to contribute |
+| [Contributing](#contributing) | A guide for heroes willing to contribute |
 | [Citation](#referencing-tslearn) | A citation for tslearn for scholarly articles |
 
 # Installation
@@ -126,10 +126,14 @@ If you use `tslearn` in a scientific publication, we would appreciate citations:
 
 ```bibtex
 @misc{tslearn,
- title={tslearn: A machine learning toolkit dedicated to time-series data},
- author={Tavenard, Romain and Faouzi, Johann and Vandewiele, Gilles},
- year={2017},
- note={\url{https://github.com/rtavenar/tslearn}}
+      title={tslearn: A machine learning toolkit dedicated to time-series
+             data},
+      author={Romain Tavenard and Johann Faouzi and Gilles Vandewiele and
+              Felix Divo and Guillaume Androz and Chester Holtz and Marie
+              Payne and Roman Yurchak and Marc Ru{\ss}wurm and Kushal
+              Kolar and Eli Woods},
+      year={2017},
+      note={\url{https://github.com/rtavenar/tslearn}}
 }
 ```
 

@@ -27,13 +27,5 @@ tslearn.clustering
       :template: function.rst
 
       silhouette_score
-
-   
-   
-   .. rubric:: Exceptions
-
-   .. autosummary::
-   
-      EmptyClusterError
    
    

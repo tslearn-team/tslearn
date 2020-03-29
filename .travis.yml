@@ -41,13 +41,17 @@ install:
 - conda config --set always_yes yes --set changeps1 no
 - conda update -q conda
 - conda info -a
-- conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy>=1.14 scipy tensorflow keras
-  scikit-learn numba nose
+- conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython numpy>=1.14 scipy tensorflow==1.* keras
+  scikit-learn numba joblib>=0.12 pandas
 - source activate test-environment
 - pip install pytest
+- if [[ "$TRAVIS_PYTHON_VERSION" == 3.* ]];
+  then pip install cesium;
+  else export DO_NOT_TEST_CESIUM_CAST=1;
+  fi
 - if [[ "$NUMBA_DISABLE_JIT" == 1 ]]; then pip install coverage==4.3 "pytest-cov<2.6"; fi
 - pip install argparse
-- pip install codeclimate-test-reporter
+- pip install codeclimate-test-reporter codecov
 - rm -f tslearn/*.c
 - python setup.py build_ext --inplace
 script:
@@ -55,10 +59,14 @@ script:
 - python -c "import keras.backend";
   sed -i -e 's/"backend":[[:space:]]*"[^"]*/"backend":\ "'$KERAS_BACKEND'/g' ~/.keras/keras.json;
   echo -e "Running tests with the following config:\n$(cat ~/.keras/keras.json)";
-- if [[ "$NUMBA_DISABLE_JIT" == 1 ]]; then
-  python -m pytest -v tslearn tslearn/tests/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py --ignore tslearn/tests/test_estimators.py $KERAS_IGNORE --cov=tslearn;
-  if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then codeclimate-test-reporter; fi
-  else travis_wait 40 python -m pytest -v tslearn tslearn/tests/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py $KERAS_IGNORE; fi
+- if [ "$NUMBA_DISABLE_JIT" == 1 ];
+  then python -m pytest -v tslearn tslearn/tests/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py $KERAS_IGNORE --cov=tslearn;
+  else python -m pytest -v tslearn tslearn/tests/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py $KERAS_IGNORE;
+  fi
+
+after_success:
+- if [ "$NUMBA_DISABLE_JIT" == 1 ]; then codeclimate-test-reporter; fi
+- if [ "$NUMBA_DISABLE_JIT" == 1 ]; then codecov; fi
+
 notifications:
   email: false
-

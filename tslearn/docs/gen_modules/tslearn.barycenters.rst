@@ -5,17 +5,6 @@ tslearn.barycenters
 
 .. automodule:: tslearn.barycenters
 
-   
-   .. rubric:: Classes
-
-   .. autosummary::
-      :toctree: barycenters
-      :template: class.rst
-   
-      DTWBarycenterAveraging
-      SoftDTWBarycenter
-      EuclideanBarycenter
-
    .. rubric:: Functions
 
    .. autosummary::
@@ -24,5 +13,6 @@ tslearn.barycenters
 
       euclidean_barycenter
       dtw_barycenter_averaging
+      dtw_barycenter_averaging_subgradient
       softdtw_barycenter
 
