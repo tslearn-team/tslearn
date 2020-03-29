@@ -4,9 +4,9 @@ The :mod:`tslearn.barycenters` module gathers algorithms for time series
 barycenter computation.
 
 A barycenter (or *Fréchet mean*) is a time series :math:`b` which minimizes
-the sum of distances to the time series of a given data set :math:`x`:
+the sum of squared distances to the time series of a given data set :math:`x`:
 
-.. math:: \\min \\sum_i d^2( b, x_i )
+.. math:: \\min \\sum_i d( b, x_i )^2
 
 Only the methods :func:`dtw_barycenter_averaging` and
 :func:`softdtw_barycenter` can operate on variable-length time-series
