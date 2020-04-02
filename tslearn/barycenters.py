@@ -1,6 +1,19 @@
+# -*- coding: utf-8 -*-
 """
 The :mod:`tslearn.barycenters` module gathers algorithms for time series
 barycenter computation.
+
+A barycenter (or *Fréchet mean*) is a time series :math:`b` which minimizes
+the sum of squared distances to the time series of a given data set :math:`x`:
+
+.. math:: \\min \\sum_i d( b, x_i )^2
+
+Only the methods :func:`dtw_barycenter_averaging` and
+:func:`softdtw_barycenter` can operate on variable-length time-series
+(see :ref:`here<variable-length-barycenter>`).
+
+See the :ref:`barycenter examples<sphx_glr_auto_examples_plot_barycenters.py>`
+for an overview.
 """
 
 # Code for soft DTW is by Mathieu Blondel under Simplified BSD license
@@ -821,6 +834,8 @@ def softdtw_barycenter(X, gamma=1.0, weights=None, method="L-BFGS-B", tol=1e-3,
                        max_iter=50, init=None):
     """Compute barycenter (time series averaging) under the soft-DTW [1]
     geometry.
+
+    Soft-DTW was originally presented in [1]_.
 
     Parameters
     ----------
