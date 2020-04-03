@@ -80,3 +80,4 @@ From here, you can navigate to:
     integration_other_software
     reference
     auto_examples/index
+    contributing
