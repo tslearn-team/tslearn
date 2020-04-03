@@ -104,6 +104,9 @@ ENV/
 .pytest_cache
 .mypy_cache
 
+# Test leftovers
+tmp-tslearn-test.txt
+
 # Documentation
 tslearn/docs/_build/
 tslearn/docs/auto_examples/
