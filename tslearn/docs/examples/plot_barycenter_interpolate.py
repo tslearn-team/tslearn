@@ -5,9 +5,21 @@ Soft-DTW weighted barycenters
 
 This example presents the weighted Soft-DTW time series barycenter method.
 
-:math:`X_0, X_1, X_2` and :math:`X_3` are time series from 4 different classes
-in the Trace dataset.
-Other time series are weighted barycenters.
+Soft-DTW [1] is a differentiable loss function for Dynamic Time Warping,
+allowing for the use of gradient-based algorithms. The barycenter corresponds
+to the time series that minimizes the sum of the distances between that time
+series and all the time series from a dataset. It is thus an optimization
+problem and having a differentiable loss function makes find the solution much
+easier.
+
+In this example, we consider four time series :math:`X_0, X_1, X_2` and
+:math:`X_3` from four different classes in the Trace dataset. We compute
+the barycenters for different sets of weights and plot them. The closer to a
+time series the barycenter is, the higher the weight for this time series
+is.
+
+[1] M. Cuturi and M. Blondel, "Soft-DTW: a Differentiable Loss Function for
+Time-Series". International Conference on Machine Learning, 2017.
 """
 
 # Author: Romain Tavenard

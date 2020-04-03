@@ -6,6 +6,17 @@ k-NN search
 This example performs a :math:`k`-Nearest-Neighbor search in a database of time
 series using DTW as a base metric.
 
+To do so, we use the :class:`tslearn.neighbors.KNeighborsTimeSeries` class
+which provides utilities for the :math:`k`-Nearest-Neighbor algorithm
+for time series.
+
+[1] `Wikipedia entry for the k-nearest neighbors algorithm
+<https://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm>`_
+
+[2] H. Sakoe and S. Chiba, "Dynamic programming algorithm optimization
+for spoken word recognition". IEEE Transactions on Acoustics, Speech, and
+Signal Processing, 26(1), 43-49 (1978).
+
 """
 
 # Author: Romain Tavenard

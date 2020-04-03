@@ -5,12 +5,28 @@ Nearest neighbors
 
 This example illustrates the use of nearest neighbor methods for database
 search and classification tasks.
+
+The three-nearest neighbors of the time series from a test set are computed.
+Then, the predictive performance of a three-nearest neighbors classifier [1] is
+computed with three different metrics: Dynamic Time Warping [2], Euclidean
+distance and SAX-MINDIST [3].
+
+[1] `Wikipedia entry for the k-nearest neighbors algorithm
+<https://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm>`_
+
+[2] H. Sakoe and S. Chiba, "Dynamic programming algorithm optimization
+for spoken word recognition". IEEE Transactions on Acoustics, Speech, and
+Signal Processing, 26(1), 43-49 (1978).
+
+[3] J. Lin, E. Keogh, L. Wei and S. Lonardi, "Experiencing SAX: a novel
+symbolic representation of time series". Data Mining and Knowledge Discovery,
+15(2), 107-144 (2007).
+
 """
 
 # Author: Romain Tavenard
 # License: BSD 3 clause
 
-from __future__ import print_function
 import numpy
 from sklearn.metrics import accuracy_score
 from sklearn.pipeline import Pipeline

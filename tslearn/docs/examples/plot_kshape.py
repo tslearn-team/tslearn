@@ -3,8 +3,12 @@
 KShape
 ======
 
-This example uses the KShape clustering method that is based on
+This example uses the KShape clustering method [1] that is based on
 cross-correlation to cluster time series.
+
+
+[1] J. Paparrizos & L. Gravano. k-Shape: Efficient and Accurate Clustering \
+of Time Series. SIGMOD 2015. pp. 1855-1870.
 """
 
 # Author: Romain Tavenard
@@ -20,14 +24,15 @@ from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 seed = 0
 numpy.random.seed(seed)
 X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")
-# Keep first 3 classes
+# Keep first 3 classes and 50 first time series
 X_train = X_train[y_train < 4]
+X_train = X_train[:50]
 numpy.random.shuffle(X_train)
-# Keep only 50 time series
-X_train = TimeSeriesScalerMeanVariance().fit_transform(X_train[:50])
+# For this method to operate properly, prior scaling is required
+X_train = TimeSeriesScalerMeanVariance().fit_transform(X_train)
 sz = X_train.shape[1]
 
-# Euclidean k-means
+# kShape clustering
 ks = KShape(n_clusters=3, verbose=True, random_state=seed)
 y_pred = ks.fit_predict(X_train)
 

@@ -3,10 +3,18 @@
 Kernel k-means
 ==============
 
-This example uses Global Alignment kernel at the core of a kernel
-:math:`k`-means algorithm to perform time series
-clustering.
+This example uses Global Alignment kernel (GAK, [1]) at the core of a kernel
+:math:`k`-means algorithm [2] to perform time series clustering.
 
+Note that, contrary to :math:`k`-means, a centroid cannot be computed when
+using kernel :math:`k`-means. However, one can still report cluster
+assignments, which is what is provided here: each subfigure represents the set
+of time series from the training set that were assigned to the considered
+cluster.
+
+[1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
+[2] I. S. Dhillon, Y. Guan, B. Kulis. Kernel k-means, Spectral Clustering and \
+Normalized Cuts. KDD 2004.
 """
 
 # Author: Romain Tavenard
