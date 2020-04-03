@@ -102,6 +102,10 @@ ENV/
 .idea/
 .DS_Store
 .pytest_cache
+.mypy_cache
+
+# Test leftovers
+tmp-tslearn-test.txt
 
 # Documentation
 tslearn/docs/_build/

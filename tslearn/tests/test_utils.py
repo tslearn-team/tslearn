@@ -1,6 +1,8 @@
+from tempfile import gettempdir
+from os.path import join
+
 import numpy as np
 import pickle
-import os
 from numpy.testing import assert_allclose
 
 import pytest
@@ -10,25 +12,28 @@ import tslearn.utils
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
+EXAMPLE_FILE = join(gettempdir(), "tslearn_pytest_file.txt")
+
+
 def test_arraylike_copy():
     X_npy = np.array([1, 2, 3])
     assert_allclose(tslearn.utils._arraylike_copy(X_npy), X_npy)
     assert_allclose(tslearn.utils._arraylike_copy(X_npy) is X_npy, False)
 
 
-def test_save_load():
+def test_save_load_random():
     n, sz, d = 15, 10, 3
     rng = np.random.RandomState(0)
     dataset = rng.randn(n, sz, d)
-    tslearn.utils.save_timeseries_txt("tmp-tslearn-test.txt", dataset)
-    reloaded_dataset = tslearn.utils.load_timeseries_txt(
-        "tmp-tslearn-test.txt")
+    tslearn.utils.save_timeseries_txt(EXAMPLE_FILE, dataset)
+    reloaded_dataset = tslearn.utils.load_timeseries_txt(EXAMPLE_FILE)
     assert_allclose(dataset, reloaded_dataset)
 
+
+def test_save_load_known():
     dataset = tslearn.utils.to_time_series_dataset([[1, 2, 3, 4], [1, 2, 3]])
-    tslearn.utils.save_timeseries_txt("tmp-tslearn-test.txt", dataset)
-    reloaded_dataset = tslearn.utils.load_timeseries_txt(
-        "tmp-tslearn-test.txt")
+    tslearn.utils.save_timeseries_txt(EXAMPLE_FILE, dataset)
+    reloaded_dataset = tslearn.utils.load_timeseries_txt(EXAMPLE_FILE)
     for ts0, ts1 in zip(dataset, reloaded_dataset):
         assert_allclose(ts0[:tslearn.utils.ts_size(ts0)],
                         ts1[:tslearn.utils.ts_size(ts1)])
