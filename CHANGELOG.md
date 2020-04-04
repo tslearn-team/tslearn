@@ -33,6 +33,9 @@ NaNs when calling their respective `transform` methods in order to better
 mirror scikit-learn's handling of missing data in preprocessing.
 * `KNeighborsTimeSeries` now accepts variable-length time series as inputs
 when used with metrics that can deal with it (eg. DTW)
+* When constrained DTW is used, if the name of the constraint is not given but 
+its parameter is set, that is now considered sufficient to identify the 
+constraint.
 
 ### Added
 
@@ -60,12 +63,6 @@ following models: `GlobalAlignmentKernelKMeans`, `TimeSeriesKMeans`,
 `KShape`, `KNeighborsTimeSeries`, `KNeighborsTimeSeriesClassifier`,
 `PiecewiseAggregateApproximation`, `SymbolicAggregateApproximation`,
 and `OneD_SymbolicAggregateApproximation`
-
-### Changed
- 
-* When constrained DTW is used, if the name of the constraint is not given but 
-its parameter is set, that is now considered sufficient to identify the 
-constraint.
 
 ## [v0.2.4]
 
