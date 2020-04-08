@@ -1,5 +1,5 @@
 from sklearn.metrics import confusion_matrix
-from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.base import BaseEstimator, ClassifierMixin, clone
 from tslearn.utils import to_time_series_dataset
 from tslearn.clustering import TimeSeriesKMeans
 import numpy as np
@@ -14,17 +14,8 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
     n_clusters : int
         Number of clusters to form.
 
-    solver :
-        The method of gradient descent used during training
-
-    hidden_layer_sizes : tuple of int
-        Size of the hidden layers
-
-    random_state : int
-        Seed of the MLP
-
-    maximum_iteration : int
-        Maximum number of iterations performed by the MLP
+    base_classifier : Estimator
+        Estimator (instance) to be cloned and used for classifications.
 
     minimum_time_stamp : int
         Earliest time at which a classification can be performed on a time series
@@ -41,7 +32,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
     silhouette_ : float
         The silhouette score from the clustering
 
-    classifier_ : list
+    classifiers_ : list
         A list containing all the classifiers trained for the model
 
     clusters_ : dictionary
@@ -73,25 +64,17 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
     def __init__(
         self,
         n_clusters,
-        solver,
-        hidden_layer_sizes,
-        random_state,
-        maximum_iteration,
+        base_classifier,
         minimum_time_stamp,
         lamb,
-        cost_time_parameter,
-        classifier
+        cost_time_parameter
     ):
         super(NonMyopicEarlyClassification, self).__init__()
-        self.solver = solver
-        self.hidden_layer_sizes = hidden_layer_sizes
-        self.random_state = random_state
-        self.maximum_iteration = maximum_iteration
+        self.base_classifier = base_classifier
         self.n_clusters = n_clusters
         self.minimum_time_stamp = minimum_time_stamp
         self.lamb = lamb
         self.cost_time_parameter = cost_time_parameter
-        self.classifier = classifier
 
     def fit(self, X, Y):
         """
@@ -109,7 +92,9 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         """
         classes_y = np.unique(Y)
         self.cluster_ = TimeSeriesKMeans(n_clusters=self.n_clusters)
-        self.classifier_ = []
+        self.classifiers_ = {t: clone(self.base_classifier)
+                             for t in range(self.minimum_time_stamp,
+                                            X.shape[1] + 1)}
         self.clusters_ = {}
         self.pyhatyck_ = {}
         self.indice_ck_ = []
@@ -133,21 +118,13 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
                 self.pyck_[current_classe, k] = self.pyck_[current_classe, k] / current_sum
 
         for t in range(self.minimum_time_stamp, X.shape[1] + 1):
-            self.classifier_.append(
-                self.classifier(
-                    solver=self.solver,
-                    hidden_layer_sizes=self.hidden_layer_sizes,
-                    random_state=self.random_state,
-                    max_iter=self.maximum_iteration,
-                )
-            )
-            self.classifier_[-1].fit(X1[:, :t], Y1)
+            self.classifiers_[t].fit(X1[:, :t], Y1)
             for k in range(0, self.n_clusters):
                 index_cluster = np.where(c_k2 == k)
                 if len(index_cluster[0]) != 0:
                     X2_current_cluster = np.squeeze(X2[index_cluster, :t], axis=0)
                     Y2_current_cluster = Y2[tuple(index_cluster)]
-                    Y2_hat = self.classifier_[-1].predict(X2_current_cluster[:, :t])
+                    Y2_hat = self.classifiers_[t].predict(X2_current_cluster[:, :t])
                     self.clusters_["ck_cm{0}".format(k)].append(
                         confusion_matrix(Y2_current_cluster, Y2_hat, labels=classes_y)
                     )
@@ -320,8 +297,8 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
                 xt=xt[:, :time_prediction],
             )
             if time_prediction == time_stamp:
-                result = self.classifier_[-1].predict(xt)
-                result_proba = self.classifier_[-1].predict_proba(xt)
+                result = self.classifiers_[time_prediction].predict(xt)
+                result_proba = self.classifiers_[time_prediction].predict_proba(xt)
                 stop_criterion = True
                 minimum_tau, minimum_loss = self.minimize_integer(
                     end_of_time=time_stamp - time_prediction,
@@ -330,10 +307,10 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
                 )
                 loss_exit = minimum_loss
             elif minimum_tau == time_prediction:
-                result = self.classifier_[
+                result = self.classifiers_[
                     time_prediction - self.minimum_time_stamp
                 ].predict(xt[:, :time_prediction])
-                result_proba = self.classifier_[
+                result_proba = self.classifiers_[
                     time_prediction - self.minimum_time_stamp
                 ].predict_proba(xt[:, :time_prediction])
                 loss_exit = minimum_loss
