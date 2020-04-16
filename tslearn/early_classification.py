@@ -45,18 +45,12 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
     indice_ck_ : list
         Contains for each clusters the indexes of the time series in the dataset
 
-    __n_classes_ : int private
-        The number of classes in the series
-
-    __len_X_ : int
-        The length of the time series
-
     Examples
     --------------------
 
     References
     --------------------
-    [1] A. Dachraoui, A. Bondu & A. Cornuéjols. Early classification of time series as a non myopic sequential decision
+    [1] A. Dachraoui, A. Bondu & A. Cornuejols. Early classification of time series as a non myopic sequential decision
     making problem. 2015 Conference paper
 
 
@@ -94,59 +88,46 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         y_classes = np.unique(y)
         self.labels_ = sorted(set(y_classes))
         y_classes_indices = [self.labels_.index(yi) for yi in y_classes]
-
+        y_ = y
         for idx, current_classe in enumerate(y_classes):
-            y[y == current_classe] = y_classes_indices[idx]
+            y_[y_ == current_classe] = y_classes_indices[idx]
 
         self.cluster_ = TimeSeriesKMeans(n_clusters=self.n_clusters)
         self.classifiers_ = {
             t: clone(self.base_classifier)
             for t in range(self.minimum_time_stamp, X.shape[1] + 1)
         }
-        self.pyhatyck_ = {}
-        self.indice_ck_ = []
         self.__n_classes_ = len(y_classes_indices)
         self.__len_X_ = X.shape[1]
-        c_k = self.cluster_.fit_predict((to_time_series_dataset(X)))
+        self.pyhatyck_ = np.empty((self.__len_X_ - self.minimum_time_stamp + 1,
+                                   self.n_clusters, self.__n_classes_, self.__n_classes_))
+        c_k = self.cluster_.fit_predict((X))
         X_and_cluster = np.concatenate((X, c_k[:, np.newaxis]), axis=1)
-        X1, X2, y1, y2 = train_test_split(X_and_cluster, y, test_size=0.5)
-        X1 = X1[:, :-1]
-        c_k2 = X2[:, -1]
-        X2 = X2[:, :-1]
+        X1, X2, c_k1, c_k2, y1, y2 = train_test_split(X_and_cluster, c_k, y_, test_size=0.5)
         vector_of_ones = np.ones((len(X[:]),))
         self.pyck_ = coo_matrix(
-            (vector_of_ones, (y, c_k)),
+            (vector_of_ones, (y_, c_k)),
             shape=(self.__n_classes_, self.n_clusters),
         ).toarray()
-        for k in range(0, self.n_clusters):
-            self.pyhatyck_["pyhatycks{0}".format(k)] = []
-            self.indice_ck_.append(np.where(c_k == k))
-            current_sum = self.pyck_[:, k].sum()
-            for current_classe in range(0, self.__n_classes_):
-                self.pyck_[current_classe, k] = (
-                    self.pyck_[current_classe, k] / current_sum
-                )
+        self.pyck_ /= self.pyck_.sum(axis=0, keepdims=True)
 
-        for t in range(self.minimum_time_stamp, X.shape[1] + 1):
+        for t in range(self.minimum_time_stamp, self.__len_X_ + 1):
             self.classifiers_[t].fit(X1[:, :t], y1)
             for k in range(0, self.n_clusters):
-                index_cluster = np.where(c_k2 == k)
-
-                if len(index_cluster[0]) != 0:
-                    X2_current_cluster = np.squeeze(
-                        X2[index_cluster, :t], axis=0
-                    )
-                    y2_current_cluster = y2[tuple(index_cluster)]
+                index = (c_k2 == k)
+                if index.shape[0] != 0:
+                    X2_current_cluster = X2[index, :t]
+                    y2_current_cluster = y2[index]
                     y2_hat = self.classifiers_[t].predict(
                         X2_current_cluster[:, :t]
                     )
                     conf_matrix = confusion_matrix(
                         y2_current_cluster, y2_hat, labels=y_classes_indices, normalize="true"
                     )
+                    #The diagonal of the confusion matrices must be put to 0
+                    # to fullfil the criterions of the cost function
                     np.fill_diagonal(conf_matrix, 0)
-                    self.pyhatyck_["pyhatycks{0}".format(k)].append(
-                        conf_matrix
-                    )
+                    self.pyhatyck_[t - self.minimum_time_stamp, k] = conf_matrix
 
     def get_cluster_probas(self, X):
         """
@@ -161,9 +142,8 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         -------
         vector : the probabilities of the given time series to be in the clusters of the model
         """
-        diffs = X[np.newaxis, :] - self.cluster_.cluster_centers_[:, len(X)]
-        distances_clusters = np.linalg.norm(diffs, axis=2)
-        distances_clusters = np.asarray(distances_clusters)
+        diffs = X[np.newaxis, :] - self.cluster_.cluster_centers_[:, :len(X)]
+        distances_clusters = np.linalg.norm(diffs, axis=(1, 2))
         minimum_distance = np.min(distances_clusters)
         average_distance = np.mean(distances_clusters)
         minimum_distance_to_average = (
@@ -193,19 +173,15 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         --------
         float : the computed cost
         """
-        cost = 0
         proba_clusters = self.get_cluster_probas(X=X)
         truncated_t = X.shape[-1]
-        for k in range(0, self.n_clusters):
-            sum_pyhatyck = np.sum(self.pyhatyck_["pyhatycks{0}".format(k)][
-                                truncated_t + tau - self.minimum_time_stamp
-                            ], axis=0)
-            sum_global = np.dot(sum_pyhatyck, self.pyck_[:, k])
-            cost = cost + proba_clusters[:, k] * sum_global
+        sum_pyhatyck = np.sum(self.pyhatyck_[truncated_t + tau - self.minimum_time_stamp], axis=1)
+        sum_pyhatyck = np.transpose(sum_pyhatyck)
+        sum_global = np.sum((sum_pyhatyck * self.pyck_), axis=0)
+        cost = np.dot(proba_clusters, sum_global)
+        return cost + self._cost_time(truncated_t + tau)
 
-        return cost
-
-    def minimize_integer(self, end_of_time, xt):
+    def cost_function_minimizer(self, end_of_time, xt):
         """
         We want to minimize a function "funct" according a time series "xt" for a list of integers from 0 to
         "end_of_time"
@@ -224,14 +200,10 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
          int : The integer in {0,...,stop} that minimizes "funct"
          float : the so fat minimum cost
         """
-        tau_star = 0
-        so_far_minimum_cost = self._expected_cost(xt, tau_star)
-        for tau in range(1, end_of_time):
-            current_cost = self._expected_cost(xt, tau)
-            if current_cost < so_far_minimum_cost:
-                so_far_minimum_cost = current_cost
-                tau_star = tau
-        return tau_star + xt.shape[-1], so_far_minimum_cost
+        costs = [self._expected_cost(xt, tau) for tau in range(end_of_time + 1)]
+        tau_star = np.argmin(costs)
+        min_cost = costs[tau_star]
+        return tau_star, min_cost
 
     def _predict_single_series(self, Xi):
         """
@@ -251,32 +223,14 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         length_Xi = Xi.shape[0]
         Xi = np.reshape(Xi, (1, length_Xi))
         time_prediction = self.minimum_time_stamp
-        stop_criterion = False
-        while stop_criterion is False:
-            minimum_tau, minimum_loss = self.minimize_integer(
-                end_of_time=length_Xi - time_prediction,
-                xt=Xi[:, :time_prediction],
-            )
-            if time_prediction == length_Xi:
-                result = self.classifiers_[time_prediction].predict(Xi)
-                result_proba = self.classifiers_[
-                    time_prediction
-                ].predict_proba(Xi)
-                stop_criterion = True
-                minimum_tau, minimum_loss = self.minimize_integer(
-                    end_of_time=length_Xi - time_prediction,
-                    xt=Xi[:, :time_prediction],
-                )
+        for t in range(self.minimum_time_stamp, self.__len_X_ + 1):
+            minimum_tau, minimum_loss = self.cost_function_minimizer(
+                end_of_time=length_Xi - t, xt=Xi[:, :t])
+            if (time_prediction == length_Xi) or (minimum_tau == t):
+                result = self.classifiers_[t].predict(Xi[:, :t])
+                result_proba = self.classifiers_[t].predict_proba(Xi[:, :t])
                 loss_exit = minimum_loss
-            elif minimum_tau == time_prediction:
-                result = self.classifiers_[
-                    time_prediction
-                ].predict(Xi[:, :time_prediction])
-                result_proba = self.classifiers_[
-                    time_prediction
-                ].predict_proba(Xi[:, :time_prediction])
-                loss_exit = minimum_loss
-                stop_criterion = True
+                break
             else:
                 time_prediction = time_prediction + 1
         return result, time_prediction, result_proba, loss_exit
