@@ -1,7 +1,7 @@
 from sklearn.metrics import confusion_matrix
 from sklearn.base import BaseEstimator, ClassifierMixin, clone
 from sklearn.model_selection import train_test_split
-from tslearn.utils import to_time_series_dataset
+from tslearn.utils import to_time_series_dataset, check_dims
 from tslearn.clustering import TimeSeriesKMeans
 import numpy as np
 from scipy.sparse import coo_matrix
@@ -85,10 +85,12 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         y: vector
             the associated classes of the series from X_train
         """
+
+        X = check_dims(X)
         y_classes = np.unique(y)
         self.labels_ = sorted(set(y_classes))
         y_classes_indices = [self.labels_.index(yi) for yi in y_classes]
-        y_ = y
+        y_ = np.copy(y)
         for idx, current_classe in enumerate(y_classes):
             y_[y_ == current_classe] = y_classes_indices[idx]
 
@@ -101,9 +103,8 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         self.__len_X_ = X.shape[1]
         self.pyhatyck_ = np.empty((self.__len_X_ - self.minimum_time_stamp + 1,
                                    self.n_clusters, self.__n_classes_, self.__n_classes_))
-        c_k = self.cluster_.fit_predict((X))
-        X_and_cluster = np.concatenate((X, c_k[:, np.newaxis]), axis=1)
-        X1, X2, c_k1, c_k2, y1, y2 = train_test_split(X_and_cluster, c_k, y_, test_size=0.5)
+        c_k = self.cluster_.fit_predict(X)
+        X1, X2, c_k1, c_k2, y1, y2 = train_test_split(X, c_k, y_, test_size=0.5)
         vector_of_ones = np.ones((len(X[:]),))
         self.pyck_ = coo_matrix(
             (vector_of_ones, (y_, c_k)),
@@ -174,7 +175,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         float : the computed cost
         """
         proba_clusters = self.get_cluster_probas(X=X)
-        truncated_t = X.shape[-1]
+        truncated_t = X.shape[0]
         sum_pyhatyck = np.sum(self.pyhatyck_[truncated_t + tau - self.minimum_time_stamp], axis=1)
         sum_pyhatyck = np.transpose(sum_pyhatyck)
         sum_global = np.sum((sum_pyhatyck * self.pyck_), axis=0)
@@ -220,19 +221,18 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         float : the probability used for computing the cost
         float : the loss when classifying
         """
-        length_Xi = Xi.shape[0]
-        Xi = np.reshape(Xi, (1, length_Xi))
+
         time_prediction = self.minimum_time_stamp
         for t in range(self.minimum_time_stamp, self.__len_X_ + 1):
             minimum_tau, minimum_loss = self.cost_function_minimizer(
-                end_of_time=length_Xi - t, xt=Xi[:, :t])
-            if (time_prediction == length_Xi) or (minimum_tau == t):
-                result = self.classifiers_[t].predict(Xi[:, :t])
-                result_proba = self.classifiers_[t].predict_proba(Xi[:, :t])
+                end_of_time=self.__len_X_ - t, xt=Xi[:t])
+            if (t == self.__len_X_) or (minimum_tau == t):
+                #Without the transpose here the predict fails miserably
+                Xi = np.transpose(Xi)
+                result = self.classifiers_[t].predict(Xi[:t])
+                result_proba = self.classifiers_[t].predict_proba(Xi[:t])
                 loss_exit = minimum_loss
                 break
-            else:
-                time_prediction = time_prediction + 1
         return result, time_prediction, result_proba, loss_exit
 
     def predict(self, X):
@@ -249,8 +249,10 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         Vector : the predicted classes
         """
 
+        X = check_dims(X)
         y_pred = []
         time_prediction = []
+        print(X.shape)
         for i in range(0, X.shape[0]):
             (
                 new_classif,
@@ -260,6 +262,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
             ) = self._predict_single_series(X[i])
             y_pred.append(new_classif)
             time_prediction.append(new_time)
+        print(y_pred)
         return y_pred, time_prediction
 
     def _cost_time(self, t):
