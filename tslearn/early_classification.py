@@ -97,22 +97,22 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         self.cluster_ = TimeSeriesKMeans(n_clusters=self.n_clusters)
         self.classifiers_ = {
             t: clone(self.base_classifier)
-            for t in range(self.minimum_time_stamp, X.shape[1] + 1)
+            for t in range(self.minimum_time_stamp, X.shape[1])
         }
         self.__n_classes_ = len(y_classes_indices)
         self.__len_X_ = X.shape[1]
-        self.pyhatyck_ = np.empty((self.__len_X_ - self.minimum_time_stamp + 1,
+        self.pyhatyck_ = np.empty((self.__len_X_ - self.minimum_time_stamp,
                                    self.n_clusters, self.__n_classes_, self.__n_classes_))
         c_k = self.cluster_.fit_predict(X)
         X1, X2, c_k1, c_k2, y1, y2 = train_test_split(X, c_k, y_, test_size=0.5)
-        vector_of_ones = np.ones((len(X[:]),))
+        vector_of_ones = np.ones((X.shape[0], ))
         self.pyck_ = coo_matrix(
             (vector_of_ones, (y_, c_k)),
             shape=(self.__n_classes_, self.n_clusters),
         ).toarray()
         self.pyck_ /= self.pyck_.sum(axis=0, keepdims=True)
 
-        for t in range(self.minimum_time_stamp, self.__len_X_ + 1):
+        for t in range(self.minimum_time_stamp, self.__len_X_):
             self.classifiers_[t].fit(X1[:, :t], y1)
             for k in range(0, self.n_clusters):
                 index = (c_k2 == k)
@@ -125,8 +125,10 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
                     conf_matrix = confusion_matrix(
                         y2_current_cluster, y2_hat, labels=y_classes_indices, normalize="true"
                     )
-                    #The diagonal of the confusion matrices must be put to 0
-                    # to fullfil the criterions of the cost function
+                    # pyhatyck_ stores
+                    # P_{t+\tau}(\hat{y} | y, c_k) \delta_{y \neq \hat{y}}
+                    # elements so it should have a null diagonal because of
+                    # the \delta_{y \neq \hat{y}} term
                     np.fill_diagonal(conf_matrix, 0)
                     self.pyhatyck_[t - self.minimum_time_stamp, k] = conf_matrix
 
@@ -158,53 +160,47 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         )
         return probas / probas.sum()
 
-    def _expected_cost(self, Xi, tau):
-        """
-        From a incomplete series xt, this function compute the expected cost of a prediction made at time "last time of
-        xt + tau"
+    def _expected_costs(self, Xi):
+        """Compute expected future costs from an incoming time series `Xi`.
+
+        This cost is computed, for a time horizon :math:`\tau`, as:
+
+        ..math ::
+
+            \sum_k P(c_k | Xi) \sum_y P(y | c_k)
+                \sum_\hat{y}
+                P_{t+\tau}(\hat{y} | y, c_k) \delta_{y \neq \hat{y}}
+
+        where:
+
+        * :math:`P(c_k | Xi)` is obtained through a call to
+        `get_cluster_probas`
+        * :math:`P(y | c_k)` is stored in `pyck_`
+        * :math:`P_{t+\tau}(\hat{y} | y, c_k) \delta_{y \neq \hat{y}}` is
+        stored in `pyhatyck_`
 
         Parameters
         ----------
-        X: vector
-            a time series that may be truncated for which we want to have the cost
-        tau: int
-            gives the future time for which the cost is calculated
+        Xi: numpy array, shape (t, d)
+            A time series observed up to time t
 
         Returns
         --------
-        float : the computed cost
+        cost : numpy array of shape (self.__len_X_ - t + 1, )
+            Expected future costs for all time stamps from t to self.__len_X_
         """
         proba_clusters = self.get_cluster_probas(Xi=Xi)
         truncated_t = Xi.shape[0]
-        sum_pyhatyck = np.sum(self.pyhatyck_[truncated_t + tau - self.minimum_time_stamp], axis=1)
-        sum_pyhatyck = np.transpose(sum_pyhatyck)
-        sum_global = np.sum((sum_pyhatyck * self.pyck_), axis=0)
-        cost = np.dot(proba_clusters, sum_global)
-        return cost + self._cost_time(truncated_t + tau)
-
-    def cost_function_minimizer(self, end_of_time, Xi):
-        """
-        We want to minimize a function "funct" according a time series "xt" for a list of integers from 0 to
-        "end_of_time"
-
-        Parameters
-        ----------
-        end_of_time: int
-            the highest integer at which the function to be minimized is calculated
-        function_to_minimize: funct
-            the function of interest
-        xt: vector
-            the time series related to the function "funct"
-
-        Returns
-         ------
-         int : The integer in {0,...,stop} that minimizes "funct"
-         float : the so fat minimum cost
-        """
-        costs = [self._expected_cost(Xi, tau) for tau in range(end_of_time + 1)]
-        tau_star = np.argmin(costs)
-        min_cost = costs[tau_star]
-        return tau_star, min_cost
+        # pyhatyck_ is indexed by: t, k, y, yhat
+        sum_pyhatyck = np.sum(
+            self.pyhatyck_[truncated_t - self.minimum_time_stamp:],
+            axis=-1
+        )
+        sum_pyhatyck = np.transpose(sum_pyhatyck, axes=(1, 2))
+        # sum_pyhatyck is now indexed by: t, y, k
+        sum_global = np.sum(sum_pyhatyck * self.pyck_[np.newaxis, :], axis=1)
+        cost = np.dot(sum_global, proba_clusters)
+        return cost + self._cost_time(np.arange(truncated_t, self.__len_X_))
 
     def _predict_single_series(self, Xi):
         """
@@ -224,9 +220,8 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
 
         time_prediction = self.minimum_time_stamp
         for t in range(self.minimum_time_stamp, self.__len_X_ + 1):
-            minimum_tau, minimum_loss = self.cost_function_minimizer(
-                end_of_time=self.__len_X_ - t, Xi=Xi[:t])
-            if (t == self.__len_X_) or (minimum_tau == t):
+            tau_star = np.argmin(self._expected_costs(Xi=Xi[:t]))
+            if (t == self.__len_X_) or (tau_star == t):
                 result = self.classifiers_[t].predict([Xi[:t]])
                 result_proba = self.classifiers_[t].predict_proba([Xi[:t]])
                 break
@@ -250,13 +245,9 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         y_pred = []
         time_prediction = []
         for i in range(0, X.shape[0]):
-            (
-                new_classif,
-                new_time,
-                new_proba
-            ) = self._predict_single_series(X[i])
-            y_pred.append(new_classif)
-            time_prediction.append(new_time)
+            cl, t, proba = self._predict_single_series(X[i])
+            y_pred.append(cl)
+            time_prediction.append(t)
         return y_pred, time_prediction
 
     def _cost_time(self, t):
