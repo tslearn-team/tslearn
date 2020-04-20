@@ -21,7 +21,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         Estimator (instance) to be cloned and used for classifications.
         If None, the chosen classifier is a 1NN with Euclidean metric.
 
-    minimum_time_stamp : int
+    min_t : int
         Earliest time at which a classification can be performed on a time series
 
     lamb : float
@@ -60,11 +60,11 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
     """
 
     def __init__(self, n_clusters=2, base_classifier=None,
-                 minimum_time_stamp=0, lamb=1., cost_time_parameter=1.):
+                 min_t=0, lamb=1., cost_time_parameter=1.):
         super(NonMyopicEarlyClassification, self).__init__()
         self.base_classifier = base_classifier
         self.n_clusters = n_clusters
-        self.min_t = minimum_time_stamp
+        self.min_t = min_t
         self.lamb = lamb
         self.cost_time_parameter = cost_time_parameter
 
@@ -88,8 +88,8 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         self.labels_ = sorted(set(y_classes))
         y_classes_indices = [self.labels_.index(yi) for yi in y_classes]
         y_ = np.copy(y)
-        for idx, current_classe in enumerate(y_classes):
-            y_[y_ == current_classe] = y_classes_indices[idx]
+        for idx, current_class in enumerate(y_classes):
+            y_[y_ == current_class] = y_classes_indices[idx]
 
         self.cluster_ = TimeSeriesKMeans(n_clusters=self.n_clusters)
         if self.base_classifier is not None:
@@ -159,13 +159,13 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         >>> probas.shape
         (3, )
         >>> probas
-        [.33, .33, .33]
+        array([.33, .33, .33])
         >>> model = NonMyopicEarlyClassification(n_clusters=3, lamb=10000.)
         >>> probas = model.fit(dataset, y).get_cluster_probas(ts0)
         >>> probas.shape
         (3, )
         >>> probas
-        [.5, .5, 0.]
+        array([.5, .5, 0.])
         """
         diffs = Xi[np.newaxis, :] - self.cluster_.cluster_centers_[:, :len(Xi)]
         distances_clusters = np.linalg.norm(diffs, axis=(1, 2))
@@ -239,15 +239,38 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         float : the probability used for computing the cost
         float : the loss when classifying
         """
-
-        time_prediction = self.min_t
+        pred, time_prediction = None, None
         for t in range(self.min_t, self.__len_X_ + 1):
             tau_star = np.argmin(self._expected_costs(Xi=Xi[:t]))
             if (t == self.__len_X_) or (tau_star == t):
-                result = self.classifiers_[t].predict([Xi[:t]])
-                result_proba = self.classifiers_[t].predict_proba([Xi[:t]])
+                pred = self.classifiers_[t].predict([Xi[:t]])
+                time_prediction = t
                 break
-        return result, time_prediction, result_proba
+        return pred, time_prediction
+
+    def _predict_single_series_proba(self, Xi):
+        """
+        This function classifies a single time series xt
+
+        Parameters
+        ----------
+        xt: vector
+            a time series that is probably incomplete but that nonetheless we want to classify
+        Returns
+        -------
+        int: the class which is predicted
+        int : the time of the prediction
+        float : the probability used for computing the cost
+        float : the loss when classifying
+        """
+        time_prediction, probas = None, None
+        for t in range(self.min_t, self.__len_X_ + 1):
+            tau_star = np.argmin(self._expected_costs(Xi=Xi[:t]))
+            if (t == self.__len_X_) or (tau_star == t):
+                probas = self.classifiers_[t].predict_proba([Xi[:t]])
+                time_prediction = t
+                break
+        return probas, time_prediction
 
     def predict(self, X):
         """
@@ -267,8 +290,31 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         y_pred = []
         time_prediction = []
         for i in range(0, X.shape[0]):
-            cl, t, proba = self._predict_single_series(X[i])
+            cl, t = self._predict_single_series(X[i])
             y_pred.append(cl)
+            time_prediction.append(t)
+        return y_pred, time_prediction
+
+    def predict_proba(self, X):
+        """
+        Predicts the classes of the series of the test dataset.
+
+        Parameters
+        ----------
+        X_test : Array-like
+            The test dataset
+
+        Returns
+        -------
+        Vector : the predicted classes
+        """
+
+        X = check_dims(X)
+        y_pred = []
+        time_prediction = []
+        for i in range(0, X.shape[0]):
+            probas, t = self._predict_single_series_proba(X[i])
+            y_pred.append(probas)
             time_prediction.append(t)
         return y_pred, time_prediction
 
