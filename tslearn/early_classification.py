@@ -130,7 +130,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
                     np.fill_diagonal(conf_matrix, 0)
                     self.pyhatyck_[t - self.minimum_time_stamp, k] = conf_matrix
 
-    def get_cluster_probas(self, X):
+    def get_cluster_probas(self, Xi):
         """
         This function computes the probabilities of the time series xt to be in a cluster of the model
 
@@ -143,7 +143,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         -------
         vector : the probabilities of the given time series to be in the clusters of the model
         """
-        diffs = X[np.newaxis, :] - self.cluster_.cluster_centers_[:, :len(X)]
+        diffs = Xi[np.newaxis, :] - self.cluster_.cluster_centers_[:, :len(Xi)]
         distances_clusters = np.linalg.norm(diffs, axis=(1, 2))
         minimum_distance = np.min(distances_clusters)
         average_distance = np.mean(distances_clusters)
@@ -158,7 +158,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         )
         return probas / probas.sum()
 
-    def _expected_cost(self, X, tau):
+    def _expected_cost(self, Xi, tau):
         """
         From a incomplete series xt, this function compute the expected cost of a prediction made at time "last time of
         xt + tau"
@@ -174,15 +174,15 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         --------
         float : the computed cost
         """
-        proba_clusters = self.get_cluster_probas(X=X)
-        truncated_t = X.shape[0]
+        proba_clusters = self.get_cluster_probas(Xi=Xi)
+        truncated_t = Xi.shape[0]
         sum_pyhatyck = np.sum(self.pyhatyck_[truncated_t + tau - self.minimum_time_stamp], axis=1)
         sum_pyhatyck = np.transpose(sum_pyhatyck)
         sum_global = np.sum((sum_pyhatyck * self.pyck_), axis=0)
         cost = np.dot(proba_clusters, sum_global)
         return cost + self._cost_time(truncated_t + tau)
 
-    def cost_function_minimizer(self, end_of_time, xt):
+    def cost_function_minimizer(self, end_of_time, Xi):
         """
         We want to minimize a function "funct" according a time series "xt" for a list of integers from 0 to
         "end_of_time"
@@ -201,7 +201,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
          int : The integer in {0,...,stop} that minimizes "funct"
          float : the so fat minimum cost
         """
-        costs = [self._expected_cost(xt, tau) for tau in range(end_of_time + 1)]
+        costs = [self._expected_cost(Xi, tau) for tau in range(end_of_time + 1)]
         tau_star = np.argmin(costs)
         min_cost = costs[tau_star]
         return tau_star, min_cost
@@ -225,15 +225,12 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         time_prediction = self.minimum_time_stamp
         for t in range(self.minimum_time_stamp, self.__len_X_ + 1):
             minimum_tau, minimum_loss = self.cost_function_minimizer(
-                end_of_time=self.__len_X_ - t, xt=Xi[:t])
+                end_of_time=self.__len_X_ - t, Xi=Xi[:t])
             if (t == self.__len_X_) or (minimum_tau == t):
-                #Without the transpose here the predict fails miserably
-                Xi = np.transpose(Xi)
-                result = self.classifiers_[t].predict(Xi[:t])
-                result_proba = self.classifiers_[t].predict_proba(Xi[:t])
-                loss_exit = minimum_loss
+                result = self.classifiers_[t].predict([Xi[:t]])
+                result_proba = self.classifiers_[t].predict_proba([Xi[:t]])
                 break
-        return result, time_prediction, result_proba, loss_exit
+        return result, time_prediction, result_proba
 
     def predict(self, X):
         """
@@ -252,17 +249,14 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         X = check_dims(X)
         y_pred = []
         time_prediction = []
-        print(X.shape)
         for i in range(0, X.shape[0]):
             (
                 new_classif,
                 new_time,
-                new_proba,
-                new_cost,
+                new_proba
             ) = self._predict_single_series(X[i])
             y_pred.append(new_classif)
             time_prediction.append(new_time)
-        print(y_pred)
         return y_pred, time_prediction
 
     def _cost_time(self, t):
