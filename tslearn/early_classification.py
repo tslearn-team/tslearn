@@ -4,7 +4,7 @@ from sklearn.model_selection import train_test_split
 import numpy as np
 from scipy.sparse import coo_matrix
 
-from tslearn.utils import to_time_series_dataset, check_dims
+from tslearn.utils import to_time_series_dataset, to_time_series, check_dims
 from tslearn.neighbors import KNeighborsTimeSeriesClassifier
 from tslearn.clustering import TimeSeriesKMeans
 
@@ -30,6 +30,8 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
 
     cost_time_parameter : float
         Parameter of the cost function of time. This function is of the form : f(time) = time * cost_time_parameter
+
+    random_state: int
 
     Attributes
     --------------------
@@ -60,13 +62,14 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
     """
 
     def __init__(self, n_clusters=2, base_classifier=None,
-                 minimum_time_stamp=0, lamb=1., cost_time_parameter=1.):
+                 min_t=1, lamb=1., cost_time_parameter=1., random_state=None):
         super(NonMyopicEarlyClassification, self).__init__()
         self.base_classifier = base_classifier
         self.n_clusters = n_clusters
-        self.min_t = minimum_time_stamp
+        self.min_t = min_t
         self.lamb = lamb
         self.cost_time_parameter = cost_time_parameter
+        self.random_state = random_state
 
     def fit(self, X, y):
         """
@@ -91,7 +94,8 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         for idx, current_classe in enumerate(y_classes):
             y_[y_ == current_classe] = y_classes_indices[idx]
 
-        self.cluster_ = TimeSeriesKMeans(n_clusters=self.n_clusters)
+        self.cluster_ = TimeSeriesKMeans(n_clusters=self.n_clusters,
+                                         random_state=self.random_state)
         if self.base_classifier is not None:
             clf = self.base_classifier
         else:
@@ -124,8 +128,12 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
                         X2_current_cluster[:, :t]
                     )
                     conf_matrix = confusion_matrix(
-                        y2_current_cluster, y2_hat, labels=y_classes_indices, normalize="pred"
+                        y2_current_cluster, y2_hat, labels=y_classes_indices
                     )
+                    # normalize parameter seems to be quite recent in sklearn,
+                    # so let's do it ourselves
+                    conf_matrix = conf_matrix / conf_matrix.sum(axis=0,
+                                                                keepdims=True)
                     # pyhatyck_ stores
                     # P_{t+\tau}(\hat{y} | y, c_k) \delta_{y \neq \hat{y}}
                     # elements so it should have a null diagonal because of
@@ -150,22 +158,29 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         Examples
         --------
         >>> dataset = to_time_series_dataset([[1, 2, 3, 4, 5, 6],
+        ...                                   [1, 2, 3, 4, 5, 6],
+        ...                                   [1, 2, 3, 4, 5, 6],
         ...                                   [1, 2, 3, 3, 2, 1],
+        ...                                   [1, 2, 3, 3, 2, 1],
+        ...                                   [1, 2, 3, 3, 2, 1],
+        ...                                   [3, 2, 1, 1, 2, 3],
         ...                                   [3, 2, 1, 1, 2, 3]])
-        >>> y = [0, 1, 0]
+        >>> y = [0, 0, 0, 1, 1, 1, 0, 0]
         >>> ts0 = to_time_series([1, 2])
-        >>> model = NonMyopicEarlyClassification(n_clusters=3, lamb=0.)
+        >>> model = NonMyopicEarlyClassification(n_clusters=3, lamb=0.,
+        ...                                      random_state=0)
         >>> probas = model.fit(dataset, y).get_cluster_probas(ts0)
         >>> probas.shape
-        (3, )
-        >>> probas
-        [.33, .33, .33]
-        >>> model = NonMyopicEarlyClassification(n_clusters=3, lamb=10000.)
+        (3,)
+        >>> probas  # doctest: +ELLIPSIS
+        array([0.33..., 0.33..., 0.33...])
+        >>> model = NonMyopicEarlyClassification(n_clusters=3, lamb=10000.,
+        ...                                      random_state=0)
         >>> probas = model.fit(dataset, y).get_cluster_probas(ts0)
         >>> probas.shape
-        (3, )
+        (3,)
         >>> probas
-        [.5, .5, 0.]
+        array([.5, .5, 0.])
         """
         diffs = Xi[np.newaxis, :] - self.cluster_.cluster_centers_[:, :len(Xi)]
         distances_clusters = np.linalg.norm(diffs, axis=(1, 2))
