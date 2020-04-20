@@ -98,7 +98,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
             clf = KNeighborsTimeSeriesClassifier(n_neighbors=1,
                                                  metric="euclidean")
         self.classifiers_ = {t: clone(clf)
-                             for t in range(self.min_t, X.shape[1])}
+                             for t in range(self.min_t, X.shape[1] + 1)}
         self.__n_classes_ = len(y_classes_indices)
         self.__len_X_ = X.shape[1]
         self.pyhatyck_ = np.empty((self.__len_X_ - self.min_t,
@@ -124,7 +124,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
                         X2_current_cluster[:, :t]
                     )
                     conf_matrix = confusion_matrix(
-                        y2_current_cluster, y2_hat, labels=y_classes_indices, normalize="true"
+                        y2_current_cluster, y2_hat, labels=y_classes_indices, normalize="pred"
                     )
                     # pyhatyck_ stores
                     # P_{t+\tau}(\hat{y} | y, c_k) \delta_{y \neq \hat{y}}
@@ -210,18 +210,6 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         --------
         cost : numpy array of shape (self.__len_X_ - t + 1, )
             Expected future costs for all time stamps from t to self.__len_X_
-
-        Examples
-        --------
-        >>> dataset = to_time_series_dataset([[1, 2, 3, 4, 5, 6],
-        ...                                   [1, 2, 3, 3, 2, 1],
-        ...                                   [3, 2, 1, 1, 2, 3]])
-        >>> y = [0, 1, 0]
-        >>> time_series = to_time_series([1, 2])
-        >>> model = NonMyopicEarlyClassification(n_clusters=3)
-        >>> future_costs = model.fit(dataset, y)._expected_costs(time_series)
-        >>> future_costs.shape
-        (5, )
         """
         proba_clusters = self.get_cluster_probas(Xi=Xi)
         truncated_t = Xi.shape[0]
@@ -230,11 +218,11 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
             self.pyhatyck_[truncated_t - self.min_t:],
             axis=-1
         )
-        sum_pyhatyck = np.transpose(sum_pyhatyck, axes=(1, 2))
+        sum_pyhatyck = np.transpose(sum_pyhatyck, axes=(0, 2, 1))
         # sum_pyhatyck is now indexed by: t, y, k
         sum_global = np.sum(sum_pyhatyck * self.pyck_[np.newaxis, :], axis=1)
         cost = np.dot(sum_global, proba_clusters)
-        return cost + self._cost_time(np.arange(truncated_t, self.__len_X_))
+        return cost + self._cost_time(np.arange(truncated_t, self.__len_X_ + 1))
 
     def _predict_single_series(self, Xi):
         """
