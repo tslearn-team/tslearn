@@ -123,8 +123,9 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
                         X2_current_cluster[:, :t]
                     )
                     conf_matrix = confusion_matrix(
-                        y2_current_cluster, y2_hat, labels=y_classes_indices, normalize="true"
+                        y2_current_cluster, y2_hat, labels=y_classes_indices, normalize="pred"
                     )
+                    print(conf_matrix)
                     # pyhatyck_ stores
                     # P_{t+\tau}(\hat{y} | y, c_k) \delta_{y \neq \hat{y}}
                     # elements so it should have a null diagonal because of
@@ -196,6 +197,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
             self.pyhatyck_[truncated_t - self.minimum_time_stamp:],
             axis=-1
         )
+        print(sum_pyhatyck.shape)
         sum_pyhatyck = np.transpose(sum_pyhatyck, axes=(1, 2))
         # sum_pyhatyck is now indexed by: t, y, k
         sum_global = np.sum(sum_pyhatyck * self.pyck_[np.newaxis, :], axis=1)
