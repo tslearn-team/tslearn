@@ -97,11 +97,11 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         self.cluster_ = TimeSeriesKMeans(n_clusters=self.n_clusters)
         self.classifiers_ = {
             t: clone(self.base_classifier)
-            for t in range(self.minimum_time_stamp, X.shape[1])
+            for t in range(self.minimum_time_stamp, X.shape[1] + 1)
         }
         self.__n_classes_ = len(y_classes_indices)
         self.__len_X_ = X.shape[1]
-        self.pyhatyck_ = np.empty((self.__len_X_ - self.minimum_time_stamp,
+        self.pyhatyck_ = np.empty((self.__len_X_ - self.minimum_time_stamp + 1,
                                    self.n_clusters, self.__n_classes_, self.__n_classes_))
         c_k = self.cluster_.fit_predict(X)
         X1, X2, c_k1, c_k2, y1, y2 = train_test_split(X, c_k, y_, test_size=0.5)
@@ -112,7 +112,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         ).toarray()
         self.pyck_ /= self.pyck_.sum(axis=0, keepdims=True)
 
-        for t in range(self.minimum_time_stamp, self.__len_X_):
+        for t in range(self.minimum_time_stamp, self.__len_X_ + 1):
             self.classifiers_[t].fit(X1[:, :t], y1)
             for k in range(0, self.n_clusters):
                 index = (c_k2 == k)
@@ -125,7 +125,6 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
                     conf_matrix = confusion_matrix(
                         y2_current_cluster, y2_hat, labels=y_classes_indices, normalize="pred"
                     )
-                    print(conf_matrix)
                     # pyhatyck_ stores
                     # P_{t+\tau}(\hat{y} | y, c_k) \delta_{y \neq \hat{y}}
                     # elements so it should have a null diagonal because of
@@ -197,12 +196,11 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
             self.pyhatyck_[truncated_t - self.minimum_time_stamp:],
             axis=-1
         )
-        print(sum_pyhatyck.shape)
-        sum_pyhatyck = np.transpose(sum_pyhatyck, axes=(1, 2))
+        sum_pyhatyck = np.transpose(sum_pyhatyck, axes=(0, 2, 1))
         # sum_pyhatyck is now indexed by: t, y, k
         sum_global = np.sum(sum_pyhatyck * self.pyck_[np.newaxis, :], axis=1)
         cost = np.dot(sum_global, proba_clusters)
-        return cost + self._cost_time(np.arange(truncated_t, self.__len_X_))
+        return cost + self._cost_time(np.arange(truncated_t, self.__len_X_ + 1))
 
     def _predict_single_series(self, Xi):
         """
