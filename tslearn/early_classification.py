@@ -87,12 +87,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         """
 
         X = check_dims(X)
-        y_classes = np.unique(y)
-        self.labels_ = sorted(set(y_classes))
-        y_classes_indices = [self.labels_.index(yi) for yi in y_classes]
-        y_ = np.copy(y)
-        for idx, current_class in enumerate(y_classes):
-            y_[y_ == current_class] = y_classes_indices[idx]
+        label_set = np.unique(y)
 
         self.cluster_ = TimeSeriesKMeans(n_clusters=self.n_clusters,
                                          random_state=self.random_state)
@@ -103,13 +98,18 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
                                                  metric="euclidean")
         self.classifiers_ = {t: clone(clf)
                              for t in range(self.min_t, X.shape[1] + 1)}
-        self.__n_classes_ = len(y_classes_indices)
+        self.__n_classes_ = len(label_set)
         self.__len_X_ = X.shape[1]
         self.pyhatyck_ = np.empty((self.__len_X_ - self.min_t,
                                    self.n_clusters,
                                    self.__n_classes_, self.__n_classes_))
         c_k = self.cluster_.fit_predict(X)
-        X1, X2, c_k1, c_k2, y1, y2 = train_test_split(X, c_k, y_, test_size=0.5)
+        X1, X2, c_k1, c_k2, y1, y2 = train_test_split(X, c_k, y, test_size=0.5)
+
+        label_to_ind = {lab: ind for ind, lab in enumerate(label_set)}
+        y_ = np.array([label_to_ind.get(lab, self.__n_classes_ + 1)
+                       for lab in y])
+
         vector_of_ones = np.ones((X.shape[0], ))
         self.pyck_ = coo_matrix(
             (vector_of_ones, (y_, c_k)),
@@ -127,9 +127,8 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
                     y2_hat = self.classifiers_[t].predict(
                         X2_current_cluster[:, :t]
                     )
-                    conf_matrix = confusion_matrix(
-                        y2_current_cluster, y2_hat, labels=y_classes_indices
-                    )
+                    conf_matrix = confusion_matrix(y2_current_cluster, y2_hat,
+                                                   labels=label_set)
                     # normalize parameter seems to be quite recent in sklearn,
                     # so let's do it ourselves
                     conf_matrix = conf_matrix / conf_matrix.sum(axis=0,
