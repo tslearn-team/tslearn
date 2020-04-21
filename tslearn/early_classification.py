@@ -87,6 +87,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         """
 
         X = check_dims(X)
+        y_arr = np.array(y)
         label_set = np.unique(y)
 
         self.cluster_ = TimeSeriesKMeans(n_clusters=self.n_clusters,
@@ -104,7 +105,9 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
                                    self.n_clusters,
                                    self.__n_classes_, self.__n_classes_))
         c_k = self.cluster_.fit_predict(X)
-        X1, X2, c_k1, c_k2, y1, y2 = train_test_split(X, c_k, y, test_size=0.5)
+        X1, X2, c_k1, c_k2, y1, y2 = train_test_split(X, c_k, y_arr,
+                                                      test_size=0.5,
+                                                      stratify=c_k)
 
         label_to_ind = {lab: ind for ind, lab in enumerate(label_set)}
         y_ = np.array([label_to_ind.get(lab, self.__n_classes_ + 1)
@@ -133,6 +136,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
                     # so let's do it ourselves
                     conf_matrix = conf_matrix / conf_matrix.sum(axis=0,
                                                                 keepdims=True)
+                    conf_matrix = np.nan_to_num(conf_matrix)
                     # pyhatyck_ stores
                     # P_{t+\tau}(\hat{y} | y, c_k) \delta_{y \neq \hat{y}}
                     # elements so it should have a null diagonal because of
@@ -142,17 +146,37 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         return self
 
     def get_cluster_probas(self, Xi):
-        """
-        This function computes the probabilities of the time series xt to be in a cluster of the model
+        """Compute cluster probability P(c_k | Xi).
+
+        This quantity is computed using the following formula:
+
+        ..math ::
+
+            P(c_k | Xi) = \frac{s_k(Xi)}{\sum_j s_j(Xi)}
+
+        where
+
+        ..math ::
+
+            s_k(Xi) = \frac{1}{1 + \exp{-\lambda \Delta_k(Xi)}}
+
+        with
+
+        ..math ::
+
+            \Delta_k(Xi) = \frac{\bar{D} - d(Xi, c_k)}{\bar{D}}
+
+        and :math:`\bar{D}` is the average of the distances between `Xi` and
+        the cluster centers.
 
         Parameters
         ----------
-        X: vector
-            a time series that may be truncated
+        Xi: numpy array, shape (t, d)
+            A time series observed up to time t
 
         Returns
         -------
-        vector : the probabilities of the given time series to be in the clusters of the model
+        probas : numpy array, shape (n_clusters, )
 
         Examples
         --------
@@ -179,22 +203,14 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         >>> probas.shape
         (3,)
         >>> probas
-        array([.5, .5, 0.])
+        array([0.5, 0.5, 0. ])
         """
         diffs = Xi[np.newaxis, :] - self.cluster_.cluster_centers_[:, :len(Xi)]
         distances_clusters = np.linalg.norm(diffs, axis=(1, 2))
-        minimum_distance = np.min(distances_clusters)
         average_distance = np.mean(distances_clusters)
-        minimum_distance_to_average = (
-            average_distance - minimum_distance
-        ) / average_distance
-        delta = (average_distance - distances_clusters) / average_distance
-        probas = 1.0 / (
-            np.exp(self.lamb * minimum_distance_to_average)
-            + np.exp(self.lamb * (minimum_distance_to_average - delta))
-            + 1e-6
-        )
-        return probas / probas.sum()
+        delta_k = 1. - distances_clusters / average_distance
+        s_k = 1. / (1. + np.exp(-self.lamb * delta_k))
+        return s_k / s_k.sum()
 
     def _expected_costs(self, Xi):
         """Compute expected future costs from an incoming time series `Xi`.
