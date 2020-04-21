@@ -1,12 +1,10 @@
 from sklearn.metrics import confusion_matrix
 from sklearn.base import BaseEstimator, ClassifierMixin, clone
 from sklearn.model_selection import train_test_split
+from tslearn.utils import to_time_series_dataset, check_dims
+from tslearn.clustering import TimeSeriesKMeans
 import numpy as np
 from scipy.sparse import coo_matrix
-
-from tslearn.utils import to_time_series_dataset, to_time_series, check_dims
-from tslearn.neighbors import KNeighborsTimeSeriesClassifier
-from tslearn.clustering import TimeSeriesKMeans
 
 
 class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
@@ -17,11 +15,10 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
     n_clusters : int
         Number of clusters to form.
 
-    base_classifier : Estimator or None
+    base_classifier : Estimator
         Estimator (instance) to be cloned and used for classifications.
-        If None, the chosen classifier is a 1NN with Euclidean metric.
 
-    min_t : int
+    minimum_time_stamp : int
         Earliest time at which a classification can be performed on a time series
 
     lamb : float
@@ -30,8 +27,6 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
 
     cost_time_parameter : float
         Parameter of the cost function of time. This function is of the form : f(time) = time * cost_time_parameter
-
-    random_state: int
 
     Attributes
     --------------------
@@ -61,15 +56,20 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
 
     """
 
-    def __init__(self, n_clusters=2, base_classifier=None,
-                 min_t=1, lamb=1., cost_time_parameter=1., random_state=None):
+    def __init__(
+        self,
+        n_clusters,
+        base_classifier,
+        minimum_time_stamp,
+        lamb,
+        cost_time_parameter,
+    ):
         super(NonMyopicEarlyClassification, self).__init__()
         self.base_classifier = base_classifier
         self.n_clusters = n_clusters
-        self.min_t = min_t
+        self.minimum_time_stamp = minimum_time_stamp
         self.lamb = lamb
         self.cost_time_parameter = cost_time_parameter
-        self.random_state = random_state
 
     def fit(self, X, y):
         """
@@ -87,37 +87,29 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         """
 
         X = check_dims(X)
-        y_classes = np.unique(y)
-        self.labels_ = sorted(set(y_classes))
-        y_classes_indices = [self.labels_.index(yi) for yi in y_classes]
-        y_ = np.copy(y)
-        for idx, current_class in enumerate(y_classes):
-            y_[y_ == current_class] = y_classes_indices[idx]
-
-        self.cluster_ = TimeSeriesKMeans(n_clusters=self.n_clusters,
-                                         random_state=self.random_state)
-        if self.base_classifier is not None:
-            clf = self.base_classifier
-        else:
-            clf = KNeighborsTimeSeriesClassifier(n_neighbors=1,
-                                                 metric="euclidean")
-        self.classifiers_ = {t: clone(clf)
-                             for t in range(self.min_t, X.shape[1] + 1)}
-        self.__n_classes_ = len(y_classes_indices)
+        self.__labels_ = np.unique(y)
+        self.cluster_ = TimeSeriesKMeans(n_clusters=self.n_clusters)
+        self.classifiers_ = {
+            t: clone(self.base_classifier)
+            for t in range(self.minimum_time_stamp, X.shape[1] + 1)
+        }
+        self.__n_classes_ = len(self.__labels_)
         self.__len_X_ = X.shape[1]
-        self.pyhatyck_ = np.empty((self.__len_X_ - self.min_t,
-                                   self.n_clusters,
-                                   self.__n_classes_, self.__n_classes_))
+        self.pyhatyck_ = np.empty((self.__len_X_ - self.minimum_time_stamp + 1,
+                                   self.n_clusters, self.__n_classes_, self.__n_classes_))
         c_k = self.cluster_.fit_predict(X)
-        X1, X2, c_k1, c_k2, y1, y2 = train_test_split(X, c_k, y_, test_size=0.5)
+        X1, X2, c_k1, c_k2, y1, y2 = train_test_split(X, c_k, y, test_size=0.5)
+        label_to_ind = {y: x for x, y in enumerate(self.__labels_)}
+        # convert yt, yp into index
+        y = np.array([label_to_ind.get(x, self.__n_classes_ + 1) for x in y])
         vector_of_ones = np.ones((X.shape[0], ))
         self.pyck_ = coo_matrix(
-            (vector_of_ones, (y_, c_k)),
+            (vector_of_ones, (y, c_k)),
             shape=(self.__n_classes_, self.n_clusters),
         ).toarray()
         self.pyck_ /= self.pyck_.sum(axis=0, keepdims=True)
 
-        for t in range(self.min_t, self.__len_X_):
+        for t in range(self.minimum_time_stamp, self.__len_X_ + 1):
             self.classifiers_[t].fit(X1[:, :t], y1)
             for k in range(0, self.n_clusters):
                 index = (c_k2 == k)
@@ -128,19 +120,14 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
                         X2_current_cluster[:, :t]
                     )
                     conf_matrix = confusion_matrix(
-                        y2_current_cluster, y2_hat, labels=y_classes_indices
+                        y2_current_cluster, y2_hat, labels=self.__labels_, normalize="pred"
                     )
-                    # normalize parameter seems to be quite recent in sklearn,
-                    # so let's do it ourselves
-                    conf_matrix = conf_matrix / conf_matrix.sum(axis=0,
-                                                                keepdims=True)
                     # pyhatyck_ stores
                     # P_{t+\tau}(\hat{y} | y, c_k) \delta_{y \neq \hat{y}}
                     # elements so it should have a null diagonal because of
                     # the \delta_{y \neq \hat{y}} term
                     np.fill_diagonal(conf_matrix, 0)
-                    self.pyhatyck_[t - self.min_t, k] = conf_matrix
-        return self
+                    self.pyhatyck_[t - self.minimum_time_stamp, k] = conf_matrix
 
     def get_cluster_probas(self, Xi):
         """
@@ -154,33 +141,6 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         Returns
         -------
         vector : the probabilities of the given time series to be in the clusters of the model
-
-        Examples
-        --------
-        >>> dataset = to_time_series_dataset([[1, 2, 3, 4, 5, 6],
-        ...                                   [1, 2, 3, 4, 5, 6],
-        ...                                   [1, 2, 3, 4, 5, 6],
-        ...                                   [1, 2, 3, 3, 2, 1],
-        ...                                   [1, 2, 3, 3, 2, 1],
-        ...                                   [1, 2, 3, 3, 2, 1],
-        ...                                   [3, 2, 1, 1, 2, 3],
-        ...                                   [3, 2, 1, 1, 2, 3]])
-        >>> y = [0, 0, 0, 1, 1, 1, 0, 0]
-        >>> ts0 = to_time_series([1, 2])
-        >>> model = NonMyopicEarlyClassification(n_clusters=3, lamb=0.,
-        ...                                      random_state=0)
-        >>> probas = model.fit(dataset, y).get_cluster_probas(ts0)
-        >>> probas.shape
-        (3,)
-        >>> probas  # doctest: +ELLIPSIS
-        array([0.33..., 0.33..., 0.33...])
-        >>> model = NonMyopicEarlyClassification(n_clusters=3, lamb=10000.,
-        ...                                      random_state=0)
-        >>> probas = model.fit(dataset, y).get_cluster_probas(ts0)
-        >>> probas.shape
-        (3,)
-        >>> probas
-        array([.5, .5, 0.])
         """
         diffs = Xi[np.newaxis, :] - self.cluster_.cluster_centers_[:, :len(Xi)]
         distances_clusters = np.linalg.norm(diffs, axis=(1, 2))
@@ -230,7 +190,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         truncated_t = Xi.shape[0]
         # pyhatyck_ is indexed by: t, k, y, yhat
         sum_pyhatyck = np.sum(
-            self.pyhatyck_[truncated_t - self.min_t:],
+            self.pyhatyck_[truncated_t - self.minimum_time_stamp:],
             axis=-1
         )
         sum_pyhatyck = np.transpose(sum_pyhatyck, axes=(0, 2, 1))
@@ -254,38 +214,15 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         float : the probability used for computing the cost
         float : the loss when classifying
         """
-        pred, time_prediction = None, None
-        for t in range(self.min_t, self.__len_X_ + 1):
+
+        time_prediction = self.minimum_time_stamp
+        for t in range(self.minimum_time_stamp, self.__len_X_ + 1):
             tau_star = np.argmin(self._expected_costs(Xi=Xi[:t]))
             if (t == self.__len_X_) or (tau_star == t):
-                pred = self.classifiers_[t].predict([Xi[:t]])
-                time_prediction = t
+                result = self.classifiers_[t].predict([Xi[:t]])
+                result_proba = self.classifiers_[t].predict_proba([Xi[:t]])
                 break
-        return pred, time_prediction
-
-    def _predict_single_series_proba(self, Xi):
-        """
-        This function classifies a single time series xt
-
-        Parameters
-        ----------
-        xt: vector
-            a time series that is probably incomplete but that nonetheless we want to classify
-        Returns
-        -------
-        int: the class which is predicted
-        int : the time of the prediction
-        float : the probability used for computing the cost
-        float : the loss when classifying
-        """
-        time_prediction, probas = None, None
-        for t in range(self.min_t, self.__len_X_ + 1):
-            tau_star = np.argmin(self._expected_costs(Xi=Xi[:t]))
-            if (t == self.__len_X_) or (tau_star == t):
-                probas = self.classifiers_[t].predict_proba([Xi[:t]])
-                time_prediction = t
-                break
-        return probas, time_prediction
+        return result, time_prediction, result_proba
 
     def predict(self, X):
         """
@@ -305,31 +242,8 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         y_pred = []
         time_prediction = []
         for i in range(0, X.shape[0]):
-            cl, t = self._predict_single_series(X[i])
+            cl, t, proba = self._predict_single_series(X[i])
             y_pred.append(cl)
-            time_prediction.append(t)
-        return y_pred, time_prediction
-
-    def predict_proba(self, X):
-        """
-        Predicts the classes of the series of the test dataset.
-
-        Parameters
-        ----------
-        X_test : Array-like
-            The test dataset
-
-        Returns
-        -------
-        Vector : the predicted classes
-        """
-
-        X = check_dims(X)
-        y_pred = []
-        time_prediction = []
-        for i in range(0, X.shape[0]):
-            probas, t = self._predict_single_series_proba(X[i])
-            y_pred.append(probas)
             time_prediction.append(t)
         return y_pred, time_prediction
 
