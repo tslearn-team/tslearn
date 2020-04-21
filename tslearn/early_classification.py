@@ -97,11 +97,11 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         else:
             clf = KNeighborsTimeSeriesClassifier(n_neighbors=1,
                                                  metric="euclidean")
-        self.classifiers_ = {t: clone(clf)
-                             for t in range(self.min_t, X.shape[1] + 1)}
         self.__n_classes_ = len(label_set)
         self.__len_X_ = X.shape[1]
-        self.pyhatyck_ = np.empty((self.__len_X_ - self.min_t,
+        self.classifiers_ = {t: clone(clf)
+                             for t in range(self.min_t, self.__len_X_ + 1)}
+        self.pyhatyck_ = np.empty((self.__len_X_ - self.min_t + 1,
                                    self.n_clusters,
                                    self.__n_classes_, self.__n_classes_))
         c_k = self.cluster_.fit_predict(X)
@@ -120,7 +120,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         ).toarray()
         self.pyck_ /= self.pyck_.sum(axis=0, keepdims=True)
 
-        for t in range(self.min_t, self.__len_X_):
+        for t in range(self.min_t, self.__len_X_ + 1):
             self.classifiers_[t].fit(X1[:, :t], y1)
             for k in range(0, self.n_clusters):
                 index = (c_k2 == k)
