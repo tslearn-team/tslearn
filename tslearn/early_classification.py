@@ -9,7 +9,7 @@ from tslearn.neighbors import KNeighborsTimeSeriesClassifier
 from tslearn.clustering import TimeSeriesKMeans
 
 
-class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
+class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
     """Early Classification modelling for time series using the model presented in [1]
 
     Parameters
@@ -63,7 +63,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
 
     def __init__(self, n_clusters=2, base_classifier=None,
                  min_t=1, lamb=1., cost_time_parameter=1., random_state=None):
-        super(NonMyopicEarlyClassification, self).__init__()
+        super(NonMyopicEarlyClassifier, self).__init__()
         self.base_classifier = base_classifier
         self.n_clusters = n_clusters
         self.min_t = min_t
@@ -190,15 +190,15 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         ...                                   [3, 2, 1, 1, 2, 3]])
         >>> y = [0, 0, 0, 1, 1, 1, 0, 0]
         >>> ts0 = to_time_series([1, 2])
-        >>> model = NonMyopicEarlyClassification(n_clusters=3, lamb=0.,
-        ...                                      random_state=0)
+        >>> model = NonMyopicEarlyClassifier(n_clusters=3, lamb=0.,
+        ...                                  random_state=0)
         >>> probas = model.fit(dataset, y).get_cluster_probas(ts0)
         >>> probas.shape
         (3,)
         >>> probas  # doctest: +ELLIPSIS
         array([0.33..., 0.33..., 0.33...])
-        >>> model = NonMyopicEarlyClassification(n_clusters=3, lamb=10000.,
-        ...                                      random_state=0)
+        >>> model = NonMyopicEarlyClassifier(n_clusters=3, lamb=10000.,
+        ...                                  random_state=0)
         >>> probas = model.fit(dataset, y).get_cluster_probas(ts0)
         >>> probas.shape
         (3,)
