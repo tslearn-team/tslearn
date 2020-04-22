@@ -273,7 +273,7 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
         for t in range(self.min_t, self.__len_X_ + 1):
             tau_star = np.argmin(self._expected_costs(Xi=Xi[:t]))
             if (t == self.__len_X_) or (tau_star == t):
-                pred = self.classifiers_[t].predict([Xi[:t]])
+                pred = self.classifiers_[t].predict([Xi[:t]])[0]
                 time_prediction = t
                 break
         return pred, time_prediction
@@ -297,7 +297,7 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
         for t in range(self.min_t, self.__len_X_ + 1):
             tau_star = np.argmin(self._expected_costs(Xi=Xi[:t]))
             if (t == self.__len_X_) or (tau_star == t):
-                probas = self.classifiers_[t].predict_proba([Xi[:t]])
+                probas = self.classifiers_[t].predict_proba([Xi[:t]])[0]
                 time_prediction = t
                 break
         return probas, time_prediction
@@ -323,7 +323,7 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
             cl, t = self._predict_single_series(X[i])
             y_pred.append(cl)
             time_prediction.append(t)
-        return y_pred, time_prediction
+        return np.array(y_pred), np.array(time_prediction)
 
     def predict_proba(self, X):
         """
@@ -346,7 +346,7 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
             probas, t = self._predict_single_series_proba(X[i])
             y_pred.append(probas)
             time_prediction.append(t)
-        return y_pred, time_prediction
+        return np.array(y_pred), np.array(time_prediction)
 
     def _cost_time(self, t):
         return t * self.cost_time_parameter
