@@ -33,6 +33,7 @@ jobs:
         choco install vcpython27 -f -y
     - name: Build wheel
       env:
+        CIBW_SKIP: "pp*-win*"
         CIBW_BEFORE_BUILD: "pip install numpy cython"
       run: |
         python -m cibuildwheel --output-dir wheelhouse
