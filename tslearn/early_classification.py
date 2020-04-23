@@ -9,7 +9,7 @@ from tslearn.neighbors import KNeighborsTimeSeriesClassifier
 from tslearn.clustering import TimeSeriesKMeans
 
 
-class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
+class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
     """Early Classification modelling for time series using the model presented in [1]
 
     Parameters
@@ -86,7 +86,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
 
     def __init__(self, n_clusters=2, base_classifier=None,
                  min_t=1, lamb=1., cost_time_parameter=1., random_state=None):
-        super(NonMyopicEarlyClassification, self).__init__()
+        super(NonMyopicEarlyClassifier, self).__init__()
         self.base_classifier = base_classifier
         self.n_clusters = n_clusters
         self.min_t = min_t
@@ -241,15 +241,15 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         ...                                   [3, 2, 1, 1, 2, 3]])
         >>> y = [0, 0, 0, 1, 1, 1, 0, 0]
         >>> ts0 = to_time_series([1, 2])
-        >>> model = NonMyopicEarlyClassification(n_clusters=3, lamb=0.,
-        ...                                      random_state=0)
+        >>> model = NonMyopicEarlyClassifier(n_clusters=3, lamb=0.,
+        ...                                  random_state=0)
         >>> probas = model.fit(dataset, y).get_cluster_probas(ts0)
         >>> probas.shape
         (3,)
         >>> probas  # doctest: +ELLIPSIS
         array([0.33..., 0.33..., 0.33...])
-        >>> model = NonMyopicEarlyClassification(n_clusters=3, lamb=10000.,
-        ...                                      random_state=0)
+        >>> model = NonMyopicEarlyClassifier(n_clusters=3, lamb=10000.,
+        ...                                  random_state=0)
         >>> probas = model.fit(dataset, y).get_cluster_probas(ts0)
         >>> probas.shape
         (3,)
@@ -324,7 +324,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         for t in range(self.min_t, self.__len_X_ + 1):
             tau_star = np.argmin(self._expected_costs(Xi=Xi[:t]))
             if (t == self.__len_X_) or (tau_star == t):
-                pred = self.classifiers_[t].predict([Xi[:t]])
+                pred = self.classifiers_[t].predict([Xi[:t]])[0]
                 time_prediction = t
                 break
         return pred, time_prediction
@@ -348,7 +348,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         for t in range(self.min_t, self.__len_X_ + 1):
             tau_star = np.argmin(self._expected_costs(Xi=Xi[:t]))
             if (t == self.__len_X_) or (tau_star == t):
-                probas = self.classifiers_[t].predict_proba([Xi[:t]])
+                probas = self.classifiers_[t].predict_proba([Xi[:t]])[0]
                 time_prediction = t
                 break
         return probas, time_prediction
@@ -374,7 +374,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
             cl, t = self._predict_single_series(X[i])
             y_pred.append(cl)
             time_prediction.append(t)
-        return y_pred, time_prediction
+        return np.array(y_pred), np.array(time_prediction)
 
     def predict_proba(self, X):
         """
@@ -397,7 +397,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
             probas, t = self._predict_single_series_proba(X[i])
             y_pred.append(probas)
             time_prediction.append(t)
-        return y_pred, time_prediction
+        return np.array(y_pred), np.array(time_prediction)
 
     def _cost_time(self, t):
         return t * self.cost_time_parameter
