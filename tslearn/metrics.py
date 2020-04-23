@@ -316,7 +316,7 @@ def dtw_path_from_metric(s1, s2=None, metric="euclidean",
         used.
 
     **kwds:
-        Additional arguments to pass to the distance function.
+        Additional arguments to pass to cdist to compute the pairwise distances.
 
     Returns
     -------
@@ -329,12 +329,42 @@ def dtw_path_from_metric(s1, s2=None, metric="euclidean",
 
     Examples
     --------
-    TBD
+    Lets create 2 numpy arrays to wrap:
+    >>> import numpy as np
+    >>> rng = np.random.RandomState(0)
+    >>> s1, s2 = rng.random((5, 2)), rng.random((6, 2))
+
+    The wrapping can be done by passing a string indicating the
+    scipy.spatial.distance function to use:
+    >>> dtw_path_from_metric(s1, s2, metric="sqeuclidean")
+    [(0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.1177581530156733
+
+    Or by defining a custom distance function:
+    >>> def sqeuclidean(x, y):
+    >>>    return(np.sum((x-y)**2))
+    >>> dtw_path_from_metric(s1, s2, metric=sqeuclidean)
+    [(0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.1177581530156733
+
+    Or by using a precomputed distance matrix as input:
+    >>> dist_matrix = cdist(s1, s2, metric="sqeuclidean")
+    >>> dtw_path_from_metric(dist_matrix, metric="precomputed")
+    [(0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.1177581530156733
+
+    Notes
+    --------
+    By using a squared euclidean distance metric as done above, the output path
+    is the same as the one obtained by using dtw_path but the similarity score
+    is the sum of squared distances instead of the euclidean distance:
+    >>> dtw_path(s1, s2)
+    [(0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.0572408207289734
+    >>> _[1]**2  # Square the second output of dtw_path(s1,s2)
+    1.1177581530156733
+
 
     See Also
     --------
     dtw_path : Get the DTW score and path using squared distance between points
-    and returning both the resulting path and the euclidean distances between
+    and return both the resulting path and the euclidean distances between
     the wrapped time series.
 
     References
