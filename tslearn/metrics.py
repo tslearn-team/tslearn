@@ -7,6 +7,7 @@ import warnings
 import numpy
 from joblib import Parallel, delayed
 from numba import njit, prange
+import scipy.spatial.distance
 from scipy.spatial.distance import pdist, cdist
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.utils import check_random_state
@@ -21,6 +22,15 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 GLOBAL_CONSTRAINT_CODE = {None: 0, "": 0, "itakura": 1, "sakoe_chiba": 2}
 VARIABLE_LENGTH_METRICS = ["dtw", "gak", "softdtw"]
 
+_VALID_METRICS = ['euclidean', 'braycurtis', 'canberra', 'chebyshev',
+                  'cityblock', 'correlation', 'cosine', 'dice', 'hamming',
+                  'jaccard', 'jensenshannon', 'kulsinski', 'mahalanobis',
+                  'matching', 'minkowski', 'rogerstanimoto', 'russellrao',
+                  'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean',
+                  'wminkowski', 'yule']
+PAIRWISE_DISTANCE_FUNCTIONS = {}
+for metric in _VALID_METRICS:
+    PAIRWISE_DISTANCE_FUNCTIONS[metric] = getattr(scipy.spatial.distance, metric)
 
 @njit()
 def _local_squared_dist(x, y):
@@ -187,6 +197,7 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
     --------
     dtw : Get only the similarity score for DTW
     cdist_dtw : Cross similarity matrix between time series datasets
+    dtw_path_from_metric : Compute a DTW using an arbitrary distance metric.
 
     References
     ----------
@@ -205,6 +216,160 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
     acc_cost_mat = njit_accumulated_matrix(s1, s2, mask=mask)
     path = _return_path(acc_cost_mat)
     return path, numpy.sqrt(acc_cost_mat[-1, -1])
+
+
+@njit()
+def njit_accumulated_matrix_from_dist_matrix(dist_matrix, mask):
+    """Compute the accumulated cost matrix score between two time series using
+    a precomputed distance matrix.
+
+    Parameters
+    ----------
+    dist_matrix :
+        (sz1, sz2) array containing the pairwise distances
+
+    mask : array, shape = (sz1, sz2)
+        Mask. Unconsidered cells must have infinite values.
+
+    Returns
+    -------
+    mat : array, shape = (sz1, sz2)
+        Accumulated cost matrix.
+
+    """
+    l1, l2 = dist_matrix.shape
+    cum_sum = numpy.full((l1 + 1, l2 + 1), numpy.inf)
+    cum_sum[0, 0] = 0.
+
+    for i in prange(l1):
+        for j in prange(l2):
+            if numpy.isfinite(mask[i, j]):
+                cum_sum[i + 1, j + 1] = dist_matrix[i, j]
+                cum_sum[i + 1, j + 1] += min(cum_sum[i, j + 1],
+                                             cum_sum[i + 1, j],
+                                             cum_sum[i, j])
+    return cum_sum[1:, 1:]
+
+
+def dtw_path_from_metric(s1, s2=None, metric="euclidean",
+                         global_constraint=None, sakoe_chiba_radius=None,
+                         itakura_max_slope=None, **kwds):
+    r"""Compute Dynamic Time Warping (DTW) similarity measure between
+    (possibly multidimensional) time series using an arbitrary function to
+    compute pairwise distance between points and return both the path and
+    the similarity (cumulative cost along the wrapped time series).
+
+    It is not required that both time series share the same size, but they must
+    be the same dimension. DTW was originally presented in [1]_.
+
+    Valid values for metric are:
+      'euclidean' (default),'braycurtis', 'canberra', 'chebyshev', 'cityblock',
+      'correlation', 'cosine', 'dice', 'hamming', 'jaccard', 'jensenshannon',
+      'kulsinski', 'mahalanobis', 'matching', 'minkowski', 'rogerstanimoto',
+      'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath',
+      'sqeuclidean', 'wminkowski', 'yule'
+
+
+    Parameters
+    ----------
+    s1 : array, shape = (sz1, sz2) if metric=="precomputed", (sz1,) otherwise
+        Array of pairwise distances between samples, or a time series.
+
+    s2 : array, shape = (sz2,), optional
+        A second time series, only allowed if metric != “precomputed”.
+
+    metric string or callable :
+        Function used to compute the pairwise distances between each points of
+        s1 and s2.
+
+        If metric is “precomputed”, s1 is assumed to be a distance matrix.
+
+        If metric is an other string, it must be one of the options compatible
+        with scipy.spatial.distance.cdist for distances between numeric vectors.
+
+        Alternatively, if metric is a callable function, it is called on pairs
+        of rows of s1 and s2. The callable should take two 1 dimensional arrays
+        as input and return a value indicating the distance between them.
+
+
+    global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
+        Global constraint to restrict admissible paths for DTW.
+
+    sakoe_chiba_radius : int or None (default: None)
+        Radius to be used for Sakoe-Chiba band global constraint.
+        If None and `global_constraint` is set to "sakoe_chiba", a radius of
+        1 is used.
+        If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+        `global_constraint` is used to infer which constraint to use among the
+        two. In this case, if `global_constraint` corresponds to no global
+        constraint, a `RuntimeWarning` is raised and no global constraint is
+        used.
+
+    itakura_max_slope : float or None (default: None)
+        Maximum slope for the Itakura parallelogram constraint.
+        If None and `global_constraint` is set to "itakura", a maximum slope
+        of 2. is used.
+        If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+        `global_constraint` is used to infer which constraint to use among the
+        two. In this case, if `global_constraint` corresponds to no global
+        constraint, a `RuntimeWarning` is raised and no global constraint is
+        used.
+
+    **kwds:
+        Additional arguments to pass to the distance function.
+
+    Returns
+    -------
+    list of integer pairs
+        Matching path represented as a list of index pairs. In each pair, the
+        first index corresponds to s1 and the second one corresponds to s2
+
+    float
+        Similarity score (sum of metric along the wrapped time series)
+
+    Examples
+    --------
+    TBD
+
+    See Also
+    --------
+    dtw_path : Get the DTW score and path using squared distance between points
+    and returning both the resulting path and the euclidean distances between
+    the wrapped time series.
+
+    References
+    ----------
+    .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
+           spoken word recognition," IEEE Transactions on Acoustics, Speech and
+           Signal Processing, vol. 26(1), pp. 43--49, 1978.
+
+    """
+    if (metric not in _VALID_METRICS and\
+            not callable(metric) and metric != "precomputed"):
+        raise ValueError("Unknown metric %s. "
+                     "Valid metrics are %s, or 'precomputed', or a "
+                     "callable" % (metric, _VALID_METRICS))
+
+    if metric == "precomputed":  # Pairwise distance given as input
+        sz1, sz2 = s1.shape
+        mask = compute_mask(
+            sz1, sz2, GLOBAL_CONSTRAINT_CODE[global_constraint],
+            sakoe_chiba_radius, itakura_max_slope
+        )
+        cost_mat = s1
+    else:
+        s1 = to_time_series(s1, remove_nans=True)
+        s2 = to_time_series(s2, remove_nans=True)
+        mask = compute_mask(
+            s1, s2, GLOBAL_CONSTRAINT_CODE[global_constraint],
+            sakoe_chiba_radius, itakura_max_slope
+        )
+
+        cost_mat = cdist(s1, s2, metric=metric, **kwds)
+
+    acc_cost_mat = njit_accumulated_matrix_from_dist_matrix(cost_mat, mask=mask)
+    path = _return_path(acc_cost_mat)
+    return path, acc_cost_mat[-1, -1]
 
 
 def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
@@ -884,10 +1049,10 @@ def compute_mask(s1, s2, global_constraint=0,
     Parameters
     ----------
     s1 : array
-        A time series.
+        A time series or integer.
 
     s2: array
-        Another time series.
+        Another time series or integer.
 
     global_constraint : {0, 1, 2} (default: 0)
         Global constraint to restrict admissible paths for DTW:
@@ -920,8 +1085,12 @@ def compute_mask(s1, s2, global_constraint=0,
     mask : array
         Constraint region.
     """
-    sz1 = s1.shape[0]
-    sz2 = s2.shape[0]
+    # The output mask will be of shape (sz1, sz2)
+    if isinstance(s1, int) and isinstance(s2, int):
+        sz1, sz2 = s1, s2
+    else:
+        sz1 = s1.shape[0]
+        sz2 = s2.shape[0]
     if (global_constraint == 0 and sakoe_chiba_radius is not None
             and itakura_max_slope is not None):
         raise RuntimeWarning("global_constraint is not set for DTW, but both "
