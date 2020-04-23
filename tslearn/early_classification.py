@@ -32,6 +32,7 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         Parameter of the cost function of time. This function is of the form : f(time) = time * cost_time_parameter
 
     random_state: int
+        Random state of the base estimator
 
     Attributes
     --------------------
@@ -51,7 +52,29 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
         Contains for each clusters the indexes of the time series in the dataset
 
     Examples
-    --------------------
+    --------
+    >>> dataset = to_time_series_dataset([[1, 2, 3, 4, 5, 6],
+    ...                                   [1, 2, 3, 4, 5, 6],
+    ...                                   [1, 2, 3, 4, 5, 6],
+    ...                                   [1, 2, 3, 3, 2, 1],
+    ...                                   [1, 2, 3, 3, 2, 1],
+    ...                                   [1, 2, 3, 3, 2, 1],
+    ...                                   [3, 2, 1, 1, 2, 3],
+    ...                                   [3, 2, 1, 1, 2, 3]])
+    >>> y = [0, 0, 0, 1, 1, 1, 0, 0]
+    >>> datatest = to_time_series_dataset([[2, 2, 3, 4, 5, 6],
+    ...                                   [2, 2, 3, 4, 5, 6],
+    ...                                   [2, 2, 3, 4, 5, 6],
+    ...                                   [2, 2, 3, 3, 1, 1],
+    ...                                   [2, 2, 3, 3, 1, 1],
+    ...                                   [2, 2, 3, 3, 1, 1],
+    ...                                   [3, 2, 1, 1, 1, 3],
+    ...                                   [3, 2, 1, 1, 1, 3]])
+    >>> ts0 = to_time_series([1, 2])
+    >>> model = NonMyopicEarlyClassification(n_clusters=3, lamb=0.,
+    ...                                      random_state=0)
+    >>> model.fit(dataset, y)
+    >>> model.predict(datatest)
 
     References
     --------------------
@@ -73,10 +96,8 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
 
     def fit(self, X, y):
         """
-        This function fits classifiers that are currently multilayer perceptrons to a training set of time series and
-        associated classes. A classifier is fit for each time stamp above a minimum time stamp that is an attribute of
-        the class of the model. Then some probabilities are computed using clusters already computed.
-        This function should be divided among 2 or 3 functions.
+        fits classifiers that are clones of self.base_classifier for each time stamps between self.min_t t and the
+        last time stamps of the time series.
 
         Parameters
         ----------
@@ -84,6 +105,37 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
             a dataset of time series
         y: vector
             the associated classes of the series from X_train
+
+        Returns
+        -------
+        itself
+
+        Examples
+        --------
+        >>> dataset = to_time_series_dataset([[1, 2, 3, 4, 5, 6],
+        ...                                   [1, 2, 3, 4, 5, 6],
+        ...                                   [1, 2, 3, 4, 5, 6],
+        ...                                   [1, 2, 3, 3, 2, 1],
+        ...                                   [1, 2, 3, 3, 2, 1],
+        ...                                   [1, 2, 3, 3, 2, 1],
+        ...                                   [3, 2, 1, 1, 2, 3],
+        ...                                   [3, 2, 1, 1, 2, 3]])
+        >>> y = [0, 0, 0, 1, 1, 1, 0, 0]
+        >>> ts0 = to_time_series([1, 2])
+        >>> model = NonMyopicEarlyClassification(n_clusters=3, lamb=0.,
+        ...                                      random_state=0)
+        >>> model.fit(dataset, y)
+        >>> model.cluster_.cluster_centers_
+        (3,)
+        >>>
+        array([0.33..., 0.33..., 0.33...])
+        >>> model = NonMyopicEarlyClassification(n_clusters=3, lamb=10000.,
+        ...                                      random_state=0)
+        >>> probas = model.fit(dataset, y).get_cluster_probas(ts0)
+        >>> probas.shape
+        (3,)
+        >>> probas
+        array([0.5, 0.5, 0. ])
         """
 
         X = check_dims(X)
@@ -119,7 +171,6 @@ class NonMyopicEarlyClassification(BaseEstimator, ClassifierMixin):
             shape=(self.__n_classes_, self.n_clusters),
         ).toarray()
         self.pyck_ /= self.pyck_.sum(axis=0, keepdims=True)
-
         for t in range(self.min_t, self.__len_X_ + 1):
             self.classifiers_[t].fit(X1[:, :t], y1)
             for k in range(0, self.n_clusters):
