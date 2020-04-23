@@ -30,7 +30,9 @@ _VALID_METRICS = ['euclidean', 'braycurtis', 'canberra', 'chebyshev',
                   'wminkowski', 'yule']
 PAIRWISE_DISTANCE_FUNCTIONS = {}
 for metric in _VALID_METRICS:
-    PAIRWISE_DISTANCE_FUNCTIONS[metric] = getattr(scipy.spatial.distance, metric)
+    scipy_distance_function = getattr(scipy.spatial.distance, metric)
+    PAIRWISE_DISTANCE_FUNCTIONS[metric] = scipy_distance_function
+
 
 @njit()
 def _local_squared_dist(x, y):
@@ -251,7 +253,7 @@ def njit_accumulated_matrix_from_dist_matrix(dist_matrix, mask):
     return cum_sum[1:, 1:]
 
 
-def dtw_path_from_metric(s1, s2=None, metric="euclidean",
+def dtw_path_from_metric(s1, s2=None, metric="precomputed",
                          global_constraint=None, sakoe_chiba_radius=None,
                          itakura_max_slope=None, **kwds):
     r"""Compute Dynamic Time Warping (DTW) similarity measure between
@@ -263,7 +265,7 @@ def dtw_path_from_metric(s1, s2=None, metric="euclidean",
     be the same dimension. DTW was originally presented in [1]_.
 
     Valid values for metric are:
-      'euclidean' (default),'braycurtis', 'canberra', 'chebyshev', 'cityblock',
+      'euclidean','braycurtis', 'canberra', 'chebyshev', 'cityblock',
       'correlation', 'cosine', 'dice', 'hamming', 'jaccard', 'jensenshannon',
       'kulsinski', 'mahalanobis', 'matching', 'minkowski', 'rogerstanimoto',
       'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath',
@@ -278,14 +280,14 @@ def dtw_path_from_metric(s1, s2=None, metric="euclidean",
     s2 : array, shape = (sz2,), optional
         A second time series, only allowed if metric != “precomputed”.
 
-    metric string or callable :
+    metric string or callable (default: "precomputed") :
         Function used to compute the pairwise distances between each points of
         s1 and s2.
 
         If metric is “precomputed”, s1 is assumed to be a distance matrix.
 
         If metric is an other string, it must be one of the options compatible
-        with scipy.spatial.distance.cdist for distances between numeric vectors.
+        with scipy.spatial.distance.cdist.
 
         Alternatively, if metric is a callable function, it is called on pairs
         of rows of s1 and s2. The callable should take two 1 dimensional arrays
@@ -316,7 +318,7 @@ def dtw_path_from_metric(s1, s2=None, metric="euclidean",
         used.
 
     **kwds:
-        Additional arguments to pass to cdist to compute the pairwise distances.
+        Additional arguments to pass to cdist to compute pairwise distances.
 
     Returns
     -------
@@ -374,11 +376,11 @@ def dtw_path_from_metric(s1, s2=None, metric="euclidean",
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
 
     """
-    if (metric not in _VALID_METRICS and\
+    if (metric not in _VALID_METRICS and
             not callable(metric) and metric != "precomputed"):
         raise ValueError("Unknown metric %s. "
-                     "Valid metrics are %s, or 'precomputed', or a "
-                     "callable" % (metric, _VALID_METRICS))
+                         "Valid metrics are %s, or 'precomputed', or a "
+                         "callable" % (metric, _VALID_METRICS))
 
     if metric == "precomputed":  # Pairwise distance given as input
         sz1, sz2 = s1.shape
@@ -386,7 +388,7 @@ def dtw_path_from_metric(s1, s2=None, metric="euclidean",
             sz1, sz2, GLOBAL_CONSTRAINT_CODE[global_constraint],
             sakoe_chiba_radius, itakura_max_slope
         )
-        cost_mat = s1
+        dist_mat = s1
     else:
         s1 = to_time_series(s1, remove_nans=True)
         s2 = to_time_series(s2, remove_nans=True)
@@ -395,9 +397,9 @@ def dtw_path_from_metric(s1, s2=None, metric="euclidean",
             sakoe_chiba_radius, itakura_max_slope
         )
 
-        cost_mat = cdist(s1, s2, metric=metric, **kwds)
+        dist_mat = cdist(s1, s2, metric=metric, **kwds)
 
-    acc_cost_mat = njit_accumulated_matrix_from_dist_matrix(cost_mat, mask=mask)
+    acc_cost_mat = njit_accumulated_matrix_from_dist_matrix(dist_mat, mask)
     path = _return_path(acc_cost_mat)
     return path, acc_cost_mat[-1, -1]
 
