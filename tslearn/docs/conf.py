@@ -60,6 +60,9 @@ sphinx_gallery_conf = {
     # 'default_thumb_file': 'fig/logo.png',
     'backreferences_dir': 'gen_modules/backreferences',
     'doc_module': ('tslearn',),
+    'subsection_order': ["examples", "examples/metrics", "examples/neighbors",
+                         "examples/clustering", "examples/classification",
+                         "examples/misc"].index
     # 'binder': {
     #     # Required keys
     #     'org': 'rtavenar',

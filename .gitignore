@@ -111,4 +111,4 @@ tmp-tslearn-test.txt
 tslearn/docs/_build/
 tslearn/docs/auto_examples/
 tslearn/docs/gen_modules/
-tslearn/docs/examples/ks_trained.hdf5
+tslearn/docs/examples/misc/ks_trained.hdf5
