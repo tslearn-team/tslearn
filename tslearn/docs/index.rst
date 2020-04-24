@@ -66,18 +66,13 @@ before you start installing ``tslearn``.
 If it still does not work, we suggest you switch to `conda` installation.
 
 
-Navigation
-----------
-
-From here, you can navigate to:
+Contents
+--------
 
 .. toctree::
     :maxdepth: 1
 
-    gettingstarted
-    variablelength
-    dtw
-    integration_other_software
+    quickstart
     reference
     auto_examples/index
-    contributing
+    citing

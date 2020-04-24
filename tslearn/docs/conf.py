@@ -145,9 +145,12 @@ html_theme = 'bootstrap'
 html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 html_theme_options = {
     # Tab name for entire site. (Default: "Site")
-    'navbar_site_name': "Table of Contents",
+    'navbar_site_name': "Site map",
 
     'navbar_links': [
+        ("Quickstart", "quickstart"),
+        ("API Reference", "reference"),
+        ("Examples", "auto_examples/index"),
         ("Citing tslearn", "citing"),
     ],
 
