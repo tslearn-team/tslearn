@@ -66,11 +66,9 @@ before you start installing ``tslearn``.
 If it still does not work, we suggest you switch to `conda` installation.
 
 
-Contents
---------
-
 .. toctree::
-    :maxdepth: 1
+    :hidden:
+    :maxdepth: 2
 
     quickstart
     reference

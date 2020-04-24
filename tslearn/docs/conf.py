@@ -148,7 +148,7 @@ html_theme_options = {
     'navbar_site_name': "Site map",
 
     'navbar_links': [
-        ("Quickstart", "quickstart"),
+        ("Quick-start", "quickstart"),
         ("API Reference", "reference"),
         ("Examples", "auto_examples/index"),
         ("Citing tslearn", "citing"),
@@ -166,6 +166,7 @@ html_theme_options = {
     # Global TOC depth for "site" navbar tab. (Default: 1)
     # Switching to -1 shows all levels.
     'globaltoc_depth': -1,
+    'globaltoc_includehidden': "false",
 
     # Location of link to source.
     # Options are "nav" (default), "footer" or anything else to exclude.

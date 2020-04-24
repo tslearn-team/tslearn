@@ -1,9 +1,11 @@
-Quick start guide
+Quick-start guide
 =================
 
-In theses pages, we go through some of the basic concepts that are useful to
-know when using ``tslearn``.
+.. toctree::
+    :maxdepth: 2
 
-The list of currently available tutorials is:
-
-.. include:: toc_quickstart.rst
+    gettingstarted
+    variablelength
+    dtw
+    integration_other_software
+    contributing
