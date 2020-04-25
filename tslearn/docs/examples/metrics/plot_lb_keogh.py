@@ -43,6 +43,7 @@ warping". Knowledge and Information Systems, 7(3), 358-386 (2004).
 # Author: Romain Tavenard
 #         Johann Faouzi
 # License: BSD 3 clause
+# sphinx_gallery_thumbnail_number = 2
 
 import numpy
 import matplotlib.pyplot as plt
@@ -57,9 +58,7 @@ dataset = random_walks(n_ts=n_ts, sz=sz, d=d)
 scaler = TimeSeriesScalerMeanVariance(mu=0., std=1.)  # Rescale time series
 dataset_scaled = scaler.fit_transform(dataset)
 
-plt.figure(figsize=(14, 4))
-
-plt.subplot(1, 2, 1)
+plt.figure(figsize=(14, 8))
 envelope_down, envelope_up = metrics.lb_envelope(dataset_scaled[0], radius=3)
 plt.plot(dataset_scaled[0, :, 0], "r-", label='First time series')
 plt.plot(envelope_down[:, 0], "b-", label='Lower envelope')
@@ -67,7 +66,7 @@ plt.plot(envelope_up[:, 0], "g-", label='Upper envelope')
 plt.legend()
 plt.title('Envelope around a time series with radius=3')
 
-plt.subplot(1, 2, 2)
+plt.figure(figsize=(14, 8))
 plt.plot(envelope_down[:, 0], "b-", label='Lower envelope')
 plt.plot(envelope_up[:, 0], "g-", label='Upper envelope')
 plt.plot(dataset_scaled[1, :, 0], "k-", label='Second time series')

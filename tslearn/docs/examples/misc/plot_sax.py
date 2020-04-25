@@ -18,12 +18,14 @@ Finally, 1d-SAX is an extension of SAX in which each segment is represented
 by an affine function (2 parameters per segment are hence quantized: slope and
 mean value).
 
-[1] E. Keogh & M. Pazzani. Scaling up dynamic time warping for datamining \
+[1] E. Keogh & M. Pazzani. Scaling up dynamic time warping for datamining
 applications. SIGKDD 2000, pp. 285--289.
-[2] J. Lin, E. Keogh, L. Wei, et al. Experiencing SAX: a novel symbolic \
+
+[2] J. Lin, E. Keogh, L. Wei, et al. Experiencing SAX: a novel symbolic
 representation of time series. Data Mining and Knowledge Discovery,
 2007. vol. 15(107)
-[3] S. Malinowski, T. Guyet, R. Quiniou, R. Tavenard. 1d-SAX: a Novel \
+
+[3] S. Malinowski, T. Guyet, R. Quiniou, R. Tavenard. 1d-SAX: a Novel
 Symbolic Representation for Time Series. IDA 2013.
 """
 
@@ -37,7 +39,7 @@ from tslearn.generators import random_walks
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.piecewise import PiecewiseAggregateApproximation
 from tslearn.piecewise import SymbolicAggregateApproximation, \
-    OneD_SymbolicAggregateApproximation
+    OneD_SymbolicAggregateApproximation, _breakpoints
 
 numpy.random.seed(0)
 # Generate a random walk time series
@@ -80,6 +82,8 @@ plt.title("PAA")
 plt.subplot(2, 2, 3)  # Then SAX
 plt.plot(dataset[0].ravel(), "b-", alpha=0.4)
 plt.plot(sax_dataset_inv[0].ravel(), "b-")
+for bp in _breakpoints(n_bins=n_sax_symbols):
+    plt.axhline(y=bp, linestyle="dashed", color="k", alpha=0.4)
 plt.title("SAX, %d symbols" % n_sax_symbols)
 
 plt.subplot(2, 2, 4)  # Finally, 1d-SAX
