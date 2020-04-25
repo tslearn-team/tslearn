@@ -5,7 +5,7 @@
 
 <!-- Short description -->
 <p align="center"> 
-   "The machine learning toolkit for time series analysis in Python"
+   The machine learning toolkit for time series analysis in Python
 </p>
 
 <!-- The badges -->

@@ -57,7 +57,7 @@ values.
 
 Code to produce such visualization is available in our `Gallery of examples`_.
 
-.. _Gallery of examples: auto_examples/plot_dtw.html
+.. _Gallery of examples: auto_examples/metrics/plot_dtw.html
 
 Algorithmic solution
 --------------------
