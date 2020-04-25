@@ -39,7 +39,7 @@ from tslearn.generators import random_walks
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.piecewise import PiecewiseAggregateApproximation
 from tslearn.piecewise import SymbolicAggregateApproximation, \
-    OneD_SymbolicAggregateApproximation, _breakpoints
+    OneD_SymbolicAggregateApproximation
 
 numpy.random.seed(0)
 # Generate a random walk time series
@@ -82,8 +82,6 @@ plt.title("PAA")
 plt.subplot(2, 2, 3)  # Then SAX
 plt.plot(dataset[0].ravel(), "b-", alpha=0.4)
 plt.plot(sax_dataset_inv[0].ravel(), "b-")
-for bp in _breakpoints(n_bins=n_sax_symbols):
-    plt.axhline(y=bp, linestyle="dashed", color="k", alpha=0.4)
 plt.title("SAX, %d symbols" % n_sax_symbols)
 
 plt.subplot(2, 2, 4)  # Finally, 1d-SAX
