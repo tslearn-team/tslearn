@@ -13,57 +13,16 @@ This package builds on (and hence depends on) ``scikit-learn``, ``numpy`` and
 
 If you plan to use the ``shapelets`` module from ``tslearn``, ``keras`` and
 ``tensorflow`` should also be installed.
-`h5py` is required for reading or writing models using the hdf5 file format.
+``h5py`` is required for reading or writing models using the hdf5 file format.
 
-Installation
-------------
+This documentation contains :doc:`a quick-start guide <quickstart>` (including
+:doc:`installation procedure <installation>` and
+:doc:`basic usage of the toolkit <gettingstarted>`),
+:doc:`a complete API Reference <reference>`, as well as a
+:doc:`gallery of examples <auto_examples/index>`.
 
-Using conda
-```````````
-
-The easiest way to install ``tslearn`` is probably via ``conda``:
-
-.. code-block:: bash
-
-    conda install -c conda-forge tslearn
-
-Using PyPI
-``````````
-
-Using ``pip`` should also work fine:
-
-.. code-block:: bash
-
-    python -m pip install tslearn
-
-In this case, you should have ``numpy``, ``cython`` and C++ build tools
-available at build time.
-
-
-Using latest github-hosted version
-``````````````````````````````````
-
-If you want to get ``tslearn``'s latest version, you can refer to the
-repository hosted at github:
-
-.. code-block:: bash
-
-    python -m pip install https://github.com/rtavenar/tslearn/archive/master.zip
-
-In this case, you should have ``numpy``, ``cython`` and C++ build tools
-available at build time.
-
-
-It seems on some platforms ``Cython`` dependency does not install properly.
-If you experiment such an issue, try installing it with the following command:
-
-.. code-block:: bash
-
-    python -m pip install cython
-
-
-before you start installing ``tslearn``.
-If it still does not work, we suggest you switch to `conda` installation.
+Finally, if you use ``tslearn`` in a scientific publication,
+:doc:`we would appreciate citations <citing>`.
 
 
 .. toctree::
