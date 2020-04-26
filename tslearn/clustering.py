@@ -4,11 +4,13 @@ algorithms.
 """
 
 from __future__ import print_function
+import scipy.sparse as sp
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.cluster.k_means_ import _k_init
 from sklearn.metrics.cluster import \
     silhouette_score as sklearn_silhouette_score
 from sklearn.utils import check_random_state
+from sklearn.utils.extmath import stable_cumsum
 from scipy.spatial.distance import cdist
 import numpy
 import warnings
@@ -28,6 +30,99 @@ from tslearn.bases import BaseModelPackage
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 # Kernel k-means is derived from https://gist.github.com/mblondel/6230787 by
 # Mathieu Blondel, under BSD 3 clause license
+
+
+def _k_init_metric(X, n_clusters, cdist_metric, random_state,
+                   n_local_trials=None):
+    """Init n_clusters seeds according to k-means++ with a custom distance
+    metric.
+
+    Parameters
+    ----------
+    X : array or sparse matrix, shape (n_samples, n_features)
+        The data to pick seeds for. To avoid memory copy, the input data
+        should be double precision (dtype=np.float64).
+
+    n_clusters : integer
+        The number of seeds to choose
+
+    cdist_metric : function
+        Function to be called for cross-distance computations
+
+    random_state : RandomState instance
+        Generator used to initialize the centers.
+
+    n_local_trials : integer, optional
+        The number of seeding trials for each center (except the first),
+        of which the one reducing inertia the most is greedily chosen.
+        Set to None to make the number of trials depend logarithmically
+        on the number of seeds (2+log(k)); this is the default.
+
+    Notes
+    -----
+    Selects initial cluster centers for k-mean clustering in a smart way
+    to speed up convergence. see: Arthur, D. and Vassilvitskii, S.
+    "k-means++: the advantages of careful seeding". ACM-SIAM symposium
+    on Discrete algorithms. 2007
+
+    Version adapted from scikit-learn for use with a custom metric in place of
+    Euclidean distance.
+    """
+    n_samples, n_timestamps, n_features = X.shape
+
+    centers = numpy.empty((n_clusters, n_timestamps, n_features),
+                          dtype=X.dtype)
+
+    # Set the number of local seeding trials if none is given
+    if n_local_trials is None:
+        # This is what Arthur/Vassilvitskii tried, but did not report
+        # specific results for other than mentioning in the conclusion
+        # that it helped.
+        n_local_trials = 2 + int(numpy.log(n_clusters))
+
+    # Pick first center randomly
+    center_id = random_state.randint(n_samples)
+    if sp.issparse(X):
+        centers[0] = X[center_id].toarray()
+    else:
+        centers[0] = X[center_id]
+
+    # Initialize list of closest distances and calculate current potential
+    closest_dist_sq = cdist_metric(centers[0, numpy.newaxis], X) ** 2
+    current_pot = closest_dist_sq.sum()
+
+    # Pick the remaining n_clusters-1 points
+    for c in range(1, n_clusters):
+        # Choose center candidates by sampling with probability proportional
+        # to the squared distance to the closest existing center
+        rand_vals = random_state.random_sample(n_local_trials) * current_pot
+        candidate_ids = numpy.searchsorted(stable_cumsum(closest_dist_sq),
+                                           rand_vals)
+        # XXX: numerical imprecision can result in a candidate_id out of range
+        numpy.clip(candidate_ids, None, closest_dist_sq.size - 1,
+                   out=candidate_ids)
+
+        # Compute distances to center candidates
+        distance_to_candidates = cdist_metric(centers[candidate_ids], X) ** 2
+
+        # update closest distances squared and potential for each candidate
+        numpy.minimum(closest_dist_sq, distance_to_candidates,
+                      out=distance_to_candidates)
+        candidates_pot = distance_to_candidates.sum(axis=1)
+
+        # Decide which candidate is the best
+        best_candidate = numpy.argmin(candidates_pot)
+        current_pot = candidates_pot[best_candidate]
+        closest_dist_sq = distance_to_candidates[best_candidate]
+        best_candidate = candidate_ids[best_candidate]
+
+        # Permanently add best center candidate found in local tries
+        if sp.issparse(X):
+            centers[c] = X[best_candidate].toarray()
+        else:
+            centers[c] = X[best_candidate]
+
+    return centers
 
 
 class EmptyClusterError(Exception):
@@ -679,15 +774,53 @@ class TimeSeriesKMeans(BaseEstimator, BaseModelPackage, ClusterMixin,
         return {'cluster_centers_': self.cluster_centers_}
 
     def _fit_one_init(self, X, x_squared_norms, rs):
+        if self.metric_params is None:
+            metric_params = {}
+        else:
+            metric_params = self.metric_params.copy()
         n_ts, _, d = X.shape
         sz = min([ts_size(ts) for ts in X])
         if hasattr(self.init, '__array__'):
             self.cluster_centers_ = self.init.copy()
         elif self.init == "k-means++":
-            self.cluster_centers_ = _k_init(X[:, :sz, :].reshape((n_ts, -1)),
-                                            self.n_clusters,
-                                            x_squared_norms,
-                                            rs).reshape((-1, sz, d))
+            if self.metric == "euclidean":
+                self.cluster_centers_ = _k_init(
+                    X[:, :sz, :].reshape((n_ts, -1)),
+                    self.n_clusters,
+                    x_squared_norms,
+                    rs
+                ).reshape((-1, sz, d))
+            elif self.metric == "dtw":
+                metric_fun = lambda x, y: cdist_dtw(
+                    x,
+                    y,
+                    n_jobs=self.n_jobs,
+                    verbose=self.verbose,
+                    **metric_params
+                )
+                self.cluster_centers_ = _k_init_metric(
+                    X,
+                    self.n_clusters,
+                    cdist_metric=metric_fun,
+                    random_state=rs
+                )
+            elif self.metric == "softdtw":
+                metric_fun = lambda x, y: cdist_soft_dtw(
+                    x,
+                    y,
+                    **metric_params
+                )
+                self.cluster_centers_ = _k_init_metric(
+                    X,
+                    self.n_clusters,
+                    cdist_metric=metric_fun,
+                    random_state=rs
+                )
+            else:
+                raise ValueError(
+                    "Incorrect metric: %s (should be one of 'dtw', "
+                    "'softdtw', 'euclidean')" % self.metric
+                )
         elif self.init == "random":
             indices = rs.choice(X.shape[0], self.n_clusters)
             self.cluster_centers_ = X[indices].copy()
