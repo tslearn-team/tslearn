@@ -790,37 +790,23 @@ class TimeSeriesKMeans(BaseEstimator, BaseModelPackage, ClusterMixin,
                     x_squared_norms,
                     rs
                 ).reshape((-1, sz, d))
-            elif self.metric == "dtw":
-                metric_fun = lambda x, y: cdist_dtw(
-                    x,
-                    y,
-                    n_jobs=self.n_jobs,
-                    verbose=self.verbose,
-                    **metric_params
-                )
-                self.cluster_centers_ = _k_init_metric(
-                    X,
-                    self.n_clusters,
-                    cdist_metric=metric_fun,
-                    random_state=rs
-                )
-            elif self.metric == "softdtw":
-                metric_fun = lambda x, y: cdist_soft_dtw(
-                    x,
-                    y,
-                    **metric_params
-                )
-                self.cluster_centers_ = _k_init_metric(
-                    X,
-                    self.n_clusters,
-                    cdist_metric=metric_fun,
-                    random_state=rs
-                )
             else:
-                raise ValueError(
-                    "Incorrect metric: %s (should be one of 'dtw', "
-                    "'softdtw', 'euclidean')" % self.metric
-                )
+                if self.metric == "dtw":
+                    def metric_fun(x, y):
+                        return cdist_dtw(x, y, n_jobs=self.n_jobs,
+                                         verbose=self.verbose, **metric_params)
+
+                elif self.metric == "softdtw":
+                    def metric_fun(x, y):
+                        return cdist_soft_dtw(x, y, **metric_params)
+                else:
+                    raise ValueError(
+                        "Incorrect metric: %s (should be one of 'dtw', "
+                        "'softdtw', 'euclidean')" % self.metric
+                    )
+                self.cluster_centers_ = _k_init_metric(X, self.n_clusters,
+                                                       cdist_metric=metric_fun,
+                                                       random_state=rs)
         elif self.init == "random":
             indices = rs.choice(X.shape[0], self.n_clusters)
             self.cluster_centers_ = X[indices].copy()
