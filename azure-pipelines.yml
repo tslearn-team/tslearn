@@ -30,6 +30,7 @@ jobs:
       set -xe
       python --version
       python -m pip install --upgrade pip
+      export PIP_PREFER_BINARY=true
       python -m pip install -r requirements.txt
     displayName: 'Install dependencies'
   
