@@ -1,7 +1,6 @@
 name: Build dist and wheels
 
-on:
-  push
+on: release
 
 jobs:
   build_wheels:
