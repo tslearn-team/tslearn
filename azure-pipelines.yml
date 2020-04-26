@@ -113,7 +113,7 @@ jobs:
   - script: |
       python --version
       python -m pip install --upgrade pip
-      python -m pip install llvm-lite==0.31.*
+      export PIP_PREFER_BINARY=true && python -m pip install llvm-lite==0.31.*
       python -m pip install -r requirements.txt
     displayName: 'Install dependencies'
   
