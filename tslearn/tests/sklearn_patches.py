@@ -52,6 +52,8 @@ from sklearn.model_selection import ShuffleSplit
 from sklearn.model_selection._validation import _safe_split
 from sklearn.pipeline import make_pipeline
 
+from tslearn.clustering import TimeSeriesKMeans
+
 import warnings
 import numpy as np
 
@@ -531,9 +533,16 @@ def check_different_length_fit_predict(name, estimator):
     # Check if classifier can predict a dataset that does not have the same
     # number of timestamps as the data passed at fit time
 
+    # Default for kmeans is Euclidean
+    if isinstance(estimator, TimeSeriesKMeans):
+        new_estimator = clone(estimator)
+        new_estimator.metric = "dtw"
+    else:
+        new_estimator = estimator
+
     X, y = _create_small_ts_dataset()
     X2 = np.hstack((X, X))
-    estimator.fit(X, y).predict(X2)
+    new_estimator.fit(X, y).predict(X2)
 
 
 def yield_all_checks(name, estimator):
