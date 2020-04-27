@@ -21,7 +21,8 @@ from tslearn.barycenters import euclidean_barycenter, \
     dtw_barycenter_averaging, softdtw_barycenter
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
-from tslearn.preprocessing import TimeSeriesScalerMeanVariance
+from tslearn.preprocessing import TimeSeriesScalerMeanVariance, \
+    TimeSeriesResampler
 from tslearn.utils import (to_time_series_dataset, to_time_series,
                            ts_size, check_dims)
 from tslearn.cycc import cdist_normalized_cc, y_shifted_sbd_vec
@@ -152,17 +153,11 @@ def _check_full_length(centroids):
     """Check that provided centroids are full-length (ie. not padded with
     nans).
 
-    If some centroids are found to be padded with nans, the last value is
-    repeated until the end.
+    If some centroids are found to be padded with nans, TimeSeriesResampler is
+    used to resample the centroids.
     """
-    centroids_ = numpy.empty(centroids.shape)
-    n, max_sz = centroids.shape[:2]
-    for i in range(n):
-        sz = ts_size(centroids[i])
-        centroids_[i, :sz] = centroids[i, :sz]
-        if sz < max_sz:
-            centroids_[i, sz:] = centroids[i, sz-1]
-    return centroids_
+    resampler = TimeSeriesResampler(sz=centroids.shape[1])
+    return resampler.fit_transform(centroids)
 
 
 def _compute_inertia(distances, assignments, squared=True):
@@ -699,8 +694,11 @@ class TimeSeriesKMeans(BaseEstimator, BaseModelPackage, ClusterMixin,
     labels_ : numpy.ndarray
         Labels of each point.
 
-    cluster_centers_ : numpy.ndarray
+    cluster_centers_ : numpy.ndarray of shape (n_clusters, sz, d)
         Cluster centers.
+        `sz` is the size of the time series used at fit time if the init method
+        is 'k-means++' or 'random', and the size of the longest initial
+        centroid if those are provided as a numpy array through init parameter.
 
     inertia_ : float
         Sum of distances of samples to their closest cluster center.
@@ -904,6 +902,10 @@ class TimeSeriesKMeans(BaseEstimator, BaseModelPackage, ClusterMixin,
 
         X = check_array(X, allow_nd=True, force_all_finite='allow-nan')
 
+        if hasattr(self.init, '__array__') and self.metric == "euclidean":
+            X = check_dims(X, X_fit_dims=self.init.shape, extend=True)
+
+
         self.labels_ = None
         self.inertia_ = numpy.inf
         self.cluster_centers_ = None
@@ -916,9 +918,15 @@ class TimeSeriesKMeans(BaseEstimator, BaseModelPackage, ClusterMixin,
 
         X_ = to_time_series_dataset(X)
         rs = check_random_state(self.random_state)
-        x_squared_norms = cdist(X_.reshape((X_.shape[0], -1)),
-                                numpy.zeros((1, X_.shape[1] * X_.shape[2])),
-                                metric="sqeuclidean").reshape((1, -1))
+
+        if self.init == "k-means++" and self.metric == "euclidean":
+            n_ts, sz, d = X_.shape
+            min_sz = min([ts_size(ts) for ts in X_])
+            x_squared_norms = cdist(X_[:, :min_sz].reshape((n_ts, -1)),
+                                    numpy.zeros((1, min_sz * d)),
+                                    metric="sqeuclidean").reshape((1, -1))
+        else:
+            x_squared_norms = None
         _check_initial_guess(self.init, self.n_clusters)
 
         best_correct_centroids = None

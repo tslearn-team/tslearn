@@ -1,6 +1,6 @@
 import numpy as np
 
-from tslearn.utils import to_time_series_dataset
+from tslearn.utils import to_time_series_dataset, ts_size
 from tslearn.clustering import EmptyClusterError, _check_full_length, \
     _check_no_empty_cluster, TimeSeriesKMeans,  GlobalAlignmentKernelKMeans, \
     KShape
@@ -22,8 +22,9 @@ def test_check_no_empty_cluster():
 def test_check_full_length():
     centroids = to_time_series_dataset([[1, 2, 3], [1, 2, 3, 4, 5]])
     arr = _check_full_length(centroids)
-    np.testing.assert_allclose(arr, to_time_series_dataset([[1, 2, 3, 3, 3],
-                                                            [1, 2, 3, 4, 5]]))
+    np.testing.assert_allclose(arr,
+                               to_time_series_dataset([[1, 1.5, 2, 2.5, 3],
+                                                       [1, 2, 3, 4, 5]]))
 
 
 def test_gak_kmeans():
@@ -91,8 +92,58 @@ def test_kmeans():
     TimeSeriesKMeans(n_clusters=2, verbose=False, max_iter=5,
                      metric="dtw", init=X_bis[:2]).fit(X_bis)
 
-    # TODO: add a check that ensures that cluster centers maintain their
-    # lengths along kmeans iterations even if DTW/softDTW are used as metrics
+    # Barycenter size (nb of timestamps)
+    # Case 1. kmeans++ / random init
+    n, sz, d = 15, 10, 1
+    n_clusters = 3
+    time_series = rng.randn(n, sz, d)
+
+    sizes_all_same_series = [sz] * n_clusters
+    km_euc = TimeSeriesKMeans(n_clusters=3,
+                              metric="euclidean",
+                              max_iter=5,
+                              verbose=False,
+                              init="k-means++",
+                              random_state=rng).fit(time_series)
+    np.testing.assert_equal(sizes_all_same_series,
+                            [ts_size(b) for b in km_euc.cluster_centers_])
+    km_dba = TimeSeriesKMeans(n_clusters=3,
+                              metric="dtw",
+                              max_iter=5,
+                              verbose=False,
+                              init="random",
+                              random_state=rng).fit(time_series)
+    np.testing.assert_equal(sizes_all_same_series,
+                            [ts_size(b) for b in km_dba.cluster_centers_])
+
+    # Case 2. forced init
+    barys = to_time_series_dataset([[1., 2., 3.],
+                                    [1., 2., 2., 3., 4.],
+                                    [3., 2., 1.]])
+    sizes_all_same_bary = [barys.shape[1]] * n_clusters
+    km_euc = TimeSeriesKMeans(n_clusters=3,
+                              metric="euclidean",
+                              max_iter=5,
+                              verbose=False,
+                              init=barys,
+                              random_state=rng)
+    np.testing.assert_raises(ValueError, km_euc.fit, time_series)
+    km_dba = TimeSeriesKMeans(n_clusters=3,
+                              metric="dtw",
+                              max_iter=5,
+                              verbose=False,
+                              init=barys,
+                              random_state=rng).fit(time_series)
+    np.testing.assert_equal(sizes_all_same_bary,
+                            [ts_size(b) for b in km_dba.cluster_centers_])
+    km_sdtw = TimeSeriesKMeans(n_clusters=3,
+                               metric="softdtw",
+                               max_iter=5,
+                               verbose=False,
+                               init=barys,
+                               random_state=rng).fit(time_series)
+    np.testing.assert_equal(sizes_all_same_bary,
+                            [ts_size(b) for b in km_sdtw.cluster_centers_])
 
 
 def test_kshape():
@@ -109,3 +160,6 @@ def test_kshape():
 
     assert KShape(n_clusters=101, verbose=False,
                   random_state=rng).fit(time_series)._X_fit is None
+
+# if __name__ == "__main__":
+#     test_kmeans()
