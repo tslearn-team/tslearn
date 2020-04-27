@@ -103,7 +103,7 @@ def _k_init_metric(X, n_clusters, cdist_metric, random_state,
                    out=candidate_ids)
 
         # Compute distances to center candidates
-        distance_to_candidates = cdist_metric(centers[candidate_ids], X) ** 2
+        distance_to_candidates = cdist_metric(X[candidate_ids], X) ** 2
 
         # update closest distances squared and potential for each candidate
         numpy.minimum(closest_dist_sq, distance_to_candidates,
