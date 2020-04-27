@@ -40,8 +40,11 @@ class TimeSeriesSVMMixin:
         else:
             X, y = check_X_y(X, y, allow_nd=True,
                              force_all_finite=force_all_finite)
-        X = check_dims(X, X_fit_dims=None)
-        X = to_time_series_dataset(X)
+        if self.kernel in VARIABLE_LENGTH_METRICS:
+            X = check_dims(X, X_fit_dims=self._X_fit, extend=True,
+                           check_n_features_only=True)
+        else:
+            X = check_dims(X, X_fit_dims=self._X_fit, extend=True)
 
         if fit_time:
             self._X_fit = X

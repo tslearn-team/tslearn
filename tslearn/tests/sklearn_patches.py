@@ -349,15 +349,20 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
                "features in {} is different from the number of features in "
                "fit.")
 
-        if not tags["no_validation"] and not tags["allow_variable_length"]:
+        if not tags["no_validation"]:
             if bool(getattr(classifier, "_pairwise", False)):
                 with assert_raises(ValueError,
                                    msg=msg_pairwise.format(name, "predict")):
                     classifier.predict(X.reshape(-1, 1))
             else:
-                with assert_raises(ValueError,
-                                   msg=msg.format(name, "predict")):
-                    classifier.predict(X.T)
+                if not tags["allow_variable_length"]:
+                    with assert_raises(ValueError,
+                                       msg=msg.format(name, "predict")):
+                        classifier.predict(X.T)
+                else:
+                    with assert_raises(ValueError,
+                                       msg=msg.format(name, "predict")):
+                        classifier.predict(X.reshape((-1, 5, 2)))
         if hasattr(classifier, "decision_function"):
             try:
                 # decision_function agrees with predict
@@ -375,16 +380,19 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
 
                 # raises error on malformed input for decision_function
                 if not tags["no_validation"]:
+                    error_msg = msg_pairwise.format(name, "decision_function")
                     if bool(getattr(classifier, "_pairwise", False)):
-                        error_msg = msg_pairwise.format(name,
-                                                        "decision_function")
                         with assert_raises(ValueError, msg=error_msg):
                             classifier.decision_function(X.reshape(-1, 1))
                     else:
-                        error_msg = msg_pairwise.format(name,
-                                                        "decision_function")
-                        with assert_raises(ValueError, msg=error_msg):
-                            classifier.decision_function(X.T)
+                        if not tags["allow_variable_length"]:
+                            with assert_raises(ValueError, msg=error_msg):
+                                classifier.decision_function(X.T)
+                        else:
+                            with assert_raises(ValueError, msg=error_msg):
+                                classifier.decision_function(
+                                    X.reshape((-1, 5, 2))
+                                )
             except NotImplementedError:
                 pass
 
@@ -396,16 +404,23 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
             # check that probas for all classes sum to one
             assert_array_almost_equal(np.sum(y_prob, axis=1),
                                       np.ones(n_samples))
-            if not tags["no_validation"] and not tags["allow_variable_length"]:
+            if not tags["no_validation"]:
                 # raises error on malformed input for predict_proba
                 if bool(getattr(classifier_orig, "_pairwise", False)):
                     with assert_raises(ValueError, msg=msg_pairwise.format(
                             name, "predict_proba")):
                         classifier.predict_proba(X.reshape(-1, 1))
                 else:
-                    with assert_raises(ValueError, msg=msg.format(
-                            name, "predict_proba")):
-                        classifier.predict_proba(X.T)
+                    if not tags["allow_variable_length"]:
+                        with assert_raises(ValueError, msg=msg.format(
+                                name, "predict_proba")):
+                            classifier.predict_proba(X.T)
+                    else:
+                        with assert_raises(ValueError, msg=msg.format(
+                                name, "predict_proba")):
+                            classifier.predict_proba(
+                                X.reshape((-1, 5, 2))
+                            )
             if hasattr(classifier, "predict_log_proba"):
                 # predict_log_proba is a transformation of predict_proba
                 y_log_prob = classifier.predict_log_proba(X)

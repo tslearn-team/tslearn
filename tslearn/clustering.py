@@ -4,7 +4,6 @@ algorithms.
 """
 
 from __future__ import print_function
-import scipy.sparse as sp
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.cluster.k_means_ import _k_init
 from sklearn.metrics.cluster import \
@@ -583,7 +582,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, BaseModelPackage,
         """
         X = check_array(X, allow_nd=True, force_all_finite=False)
         check_is_fitted(self, '_X_fit')
-        X = check_dims(X, self._X_fit.shape)
+        X = check_dims(X, self._X_fit.shape, check_n_features_only=True)
         K = self._get_kernel(X, self._X_fit)
         n_samples = X.shape[0]
         dist = numpy.zeros((n_samples, self.n_clusters))
@@ -981,9 +980,12 @@ class TimeSeriesKMeans(BaseEstimator, BaseModelPackage, ClusterMixin,
         """
         X = check_array(X, allow_nd=True, force_all_finite='allow-nan')
         check_is_fitted(self, 'cluster_centers_')
-        X = check_dims(X, self.cluster_centers_.shape)
-        X_ = to_time_series_dataset(X)
-        return self._assign(X_, update_class_attributes=False)
+        if self.metric == "euclidean":
+            X = check_dims(X, self.cluster_centers_.shape, extend=True)
+        else:
+            X = check_dims(X, self.cluster_centers_.shape, extend=True,
+                           check_n_features_only=True)
+        return self._assign(X, update_class_attributes=False)
 
     def _get_tags(self):
         return {'allow_nan': True, 'allow_variable_length': True}
@@ -1272,8 +1274,7 @@ class KShape(BaseEstimator, BaseModelPackage, ClusterMixin,
         check_is_fitted(self,
                         ['cluster_centers_', 'norms_', 'norms_centroids_'])
 
-        X_ = to_time_series_dataset(X)
-        X = check_dims(X, self.cluster_centers_.shape)
+        X_ = check_dims(X, self.cluster_centers_.shape)
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
         dists = self._cross_dists(X_)
         return dists.argmin(axis=1)
