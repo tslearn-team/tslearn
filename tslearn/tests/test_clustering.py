@@ -121,6 +121,7 @@ def test_kmeans():
                                     [1., 2., 2., 3., 4.],
                                     [3., 2., 1.]])
     sizes_all_same_bary = [barys.shape[1]] * n_clusters
+    # If Euclidean is used, barycenters size should be that of the input series
     km_euc = TimeSeriesKMeans(n_clusters=3,
                               metric="euclidean",
                               max_iter=5,
@@ -128,6 +129,7 @@ def test_kmeans():
                               init=barys,
                               random_state=rng)
     np.testing.assert_raises(ValueError, km_euc.fit, time_series)
+
     km_dba = TimeSeriesKMeans(n_clusters=3,
                               metric="dtw",
                               max_iter=5,
@@ -160,6 +162,3 @@ def test_kshape():
 
     assert KShape(n_clusters=101, verbose=False,
                   random_state=rng).fit(time_series)._X_fit is None
-
-# if __name__ == "__main__":
-#     test_kmeans()
