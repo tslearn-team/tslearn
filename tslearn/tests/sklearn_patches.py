@@ -526,6 +526,16 @@ def check_pipeline_consistency(name, estimator_orig):
             assert_allclose_dense_sparse(result, result_pipe)
 
 
+@ignore_warnings(category=(DeprecationWarning, FutureWarning))
+def check_different_length_fit_predict(name, estimator):
+    # Check if classifier can predict a dataset that does not have the same
+    # number of timestamps as the data passed at fit time
+
+    X, y = _create_small_ts_dataset()
+    X2 = np.hstack((X, X))
+    estimator.fit(X, y).predict(X2)
+
+
 def yield_all_checks(name, estimator):
     tags = _safe_tags(estimator)
     if "2darray" not in tags["X_types"]:
@@ -556,7 +566,8 @@ def yield_all_checks(name, estimator):
     if is_outlier_detector(estimator):
         for check in _yield_outliers_checks(name, estimator):
             yield check
-    yield check_fit2d_predict1d
+    # We are not strict on presence/absence of the 3rd dimension
+    # yield check_fit2d_predict1d
 
     if not tags["non_deterministic"]:
         yield check_methods_subset_invariance
@@ -569,3 +580,6 @@ def yield_all_checks(name, estimator):
     yield check_dict_unchanged
     yield check_dont_overwrite_parameters
     yield check_fit_idempotent
+
+    if tags["allow_variable_length"]:
+        yield check_different_length_fit_predict
