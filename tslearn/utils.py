@@ -9,7 +9,7 @@ from sklearn.utils.validation import check_is_fitted
 import warnings
 
 try:
-    from sklearn.utils.estimator_checks import _NotAnArray
+    from sklearn.utils.estimator_checks import _NotAnArray as NotAnArray
 except ImportError:  # Old sklearn versions
     from sklearn.utils.estimator_checks import NotAnArray
 
