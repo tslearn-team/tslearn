@@ -8,6 +8,11 @@ from sklearn.utils import column_or_1d, check_array
 from sklearn.utils.validation import check_is_fitted
 import warnings
 
+try:
+    from sklearn.utils.estimator_checks import _NotAnArray
+except ImportError:  # Old sklearn versions
+    from sklearn.utils.estimator_checks import NotAnArray
+
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
@@ -76,16 +81,20 @@ def check_dims(X, X_fit_dims=None, extend=True, check_n_features_only=False):
 
 
     if X_fit_dims is not None:
-        if X_fit_dims[2] != X.shape[2] and check_n_features_only:
-            raise ValueError(
-                'Number of features of the provided timeseries'
-                '(last dimension) must match the one of the fitted data!'
-                ' ({} and {} are passed shapes)'.format(X_fit_dims, X.shape))
-        if X_fit_dims[1:] != X.shape[1:] and not check_n_features_only:
-            raise ValueError(
-                'Dimensions of the provided timeseries'
-                '(except first) must match those of the fitted data!'
-                ' ({} and {} are passed shapes)'.format(X_fit_dims, X.shape))
+        if check_n_features_only:
+            if X_fit_dims[2] != X.shape[2]:
+                raise ValueError(
+                    'Number of features of the provided timeseries'
+                    '(last dimension) must match the one of the fitted data!'
+                    ' ({} and {} are passed shapes)'.format(X_fit_dims,
+                                                            X.shape))
+        else:
+            if X_fit_dims[1:] != X.shape[1:]:
+                raise ValueError(
+                    'Dimensions of the provided timeseries'
+                    '(except first) must match those of the fitted data!'
+                    ' ({} and {} are passed shapes)'.format(X_fit_dims,
+                                                            X.shape))
 
     return X
 
@@ -201,15 +210,13 @@ def to_time_series_dataset(dataset, dtype=numpy.float):
     --------
     to_time_series : Transforms a single time series
     """
-    is_empty = True
-    for _ in dataset:
-        is_empty = False
-        break
-    if is_empty:
+    if isinstance(dataset, NotAnArray):  # Patch to pass sklearn tests
+        dataset = numpy.array(dataset)
+    if len(dataset) == 0:
         return numpy.zeros((0, 0, 0))
     if numpy.array(dataset[0]).ndim == 0:
         dataset = [dataset]
-    n_ts = len([ts for ts in dataset])
+    n_ts = len(dataset)
     max_sz = max([ts_size(to_time_series(ts)) for ts in dataset])
     d = to_time_series(dataset[0]).shape[1]
     dataset_out = numpy.zeros((n_ts, max_sz, d), dtype=dtype) + numpy.nan
