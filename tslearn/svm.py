@@ -34,23 +34,24 @@ def _prepare_ts_datasets_sklearn(X):
 class TimeSeriesSVMMixin:
     def _preprocess_sklearn(self, X, y=None, fit_time=False):
         force_all_finite = self.kernel not in VARIABLE_LENGTH_METRICS
-        X = to_time_series_dataset(X)
         if y is None:
             X = check_array(X, allow_nd=True,
                             force_all_finite=force_all_finite)
         else:
             X, y = check_X_y(X, y, allow_nd=True,
                              force_all_finite=force_all_finite)
-        if self.kernel in VARIABLE_LENGTH_METRICS:
-            X = check_dims(X, X_fit_dims=self._X_fit, extend=True,
-                           check_n_features_only=True)
-        else:
-            X = check_dims(X, X_fit_dims=self._X_fit, extend=True)
+        X = to_time_series_dataset(X)
 
         if fit_time:
             self._X_fit = X
             self.gamma_ = gamma_soft_dtw(X)
             self.classes_ = numpy.unique(y)
+        else:
+            if self.kernel in VARIABLE_LENGTH_METRICS:
+                X = check_dims(X, X_fit_dims=self._X_fit.shape, extend=True,
+                               check_n_features_only=True)
+            else:
+                X = check_dims(X, X_fit_dims=self._X_fit.shape, extend=True)
 
         if self.kernel in VARIABLE_LENGTH_METRICS:
             assert self.kernel == "gak"

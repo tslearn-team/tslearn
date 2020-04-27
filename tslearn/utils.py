@@ -201,11 +201,15 @@ def to_time_series_dataset(dataset, dtype=numpy.float):
     --------
     to_time_series : Transforms a single time series
     """
-    if len(dataset) == 0:
+    is_empty = True
+    for _ in dataset:
+        is_empty = False
+        break
+    if is_empty:
         return numpy.zeros((0, 0, 0))
     if numpy.array(dataset[0]).ndim == 0:
         dataset = [dataset]
-    n_ts = len(dataset)
+    n_ts = len([ts for ts in dataset])
     max_sz = max([ts_size(to_time_series(ts)) for ts in dataset])
     d = to_time_series(dataset[0]).shape[1]
     dataset_out = numpy.zeros((n_ts, max_sz, d), dtype=dtype) + numpy.nan
