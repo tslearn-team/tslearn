@@ -50,6 +50,13 @@ class TimeSeriesResampler(TransformerMixin):
         """
         return self
 
+    def _transform_unit_sz(self, X):
+        n_ts, sz, d = X.shape
+        X_out = numpy.empty((n_ts, self.sz_, d))
+        for i in range(X.shape[0]):
+            X_out[i] = numpy.nanmean(X[i], axis=0, keepdims=True)
+        return X_out
+
     def transform(self, X, **kwargs):
         """Fit to data, then transform it.
 
@@ -64,6 +71,8 @@ class TimeSeriesResampler(TransformerMixin):
             Resampled time series dataset.
         """
         X_ = to_time_series_dataset(X)
+        if self.sz_ == 1:
+            return self._transform_unit_sz(X_)
         n_ts, sz, d = X_.shape
         equal_size = check_equal_size(X_)
         X_out = numpy.empty((n_ts, self.sz_, d))
