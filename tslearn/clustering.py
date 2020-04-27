@@ -40,9 +40,8 @@ def _k_init_metric(X, n_clusters, cdist_metric, random_state,
 
     Parameters
     ----------
-    X : array or sparse matrix, shape (n_samples, n_features)
-        The data to pick seeds for. To avoid memory copy, the input data
-        should be double precision (dtype=np.float64).
+    X : array, shape (n_samples, n_timestamps, n_features)
+        The data to pick seeds for.
 
     n_clusters : integer
         The number of seeds to choose
@@ -83,10 +82,7 @@ def _k_init_metric(X, n_clusters, cdist_metric, random_state,
 
     # Pick first center randomly
     center_id = random_state.randint(n_samples)
-    if sp.issparse(X):
-        centers[0] = X[center_id].toarray()
-    else:
-        centers[0] = X[center_id]
+    centers[0] = X[center_id]
 
     # Initialize list of closest distances and calculate current potential
     closest_dist_sq = cdist_metric(centers[0, numpy.newaxis], X) ** 2
@@ -118,10 +114,7 @@ def _k_init_metric(X, n_clusters, cdist_metric, random_state,
         best_candidate = candidate_ids[best_candidate]
 
         # Permanently add best center candidate found in local tries
-        if sp.issparse(X):
-            centers[c] = X[best_candidate].toarray()
-        else:
-            centers[c] = X[best_candidate]
+        centers[c] = X[best_candidate]
 
     return centers
 

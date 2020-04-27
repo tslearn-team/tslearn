@@ -147,6 +147,21 @@ def test_kmeans():
     np.testing.assert_equal(sizes_all_same_bary,
                             [ts_size(b) for b in km_sdtw.cluster_centers_])
 
+    # A simple dataset, can we extract the correct number of clusters?
+    time_series = to_time_series_dataset([[1, 2, 3],
+                                   [7, 8, 9, 11],
+                                   [.1, .2, 2.],
+                                   [1, 1, 1, 9],
+                                   [10, 20, 30, 1000]])
+    preds = TimeSeriesKMeans(n_clusters=3, metric="dtw", max_iter=5,
+                             random_state=rng).fit_predict(time_series)
+    np.testing.assert_equal(set(preds), set(range(3)))
+    preds = TimeSeriesKMeans(n_clusters=4, metric="dtw", max_iter=5,
+                             random_state=rng).fit_predict(time_series)
+    np.testing.assert_equal(set(preds), set(range(4)))
+
+
+
 
 def test_kshape():
     n, sz, d = 15, 10, 3
