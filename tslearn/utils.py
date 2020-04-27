@@ -81,7 +81,7 @@ def check_dims(X, X_fit_dims=None, extend=True, check_n_features_only=False):
                 'Number of features of the provided timeseries'
                 '(last dimension) must match the one of the fitted data!'
                 ' ({} and {} are passed shapes)'.format(X_fit_dims, X.shape))
-        elif X_fit_dims[1:] != X.shape[1:]:
+        if X_fit_dims[1:] != X.shape[1:] and not check_n_features_only:
             raise ValueError(
                 'Dimensions of the provided timeseries'
                 '(except first) must match those of the fitted data!'

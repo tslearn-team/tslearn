@@ -560,9 +560,10 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
                [0],
                [0]])
         """
-        X = check_dims(X, self._X_fit_dims)
+        check_is_fitted(self, '_X_fit_dims')
         X = check_array(X, allow_nd=True)
         X = to_time_series_dataset(X)
+        X = check_dims(X, self._X_fit_dims)
         n_ts, sz, d = X.shape
         locations = self.locator_model_.predict(
             [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
