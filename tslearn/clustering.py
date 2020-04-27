@@ -738,7 +738,7 @@ class TimeSeriesKMeans(BaseEstimator, BaseModelPackage, ClusterMixin,
     >>> km = TimeSeriesKMeans(n_clusters=2, max_iter=5,
     ...                       metric="dtw", random_state=0).fit(X_bis)
     >>> km.cluster_centers_.shape
-    (2, 3, 1)
+    (2, 6, 1)
     """
 
     def __init__(self, n_clusters=3, max_iter=50, tol=1e-6, n_init=1,
@@ -773,11 +773,20 @@ class TimeSeriesKMeans(BaseEstimator, BaseModelPackage, ClusterMixin,
     def _get_model_params(self):
         return {'cluster_centers_': self.cluster_centers_}
 
-    def _fit_one_init(self, X, x_squared_norms, rs):
+    def _get_metric_params(self):
         if self.metric_params is None:
             metric_params = {}
         else:
             metric_params = self.metric_params.copy()
+        if "gamma_sdtw" in metric_params.keys():
+            metric_params["gamma"] = metric_params["gamma_sdtw"]
+            del metric_params["gamma_sdtw"]
+        if "n_jobs" in metric_params.keys():
+            del metric_params["n_jobs"]
+        return metric_params
+
+    def _fit_one_init(self, X, x_squared_norms, rs):
+        metric_params = self._get_metric_params()
         n_ts, _, d = X.shape
         sz = min([ts_size(ts) for ts in X])
         if hasattr(self.init, '__array__'):
@@ -833,15 +842,7 @@ class TimeSeriesKMeans(BaseEstimator, BaseModelPackage, ClusterMixin,
         return self
 
     def _assign(self, X, update_class_attributes=True):
-        if self.metric_params is None:
-            metric_params = {}
-        else:
-            metric_params = self.metric_params.copy()
-        if "gamma_sdtw" in metric_params.keys():
-            metric_params["gamma"] = metric_params["gamma_sdtw"]
-            del metric_params["gamma_sdtw"]
-        if "n_jobs" in metric_params.keys():
-            del metric_params["n_jobs"]
+        metric_params = self._get_metric_params()
         if self.metric == "euclidean":
             dists = cdist(X.reshape((X.shape[0], -1)),
                           self.cluster_centers_.reshape((self.n_clusters, -1)),
@@ -870,13 +871,7 @@ class TimeSeriesKMeans(BaseEstimator, BaseModelPackage, ClusterMixin,
         return matched_labels
 
     def _update_centroids(self, X):
-        if self.metric_params is None:
-            metric_params = {}
-        else:
-            metric_params = self.metric_params.copy()
-        if "gamma_sdtw" in metric_params.keys():
-            metric_params["gamma"] = metric_params["gamma_sdtw"]
-            del metric_params["gamma_sdtw"]
+        metric_params = self._get_metric_params()
         for k in range(self.n_clusters):
             if self.metric == "dtw":
                 self.cluster_centers_[k] = dtw_barycenter_averaging(

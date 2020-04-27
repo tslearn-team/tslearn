@@ -91,6 +91,9 @@ def test_kmeans():
     TimeSeriesKMeans(n_clusters=2, verbose=False, max_iter=5,
                      metric="dtw", init=X_bis[:2]).fit(X_bis)
 
+    # TODO: add a check that ensures that cluster centers maintain their
+    # lengths along kmeans iterations even if DTW/softDTW are used as metrics
+
 
 def test_kshape():
     n, sz, d = 15, 10, 3
