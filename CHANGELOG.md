@@ -11,6 +11,8 @@ Changelogs for this project are recorded in this file since v0.2.0.
 ## [Towards v0.4.0]
 
 ### Changed
+* Better initialization schemes for `TimeSeriesKMeans` that lead to more 
+consistent clustering runs (helps avoid empty cluster situations)
 * TimeSeriesScalerMeanVariance and TimeSeriesScalerMinMax are now completely sklearn-compliant
 * Bugfix in kneighbors() methods.
 
