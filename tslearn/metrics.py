@@ -188,7 +188,7 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
     --------
     dtw : Get only the similarity score for DTW
     cdist_dtw : Cross similarity matrix between time series datasets
-    dtw_path_from_metric : Compute a DTW using an arbitrary distance metric.
+    dtw_path_from_metric : Compute a DTW using a user-defined distance metric
 
     References
     ----------
@@ -245,17 +245,21 @@ def njit_accumulated_matrix_from_dist_matrix(dist_matrix, mask):
 def dtw_path_from_metric(s1, s2=None, metric="precomputed",
                          global_constraint=None, sakoe_chiba_radius=None,
                          itakura_max_slope=None, **kwds):
-    """Compute Dynamic Time Warping (DTW) similarity measure between
+    r"""Compute Dynamic Time Warping (DTW) similarity measure between
     (possibly multidimensional) time series using a distance metric defined by
     the user and return both the path and the similarity.
 
-    Similarity is computed as the cumulative cost along the wrapped time series.
+    Similarity is computed as the cumulative cost along the wrapped time
+    series.
 
     It is not required that both time series share the same size, but they must
     be the same dimension. DTW was originally presented in [1]_.
 
-    Valid values for metric are the same as for scikit-learn pairwise_distances
-    function (E.G. "euclidean", "sqeuclidean", "hamming").
+    Valid values for metric are the same as for scikit-learn
+    `pairwise_distances`_ function I.E. a string (E.G. "euclidean",
+    "sqeuclidean", "hamming") or a function that is used to compute the
+    pairwise distances. See `scikit`_ and `scipy`_ documentations for more
+    information about the available metrics.
 
     Parameters
     ----------
@@ -276,7 +280,8 @@ def dtw_path_from_metric(s1, s2=None, metric="precomputed",
 
         Alternatively, if metric is a callable function, it is called on pairs
         of rows of `s1` and `s2`. The callable should take two 1 dimensional
-        arrays as input and return a value indicating the distance between them.
+        arrays as input and return a value indicating the distance between
+        them.
 
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
         Global constraint to restrict admissible paths for DTW.
@@ -302,63 +307,67 @@ def dtw_path_from_metric(s1, s2=None, metric="precomputed",
         used.
 
     **kwds
-        Additional arguments to pass to sklearn pairwise_distances function
-        to compute the pairwise distances.
+        Additional arguments to pass to sklearn pairwise_distances to compute
+        the pairwise distances.
 
     Returns
     -------
     list of integer pairs
         Matching path represented as a list of index pairs. In each pair, the
-        first index corresponds to s1 and the second one corresponds to s2
+        first index corresponds to s1 and the second one corresponds to s2.
 
     float
-        Similarity score (sum of metric along the wrapped time series)
+        Similarity score (sum of metric along the wrapped time series).
 
     Examples
     --------
     Lets create 2 numpy arrays to wrap:
+
     >>> import numpy as np
     >>> rng = np.random.RandomState(0)
     >>> s1, s2 = rng.random((5, 2)), rng.random((6, 2))
 
-    The wrapping can be done by passing a string indicating the
-    scipy.spatial.distance function to use:
+    The wrapping can be done by passing a string indicating the metric to pass
+    to scikit-learn pairwise_distances:
+
     >>> dtw_path_from_metric(s1, s2, metric="sqeuclidean")
     [(0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.1177581530156733
 
     Or by defining a custom distance function:
+
     >>> def sqeuclidean(x, y):
     >>>    return(np.sum((x-y)**2))
     >>> dtw_path_from_metric(s1, s2, metric=sqeuclidean)
     [(0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.1177581530156733
 
     Or by using a precomputed distance matrix as input:
-    >>> dist_matrix = cdist(s1, s2, metric="sqeuclidean")
+
+    >>> from sklearn.metrics.pairwise import pairwise_distances
+    >>> dist_matrix = pairwise_distances(s1, s2, metric="sqeuclidean")
     >>> dtw_path_from_metric(dist_matrix, metric="precomputed")
     [(0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.1177581530156733
 
     Notes
     --------
-    By using a squared euclidean distance metric as done above, the output path
-    is the same as the one obtained by using dtw_path but the similarity score
-    is the sum of squared distances instead of the euclidean distance:
-    >>> dtw_path(s1, s2)
-    [(0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.0572408207289734
-    >>> _[1]**2  # Square the second output of dtw_path(s1,s2)
-    1.1177581530156733
-
+    By using a squared euclidean distance metric as shown above, the output
+    path is the same as the one obtained by using dtw_path but the similarity
+    score is the sum of squared distances instead of the euclidean distance.
 
     See Also
     --------
-    dtw_path : Get the DTW score and path using squared distance between points
-    and return both the resulting path and the euclidean distances between
-    the wrapped time series.
+    dtw_path : Get both the matching path and the similarity score for DTW
 
     References
     ----------
     .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
            spoken word recognition," IEEE Transactions on Acoustics, Speech and
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
+
+    .. _pairwise_distances: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.pairwise_distances.html
+
+    .. _scikit: https://scikit-learn.org/stable/modules/metrics.html
+
+    .. _scipy: https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html
 
     """
     if metric == "precomputed":  # Pairwise distance given as input

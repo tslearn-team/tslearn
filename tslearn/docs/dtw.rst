@@ -211,6 +211,32 @@ This is the algorithm at stake when invoking
 :ref:`TimeSeriesKMeans <class-tslearn.clustering.TimeSeriesKMeans>` with
 ``metric="softdtw"``.
 
+DTW using a user-defined distance metric
+--------
+
+The algorithmic solution to the DTW optimization problem can also be applied to
+a distance matrix computed using an user-defined distance metric.
+
+The corresponding code for a compatible distance metric would be:
+
+.. code-block:: python
+
+    from tslearn.metrics import dtw_path_from_metric
+    path, cost = dtw_path_from_metric(x, y, metric=compatible_metric)
+
+Or equivalently by precomputing the distance matrix:
+
+.. code-block:: python
+
+    from tslearn.metrics import dtw_path_from_metric
+    from sklearn.metrics.pairwise import pairwise_distances
+    dist_matrix = pairwise_distances(x, y, metric=compatible_metric)
+    path, cost = dtw_path_from_metric(distance_matrix, metric="precomputed")
+
+In both cases, compatible metrics are the same as for scikit's
+pairwise_distances i.e. either a string referring to an existing metric or a
+function that is used to compute the pairwise distances.
+
 References
 ----------
 

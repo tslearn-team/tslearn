@@ -2,33 +2,35 @@
 """
 DTW computation with a custom distance metric
 ===============
+.. currentmodule:: tslearn.metrics
 
-This example illustrates DTW computation optimal alignment path [1] on a
-distance matrix computed differently from using pairwise euclidean distances.
+This example illustrates how to use the DTW computation of the optimal
+alignment path [1]_ on an user-defined distance matrix using
+:func:`dtw_path_from_metric`.
 
 Left is the DTW of two angular time series using the length of the arc on the
-unit circle as a distance metric [2] and right is the DTW of two
-multidimensional boolean time series using hamming distance [3] as a distance
-metric.
+unit circle as a distance metric [2]_ and right is the DTW of two
+multidimensional boolean time series using hamming distance [3]_.
 
-The images represents cost matrix, that is, on the left the length of the arc
-between the angles on the unit circle and right the hamming distances between
-the multidimensional boolean arrays. Both time series are represented at the
-left and at the top of each cost matrix.
+The images represent cost matrices, that is, on the left the length of the arc
+between each pair of angles on the unit circle and on the right the hamming
+distances between the multidimensional boolean arrays. In both cases, the
+corresponding time series are represented at the left and at the top of each
+cost matrix.
 
-The optimal path, that is the path that minimizes the total cost to go from
-the first time point to the last one, is represented in white on the image.
+The optimal path, that is the path that minimizes the total user-defined cost
+from the first time point to the last one, is represented in white on the
+image.
 
-[1] H. Sakoe and S. Chiba, "Dynamic programming algorithm optimization
-for spoken word recognition". IEEE Transactions on Acoustics, Speech, and
-Signal Processing, 26(1), 43-49 (1978).
+.. [1] H. Sakoe and S. Chiba, "Dynamic programming algorithm optimization
+       for spoken word recognition". IEEE Transactions on Acoustics, Speech,
+       and Signal Processing, 26(1), 43-49 (1978).
 
-[2] Definition of the length of an arc on `Wikipedia <
-https://en.wikipedia.org/wiki/Arc_(geometry)#Length_of_an_arc_of_a_circle>`_.
+.. [2] Definition of the length of an arc on `Wikipedia
+       <https://en.wikipedia.org/wiki/Arc_(geometry)#Length_of_an_arc_of_a_circle>`_.
 
-[3] See Hammig distance in `Scipy's documentation <
-https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.hamming.html
->`_.
+.. [3] See Hammig distance in `Scipy's documentation
+       <https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.hamming.html>`_.
 
 """
 
@@ -48,7 +50,8 @@ from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 np.random.seed(0)
 n_ts, sz = 2, 100
 
-## Example 1 : Length of the arc between two angles on a circle
+
+# Example 1 : Length of the arc between two angles on a circle
 def arc_length(angle_1, angle_2, r=1.):
     "Length of the arc between two angles (in rad) on a circle of radius r."
     # Compute the angle between the two inputs between 0 and 2*pi.
@@ -68,7 +71,7 @@ path_1, sim_1 = metrics.dtw_path_from_metric(
     dataset_scaled_1[0], dataset_scaled_1[1], metric=arc_length
 )
 
-## Example 2 : Hamming distance between 2 multi-dimensional boolean time series
+# Example 2 : Hamming distance between 2 multi-dimensional boolean time series
 rw = random_walks(n_ts=n_ts, sz=sz, d=15, std=.3)
 dataset_2 = np.mod(np.floor(rw), 4) == 0
 
@@ -77,7 +80,7 @@ path_2, sim_2 = metrics.dtw_path_from_metric(
     dataset_2[0], dataset_2[1], metric="hamming"
 )
 
-## Plots
+# Plots
 # Grab the data for the plots
 paths = [path_1, path_2]
 data = [dataset_scaled_1, dataset_2]
@@ -87,7 +90,7 @@ distances_1 = pairwise_distances(
 distances_2 = pairwise_distances(dataset_2[0], dataset_2[1], metric="hamming")
 distances = [distances_1, distances_2]
 
-## Definitions for the axes
+# Definitions for the axes
 left, bottom = [.01, .51], .1
 w_ts, h_ts = .1, .2
 left_h = [l + w_ts + .01 for l in left]
