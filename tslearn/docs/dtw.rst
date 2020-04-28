@@ -85,6 +85,30 @@ simplicity):
        return sqrt(C[n, m])
 
 
+Using a different ground metric
+-------------------------------
+
+By default, ``tslearn`` uses squared Euclidean distance as the base metric
+(i.e. :math:`d(\cdot, \cdot)` in the optimization problem above is the
+Euclidean distance). If one wants to use another ground metric, the code
+would then be:
+
+.. code-block:: python
+
+    from tslearn.metrics import dtw_path_from_metric
+    path, cost = dtw_path_from_metric(x, y, metric=compatible_metric)
+
+
+in which case the optimization problem that would be solved would be:
+
+.. math::
+
+    DTW(x, y) = \min_\pi \sum_{(i, j) \in \pi} \tilde{d}(x_i, y_j)
+
+
+where :math:`\tilde{d}(\cdot, \cdot)` is the user-defined ground metric,
+denoted ``compatible_metric`` in the code snippet above.
+
 
 Properties
 ----------
@@ -210,32 +234,6 @@ Also, barycenters for soft-DTW can be estimated through gradient descent:
 This is the algorithm at stake when invoking
 :ref:`TimeSeriesKMeans <class-tslearn.clustering.TimeSeriesKMeans>` with
 ``metric="softdtw"``.
-
-DTW using a user-defined distance metric
---------
-
-The algorithmic solution to the DTW optimization problem can also be applied to
-a distance matrix computed using an user-defined distance metric.
-
-The corresponding code for a compatible distance metric would be:
-
-.. code-block:: python
-
-    from tslearn.metrics import dtw_path_from_metric
-    path, cost = dtw_path_from_metric(x, y, metric=compatible_metric)
-
-Or equivalently by precomputing the distance matrix:
-
-.. code-block:: python
-
-    from tslearn.metrics import dtw_path_from_metric
-    from sklearn.metrics.pairwise import pairwise_distances
-    dist_matrix = pairwise_distances(x, y, metric=compatible_metric)
-    path, cost = dtw_path_from_metric(distance_matrix, metric="precomputed")
-
-In both cases, compatible metrics are the same as for scikit's
-pairwise_distances i.e. either a string referring to an existing metric or a
-function that is used to compute the pairwise distances.
 
 References
 ----------
