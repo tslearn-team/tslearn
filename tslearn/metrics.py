@@ -242,34 +242,34 @@ def njit_accumulated_matrix_from_dist_matrix(dist_matrix, mask):
     return cum_sum[1:, 1:]
 
 
-def dtw_path_from_metric(s1, s2=None, metric="precomputed",
+def dtw_path_from_metric(s1, s2=None, metric="euclidean",
                          global_constraint=None, sakoe_chiba_radius=None,
                          itakura_max_slope=None, **kwds):
     r"""Compute Dynamic Time Warping (DTW) similarity measure between
     (possibly multidimensional) time series using a distance metric defined by
     the user and return both the path and the similarity.
 
-    Similarity is computed as the cumulative cost along the wrapped time
+    Similarity is computed as the cumulative cost along the aligned time
     series.
 
     It is not required that both time series share the same size, but they must
     be the same dimension. DTW was originally presented in [1]_.
 
     Valid values for metric are the same as for scikit-learn
-    `pairwise_distances`_ function I.E. a string (E.G. "euclidean",
+    `pairwise_distances`_ function i.e. a string (e.g. "euclidean",
     "sqeuclidean", "hamming") or a function that is used to compute the
     pairwise distances. See `scikit`_ and `scipy`_ documentations for more
     information about the available metrics.
 
     Parameters
     ----------
-    s1 : array, shape = (sz1, sz2) if metric=="precomputed", (sz1,) otherwise
-        Array of pairwise distances between samples, or a time series.
+    s1 : array, shape = (sz1, d) if metric!="precomputed", (sz1, sz2) otherwise
+        A time series or an array of pairwise distances between samples.
 
-    s2 : array, shape = (sz2,), optional (default: None)
+    s2 : array, shape = (sz2, d), optional (default: None)
         A second time series, only allowed if metric != "precomputed".
 
-    metric : string or callable (default: "precomputed")
+    metric : string or callable (default: "euclidean")
         Function used to compute the pairwise distances between each points of
         `s1` and `s2`.
 
