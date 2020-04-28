@@ -48,7 +48,7 @@ class TimeSeriesResampler(TransformerMixin):
         """
         return self
 
-    def fit_transform(self, X, **kwargs):
+    def fit_transform(self, X, y=None, **kwargs):
         """Fit to data, then transform it.
 
         Parameters
@@ -63,7 +63,7 @@ class TimeSeriesResampler(TransformerMixin):
         """
         return self.fit(X).transform(X)
 
-    def transform(self, X, **kwargs):
+    def transform(self, X, y=None, **kwargs):
         """Fit to data, then transform it.
 
         Parameters
@@ -153,7 +153,7 @@ class TimeSeriesScalerMinMax(TransformerMixin):
         """
         return self
 
-    def fit_transform(self, X, **kwargs):
+    def fit_transform(self, X, y=None, **kwargs):
         """Fit to data, then transform it.
 
         Parameters
@@ -262,7 +262,7 @@ class TimeSeriesScalerMeanVariance(TransformerMixin):
         """
         return self
 
-    def fit_transform(self, X, **kwargs):
+    def fit_transform(self, X, y=None, **kwargs):
         """Fit to data, then transform it.
 
         Parameters
@@ -277,7 +277,7 @@ class TimeSeriesScalerMeanVariance(TransformerMixin):
         """
         return self.fit(X).transform(X)
 
-    def transform(self, X, **kwargs):
+    def transform(self, X, y=None, **kwargs):
         """Fit to data, then transform it.
 
         Parameters
