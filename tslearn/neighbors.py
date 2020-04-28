@@ -38,6 +38,20 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
 
         return X
 
+    def _get_metric_params(self):
+        if self.metric_params is None:
+            metric_params = {}
+        else:
+            metric_params = self.metric_params.copy()
+        if "gamma_sdtw" in metric_params.keys():
+            metric_params["gamma"] = metric_params["gamma_sdtw"]
+            del metric_params["gamma_sdtw"]
+        if "n_jobs" in metric_params.keys():
+            del metric_params["n_jobs"]
+        if "verbose" in metric_params.keys():
+            del metric_params["verbose"]
+        return metric_params
+
     def _precompute_cross_dist(self, X, other_X=None):
         if other_X is None:
             other_X = self._ts_fit
@@ -45,14 +59,7 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
         self._ts_metric = self.metric
         self.metric = "precomputed"
 
-        if self.metric_params is None:
-            metric_params = {}
-        else:
-            metric_params = self.metric_params.copy()
-            if "n_jobs" in metric_params.keys():
-                del metric_params["n_jobs"]
-            if "verbose" in metric_params.keys():
-                del metric_params["verbose"]
+        metric_params = self._get_metric_params()
 
         X = check_array(X, allow_nd=True, force_all_finite=False)
         X = to_time_series_dataset(X)
@@ -98,14 +105,6 @@ class KNeighborsTimeSeriesMixin(KNeighborsMixin):
         ind : array
             Indices of the nearest points in the population matrix.
         """
-        if self.metric_params is not None:
-            metric_params = self.metric_params.copy()
-            if "n_jobs" in metric_params.keys():
-                del metric_params["n_jobs"]
-            if "verbose" in metric_params.keys():
-                del metric_params["verbose"]
-        else:
-            metric_params = {}
         self_neighbors = False
         if n_neighbors is None:
             n_neighbors = self.n_neighbors
@@ -309,14 +308,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
             self._ts_metric = self.metric
             self.metric = "precomputed"
 
-            if self.metric_params is None:
-                metric_params = {}
-            else:
-                metric_params = self.metric_params.copy()
-                if "n_jobs" in metric_params.keys():
-                    del metric_params["n_jobs"]
-                if "verbose" in metric_params.keys():
-                    del metric_params["verbose"]
+            metric_params = self._get_metric_params()
             check_is_fitted(self, '_ts_fit')
             X = check_array(X, allow_nd=True, force_all_finite=False)
             X = check_dims(X, self._ts_fit.shape, extend=True,
