@@ -48,12 +48,27 @@ class TimeSeriesResampler(TransformerMixin):
         """
         return self
 
+    def fit_transform(self, X, **kwargs):
+        """Fit to data, then transform it.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_ts, sz, d)
+            Time series dataset to be resampled.
+
+        Returns
+        -------
+        numpy.ndarray
+            Resampled time series dataset.
+        """
+        self.fit(X).transform(X)
+
     def transform(self, X, **kwargs):
         """Fit to data, then transform it.
 
         Parameters
         ----------
-        X : array-like
+        X : array-like of shape (n_ts, sz, d)
             Time series dataset to be resampled.
 
         Returns
@@ -138,6 +153,21 @@ class TimeSeriesScalerMinMax(TransformerMixin):
         """
         return self
 
+    def fit_transform(self, X, **kwargs):
+        """Fit to data, then transform it.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_ts, sz, d)
+            Time series dataset to be rescaled.
+
+        Returns
+        -------
+        numpy.ndarray
+            Resampled time series dataset.
+        """
+        self.fit(X).transform(X)
+
     def transform(self, X, y=None, **kwargs):
         """Will normalize (min-max) each of the timeseries. IMPORTANT: this
         transformation is completely stateless, and is applied to each of
@@ -145,7 +175,7 @@ class TimeSeriesScalerMinMax(TransformerMixin):
 
         Parameters
         ----------
-        X : array-like
+        X : array-like of shape (n_ts, sz, d)
             Time series dataset to be rescaled.
 
         Returns
@@ -232,12 +262,27 @@ class TimeSeriesScalerMeanVariance(TransformerMixin):
         """
         return self
 
+    def fit_transform(self, X, **kwargs):
+        """Fit to data, then transform it.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_ts, sz, d)
+            Time series dataset to be rescaled.
+
+        Returns
+        -------
+        numpy.ndarray
+            Resampled time series dataset.
+        """
+        self.fit(X).transform(X)
+
     def transform(self, X, **kwargs):
         """Fit to data, then transform it.
 
         Parameters
         ----------
-        X
+        X : array-like of shape (n_ts, sz, d)
             Time series dataset to be rescaled
 
         Returns
