@@ -65,8 +65,9 @@ def check_dims(X, X_fit_dims=None, extend=True, check_n_features_only=False):
     ...     check_n_features_only=True
     ... )  # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
-    ValueError: Dimensions (except first) must match! ((5, 5, 2) and (10, 3, 1)
-    are passed shapes)
+    ValueError: Number of features of the provided timeseries must match!
+    (last dimension) must match the one of the fitted data!
+    ((5, 5, 2) and (10, 3, 1) are passed shapes)
 
     Raises
     ------
