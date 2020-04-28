@@ -7,7 +7,6 @@ import warnings
 import numpy
 from joblib import Parallel, delayed
 from numba import njit, prange
-import scipy.spatial.distance
 from scipy.spatial.distance import pdist, cdist
 from sklearn.metrics.pairwise import euclidean_distances, pairwise_distances
 from sklearn.utils import check_random_state
@@ -369,7 +368,7 @@ def dtw_path_from_metric(s1, s2=None, metric="euclidean",
 
     .. _scipy: https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html
 
-    """
+    """  # noqa: E501
     if metric == "precomputed":  # Pairwise distance given as input
         sz1, sz2 = s1.shape
         mask = compute_mask(
@@ -815,7 +814,8 @@ def subsequence_path(acc_cost_mat, idx_path_end):
     Parameters
     ----------
     acc_cost_mat: array, shape = (sz1, sz2)
-        The accumulated cost matrix comparing subsequence from a longer sequence
+        The accumulated cost matrix comparing subsequence from a longer
+        sequence
     idx_path_end: int
         The end position of the matched subsequence in the longer sequence.
 
@@ -1132,7 +1132,8 @@ def compute_mask(s1, s2, global_constraint=0,
 
 
 def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
-              sakoe_chiba_radius=None, itakura_max_slope=None, n_jobs=None, verbose=0):
+              sakoe_chiba_radius=None, itakura_max_slope=None, n_jobs=None,
+              verbose=0):
     r"""Compute cross-similarity matrix using Dynamic Time Warping (DTW)
     similarity measure.
 
@@ -1216,7 +1217,7 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
            spoken word recognition," IEEE Transactions on Acoustics, Speech and
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
 
-    """ # noqa: E501
+    """  # noqa: E501
     dataset1 = to_time_series_dataset(dataset1)
 
     if dataset2 is None:
@@ -1224,7 +1225,9 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
         # https://github.com/rtavenar/tslearn/pull/128#discussion_r314978479
         matrix = numpy.zeros((len(dataset1), len(dataset1)))
         indices = numpy.triu_indices(len(dataset1), k=1, m=len(dataset1))
-        matrix[indices] = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
+        matrix[indices] = Parallel(n_jobs=n_jobs,
+                                   prefer="threads",
+                                   verbose=verbose)(
             delayed(dtw)(
                 dataset1[i], dataset1[j],
                 global_constraint=global_constraint,
@@ -1414,7 +1417,7 @@ def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None, verbose=0):
     References
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
-    """ # noqa: E501
+    """  # noqa: E501
     dataset1 = to_time_series_dataset(dataset1)
 
     if dataset2 is None:
@@ -1422,7 +1425,9 @@ def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None, verbose=0):
         # https://github.com/rtavenar/tslearn/pull/128#discussion_r314978479
         matrix = numpy.zeros((len(dataset1), len(dataset1)))
         indices = numpy.triu_indices(len(dataset1), k=0, m=len(dataset1))
-        matrix[indices] = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
+        matrix[indices] = Parallel(n_jobs=n_jobs,
+                                   prefer="threads",
+                                   verbose=verbose)(
             delayed(unnormalized_gak)(dataset1[i], dataset1[j], sigma=sigma)
             for i in range(len(dataset1)) for j in range(i, len(dataset1))
         )
@@ -1437,11 +1442,15 @@ def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None, verbose=0):
             for i in range(len(dataset1)) for j in range(len(dataset2))
         )
         matrix = numpy.array(matrix).reshape((len(dataset1), -1))
-        diagonal_left = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
+        diagonal_left = Parallel(n_jobs=n_jobs,
+                                 prefer="threads",
+                                 verbose=verbose)(
             delayed(unnormalized_gak)(dataset1[i], dataset1[i], sigma=sigma)
             for i in range(len(dataset1))
         )
-        diagonal_right = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
+        diagonal_right = Parallel(n_jobs=n_jobs,
+                                  prefer="threads",
+                                  verbose=verbose)(
             delayed(unnormalized_gak)(dataset2[j], dataset2[j], sigma=sigma)
             for j in range(len(dataset2))
         )
