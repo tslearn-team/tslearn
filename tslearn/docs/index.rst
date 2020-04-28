@@ -1,10 +1,60 @@
-.. tslearn documentation master file, created by
-   sphinx-quickstart on Mon May  8 21:34:49 2017.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. raw:: html
+
+    <style type="text/css">
+    @media screen and (min-width: 768px) and (max-width: 992px) {
+        .navbar-form .form-control {
+            display: none;
+        }
+    }
+
+    .thumbnail {
+        position: relative;
+        float: left;
+        margin: 10px;
+        width: 160px;
+        height: 160px;
+    }
+
+    .thumbnail img {
+        position: absolute;
+        display: inline;
+        left: 0;
+        width: 150px;
+        height: 150px;
+    }
+
+    </style>
 
 ``tslearn``'s documentation
 ===========================
+
+.. raw:: html
+
+    <div style="clear: both"></div>
+    <div class="container-fluid hidden-xs hidden-sm">
+      <div class="row">
+        <a href="auto_examples/metrics/plot_dtw.html">
+          <div class="col-md-2 thumbnail">
+            <img src="_static/img/dtw_thumb.png">
+          </div>
+        </a>
+        <a href="auto_examples/clustering/plot_barycenter_interpolate.html">
+          <div class="col-md-2 thumbnail">
+            <img src="_static/img/bary_interp_thumb.png">
+          </div>
+        </a>
+        <a href="auto_examples/clustering/plot_kmeans.html">
+          <div class="col-md-2 thumbnail">
+            <img src="_static/img/kmeans_thumb.png">
+          </div>
+        </a>
+        <a href="auto_examples/misc/plot_sax.html">
+          <div class="col-md-2 thumbnail">
+            <img src="_static/img/sax_thumb.png">
+          </div>
+        </a>
+      </div>
+    </div>
 
 ``tslearn`` is a Python package that provides machine learning tools for the
 analysis of time series.
