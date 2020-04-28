@@ -25,7 +25,7 @@ VARIABLE_LENGTH_METRICS = ["dtw", "gak", "softdtw"]
 @njit()
 def _local_squared_dist(x, y):
     dist = 0.
-    for di in prange(x.shape[0]):
+    for di in range(x.shape[0]):
         diff = (x[di] - y[di])
         dist += diff * diff
     return dist
@@ -57,8 +57,8 @@ def njit_accumulated_matrix(s1, s2, mask):
     cum_sum = numpy.full((l1 + 1, l2 + 1), numpy.inf)
     cum_sum[0, 0] = 0.
 
-    for i in prange(l1):
-        for j in prange(l2):
+    for i in range(l1):
+        for j in range(l2):
             if numpy.isfinite(mask[i, j]):
                 cum_sum[i + 1, j + 1] = _local_squared_dist(s1[i], s2[j])
                 cum_sum[i + 1, j + 1] += min(cum_sum[i, j + 1],
@@ -571,8 +571,8 @@ def _subsequence_cost_matrix(subseq, longseq):
     cum_sum = numpy.full((l1 + 1, l2 + 1), numpy.inf)
     cum_sum[0, :] = 0.
 
-    for i in prange(l1):
-        for j in prange(l2):
+    for i in range(l1):
+        for j in range(l2):
             cum_sum[i + 1, j + 1] = _local_squared_dist(subseq[i], longseq[j])
             cum_sum[i + 1, j + 1] += min(cum_sum[i, j + 1],
                                          cum_sum[i + 1, j],
@@ -1066,8 +1066,8 @@ def njit_gak(s1, s2, gram):
     cum_sum = numpy.zeros((l1 + 1, l2 + 1))
     cum_sum[0, 0] = 1.
 
-    for i in prange(l1):
-        for j in prange(l2):
+    for i in range(l1):
+        for j in range(l2):
             cum_sum[i + 1, j + 1] = (cum_sum[i, j + 1] +
                                      cum_sum[i + 1, j] +
                                      cum_sum[i, j]) * gram[i, j]
