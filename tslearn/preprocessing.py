@@ -61,7 +61,7 @@ class TimeSeriesResampler(TransformerMixin):
         numpy.ndarray
             Resampled time series dataset.
         """
-        self.fit(X).transform(X)
+        return self.fit(X).transform(X)
 
     def transform(self, X, **kwargs):
         """Fit to data, then transform it.
@@ -166,7 +166,7 @@ class TimeSeriesScalerMinMax(TransformerMixin):
         numpy.ndarray
             Resampled time series dataset.
         """
-        self.fit(X).transform(X)
+        return self.fit(X).transform(X)
 
     def transform(self, X, y=None, **kwargs):
         """Will normalize (min-max) each of the timeseries. IMPORTANT: this
@@ -275,7 +275,7 @@ class TimeSeriesScalerMeanVariance(TransformerMixin):
         numpy.ndarray
             Resampled time series dataset.
         """
-        self.fit(X).transform(X)
+        return self.fit(X).transform(X)
 
     def transform(self, X, **kwargs):
         """Fit to data, then transform it.
