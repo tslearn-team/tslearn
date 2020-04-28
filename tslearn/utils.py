@@ -59,7 +59,11 @@ def check_dims(X, X_fit_dims=None, extend=True, check_n_features_only=False):
     >>> check_dims(X, X_fit_dims, check_n_features_only=True).shape
     (10, 3, 1)
     >>> X_fit_dims = (5, 5, 2)
-    >>> check_dims(X, X_fit_dims, check_n_features_only=True)  # doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> check_dims(
+    ...     X,
+    ...     X_fit_dims,
+    ...     check_n_features_only=True
+    ... )  # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ValueError: Dimensions (except first) must match! ((5, 5, 2) and (10, 3, 1)
     are passed shapes)
@@ -78,7 +82,6 @@ def check_dims(X, X_fit_dims=None, extend=True, check_n_features_only=False):
         warnings.warn('2-Dimensional data passed. Assuming these are '
                       '{} 1-dimensional timeseries'.format(X.shape[0]))
         X = X.reshape((X.shape) + (1,))
-
 
     if X_fit_dims is not None:
         if check_n_features_only:
