@@ -25,7 +25,7 @@ time series:
   find a barycenter [3]. The method itself and the parameter
   :math:`\\gamma=1.0` is described in more detail in the section on
   :ref:`DTW<dtw>`. There is also a dedicated
-  :ref:`example<sphx_glr_auto_examples_plot_barycenter_interpolate.py>`
+  :ref:`example<sphx_glr_auto_examples_clustering_plot_barycenter_interpolate.py>`
   available.
 
 [1] F. Petitjean, A. Ketterlin & P. Gancarski. A global averaging method for

@@ -41,6 +41,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
+    'sphinx.ext.intersphinx',
     'sphinx_gallery.gen_gallery',
     'nbsphinx'
 ]
@@ -50,14 +51,20 @@ numpydoc_class_members_toctree = False
 
 autosummary_generate = True
 
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/{.major}'.format(
+        sys.version_info), None),
+    'numpy': ('https://numpy.org/doc/stable', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
+    'matplotlib': ('https://matplotlib.org/', None),
+    'sklearn': ('http://scikit-learn.org/stable', None)
+}
+
 sphinx_gallery_conf = {
     'examples_dirs': ['./examples'],
     'gallery_dirs': ['./auto_examples'],
-    'reference_url':  {'tslearn': None,
-                       # 'matplotlib': 'http://matplotlib.org',
-                       # 'numpy': 'http://docs.scipy.org/doc/numpy-1.9.1'
-                       },
-    # 'default_thumb_file': 'fig/logo.png',
+    'reference_url':  {'tslearn': None},
+    'default_thumb_file': '_static/img/logo.png',
     'backreferences_dir': 'gen_modules/backreferences',
     'doc_module': ('tslearn',),
     'subsection_order': ["examples", "examples/metrics", "examples/neighbors",
