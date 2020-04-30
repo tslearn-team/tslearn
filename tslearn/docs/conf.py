@@ -19,7 +19,6 @@ import sphinx_bootstrap_theme
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-# Uncomment for local build
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
 if not on_rtd:
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
@@ -35,14 +34,13 @@ if not on_rtd:
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
-    'numpydoc',
     'sphinx.ext.doctest',
-    'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
-    'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.linkcode',
     'sphinx_gallery.gen_gallery',
+    'numpydoc',
     'nbsphinx'
 ]
 
@@ -355,3 +353,29 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+# The following is used by sphinx.ext.linkcode to provide links to github
+def linkcode_resolve(domain, info):
+    def find_source():
+        # try to find the file and line number, based on code from numpy:
+        # https://github.com/numpy/numpy/blob/master/doc/source/conf.py#L286
+        obj = sys.modules[info['module']]
+        for part in info['fullname'].split('.'):
+            obj = getattr(obj, part)
+        import inspect
+        import os
+        fn = inspect.getsourcefile(obj)
+        fn = os.path.relpath(fn, start=os.path.dirname(tslearn.__file__))
+        source, lineno = inspect.getsourcelines(obj)
+        return fn, lineno, lineno + len(source) - 1
+
+    if domain != 'py' or not info['module']:
+        return None
+    try:
+        filename = 'tslearn/%s#L%d-L%d' % find_source()
+    except Exception:
+        filename = info['module'].replace('.', '/') + '.py'
+    # tag = 'master' if 'dev' in release else ('v' + release)
+    tag = "master"
+    return "https://github.com/tslearn-team/tslearn/blob/%s/%s" % (tag,
+                                                                   filename)
