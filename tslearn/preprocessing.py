@@ -5,6 +5,7 @@ The :mod:`tslearn.preprocessing` module gathers time series scalers.
 import numpy
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_array
+from sklearn.utils.validation import check_is_fitted
 from scipy.interpolate import interp1d
 import warnings
 
@@ -186,9 +187,10 @@ class TimeSeriesScalerMinMax(BaseEstimator, TransformerMixin):
             raise ValueError("Minimum of desired range must be smaller"
                              " than maximum. Got %s." % str(value_range))
 
+        check_is_fitted(self, '_X_fit_dims')
         X = check_array(X, allow_nd=True, force_all_finite=False)
         X_ = to_time_series_dataset(X)
-        X_ = check_dims(X_, self._X_fit_dims, extend=False)
+        X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, extend=False)
         min_t = numpy.nanmin(X_, axis=1)[:, numpy.newaxis, :]
         max_t = numpy.nanmax(X_, axis=1)[:, numpy.newaxis, :]
         range_t = max_t - min_t
@@ -266,9 +268,10 @@ class TimeSeriesScalerMeanVariance(BaseEstimator, TransformerMixin):
         numpy.ndarray
             Rescaled time series dataset
         """
+        check_is_fitted(self, '_X_fit_dims')
         X = check_array(X, allow_nd=True, force_all_finite=False)
         X_ = to_time_series_dataset(X)
-        X_ = check_dims(X_, self._X_fit_dims, extend=False)
+        X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, extend=False)
         mean_t = numpy.nanmean(X_, axis=1)[:, numpy.newaxis, :]
         std_t = numpy.nanstd(X_, axis=1)[:, numpy.newaxis, :]
         std_t[std_t == 0.] = 1.

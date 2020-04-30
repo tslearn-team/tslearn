@@ -266,7 +266,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
                         allow_nd=True,
                         force_all_finite=(self.metric != "precomputed"))
         X = to_time_series_dataset(X)
-        X = check_dims(X, X_fit_dims=None)
+        X = check_dims(X)
         if self.metric == "precomputed" and hasattr(self, '_ts_metric'):
             self._ts_fit = X
             self._d = X.shape[2]
@@ -311,7 +311,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
             metric_params = self._get_metric_params()
             check_is_fitted(self, '_ts_fit')
             X = check_array(X, allow_nd=True, force_all_finite=False)
-            X = check_dims(X, self._ts_fit.shape, extend=True,
+            X = check_dims(X, X_fit_dims=self._ts_fit.shape, extend=True,
                            check_n_features_only=True)
             if self._ts_metric == "dtw":
                 X_ = cdist_dtw(X, self._ts_fit, n_jobs=self.n_jobs,
@@ -336,7 +336,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
                 X = check_array(X, allow_nd=True)
                 X = to_time_series_dataset(X)
                 X_ = to_sklearn_dataset(X)
-                X_ = check_dims(X_, self._X_fit.shape, extend=False)
+                X_ = check_dims(X_, X_fit_dims=self._X_fit.shape, extend=False)
             return KNeighborsTimeSeriesMixin.kneighbors(
                 self,
                 X=X_,
@@ -471,7 +471,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
                         allow_nd=True,
                         force_all_finite=(self.metric != "precomputed"))
         X = to_time_series_dataset(X)
-        X = check_dims(X, X_fit_dims=None)
+        X = check_dims(X)
         if self.metric == "precomputed" and hasattr(self, '_ts_metric'):
             self._ts_fit = X
             if self._ts_metric == 'sax':
@@ -509,7 +509,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         if self.metric in TSLEARN_VALID_METRICS:
             check_is_fitted(self, '_ts_fit')
             X = to_time_series_dataset(X)
-            X = check_dims(X, self._ts_fit.shape, extend=True,
+            X = check_dims(X, X_fit_dims=self._ts_fit.shape, extend=True,
                            check_n_features_only=True)
             X_ = self._precompute_cross_dist(X)
             pred = super(KNeighborsTimeSeriesClassifier, self).predict(X_)
@@ -520,7 +520,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             X = check_array(X, allow_nd=True)
             X = to_time_series_dataset(X)
             X_ = to_sklearn_dataset(X)
-            X_ = check_dims(X_, self._X_fit.shape, extend=False)
+            X_ = check_dims(X_, X_fit_dims=self._X_fit.shape, extend=False)
             return super(KNeighborsTimeSeriesClassifier, self).predict(X_)
 
     def predict_proba(self, X):
@@ -538,7 +538,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         """
         if self.metric in TSLEARN_VALID_METRICS:
             check_is_fitted(self, '_ts_fit')
-            X = check_dims(X, self._ts_fit.shape, extend=True,
+            X = check_dims(X, X_fit_dims=self._ts_fit.shape, extend=True,
                            check_n_features_only=True)
             X_ = self._precompute_cross_dist(X)
             pred = super(KNeighborsTimeSeriesClassifier,
@@ -550,7 +550,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             X = check_array(X, allow_nd=True)
             X = to_time_series_dataset(X)
             X_ = to_sklearn_dataset(X)
-            X_ = check_dims(X_, self._X_fit.shape, extend=False)
+            X_ = check_dims(X_, X_fit_dims=self._X_fit.shape, extend=False)
             return super(KNeighborsTimeSeriesClassifier,
                          self).predict_proba(X_)
 
@@ -664,7 +664,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
                         allow_nd=True,
                         force_all_finite=(self.metric != "precomputed"))
         X = to_time_series_dataset(X)
-        X = check_dims(X, X_fit_dims=None)
+        X = check_dims(X)
         if self.metric == "precomputed" and hasattr(self, '_ts_metric'):
             self._ts_fit = X
             self._d = X.shape[2]
@@ -693,7 +693,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         if self.metric in TSLEARN_VALID_METRICS:
             check_is_fitted(self, '_ts_fit')
             X = to_time_series_dataset(X)
-            X = check_dims(X, self._ts_fit.shape, extend=True,
+            X = check_dims(X, X_fit_dims=self._ts_fit.shape, extend=True,
                            check_n_features_only=True)
             X_ = self._precompute_cross_dist(X)
             pred = super(KNeighborsTimeSeriesRegressor, self).predict(X_)
@@ -704,7 +704,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
             X = check_array(X, allow_nd=True)
             X = to_time_series_dataset(X)
             X_ = to_sklearn_dataset(X)
-            X_ = check_dims(X_, self._X_fit.shape, extend=False)
+            X_ = check_dims(X_, X_fit_dims=self._X_fit.shape, extend=False)
             return super(KNeighborsTimeSeriesRegressor, self).predict(X_)
 
     def _get_tags(self):

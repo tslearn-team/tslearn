@@ -478,7 +478,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, BaseModelPackage,
         """
 
         X = check_array(X, allow_nd=True, force_all_finite=False)
-        X = check_dims(X, X_fit_dims=None)
+        X = check_dims(X)
 
         if sample_weight is not None:
             sample_weight = check_array(sample_weight, ensure_2d=False)
@@ -582,7 +582,8 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, BaseModelPackage,
         """
         X = check_array(X, allow_nd=True, force_all_finite=False)
         check_is_fitted(self, '_X_fit')
-        X = check_dims(X, self._X_fit.shape, check_n_features_only=True)
+        X = check_dims(X, X_fit_dims=self._X_fit.shape,
+                       check_n_features_only=True)
         K = self._get_kernel(X, self._X_fit)
         n_samples = X.shape[0]
         dist = numpy.zeros((n_samples, self.n_clusters))
@@ -777,14 +778,13 @@ class TimeSeriesKMeans(BaseEstimator, BaseModelPackage, ClusterMixin,
 
     def _fit_one_init(self, X, x_squared_norms, rs):
         metric_params = self._get_metric_params()
-        n_ts, _, d = X.shape
-        sz = min([ts_size(ts) for ts in X])
+        n_ts, sz, d = X.shape
         if hasattr(self.init, '__array__'):
             self.cluster_centers_ = self.init.copy()
         elif self.init == "k-means++":
             if self.metric == "euclidean":
                 self.cluster_centers_ = _k_init(
-                    X[:, :sz, :].reshape((n_ts, -1)),
+                    X.reshape((n_ts, -1)),
                     self.n_clusters,
                     x_squared_norms,
                     rs
@@ -894,8 +894,10 @@ class TimeSeriesKMeans(BaseEstimator, BaseModelPackage, ClusterMixin,
 
         X = check_array(X, allow_nd=True, force_all_finite='allow-nan')
 
-        if hasattr(self.init, '__array__') and self.metric == "euclidean":
-            X = check_dims(X, X_fit_dims=self.init.shape, extend=True)
+        if hasattr(self.init, '__array__'):
+            X = check_dims(X, X_fit_dims=self.init.shape,
+                           extend=True,
+                           check_n_features_only=(self.metric != "euclidean"))
 
 
         self.labels_ = None
@@ -913,9 +915,8 @@ class TimeSeriesKMeans(BaseEstimator, BaseModelPackage, ClusterMixin,
 
         if self.init == "k-means++" and self.metric == "euclidean":
             n_ts, sz, d = X_.shape
-            min_sz = min([ts_size(ts) for ts in X_])
-            x_squared_norms = cdist(X_[:, :min_sz].reshape((n_ts, -1)),
-                                    numpy.zeros((1, min_sz * d)),
+            x_squared_norms = cdist(X_.reshape((n_ts, -1)),
+                                    numpy.zeros((1, sz * d)),
                                     metric="sqeuclidean").reshape((1, -1))
         else:
             x_squared_norms = None
@@ -980,11 +981,9 @@ class TimeSeriesKMeans(BaseEstimator, BaseModelPackage, ClusterMixin,
         """
         X = check_array(X, allow_nd=True, force_all_finite='allow-nan')
         check_is_fitted(self, 'cluster_centers_')
-        if self.metric == "euclidean":
-            X = check_dims(X, self.cluster_centers_.shape, extend=True)
-        else:
-            X = check_dims(X, self.cluster_centers_.shape, extend=True,
-                           check_n_features_only=True)
+        X = check_dims(X, X_fit_dims=self.cluster_centers_.shape,
+                       extend=True,
+                       check_n_features_only=(self.metric != "euclidean"))
         return self._assign(X, update_class_attributes=False)
 
     def _get_tags(self):
@@ -1274,7 +1273,7 @@ class KShape(BaseEstimator, BaseModelPackage, ClusterMixin,
         check_is_fitted(self,
                         ['cluster_centers_', 'norms_', 'norms_centroids_'])
 
-        X_ = check_dims(X, self.cluster_centers_.shape)
+        X_ = check_dims(X, X_fit_dims=self.cluster_centers_.shape)
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
         dists = self._cross_dists(X_)
         return dists.argmin(axis=1)
