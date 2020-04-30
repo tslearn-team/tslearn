@@ -16,8 +16,11 @@
     <a href="http://tslearn.readthedocs.io/en/latest/?badge=latest">
         <img alt="Documentation" src="https://readthedocs.org/projects/tslearn/badge/?version=latest">
     </a>
+    <a href="https://dev.azure.com/romaintavenard/tslearn/_build">
+        <img alt="Build (Azure Pipelines)" src="https://dev.azure.com/romaintavenard/tslearn/_apis/build/status/tslearn-team.tslearn?branchName=master">
+    </a>
     <a href="https://travis-ci.com/tslearn-team/tslearn">
-        <img alt="Build" src="https://travis-ci.com/tslearn-team/tslearn.svg?branch=master">
+        <img alt="Build (Travis CI)" src="https://travis-ci.com/tslearn-team/tslearn.svg?branch=master">
     </a>
     <a href="https://codecov.io/gh/tslearn-team/tslearn">
         <img alt="Codecov" src="https://codecov.io/gh/tslearn-team/tslearn/branch/master/graph/badge.svg">
