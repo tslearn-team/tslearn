@@ -16,8 +16,8 @@
     <a href="http://tslearn.readthedocs.io/en/latest/?badge=latest">
         <img alt="Documentation" src="https://readthedocs.org/projects/tslearn/badge/?version=latest">
     </a>
-    <a href="https://travis-ci.org/rtavenar/tslearn">
-        <img alt="Build" src="https://travis-ci.org/rtavenar/tslearn.svg?branch=master">
+    <a href="https://travis-ci.com/tslearn-team/tslearn">
+        <img alt="Build" src="https://travis-ci.com/tslearn-team/tslearn.svg?branch=master">
     </a>
     <a href="https://codecov.io/gh/rtavenar/tslearn">
         <img alt="Codecov" src="https://codecov.io/gh/rtavenar/tslearn/branch/master/graph/badge.svg">
