@@ -8,10 +8,15 @@ from sklearn.utils import column_or_1d, check_array
 from sklearn.utils.validation import check_is_fitted
 import warnings
 
+try:
+    from sklearn.utils.estimator_checks import _NotAnArray as NotAnArray
+except ImportError:  # Old sklearn versions
+    from sklearn.utils.estimator_checks import NotAnArray
+
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
-def check_dims(X, X_fit_dims=None, extend=True):
+def check_dims(X, X_fit_dims=None, extend=True, check_n_features_only=False):
     """Reshapes X to a 3-dimensional array of X.shape[0] univariate
     timeseries of length X.shape[1] if X is 2-dimensional and extend
     is True. Then checks whether the provided X_fit_dims and the
@@ -27,6 +32,7 @@ def check_dims(X, X_fit_dims=None, extend=True):
         If None, then only perform reshaping of X, if necessary.
     extend : boolean (default: True)
         Whether to reshape X, if it is 2-dimensional.
+    check_n_features_only: boolean (default: False)
 
     Returns
     -------
@@ -49,6 +55,19 @@ def check_dims(X, X_fit_dims=None, extend=True):
     Traceback (most recent call last):
     ValueError: Dimensions (except first) must match! ((5, 3, 2) and (10, 3, 1)
     are passed shapes)
+    >>> X_fit_dims = (5, 5, 1)
+    >>> check_dims(X, X_fit_dims, check_n_features_only=True).shape
+    (10, 3, 1)
+    >>> X_fit_dims = (5, 5, 2)
+    >>> check_dims(
+    ...     X,
+    ...     X_fit_dims,
+    ...     check_n_features_only=True
+    ... )  # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+    ValueError: Number of features of the provided timeseries must match!
+    (last dimension) must match the one of the fitted data!
+    ((5, 5, 2) and (10, 3, 1) are passed shapes)
 
     Raises
     ------
@@ -65,11 +84,21 @@ def check_dims(X, X_fit_dims=None, extend=True):
                       '{} 1-dimensional timeseries'.format(X.shape[0]))
         X = X.reshape((X.shape) + (1,))
 
-    if X_fit_dims is not None and X_fit_dims[1:] != X.shape[1:]:
-        raise ValueError('Dimensions of the provided timeseries'
-                         '(except first) must match those of the fitted data!'
-                         ' ({} and {} are passed shapes)'.format(X_fit_dims,
-                                                                 X.shape))
+    if X_fit_dims is not None:
+        if check_n_features_only:
+            if X_fit_dims[2] != X.shape[2]:
+                raise ValueError(
+                    'Number of features of the provided timeseries'
+                    '(last dimension) must match the one of the fitted data!'
+                    ' ({} and {} are passed shapes)'.format(X_fit_dims,
+                                                            X.shape))
+        else:
+            if X_fit_dims[1:] != X.shape[1:]:
+                raise ValueError(
+                    'Dimensions of the provided timeseries'
+                    '(except first) must match those of the fitted data!'
+                    ' ({} and {} are passed shapes)'.format(X_fit_dims,
+                                                            X.shape))
 
     return X
 
@@ -185,6 +214,8 @@ def to_time_series_dataset(dataset, dtype=numpy.float):
     --------
     to_time_series : Transforms a single time series
     """
+    if isinstance(dataset, NotAnArray):  # Patch to pass sklearn tests
+        dataset = numpy.array(dataset)
     if len(dataset) == 0:
         return numpy.zeros((0, 0, 0))
     if numpy.array(dataset[0]).ndim == 0:
