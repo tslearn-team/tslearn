@@ -123,11 +123,11 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
     similarity.
 
     DTW is computed as the Euclidean distance between aligned time series,
-    i.e., if :math:`P` is the alignment path:
+    i.e., if :math:`\pi` is the alignment path:
 
     .. math::
 
-        DTW(X, Y) = \sqrt{\sum_{(i, j) \in P} (X_{i} - Y_{j})^2}
+        DTW(X, Y) = \sqrt{\sum_{(i, j) \in \pi} (X_{i} - Y_{j})^2}
 
     It is not required that both time series share the same size, but they must
     be the same dimension. DTW was originally presented in [1]_.
@@ -213,11 +213,11 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
     (possibly multidimensional) time series and return it.
 
     DTW is computed as the Euclidean distance between aligned time series,
-    i.e., if :math:`P` is the optimal alignment path:
+    i.e., if :math:`\pi` is the optimal alignment path:
 
     .. math::
 
-        DTW(X, Y) = \sqrt{\sum_{(i, j) \in P} \|X_{i} - Y_{j}\|^2}
+        DTW(X, Y) = \sqrt{\sum_{(i, j) \in \pi} \|X_{i} - Y_{j}\|^2}
 
     Note that this formula is still valid for the multivariate case.
 
@@ -377,11 +377,11 @@ def dtw_limited_warping_length(s1, s2, max_length):
     the resulting path length and return the similarity cost.
 
     DTW is computed as the Euclidean distance between aligned time series,
-    i.e., if :math:`P` is the optimal alignment path:
+    i.e., if :math:`\pi` is the optimal alignment path:
 
     .. math::
 
-        DTW(X, Y) = \sqrt{\sum_{(i, j) \in P} \|X_{i} - Y_{j}\|^2}
+        DTW(X, Y) = \sqrt{\sum_{(i, j) \in \pi} \|X_{i} - Y_{j}\|^2}
 
     Note that this formula is still valid for the multivariate case.
 
@@ -478,11 +478,11 @@ def dtw_path_limited_warping_length(s1, s2, max_length):
     cost.
 
     DTW is computed as the Euclidean distance between aligned time series,
-    i.e., if :math:`P` is the optimal alignment path:
+    i.e., if :math:`\pi` is the optimal alignment path:
 
     .. math::
 
-        DTW(X, Y) = \sqrt{\sum_{(i, j) \in P} \|X_{i} - Y_{j}\|^2}
+        DTW(X, Y) = \sqrt{\sum_{(i, j) \in \pi} \|X_{i} - Y_{j}\|^2}
 
     Note that this formula is still valid for the multivariate case.
 
@@ -669,16 +669,16 @@ def dtw_subsequence_path(subseq, longseq):
     return both the path and the similarity.
 
     DTW is computed as the Euclidean distance between aligned time series,
-    i.e., if :math:`P` is the alignment path:
+    i.e., if :math:`\pi` is the alignment path:
 
     .. math::
 
-        DTW(X, Y) = \sqrt{\sum_{(i, j) \in P} (X_{i} - Y_{j})^2}
+        DTW(X, Y) = \sqrt{\sum_{(i, j) \in \pi} \|X_{i} - Y_{j}\|^2}
 
     Compared to traditional DTW, here, border constraints on admissible paths
-    :math:`P` are relaxed such that :math:`P_0 = (0, ?)` and
-    :math:`P_L = (N-1, ?)` where :math:`L` is the length of the considered path
-    and :math:`N` is the length of the subsequence time series.
+    :math:`\pi` are relaxed such that :math:`\pi_0 = (0, ?)` and
+    :math:`\pi_L = (N-1, ?)` where :math:`L` is the length of the considered
+    path and :math:`N` is the length of the subsequence time series.
 
     It is not required that both time series share the same size, but they must
     be the same dimension. This implementation finds the best matching starting
@@ -949,11 +949,11 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
     similarity measure.
 
     DTW is computed as the Euclidean distance between aligned time series,
-    i.e., if :math:`P` is the alignment path:
+    i.e., if :math:`\pi` is the alignment path:
 
     .. math::
 
-        DTW(X, Y) = \sqrt{\sum_{(i, j) \in P} (X_{i} - Y_{j})^2}
+        DTW(X, Y) = \sqrt{\sum_{(i, j) \in \pi} (X_{i} - Y_{j})^2}
 
     DTW was originally presented in [1]_.
 
@@ -1280,7 +1280,7 @@ def sigma_gak(dataset, n_samples=100, random_state=None):
     Returns
     -------
     float
-        Suggested bandwidth (:math:`\\sigma`) for the Global Alignment kernel
+        Suggested bandwidth (:math:`\sigma`) for the Global Alignment kernel
 
     Examples
     --------
@@ -1334,7 +1334,7 @@ def gamma_soft_dtw(dataset, n_samples=100, random_state=None):
     Returns
     -------
     float
-        Suggested :math:`\\gamma` parameter for the Soft-DTW
+        Suggested :math:`\gamma` parameter for the Soft-DTW
 
     Examples
     --------
@@ -1508,6 +1508,20 @@ def soft_dtw(ts1, ts2, gamma=1.):
 
     Soft-DTW was originally presented in [1]_.
 
+    Soft-DTW is computed as:
+
+    .. math::
+
+        \text{soft-DTW}_{\gamma}(X, Y) =
+            \min_{\pi}{}^\gamma \sum_{(i, j) \in \pi} \|X_i, Y_j\|^2
+
+    where :math:`\min^\gamma` is the soft-min operator of parameter
+    :math:`\gamma`.
+
+    In the limit case :math:`\gamma = 0`, :math:`\min^\gamma` reduces to a
+    hard-min operator and soft-DTW is defined as the square of the DTW
+    similarity measure.
+
     Parameters
     ----------
     ts1
@@ -1543,7 +1557,7 @@ def soft_dtw(ts1, ts2, gamma=1.):
        Time-Series," ICML 2017.
     """
     if gamma == 0.:
-        return dtw(ts1, ts2)
+        return dtw(ts1, ts2) ** 2
     return SoftDTW(SquaredEuclidean(ts1[:ts_size(ts1)], ts2[:ts_size(ts2)]),
                    gamma=gamma).compute()
 
@@ -1552,6 +1566,20 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
     r"""Compute cross-similarity matrix using Soft-DTW metric.
 
     Soft-DTW was originally presented in [1]_.
+
+    Soft-DTW is computed as:
+
+    .. math::
+
+        \text{soft-DTW}_{\gamma}(X, Y) =
+            \min_{\pi}{}^\gamma \sum_{(i, j) \in \pi} \|X_i, Y_j\|^2
+
+    where :math:`\min^\gamma` is the soft-min operator of parameter
+    :math:`\gamma`.
+
+    In the limit case :math:`\gamma = 0`, :math:`\min^\gamma` reduces to a
+    hard-min operator and soft-DTW is defined as the square of the DTW
+    similarity measure.
 
     Parameters
     ----------
@@ -1617,21 +1645,45 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
 
 
 def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.):
-    """Compute cross-similarity matrix using a normalized version of the
+    r"""Compute cross-similarity matrix using a normalized version of the
     Soft-DTW metric.
 
     Soft-DTW was originally presented in [1]_.
+
+    Soft-DTW is computed as:
+
+    .. math::
+
+        \text{soft-DTW}_{\gamma}(X, Y) =
+            \min_{\pi}{}^\gamma \sum_{(i, j) \in \pi} \|X_i, Y_j\|^2
+
+    where :math:`\min^\gamma` is the soft-min operator of parameter
+    :math:`\gamma`.
+
+    In the limit case :math:`\gamma = 0`, :math:`\min^\gamma` reduces to a
+    hard-min operator and soft-DTW is defined as the square of the DTW
+    similarity measure.
+
     This normalized version is defined as:
-    `sdtw_(x,y) := sdtw(x,y) - 1/2(sdtw(x,x)+sdtw(y,y))`
+
+    .. math::
+
+        \text{norm-soft-DTW}_{\gamma}(X, Y) =
+            \text{soft-DTW}_{\gamma}(X, Y) -
+            \frac{1}{2} \left(\text{soft-DTW}_{\gamma}(X, X) +
+                \text{soft-DTW}_{\gamma}(Y, Y)\right)
+
     and ensures that all returned values are positive and that
-    `sdtw_(x,x) == 0`.
+    :math:`\text{norm-soft-DTW}_{\gamma}(X, X) = 0`.
 
     Parameters
     ----------
     dataset1
         A dataset of time series
+
     dataset2
         Another dataset of time series
+
     gamma : float (default 1.)
         Gamma paraneter for Soft-DTW
 
