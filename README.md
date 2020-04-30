@@ -19,8 +19,8 @@
     <a href="https://travis-ci.com/tslearn-team/tslearn">
         <img alt="Build" src="https://travis-ci.com/tslearn-team/tslearn.svg?branch=master">
     </a>
-    <a href="https://codecov.io/gh/rtavenar/tslearn">
-        <img alt="Codecov" src="https://codecov.io/gh/rtavenar/tslearn/branch/master/graph/badge.svg">
+    <a href="https://codecov.io/gh/tslearn-team/tslearn">
+        <img alt="Codecov" src="https://codecov.io/gh/tslearn-team/tslearn/branch/master/graph/badge.svg">
     </a>
     <a href="https://pepy.tech/project/tslearn">
         <img alt="Downloads" src="https://pepy.tech/badge/tslearn">
@@ -116,7 +116,7 @@ The documentation, including a gallery of examples, is hosted at [readthedocs](h
 
 ## Contributing
 
-If you would like to contribute to `tslearn`, please have a look at [our contribution guidelines](CONTRIBUTING.md). A list of interesting TODO's can be found [here](https://github.com/rtavenar/tslearn/issues?utf8=✓&q=is%3Aissue%20is%3Aopen%20label%3A%22new%20feature%22%20). **If you want other ML methods for time series to be added to this TODO list, do not hesitate to [open an issue](https://github.com/rtavenar/tslearn/issues/new/choose)!**
+If you would like to contribute to `tslearn`, please have a look at [our contribution guidelines](CONTRIBUTING.md). A list of interesting TODO's can be found [here](https://github.com/tslearn-team/tslearn/issues?utf8=✓&q=is%3Aissue%20is%3Aopen%20label%3A%22new%20feature%22%20). **If you want other ML methods for time series to be added to this TODO list, do not hesitate to [open an issue](https://github.com/tslearn-team/tslearn/issues/new/choose)!**
 
 ## Referencing tslearn
 
@@ -131,7 +131,7 @@ If you use `tslearn` in a scientific publication, we would appreciate citations:
               Payne and Roman Yurchak and Marc Ru{\ss}wurm and Kushal
               Kolar and Eli Woods},
       year={2017},
-      note={\url{https://github.com/rtavenar/tslearn}}
+      note={\url{https://github.com/tslearn-team/tslearn}}
 }
 ```
 
