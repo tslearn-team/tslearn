@@ -130,7 +130,8 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
         DTW(X, Y) = \sqrt{\sum_{(i, j) \in \pi} (X_{i} - Y_{j})^2}
 
     It is not required that both time series share the same size, but they must
-    be the same dimension. DTW was originally presented in [1]_.
+    be the same dimension. DTW was originally presented in [1]_ and is
+    discussed in more details in our :ref:`dedicated tutorial page <dtw>`.
 
     Parameters
     ----------
@@ -222,7 +223,8 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
     Note that this formula is still valid for the multivariate case.
 
     It is not required that both time series share the same size, but they must
-    be the same dimension. DTW was originally presented in [1]_.
+    be the same dimension. DTW was originally presented in [1]_ and is
+    discussed in more details in our :ref:`dedicated tutorial page <dtw>`.
 
     Parameters
     ----------
@@ -388,6 +390,8 @@ def dtw_limited_warping_length(s1, s2, max_length):
     It is not required that both time series share the same size, but they must
     be the same dimension. DTW was originally presented in [1]_.
     This constrained-length variant was introduced in [2]_.
+    Both bariants are
+    discussed in more details in our :ref:`dedicated tutorial page <dtw>`
 
     Parameters
     ----------
@@ -489,6 +493,8 @@ def dtw_path_limited_warping_length(s1, s2, max_length):
     It is not required that both time series share the same size, but they must
     be the same dimension. DTW was originally presented in [1]_.
     This constrained-length variant was introduced in [2]_.
+    Both variants are
+    discussed in more details in our :ref:`dedicated tutorial page <dtw>`
 
     Parameters
     ----------
@@ -955,7 +961,8 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
 
         DTW(X, Y) = \sqrt{\sum_{(i, j) \in \pi} (X_{i} - Y_{j})^2}
 
-    DTW was originally presented in [1]_.
+    DTW was originally presented in [1]_ and is
+    discussed in more details in our :ref:`dedicated tutorial page <dtw>`.
 
     Parameters
     ----------
@@ -1506,7 +1513,9 @@ def lb_envelope(ts, radius=1):
 def soft_dtw(ts1, ts2, gamma=1.):
     r"""Compute Soft-DTW metric between two time series.
 
-    Soft-DTW was originally presented in [1]_.
+    Soft-DTW was originally presented in [1]_ and is
+    discussed in more details in our
+    :ref:`tutorial page on DTW and its variants<dtw>`.
 
     Soft-DTW is computed as:
 
@@ -1565,7 +1574,9 @@ def soft_dtw(ts1, ts2, gamma=1.):
 def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
     r"""Compute cross-similarity matrix using Soft-DTW metric.
 
-    Soft-DTW was originally presented in [1]_.
+    Soft-DTW was originally presented in [1]_ and is
+    discussed in more details in our
+    :ref:`tutorial page on DTW and its variants<dtw>`.
 
     Soft-DTW is computed as:
 
@@ -1648,7 +1659,9 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.):
     r"""Compute cross-similarity matrix using a normalized version of the
     Soft-DTW metric.
 
-    Soft-DTW was originally presented in [1]_.
+    Soft-DTW was originally presented in [1]_ and is
+    discussed in more details in our
+    :ref:`tutorial page on DTW and its variants<dtw>`.
 
     Soft-DTW is computed as:
 

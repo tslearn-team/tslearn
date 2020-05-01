@@ -190,7 +190,7 @@ operator is replaced by ``soft-min``, using the log-sum-exp formulation:
 
 
 soft-DTW hence depends on a hyper-parameter :math:`\gamma` that controls the
-smoothing of the resulting metric (DTW corresponds to the limit case
+smoothing of the resulting metric (squared DTW corresponds to the limit case
 :math:`\gamma \rightarrow 0`).
 
 .. code-block:: python
