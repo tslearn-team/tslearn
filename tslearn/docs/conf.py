@@ -15,6 +15,7 @@
 import sys
 import os
 import sphinx_bootstrap_theme
+import subprocess
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -355,6 +356,17 @@ texinfo_documents = [
 #texinfo_no_detailmenu = False
 
 # The following is used by sphinx.ext.linkcode to provide links to github
+REVISION_CMD = 'git rev-parse --short HEAD'
+
+
+def _get_git_revision():
+    try:
+        revision = subprocess.check_output(REVISION_CMD.split()).strip()
+    except (subprocess.CalledProcessError, OSError):
+        print('Failed to execute git to get revision')
+        return None
+    return revision.decode('utf-8')
+
 def linkcode_resolve(domain, info):
     def find_source():
         # try to find the file and line number, based on code from numpy:
@@ -375,7 +387,6 @@ def linkcode_resolve(domain, info):
         filename = 'tslearn/%s#L%d-L%d' % find_source()
     except Exception:
         filename = info['module'].replace('.', '/') + '.py'
-    # tag = 'master' if 'dev' in release else ('v' + release)
-    tag = "master"
-    return "https://github.com/tslearn-team/tslearn/blob/%s/%s" % (tag,
+    revision = _get_git_revision()
+    return "https://github.com/tslearn-team/tslearn/blob/%s/%s" % (revision,
                                                                    filename)
