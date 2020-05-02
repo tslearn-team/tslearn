@@ -7,7 +7,6 @@ import numpy
 from sklearn import neighbors
 from sklearn.neighbors import (KNeighborsClassifier, NearestNeighbors,
                                KNeighborsRegressor)
-from sklearn.neighbors.base import KNeighborsMixin
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 from scipy.spatial.distance import cdist as scipy_cdist
@@ -22,7 +21,7 @@ from tslearn.bases import BaseModelPackage
 neighbors.VALID_METRICS['brute'].extend(['dtw', 'softdtw', 'sax'])
 
 
-class KNeighborsTimeSeriesMixin(KNeighborsMixin):
+class KNeighborsTimeSeriesMixin():
     """Mixin for k-neighbors searches on Time Series."""
 
     def _sax_preprocess(self, X, n_segments=10, alphabet_size_avg=4):
