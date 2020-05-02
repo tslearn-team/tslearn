@@ -575,23 +575,17 @@ def yield_all_checks(name, estimator):
                       SkipTestWarning)
         return
 
-    for check in _yield_checks(name, estimator):
-        yield check
+    yield from _yield_checks(name, estimator)
     if is_classifier(estimator):
-        for check in _yield_classifier_checks(name, estimator):
-            yield check
+        yield from _yield_classifier_checks(name, estimator)
     if is_regressor(estimator):
-        for check in _yield_regressor_checks(name, estimator):
-            yield check
+        yield from _yield_regressor_checks(name, estimator)
     if hasattr(estimator, 'transform'):
-        for check in _yield_transformer_checks(name, estimator):
-            yield check
+        yield from _yield_transformer_checks(name, estimator)
     if isinstance(estimator, ClusterMixin):
-        for check in _yield_clustering_checks(name, estimator):
-            yield check
+        yield from _yield_clustering_checks(name, estimator)
     if is_outlier_detector(estimator):
-        for check in _yield_outliers_checks(name, estimator):
-            yield check
+        yield from _yield_outliers_checks(name, estimator)
     # We are not strict on presence/absence of the 3rd dimension
     # yield check_fit2d_predict1d
 

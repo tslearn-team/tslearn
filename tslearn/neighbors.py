@@ -273,7 +273,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
                                        self._ts_fit.shape[0]))
         else:
             self._X_fit, self._d = to_sklearn_dataset(X, return_dim=True)
-        super(KNeighborsTimeSeries, self).fit(self._X_fit, y)
+        super().fit(self._X_fit, y)
         if hasattr(self, '_ts_metric'):
             self.metric = self._ts_metric
         return self
@@ -487,7 +487,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
                                        self._ts_fit.shape[0]))
         else:
             self._X_fit, self._d = to_sklearn_dataset(X, return_dim=True)
-        super(KNeighborsTimeSeriesClassifier, self).fit(self._X_fit, y)
+        super().fit(self._X_fit, y)
         if hasattr(self, '_ts_metric'):
             self.metric = self._ts_metric
         return self
@@ -511,7 +511,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             X = check_dims(X, X_fit_dims=self._ts_fit.shape, extend=True,
                            check_n_features_only=True)
             X_ = self._precompute_cross_dist(X)
-            pred = super(KNeighborsTimeSeriesClassifier, self).predict(X_)
+            pred = super().predict(X_)
             self.metric = self._ts_metric
             return pred
         else:
@@ -520,7 +520,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             X = to_time_series_dataset(X)
             X_ = to_sklearn_dataset(X)
             X_ = check_dims(X_, X_fit_dims=self._X_fit.shape, extend=False)
-            return super(KNeighborsTimeSeriesClassifier, self).predict(X_)
+            return super().predict(X_)
 
     def predict_proba(self, X):
         """Predict the class probabilities for the provided data
@@ -540,8 +540,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             X = check_dims(X, X_fit_dims=self._ts_fit.shape, extend=True,
                            check_n_features_only=True)
             X_ = self._precompute_cross_dist(X)
-            pred = super(KNeighborsTimeSeriesClassifier,
-                         self).predict_proba(X_)
+            pred = super().predict_proba(X_)
             self.metric = self._ts_metric
             return pred
         else:
@@ -550,8 +549,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             X = to_time_series_dataset(X)
             X_ = to_sklearn_dataset(X)
             X_ = check_dims(X_, X_fit_dims=self._X_fit.shape, extend=False)
-            return super(KNeighborsTimeSeriesClassifier,
-                         self).predict_proba(X_)
+            return super().predict_proba(X_)
 
     def _get_tags(self):
         return {'allow_nan': True, 'allow_variable_length': True}
@@ -671,7 +669,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
                                        self._ts_fit.shape[0]))
         else:
             self._X_fit, self._d = to_sklearn_dataset(X, return_dim=True)
-        super(KNeighborsTimeSeriesRegressor, self).fit(self._X_fit, y)
+        super().fit(self._X_fit, y)
         if hasattr(self, '_ts_metric'):
             self.metric = self._ts_metric
         return self
@@ -695,7 +693,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
             X = check_dims(X, X_fit_dims=self._ts_fit.shape, extend=True,
                            check_n_features_only=True)
             X_ = self._precompute_cross_dist(X)
-            pred = super(KNeighborsTimeSeriesRegressor, self).predict(X_)
+            pred = super().predict(X_)
             self.metric = self._ts_metric
             return pred
         else:
@@ -704,7 +702,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
             X = to_time_series_dataset(X)
             X_ = to_sklearn_dataset(X)
             X_ = check_dims(X_, X_fit_dims=self._X_fit.shape, extend=False)
-            return super(KNeighborsTimeSeriesRegressor, self).predict(X_)
+            return super().predict(X_)
 
     def _get_tags(self):
         return {'allow_nan': True, 'allow_variable_length': True,

@@ -40,7 +40,7 @@ class GlobalMinPooling1D(Layer):
     """
 
     def __init__(self, **kwargs):
-        super(GlobalMinPooling1D, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.input_spec = InputSpec(ndim=3)
 
     def compute_output_shape(self, input_shape):
@@ -60,7 +60,7 @@ class GlobalArgminPooling1D(Layer):
     """
 
     def __init__(self, **kwargs):
-        super(GlobalArgminPooling1D, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.input_spec = InputSpec(ndim=3)
 
     def compute_output_shape(self, input_shape):
@@ -121,7 +121,7 @@ class LocalSquaredDistanceLayer(Layer):
             self.initializer = "uniform"
         else:
             self.initializer = KMeansShapeletInitializer(X)  # TODO: v2-compatible initializer
-        super(LocalSquaredDistanceLayer, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.input_spec = InputSpec(ndim=3)
 
     def build(self, input_shape):
@@ -129,7 +129,7 @@ class LocalSquaredDistanceLayer(Layer):
                                       shape=(self.n_shapelets, input_shape[2]),
                                       initializer=self.initializer,
                                       trainable=True)
-        super(LocalSquaredDistanceLayer, self).build(input_shape)
+        super().build(input_shape)
 
     def call(self, x, **kwargs):
         # (x - y)^2 = x^2 + y^2 - 2 * x * y
@@ -144,7 +144,7 @@ class LocalSquaredDistanceLayer(Layer):
 
     def get_config(self):
         config = {'n_shapelets': self.n_shapelets}
-        base_config = super(LocalSquaredDistanceLayer, self).get_config()
+        base_config = super().get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
 
@@ -828,8 +828,7 @@ class SerializableShapeletModel(ShapeletModel):
                  shapelet_length=0.3,
                  total_lengths=3,
                  random_state=None):
-        super(SerializableShapeletModel,
-              self).__init__(n_shapelets_per_size=n_shapelets_per_size,
+        super().__init__(n_shapelets_per_size=n_shapelets_per_size,
                              max_iter=max_iter,
                              batch_size=batch_size,
                              verbose=verbose,
@@ -841,12 +840,11 @@ class SerializableShapeletModel(ShapeletModel):
         self.learning_rate = learning_rate
 
     def _set_model_layers(self, X, ts_sz, d, n_classes):
-        super(SerializableShapeletModel,
-              self)._set_model_layers(X=X,
+        super()._set_model_layers(X=X,
                                       ts_sz=ts_sz,
                                       d=d,
                                       n_classes=n_classes)
         K.set_value(self.model_.optimizer.lr, self.learning_rate)
 
     def set_params(self, **params):
-        return super(SerializableShapeletModel, self).set_params(**params)
+        return super().set_params(**params)

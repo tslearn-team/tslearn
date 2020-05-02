@@ -3,7 +3,6 @@ The :mod:`tslearn.clustering` module gathers time series specific clustering
 algorithms.
 """
 
-from __future__ import print_function
 from sklearn.base import BaseEstimator, ClusterMixin
 try:
     # Most recent
@@ -125,7 +124,7 @@ def _k_init_metric(X, n_clusters, cdist_metric, random_state,
 
 class EmptyClusterError(Exception):
     def __init__(self, message=""):
-        super(EmptyClusterError, self).__init__()
+        super().__init__()
         self.message = message
 
     def __str__(self):
