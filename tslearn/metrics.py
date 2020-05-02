@@ -817,7 +817,7 @@ def _subsequence_path(acc_cost_mat, idx_path_end):
 
 
 def subsequence_path(acc_cost_mat, idx_path_end):
-    """Compute the optimal path through a accumulated cost matrix given the
+    r"""Compute the optimal path through a accumulated cost matrix given the
     endpoint of the sequence.
 
     Parameters
@@ -2027,7 +2027,7 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.):
     return dists
 
 
-class SoftDTW(object):
+class SoftDTW:
     def __init__(self, D, gamma=1.):
         """
         Parameters
@@ -2100,7 +2100,7 @@ class SoftDTW(object):
         return E[1:-1, 1:-1]
 
 
-class SquaredEuclidean(object):
+class SquaredEuclidean:
     def __init__(self, X, Y):
         """
         Parameters
