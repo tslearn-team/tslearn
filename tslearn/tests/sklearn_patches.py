@@ -18,7 +18,6 @@ from sklearn.utils.testing import (
     assert_allclose, assert_raises_regex, assert_allclose_dense_sparse
 )
 from sklearn.utils.estimator_checks import (
-    pairwise_estimator_convert_X, choose_check_classifiers_labels,
     check_classifiers_predictions,
     check_fit2d_1sample,
     check_fit2d_1feature,
@@ -34,7 +33,20 @@ from sklearn.utils.estimator_checks import (
     _boston_subset
 )
 
-from sklearn.utils.testing import ignore_warnings, SkipTest
+try:
+    from sklearn.utils.estimator_checks import (
+        _pairwise_estimator_convert_X as pairwise_estimator_convert_X,
+        _choose_check_classifiers_labels as choose_check_classifiers_labels
+    )
+except ImportError:from sklearn.utils.estimator_checks import (
+        pairwise_estimator_convert_X,
+        choose_check_classifiers_labels
+    )
+
+try:
+    from sklearn.utils._testing import ignore_warnings, SkipTest
+except ImportError:
+    from sklearn.utils.testing import ignore_warnings, SkipTest
 from sklearn.exceptions import SkipTestWarning
 from sklearn.utils.estimator_checks import (_yield_classifier_checks,
                                             _yield_regressor_checks,

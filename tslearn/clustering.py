@@ -5,7 +5,10 @@ algorithms.
 
 from __future__ import print_function
 from sklearn.base import BaseEstimator, ClusterMixin
-from sklearn.cluster.k_means_ import _k_init
+try:
+    from sklearn.cluster._k_means import _k_init
+except ImportError:
+    from sklearn.cluster.k_means_ import _k_init
 from sklearn.metrics.cluster import \
     silhouette_score as sklearn_silhouette_score
 from sklearn.utils import check_random_state
