@@ -13,8 +13,8 @@
     <a href="https://badge.fury.io/py/tslearn">
         <img alt="PyPI" src="https://badge.fury.io/py/tslearn.svg">
     </a>
-    <a href="http://tslearn.readthedocs.io/en/latest/?badge=latest">
-        <img alt="Documentation" src="https://readthedocs.org/projects/tslearn/badge/?version=latest">
+    <a href="http://tslearn.readthedocs.io/en/stable/?badge=stable">
+        <img alt="Documentation" src="https://readthedocs.org/projects/tslearn/badge/?version=stable">
     </a>
     <a href="https://dev.azure.com/romaintavenard/tslearn/_build">
         <img alt="Build (Azure Pipelines)" src="https://dev.azure.com/romaintavenard/tslearn/_apis/build/status/tslearn-team.tslearn?branchName=master">
