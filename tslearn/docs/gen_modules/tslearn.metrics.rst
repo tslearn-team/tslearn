@@ -24,6 +24,7 @@ Dynamic Time Warping (DTW) and variants are described in more details in
       cdist_gak
       dtw
       dtw_path
+      dtw_path_from_metric
       dtw_limited_warping_length
       dtw_path_limited_warping_length
       subsequence_path
