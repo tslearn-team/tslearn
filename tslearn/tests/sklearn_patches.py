@@ -34,18 +34,23 @@ from sklearn.utils.estimator_checks import (
 )
 
 try:
+    # Most recent
     from sklearn.utils.estimator_checks import (
         _pairwise_estimator_convert_X as pairwise_estimator_convert_X,
         _choose_check_classifiers_labels as choose_check_classifiers_labels
     )
-except ImportError:from sklearn.utils.estimator_checks import (
+except ImportError:
+    # Deprecated from sklearn v0.24 onwards
+    from sklearn.utils.estimator_checks import (
         pairwise_estimator_convert_X,
         choose_check_classifiers_labels
     )
 
 try:
+    # Most recent
     from sklearn.utils._testing import ignore_warnings, SkipTest
 except ImportError:
+    # Deprecated from sklearn v0.24 onwards
     from sklearn.utils.testing import ignore_warnings, SkipTest
 from sklearn.exceptions import SkipTestWarning
 from sklearn.utils.estimator_checks import (_yield_classifier_checks,

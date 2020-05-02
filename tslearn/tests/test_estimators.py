@@ -13,8 +13,10 @@ from sklearn.base import (BaseEstimator, ClassifierMixin, ClusterMixin,
                           RegressorMixin, TransformerMixin)
 
 try:
+    # Most recent
     from sklearn.utils._testing import SkipTest
 except ImportError:
+    # Deprecated from sklearn v0.24 onwards
     from sklearn.utils.testing import SkipTest
 from sklearn.exceptions import SkipTestWarning
 from sklearn.utils.estimator_checks import (
