@@ -18,7 +18,7 @@ def test_constrained_paths():
         metric="dtw",
         metric_params={
             "global_constraint": "sakoe_chiba",
-            "sakoe_chiba_radius":0
+            "sakoe_chiba_radius": 0
         }
     )
     y_pred_sakoe = model_dtw_sakoe.fit(X, y).predict(X)
@@ -40,3 +40,20 @@ def test_constrained_paths():
     y_pred_dtw = model_dtw.fit(X, y).predict(X)
 
     np.testing.assert_equal(y_pred_dtw, y_pred_softdtw)
+
+    model_sax = KNeighborsTimeSeriesClassifier(
+            n_neighbors=3,
+            metric="sax",
+            metric_params={
+                "alphabet_size_avg": 6,
+                "n_segments": 10
+            }
+    )
+    model_sax.fit(X, y)
+
+    # The MINDIST of SAX is a lower bound of the euclidean distance
+    euc_dist, _ = model_euc.kneighbors(X, n_neighbors=5)
+    sax_dist, _ = model_sax.kneighbors(X, n_neighbors=5)
+
+    # First column will contain zeroes
+    np.testing.assert_array_less(sax_dist[:, 1:], euc_dist[:, 1:])

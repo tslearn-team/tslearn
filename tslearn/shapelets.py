@@ -396,13 +396,13 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
 
         X, y = check_X_y(X, y, allow_nd=True)
         X = to_time_series_dataset(X)
-        X = check_dims(X, X_fit=None)
+        X = check_dims(X)
 
         set_random_seed(seed=self.random_state)
         numpy.random.seed(seed=self.random_state)
 
         n_ts, sz, d = X.shape
-        self._X_fit = X
+        self._X_fit_dims = X.shape
 
         self.model_ = None
         self.transformer_model_ = None
@@ -464,10 +464,10 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
             Index of the cluster each sample belongs to or class probability
             matrix, depending on what was provided at training time.
         """
-        check_is_fitted(self, '_X_fit')
+        check_is_fitted(self, '_X_fit_dims')
         X = check_array(X, allow_nd=True)
         X = to_time_series_dataset(X)
-        X = check_dims(X, X_fit=self._X_fit)
+        X = check_dims(X, X_fit_dims=self._X_fit_dims)
 
         categorical_preds = self.predict_proba(X)
         if self.categorical_y_:
@@ -488,10 +488,10 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         array of shape=(n_ts, n_classes),
             Class probability matrix.
         """
-        check_is_fitted(self, '_X_fit')
+        check_is_fitted(self, '_X_fit_dims')
         X = check_array(X, allow_nd=True)
         X = to_time_series_dataset(X)
-        X = check_dims(X, self._X_fit)
+        X = check_dims(X, X_fit_dims=self._X_fit_dims)
         n_ts, sz, d = X.shape
         categorical_preds = self.model_.predict(
             [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
@@ -517,10 +517,10 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         array of shape=(n_ts, n_shapelets)
             Shapelet-Transform of the provided time series.
         """
-        check_is_fitted(self, '_X_fit')
+        check_is_fitted(self, '_X_fit_dims')
         X = check_array(X, allow_nd=True)
         X = to_time_series_dataset(X)
-        X = check_dims(X, X_fit=self._X_fit)
+        X = check_dims(X, X_fit_dims=self._X_fit_dims)
         n_ts, sz, d = X.shape
         pred = self.transformer_model_.predict(
             [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
@@ -560,10 +560,10 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
                [0],
                [0]])
         """
-        X = check_dims(X, X_fit=self._X_fit)
+        check_is_fitted(self, '_X_fit_dims')
         X = check_array(X, allow_nd=True)
         X = to_time_series_dataset(X)
-        X = check_dims(X, X_fit=self._X_fit)
+        X = check_dims(X, X_fit_dims=self._X_fit_dims)
         n_ts, sz, d = X.shape
         locations = self.locator_model_.predict(
             [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
