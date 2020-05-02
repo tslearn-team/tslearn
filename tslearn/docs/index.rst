@@ -6,17 +6,17 @@
 ``tslearn``'s documentation
 ===========================
 
-``tslearn`` is a Python package that provides machine learning tools for the analysis of time series.
-This package builds on (and hence depends on) ``scikit-learn``, ``numpy`` and ``scipy`` libraries.
+``tslearn`` is a Python package that provides machine learning tools for the
+analysis of time series.
+This package builds on (and hence depends on) ``scikit-learn``, ``numpy`` and
+``scipy`` libraries.
 
-If you plan to use the ``shapelets`` module from ``tslearn``, ``keras`` and ``tensorflow`` should also be installed.
+If you plan to use the ``shapelets`` module from ``tslearn``, ``keras`` and
+``tensorflow`` should also be installed.
+`h5py` is required for reading or writing models using the hdf5 file format.
 
 Installation
 ------------
-
-Pre-requisites 
-``````````````
-C++ build tools should be available to perform installation.
 
 Using conda
 ```````````
@@ -33,22 +33,26 @@ Using PyPI
 Using ``pip`` should also work fine:
 
 .. code-block:: bash
-  
+
     pip install tslearn
+
+In this case, you should have ``numpy``, ``cython`` and C++ build tools
+available at build time.
 
 
 Using latest github-hosted version
 ``````````````````````````````````
 
-If you want to get ``tslearn``'s latest version, you can refer to the repository hosted at github:
+If you want to get ``tslearn``'s latest version, you can refer to the
+repository hosted at github:
 
 .. code-block:: bash
-  
+
     pip install git+https://github.com/rtavenar/tslearn.git
 
+In this case, you should have ``numpy``, ``cython`` and C++ build tools
+available at build time.
 
-Troubleshooting
-```````````````
 
 It seems on some platforms ``Cython`` dependency does not install properly.
 If you experiment such an issue, try installing it with the following command:
@@ -58,14 +62,8 @@ If you experiment such an issue, try installing it with the following command:
     pip install cython
 
 
-or (depending on your preferred python package manager):
-
-.. code-block:: bash
-
-    conda install -c anaconda cython
-
-
 before you start installing ``tslearn``.
+If it still does not work, we suggest you switch to `conda` installation.
 
 
 Navigation
@@ -78,6 +76,7 @@ From here, you can navigate to:
 
     gettingstarted
     variablelength
+    dtw
     reference
     auto_examples/index
-
+    contributing

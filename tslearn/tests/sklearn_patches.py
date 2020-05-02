@@ -1,10 +1,41 @@
-from tslearn.generators import random_walks, random_walk_blobs
+from tslearn.generators import random_walk_blobs
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 
 import sklearn
 from sklearn.base import clone
-from sklearn.utils.testing import *
-from sklearn.utils.estimator_checks import *
+
+from sklearn.base import is_classifier, is_outlier_detector, is_regressor
+from sklearn.base import ClusterMixin
+from sklearn.exceptions import DataConversionWarning
+
+from sklearn.datasets import make_blobs
+from sklearn.metrics.pairwise import rbf_kernel
+
+from sklearn.utils import shuffle
+from sklearn.utils.testing import (
+    set_random_state, assert_equal, assert_greater, assert_array_equal,
+    assert_raises, assert_array_almost_equal, assert_greater_equal,
+    assert_allclose, assert_raises_regex, assert_allclose_dense_sparse
+)
+from sklearn.utils.estimator_checks import (
+    pairwise_estimator_convert_X, choose_check_classifiers_labels,
+    check_classifiers_predictions,
+    check_fit2d_1sample,
+    check_fit2d_1feature,
+    check_fit1d,
+    check_get_params_invariance,
+    check_set_params,
+    check_dict_unchanged,
+    check_dont_overwrite_parameters,
+    check_estimators_data_not_an_array,
+    check_fit2d_predict1d,
+    check_methods_subset_invariance,
+    check_regressors_int,
+    _boston_subset
+)
+
+from sklearn.utils.testing import ignore_warnings, SkipTest
+from sklearn.exceptions import SkipTestWarning
 from sklearn.utils.estimator_checks import (_yield_classifier_checks,
                                             _yield_regressor_checks,
                                             _yield_transformer_checks,
@@ -21,6 +52,8 @@ from sklearn.model_selection import ShuffleSplit
 from sklearn.model_selection._validation import _safe_split
 from sklearn.pipeline import make_pipeline
 
+from tslearn.clustering import TimeSeriesKMeans
+
 import warnings
 import numpy as np
 
@@ -34,6 +67,7 @@ _DEFAULT_TAGS = {
     'no_validation': False,
     'multioutput': False,
     "allow_nan": False,
+    'allow_variable_length': False,
     'stateless': False,
     'multilabel': False,
     '_skip_test': False,
@@ -61,6 +95,30 @@ def _create_small_ts_dataset():
                              sz=10, noise_level=0.025)
 
 
+def enforce_estimator_tags_y(estimator, y):
+    # Estimators with a `requires_positive_y` tag only accept strictly positive
+    # data
+    if _safe_tags(estimator, "requires_positive_y"):
+        # Create strictly positive y. The minimal increment above 0 is 1, as
+        # y could be of integer dtype.
+        y += 1 + abs(y.min())
+    # Estimators in mono_output_task_error raise ValueError if y is of 1-D
+    # Convert into a 2-D y for those estimators.
+    if _safe_tags(estimator, "multioutput_only"):
+        return np.reshape(y, (-1, 1))
+    return y
+
+
+def multioutput_estimator_convert_y_2d(estimator, y):
+    # This function seems to be removed in version 0.22, so let's make
+    # a copy here.
+    # Estimators in mono_output_task_error raise ValueError if y is of 1-D
+    # Convert into a 2-D y for those estimators.
+    if "MultiTask" in estimator.__class__.__name__:
+        return np.reshape(y, (-1, 1))
+    return y
+
+
 # Patch BOSTON dataset of sklearn to fix _csv.Error: line contains NULL byte
 # Moreover, it makes more sense to use a timeseries dataset for our estimators
 BOSTON = _create_small_ts_dataset()
@@ -74,7 +132,8 @@ def check_clustering(name, clusterer_orig, readonly_memmap=False):
     X, y = _create_small_ts_dataset()
     X, y = shuffle(X, y, random_state=7)
     X = TimeSeriesScalerMeanVariance().fit_transform(X)
-    X_noise = np.concatenate([X, random_walks(n_ts=2, sz=10)])
+    rng = np.random.RandomState(42)
+    X_noise = X + (rng.randn(*X.shape) / 5)
 
     n_samples, n_features, dim = X.shape
     # catch deprecation and neighbors warnings
@@ -100,21 +159,15 @@ def check_clustering(name, clusterer_orig, readonly_memmap=False):
     assert_array_equal(pred, pred2)
 
     # fit_predict(X) and labels_ should be of type int
-    assert_in(pred.dtype, [np.dtype('int32'), np.dtype('int64')])
-    assert_in(pred2.dtype, [np.dtype('int32'), np.dtype('int64')])
+    assert pred.dtype in [np.dtype('int32'), np.dtype('int64')]
+    assert pred2.dtype in [np.dtype('int32'), np.dtype('int64')]
 
     # Add noise to X to test the possible values of the labels
     labels = clusterer.fit_predict(X_noise)
 
-    # There should be at least one sample in every cluster. Equivalently
-    # labels_ should contain all the consecutive values between its
-    # min and its max.
+    # There should be at least one sample in every original cluster
     labels_sorted = np.unique(labels)
-    assert_array_equal(labels_sorted, np.arange(labels_sorted[0],
-                                                labels_sorted[-1] + 1))
-
-    # Labels are expected to start at 0 (no noise) or -1 (if noise)
-    assert labels_sorted[0] in [0, -1]
+    assert_array_equal(labels_sorted, np.arange(0, 3))
 
     # Labels should be less than n_clusters - 1
     if hasattr(clusterer, 'n_clusters'):
@@ -304,9 +357,14 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
                                    msg=msg_pairwise.format(name, "predict")):
                     classifier.predict(X.reshape(-1, 1))
             else:
-                with assert_raises(ValueError,
-                                   msg=msg.format(name, "predict")):
-                    classifier.predict(X.T)
+                if not tags["allow_variable_length"]:
+                    with assert_raises(ValueError,
+                                       msg=msg.format(name, "predict")):
+                        classifier.predict(X.T)
+                else:
+                    with assert_raises(ValueError,
+                                       msg=msg.format(name, "predict")):
+                        classifier.predict(X.reshape((-1, 5, 2)))
         if hasattr(classifier, "decision_function"):
             try:
                 # decision_function agrees with predict
@@ -324,16 +382,19 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
 
                 # raises error on malformed input for decision_function
                 if not tags["no_validation"]:
+                    error_msg = msg_pairwise.format(name, "decision_function")
                     if bool(getattr(classifier, "_pairwise", False)):
-                        error_msg = msg_pairwise.format(name,
-                                                        "decision_function")
                         with assert_raises(ValueError, msg=error_msg):
                             classifier.decision_function(X.reshape(-1, 1))
                     else:
-                        error_msg = msg_pairwise.format(name,
-                                                        "decision_function")
-                        with assert_raises(ValueError, msg=error_msg):
-                            classifier.decision_function(X.T)
+                        if not tags["allow_variable_length"]:
+                            with assert_raises(ValueError, msg=error_msg):
+                                classifier.decision_function(X.T)
+                        else:
+                            with assert_raises(ValueError, msg=error_msg):
+                                classifier.decision_function(
+                                    X.reshape((-1, 5, 2))
+                                )
             except NotImplementedError:
                 pass
 
@@ -352,9 +413,16 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
                             name, "predict_proba")):
                         classifier.predict_proba(X.reshape(-1, 1))
                 else:
-                    with assert_raises(ValueError, msg=msg.format(
-                            name, "predict_proba")):
-                        classifier.predict_proba(X.T)
+                    if not tags["allow_variable_length"]:
+                        with assert_raises(ValueError, msg=msg.format(
+                                name, "predict_proba")):
+                            classifier.predict_proba(X.T)
+                    else:
+                        with assert_raises(ValueError, msg=msg.format(
+                                name, "predict_proba")):
+                            classifier.predict_proba(
+                                X.reshape((-1, 5, 2))
+                            )
             if hasattr(classifier, "predict_log_proba"):
                 # predict_log_proba is a transformation of predict_proba
                 y_log_prob = classifier.predict_log_proba(X)
@@ -370,10 +438,7 @@ def check_estimators_pickle(name, estimator_orig):
 
 @ignore_warnings(category=(DeprecationWarning, FutureWarning))
 def check_supervised_y_2d(name, estimator_orig):
-
-    tags = {'multioutput': False, 'binary_only': False}
-
-    rnd = np.random.RandomState(0)
+    tags = _safe_tags(estimator_orig)
     X, y = _create_small_ts_dataset()
     if tags['binary_only']:
         X = X[y != 2]
@@ -463,6 +528,23 @@ def check_pipeline_consistency(name, estimator_orig):
             assert_allclose_dense_sparse(result, result_pipe)
 
 
+@ignore_warnings(category=(DeprecationWarning, FutureWarning))
+def check_different_length_fit_predict(name, estimator):
+    # Check if classifier can predict a dataset that does not have the same
+    # number of timestamps as the data passed at fit time
+
+    # Default for kmeans is Euclidean
+    if isinstance(estimator, TimeSeriesKMeans):
+        new_estimator = clone(estimator)
+        new_estimator.metric = "dtw"
+    else:
+        new_estimator = estimator
+
+    X, y = _create_small_ts_dataset()
+    X2 = np.hstack((X, X))
+    new_estimator.fit(X, y).predict(X2)
+
+
 def yield_all_checks(name, estimator):
     tags = _safe_tags(estimator)
     if "2darray" not in tags["X_types"]:
@@ -493,7 +575,8 @@ def yield_all_checks(name, estimator):
     if is_outlier_detector(estimator):
         for check in _yield_outliers_checks(name, estimator):
             yield check
-    yield check_fit2d_predict1d
+    # We are not strict on presence/absence of the 3rd dimension
+    # yield check_fit2d_predict1d
 
     if not tags["non_deterministic"]:
         yield check_methods_subset_invariance
@@ -506,3 +589,6 @@ def yield_all_checks(name, estimator):
     yield check_dict_unchanged
     yield check_dont_overwrite_parameters
     yield check_fit_idempotent
+
+    if tags["allow_variable_length"]:
+        yield check_different_length_fit_predict

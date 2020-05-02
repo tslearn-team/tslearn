@@ -9,24 +9,113 @@ from sklearn.cluster.k_means_ import _k_init
 from sklearn.metrics.cluster import \
     silhouette_score as sklearn_silhouette_score
 from sklearn.utils import check_random_state
+from sklearn.utils.extmath import stable_cumsum
 from scipy.spatial.distance import cdist
 import numpy
+import warnings
 
 from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw, \
-    cdist_soft_dtw_normalized, dtw
+    cdist_soft_dtw_normalized
 from tslearn.barycenters import euclidean_barycenter, \
     dtw_barycenter_averaging, softdtw_barycenter
-from sklearn.utils import check_array, column_or_1d
+from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
-from tslearn.preprocessing import TimeSeriesScalerMeanVariance
+from tslearn.preprocessing import TimeSeriesScalerMeanVariance, \
+    TimeSeriesResampler
 from tslearn.utils import (to_time_series_dataset, to_time_series,
                            ts_size, check_dims)
 from tslearn.cycc import cdist_normalized_cc, y_shifted_sbd_vec
-
+from tslearn.bases import BaseModelPackage
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 # Kernel k-means is derived from https://gist.github.com/mblondel/6230787 by
 # Mathieu Blondel, under BSD 3 clause license
+
+
+def _k_init_metric(X, n_clusters, cdist_metric, random_state,
+                   n_local_trials=None):
+    """Init n_clusters seeds according to k-means++ with a custom distance
+    metric.
+
+    Parameters
+    ----------
+    X : array, shape (n_samples, n_timestamps, n_features)
+        The data to pick seeds for.
+
+    n_clusters : integer
+        The number of seeds to choose
+
+    cdist_metric : function
+        Function to be called for cross-distance computations
+
+    random_state : RandomState instance
+        Generator used to initialize the centers.
+
+    n_local_trials : integer, optional
+        The number of seeding trials for each center (except the first),
+        of which the one reducing inertia the most is greedily chosen.
+        Set to None to make the number of trials depend logarithmically
+        on the number of seeds (2+log(k)); this is the default.
+
+    Notes
+    -----
+    Selects initial cluster centers for k-mean clustering in a smart way
+    to speed up convergence. see: Arthur, D. and Vassilvitskii, S.
+    "k-means++: the advantages of careful seeding". ACM-SIAM symposium
+    on Discrete algorithms. 2007
+
+    Version adapted from scikit-learn for use with a custom metric in place of
+    Euclidean distance.
+    """
+    n_samples, n_timestamps, n_features = X.shape
+
+    centers = numpy.empty((n_clusters, n_timestamps, n_features),
+                          dtype=X.dtype)
+
+    # Set the number of local seeding trials if none is given
+    if n_local_trials is None:
+        # This is what Arthur/Vassilvitskii tried, but did not report
+        # specific results for other than mentioning in the conclusion
+        # that it helped.
+        n_local_trials = 2 + int(numpy.log(n_clusters))
+
+    # Pick first center randomly
+    center_id = random_state.randint(n_samples)
+    centers[0] = X[center_id]
+
+    # Initialize list of closest distances and calculate current potential
+    closest_dist_sq = cdist_metric(centers[0, numpy.newaxis], X) ** 2
+    current_pot = closest_dist_sq.sum()
+
+    # Pick the remaining n_clusters-1 points
+    for c in range(1, n_clusters):
+        # Choose center candidates by sampling with probability proportional
+        # to the squared distance to the closest existing center
+        rand_vals = random_state.random_sample(n_local_trials) * current_pot
+        candidate_ids = numpy.searchsorted(stable_cumsum(closest_dist_sq),
+                                           rand_vals)
+        # XXX: numerical imprecision can result in a candidate_id out of range
+        numpy.clip(candidate_ids, None, closest_dist_sq.size - 1,
+                   out=candidate_ids)
+
+        # Compute distances to center candidates
+        distance_to_candidates = cdist_metric(X[candidate_ids], X) ** 2
+
+        # update closest distances squared and potential for each candidate
+        numpy.minimum(closest_dist_sq, distance_to_candidates,
+                      out=distance_to_candidates)
+        candidates_pot = distance_to_candidates.sum(axis=1)
+
+        # Decide which candidate is the best
+        best_candidate = numpy.argmin(candidates_pot)
+        current_pot = candidates_pot[best_candidate]
+        closest_dist_sq = distance_to_candidates[best_candidate]
+        best_candidate = candidate_ids[best_candidate]
+
+        # Permanently add best center candidate found in local tries
+        centers[c] = X[best_candidate]
+
+    return centers
 
 
 class EmptyClusterError(Exception):
@@ -56,17 +145,11 @@ def _check_full_length(centroids):
     """Check that provided centroids are full-length (ie. not padded with
     nans).
 
-    If some centroids are found to be padded with nans, the last value is
-    repeated until the end.
+    If some centroids are found to be padded with nans, TimeSeriesResampler is
+    used to resample the centroids.
     """
-    centroids_ = numpy.empty(centroids.shape)
-    n, max_sz = centroids.shape[:2]
-    for i in range(n):
-        sz = ts_size(centroids[i])
-        centroids_[i, :sz] = centroids[i, :sz]
-        if sz < max_sz:
-            centroids_[i, sz:] = centroids[i, sz-1]
-    return centroids_
+    resampler = TimeSeriesResampler(sz=centroids.shape[1])
+    return resampler.fit_transform(centroids)
 
 
 def _compute_inertia(distances, assignments, squared=True):
@@ -89,7 +172,8 @@ def _compute_inertia(distances, assignments, squared=True):
 
 
 def silhouette_score(X, labels, metric=None, sample_size=None,
-                     metric_params=None, random_state=None, **kwds):
+                     metric_params=None, n_jobs=None, verbose=0, 
+                     random_state=None, **kwds):
     """Compute the mean Silhouette Coefficient of all samples (cf.  [1]_ and
     [2]_).
 
@@ -105,32 +189,59 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
         dataset.
     labels : array, shape = [n_ts]
          Predicted labels for each time series.
-    metric : string, or callable
+    metric : string, callable or None (default: None)
         The metric to use when calculating distance between time series.
         Should be one of {'dtw', 'softdtw', 'euclidean'} or a callable distance
-        function.
+        function or None.
         If 'softdtw' is passed, a normalized version of Soft-DTW is used that
         is defined as `sdtw_(x,y) := sdtw(x,y) - 1/2(sdtw(x,x)+sdtw(y,y))`.
         If X is the distance array itself, use ``metric="precomputed"``.
-    sample_size : int or None
+        If None, dtw is used.
+    sample_size : int or None (default: None)
         The size of the sample to use when computing the Silhouette Coefficient
         on a random subset of the data.
         If ``sample_size is None``, no sampling is used.
-    metric_params : dict or None
-        Parameter values for the chosen metric. Value associated to the
-        `"gamma_sdtw"` key corresponds to the gamma parameter in Soft-DTW.
-    random_state : int, RandomState instance or None, optional (default=None)
+    metric_params : dict or None (default: None)
+        Parameter values for the chosen metric.
+        For metrics that accept parallelization of the cross-distance matrix
+        computations, `n_jobs` key passed in `metric_params` is overridden by
+        the `n_jobs` argument.
+        Value associated to the `"gamma_sdtw"` key corresponds to the gamma
+        parameter in Soft-DTW.
+
+        .. deprecated:: 0.2
+            `"gamma_sdtw"` as a key for `metric_params` is deprecated in
+            version 0.2 and will be removed in 0.4.
+
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel for cross-distance matrix
+        computations.
+        Ignored if the cross-distance matrix cannot be computed using
+        parallelization.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See scikit-learns'
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        for more details.
+
+    verbose : int (default: 0)
+        If nonzero, print information about the inertia while learning
+        the model and joblib progress messages are printed.  
+
+    random_state : int, RandomState instance or None, optional (default: None)
         The generator used to randomly select a subset of samples.  If int,
         random_state is the seed used by the random number generator; If
         RandomState instance, random_state is the random number generator; If
         None, the random number generator is the RandomState instance used by
         `np.random`. Used when ``sample_size is not None``.
     **kwds : optional keyword parameters
-        Any further parameters are passed directly to the distance function.
+        Any further parameters are passed directly to the distance function,
+        just as for the `metric_params` parameter.
+
     Returns
     -------
     silhouette : float
         Mean Silhouette Coefficient for all samples.
+
     References
     ----------
     .. [1] `Peter J. Rousseeuw (1987). "Silhouettes: a Graphical Aid to the
@@ -139,6 +250,7 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
        <http://www.sciencedirect.com/science/article/pii/0377042787901257>`_
     .. [2] `Wikipedia entry on the Silhouette Coefficient
            <https://en.wikipedia.org/wiki/Silhouette_(clustering)>`_
+
     Examples
     --------
     >>> from tslearn.generators import random_walks
@@ -153,7 +265,7 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
     >>> silhouette_score(X, labels, metric="softdtw")  # doctest: +ELLIPSIS
     0.17953934...
     >>> silhouette_score(X, labels, metric="softdtw",
-    ...                  metric_params={"gamma_sdtw": 2.}) \
+    ...                  metric_params={"gamma": 2.}) \
     # doctest: +ELLIPSIS
     0.17591060...
     >>> silhouette_score(cdist_dtw(X), labels,
@@ -162,17 +274,28 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
     """
     sklearn_metric = None
     if metric_params is None:
-        metric_params = {}
+        metric_params_ = {}
+    else:
+        metric_params_ = metric_params.copy()
+    if "gamma_sdtw" in metric_params_.keys():
+        warnings.warn(
+            "'gamma_sdtw' is deprecated in version 0.2 and will be "
+            "removed in 0.4. Use `gamma` instead of `gamma_sdtw` as a "
+            "`metric_params` key to remove this warning.",
+            DeprecationWarning, stacklevel=2)
+        metric_params_["gamma"] = metric_params_["gamma_sdtw"]
+        del metric_params_["gamma_sdtw"]
+    for k in kwds.keys():
+        metric_params_[k] = kwds[k]
+    if "n_jobs" in metric_params_.keys():
+        del metric_params_["n_jobs"]
     if metric == "precomputed":
         sklearn_X = X
-    elif metric == "dtw":
-        sklearn_X = cdist_dtw(X)
+    elif metric == "dtw" or metric is None:
+        sklearn_X = cdist_dtw(X, n_jobs=n_jobs, verbose=verbose,
+                              **metric_params_)
     elif metric == "softdtw":
-        gamma = metric_params.get("gamma_sdtw", None)
-        if gamma is not None:
-            sklearn_X = cdist_soft_dtw_normalized(X, gamma=gamma)
-        else:
-            sklearn_X = cdist_soft_dtw_normalized(X)
+        sklearn_X = cdist_soft_dtw_normalized(X, **metric_params_)
     elif metric == "euclidean":
         X_ = to_time_series_dataset(X)
         X_ = X_.reshape((X.shape[0], -1))
@@ -181,8 +304,6 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
         X_ = to_time_series_dataset(X)
         n, sz, d = X_.shape
         sklearn_X = X_.reshape((n, -1))
-        if metric is None:
-            metric = dtw
 
         def sklearn_metric(x, y):
             return metric(to_time_series(x.reshape((sz, d)),
@@ -205,29 +326,45 @@ def _check_initial_guess(init, n_clusters):
             " {} given".format(n_clusters, init.shape[0])
 
 
-class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
+class GlobalAlignmentKernelKMeans(BaseEstimator, BaseModelPackage,
+                                  ClusterMixin):
     """Global Alignment Kernel K-means.
 
     Parameters
     ----------
     n_clusters : int (default: 3)
         Number of clusters to form.
+
     max_iter : int (default: 50)
         Maximum number of iterations of the k-means algorithm for a single run.
+
     tol : float (default: 1e-6)
         Inertia variation threshold. If at some point, inertia varies less than
         this threshold between two consecutive
         iterations, the model is considered to have converged and the algorithm
         stops.
+
     n_init : int (default: 1)
         Number of time the k-means algorithm will be run with different
         centroid seeds. The final results will be the
         best output of n_init consecutive runs in terms of inertia.
-    sigma : float (default: 1.)
-        Bandwidth parameter for the Global Alignment kernel
-    verbose : bool (default: False)
-        Whether or not to print information about the inertia while learning
-        the model.
+
+    sigma : float or "auto" (default: "auto")
+        Bandwidth parameter for the Global Alignment kernel. If set to 'auto',
+        it is computed based on a sampling of the training set
+        (cf :ref:`tslearn.metrics.sigma_gak <fun-tslearn.metrics.sigma_gak>`)
+
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel for GAK cross-similarity matrix
+        computations.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See scikit-learns'
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        for more details.
+
+    verbose : int (default: 0)
+        If nonzero, joblib progress messages are printed.  
+
     random_state : integer or numpy.RandomState, optional
         Generator used to initialize the centers. If an integer is given, it
         fixes the seed. Defaults to the global
@@ -237,13 +374,22 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
     ----------
     labels_ : numpy.ndarray
         Labels of each point
+
     inertia_ : float
         Sum of distances of samples to their closest cluster center (computed
         using the kernel trick).
+
     sample_weight_ : numpy.ndarray
         The weight given to each sample from the data provided to fit.
+
     n_iter_ : int
         The number of iterations performed during fit.
+
+    Notes
+    -----
+        The training data are saved to disk if this model is
+        serialized and may result in a large model file if the training
+        dataset is large.
 
     Examples
     --------
@@ -264,17 +410,30 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
     """
 
     def __init__(self, n_clusters=3, max_iter=50, tol=1e-6, n_init=1, sigma=1.,
-                 verbose=False, random_state=None):
+                 n_jobs=None, verbose=0, random_state=None):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
         self.tol = tol
         self.n_init = n_init
         self.sigma = sigma
+        self.n_jobs = n_jobs
         self.verbose = verbose
         self.random_state = random_state
 
+    def _is_fitted(self):
+        check_is_fitted(self, '_X_fit')
+        return True
+
+    def _get_model_params(self):
+        return {
+            '_X_fit': self._X_fit,
+            'sample_weight_': self.sample_weight_,
+            'labels_': self.labels_
+        }
+
     def _get_kernel(self, X, Y=None):
-        return cdist_gak(X, Y, sigma=self.sigma)
+        return cdist_gak(X, Y, sigma=self.sigma, n_jobs=self.n_jobs,
+                         verbose=self.verbose)
 
     def _fit_one_init(self, K, rs):
         n_samples = K.shape[0]
@@ -310,6 +469,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset.
+
         y
             Ignored
         sample_weight : array-like of shape=(n_ts, ) or None (default: None)
@@ -317,8 +477,8 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
             default, all time series weights are equal.
         """
 
-        X = check_array(X, allow_nd=True)
-        X = check_dims(X, X_fit=None)
+        X = check_array(X, allow_nd=True, force_all_finite=False)
+        X = check_dims(X)
 
         if sample_weight is not None:
             sample_weight = check_array(sample_weight, ensure_2d=False)
@@ -396,6 +556,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset to predict.
+
         y
             Ignored
 
@@ -419,14 +580,18 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, ClusterMixin):
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
-        X = check_array(X, allow_nd=True)
+        X = check_array(X, allow_nd=True, force_all_finite=False)
         check_is_fitted(self, '_X_fit')
-        X = check_dims(X, self._X_fit)
+        X = check_dims(X, X_fit_dims=self._X_fit.shape,
+                       check_n_features_only=True)
         K = self._get_kernel(X, self._X_fit)
         n_samples = X.shape[0]
         dist = numpy.zeros((n_samples, self.n_clusters))
         self._compute_dist(K, dist)
         return dist.argmin(axis=1)
+
+    def _get_tags(self):
+        return {'allow_nan': True, 'allow_variable_length': True}
 
 
 class TimeSeriesCentroidBasedClusteringMixin:
@@ -441,7 +606,7 @@ class TimeSeriesCentroidBasedClusteringMixin:
             self._X_fit = None
 
 
-class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
+class TimeSeriesKMeans(BaseEstimator, BaseModelPackage, ClusterMixin,
                        TimeSeriesCentroidBasedClusteringMixin):
     """K-means clustering for time-series data.
 
@@ -449,37 +614,64 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
     ----------
     n_clusters : int (default: 3)
         Number of clusters to form.
+
     max_iter : int (default: 50)
         Maximum number of iterations of the k-means algorithm for a single run.
+
     tol : float (default: 1e-6)
         Inertia variation threshold. If at some point, inertia varies less than
         this threshold between two consecutive
         iterations, the model is considered to have converged and the algorithm
         stops.
+
     n_init : int (default: 1)
         Number of time the k-means algorithm will be run with different
         centroid seeds. The final results will be the best output of n_init
         consecutive runs in terms of inertia.
+
     metric : {"euclidean", "dtw", "softdtw"} (default: "euclidean")
         Metric to be used for both cluster assignment and barycenter
         computation. If "dtw", DBA is used for barycenter
         computation.
+
     max_iter_barycenter : int (default: 100)
         Number of iterations for the barycenter computation process. Only used
         if `metric="dtw"` or `metric="softdtw"`.
-    metric_params : dict or None
-        Parameter values for the chosen metric. Value associated to the
-        `"gamma_sdtw"` key corresponds to the gamma
+
+    metric_params : dict or None (default: None)
+        Parameter values for the chosen metric.
+        For metrics that accept parallelization of the cross-distance matrix
+        computations, `n_jobs` key passed in `metric_params` is overridden by
+        the `n_jobs` argument.
+        Value associated to the `"gamma_sdtw"` key corresponds to the gamma
         parameter in Soft-DTW.
-    dtw_inertia: bool
+
+        .. deprecated:: 0.2
+            `"gamma_sdtw"` as a key for `metric_params` is deprecated in
+            version 0.2 and will be removed in 0.4.
+
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel for cross-distance matrix
+        computations.
+        Ignored if the cross-distance matrix cannot be computed using
+        parallelization.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See scikit-learns'
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        for more details.
+
+    dtw_inertia: bool (default: False)
         Whether to compute DTW inertia even if DTW is not the chosen metric.
-    verbose : bool (default: False)
-        Whether or not to print information about the inertia while learning
-        the model.
+
+    verbose : int (default: 0)
+        If nonzero, print information about the inertia while learning
+        the model and joblib progress messages are printed.  
+
     random_state : integer or numpy.RandomState, optional
         Generator used to initialize the centers. If an integer is given, it
         fixes the seed. Defaults to the global
         numpy random number generator.
+
     init : {'k-means++', 'random' or an ndarray} (default: 'k-means++')
         Method for initialization:
         'k-means++' : use k-means++ heuristic. See `scikit-learn's k_init_
@@ -494,15 +686,21 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
     ----------
     labels_ : numpy.ndarray
         Labels of each point.
-    cluster_centers_ : numpy.ndarray
+
+    cluster_centers_ : numpy.ndarray of shape (n_clusters, sz, d)
         Cluster centers.
+        `sz` is the size of the time series used at fit time if the init method
+        is 'k-means++' or 'random', and the size of the longest initial
+        centroid if those are provided as a numpy array through init parameter.
+
     inertia_ : float
         Sum of distances of samples to their closest cluster center.
+
     n_iter_ : int
         The number of iterations performed during fit.
 
-    Note
-    ----
+    Notes
+    -----
         If `metric` is set to `"euclidean"`, the algorithm expects a dataset of
         equal-sized time series.
 
@@ -521,7 +719,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
     (3, 32, 1)
     >>> km_sdtw = TimeSeriesKMeans(n_clusters=3, metric="softdtw", max_iter=5,
     ...                            max_iter_barycenter=5,
-    ...                            metric_params={"gamma_sdtw": .5},
+    ...                            metric_params={"gamma": .5},
     ...                            random_state=0).fit(X)
     >>> km_sdtw.cluster_centers_.shape
     (3, 32, 1)
@@ -531,13 +729,13 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
     >>> km = TimeSeriesKMeans(n_clusters=2, max_iter=5,
     ...                       metric="dtw", random_state=0).fit(X_bis)
     >>> km.cluster_centers_.shape
-    (2, 3, 1)
+    (2, 6, 1)
     """
 
     def __init__(self, n_clusters=3, max_iter=50, tol=1e-6, n_init=1,
                  metric="euclidean", max_iter_barycenter=100,
-                 metric_params=None, dtw_inertia=False, verbose=False,
-                 random_state=None, init='k-means++'):
+                 metric_params=None, n_jobs=None, dtw_inertia=False,
+                 verbose=0, random_state=None, init='k-means++'):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
         self.tol = tol
@@ -545,21 +743,69 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         self.metric = metric
         self.max_iter_barycenter = max_iter_barycenter
         self.metric_params = metric_params
+        self.n_jobs = n_jobs
         self.dtw_inertia = dtw_inertia
         self.verbose = verbose
         self.random_state = random_state
         self.init = init
 
+        if self.metric_params is not None and \
+            "gamma_sdtw" in self.metric_params.keys():
+            warnings.warn(
+                "'gamma_sdtw' is deprecated in version 0.2 and will be "
+                "removed in 0.4. Use `gamma` instead of `gamma_sdtw` as a "
+                "`metric_params` key to remove this warning.",
+                DeprecationWarning, stacklevel=2)
+
+    def _is_fitted(self):
+        check_is_fitted(self, ['cluster_centers_'])
+        return True
+
+    def _get_model_params(self):
+        return {'cluster_centers_': self.cluster_centers_}
+
+    def _get_metric_params(self):
+        if self.metric_params is None:
+            metric_params = {}
+        else:
+            metric_params = self.metric_params.copy()
+        if "gamma_sdtw" in metric_params.keys():
+            metric_params["gamma"] = metric_params["gamma_sdtw"]
+            del metric_params["gamma_sdtw"]
+        if "n_jobs" in metric_params.keys():
+            del metric_params["n_jobs"]
+        return metric_params
+
     def _fit_one_init(self, X, x_squared_norms, rs):
-        n_ts, _, d = X.shape
-        sz = min([ts_size(ts) for ts in X])
+        metric_params = self._get_metric_params()
+        n_ts, sz, d = X.shape
         if hasattr(self.init, '__array__'):
             self.cluster_centers_ = self.init.copy()
         elif self.init == "k-means++":
-            self.cluster_centers_ = _k_init(X[:, :sz, :].reshape((n_ts, -1)),
-                                            self.n_clusters,
-                                            x_squared_norms,
-                                            rs).reshape((-1, sz, d))
+            if self.metric == "euclidean":
+                self.cluster_centers_ = _k_init(
+                    X.reshape((n_ts, -1)),
+                    self.n_clusters,
+                    x_squared_norms,
+                    rs
+                ).reshape((-1, sz, d))
+            else:
+                if self.metric == "dtw":
+                    def metric_fun(x, y):
+                        return cdist_dtw(x, y, n_jobs=self.n_jobs,
+                                         verbose=self.verbose, **metric_params)
+
+                elif self.metric == "softdtw":
+                    def metric_fun(x, y):
+                        return cdist_soft_dtw(x, y, **metric_params)
+                else:
+                    raise ValueError(
+                        "Incorrect metric: %s (should be one of 'dtw', "
+                        "'softdtw', 'euclidean')" % self.metric
+                    )
+                self.cluster_centers_ = _k_init_metric(X, self.n_clusters,
+                                                       cdist_metric=metric_fun,
+                                                       random_state=rs)
         elif self.init == "random":
             indices = rs.choice(X.shape[0], self.n_clusters)
             self.cluster_centers_ = X[indices].copy()
@@ -586,15 +832,16 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         return self
 
     def _assign(self, X, update_class_attributes=True):
+        metric_params = self._get_metric_params()
         if self.metric == "euclidean":
             dists = cdist(X.reshape((X.shape[0], -1)),
                           self.cluster_centers_.reshape((self.n_clusters, -1)),
                           metric="euclidean")
         elif self.metric == "dtw":
-            dists = cdist_dtw(X, self.cluster_centers_)
+            dists = cdist_dtw(X, self.cluster_centers_, n_jobs=self.n_jobs,
+                              verbose=self.verbose, **metric_params)
         elif self.metric == "softdtw":
-            dists = cdist_soft_dtw(X, self.cluster_centers_,
-                                   gamma=self._gamma_sdtw)
+            dists = cdist_soft_dtw(X, self.cluster_centers_, **metric_params)
         else:
             raise ValueError("Incorrect metric: %s (should be one of 'dtw', "
                              "'softdtw', 'euclidean')" % self.metric)
@@ -603,7 +850,9 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
             self.labels_ = matched_labels
             _check_no_empty_cluster(self.labels_, self.n_clusters)
             if self.dtw_inertia and self.metric != "dtw":
-                inertia_dists = cdist_dtw(X, self.cluster_centers_)
+                inertia_dists = cdist_dtw(X, self.cluster_centers_,
+                                          n_jobs=self.n_jobs,
+                                          verbose=self.verbose)
             else:
                 inertia_dists = dists
             self.inertia_ = _compute_inertia(inertia_dists,
@@ -612,19 +861,21 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         return matched_labels
 
     def _update_centroids(self, X):
+        metric_params = self._get_metric_params()
         for k in range(self.n_clusters):
             if self.metric == "dtw":
                 self.cluster_centers_[k] = dtw_barycenter_averaging(
                     X=X[self.labels_ == k],
                     barycenter_size=None,
                     init_barycenter=self.cluster_centers_[k],
+                    metric_params=metric_params,
                     verbose=False)
             elif self.metric == "softdtw":
                 self.cluster_centers_[k] = softdtw_barycenter(
                     X=X[self.labels_ == k],
                     max_iter=self.max_iter_barycenter,
-                    gamma=self._gamma_sdtw,
-                    init=self.cluster_centers_[k])
+                    init=self.cluster_centers_[k],
+                    **metric_params)
             else:
                 self.cluster_centers_[k] = euclidean_barycenter(
                     X=X[self.labels_ == k])
@@ -636,22 +887,24 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset.
+
         y
             Ignored
         """
 
         X = check_array(X, allow_nd=True, force_all_finite='allow-nan')
 
+        if hasattr(self.init, '__array__'):
+            X = check_dims(X, X_fit_dims=self.init.shape,
+                           extend=True,
+                           check_n_features_only=(self.metric != "euclidean"))
+
+
         self.labels_ = None
         self.inertia_ = numpy.inf
         self.cluster_centers_ = None
         self._X_fit = None
         self._squared_inertia = True
-        if self.metric_params is None:
-            metric_params = {}
-        else:
-            metric_params = self.metric_params
-        self._gamma_sdtw = metric_params.get("gamma_sdtw", 1.)
 
         self.n_iter_ = 0
 
@@ -659,9 +912,14 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
 
         X_ = to_time_series_dataset(X)
         rs = check_random_state(self.random_state)
-        x_squared_norms = cdist(X_.reshape((X_.shape[0], -1)),
-                                numpy.zeros((1, X_.shape[1] * X_.shape[2])),
-                                metric="sqeuclidean").reshape((1, -1))
+
+        if self.init == "k-means++" and self.metric == "euclidean":
+            n_ts, sz, d = X_.shape
+            x_squared_norms = cdist(X_.reshape((n_ts, -1)),
+                                    numpy.zeros((1, sz * d)),
+                                    metric="sqeuclidean").reshape((1, -1))
+        else:
+            x_squared_norms = None
         _check_initial_guess(self.init, self.n_clusters)
 
         best_correct_centroids = None
@@ -696,6 +954,7 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset to predict.
+
         y
             Ignored
 
@@ -721,16 +980,17 @@ class TimeSeriesKMeans(BaseEstimator, ClusterMixin,
             Index of the cluster each sample belongs to.
         """
         X = check_array(X, allow_nd=True, force_all_finite='allow-nan')
-        check_is_fitted(self, '_X_fit')
-        X = check_dims(X, self._X_fit)
-        X_ = to_time_series_dataset(X)
-        return self._assign(X_, update_class_attributes=False)
+        check_is_fitted(self, 'cluster_centers_')
+        X = check_dims(X, X_fit_dims=self.cluster_centers_.shape,
+                       extend=True,
+                       check_n_features_only=(self.metric != "euclidean"))
+        return self._assign(X, update_class_attributes=False)
 
     def _get_tags(self):
-        return {'allow_nan': True}
+        return {'allow_nan': True, 'allow_variable_length': True}
 
 
-class KShape(BaseEstimator, ClusterMixin,
+class KShape(BaseEstimator, BaseModelPackage, ClusterMixin,
              TimeSeriesCentroidBasedClusteringMixin):
     """KShape clustering for time series.
 
@@ -740,24 +1000,30 @@ class KShape(BaseEstimator, ClusterMixin,
     ----------
     n_clusters : int (default: 3)
         Number of clusters to form.
+
     max_iter : int (default: 100)
         Maximum number of iterations of the k-Shape algorithm.
+
     tol : float (default: 1e-6)
         Inertia variation threshold. If at some point, inertia varies less than
         this threshold between two consecutive
         iterations, the model is considered to have converged and the algorithm
         stops.
+
     n_init : int (default: 1)
         Number of time the k-Shape algorithm will be run with different
         centroid seeds. The final results will be the
         best output of n_init consecutive runs in terms of inertia.
+
     verbose : bool (default: False)
         Whether or not to print information about the inertia while learning
         the model.
+
     random_state : integer or numpy.RandomState, optional
         Generator used to initialize the centers. If an integer is given, it
         fixes the seed. Defaults to the global
         numpy random number generator.
+
     init : {'random' or ndarray} (default: 'random')
         Method for initialization.
         'random': choose k observations (rows) at random from data for the
@@ -769,15 +1035,18 @@ class KShape(BaseEstimator, ClusterMixin,
     ----------
     cluster_centers_ : numpy.ndarray of shape (sz, d).
         Centroids
+
     labels_ : numpy.ndarray of integers with shape (n_ts, ).
         Labels of each point
+
     inertia_ : float
         Sum of distances of samples to their closest cluster center.
+
     n_iter_ : int
         The number of iterations performed during fit.
 
-    Note
-    ----
+    Notes
+    -----
         This method requires a dataset of equal-sized time series.
 
     Examples
@@ -794,6 +1063,7 @@ class KShape(BaseEstimator, ClusterMixin,
     .. [1] J. Paparrizos & L. Gravano. k-Shape: Efficient and Accurate
        Clustering of Time Series. SIGMOD 2015. pp. 1855-1870.
     """
+
     def __init__(self, n_clusters=3, max_iter=100, tol=1e-6, n_init=1,
                  verbose=False, random_state=None, init='random'):
         self.n_clusters = n_clusters
@@ -804,11 +1074,40 @@ class KShape(BaseEstimator, ClusterMixin,
         self.verbose = verbose
         self.init = init
 
+    def _get_model_params(self):
+        """
+        Get the model parameters
+
+        Returns
+        -------
+        params : dict
+            Model parameters (attributes) that are sufficient
+            to recapitulate the model
+        """
+
+        return {'cluster_centers_': self.cluster_centers_,
+                'norms_': self.norms_,
+                'norms_centroids_': self.norms_centroids_,
+                }
+
+    def _is_fitted(self):
+        """
+        Check if the model has been fit.
+
+        Returns
+        -------
+        bool
+        """
+
+        check_is_fitted(self,
+                        ['cluster_centers_', 'norms_', 'norms_centroids_'])
+        return True
+
     def _shape_extraction(self, X, k):
         sz = X.shape[1]
         Xp = y_shifted_sbd_vec(self.cluster_centers_[k], X[self.labels_ == k],
                                norm_ref=-1,
-                               norms_dataset=self._norms[self.labels_ == k])
+                               norms_dataset=self.norms_[self.labels_ == k])
         S = numpy.dot(Xp[:, :, 0].T, Xp[:, :, 0])
         Q = numpy.eye(sz) - numpy.ones((sz, sz)) / sz
         M = numpy.dot(Q.T, numpy.dot(S, Q))
@@ -830,13 +1129,13 @@ class KShape(BaseEstimator, ClusterMixin,
             self.cluster_centers_[k] = self._shape_extraction(X, k)
         self.cluster_centers_ = TimeSeriesScalerMeanVariance(
             mu=0., std=1.).fit_transform(self.cluster_centers_)
-        self._norms_centroids = numpy.linalg.norm(self.cluster_centers_,
+        self.norms_centroids_ = numpy.linalg.norm(self.cluster_centers_,
                                                   axis=(1, 2))
 
     def _cross_dists(self, X):
         return 1. - cdist_normalized_cc(X, self.cluster_centers_,
-                                        norms1=self._norms,
-                                        norms2=self._norms_centroids,
+                                        norms1=self.norms_,
+                                        norms2=self.norms_centroids_,
                                         self_similarity=False)
 
     def _assign(self, X):
@@ -854,7 +1153,7 @@ class KShape(BaseEstimator, ClusterMixin,
         else:
             raise ValueError("Value %r for parameter 'init' is "
                              "invalid" % self.init)
-        self._norms_centroids = numpy.linalg.norm(self.cluster_centers_,
+        self.norms_centroids_ = numpy.linalg.norm(self.cluster_centers_,
                                                   axis=(1, 2))
         self._assign(X)
         old_inertia = numpy.inf
@@ -887,6 +1186,7 @@ class KShape(BaseEstimator, ClusterMixin,
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset.
+
         y
             Ignored
         """
@@ -898,14 +1198,14 @@ class KShape(BaseEstimator, ClusterMixin,
         self.inertia_ = numpy.inf
         self.cluster_centers_ = None
 
-        self._norms = 0.
-        self._norms_centroids = 0.
+        self.norms_ = 0.
+        self.norms_centroids_ = 0.
 
         self.n_iter_ = 0
 
         X_ = to_time_series_dataset(X)
         self._X_fit = X_
-        self._norms = numpy.linalg.norm(X_, axis=(1, 2))
+        self.norms_ = numpy.linalg.norm(X_, axis=(1, 2))
 
         _check_initial_guess(self.init, self.n_clusters)
 
@@ -929,7 +1229,7 @@ class KShape(BaseEstimator, ClusterMixin,
             except EmptyClusterError:
                 if self.verbose:
                     print("Resumed because of empty cluster")
-        self._norms_centroids = numpy.linalg.norm(self.cluster_centers_,
+        self.norms_centroids_ = numpy.linalg.norm(self.cluster_centers_,
                                                   axis=(1, 2))
         self._post_fit(X_, best_correct_centroids, min_inertia)
         return self
@@ -945,6 +1245,7 @@ class KShape(BaseEstimator, ClusterMixin,
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset to predict.
+
         y
             Ignored
 
@@ -969,9 +1270,10 @@ class KShape(BaseEstimator, ClusterMixin,
             Index of the cluster each sample belongs to.
         """
         X = check_array(X, allow_nd=True)
-        check_is_fitted(self, '_X_fit')
-        X_ = to_time_series_dataset(X)
-        X = check_dims(X, self._X_fit)
+        check_is_fitted(self,
+                        ['cluster_centers_', 'norms_', 'norms_centroids_'])
+
+        X_ = check_dims(X, X_fit_dims=self.cluster_centers_.shape)
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
         dists = self._cross_dists(X_)
         return dists.argmin(axis=1)

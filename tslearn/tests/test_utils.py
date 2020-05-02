@@ -1,5 +1,6 @@
 import numpy as np
 import pickle
+import os
 
 import tslearn.utils
 
@@ -42,3 +43,60 @@ def test_label_categorizer():
     ref = np.array([1., 2., -1.])
 
     np.testing.assert_allclose(ref, y_tr)
+
+
+def test_conversions():
+    n, sz, d = 15, 10, 3
+    rng = np.random.RandomState(0)
+    tslearn_dataset = rng.randn(n, sz, d)
+
+    np.testing.assert_allclose(
+        tslearn_dataset,
+        tslearn.utils.from_pyts_dataset(
+            tslearn.utils.to_pyts_dataset(tslearn_dataset)
+        )
+    )
+
+    np.testing.assert_allclose(
+        tslearn_dataset,
+        tslearn.utils.from_sktime_dataset(
+            tslearn.utils.to_sktime_dataset(tslearn_dataset)
+        )
+    )
+
+    np.testing.assert_allclose(
+        tslearn_dataset,
+        tslearn.utils.from_seglearn_dataset(
+            tslearn.utils.to_seglearn_dataset(tslearn_dataset)
+        )
+    )
+
+    np.testing.assert_allclose(
+        tslearn_dataset,
+        tslearn.utils.from_stumpy_dataset(
+            tslearn.utils.to_stumpy_dataset(tslearn_dataset)
+        )
+    )
+
+    if os.environ.get("DO_NOT_TEST_CESIUM_CAST", None) is None:
+        np.testing.assert_allclose(
+            tslearn_dataset,
+            tslearn.utils.from_cesium_dataset(
+                tslearn.utils.to_cesium_dataset(tslearn_dataset)
+            )
+        )
+
+    np.testing.assert_allclose(
+        tslearn_dataset,
+        tslearn.utils.from_tsfresh_dataset(
+            tslearn.utils.to_tsfresh_dataset(tslearn_dataset)
+        )
+    )
+
+    tslearn_dataset = rng.randn(1, sz, d)
+    np.testing.assert_allclose(
+        tslearn_dataset,
+        tslearn.utils.from_pyflux_dataset(
+            tslearn.utils.to_pyflux_dataset(tslearn_dataset)
+        )
+    )
