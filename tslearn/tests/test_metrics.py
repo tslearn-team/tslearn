@@ -283,7 +283,7 @@ def test_lb_keogh():
 
 def test_dtw_path_from_metric():
     rng = np.random.RandomState(0)
-    s1, s2 = rng.random((10, 2)), rng.random((30, 2))
+    s1, s2 = rng.rand(10, 2), rng.rand(30, 2)
 
     # Use dtw_path as a reference
     path_ref, dist_ref = tslearn.metrics.dtw_path(s1, s2)
@@ -296,7 +296,8 @@ def test_dtw_path_from_metric():
 
     # Test of defining a custom function
     def sqeuclidean(x, y):
-        return(np.sum((x-y)**2))
+        return np.sum((x-y)**2)
+
     path, dist = tslearn.metrics.dtw_path_from_metric(s1, s2,
                                                       metric=sqeuclidean)
     np.testing.assert_equal(path, path_ref)
