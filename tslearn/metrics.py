@@ -12,6 +12,7 @@ from sklearn.metrics.pairwise import euclidean_distances, pairwise_distances
 from sklearn.utils import check_random_state
 from tslearn.soft_dtw_fast import _soft_dtw, _soft_dtw_grad, \
     _jacobian_product_sq_euc
+from tslearn.cysax import cydist_sax
 
 from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, \
     check_equal_size
@@ -19,13 +20,14 @@ from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, \
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 GLOBAL_CONSTRAINT_CODE = {None: 0, "": 0, "itakura": 1, "sakoe_chiba": 2}
-VARIABLE_LENGTH_METRICS = ["dtw", "gak", "softdtw"]
+TSLEARN_VALID_METRICS = ["dtw", "gak", "softdtw", "sax"]
+VARIABLE_LENGTH_METRICS = ["dtw", "gak", "softdtw", "sax"]
 
 
 @njit()
 def _local_squared_dist(x, y):
     dist = 0.
-    for di in prange(x.shape[0]):
+    for di in range(x.shape[0]):
         diff = (x[di] - y[di])
         dist += diff * diff
     return dist
@@ -57,8 +59,8 @@ def njit_accumulated_matrix(s1, s2, mask):
     cum_sum = numpy.full((l1 + 1, l2 + 1), numpy.inf)
     cum_sum[0, 0] = 0.
 
-    for i in prange(l1):
-        for j in prange(l2):
+    for i in range(l1):
+        for j in range(l2):
             if numpy.isfinite(mask[i, j]):
                 cum_sum[i + 1, j + 1] = _local_squared_dist(s1[i], s2[j])
                 cum_sum[i + 1, j + 1] += min(cum_sum[i, j + 1],
@@ -123,14 +125,15 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
     similarity.
 
     DTW is computed as the Euclidean distance between aligned time series,
-    i.e., if :math:`P` is the alignment path:
+    i.e., if :math:`\pi` is the alignment path:
 
     .. math::
 
-        DTW(X, Y) = \sqrt{\sum_{(i, j) \in P} (X_{i} - Y_{j})^2}
+        DTW(X, Y) = \sqrt{\sum_{(i, j) \in \pi} (X_{i} - Y_{j})^2}
 
     It is not required that both time series share the same size, but they must
-    be the same dimension. DTW was originally presented in [1]_.
+    be the same dimension. DTW was originally presented in [1]_ and is
+    discussed in more details in our :ref:`dedicated tutorial page <dtw>`.
 
     Parameters
     ----------
@@ -396,16 +399,17 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
     (possibly multidimensional) time series and return it.
 
     DTW is computed as the Euclidean distance between aligned time series,
-    i.e., if :math:`P` is the optimal alignment path:
+    i.e., if :math:`\pi` is the optimal alignment path:
 
     .. math::
 
-        DTW(X, Y) = \sqrt{\sum_{(i, j) \in P} \|X_{i} - Y_{j}\|^2}
+        DTW(X, Y) = \sqrt{\sum_{(i, j) \in \pi} \|X_{i} - Y_{j}\|^2}
 
     Note that this formula is still valid for the multivariate case.
 
     It is not required that both time series share the same size, but they must
-    be the same dimension. DTW was originally presented in [1]_.
+    be the same dimension. DTW was originally presented in [1]_ and is
+    discussed in more details in our :ref:`dedicated tutorial page <dtw>`.
 
     Parameters
     ----------
@@ -560,17 +564,19 @@ def dtw_limited_warping_length(s1, s2, max_length):
     the resulting path length and return the similarity cost.
 
     DTW is computed as the Euclidean distance between aligned time series,
-    i.e., if :math:`P` is the optimal alignment path:
+    i.e., if :math:`\pi` is the optimal alignment path:
 
     .. math::
 
-        DTW(X, Y) = \sqrt{\sum_{(i, j) \in P} \|X_{i} - Y_{j}\|^2}
+        DTW(X, Y) = \sqrt{\sum_{(i, j) \in \pi} \|X_{i} - Y_{j}\|^2}
 
     Note that this formula is still valid for the multivariate case.
 
     It is not required that both time series share the same size, but they must
     be the same dimension. DTW was originally presented in [1]_.
     This constrained-length variant was introduced in [2]_.
+    Both bariants are
+    discussed in more details in our :ref:`dedicated tutorial page <dtw>`
 
     Parameters
     ----------
@@ -661,17 +667,19 @@ def dtw_path_limited_warping_length(s1, s2, max_length):
     cost.
 
     DTW is computed as the Euclidean distance between aligned time series,
-    i.e., if :math:`P` is the optimal alignment path:
+    i.e., if :math:`\pi` is the optimal alignment path:
 
     .. math::
 
-        DTW(X, Y) = \sqrt{\sum_{(i, j) \in P} \|X_{i} - Y_{j}\|^2}
+        DTW(X, Y) = \sqrt{\sum_{(i, j) \in \pi} \|X_{i} - Y_{j}\|^2}
 
     Note that this formula is still valid for the multivariate case.
 
     It is not required that both time series share the same size, but they must
     be the same dimension. DTW was originally presented in [1]_.
     This constrained-length variant was introduced in [2]_.
+    Both variants are
+    discussed in more details in our :ref:`dedicated tutorial page <dtw>`
 
     Parameters
     ----------
@@ -754,8 +762,8 @@ def _subsequence_cost_matrix(subseq, longseq):
     cum_sum = numpy.full((l1 + 1, l2 + 1), numpy.inf)
     cum_sum[0, :] = 0.
 
-    for i in prange(l1):
-        for j in prange(l2):
+    for i in range(l1):
+        for j in range(l2):
             cum_sum[i + 1, j + 1] = _local_squared_dist(subseq[i], longseq[j])
             cum_sum[i + 1, j + 1] += min(cum_sum[i, j + 1],
                                          cum_sum[i + 1, j],
@@ -815,7 +823,7 @@ def subsequence_path(acc_cost_mat, idx_path_end):
     ----------
     acc_cost_mat: array, shape = (sz1, sz2)
         The accumulated cost matrix comparing subsequence from a longer
-        sequence
+        sequence.
     idx_path_end: int
         The end position of the matched subsequence in the longer sequence.
 
@@ -853,16 +861,16 @@ def dtw_subsequence_path(subseq, longseq):
     return both the path and the similarity.
 
     DTW is computed as the Euclidean distance between aligned time series,
-    i.e., if :math:`P` is the alignment path:
+    i.e., if :math:`\pi` is the alignment path:
 
     .. math::
 
-        DTW(X, Y) = \sqrt{\sum_{(i, j) \in P} (X_{i} - Y_{j})^2}
+        DTW(X, Y) = \sqrt{\sum_{(i, j) \in \pi} \|X_{i} - Y_{j}\|^2}
 
     Compared to traditional DTW, here, border constraints on admissible paths
-    :math:`P` are relaxed such that :math:`P_0 = (0, ?)` and
-    :math:`P_L = (N-1, ?)` where :math:`L` is the length of the considered path
-    and :math:`N` is the length of the subsequence time series.
+    :math:`\pi` are relaxed such that :math:`\pi_0 = (0, ?)` and
+    :math:`\pi_L = (N-1, ?)` where :math:`L` is the length of the considered
+    path and :math:`N` is the length of the subsequence time series.
 
     It is not required that both time series share the same size, but they must
     be the same dimension. This implementation finds the best matching starting
@@ -1131,6 +1139,86 @@ def compute_mask(s1, s2, global_constraint=0,
     return mask
 
 
+def _cdist_generic(dist_fun, dataset1, dataset2, n_jobs, verbose,
+                   compute_diagonal=True, dtype=numpy.float, *args, **kwargs):
+    """Compute cross-similarity matrix with joblib parallelization for a given
+    similarity function.
+
+    Parameters
+    ----------
+    dist_fun : function
+        Similarity function to be used
+
+    dataset1 : array-like
+        A dataset of time series
+
+    dataset2 : array-like (default: None)
+        Another dataset of time series. If `None`, self-similarity of
+        `dataset1` is returned.
+
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See scikit-learns'
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`__
+        for more details.
+
+    verbose : int, optional (default=0)
+        The verbosity level: if non zero, progress messages are printed.
+        Above 50, the output is sent to stdout.
+        The frequency of the messages increases with the verbosity level.
+        If it more than 10, all iterations are reported.
+        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`__
+        for more details.
+
+    compute_diagonal : bool (default: True)
+        Whether diagonal terms should be computed or assumed to be 0 in the
+        self-similarity case. Used only if `dataset2` is `None`.
+
+    *args and **kwargs :
+        Optional additional parameters to be passed to the similarity function.
+
+
+    Returns
+    -------
+    cdist : numpy.ndarray
+        Cross-similarity matrix
+    """  # noqa: E501
+    dataset1 = to_time_series_dataset(dataset1, dtype=dtype)
+
+    if dataset2 is None:
+        # Inspired from code by @GillesVandewiele:
+        # https://github.com/rtavenar/tslearn/pull/128#discussion_r314978479
+        matrix = numpy.zeros((len(dataset1), len(dataset1)))
+        indices = numpy.triu_indices(len(dataset1),
+                                     k=0 if compute_diagonal else 1,
+                                     m=len(dataset1))
+        matrix[indices] = Parallel(n_jobs=n_jobs,
+                                   prefer="threads",
+                                   verbose=verbose)(
+            delayed(dist_fun)(
+                dataset1[i], dataset1[j],
+                *args, **kwargs
+            )
+            for i in range(len(dataset1))
+            for j in range(i if compute_diagonal else i + 1,
+                           len(dataset1))
+        )
+        indices = numpy.tril_indices(len(dataset1), k=-1, m=len(dataset1))
+        matrix[indices] = matrix.T[indices]
+        return matrix
+    else:
+        dataset2 = to_time_series_dataset(dataset2, dtype=dtype)
+        matrix = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
+            delayed(dist_fun)(
+                dataset1[i], dataset2[j],
+                *args, **kwargs
+            )
+            for i in range(len(dataset1)) for j in range(len(dataset2))
+        )
+        return numpy.array(matrix).reshape((len(dataset1), -1))
+
+
 def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
               sakoe_chiba_radius=None, itakura_max_slope=None, n_jobs=None,
               verbose=0):
@@ -1138,13 +1226,14 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
     similarity measure.
 
     DTW is computed as the Euclidean distance between aligned time series,
-    i.e., if :math:`P` is the alignment path:
+    i.e., if :math:`\pi` is the alignment path:
 
     .. math::
 
-        DTW(X, Y) = \sqrt{\sum_{(i, j) \in P} (X_{i} - Y_{j})^2}
+        DTW(X, Y) = \sqrt{\sum_{(i, j) \in \pi} (X_{i} - Y_{j})^2}
 
-    DTW was originally presented in [1]_.
+    DTW was originally presented in [1]_ and is
+    discussed in more details in our :ref:`dedicated tutorial page <dtw>`.
 
     Parameters
     ----------
@@ -1182,7 +1271,7 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
         The number of jobs to run in parallel.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors. See scikit-learns'
-        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`__
         for more details.
 
     verbose : int, optional (default=0)
@@ -1216,37 +1305,13 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
     .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
            spoken word recognition," IEEE Transactions on Acoustics, Speech and
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
-
     """  # noqa: E501
-    dataset1 = to_time_series_dataset(dataset1)
-
-    if dataset2 is None:
-        # Inspired from code by @GillesVandewiele:
-        # https://github.com/rtavenar/tslearn/pull/128#discussion_r314978479
-        matrix = numpy.zeros((len(dataset1), len(dataset1)))
-        indices = numpy.triu_indices(len(dataset1), k=1, m=len(dataset1))
-        matrix[indices] = Parallel(n_jobs=n_jobs,
-                                   prefer="threads",
-                                   verbose=verbose)(
-            delayed(dtw)(
-                dataset1[i], dataset1[j],
-                global_constraint=global_constraint,
-                sakoe_chiba_radius=sakoe_chiba_radius,
-                itakura_max_slope=itakura_max_slope)
-            for i in range(len(dataset1)) for j in range(i + 1, len(dataset1))
-        )
-        return matrix + matrix.T
-    else:
-        dataset2 = to_time_series_dataset(dataset2)
-        matrix = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
-            delayed(dtw)(
-                dataset1[i], dataset2[j],
-                global_constraint=global_constraint,
-                sakoe_chiba_radius=sakoe_chiba_radius,
-                itakura_max_slope=itakura_max_slope)
-            for i in range(len(dataset1)) for j in range(len(dataset2))
-        )
-        return numpy.array(matrix).reshape((len(dataset1), -1))
+    return _cdist_generic(dist_fun=dtw, dataset1=dataset1, dataset2=dataset2,
+                          n_jobs=n_jobs, verbose=verbose,
+                          compute_diagonal=False,
+                          global_constraint=global_constraint,
+                          sakoe_chiba_radius=sakoe_chiba_radius,
+                          itakura_max_slope=itakura_max_slope)
 
 
 @njit(nogil=True)
@@ -1257,8 +1322,8 @@ def njit_gak(s1, s2, gram):
     cum_sum = numpy.zeros((l1 + 1, l2 + 1))
     cum_sum[0, 0] = 1.
 
-    for i in prange(l1):
-        for j in prange(l2):
+    for i in range(l1):
+        for j in range(l2):
             cum_sum[i + 1, j + 1] = (cum_sum[i, j + 1] +
                                      cum_sum[i + 1, j] +
                                      cum_sum[i, j]) * gram[i, j]
@@ -1384,7 +1449,7 @@ def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None, verbose=0):
         The number of jobs to run in parallel.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors. See scikit-learns'
-        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`__
         for more details.
     verbose : int, optional (default=0)
         The verbosity level: if non zero, progress messages are printed.
@@ -1418,30 +1483,19 @@ def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None, verbose=0):
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """  # noqa: E501
+    unnormalized_matrix = _cdist_generic(dist_fun=unnormalized_gak,
+                                         dataset1=dataset1,
+                                         dataset2=dataset2,
+                                         n_jobs=n_jobs,
+                                         verbose=verbose,
+                                         sigma=sigma,
+                                         compute_diagonal=True)
     dataset1 = to_time_series_dataset(dataset1)
-
     if dataset2 is None:
-        # Inspired from code by @GillesVandewiele:
-        # https://github.com/rtavenar/tslearn/pull/128#discussion_r314978479
-        matrix = numpy.zeros((len(dataset1), len(dataset1)))
-        indices = numpy.triu_indices(len(dataset1), k=0, m=len(dataset1))
-        matrix[indices] = Parallel(n_jobs=n_jobs,
-                                   prefer="threads",
-                                   verbose=verbose)(
-            delayed(unnormalized_gak)(dataset1[i], dataset1[j], sigma=sigma)
-            for i in range(len(dataset1)) for j in range(i, len(dataset1))
-        )
-        indices = numpy.tril_indices(len(dataset1), k=-1, m=len(dataset1))
-        matrix[indices] = matrix.T[indices]
-        diagonal = numpy.diag(numpy.sqrt(1. / numpy.diag(matrix)))
+        diagonal = numpy.diag(numpy.sqrt(1. / numpy.diag(unnormalized_matrix)))
         diagonal_left = diagonal_right = diagonal
     else:
         dataset2 = to_time_series_dataset(dataset2)
-        matrix = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
-            delayed(unnormalized_gak)(dataset1[i], dataset2[j], sigma=sigma)
-            for i in range(len(dataset1)) for j in range(len(dataset2))
-        )
-        matrix = numpy.array(matrix).reshape((len(dataset1), -1))
         diagonal_left = Parallel(n_jobs=n_jobs,
                                  prefer="threads",
                                  verbose=verbose)(
@@ -1456,7 +1510,7 @@ def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None, verbose=0):
         )
         diagonal_left = numpy.diag(1. / numpy.sqrt(diagonal_left))
         diagonal_right = numpy.diag(1. / numpy.sqrt(diagonal_right))
-    return (diagonal_left.dot(matrix)).dot(diagonal_right)
+    return (diagonal_left.dot(unnormalized_matrix)).dot(diagonal_right)
 
 
 def sigma_gak(dataset, n_samples=100, random_state=None):
@@ -1477,7 +1531,7 @@ def sigma_gak(dataset, n_samples=100, random_state=None):
     Returns
     -------
     float
-        Suggested bandwidth (:math:`\\sigma`) for the Global Alignment kernel
+        Suggested bandwidth (:math:`\sigma`) for the Global Alignment kernel
 
     Examples
     --------
@@ -1531,7 +1585,7 @@ def gamma_soft_dtw(dataset, n_samples=100, random_state=None):
     Returns
     -------
     float
-        Suggested :math:`\\gamma` parameter for the Soft-DTW
+        Suggested :math:`\gamma` parameter for the Soft-DTW
 
     Examples
     --------
@@ -1552,6 +1606,60 @@ def gamma_soft_dtw(dataset, n_samples=100, random_state=None):
     return 2. * sigma_gak(dataset=dataset,
                           n_samples=n_samples,
                           random_state=random_state) ** 2
+
+
+def cdist_sax(dataset1, breakpoints_avg, size_fitted, dataset2=None,
+              n_jobs=None, verbose=0):
+    r"""Calculates a matrix of distances (MINDIST) on SAX-transformed data,
+    as presented in [1]_. It is important to note that this function
+    expects the timeseries in dataset1 and dataset2 to be normalized
+    to each have zero mean and unit variance.
+
+    Parameters
+    ----------
+    dataset1 : array-like
+        A dataset of time series
+
+    breakpoints_avg : array-like
+        The breakpoints used to assign the alphabet symbols.
+
+    size_fitted: int
+        The original timesteps in the timeseries, before
+        discretizing through SAX.
+
+    dataset2 : array-like (default: None)
+        Another dataset of time series. If `None`, self-similarity of
+        `dataset1` is returned.
+
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See scikit-learns'
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`__
+        for more details.
+
+    verbose : int, optional (default=0)
+        The verbosity level: if non zero, progress messages are printed.
+        Above 50, the output is sent to stdout.
+        The frequency of the messages increases with the verbosity level.
+        If it more than 10, all iterations are reported.
+        `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`__
+        for more details.
+
+    Returns
+    -------
+    cdist : numpy.ndarray
+        Cross-similarity matrix
+
+    References
+    ----------
+    .. [1] Lin, Jessica, et al. "Experiencing SAX: a novel symbolic
+           representation of time series." Data Mining and knowledge
+           discovery 15.2 (2007): 107-144.
+
+    """  # noqa: E501
+    return _cdist_generic(cydist_sax, dataset1, dataset2, n_jobs, verbose,
+                          False, int, breakpoints_avg, size_fitted)
 
 
 def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
@@ -1703,7 +1811,23 @@ def lb_envelope(ts, radius=1):
 def soft_dtw(ts1, ts2, gamma=1.):
     r"""Compute Soft-DTW metric between two time series.
 
-    Soft-DTW was originally presented in [1]_.
+    Soft-DTW was originally presented in [1]_ and is
+    discussed in more details in our
+    :ref:`tutorial page on DTW and its variants<dtw>`.
+
+    Soft-DTW is computed as:
+
+    .. math::
+
+        \text{soft-DTW}_{\gamma}(X, Y) =
+            \min_{\pi}{}^\gamma \sum_{(i, j) \in \pi} \|X_i, Y_j\|^2
+
+    where :math:`\min^\gamma` is the soft-min operator of parameter
+    :math:`\gamma`.
+
+    In the limit case :math:`\gamma = 0`, :math:`\min^\gamma` reduces to a
+    hard-min operator and soft-DTW is defined as the square of the DTW
+    similarity measure.
 
     Parameters
     ----------
@@ -1740,7 +1864,7 @@ def soft_dtw(ts1, ts2, gamma=1.):
        Time-Series," ICML 2017.
     """
     if gamma == 0.:
-        return dtw(ts1, ts2)
+        return dtw(ts1, ts2) ** 2
     return SoftDTW(SquaredEuclidean(ts1[:ts_size(ts1)], ts2[:ts_size(ts2)]),
                    gamma=gamma).compute()
 
@@ -1748,7 +1872,23 @@ def soft_dtw(ts1, ts2, gamma=1.):
 def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
     r"""Compute cross-similarity matrix using Soft-DTW metric.
 
-    Soft-DTW was originally presented in [1]_.
+    Soft-DTW was originally presented in [1]_ and is
+    discussed in more details in our
+    :ref:`tutorial page on DTW and its variants<dtw>`.
+
+    Soft-DTW is computed as:
+
+    .. math::
+
+        \text{soft-DTW}_{\gamma}(X, Y) =
+            \min_{\pi}{}^\gamma \sum_{(i, j) \in \pi} \|X_i, Y_j\|^2
+
+    where :math:`\min^\gamma` is the soft-min operator of parameter
+    :math:`\gamma`.
+
+    In the limit case :math:`\gamma = 0`, :math:`\min^\gamma` reduces to a
+    hard-min operator and soft-DTW is defined as the square of the DTW
+    similarity measure.
 
     Parameters
     ----------
@@ -1814,21 +1954,47 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
 
 
 def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.):
-    """Compute cross-similarity matrix using a normalized version of the
+    r"""Compute cross-similarity matrix using a normalized version of the
     Soft-DTW metric.
 
-    Soft-DTW was originally presented in [1]_.
+    Soft-DTW was originally presented in [1]_ and is
+    discussed in more details in our
+    :ref:`tutorial page on DTW and its variants<dtw>`.
+
+    Soft-DTW is computed as:
+
+    .. math::
+
+        \text{soft-DTW}_{\gamma}(X, Y) =
+            \min_{\pi}{}^\gamma \sum_{(i, j) \in \pi} \|X_i, Y_j\|^2
+
+    where :math:`\min^\gamma` is the soft-min operator of parameter
+    :math:`\gamma`.
+
+    In the limit case :math:`\gamma = 0`, :math:`\min^\gamma` reduces to a
+    hard-min operator and soft-DTW is defined as the square of the DTW
+    similarity measure.
+
     This normalized version is defined as:
-    `sdtw_(x,y) := sdtw(x,y) - 1/2(sdtw(x,x)+sdtw(y,y))`
+
+    .. math::
+
+        \text{norm-soft-DTW}_{\gamma}(X, Y) =
+            \text{soft-DTW}_{\gamma}(X, Y) -
+            \frac{1}{2} \left(\text{soft-DTW}_{\gamma}(X, X) +
+                \text{soft-DTW}_{\gamma}(Y, Y)\right)
+
     and ensures that all returned values are positive and that
-    `sdtw_(x,x) == 0`.
+    :math:`\text{norm-soft-DTW}_{\gamma}(X, X) = 0`.
 
     Parameters
     ----------
     dataset1
         A dataset of time series
+
     dataset2
         Another dataset of time series
+
     gamma : float (default 1.)
         Gamma paraneter for Soft-DTW
 

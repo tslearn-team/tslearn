@@ -18,7 +18,6 @@ from sklearn.utils.testing import (
     assert_allclose, assert_raises_regex, assert_allclose_dense_sparse
 )
 from sklearn.utils.estimator_checks import (
-    pairwise_estimator_convert_X, choose_check_classifiers_labels,
     check_classifiers_predictions,
     check_fit2d_1sample,
     check_fit2d_1feature,
@@ -34,7 +33,25 @@ from sklearn.utils.estimator_checks import (
     _boston_subset
 )
 
-from sklearn.utils.testing import ignore_warnings, SkipTest
+try:
+    # Most recent
+    from sklearn.utils.estimator_checks import (
+        _pairwise_estimator_convert_X as pairwise_estimator_convert_X,
+        _choose_check_classifiers_labels as choose_check_classifiers_labels
+    )
+except ImportError:
+    # Deprecated from sklearn v0.24 onwards
+    from sklearn.utils.estimator_checks import (
+        pairwise_estimator_convert_X,
+        choose_check_classifiers_labels
+    )
+
+try:
+    # Most recent
+    from sklearn.utils._testing import ignore_warnings, SkipTest
+except ImportError:
+    # Deprecated from sklearn v0.24 onwards
+    from sklearn.utils.testing import ignore_warnings, SkipTest
 from sklearn.exceptions import SkipTestWarning
 from sklearn.utils.estimator_checks import (_yield_classifier_checks,
                                             _yield_regressor_checks,
@@ -51,6 +68,8 @@ from sklearn.metrics import adjusted_rand_score, accuracy_score
 from sklearn.model_selection import ShuffleSplit
 from sklearn.model_selection._validation import _safe_split
 from sklearn.pipeline import make_pipeline
+
+from tslearn.clustering import TimeSeriesKMeans
 
 import warnings
 import numpy as np
@@ -349,15 +368,20 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
                "features in {} is different from the number of features in "
                "fit.")
 
-        if not tags["no_validation"] and not tags["allow_variable_length"]:
+        if not tags["no_validation"]:
             if bool(getattr(classifier, "_pairwise", False)):
                 with assert_raises(ValueError,
                                    msg=msg_pairwise.format(name, "predict")):
                     classifier.predict(X.reshape(-1, 1))
             else:
-                with assert_raises(ValueError,
-                                   msg=msg.format(name, "predict")):
-                    classifier.predict(X.T)
+                if not tags["allow_variable_length"]:
+                    with assert_raises(ValueError,
+                                       msg=msg.format(name, "predict")):
+                        classifier.predict(X.T)
+                else:
+                    with assert_raises(ValueError,
+                                       msg=msg.format(name, "predict")):
+                        classifier.predict(X.reshape((-1, 5, 2)))
         if hasattr(classifier, "decision_function"):
             try:
                 # decision_function agrees with predict
@@ -375,16 +399,19 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
 
                 # raises error on malformed input for decision_function
                 if not tags["no_validation"]:
+                    error_msg = msg_pairwise.format(name, "decision_function")
                     if bool(getattr(classifier, "_pairwise", False)):
-                        error_msg = msg_pairwise.format(name,
-                                                        "decision_function")
                         with assert_raises(ValueError, msg=error_msg):
                             classifier.decision_function(X.reshape(-1, 1))
                     else:
-                        error_msg = msg_pairwise.format(name,
-                                                        "decision_function")
-                        with assert_raises(ValueError, msg=error_msg):
-                            classifier.decision_function(X.T)
+                        if not tags["allow_variable_length"]:
+                            with assert_raises(ValueError, msg=error_msg):
+                                classifier.decision_function(X.T)
+                        else:
+                            with assert_raises(ValueError, msg=error_msg):
+                                classifier.decision_function(
+                                    X.reshape((-1, 5, 2))
+                                )
             except NotImplementedError:
                 pass
 
@@ -396,16 +423,23 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
             # check that probas for all classes sum to one
             assert_array_almost_equal(np.sum(y_prob, axis=1),
                                       np.ones(n_samples))
-            if not tags["no_validation"] and not tags["allow_variable_length"]:
+            if not tags["no_validation"]:
                 # raises error on malformed input for predict_proba
                 if bool(getattr(classifier_orig, "_pairwise", False)):
                     with assert_raises(ValueError, msg=msg_pairwise.format(
                             name, "predict_proba")):
                         classifier.predict_proba(X.reshape(-1, 1))
                 else:
-                    with assert_raises(ValueError, msg=msg.format(
-                            name, "predict_proba")):
-                        classifier.predict_proba(X.T)
+                    if not tags["allow_variable_length"]:
+                        with assert_raises(ValueError, msg=msg.format(
+                                name, "predict_proba")):
+                            classifier.predict_proba(X.T)
+                    else:
+                        with assert_raises(ValueError, msg=msg.format(
+                                name, "predict_proba")):
+                            classifier.predict_proba(
+                                X.reshape((-1, 5, 2))
+                            )
             if hasattr(classifier, "predict_log_proba"):
                 # predict_log_proba is a transformation of predict_proba
                 y_log_prob = classifier.predict_log_proba(X)
@@ -511,6 +545,23 @@ def check_pipeline_consistency(name, estimator_orig):
             assert_allclose_dense_sparse(result, result_pipe)
 
 
+@ignore_warnings(category=(DeprecationWarning, FutureWarning))
+def check_different_length_fit_predict(name, estimator):
+    # Check if classifier can predict a dataset that does not have the same
+    # number of timestamps as the data passed at fit time
+
+    # Default for kmeans is Euclidean
+    if isinstance(estimator, TimeSeriesKMeans):
+        new_estimator = clone(estimator)
+        new_estimator.metric = "dtw"
+    else:
+        new_estimator = estimator
+
+    X, y = _create_small_ts_dataset()
+    X2 = np.hstack((X, X))
+    new_estimator.fit(X, y).predict(X2)
+
+
 def yield_all_checks(name, estimator):
     tags = _safe_tags(estimator)
     if "2darray" not in tags["X_types"]:
@@ -541,7 +592,8 @@ def yield_all_checks(name, estimator):
     if is_outlier_detector(estimator):
         for check in _yield_outliers_checks(name, estimator):
             yield check
-    yield check_fit2d_predict1d
+    # We are not strict on presence/absence of the 3rd dimension
+    # yield check_fit2d_predict1d
 
     if not tags["non_deterministic"]:
         yield check_methods_subset_invariance
@@ -554,3 +606,6 @@ def yield_all_checks(name, estimator):
     yield check_dict_unchanged
     yield check_dont_overwrite_parameters
     yield check_fit_idempotent
+
+    if tags["allow_variable_length"]:
+        yield check_different_length_fit_predict

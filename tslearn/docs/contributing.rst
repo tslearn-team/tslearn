@@ -16,7 +16,7 @@ We are welcoming contributions in the following forms:
   2. implement your bug fix;
   3. submit a pull request referencing the ID of the issue in which the bug was reported / the feature was suggested;
 
-If you would like to contribute by implementing a new feature reported in the Issues, maybe starting with `Issues that are attached the "good first issue" label <https://github.com/rtavenar/tslearn/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22>`_ would be a good idea.
+If you would like to contribute by implementing a new feature reported in the Issues, maybe starting with `Issues that are attached the "good first issue" label <https://github.com/tslearn-team/tslearn/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22>`_ would be a good idea.
 
 When submitting code, please think about code quality, adding proper docstrings including doctests with high code coverage.
 
@@ -24,10 +24,10 @@ More details on Pull requests
 =============================
 
 The preferred workflow for contributing to tslearn is to fork the
-`main repository <https://github.com/rtavenar/tslearn>`_ on
+`main repository <https://github.com/tslearn-team/tslearn>`_ on
 GitHub, clone, and develop on a branch. Steps:
 
-1. Fork the `project repository <https://github.com/rtavenar/tslearn>`_
+1. Fork the `project repository <https://github.com/tslearn-team/tslearn>`_
    by clicking on the 'Fork' button near the top right of the page. This creates
    a copy of the code under your GitHub user account. For more details on
    how to fork a repository see `this guide <https://help.github.com/articles/fork-a-repo/>`_.

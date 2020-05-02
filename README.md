@@ -5,7 +5,7 @@
 
 <!-- Short description -->
 <p align="center"> 
-   "The machine learning toolkit for time series analysis in Python"
+   The machine learning toolkit for time series analysis in Python
 </p>
 
 <!-- The badges -->
@@ -13,14 +13,17 @@
     <a href="https://badge.fury.io/py/tslearn">
         <img alt="PyPI" src="https://badge.fury.io/py/tslearn.svg">
     </a>
-    <a href="http://tslearn.readthedocs.io/en/latest/?badge=latest">
-        <img alt="Documentation" src="https://readthedocs.org/projects/tslearn/badge/?version=latest">
+    <a href="http://tslearn.readthedocs.io/en/stable/?badge=stable">
+        <img alt="Documentation" src="https://readthedocs.org/projects/tslearn/badge/?version=stable">
     </a>
-    <a href="https://travis-ci.org/rtavenar/tslearn">
-        <img alt="Build" src="https://travis-ci.org/rtavenar/tslearn.svg?branch=master">
+    <a href="https://dev.azure.com/romaintavenard/tslearn/_build">
+        <img alt="Build (Azure Pipelines)" src="https://dev.azure.com/romaintavenard/tslearn/_apis/build/status/tslearn-team.tslearn?branchName=master">
     </a>
-    <a href="https://codecov.io/gh/rtavenar/tslearn">
-        <img alt="Codecov" src="https://codecov.io/gh/rtavenar/tslearn/branch/master/graph/badge.svg">
+    <a href="https://travis-ci.com/tslearn-team/tslearn">
+        <img alt="Build (Travis CI)" src="https://travis-ci.com/tslearn-team/tslearn.svg?branch=master">
+    </a>
+    <a href="https://codecov.io/gh/tslearn-team/tslearn">
+        <img alt="Codecov" src="https://codecov.io/gh/tslearn-team/tslearn/branch/master/graph/badge.svg">
     </a>
     <a href="https://pepy.tech/project/tslearn">
         <img alt="Downloads" src="https://pepy.tech/badge/tslearn">
@@ -45,7 +48,7 @@
 There are different alternatives to install tslearn:
 * PyPi: `python -m pip install tslearn`
 * Conda: `conda install -c conda-forge tslearn`
-* Git: `python -m pip install https://github.com/rtavenar/tslearn/archive/master.zip`
+* Git: `python -m pip install https://github.com/tslearn-team/tslearn/archive/master.zip`
 
 In order for the installation to be successful, the required dependencies must be installed. For a more detailed guide on how to install tslearn, please see the [Documentation](https://tslearn.readthedocs.io/en/latest/?badge=latest#installation).
 
@@ -116,7 +119,7 @@ The documentation, including a gallery of examples, is hosted at [readthedocs](h
 
 ## Contributing
 
-If you would like to contribute to `tslearn`, please have a look at [our contribution guidelines](CONTRIBUTING.md). A list of interesting TODO's can be found [here](https://github.com/rtavenar/tslearn/issues?utf8=✓&q=is%3Aissue%20is%3Aopen%20label%3A%22new%20feature%22%20). **If you want other ML methods for time series to be added to this TODO list, do not hesitate to [open an issue](https://github.com/rtavenar/tslearn/issues/new/choose)!**
+If you would like to contribute to `tslearn`, please have a look at [our contribution guidelines](CONTRIBUTING.md). A list of interesting TODO's can be found [here](https://github.com/tslearn-team/tslearn/issues?utf8=✓&q=is%3Aissue%20is%3Aopen%20label%3A%22new%20feature%22%20). **If you want other ML methods for time series to be added to this TODO list, do not hesitate to [open an issue](https://github.com/tslearn-team/tslearn/issues/new/choose)!**
 
 ## Referencing tslearn
 
@@ -131,7 +134,7 @@ If you use `tslearn` in a scientific publication, we would appreciate citations:
               Payne and Roman Yurchak and Marc Ru{\ss}wurm and Kushal
               Kolar and Eli Woods},
       year={2017},
-      note={\url{https://github.com/rtavenar/tslearn}}
+      note={\url{https://github.com/tslearn-team/tslearn}}
 }
 ```
 

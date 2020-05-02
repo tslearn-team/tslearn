@@ -51,13 +51,13 @@ The following image exhibits the DTW path (in white) for a given pair of time
 series, on top of the cross-similarity matrix that stores :math:`d(x_i, y_j)`
 values.
 
-.. figure:: fig/dtw.png
+.. figure:: _static/img/dtw_thumb.png
     :width: 30%
     :align: center
 
 Code to produce such visualization is available in our `Gallery of examples`_.
 
-.. _Gallery of examples: auto_examples/plot_dtw.html
+.. _Gallery of examples: auto_examples/metrics/plot_dtw.html
 
 Algorithmic solution
 --------------------
@@ -133,7 +133,7 @@ First, the Sakoe-Chiba band is parametrized by a radius :math:`r` (number of
 off-diagonal elements to consider, also called warping window size sometimes), 
 as illustrated below:
 
-.. figure:: fig/sakoe_chiba.png
+.. figure:: _static/img/sakoe_chiba.png
     :width: 30%
     :align: center
 
@@ -151,7 +151,7 @@ The corresponding code would be:
 Second, the Itakura parallelogram sets a maximum slope :math:`s` for alignment
 paths, which leads to a parallelogram-shaped constraint:
 
-.. figure:: fig/itakura.png
+.. figure:: _static/img/itakura.png
     :width: 30%
     :align: center
 
@@ -214,7 +214,7 @@ operator is replaced by ``soft-min``, using the log-sum-exp formulation:
 
 
 soft-DTW hence depends on a hyper-parameter :math:`\gamma` that controls the
-smoothing of the resulting metric (DTW corresponds to the limit case
+smoothing of the resulting metric (squared DTW corresponds to the limit case
 :math:`\gamma \rightarrow 0`).
 
 .. code-block:: python
@@ -239,11 +239,11 @@ References
 ----------
 
 .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
-           spoken word recognition," IEEE Transactions on Acoustics, Speech and
-           Signal Processing, vol. 26(1), pp. 43--49, 1978.
+       spoken word recognition," IEEE Transactions on Acoustics, Speech and
+       Signal Processing, vol. 26(1), pp. 43--49, 1978.
 .. [2] Z. Zhang, R. Tavenard, A. Bailly, X. Tang, P. Tang, T. Corpetti
-           Dynamic time warping under limited warping path length.
-           Information Sciences, vol. 393, pp. 91--107, 2017.
+       Dynamic time warping under limited warping path length.
+       Information Sciences, vol. 393, pp. 91--107, 2017.
 .. [3] F. Petitjean, A. Ketterlin & P. Gancarski. A global averaging method
        for dynamic time warping, with applications to clustering. Pattern
        Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693

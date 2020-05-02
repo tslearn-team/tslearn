@@ -12,7 +12,7 @@ Only the methods :func:`dtw_barycenter_averaging` and
 :func:`softdtw_barycenter` can operate on variable-length time-series
 (see :ref:`here<variable-length-barycenter>`).
 
-See the :ref:`barycenter examples<sphx_glr_auto_examples_plot_barycenters.py>`
+See the :ref:`barycenter examples<sphx_glr_auto_examples_clustering_plot_barycenters.py>`
 for an overview.
 """
 

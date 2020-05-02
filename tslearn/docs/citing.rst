@@ -14,6 +14,6 @@ citations:
                   Payne and Roman Yurchak and Marc Ru{\ss}wurm and Kushal
                   Kolar and Eli Woods},
           year={2017},
-          note={\url{https://github.com/rtavenar/tslearn}}
+          note={\url{https://github.com/tslearn-team/tslearn}}
     }
 

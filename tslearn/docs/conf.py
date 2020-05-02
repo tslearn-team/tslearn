@@ -15,11 +15,11 @@
 import sys
 import os
 import sphinx_bootstrap_theme
+import subprocess
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-# Uncomment for local build
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
 if not on_rtd:
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
@@ -35,13 +35,12 @@ if not on_rtd:
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
-    'numpydoc',
     'sphinx.ext.doctest',
-    'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.linkcode',
     'sphinx_gallery.gen_gallery',
+    'numpydoc',
     'nbsphinx'
 ]
 
@@ -50,16 +49,25 @@ numpydoc_class_members_toctree = False
 
 autosummary_generate = True
 
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/{.major}'.format(
+        sys.version_info), None),
+    'numpy': ('https://numpy.org/doc/stable', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
+    'matplotlib': ('https://matplotlib.org/', None),
+    'sklearn': ('http://scikit-learn.org/stable', None)
+}
+
 sphinx_gallery_conf = {
     'examples_dirs': ['./examples'],
     'gallery_dirs': ['./auto_examples'],
-    'reference_url':  {'tslearn': None,
-                       # 'matplotlib': 'http://matplotlib.org',
-                       # 'numpy': 'http://docs.scipy.org/doc/numpy-1.9.1'
-                       },
-    # 'default_thumb_file': 'fig/logo.png',
+    'reference_url':  {'tslearn': None},
+    'default_thumb_file': '_static/img/logo.png',
     'backreferences_dir': 'gen_modules/backreferences',
     'doc_module': ('tslearn',),
+    'subsection_order': ["examples", "examples/metrics", "examples/neighbors",
+                         "examples/clustering", "examples/classification",
+                         "examples/misc"].index
     # 'binder': {
     #     # Required keys
     #     'org': 'rtavenar',
@@ -145,9 +153,12 @@ html_theme = 'bootstrap'
 html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 html_theme_options = {
     # Tab name for entire site. (Default: "Site")
-    'navbar_site_name': "Table of Contents",
+    'navbar_site_name': "Site map",
 
     'navbar_links': [
+        ("Quick-start", "quickstart"),
+        ("API Reference", "reference"),
+        ("Examples", "auto_examples/index"),
         ("Citing tslearn", "citing"),
     ],
 
@@ -163,6 +174,7 @@ html_theme_options = {
     # Global TOC depth for "site" navbar tab. (Default: 1)
     # Switching to -1 shows all levels.
     'globaltoc_depth': -1,
+    'globaltoc_includehidden': "false",
 
     # Location of link to source.
     # Options are "nav" (default), "footer" or anything else to exclude.
@@ -341,3 +353,39 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+# The following is used by sphinx.ext.linkcode to provide links to github
+REVISION_CMD = 'git rev-parse --short HEAD'
+
+
+def _get_git_revision():
+    try:
+        revision = subprocess.check_output(REVISION_CMD.split()).strip()
+    except (subprocess.CalledProcessError, OSError):
+        print('Failed to execute git to get revision')
+        return None
+    return revision.decode('utf-8')
+
+def linkcode_resolve(domain, info):
+    def find_source():
+        # try to find the file and line number, based on code from numpy:
+        # https://github.com/numpy/numpy/blob/master/doc/source/conf.py#L286
+        obj = sys.modules[info['module']]
+        for part in info['fullname'].split('.'):
+            obj = getattr(obj, part)
+        import inspect
+        import os
+        fn = inspect.getsourcefile(obj)
+        fn = os.path.relpath(fn, start=os.path.dirname(tslearn.__file__))
+        source, lineno = inspect.getsourcelines(obj)
+        return fn, lineno, lineno + len(source) - 1
+
+    if domain != 'py' or not info['module']:
+        return None
+    try:
+        filename = 'tslearn/%s#L%d-L%d' % find_source()
+    except Exception:
+        filename = info['module'].replace('.', '/') + '.py'
+    revision = _get_git_revision()
+    return "https://github.com/tslearn-team/tslearn/blob/%s/%s" % (revision,
+                                                                   filename)

@@ -18,12 +18,14 @@ Finally, 1d-SAX is an extension of SAX in which each segment is represented
 by an affine function (2 parameters per segment are hence quantized: slope and
 mean value).
 
-[1] E. Keogh & M. Pazzani. Scaling up dynamic time warping for datamining \
+[1] E. Keogh & M. Pazzani. Scaling up dynamic time warping for datamining
 applications. SIGKDD 2000, pp. 285--289.
-[2] J. Lin, E. Keogh, L. Wei, et al. Experiencing SAX: a novel symbolic \
+
+[2] J. Lin, E. Keogh, L. Wei, et al. Experiencing SAX: a novel symbolic
 representation of time series. Data Mining and Knowledge Discovery,
 2007. vol. 15(107)
-[3] S. Malinowski, T. Guyet, R. Quiniou, R. Tavenard. 1d-SAX: a Novel \
+
+[3] S. Malinowski, T. Guyet, R. Quiniou, R. Tavenard. 1d-SAX: a Novel
 Symbolic Representation for Time Series. IDA 2013.
 """
 

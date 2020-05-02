@@ -8,12 +8,32 @@ and this project adheres to
 
 Changelogs for this project are recorded in this file since v0.2.0.
 
+## [Towards v0.4.0]
+
+### Changed
+* Better initialization schemes for `TimeSeriesKMeans` that lead to more 
+consistent clustering runs (helps avoid empty cluster situations)
+* TimeSeriesScalerMeanVariance and TimeSeriesScalerMinMax are now completely sklearn-compliant
+* Bugfix in kneighbors() methods.
+
+### Added
+* Nearest Neighbors on SAX representation (with custom distance)
+* Calculate pairwise distance matrix between SAX representations
+* PiecewiseAggregateApproximation can now handle variable lengths
+
+### Fixed
+
+* Estimators that can operate on variable length time series now allow 
+for test time datasets to have a different length from the one that was
+passed at fit time
+
 ## [v0.3.1]
 
 ### Fixed
 
 * Fixed a bug in `TimeSeriesSVC` and `TimeSeriesSVR` that caused user-input 
 `gamma` to be ignored (always treated as if it were `"auto"`) for `gak` kernel
+
 
 ## [v0.3.0]
 

@@ -25,3 +25,9 @@ table.longtable tbody td {
     border-color: #d2edf6;
     color: #555555;
 }
+
+@media screen and (min-width: 768px) and (max-width: 992px) {
+    .navbar-form .form-control {
+        display: none;
+    }
+}
