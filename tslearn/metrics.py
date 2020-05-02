@@ -327,27 +327,28 @@ def dtw_path_from_metric(s1, s2=None, metric="euclidean",
 
     >>> import numpy as np
     >>> rng = np.random.RandomState(0)
-    >>> s1, s2 = rng.random((5, 2)), rng.random((6, 2))
+    >>> s1, s2 = rng.rand(5, 2), rng.rand(6, 2)
 
     The wrapping can be done by passing a string indicating the metric to pass
     to scikit-learn pairwise_distances:
 
-    >>> dtw_path_from_metric(s1, s2, metric="sqeuclidean")
-    [(0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.1177581530156733
+    >>> dtw_path_from_metric(s1, s2,
+    ...                      metric="sqeuclidean")  # doctest: +ELLIPSIS
+    ([(0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.117...)
 
     Or by defining a custom distance function:
 
-    >>> def sqeuclidean(x, y):
-    >>>    return(np.sum((x-y)**2))
-    >>> dtw_path_from_metric(s1, s2, metric=sqeuclidean)
-    [(0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.1177581530156733
+    >>> sqeuclidean = lambda x, y: np.sum((x-y)**2)
+    >>> dtw_path_from_metric(s1, s2, metric=sqeuclidean)  # doctest: +ELLIPSIS
+    ([(0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.117...)
 
     Or by using a precomputed distance matrix as input:
 
     >>> from sklearn.metrics.pairwise import pairwise_distances
     >>> dist_matrix = pairwise_distances(s1, s2, metric="sqeuclidean")
-    >>> dtw_path_from_metric(dist_matrix, metric="precomputed")
-    [(0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.1177581530156733
+    >>> dtw_path_from_metric(dist_matrix,
+    ...                      metric="precomputed")  # doctest: +ELLIPSIS
+    ([(0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.117...)
 
     Notes
     --------
