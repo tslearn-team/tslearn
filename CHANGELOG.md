@@ -17,6 +17,8 @@ consistent clustering runs (helps avoid empty cluster situations)
 * Bugfix in kneighbors() methods.
 
 ### Added
+* `dtw_path_from_metric` allows one to pick a dedicated ground metric on top 
+of which the DTW algorithm can be run
 * Nearest Neighbors on SAX representation (with custom distance)
 * Calculate pairwise distance matrix between SAX representations
 * PiecewiseAggregateApproximation can now handle variable lengths
