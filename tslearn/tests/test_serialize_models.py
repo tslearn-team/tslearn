@@ -4,13 +4,11 @@ import numpy
 import pytest
 from sklearn.exceptions import NotFittedError
 from tslearn import hdftools
-from tslearn.metrics import sigma_gak
-from tslearn.datasets import CachedDatasets
-from tslearn.preprocessing import TimeSeriesScalerMeanVariance, \
-    TimeSeriesResampler
+from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 
 from tslearn.neighbors import KNeighborsTimeSeries, \
     KNeighborsTimeSeriesClassifier
+from tslearn.shapelets import ShapeletModel, SerializableShapeletModel
 from tslearn.clustering import KShape, TimeSeriesKMeans, \
     GlobalAlignmentKernelKMeans
 from tslearn.generators import random_walks
@@ -70,9 +68,12 @@ def _check_not_fitted(model):
             )
 
 
-def _check_params_predict(model, X, test_methods):
+def _check_params_predict(model, X, test_methods, check_params_fun=None,
+                          formats=None):
+    if formats is None:
+        formats = all_formats
     # serialize to all all_formats
-    for fmt in all_formats:
+    for fmt in formats:
         getattr(model, "to_{}".format(fmt))(
             os.path.join(
                 tmp_dir, "{}.{}".format(model.__class__.__name__, fmt)
@@ -81,7 +82,7 @@ def _check_params_predict(model, X, test_methods):
 
     # loaded models should have same model params
     # and provide the same predictions
-    for fmt in all_formats:
+    for fmt in formats:
         sm = getattr(model, "from_{}".format(fmt))(
             os.path.join(
                 tmp_dir, "{}.{}".format(model.__class__.__name__, fmt)
@@ -97,10 +98,14 @@ def _check_params_predict(model, X, test_methods):
             m2 = getattr(sm, method)
             numpy.testing.assert_equal(m1(X), m2(X))
 
-        # check that the model-params are the same
         model_params = model._get_model_params()
-        for p in model_params.keys():
-            numpy.testing.assert_equal(getattr(model, p), getattr(sm, p))
+        if check_params_fun is None:
+            # check that the model-params are the same
+            for p in model_params.keys():
+                numpy.testing.assert_equal(getattr(model, p), getattr(sm, p))
+        else:
+            numpy.testing.assert_equal(check_params_fun(model),
+                                       check_params_fun(sm))
 
         # check that hyper-params are the same
         hyper_params = model.get_params()
@@ -255,3 +260,20 @@ def test_serialize_1dsax():
     one_d_sax.fit(X)
 
     _check_params_predict(one_d_sax, X, ['transform'])
+
+
+def test_serialize_shapelets():
+    n, sz, d = 15, 10, 3
+    rng = numpy.random.RandomState(0)
+    X = rng.randn(n, sz, d)
+    y = rng.randint(low=0, high=3, size=n)
+
+    shp = ShapeletModel(max_iter=1)
+
+    _check_not_fitted(shp)
+
+    shp.fit(X, y)
+
+    _check_params_predict(shp, X, ['predict'],
+                          check_params_fun=lambda m: m.model_.get_weights(),
+                          formats=["json"])
