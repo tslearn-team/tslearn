@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 The :mod:`tslearn.barycenters` module gathers algorithms for time series
 barycenter computation.
@@ -18,7 +17,6 @@ for an overview.
 
 # Code for soft DTW is by Mathieu Blondel under Simplified BSD license
 
-from __future__ import division
 import numpy
 from scipy.interpolate import interp1d
 from scipy.optimize import minimize
