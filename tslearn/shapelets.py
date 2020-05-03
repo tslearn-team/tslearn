@@ -420,7 +420,6 @@ class ShapeletModel(BaseEstimator, BaseModelPackage,
         self.model_ = None
         self.transformer_model_ = None
         self.locator_model_ = None
-        self.label_to_ind_ = None
         self.d_ = d
 
         self.classes_ = [int(lab) for lab in set(y)]
@@ -432,7 +431,7 @@ class ShapeletModel(BaseEstimator, BaseModelPackage,
         )
         y_ = to_categorical(y_ind)
         if n_labels == 2:
-            y_ = y_[:, 1:]  # Keep only indicator of max index class
+            y_ = y_[:, 1:]  # Keep only indicator of positive class
 
         if self.n_shapelets_per_size is None:
             sizes = grabocka_params_to_shapelet_size_dict(n_ts, sz, n_labels,
@@ -477,7 +476,7 @@ class ShapeletModel(BaseEstimator, BaseModelPackage,
         X = check_dims(X, X_fit_dims=self._X_fit_dims)
 
         if len(self.classes_) == 2:
-            y_ind = self.predict_proba(X) > .5
+            y_ind = (self.predict_proba(X) > .5).astype(numpy.int)
         else:
             y_ind = self.predict_proba(X).argmax(axis=1)
         y_label = numpy.array(
