@@ -276,4 +276,4 @@ def test_serialize_shapelets():
 
     _check_params_predict(shp, X, ['predict'],
                           check_params_fun=lambda m: m.model_.get_weights(),
-                          formats=["json"])
+                          formats=["json", "pickle"])

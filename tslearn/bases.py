@@ -182,7 +182,7 @@ class BaseModelPackage:
             if model['hyper_params'][k] == 'None':
                 model['hyper_params'][k] = None
 
-        return BaseModelPackage._organize_model(cls, model)
+        return cls._organize_model(cls, model)
 
     def to_json(self, path):
         """
@@ -250,4 +250,4 @@ class BaseModelPackage:
         Model instance
         """
         model = pickle.load(open(path, 'rb'))
-        return BaseModelPackage._organize_model(cls, model)
+        return cls._organize_model(cls, model)
