@@ -29,6 +29,11 @@ of which the DTW algorithm can be run
 for test time datasets to have a different length from the one that was
 passed at fit time
 
+### Removed
+
+* Support for Python 2 is dropped
+
+
 ## [v0.3.1]
 
 ### Fixed
