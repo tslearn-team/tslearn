@@ -424,6 +424,9 @@ class ShapeletModel(BaseEstimator, BaseModelPackage,
 
         self.classes_ = [int(lab) for lab in set(y)]
         n_labels = len(self.classes_)
+        if n_labels == 1:
+            raise ValueError("Classifier can't train when only one class "
+                             "is present.")
         self.label_to_ind_ = {int(lab): ind
                               for ind, lab in enumerate(self.classes_)}
         y_ind = numpy.array(
