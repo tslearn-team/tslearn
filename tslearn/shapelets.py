@@ -347,7 +347,7 @@ class ShapeletModel(BaseEstimator, BaseModelPackage,
 
     @property
     def _n_shapelet_sizes(self):
-        return len(self.n_shapelets_per_size)
+        return len(self.n_shapelets_per_size_)
 
     @property
     def shapelets_(self):
@@ -450,10 +450,6 @@ class ShapeletModel(BaseEstimator, BaseModelPackage,
             self.n_shapelets_per_size_ = self.n_shapelets_per_size
 
         self._set_model_layers(X=X, ts_sz=sz, d=d, n_classes=n_labels)
-        self.transformer_model_.compile(loss="mean_squared_error",
-                                        optimizer=self.optimizer)
-        self.locator_model_.compile(loss="mean_squared_error",
-                                    optimizer=self.optimizer)
         self._set_weights_false_conv(d=d)
         self.model_.fit(
             [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(d)], y_,
@@ -585,6 +581,34 @@ class ShapeletModel(BaseEstimator, BaseModelPackage,
         )
         return locations.astype(numpy.int)
 
+    def _build_auxiliary_models(self):
+        check_is_fitted(self, 'model_')
+
+        inputs = self.model_.inputs
+        concatenated_features = self.model_.get_layer("classification").input
+
+        self.transformer_model_ = Model(inputs=inputs,
+                                        outputs=concatenated_features)
+        self.transformer_model_.compile(loss="mean_squared_error",
+                                        optimizer=self.optimizer)
+
+        min_pool_inputs = [self.model_.get_layer("min_pooling_%d" % i).input
+                           for i in range(self._n_shapelet_sizes)]
+
+        pool_layers_locations = [
+            GlobalArgminPooling1D(name="min_pooling_%d" % i)(pool_input)
+            for i, pool_input in enumerate(min_pool_inputs)
+        ]
+        if self._n_shapelet_sizes > 1:
+            concatenated_locations = concatenate(pool_layers_locations)
+        else:
+            concatenated_locations = pool_layers_locations[0]
+
+        self.locator_model_ = Model(inputs=inputs,
+                                    outputs=concatenated_locations)
+        self.locator_model_.compile(loss="mean_squared_error",
+                                    optimizer=self.optimizer)
+
     def _set_weights_false_conv(self, d):
         shapelet_sizes = sorted(self.n_shapelets_per_size_.keys())
         for i, sz in enumerate(shapelet_sizes):
@@ -598,7 +622,6 @@ class ShapeletModel(BaseEstimator, BaseModelPackage,
                   for di in range(d)]
         shapelet_sizes = sorted(self.n_shapelets_per_size_.keys())
         pool_layers = []
-        pool_layers_locations = []
         for i, sz in enumerate(sorted(shapelet_sizes)):
             transformer_layers = [
                 Conv1D(
@@ -620,15 +643,11 @@ class ShapeletModel(BaseEstimator, BaseModelPackage,
                 sum_shap = add(shapelet_layers)
 
             gp = GlobalMinPooling1D(name="min_pooling_%d" % i)(sum_shap)
-            gap = GlobalArgminPooling1D(name="min_pooling_%d" % i)(sum_shap)
             pool_layers.append(gp)
-            pool_layers_locations.append(gap)
         if len(shapelet_sizes) > 1:
             concatenated_features = concatenate(pool_layers)
-            concatenated_locations = concatenate(pool_layers_locations)
         else:
             concatenated_features = pool_layers[0]
-            concatenated_locations = pool_layers_locations[0]
 
         if self.weight_regularizer > 0:
             regularizer = l2(self.weight_regularizer)
@@ -647,13 +666,10 @@ class ShapeletModel(BaseEstimator, BaseModelPackage,
                         kernel_regularizer=regularizer,
                         name="classification")(concatenated_features)
         self.model_ = Model(inputs=inputs, outputs=outputs)
-        self.transformer_model_ = Model(inputs=inputs,
-                                        outputs=concatenated_features)
-        self.locator_model_ = Model(inputs=inputs,
-                                    outputs=concatenated_locations)
         self.model_.compile(loss=loss,
                             optimizer=self.optimizer,
                             metrics=metrics)
+        self._build_auxiliary_models()
 
     def get_weights(self, layer_name=None):
         """Return model weights (or weights for a given layer if `layer_name`
@@ -743,6 +759,7 @@ class ShapeletModel(BaseEstimator, BaseModelPackage,
                 "classes_": self.classes_,
                 "label_to_ind_": self.label_to_ind_,
                 "d_": self.d_,
+                "n_shapelets_per_size_": self.n_shapelets_per_size_,
                 "_X_fit_dims": self._X_fit_dims}
 
     @staticmethod
@@ -781,8 +798,8 @@ class ShapeletModel(BaseEstimator, BaseModelPackage,
         inst.set_weights(model_params.pop("model_weights_"))
         for p in model_params.keys():
             setattr(inst, p, model_params[p])
-
         inst._X_fit_dims = tuple(inst._X_fit_dims)
+        inst._build_auxiliary_models()
 
         return inst
 
