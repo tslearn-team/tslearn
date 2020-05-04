@@ -4,7 +4,7 @@ The :mod:`tslearn.shapelets` module gathers Shapelet-based algorithms.
 It depends on the `keras` library for optimization.
 """
 
-from keras.models import Model, model_from_json, load_model
+from keras.models import Model, model_from_json
 from keras.layers import Dense, Conv1D, Layer, Input, concatenate, add
 from keras.metrics import (categorical_accuracy, categorical_crossentropy,
                            binary_accuracy, binary_crossentropy)
