@@ -475,10 +475,7 @@ class ShapeletModel(BaseEstimator, BaseModelPackage,
         X = to_time_series_dataset(X)
         X = check_dims(X, X_fit_dims=self._X_fit_dims)
 
-        if len(self.classes_) == 2:
-            y_ind = (self.predict_proba(X) > .5).astype(numpy.int)
-        else:
-            y_ind = self.predict_proba(X).argmax(axis=1)
+        y_ind = self.predict_proba(X).argmax(axis=1)
         y_label = numpy.array(
             [self.classes_[ind] for ind in y_ind]
         )
