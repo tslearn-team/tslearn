@@ -22,17 +22,6 @@ try:
     from tensorflow.compat.v1 import set_random_seed
 except ImportError:
     from tensorflow import set_random_seed
-from warnings import warn
-h5py_msg = 'h5py not installed, hdf5 features will not be supported.\n'\
-           'Install h5py to use hdf5 features: http://docs.h5py.org/'
-try:
-    import h5py
-except ImportError:
-    warn(h5py_msg)
-    HDF5_INSTALLED = False
-else:
-    from tslearn import hdftools
-    HDF5_INSTALLED = True
 
 import warnings
 
