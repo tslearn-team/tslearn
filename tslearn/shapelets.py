@@ -12,6 +12,7 @@ from keras.utils import to_categorical
 from sklearn.base import BaseEstimator, ClassifierMixin, TransformerMixin
 from sklearn.utils import check_array, check_X_y
 from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.multiclass import unique_labels
 from keras.regularizers import l2
 from keras.initializers import Initializer
 import keras.backend as K
@@ -422,13 +423,17 @@ class ShapeletModel(BaseEstimator, BaseModelPackage,
         self.locator_model_ = None
         self.d_ = d
 
-        self.classes_ = [int(lab) for lab in set(y)]
+        self.classes_ = unique_labels(y)
         n_labels = len(self.classes_)
         if n_labels == 1:
             raise ValueError("Classifier can't train when only one class "
                              "is present.")
-        self.label_to_ind_ = {int(lab): ind
-                              for ind, lab in enumerate(self.classes_)}
+        if self.classes_.dtype in [numpy.int32, numpy.int64]:
+            self.label_to_ind_ = {int(lab): ind
+                                  for ind, lab in enumerate(self.classes_)}
+        else:
+            self.label_to_ind_ = {lab: ind
+                                  for ind, lab in enumerate(self.classes_)}
         y_ind = numpy.array(
             [self.label_to_ind_[lab] for lab in y]
         )

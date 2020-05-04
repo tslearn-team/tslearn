@@ -263,17 +263,19 @@ def test_serialize_1dsax():
 
 
 def test_serialize_shapelets():
+    def get_model_weights(model):
+        return model.model_.get_weights()
+
     n, sz, d = 15, 10, 3
     rng = numpy.random.RandomState(0)
     X = rng.randn(n, sz, d)
-    y = rng.randint(low=0, high=3, size=n)
 
-    shp = ShapeletModel(max_iter=1)
+    for y in [rng.randint(low=0, high=3, size=n),
+              rng.choice(["one", "two", "three"], size=n)]:
 
-    _check_not_fitted(shp)
-
-    shp.fit(X, y)
-
-    _check_params_predict(shp, X, ['predict'],
-                          check_params_fun=lambda m: m.model_.get_weights(),
-                          formats=["json", "pickle"])
+        shp = ShapeletModel(max_iter=1)
+        _check_not_fitted(shp)
+        shp.fit(X, y)
+        _check_params_predict(shp, X, ['predict'],
+                              check_params_fun=get_model_weights,
+                              formats=["json", "pickle"])
