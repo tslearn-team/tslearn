@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 DTW computation with a custom distance metric
-===============
+=============================================
 .. currentmodule:: tslearn.metrics
 
 This example illustrates how to use the DTW computation of the optimal
@@ -54,7 +54,9 @@ n_ts, sz = 2, 100
 
 # Example 1 : Length of the arc between two angles on a circle
 def arc_length(angle_1, angle_2, r=1.):
-    "Length of the arc between two angles (in rad) on a circle of radius r."
+    """Length of the arc between two angles (in rad) on a circle of
+    radius r.
+    """
     # Compute the angle between the two inputs between 0 and 2*pi.
     theta = np.mod(angle_2 - angle_1, 2*pi)
     if theta > pi:
