@@ -42,7 +42,7 @@ jobs:
   - script: |
       set -xe
       python -m pip install pytest pytest-azurepipelines pytest-timeout
-      python -m pytest -v --durations 10 --timeout 120 tslearn/
+      python -m pytest -v tslearn/
     displayName: 'Test'
 
 
@@ -83,7 +83,7 @@ jobs:
   - script: |
       set -xe
       python -m pip install pytest pytest-azurepipelines pytest-timeout
-      python -m pytest -v --durations 10 --timeout 120 tslearn/
+      python -m pytest -v tslearn/
     displayName: 'Test'
 
 
@@ -123,5 +123,5 @@ jobs:
   
   - script: |
       python -m pip install pytest pytest-azurepipelines pytest-timeout
-      python -m pytest -v --durations 10 --timeout 120 tslearn/
+      python -m pytest -v tslearn/
     displayName: 'Test'
