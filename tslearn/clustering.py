@@ -766,7 +766,10 @@ class TimeSeriesKMeans(BaseEstimator, BaseModelPackage, ClusterMixin,
         return True
 
     def _get_model_params(self):
-        return {'cluster_centers_': self.cluster_centers_}
+        return {'cluster_centers_': self.cluster_centers_,
+                'inertia_': self.inertia_,
+                'labels_': self.labels_,
+                'n_iter_': self.n_iter_}
 
     def _get_metric_params(self):
         if self.metric_params is None:
