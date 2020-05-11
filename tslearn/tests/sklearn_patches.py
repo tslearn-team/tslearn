@@ -266,9 +266,9 @@ def check_fit_idempotent(name, estimator_orig):
 
 def check_classifiers_classes(name, classifier_orig):
     # Skip shapelet models
-    if name in ['ShapeletModel', 'SerializableShapeletModel']:
-        raise SkipTest('Skipping check_classifiers_classes for shapelets'
-                       ' due to convergence issues...')
+    # if name in ['ShapeletModel', 'SerializableShapeletModel']:
+    #     raise SkipTest('Skipping check_classifiers_classes for shapelets'
+    #                    ' due to convergence issues...')
     X_multiclass, y_multiclass = _create_small_ts_dataset()
 
     X_multiclass, y_multiclass = shuffle(X_multiclass, y_multiclass,
@@ -310,10 +310,10 @@ def check_classifiers_classes(name, classifier_orig):
 
 @ignore_warnings  # Warnings are raised by decision function
 def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
-    # Skip shapelet models
-    if name in ['ShapeletModel', 'SerializableShapeletModel']:
-        raise SkipTest('Skipping check_classifiers_train for shapelet models'
-                       ' due to convergence issues...')
+    # # Skip shapelet models
+    # if name in ['ShapeletModel', 'SerializableShapeletModel']:
+    #     raise SkipTest('Skipping check_classifiers_train for shapelet models'
+    #                    ' due to convergence issues...')
 
     # Generate some random walk blobs, shuffle them and normalize them
     X_m, y_m = _create_small_ts_dataset()

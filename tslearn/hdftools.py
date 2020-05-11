@@ -5,7 +5,7 @@ import traceback
 from warnings import warn
 
 
-def save_dict(d, filename, group, raise_type_fail=True, append=False):
+def save_dict(d, filename, group, raise_type_fail=True):
     """
     Recursively save a dict to an hdf5 group in a new file.
 
@@ -25,9 +25,6 @@ def save_dict(d, filename, group, raise_type_fail=True, append=False):
         If False: prints a warning instead and saves the
         object's __str__() return value.
 
-    append : bool
-        If True, the content is appended to the already existing file
-
     Returns
     -------
     None
@@ -41,10 +38,10 @@ def save_dict(d, filename, group, raise_type_fail=True, append=False):
         If a particular entry within the dict cannot be saved to hdf5 AND
         the argument `raise_type_fail` is set to `True`
     """
-    if not append and os.path.isfile(filename):
+    if os.path.isfile(filename):
         raise FileExistsError
 
-    with h5py.File(filename, 'a' if append else 'w') as h5file:
+    with h5py.File(filename, 'w') as h5file:
         _dicts_to_group(h5file, "{}/".format(group), d,
                         raise_meta_fail=raise_type_fail)
 

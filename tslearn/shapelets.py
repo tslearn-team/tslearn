@@ -412,23 +412,8 @@ class ShapeletModel(BaseEstimator, BaseModelPackage,
         self.locator_model_ = None
         self.d_ = d
 
-        self.classes_ = unique_labels(y)
+        y_ = self._preprocess_labels(y)
         n_labels = len(self.classes_)
-        if n_labels == 1:
-            raise ValueError("Classifier can't train when only one class "
-                             "is present.")
-        if self.classes_.dtype in [numpy.int32, numpy.int64]:
-            self.label_to_ind_ = {int(lab): ind
-                                  for ind, lab in enumerate(self.classes_)}
-        else:
-            self.label_to_ind_ = {lab: ind
-                                  for ind, lab in enumerate(self.classes_)}
-        y_ind = numpy.array(
-            [self.label_to_ind_[lab] for lab in y]
-        )
-        y_ = to_categorical(y_ind)
-        if n_labels == 2:
-            y_ = y_[:, 1:]  # Keep only indicator of positive class
 
         if self.n_shapelets_per_size is None:
             sizes = grabocka_params_to_shapelet_size_dict(n_ts, sz, n_labels,
@@ -569,6 +554,26 @@ class ShapeletModel(BaseEstimator, BaseModelPackage,
             batch_size=self.batch_size, verbose=self.verbose
         )
         return locations.astype(numpy.int)
+
+    def _preprocess_labels(self, y):
+        self.classes_ = unique_labels(y)
+        n_labels = len(self.classes_)
+        if n_labels == 1:
+            raise ValueError("Classifier can't train when only one class "
+                             "is present.")
+        if self.classes_.dtype in [numpy.int32, numpy.int64]:
+            self.label_to_ind_ = {int(lab): ind
+                                  for ind, lab in enumerate(self.classes_)}
+        else:
+            self.label_to_ind_ = {lab: ind
+                                  for ind, lab in enumerate(self.classes_)}
+        y_ind = numpy.array(
+            [self.label_to_ind_[lab] for lab in y]
+        )
+        y_ = to_categorical(y_ind)
+        if n_labels == 2:
+            y_ = y_[:, 1:]  # Keep only indicator of positive class
+        return y_
 
     def _build_auxiliary_models(self):
         check_is_fitted(self, 'model_')
