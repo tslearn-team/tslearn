@@ -275,6 +275,8 @@ def check_classifiers_classes(name, classifier_orig):
         # raise SkipTest('Skipping check_classifiers_classes for shapelets'
         #                ' due to convergence issues...')
         X_multiclass, y_multiclass = _create_large_ts_dataset()
+        classifier_orig = clone(classifier_orig)
+        classifier_orig.max_iter = 1000
     else:
         X_multiclass, y_multiclass = _create_small_ts_dataset()
 
@@ -322,6 +324,8 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
         # raise SkipTest('Skipping check_classifiers_classes for shapelets'
         #                ' due to convergence issues...')
         X_m, y_m = _create_large_ts_dataset()
+        classifier_orig = clone(classifier_orig)
+        classifier_orig.max_iter = 1000
     else:
         X_m, y_m = _create_small_ts_dataset()
 
