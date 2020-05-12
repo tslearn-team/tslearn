@@ -270,16 +270,15 @@ def check_fit_idempotent(name, estimator_orig):
 
 
 def check_classifiers_classes(name, classifier_orig):
-    # Skip shapelet models
-    if name in ['ShapeletModel', 'SerializableShapeletModel']:
-        # raise SkipTest('Skipping check_classifiers_classes for shapelets'
-        #                ' due to convergence issues...')
-        X_multiclass, y_multiclass = _create_large_ts_dataset()
+    # Case of shapelet models
+    if name == 'SerializableShapeletModel':
+        raise SkipTest('Skipping check_classifiers_classes for shapelets'
+                       ' due to convergence issues...')
+    elif name == 'ShapeletModel':
         classifier_orig = clone(classifier_orig)
-        classifier_orig.max_iter = 1000
-    else:
-        X_multiclass, y_multiclass = _create_small_ts_dataset()
+        classifier_orig.max_iter = 100
 
+    X_multiclass, y_multiclass = _create_small_ts_dataset()
     X_multiclass, y_multiclass = shuffle(X_multiclass, y_multiclass,
                                          random_state=7)
 
@@ -319,16 +318,15 @@ def check_classifiers_classes(name, classifier_orig):
 
 @ignore_warnings  # Warnings are raised by decision function
 def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
-    # Skip shapelet models
-    if name in ['ShapeletModel', 'SerializableShapeletModel']:
-        # raise SkipTest('Skipping check_classifiers_classes for shapelets'
-        #                ' due to convergence issues...')
-        X_m, y_m = _create_large_ts_dataset()
+    # Case of shapelet models
+    if name == 'SerializableShapeletModel':
+        raise SkipTest('Skipping check_classifiers_classes for shapelets'
+                       ' due to convergence issues...')
+    elif name == 'ShapeletModel':
         classifier_orig = clone(classifier_orig)
-        classifier_orig.max_iter = 1000
-    else:
-        X_m, y_m = _create_small_ts_dataset()
+        classifier_orig.max_iter = 100
 
+    X_m, y_m = _create_small_ts_dataset()
     X_m, y_m = shuffle(X_m, y_m, random_state=7)
 
     X_m = TimeSeriesScalerMeanVariance().fit_transform(X_m)
