@@ -1,3 +1,12 @@
+"""
+The :mod:`tslearn.early_classification` module gathers early classifiers for
+time series.
+
+Such classifiers aim at performing prediction as early as possible (i.e. they
+do not necessarily wait for the end of the series before prediction is
+triggered).
+"""
+
 from sklearn.metrics import confusion_matrix
 from sklearn.base import BaseEstimator, ClassifierMixin, clone
 from sklearn.model_selection import train_test_split
@@ -10,7 +19,8 @@ from tslearn.clustering import TimeSeriesKMeans
 
 
 class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
-    """Early Classification modelling for time series using the model presented in [1]
+    """Early Classification modelling for time series using the model
+    presented in [1]
 
     Parameters
     ----------
@@ -22,14 +32,17 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
         If None, the chosen classifier is a 1NN with Euclidean metric.
 
     min_t : int
-        Earliest time at which a classification can be performed on a time series
+        Earliest time at which a classification can be performed on a time
+        series
 
     lamb : float
-        Value of the hyper parameter lambda used during the computation of the cost function to evaluate the probability
+        Value of the hyper parameter lambda used during the computation of the
+        cost function to evaluate the probability
         that a time series belongs to a cluster given the time series.
 
     cost_time_parameter : float
-        Parameter of the cost function of time. This function is of the form : f(time) = time * cost_time_parameter
+        Parameter of the cost function of time. This function is of the form :
+        f(time) = time * cost_time_parameter
 
     random_state: int
         Random state of the base estimator
@@ -46,10 +59,12 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
         Contains the times series by clusters
 
     pyhatyck_ : dictionary
-        Contains the probabilities of being classified as class y_hat given class y and cluster ck
+        Contains the probabilities of being classified as class y_hat given
+        class y and cluster ck
 
     indice_ck_ : list
-        Contains for each clusters the indexes of the time series in the dataset
+        Contains for each clusters the indexes of the time series in the
+        dataset
 
     Examples
     --------
@@ -62,25 +77,19 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
     ...                                   [3, 2, 1, 1, 2, 3],
     ...                                   [3, 2, 1, 1, 2, 3]])
     >>> y = [0, 0, 0, 1, 1, 1, 0, 0]
-    >>> datatest = to_time_series_dataset([[2, 2, 3, 4, 5, 6],
-    ...                                   [2, 2, 3, 4, 5, 6],
-    ...                                   [2, 2, 3, 4, 5, 6],
-    ...                                   [2, 2, 3, 3, 1, 1],
-    ...                                   [2, 2, 3, 3, 1, 1],
-    ...                                   [2, 2, 3, 3, 1, 1],
-    ...                                   [3, 2, 1, 1, 1, 3],
-    ...                                   [3, 2, 1, 1, 1, 3]])
-    >>> ts0 = to_time_series([1, 2])
-    >>> model = NonMyopicEarlyClassifier(n_clusters=3, lamb=0.,
-    ...                                      random_state=0)
-    >>> model.fit(dataset, y)
-    NonMyopicEarlyClassifier(base_classifier=None, cost_time_parameter=1.0,
-                             lamb=0.0, min_t=1, n_clusters=3, random_state=0)
+    >>> model = NonMyopicEarlyClassifier(n_clusters=3, lamb=1000.,
+    ...                                  cost_time_parameter=.1,
+    ...                                  random_state=0)
+    >>> model.fit(dataset, y)  # doctest: +ELLIPSIS
+    NonMyopicEarlyClassifier(...)
     >>> print(model.pyck_)
     [[0. 1. 1.]
      [1. 0. 0.]]
-    >>> model.predict(datatest)
-    (array([0, 0, 0, 1, 1, 1, 0, 0]), array([6, 6, 6, 6, 6, 6, 6, 6]))
+    >>> preds, pred_times = model.predict(dataset)
+    >>> preds
+    array([0, 0, 0, 1, 1, 1, 0, 0])
+    >>> pred_times
+    array([4, 4, 4, 4, 4, 4, 1, 1])
 
     References
     --------------------
@@ -177,7 +186,7 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
         return self
 
     def get_cluster_probas(self, Xi):
-        """Compute cluster probability P(c_k | Xi).
+        r"""Compute cluster probability :math:`P(c_k | Xi)`.
 
         This quantity is computed using the following formula:
 
@@ -235,6 +244,9 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
         (3,)
         >>> probas
         array([0.5, 0.5, 0. ])
+        >>> ts1 = to_time_series([3, 2])
+        >>> model.get_cluster_probas(ts1)
+        array([0., 0., 1.])
         """
         diffs = Xi[np.newaxis, :] - self.cluster_.cluster_centers_[:, :len(Xi)]
         distances_clusters = np.linalg.norm(diffs, axis=(1, 2))
@@ -271,6 +283,27 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
         --------
         cost : numpy array of shape (self.__len_X_ - t + 1, )
             Expected future costs for all time stamps from t to self.__len_X_
+
+        Examples
+        --------
+        >>> dataset = to_time_series_dataset([[1, 2, 3, 4, 5, 6],
+        ...                                   [1, 2, 3, 4, 5, 6],
+        ...                                   [1, 2, 3, 4, 5, 6],
+        ...                                   [1, 2, 3, 3, 2, 1],
+        ...                                   [1, 2, 3, 3, 2, 1],
+        ...                                   [1, 2, 3, 3, 2, 1],
+        ...                                   [3, 2, 1, 1, 2, 3],
+        ...                                   [3, 2, 1, 1, 2, 3]])
+        >>> y = [0, 0, 0, 1, 1, 1, 0, 0]
+        >>> ts1 = to_time_series([3, 2])
+        >>> model = NonMyopicEarlyClassifier(n_clusters=3, lamb=10000.,
+        ...                                  cost_time_parameter=1.,
+        ...                                  random_state=0)
+        >>> costs = model.fit(dataset, y)._expected_costs(ts1)
+        >>> costs.shape
+        (5,)
+        >>> costs  # doctest: +ELLIPSIS
+        array([2., 3., 4., 5., 6.])
         """
         proba_clusters = self.get_cluster_probas(Xi=Xi)
         truncated_t = Xi.shape[0]
@@ -283,7 +316,8 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
         # sum_pyhatyck is now indexed by: t, y, k
         sum_global = np.sum(sum_pyhatyck * self.pyck_[np.newaxis, :], axis=1)
         cost = np.dot(sum_global, proba_clusters)
-        return cost + self._cost_time(np.arange(truncated_t, self.__len_X_ + 1))
+        return cost + self._cost_time(np.arange(truncated_t,
+                                                self.__len_X_ + 1))
 
     def _predict_single_series(self, Xi):
         """
@@ -303,7 +337,7 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
         pred, time_prediction = None, None
         for t in range(self.min_t, self.__len_X_ + 1):
             tau_star = np.argmin(self._expected_costs(Xi=Xi[:t]))
-            if (t == self.__len_X_) or (tau_star == t):
+            if (t == self.__len_X_) or (tau_star == 0):
                 pred = self.classifiers_[t].predict([Xi[:t]])[0]
                 time_prediction = t
                 break
