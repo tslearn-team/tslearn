@@ -71,10 +71,16 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
     ...                                   [3, 2, 1, 1, 1, 3],
     ...                                   [3, 2, 1, 1, 1, 3]])
     >>> ts0 = to_time_series([1, 2])
-    >>> model = NonMyopicEarlyClassification(n_clusters=3, lamb=0.,
+    >>> model = NonMyopicEarlyClassifier(n_clusters=3, lamb=0.,
     ...                                      random_state=0)
     >>> model.fit(dataset, y)
+    NonMyopicEarlyClassifier(base_classifier=None, cost_time_parameter=1.0,
+                             lamb=0.0, min_t=1, n_clusters=3, random_state=0)
+    >>> print(model.pyck_)
+    [[0. 1. 1.]
+     [1. 0. 0.]]
     >>> model.predict(datatest)
+    (array([0, 0, 0, 1, 1, 1, 0, 0]), array([6, 6, 6, 6, 6, 6, 6, 6]))
 
     References
     --------------------
@@ -110,32 +116,6 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
         -------
         itself
 
-        Examples
-        --------
-        >>> dataset = to_time_series_dataset([[1, 2, 3, 4, 5, 6],
-        ...                                   [1, 2, 3, 4, 5, 6],
-        ...                                   [1, 2, 3, 4, 5, 6],
-        ...                                   [1, 2, 3, 3, 2, 1],
-        ...                                   [1, 2, 3, 3, 2, 1],
-        ...                                   [1, 2, 3, 3, 2, 1],
-        ...                                   [3, 2, 1, 1, 2, 3],
-        ...                                   [3, 2, 1, 1, 2, 3]])
-        >>> y = [0, 0, 0, 1, 1, 1, 0, 0]
-        >>> ts0 = to_time_series([1, 2])
-        >>> model = NonMyopicEarlyClassification(n_clusters=3, lamb=0.,
-        ...                                      random_state=0)
-        >>> model.fit(dataset, y)
-        >>> model.cluster_.cluster_centers_
-        (3,)
-        >>>
-        array([0.33..., 0.33..., 0.33...])
-        >>> model = NonMyopicEarlyClassification(n_clusters=3, lamb=10000.,
-        ...                                      random_state=0)
-        >>> probas = model.fit(dataset, y).get_cluster_probas(ts0)
-        >>> probas.shape
-        (3,)
-        >>> probas
-        array([0.5, 0.5, 0. ])
         """
 
         X = check_dims(X)
