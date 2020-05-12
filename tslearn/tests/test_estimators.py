@@ -174,7 +174,7 @@ def check_estimator(Estimator):
     if hasattr(estimator, 'max_iter'):
         if (isinstance(estimator, ShapeletModel) or
                 isinstance(estimator, SerializableShapeletModel)):
-            estimator.set_params(max_iter=1)
+            estimator.set_params(max_iter=100)
         else:
             estimator.set_params(max_iter=10)
     if hasattr(estimator, 'total_lengths'):

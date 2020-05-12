@@ -112,6 +112,11 @@ def _create_small_ts_dataset():
                              sz=10, noise_level=0.025)
 
 
+def _create_large_ts_dataset():
+    return random_walk_blobs(n_ts_per_blob=50, n_blobs=3, random_state=1,
+                             sz=20, noise_level=0.025)
+
+
 def enforce_estimator_tags_y(estimator, y):
     # Estimators with a `requires_positive_y` tag only accept strictly positive
     # data
@@ -267,9 +272,11 @@ def check_fit_idempotent(name, estimator_orig):
 def check_classifiers_classes(name, classifier_orig):
     # Skip shapelet models
     if name in ['ShapeletModel', 'SerializableShapeletModel']:
-        raise SkipTest('Skipping check_classifiers_classes for shapelets'
-                       ' due to convergence issues...')
-    X_multiclass, y_multiclass = _create_small_ts_dataset()
+        # raise SkipTest('Skipping check_classifiers_classes for shapelets'
+        #                ' due to convergence issues...')
+        X_multiclass, y_multiclass = _create_large_ts_dataset()
+    else:
+        X_multiclass, y_multiclass = _create_small_ts_dataset()
 
     X_multiclass, y_multiclass = shuffle(X_multiclass, y_multiclass,
                                          random_state=7)
@@ -312,11 +319,12 @@ def check_classifiers_classes(name, classifier_orig):
 def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
     # Skip shapelet models
     if name in ['ShapeletModel', 'SerializableShapeletModel']:
-        raise SkipTest('Skipping check_classifiers_train for shapelet models'
-                       ' due to convergence issues...')
+        # raise SkipTest('Skipping check_classifiers_classes for shapelets'
+        #                ' due to convergence issues...')
+        X_m, y_m = _create_large_ts_dataset()
+    else:
+        X_m, y_m = _create_small_ts_dataset()
 
-    # Generate some random walk blobs, shuffle them and normalize them
-    X_m, y_m = _create_small_ts_dataset()
     X_m, y_m = shuffle(X_m, y_m, random_state=7)
 
     X_m = TimeSeriesScalerMeanVariance().fit_transform(X_m)
