@@ -277,7 +277,7 @@ def check_classifiers_classes(name, classifier_orig):
     elif name == 'ShapeletModel':
         X_multiclass, y_multiclass = _create_large_ts_dataset()
         classifier_orig = clone(classifier_orig)
-        classifier_orig.max_iter = 100
+        classifier_orig.max_iter = 1000
     else:
         X_multiclass, y_multiclass = _create_small_ts_dataset()
 
