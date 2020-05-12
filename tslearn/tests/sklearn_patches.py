@@ -276,7 +276,7 @@ def check_classifiers_classes(name, classifier_orig):
                        ' due to convergence issues...')
     elif name == 'ShapeletModel':
         classifier_orig = clone(classifier_orig)
-        classifier_orig.max_iter = 100
+        classifier_orig.max_iter = 1000
 
     X_multiclass, y_multiclass = _create_small_ts_dataset()
     X_multiclass, y_multiclass = shuffle(X_multiclass, y_multiclass,
@@ -324,7 +324,7 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
                        ' due to convergence issues...')
     elif name == 'ShapeletModel':
         classifier_orig = clone(classifier_orig)
-        classifier_orig.max_iter = 100
+        classifier_orig.max_iter = 1000
 
     X_m, y_m = _create_small_ts_dataset()
     X_m, y_m = shuffle(X_m, y_m, random_state=7)
