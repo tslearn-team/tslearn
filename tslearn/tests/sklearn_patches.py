@@ -327,7 +327,7 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
     elif name == 'ShapeletModel':
         X_m, y_m = _create_large_ts_dataset()
         classifier_orig = clone(classifier_orig)
-        classifier_orig.max_iter = 100
+        classifier_orig.max_iter = 1000
     else:
         X_m, y_m = _create_small_ts_dataset()
 
