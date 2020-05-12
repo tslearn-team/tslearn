@@ -90,7 +90,8 @@ _DEFAULT_TAGS = {
     '_skip_test': False,
     'multioutput_only': False,
     'binary_only': False,
-    'requires_fit': True}
+    'requires_fit': True,
+    'early_classifier': False}
 
 
 def _safe_tags(estimator, key=None):
@@ -270,8 +271,12 @@ def check_fit_idempotent(name, estimator_orig):
 
 
 def check_classifiers_classes(name, classifier_orig):
-    # Case of shapelet models
-    if name == 'SerializableShapeletModel':
+    tags = _safe_tags(classifier_orig)
+
+    if tags["early_classifier"]:
+        raise SkipTest('Skipping check_classifiers_train for early '
+                       'classifiers...')
+    elif name == 'SerializableShapeletModel':
         raise SkipTest('Skipping check_classifiers_classes for shapelets'
                        ' due to convergence issues...')
     elif name == 'ShapeletModel':
@@ -304,7 +309,7 @@ def check_classifiers_classes(name, classifier_orig):
 
     problems = [(X_binary, y_binary, y_names_binary)]
 
-    if not _safe_tags(classifier_orig, 'binary_only'):
+    if not tags['binary_only']:
         problems.append((X_multiclass, y_multiclass, y_names_multiclass))
 
     for X, y, y_names in problems:
@@ -320,8 +325,12 @@ def check_classifiers_classes(name, classifier_orig):
 
 @ignore_warnings  # Warnings are raised by decision function
 def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
-    # Case of shapelet models
-    if name == 'SerializableShapeletModel':
+    tags = _safe_tags(classifier_orig)
+
+    if tags["early_classifier"]:
+        raise SkipTest('Skipping check_classifiers_train for early '
+                       'classifiers...')
+    elif name == 'SerializableShapeletModel':
         raise SkipTest('Skipping check_classifiers_classes for shapelets'
                        ' due to convergence issues...')
     elif name == 'ShapeletModel':
@@ -341,8 +350,6 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
 
     # We will test for both binary and multiclass case
     problems = [(X_b, y_b), (X_m, y_m)]
-
-    tags = _safe_tags(classifier_orig)
 
     for (X, y) in problems:
         classes = np.unique(y)
@@ -470,6 +477,9 @@ def check_estimators_pickle(name, estimator_orig):
 @ignore_warnings(category=(DeprecationWarning, FutureWarning))
 def check_supervised_y_2d(name, estimator_orig):
     tags = _safe_tags(estimator_orig)
+    if tags["early_classifier"]:
+        raise SkipTest('Skipping check_supervised_y_2d for early '
+                       'classifiers...')
     X, y = _create_small_ts_dataset()
     if tags['binary_only']:
         X = X[y != 2]

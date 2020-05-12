@@ -415,3 +415,6 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
 
     def _cost_time(self, t):
         return t * self.cost_time_parameter
+
+    def _get_tags(self):
+        return {"early_classifier": True}

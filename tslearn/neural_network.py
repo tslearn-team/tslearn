@@ -1,3 +1,10 @@
+"""
+The :mod:`tslearn.neural_network` module contains multi-layer perceptron
+models for time series classification and regression.
+
+These are straight-forward adaptations of scikit-learn models.
+"""
+
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.utils import check_array
 
@@ -24,7 +31,9 @@ class TimeSeriesMLPClassifier(MLPClassifier):
     >>> X, y = random_walk_blobs(n_ts_per_blob=30, sz=16, d=2, n_blobs=3,
     ...                          random_state=0)
     >>> mlp = TimeSeriesMLPClassifier(hidden_layer_sizes=(64, 64),
-    ...                               random_state=0).fit(X, y)
+    ...                               random_state=0)
+    >>> mlp.fit(X, y)  # doctest: +ELLIPSIS
+    TimeSeriesMLPClassifier(...)
     >>> [c.shape for c in mlp.coefs_]
     [(32, 64), (64, 64), (64, 3)]
     >>> [c.shape for c in mlp.intercepts_]
@@ -117,7 +126,6 @@ class TimeSeriesMLPRegressor(MLPRegressor):
 
     Examples
     --------
-    >>>
     >>> mlp = TimeSeriesMLPRegressor(hidden_layer_sizes=(64, 64),
     ...                               random_state=0)
     >>> mlp.fit(X=[[1, 2, 3], [1, 1.2, 3.2], [3, 2, 1]],
