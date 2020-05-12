@@ -4,14 +4,15 @@ The :mod:`tslearn.shapelets` module gathers Shapelet-based algorithms.
 It depends on the `keras` library for optimization.
 """
 
-from keras.models import Model
+from keras.models import Model, model_from_json
 from keras.layers import Dense, Conv1D, Layer, Input, concatenate, add
 from keras.metrics import (categorical_accuracy, categorical_crossentropy,
                            binary_accuracy, binary_crossentropy)
-from sklearn.preprocessing import LabelBinarizer
+from keras.utils import to_categorical
 from sklearn.base import BaseEstimator, ClassifierMixin, TransformerMixin
 from sklearn.utils import check_array, check_X_y
 from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.multiclass import unique_labels
 from keras.regularizers import l2
 from keras.initializers import Initializer
 import keras.backend as K
@@ -25,6 +26,7 @@ except ImportError:
 import warnings
 
 from tslearn.utils import to_time_series_dataset, check_dims
+from tslearn.bases import BaseModelPackage
 from tslearn.clustering import TimeSeriesKMeans
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -202,7 +204,8 @@ def grabocka_params_to_shapelet_size_dict(n_ts, ts_sz, n_classes, l, r):
     return d
 
 
-class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
+class ShapeletModel(BaseEstimator, BaseModelPackage,
+                    ClassifierMixin, TransformerMixin):
     r"""Learning Time-Series Shapelets model.
 
 
@@ -333,7 +336,7 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
 
     @property
     def _n_shapelet_sizes(self):
-        return len(self.n_shapelets_per_size)
+        return len(self.n_shapelets_per_size_)
 
     @property
     def shapelets_(self):
@@ -407,39 +410,20 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         self.model_ = None
         self.transformer_model_ = None
         self.locator_model_ = None
-        self.categorical_y_ = False
-        self.label_binarizer_ = None
         self.d_ = d
 
-        if y.ndim == 1 or y.shape[1] == 1:
-            self.label_binarizer_ = LabelBinarizer().fit(y)
-            y_ = self.label_binarizer_.transform(y)
-            self.classes_ = self.label_binarizer_.classes_
-        else:
-            y_ = y
-            self.categorical_y_ = True
-            self.classes_ = numpy.unique(y)
-            assert y_.shape[1] != 2, ("Binary classification case, " +
-                                      "monodimensional y should be passed.")
-
-        if y_.ndim == 1 or y_.shape[1] == 1:
-            n_classes = 2
-        else:
-            n_classes = y_.shape[1]
+        y_ = self._preprocess_labels(y)
+        n_labels = len(self.classes_)
 
         if self.n_shapelets_per_size is None:
-            sizes = grabocka_params_to_shapelet_size_dict(n_ts, sz, n_classes,
+            sizes = grabocka_params_to_shapelet_size_dict(n_ts, sz, n_labels,
                                                           self.shapelet_length,
                                                           self.total_lengths)
             self.n_shapelets_per_size_ = sizes
         else:
             self.n_shapelets_per_size_ = self.n_shapelets_per_size
 
-        self._set_model_layers(X=X, ts_sz=sz, d=d, n_classes=n_classes)
-        self.transformer_model_.compile(loss="mean_squared_error",
-                                        optimizer=self.optimizer)
-        self.locator_model_.compile(loss="mean_squared_error",
-                                    optimizer=self.optimizer)
+        self._set_model_layers(X=X, ts_sz=sz, d=d, n_classes=n_labels)
         self._set_weights_false_conv(d=d)
         self.model_.fit(
             [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(d)], y_,
@@ -469,11 +453,11 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         X = to_time_series_dataset(X)
         X = check_dims(X, X_fit_dims=self._X_fit_dims)
 
-        categorical_preds = self.predict_proba(X)
-        if self.categorical_y_:
-            return categorical_preds
-        else:
-            return self.label_binarizer_.inverse_transform(categorical_preds)
+        y_ind = self.predict_proba(X).argmax(axis=1)
+        y_label = numpy.array(
+            [self.classes_[ind] for ind in y_ind]
+        )
+        return y_label
 
     def predict_proba(self, X):
         """Predict class probability for a given set of time series.
@@ -571,6 +555,54 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
         )
         return locations.astype(numpy.int)
 
+    def _preprocess_labels(self, y):
+        self.classes_ = unique_labels(y)
+        n_labels = len(self.classes_)
+        if n_labels == 1:
+            raise ValueError("Classifier can't train when only one class "
+                             "is present.")
+        if self.classes_.dtype in [numpy.int32, numpy.int64]:
+            self.label_to_ind_ = {int(lab): ind
+                                  for ind, lab in enumerate(self.classes_)}
+        else:
+            self.label_to_ind_ = {lab: ind
+                                  for ind, lab in enumerate(self.classes_)}
+        y_ind = numpy.array(
+            [self.label_to_ind_[lab] for lab in y]
+        )
+        y_ = to_categorical(y_ind)
+        if n_labels == 2:
+            y_ = y_[:, 1:]  # Keep only indicator of positive class
+        return y_
+
+    def _build_auxiliary_models(self):
+        check_is_fitted(self, 'model_')
+
+        inputs = self.model_.inputs
+        concatenated_features = self.model_.get_layer("classification").input
+
+        self.transformer_model_ = Model(inputs=inputs,
+                                        outputs=concatenated_features)
+        self.transformer_model_.compile(loss="mean_squared_error",
+                                        optimizer=self.optimizer)
+
+        min_pool_inputs = [self.model_.get_layer("min_pooling_%d" % i).input
+                           for i in range(self._n_shapelet_sizes)]
+
+        pool_layers_locations = [
+            GlobalArgminPooling1D(name="min_pooling_%d" % i)(pool_input)
+            for i, pool_input in enumerate(min_pool_inputs)
+        ]
+        if self._n_shapelet_sizes > 1:
+            concatenated_locations = concatenate(pool_layers_locations)
+        else:
+            concatenated_locations = pool_layers_locations[0]
+
+        self.locator_model_ = Model(inputs=inputs,
+                                    outputs=concatenated_locations)
+        self.locator_model_.compile(loss="mean_squared_error",
+                                    optimizer=self.optimizer)
+
     def _set_weights_false_conv(self, d):
         shapelet_sizes = sorted(self.n_shapelets_per_size_.keys())
         for i, sz in enumerate(shapelet_sizes):
@@ -584,7 +616,6 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
                   for di in range(d)]
         shapelet_sizes = sorted(self.n_shapelets_per_size_.keys())
         pool_layers = []
-        pool_layers_locations = []
         for i, sz in enumerate(sorted(shapelet_sizes)):
             transformer_layers = [
                 Conv1D(
@@ -606,15 +637,11 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
                 sum_shap = add(shapelet_layers)
 
             gp = GlobalMinPooling1D(name="min_pooling_%d" % i)(sum_shap)
-            gap = GlobalArgminPooling1D(name="min_pooling_%d" % i)(sum_shap)
             pool_layers.append(gp)
-            pool_layers_locations.append(gap)
         if len(shapelet_sizes) > 1:
             concatenated_features = concatenate(pool_layers)
-            concatenated_locations = concatenate(pool_layers_locations)
         else:
             concatenated_features = pool_layers[0]
-            concatenated_locations = pool_layers_locations[0]
 
         if self.weight_regularizer > 0:
             regularizer = l2(self.weight_regularizer)
@@ -633,13 +660,10 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
                         kernel_regularizer=regularizer,
                         name="classification")(concatenated_features)
         self.model_ = Model(inputs=inputs, outputs=outputs)
-        self.transformer_model_ = Model(inputs=inputs,
-                                        outputs=concatenated_features)
-        self.locator_model_ = Model(inputs=inputs,
-                                    outputs=concatenated_locations)
         self.model_.compile(loss=loss,
                             optimizer=self.optimizer,
                             metrics=metrics)
+        self._build_auxiliary_models()
 
     def get_weights(self, layer_name=None):
         """Return model weights (or weights for a given layer if `layer_name`
@@ -717,6 +741,61 @@ class ShapeletModel(BaseEstimator, ClassifierMixin, TransformerMixin):
             return self.model_.set_weights(weights)
         else:
             return self.model_.get_layer(layer_name).set_weights(weights)
+
+    def _is_fitted(self):
+        check_is_fitted(self, 'model_')
+        return True
+
+    def _get_model_params(self):
+        """Get model parameters that are sufficient to recapitulate it."""
+        return {"model_": self.model_.to_json(),
+                "model_weights_": self.get_weights(),
+                "classes_": self.classes_,
+                "label_to_ind_": self.label_to_ind_,
+                "d_": self.d_,
+                "n_shapelets_per_size_": self.n_shapelets_per_size_,
+                "_X_fit_dims": self._X_fit_dims}
+
+    @staticmethod
+    def _organize_model(cls, model):
+        """
+        Instantiate the model with all hyper-parameters,
+        set all model parameters and then return the model.
+        Do not use directly. Use the designated classmethod to load a model.
+        Parameters
+        ----------
+        cls : instance of model that inherits from `BaseModelPackage`
+            a model instance
+        model : dict
+            Model dict containing hyper-parameters and model-parameters
+        Returns
+        -------
+        model: instance of model that inherits from `BaseModelPackage`
+            instance of the model class with hyper-parameters and
+            model parameters set from the passed model dict
+        """
+
+        model_params = model.pop('model_params')
+        hyper_params = model.pop('hyper_params')  # hyper-params
+
+        # instantiate with hyper-parameters
+        inst = cls(**hyper_params)
+
+        # set all model params
+        inst.model_ = model_from_json(
+            model_params.pop("model_"),
+            custom_objects={
+                "LocalSquaredDistanceLayer": LocalSquaredDistanceLayer,
+                "GlobalMinPooling1D": GlobalMinPooling1D
+            }
+        )
+        inst.set_weights(model_params.pop("model_weights_"))
+        for p in model_params.keys():
+            setattr(inst, p, model_params[p])
+        inst._X_fit_dims = tuple(inst._X_fit_dims)
+        inst._build_auxiliary_models()
+
+        return inst
 
     def _get_tags(self):
         # This is added due to the fact that there are small rounding

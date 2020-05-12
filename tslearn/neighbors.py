@@ -177,19 +177,22 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
     ----------
     n_neighbors : int (default: 5)
         Number of nearest neighbors to be considered for the decision.
-    metric : {'dtw', 'softdtw', 'euclidean', 'sqeuclidean', 'cityblock',
-              'sax'} (default: 'dtw')
+
+    metric : {'dtw', 'softdtw', 'euclidean', 'sqeuclidean', 'cityblock', \
+    'sax'} (default: 'dtw')
         Metric to be used at the core of the nearest neighbor procedure.
         DTW and SAX are described in more detail in :mod:`tslearn.metrics`.
         When SAX is provided as a metric, the data is expected to be
         normalized such that each time series has zero mean and unit
         variance. Other metrics are described in `scipy.spatial.distance doc
         <https://docs.scipy.org/doc/scipy/reference/spatial.distance.html>`_.
+
     metric_params : dict or None (default: None)
-        Dictionnary of metric parameters.
+        Dictionary of metric parameters.
         For metrics that accept parallelization of the cross-distance matrix
         computations, `n_jobs` and `verbose` keys passed in `metric_params`
         are overridden by the `n_jobs` and `verbose` arguments.
+
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel for cross-distance matrix
         computations.

@@ -38,7 +38,6 @@ def save_dict(d, filename, group, raise_type_fail=True):
         If a particular entry within the dict cannot be saved to hdf5 AND
         the argument `raise_type_fail` is set to `True`
     """
-
     if os.path.isfile(filename):
         raise FileExistsError
 
