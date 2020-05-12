@@ -8,6 +8,40 @@ and this project adheres to
 
 Changelogs for this project are recorded in this file since v0.2.0.
 
+## [Towards v0.4.0]
+
+### Changed
+* Better initialization schemes for `TimeSeriesKMeans` that lead to more 
+consistent clustering runs (helps avoid empty cluster situations)
+* TimeSeriesScalerMeanVariance and TimeSeriesScalerMinMax are now completely sklearn-compliant
+* Bugfix in kneighbors() methods.
+
+### Added
+* `dtw_path_from_metric` allows one to pick a dedicated ground metric on top 
+of which the DTW algorithm can be run
+* Nearest Neighbors on SAX representation (with custom distance)
+* Calculate pairwise distance matrix between SAX representations
+* PiecewiseAggregateApproximation can now handle variable lengths
+
+### Fixed
+
+* Estimators that can operate on variable length time series now allow 
+for test time datasets to have a different length from the one that was
+passed at fit time
+
+### Removed
+
+* Support for Python 2 is dropped
+
+
+## [v0.3.1]
+
+### Fixed
+
+* Fixed a bug in `TimeSeriesSVC` and `TimeSeriesSVR` that caused user-input 
+`gamma` to be ignored (always treated as if it were `"auto"`) for `gak` kernel
+
+
 ## [v0.3.0]
 
 ### Changed
@@ -26,6 +60,9 @@ NaNs when calling their respective `transform` methods in order to better
 mirror scikit-learn's handling of missing data in preprocessing.
 * `KNeighborsTimeSeries` now accepts variable-length time series as inputs
 when used with metrics that can deal with it (eg. DTW)
+* When constrained DTW is used, if the name of the constraint is not given but 
+its parameter is set, that is now considered sufficient to identify the 
+constraint.
 
 ### Added
 
@@ -53,12 +90,6 @@ following models: `GlobalAlignmentKernelKMeans`, `TimeSeriesKMeans`,
 `KShape`, `KNeighborsTimeSeries`, `KNeighborsTimeSeriesClassifier`,
 `PiecewiseAggregateApproximation`, `SymbolicAggregateApproximation`,
 and `OneD_SymbolicAggregateApproximation`
-
-### Changed
- 
-* When constrained DTW is used, if the name of the constraint is not given but 
-its parameter is set, that is now considered sufficient to identify the 
-constraint.
 
 ## [v0.2.4]
 

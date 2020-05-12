@@ -46,7 +46,7 @@ class BaseModelPackage:
         """Get the hyper-parameters for this model"""
         pass
 
-    def _to_dict(self, output=None):
+    def _to_dict(self, output=None, hyper_parameters_only=False):
         """
         Get model hyper-parameters and model-parameters
         as a dict that can be saved to disk.
@@ -71,6 +71,9 @@ class BaseModelPackage:
             d['hyper_params'] = \
                 BaseModelPackage._none_to_str(d['hyper_params'])
 
+        if hyper_parameters_only:
+            del d["model_params"]
+
         return d
 
     @staticmethod
@@ -93,6 +96,8 @@ class BaseModelPackage:
 
             if isinstance(param, np.ndarray):
                 model_params[k] = param.tolist()  # for json support
+            elif isinstance(param, list) and isinstance(param[0], np.ndarray):
+                model_params[k] = [p.tolist() for p in param]  # json support
             else:
                 model_params[k] = param
         return model_params
@@ -177,7 +182,7 @@ class BaseModelPackage:
             if model['hyper_params'][k] == 'None':
                 model['hyper_params'][k] = None
 
-        return BaseModelPackage._organize_model(cls, model)
+        return cls._organize_model(cls, model)
 
     def to_json(self, path):
         """
@@ -215,7 +220,7 @@ class BaseModelPackage:
             if type(param) is list:
                 model['model_params'][k] = np.array(param)
 
-        return BaseModelPackage._organize_model(cls, model)
+        return cls._organize_model(cls, model)
 
     def to_pickle(self, path):
         """
@@ -245,4 +250,4 @@ class BaseModelPackage:
         Model instance
         """
         model = pickle.load(open(path, 'rb'))
-        return BaseModelPackage._organize_model(cls, model)
+        return cls._organize_model(cls, model)

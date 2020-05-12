@@ -1,10 +1,55 @@
-.. tslearn documentation master file, created by
-   sphinx-quickstart on Mon May  8 21:34:49 2017.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. raw:: html
+
+    <style type="text/css">
+
+    .thumbnail {
+        position: relative;
+        float: left;
+        margin: 10px;
+        width: 160px;
+        height: 160px;
+    }
+
+    .thumbnail img {
+        position: absolute;
+        display: inline;
+        left: 0;
+        width: 150px;
+        height: 150px;
+    }
+
+    </style>
 
 ``tslearn``'s documentation
 ===========================
+
+.. raw:: html
+
+    <div style="clear: both"></div>
+    <div class="container-fluid hidden-xs hidden-sm">
+      <div class="row">
+        <a href="auto_examples/metrics/plot_dtw.html">
+          <div class="col-md-2 thumbnail">
+            <img src="_static/img/dtw_thumb.png">
+          </div>
+        </a>
+        <a href="auto_examples/clustering/plot_barycenter_interpolate.html">
+          <div class="col-md-2 thumbnail">
+            <img src="_static/img/bary_interp_thumb.png">
+          </div>
+        </a>
+        <a href="auto_examples/clustering/plot_kmeans.html">
+          <div class="col-md-2 thumbnail">
+            <img src="_static/img/kmeans_thumb.png">
+          </div>
+        </a>
+        <a href="auto_examples/misc/plot_sax.html">
+          <div class="col-md-2 thumbnail">
+            <img src="_static/img/sax_thumb.png">
+          </div>
+        </a>
+      </div>
+    </div>
 
 ``tslearn`` is a Python package that provides machine learning tools for the
 analysis of time series.
@@ -13,70 +58,23 @@ This package builds on (and hence depends on) ``scikit-learn``, ``numpy`` and
 
 If you plan to use the ``shapelets`` module from ``tslearn``, ``keras`` and
 ``tensorflow`` should also be installed.
-`h5py` is required for reading or writing models using the hdf5 file format.
+``h5py`` is required for reading or writing models using the hdf5 file format.
 
-Installation
-------------
+This documentation contains :doc:`a quick-start guide <quickstart>` (including
+:doc:`installation procedure <installation>` and
+:doc:`basic usage of the toolkit <gettingstarted>`),
+:doc:`a complete API Reference <reference>`, as well as a
+:doc:`gallery of examples <auto_examples/index>`.
 
-Using conda
-```````````
+Finally, if you use ``tslearn`` in a scientific publication,
+:doc:`we would appreciate citations <citing>`.
 
-The easiest way to install ``tslearn`` is probably via ``conda``:
-
-.. code-block:: bash
-
-    conda install -c conda-forge tslearn
-
-Using PyPI
-``````````
-
-Using ``pip`` should also work fine:
-
-.. code-block:: bash
-  
-    pip install tslearn
-
-In this case, you should have ``numpy``, ``cython`` and C++ build tools
-available at build time.
-
-
-Using latest github-hosted version
-``````````````````````````````````
-
-If you want to get ``tslearn``'s latest version, you can refer to the
-repository hosted at github:
-
-.. code-block:: bash
-  
-    pip install git+https://github.com/rtavenar/tslearn.git
-
-In this case, you should have ``numpy``, ``cython`` and C++ build tools
-available at build time.
-
-
-It seems on some platforms ``Cython`` dependency does not install properly.
-If you experiment such an issue, try installing it with the following command:
-
-.. code-block:: bash
-
-    pip install cython
-
-
-before you start installing ``tslearn``.
-If it still does not work, we suggest you switch to `conda` installation.
-
-
-Navigation
-----------
-
-From here, you can navigate to:
 
 .. toctree::
-    :maxdepth: 1
+    :hidden:
+    :maxdepth: 2
 
-    gettingstarted
-    variablelength
-    dtw
+    quickstart
     reference
     auto_examples/index
-
+    citing

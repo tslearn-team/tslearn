@@ -86,7 +86,7 @@ def in_file_string_replace(filename, old_string, new_string):
         f.write(s)
 
 
-class UCR_UEA_datasets(object):
+class UCR_UEA_datasets:
     """A convenience class to access UCR/UEA time series datasets.
 
     When using one (or several) of these datasets in research projects, please
@@ -287,7 +287,7 @@ class UCR_UEA_datasets(object):
                                  % dataset_name)
 
 
-class CachedDatasets(object):
+class CachedDatasets:
     """A convenience class to access cached time series datasets.
 
     When using the Trace dataset, please cite [1]_.

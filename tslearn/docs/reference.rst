@@ -3,7 +3,7 @@
 API Reference
 =============
 
-The complete tslearn project is automatically documented for every module.
+The complete ``tslearn`` project is automatically documented for every module.
 
 .. currentmodule:: tslearn
 

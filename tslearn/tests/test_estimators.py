@@ -12,7 +12,12 @@ import sklearn
 from sklearn.base import (BaseEstimator, ClassifierMixin, ClusterMixin,
                           RegressorMixin, TransformerMixin)
 
-from sklearn.utils.testing import SkipTest
+try:
+    # Most recent
+    from sklearn.utils._testing import SkipTest
+except ImportError:
+    # Deprecated from sklearn v0.24 onwards
+    from sklearn.utils.testing import SkipTest
 from sklearn.exceptions import SkipTestWarning
 from sklearn.utils.estimator_checks import (
     check_no_attributes_set_in_init,
@@ -32,6 +37,7 @@ from tslearn.tests.sklearn_patches import (
                              check_pipeline_consistency,
                              yield_all_checks)
 from tslearn.tests.sklearn_patches import _safe_tags
+from tslearn.shapelets import ShapeletModel, SerializableShapeletModel
 import warnings
 import pytest
 
@@ -166,7 +172,11 @@ def check_estimator(Estimator):
         name = type(estimator).__name__
 
     if hasattr(estimator, 'max_iter'):
-        estimator.set_params(max_iter=10)
+        if (isinstance(estimator, ShapeletModel) or
+                isinstance(estimator, SerializableShapeletModel)):
+            estimator.set_params(max_iter=100)
+        else:
+            estimator.set_params(max_iter=10)
     if hasattr(estimator, 'total_lengths'):
         estimator.set_params(total_lengths=1)
     if hasattr(estimator, 'probability'):

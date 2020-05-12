@@ -1,40 +1,22 @@
+language: python
+
 env:
   global:
   - CODECLIMATE_REPO_TOKEN=d8c5ae082832ed947bc6e673ebfbd1592278fa04633401bf7d180687238fa397
   - GIT_COMMITTED_AT=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then git log -1 --pretty=format:%ct;
     else git log -1 --skip 1 --pretty=format:%ct; fi)
-language: python
-matrix:
-  include:
-    - python: '2.7'
-      env:
-      - KERAS_BACKEND=tensorflow
-      - NUMBA_DISABLE_JIT=0
-    - python: '3.5'
-      env:
-      - KERAS_BACKEND=tensorflow
-      - NUMBA_DISABLE_JIT=0
-    - python: '3.6'
-      env:
-      - KERAS_BACKEND=tensorflow
-      - NUMBA_DISABLE_JIT=0
-    - python: '2.7'
-      env:
-      - KERAS_BACKEND=tensorflow
-      - NUMBA_DISABLE_JIT=1
-    - python: '3.5'
-      env:
-      - KERAS_BACKEND=tensorflow
-      - NUMBA_DISABLE_JIT=1
-    - python: '3.6'
-      env:
-      - KERAS_BACKEND=tensorflow
-      - NUMBA_DISABLE_JIT=1
+  matrix:
+  - KERAS_BACKEND=tensorflow NUMBA_DISABLE_JIT=0
+  - KERAS_BACKEND=tensorflow NUMBA_DISABLE_JIT=1
+
+python:
+  - '3.5'
+  - '3.6'
+  - '3.7'
+
 install:
 - sudo apt-get update
-- if [[ "$TRAVIS_PYTHON_VERSION" == 2.* ]];
-  then wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
-  else wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh; fi
+- wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
 - bash miniconda.sh -b -p $HOME/miniconda
 - export PATH="$HOME/miniconda/bin:$PATH"
 - hash -r
@@ -45,23 +27,22 @@ install:
   scikit-learn numba joblib>=0.12 pandas
 - source activate test-environment
 - pip install pytest
-- if [[ "$TRAVIS_PYTHON_VERSION" == 3.* ]];
-  then pip install cesium;
-  else export DO_NOT_TEST_CESIUM_CAST=1;
+- pip install cesium
   fi
 - if [[ "$NUMBA_DISABLE_JIT" == 1 ]]; then pip install coverage==4.3 "pytest-cov<2.6"; fi
 - pip install argparse
 - pip install codeclimate-test-reporter codecov
 - rm -f tslearn/*.c
 - python setup.py build_ext --inplace
+
 script:
 # run keras backend init to initialize backend config
 - python -c "import keras.backend";
   sed -i -e 's/"backend":[[:space:]]*"[^"]*/"backend":\ "'$KERAS_BACKEND'/g' ~/.keras/keras.json;
   echo -e "Running tests with the following config:\n$(cat ~/.keras/keras.json)";
 - if [ "$NUMBA_DISABLE_JIT" == 1 ];
-  then python -m pytest -v tslearn tslearn/tests/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py $KERAS_IGNORE --cov=tslearn;
-  else python -m pytest -v tslearn tslearn/tests/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py $KERAS_IGNORE;
+  then travis_wait 30 python -m pytest -v tslearn tslearn/tests/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py $KERAS_IGNORE --cov=tslearn;
+  else travis_wait 30 python -m pytest -v tslearn tslearn/tests/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py $KERAS_IGNORE;
   fi
 
 after_success:

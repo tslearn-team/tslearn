@@ -8,7 +8,7 @@ from scipy.stats import norm
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
-from tslearn.utils import to_time_series_dataset
+from tslearn.utils import to_time_series_dataset, ts_size
 from tslearn.cysax import (cydist_sax, cyslopes, cydist_1d_sax,
                            inv_transform_1d_sax, inv_transform_sax,
                            inv_transform_paa)
@@ -156,11 +156,13 @@ class PiecewiseAggregateApproximation(TransformerMixin, BaseModelPackage):
     def _transform(self, X, y=None):
         n_ts, sz, d = X.shape
         X_transformed = numpy.empty((n_ts, self.n_segments, d))
-        sz_segment = sz // self.n_segments
-        for i_seg in range(self.n_segments):
-            start = i_seg * sz_segment
-            end = start + sz_segment
-            X_transformed[:, i_seg, :] = X[:, start:end, :].mean(axis=1)
+        for i_ts in range(n_ts):
+            sz_segment = ts_size(X[i_ts]) // self.n_segments
+            for i_seg in range(self.n_segments):
+                start = i_seg * sz_segment
+                end = start + sz_segment
+                segment = X[i_ts, start:end, :]
+                X_transformed[i_ts, i_seg, :] = segment.mean(axis=0)
         return X_transformed
 
     def transform(self, X, y=None):
@@ -355,7 +357,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation,
         }
 
         p.update(
-            super(SymbolicAggregateApproximation, self)._get_model_params()
+            super()._get_model_params()
         )
 
         return p
@@ -410,7 +412,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation,
         numpy.ndarray of integers with shape (n_ts, n_segments, d)
             SAX-Transformed dataset
         """
-        return super(SymbolicAggregateApproximation, self).transform(X, y)
+        return super().transform(X, y)
 
     def distance_sax(self, sax1, sax2):
         """Compute distance between SAX representations as defined in [1]_.
@@ -581,8 +583,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         }
 
         p.update(
-            super(OneD_SymbolicAggregateApproximation,
-                  self)._get_model_params()
+            super()._get_model_params()
         )
 
         return p
@@ -682,7 +683,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         numpy.ndarray of integers with shape (n_ts, n_segments, 2 * d)
             1d-SAX-Transformed dataset
         """
-        return super(OneD_SymbolicAggregateApproximation, self).transform(X, y)
+        return super().transform(X, y)
 
     def distance_1d_sax(self, sax1, sax2):
         """Compute distance between 1d-SAX representations as defined in [1]_.

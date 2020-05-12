@@ -104,3 +104,13 @@ ENV/
 tslearn/examples
 tslearn/docs/auto_examples
 .pytest_cache
+.mypy_cache
+
+# Test leftovers
+tmp-tslearn-test.txt
+
+# Documentation
+tslearn/docs/_build/
+tslearn/docs/auto_examples/
+tslearn/docs/gen_modules/
+tslearn/docs/examples/misc/ks_trained.hdf5
