@@ -22,6 +22,8 @@ of which the DTW algorithm can be run
 * Nearest Neighbors on SAX representation (with custom distance)
 * Calculate pairwise distance matrix between SAX representations
 * PiecewiseAggregateApproximation can now handle variable lengths
+* ShapeletModel can now be dumped to disk / loaded from disk in JSON and pickle
+formats
 
 ### Fixed
 
