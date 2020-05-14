@@ -7,7 +7,7 @@ do not necessarily wait for the end of the series before prediction is
 triggered).
 """
 
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, accuracy_score
 from sklearn.base import BaseEstimator, ClassifierMixin, clone
 from sklearn.model_selection import train_test_split
 import numpy as np
@@ -20,7 +20,7 @@ from tslearn.clustering import TimeSeriesKMeans
 
 class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
     """Early Classification modelling for time series using the model
-    presented in [1]
+    presented in [1]_.
 
     Parameters
     ----------
@@ -85,18 +85,17 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
     >>> print(model.pyck_)
     [[0. 1. 1.]
      [1. 0. 0.]]
-    >>> preds, pred_times = model.predict(dataset)
+    >>> preds, pred_times = model.predict_class_and_earliness(dataset)
     >>> preds
     array([0, 0, 0, 1, 1, 1, 0, 0])
     >>> pred_times
     array([4, 4, 4, 4, 4, 4, 1, 1])
 
     References
-    --------------------
-    [1] A. Dachraoui, A. Bondu & A. Cornuejols. Early classification of time series as a non myopic sequential decision
-    making problem. 2015 Conference paper
-
-
+    ----------
+    .. [1] A. Dachraoui, A. Bondu & A. Cornuejols. Early classification of time
+       series as a non myopic sequential decision making problem.
+       ECML/PKDD 2015
     """
 
     def __init__(self, n_clusters=2, base_classifier=None,
@@ -111,20 +110,22 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
 
     def fit(self, X, y):
         """
-        fits classifiers that are clones of self.base_classifier for each time stamps between self.min_t t and the
-        last time stamps of the time series.
+        Fit early classifier.
 
         Parameters
         ----------
-        X: Array-like
-            a dataset of time series
-        y: vector
-            the associated classes of the series from X_train
+        X : array-like of shape (n_series, n_timestamps, n_features)
+            Training data, where `n_series` is the number of time series,
+            `n_timestamps` is the number of timestamps in the series
+            and `n_features` is the number of features recorded at each
+            timestamp.
+
+        y : array-like of shape (n_samples,)
+            Target values. Will be cast to X's dtype if necessary
 
         Returns
         -------
-        itself
-
+        self : returns an instance of self.
         """
 
         X = check_dims(X)
@@ -190,19 +191,19 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
 
         This quantity is computed using the following formula:
 
-        ..math ::
+        .. math::
 
             P(c_k | Xi) = \frac{s_k(Xi)}{\sum_j s_j(Xi)}
 
         where
 
-        ..math ::
+        .. math::
 
             s_k(Xi) = \frac{1}{1 + \exp{-\lambda \Delta_k(Xi)}}
 
         with
 
-        ..math ::
+        .. math::
 
             \Delta_k(Xi) = \frac{\bar{D} - d(Xi, c_k)}{\bar{D}}
 
@@ -260,7 +261,7 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
 
         This cost is computed, for a time horizon :math:`\tau`, as:
 
-        ..math ::
+        .. math::
 
             \sum_k P(c_k | Xi) \sum_y P(y | c_k)
                 \sum_\hat{y}
@@ -349,8 +350,9 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
-        xt: vector
-            a time series that is probably incomplete but that nonetheless we want to classify
+        Xi: vector
+            a time series that is probably incomplete but that nonetheless we
+            want to classify
         Returns
         -------
         int: the class which is predicted
@@ -367,18 +369,27 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
                 break
         return probas, time_prediction
 
-    def predict(self, X):
+    def predict_class_and_earliness(self, X):
         """
-        Predicts the classes of the series of the test dataset.
+        Provide predicted class as well as prediction timestamps.
+
+        Prediction timestamps are timestamps at which a prediction is made in
+        early classification setting.
 
         Parameters
         ----------
-        X_test : Array-like
-            The test dataset
+        X : array-like of shape (n_series, n_timestamps, n_features)
+            Vector to be scored, where `n_series` is the number of time series,
+            `n_timestamps` is the number of timestamps in the series
+            and `n_features` is the number of features recorded at each
+            timestamp.
 
         Returns
         -------
-        Vector : the predicted classes
+        array, shape (n_samples,)
+            Predicted classes.
+        array-like of shape (n_series, )
+            Prediction timestamps.
         """
 
         X = check_dims(X)
@@ -390,18 +401,49 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
             time_prediction.append(t)
         return np.array(y_pred), np.array(time_prediction)
 
-    def predict_proba(self, X):
+    def predict(self, X):
         """
-        Predicts the classes of the series of the test dataset.
+        Provide predicted class.
 
         Parameters
         ----------
-        X_test : Array-like
-            The test dataset
+        X : array-like of shape (n_series, n_timestamps, n_features)
+            Vector to be scored, where `n_series` is the number of time series,
+            `n_timestamps` is the number of timestamps in the series
+            and `n_features` is the number of features recorded at each
+            timestamp.
 
         Returns
         -------
-        Vector : the predicted classes
+        array, shape (n_samples,)
+            Predicted classes.
+        """
+        return self.predict_class_and_earliness(X)[0]
+
+    def predict_proba_and_earliness(self, X):
+        """
+        Provide probability estimates as well as prediction timestamps.
+
+        Prediction timestamps are timestamps at which a prediction is made in
+        early classification setting.
+        The returned estimates for all classes are ordered by the
+        label of classes.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_series, n_timestamps, n_features)
+            Vector to be scored, where `n_series` is the number of time series,
+            `n_timestamps` is the number of timestamps in the series
+            and `n_features` is the number of features recorded at each
+            timestamp.
+
+        Returns
+        -------
+        array-like of shape (n_series, n_classes)
+            Probability of the sample for each class in the model,
+            where classes are ordered as they are in ``self.classes_``.
+        array-like of shape (n_series, )
+            Prediction timestamps.
         """
 
         X = check_dims(X)
@@ -413,8 +455,85 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
             time_prediction.append(t)
         return np.array(y_pred), np.array(time_prediction)
 
+    def predict_proba(self, X):
+        """
+        Probability estimates.
+
+        The returned estimates for all classes are ordered by the
+        label of classes.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_series, n_timestamps, n_features)
+            Vector to be scored, where `n_series` is the number of time series,
+            `n_timestamps` is the number of timestamps in the series
+            and `n_features` is the number of features recorded at each
+            timestamp.
+
+        Returns
+        -------
+        array-like of shape (n_series, n_classes)
+            Probability of the sample for each class in the model,
+            where classes are ordered as they are in ``self.classes_``.
+        """
+        return self.predict_proba_and_earliness(X)[0]
+
     def _cost_time(self, t):
         return t * self.cost_time_parameter
 
-    def _get_tags(self):
-        return {"early_classifier": True}
+    def early_classification_cost(self, X, y):
+        r"""
+        Compute early classification score.
+
+        The score is computed as:
+
+        .. math::
+
+            1 - acc + \alpha \frac{1}{n} \sum_i t_i
+
+        where :math:`\alpha` is the trade-off parameter
+        (`self.cost_time_parameter`) and :math:`t_i` are prediction timestamps.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_series, n_timestamps, n_features)
+            Vector to be scored, where `n_series` is the number of time series,
+            `n_timestamps` is the number of timestamps in the series
+            and `n_features` is the number of features recorded at each
+            timestamp.
+
+        y : array-like, shape = (n_samples) or (n_samples, n_outputs)
+            True labels for X.
+
+        Returns
+        -------
+        float
+            Early classification cost (a positive number, the lower the better)
+
+        Examples
+        --------
+        >>> dataset = to_time_series_dataset([[1, 2, 3, 4, 5, 6],
+        ...                                   [1, 2, 3, 4, 5, 6],
+        ...                                   [1, 2, 3, 4, 5, 6],
+        ...                                   [1, 2, 3, 3, 2, 1],
+        ...                                   [1, 2, 3, 3, 2, 1],
+        ...                                   [1, 2, 3, 3, 2, 1],
+        ...                                   [3, 2, 1, 1, 2, 3],
+        ...                                   [3, 2, 1, 1, 2, 3]])
+        >>> y = [0, 0, 0, 1, 1, 1, 0, 0]
+        >>> model = NonMyopicEarlyClassifier(n_clusters=3, lamb=1000.,
+        ...                                  cost_time_parameter=.1,
+        ...                                  random_state=0)
+        >>> model.fit(dataset, y)  # doctest: +ELLIPSIS
+        NonMyopicEarlyClassifier(...)
+        >>> preds, pred_times = model.predict_class_and_earliness(dataset)
+        >>> preds
+        array([0, 0, 0, 1, 1, 1, 0, 0])
+        >>> pred_times
+        array([4, 4, 4, 4, 4, 4, 1, 1])
+        >>> model.early_classification_cost(dataset, y)
+        0.325
+        """
+        y_pred, pred_times = self.predict_class_and_earliness(X)
+        acc = accuracy_score(y, y_pred)
+        return (1. - acc) + np.mean(self._cost_time(pred_times))

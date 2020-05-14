@@ -18,7 +18,7 @@ class TimeSeriesMLPClassifier(MLPClassifier):
     ``MLPClassifier``.
 
     It accepts the exact same hyper-parameters as ``MLPClassifier``, check
-    ``scikit-learn` docs <https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html>`__
+    `scikit-learn docs <https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html>`__
     for a list of parameters and attributes.
 
     Notes
@@ -117,7 +117,7 @@ class TimeSeriesMLPRegressor(MLPRegressor):
     ``MLPRegressor``.
 
     It accepts the exact same hyper-parameters as ``MLPRegressor``, check
-    ``scikit-learn` docs <https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPRegressor.html>`__
+    `scikit-learn docs <https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPRegressor.html>`__
     for a list of parameters and attributes.
 
     Notes
