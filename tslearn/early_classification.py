@@ -13,6 +13,9 @@ from sklearn.model_selection import train_test_split
 import numpy as np
 from scipy.sparse import coo_matrix
 
+from sklearn.utils import check_array
+from sklearn.utils.validation import check_is_fitted
+
 from tslearn.utils import to_time_series_dataset, to_time_series, check_dims
 from tslearn.neighbors import KNeighborsTimeSeriesClassifier
 from tslearn.clustering import TimeSeriesKMeans
@@ -128,7 +131,9 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
         self : returns an instance of self.
         """
 
+        X = check_array(X, allow_nd=True, force_all_finite=False)
         X = check_dims(X)
+        X = to_time_series_dataset(X)
         y_arr = np.array(y)
         label_set = np.unique(y)
 
@@ -140,10 +145,11 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
             clf = KNeighborsTimeSeriesClassifier(n_neighbors=1,
                                                  metric="euclidean")
         self.__n_classes_ = len(label_set)
-        self.__len_X_ = X.shape[1]
+        self._X_fit_dims = X.shape
+        sz = X.shape[1]
         self.classifiers_ = {t: clone(clf)
-                             for t in range(self.min_t, self.__len_X_ + 1)}
-        self.pyhatyck_ = np.empty((self.__len_X_ - self.min_t + 1,
+                             for t in range(self.min_t, sz + 1)}
+        self.pyhatyck_ = np.empty((sz - self.min_t + 1,
                                    self.n_clusters,
                                    self.__n_classes_, self.__n_classes_))
         c_k = self.cluster_.fit_predict(X)
@@ -161,7 +167,7 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
             shape=(self.__n_classes_, self.n_clusters),
         ).toarray()
         self.pyck_ /= self.pyck_.sum(axis=0, keepdims=True)
-        for t in range(self.min_t, self.__len_X_ + 1):
+        for t in range(self.min_t, sz + 1):
             self.classifiers_[t].fit(X1[:, :t], y1)
             for k in range(0, self.n_clusters):
                 index = (c_k2 == k)
@@ -249,6 +255,7 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
         >>> model.get_cluster_probas(ts1)
         array([0., 0., 1.])
         """
+        Xi = check_array(Xi)
         diffs = Xi[np.newaxis, :] - self.cluster_.cluster_centers_[:, :len(Xi)]
         distances_clusters = np.linalg.norm(diffs, axis=(1, 2))
         average_distance = np.mean(distances_clusters)
@@ -318,7 +325,7 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
         sum_global = np.sum(sum_pyhatyck * self.pyck_[np.newaxis, :], axis=1)
         cost = np.dot(sum_global, proba_clusters)
         return cost + self._cost_time(np.arange(truncated_t,
-                                                self.__len_X_ + 1))
+                                                self._X_fit_dims[1] + 1))
 
     def _predict_single_series(self, Xi):
         """
@@ -327,7 +334,8 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
         Parameters
         ----------
         xt: vector
-            a time series that is probably incomplete but that nonetheless we want to classify
+            a time series that is probably incomplete but that nonetheless we
+            want to classify
         Returns
         -------
         int: the class which is predicted
@@ -336,9 +344,9 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
         float : the loss when classifying
         """
         pred, time_prediction = None, None
-        for t in range(self.min_t, self.__len_X_ + 1):
+        for t in range(self.min_t, self._X_fit_dims[1] + 1):
             tau_star = np.argmin(self._expected_costs(Xi=Xi[:t]))
-            if (t == self.__len_X_) or (tau_star == 0):
+            if (t == self._X_fit_dims[1]) or (tau_star == 0):
                 pred = self.classifiers_[t].predict([Xi[:t]])[0]
                 time_prediction = t
                 break
@@ -361,9 +369,9 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
         float : the loss when classifying
         """
         time_prediction, probas = None, None
-        for t in range(self.min_t, self.__len_X_ + 1):
+        for t in range(self.min_t, self._X_fit_dims[1] + 1):
             tau_star = np.argmin(self._expected_costs(Xi=Xi[:t]))
-            if (t == self.__len_X_) or (tau_star == t):
+            if (t == self._X_fit_dims[1]) or (tau_star == t):
                 probas = self.classifiers_[t].predict_proba([Xi[:t]])[0]
                 time_prediction = t
                 break
@@ -392,7 +400,10 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
             Prediction timestamps.
         """
 
-        X = check_dims(X)
+        X = check_array(X, allow_nd=True, force_all_finite=False)
+        check_is_fitted(self, '_X_fit_dims')
+        X = check_dims(X, X_fit_dims=self._X_fit_dims,
+                       check_n_features_only=True)
         y_pred = []
         time_prediction = []
         for i in range(0, X.shape[0]):
@@ -446,7 +457,10 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
             Prediction timestamps.
         """
 
-        X = check_dims(X)
+        X = check_array(X, allow_nd=True, force_all_finite=False)
+        check_is_fitted(self, '_X_fit_dims')
+        X = check_dims(X, X_fit_dims=self._X_fit_dims,
+                       check_n_features_only=True)
         y_pred = []
         time_prediction = []
         for i in range(0, X.shape[0]):
