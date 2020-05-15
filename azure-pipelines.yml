@@ -83,7 +83,7 @@ jobs:
   - script: |
       set -xe
       python -m pip install pytest pytest-azurepipelines pytest-timeout
-      python -m pytest -v tslearn/
+      python -m pytest -v tslearn/ -k 'not test_all_estimators'
     displayName: 'Test'
 
 
@@ -123,5 +123,5 @@ jobs:
   
   - script: |
       python -m pip install pytest pytest-azurepipelines pytest-timeout
-      python -m pytest -v tslearn/
+      python -m pytest -v tslearn/ -k 'not test_all_estimators'
     displayName: 'Test'
