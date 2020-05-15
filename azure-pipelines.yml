@@ -44,8 +44,10 @@ jobs:
       python -m pip install pytest pytest-azurepipelines
       if [[ "$(python.version)" == '3.5' ]];
       then
-        python -m pytest -v tslearn/ --doctest-modules -k 'not test_all_estimators';
+        python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py -k 'not test_all_estimators';
       else
+        pip install coverage==4.3 "pytest-cov<2.6";
+        pip install cesium pandas;
         python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py --cov=tslearn;
       fi
     displayName: 'Test'
@@ -55,7 +57,6 @@ jobs:
       export CODECLIMATE_REPO_TOKEN=d8c5ae082832ed947bc6e673ebfbd1592278fa04633401bf7d180687238fa397
       if [[ "$(python.version)" == '3.7' ]];
       then
-        pip install coverage==4.3 "pytest-cov<2.6";
         pip install codeclimate-test-reporter codecov
         codeclimate-test-reporter;
         codecov;
