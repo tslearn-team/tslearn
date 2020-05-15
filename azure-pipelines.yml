@@ -61,7 +61,7 @@ jobs:
         codeclimate-test-reporter;
         codecov;
       fi
-    displayName: Upload coverage to codecov.io
+    displayName: 'Upload coverage to codecov.io'
 
 
 - job: 'macOS1014'
