@@ -3,7 +3,7 @@ The :mod:`tslearn.clustering` module gathers time series specific clustering
 algorithms.
 """
 
-from sklearn.base import BaseEstimator, ClusterMixin
+from sklearn.base import ClusterMixin
 try:
     # Most recent
     from sklearn.cluster._k_means import _k_init
@@ -14,6 +14,7 @@ from sklearn.metrics.cluster import \
     silhouette_score as sklearn_silhouette_score
 from sklearn.utils import check_random_state
 from sklearn.utils.extmath import stable_cumsum
+from sklearn.utils.validation import _check_sample_weight
 from scipy.spatial.distance import cdist
 import numpy
 import warnings
@@ -29,7 +30,7 @@ from tslearn.preprocessing import TimeSeriesScalerMeanVariance, \
 from tslearn.utils import (to_time_series_dataset, to_time_series,
                            ts_size, check_dims)
 from tslearn.cycc import cdist_normalized_cc, y_shifted_sbd_vec
-from tslearn.bases import BaseModelPackage
+from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 # Kernel k-means is derived from https://gist.github.com/mblondel/6230787 by
@@ -331,7 +332,7 @@ def _check_initial_guess(init, n_clusters):
 
 
 class GlobalAlignmentKernelKMeans(ClusterMixin, BaseModelPackage,
-                                  BaseEstimator):
+                                  TimeSeriesBaseEstimator):
     """Global Alignment Kernel K-means.
 
     Parameters
@@ -484,8 +485,7 @@ class GlobalAlignmentKernelKMeans(ClusterMixin, BaseModelPackage,
         X = check_array(X, allow_nd=True, force_all_finite=False)
         X = check_dims(X)
 
-        if sample_weight is not None:
-            sample_weight = check_array(sample_weight, ensure_2d=False)
+        sample_weight = _check_sample_weight(sample_weight=sample_weight, X=X)
 
         max_attempts = max(self.n_init, 10)
 
@@ -611,7 +611,7 @@ class TimeSeriesCentroidBasedClusteringMixin:
 
 
 class TimeSeriesKMeans(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
-                       BaseModelPackage, BaseEstimator):
+                       BaseModelPackage, TimeSeriesBaseEstimator):
     """K-means clustering for time-series data.
 
     Parameters
@@ -997,8 +997,8 @@ class TimeSeriesKMeans(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
         return {'allow_nan': True, 'allow_variable_length': True}
 
 
-class KShape(BaseEstimator, BaseModelPackage, ClusterMixin,
-             TimeSeriesCentroidBasedClusteringMixin):
+class KShape(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
+             BaseModelPackage, TimeSeriesBaseEstimator):
     """KShape clustering for time series.
 
     KShape was originally presented in [1]_.

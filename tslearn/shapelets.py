@@ -9,7 +9,7 @@ from keras.layers import Dense, Conv1D, Layer, Input, concatenate, add
 from keras.metrics import (categorical_accuracy, categorical_crossentropy,
                            binary_accuracy, binary_crossentropy)
 from keras.utils import to_categorical
-from sklearn.base import BaseEstimator, ClassifierMixin, TransformerMixin
+from sklearn.base import ClassifierMixin, TransformerMixin
 from sklearn.utils import check_array, check_X_y
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.multiclass import unique_labels
@@ -26,7 +26,7 @@ except ImportError:
 import warnings
 
 from tslearn.utils import to_time_series_dataset, check_dims
-from tslearn.bases import BaseModelPackage
+from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
 from tslearn.clustering import TimeSeriesKMeans
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -204,8 +204,8 @@ def grabocka_params_to_shapelet_size_dict(n_ts, ts_sz, n_classes, l, r):
     return d
 
 
-class ShapeletModel(BaseEstimator, BaseModelPackage,
-                    ClassifierMixin, TransformerMixin):
+class ShapeletModel(ClassifierMixin, TransformerMixin,
+                    BaseModelPackage, TimeSeriesBaseEstimator):
     r"""Learning Time-Series Shapelets model.
 
 

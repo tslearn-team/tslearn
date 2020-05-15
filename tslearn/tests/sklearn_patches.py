@@ -287,7 +287,8 @@ def check_classifiers_classes(name, classifier_orig):
 
 
 @ignore_warnings  # Warnings are raised by decision function
-def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
+def check_classifiers_train(name, classifier_orig, readonly_memmap=False,
+                            X_dtype='float64'):
     # Case of shapelet models
     if name == 'SerializableShapeletModel':
         raise SkipTest('Skipping check_classifiers_classes for shapelets'
@@ -298,6 +299,7 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
         classifier_orig.max_iter = 1000
     else:
         X_m, y_m = _create_small_ts_dataset()
+    X_m = X_m.astype(X_dtype)
 
     X_m, y_m = shuffle(X_m, y_m, random_state=7)
 
@@ -475,7 +477,13 @@ def check_regressor_data_not_an_array(name, estimator_orig):
     X, y = _boston_subset(n_samples=50)
     X = pairwise_estimator_convert_X(X, estimator_orig)
     y = enforce_estimator_tags_y(estimator_orig, y)
-    check_estimators_data_not_an_array(name, estimator_orig, X, y)
+    for obj_type in ["NotAnArray", "PandasDataframe"]:
+        if obj_type == "PandasDataframe":
+            X_ = X[:, :, 0]  # pandas df cant be 3d
+        else:
+            X_ = X
+        check_estimators_data_not_an_array(name, estimator_orig, X_, y,
+                                           obj_type)
 
 
 @ignore_warnings(category=(DeprecationWarning, FutureWarning))

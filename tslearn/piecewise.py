@@ -5,7 +5,7 @@ approximation algorithms.
 
 import numpy
 from scipy.stats import norm
-from sklearn.base import TransformerMixin, BaseEstimator
+from sklearn.base import TransformerMixin
 from sklearn.exceptions import NotFittedError
 
 from tslearn.utils import to_time_series_dataset, ts_size

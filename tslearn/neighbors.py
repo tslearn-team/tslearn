@@ -708,5 +708,4 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
             return super().predict(X_)
 
     def _more_tags(self):
-        return {'allow_nan': True, 'allow_variable_length': True,
-                'multioutput': True}  # TODO: probably we could remove multioutput since it should be inherited from sklearn parent class
+        return {'allow_nan': True, 'allow_variable_length': True}
