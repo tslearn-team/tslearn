@@ -59,7 +59,7 @@ jobs:
       then
         pip install codeclimate-test-reporter codecov
         codeclimate-test-reporter;
-        codecov;
+        codecov -t $(CODECLIMATE_REPO_TOKEN);
       fi
     displayName: 'Upload coverage to codecov.io'
 
