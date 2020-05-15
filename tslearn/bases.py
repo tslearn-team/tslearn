@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from sklearn.exceptions import NotFittedError
+from sklearn.base import BaseEstimator
 import json
 import pickle
 import numpy as np
@@ -16,6 +17,14 @@ except ImportError:
 else:
     from tslearn import hdftools
     HDF5_INSTALLED = True
+
+_DEFAULT_TAGS = {
+    'allow_variable_length': False,
+}
+
+class TimeSeriesBaseEstimator(BaseEstimator):
+    def _more_tags(self):
+        return _DEFAULT_TAGS
 
 
 class BaseModelPackage:
@@ -39,11 +48,6 @@ class BaseModelPackage:
     @abstractmethod
     def _get_model_params(self):
         """Get model parameters that are sufficient to recapitulate it."""
-        pass
-
-    @abstractmethod
-    def get_params(self):
-        """Get the hyper-parameters for this model"""
         pass
 
     def _to_dict(self, output=None, hyper_parameters_only=False):
