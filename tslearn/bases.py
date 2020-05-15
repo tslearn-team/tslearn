@@ -41,11 +41,6 @@ class BaseModelPackage:
         """Get model parameters that are sufficient to recapitulate it."""
         pass
 
-    @abstractmethod
-    def get_params(self):
-        """Get the hyper-parameters for this model"""
-        pass
-
     def _to_dict(self, output=None, hyper_parameters_only=False):
         """
         Get model hyper-parameters and model-parameters
