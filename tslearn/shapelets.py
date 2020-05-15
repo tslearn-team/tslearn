@@ -797,7 +797,7 @@ class ShapeletModel(BaseEstimator, BaseModelPackage,
 
         return inst
 
-    def _get_tags(self):
+    def _more_tags(self):
         # This is added due to the fact that there are small rounding
         # errors in the `transform` method, while sklearn performs checks
         # that requires the output of transform to have less than 1e-9

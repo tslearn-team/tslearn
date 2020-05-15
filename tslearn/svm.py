@@ -292,7 +292,7 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, BaseEstimator, ClassifierMixin):
         return self.svm_estimator_.score(sklearn_X, y,
                                          sample_weight=sample_weight)
 
-    def _get_tags(self):
+    def _more_tags(self):
         return {'non_deterministic': True, 'allow_nan': True,
                 'allow_variable_length': True}
 
@@ -451,6 +451,6 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, BaseEstimator, RegressorMixin):
         return self.svm_estimator_.score(sklearn_X, y,
                                          sample_weight=sample_weight)
 
-    def _get_tags(self):
+    def _more_tags(self):
         return {'non_deterministic': True, 'allow_nan': True,
                 'allow_variable_length': True}

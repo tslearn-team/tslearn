@@ -228,7 +228,7 @@ class TimeSeriesScalerMinMax(BaseEstimator, TransformerMixin):
         X_ = nomin / range_t + value_range[0]
         return X_
 
-    def _get_tags(self):
+    def _more_tags(self):
         return {'allow_nan': True}
 
 
@@ -325,5 +325,5 @@ class TimeSeriesScalerMeanVariance(BaseEstimator, TransformerMixin):
 
         return X_
 
-    def _get_tags(self):
+    def _more_tags(self):
         return {'allow_nan': True}

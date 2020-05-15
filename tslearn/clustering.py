@@ -330,8 +330,8 @@ def _check_initial_guess(init, n_clusters):
             " {} given".format(n_clusters, init.shape[0])
 
 
-class GlobalAlignmentKernelKMeans(BaseEstimator, BaseModelPackage,
-                                  ClusterMixin):
+class GlobalAlignmentKernelKMeans(ClusterMixin, BaseModelPackage,
+                                  BaseEstimator):
     """Global Alignment Kernel K-means.
 
     Parameters
@@ -594,7 +594,7 @@ class GlobalAlignmentKernelKMeans(BaseEstimator, BaseModelPackage,
         self._compute_dist(K, dist)
         return dist.argmin(axis=1)
 
-    def _get_tags(self):
+    def _more_tags(self):
         return {'allow_nan': True, 'allow_variable_length': True}
 
 
@@ -610,8 +610,8 @@ class TimeSeriesCentroidBasedClusteringMixin:
             self._X_fit = None
 
 
-class TimeSeriesKMeans(BaseEstimator, BaseModelPackage, ClusterMixin,
-                       TimeSeriesCentroidBasedClusteringMixin):
+class TimeSeriesKMeans(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
+                       BaseModelPackage, BaseEstimator):
     """K-means clustering for time-series data.
 
     Parameters
@@ -993,7 +993,7 @@ class TimeSeriesKMeans(BaseEstimator, BaseModelPackage, ClusterMixin,
                        check_n_features_only=(self.metric != "euclidean"))
         return self._assign(X, update_class_attributes=False)
 
-    def _get_tags(self):
+    def _more_tags(self):
         return {'allow_nan': True, 'allow_variable_length': True}
 
 

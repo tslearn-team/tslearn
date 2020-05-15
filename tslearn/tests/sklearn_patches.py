@@ -75,38 +75,6 @@ import warnings
 import numpy as np
 
 
-_DEFAULT_TAGS = {
-    'non_deterministic': False,
-    'requires_positive_X': False,
-    'requires_positive_y': False,
-    'X_types': ['2darray'],
-    'poor_score': False,
-    'no_validation': False,
-    'multioutput': False,
-    "allow_nan": False,
-    'allow_variable_length': False,
-    'stateless': False,
-    'multilabel': False,
-    '_skip_test': False,
-    'multioutput_only': False,
-    'binary_only': False,
-    'requires_fit': True}
-
-
-def _safe_tags(estimator, key=None):
-    # if estimator doesn't have _get_tags, use _DEFAULT_TAGS
-    # if estimator has tags but not key, use _DEFAULT_TAGS[key]
-    if hasattr(estimator, "_get_tags"):
-        if key is not None:
-            return estimator._get_tags().get(key, _DEFAULT_TAGS[key])
-        tags = estimator._get_tags()
-        return {key: tags.get(key, _DEFAULT_TAGS[key])
-                for key in _DEFAULT_TAGS.keys()}
-    if key is not None:
-        return _DEFAULT_TAGS[key]
-    return _DEFAULT_TAGS
-
-
 def _create_small_ts_dataset():
     return random_walk_blobs(n_ts_per_blob=5, n_blobs=3, random_state=1,
                              sz=10, noise_level=0.025)
@@ -120,13 +88,13 @@ def _create_large_ts_dataset():
 def enforce_estimator_tags_y(estimator, y):
     # Estimators with a `requires_positive_y` tag only accept strictly positive
     # data
-    if _safe_tags(estimator, "requires_positive_y"):
+    if estimator._get_tags()["requires_positive_y"]:
         # Create strictly positive y. The minimal increment above 0 is 1, as
         # y could be of integer dtype.
         y += 1 + abs(y.min())
     # Estimators in mono_output_task_error raise ValueError if y is of 1-D
     # Convert into a 2-D y for those estimators.
-    if _safe_tags(estimator, "multioutput_only"):
+    if estimator._get_tags()["multioutput_only"]:
         return np.reshape(y, (-1, 1))
     return y
 
@@ -172,7 +140,7 @@ def check_clustering(name, clusterer_orig, readonly_memmap=False):
     assert_equal(pred.shape, (n_samples,))
     assert_greater(adjusted_rand_score(pred, y), 0.4)
 
-    if _safe_tags(clusterer, 'non_deterministic'):
+    if clusterer._get_tags()['non_deterministic']:
         return
 
     set_random_state(clusterer)
@@ -222,7 +190,7 @@ def check_fit_idempotent(name, estimator_orig):
                      "predict_proba"]
     rng = np.random.RandomState(0)
 
-    if _safe_tags(estimator_orig, 'non_deterministic'):
+    if estimator_orig._get_tags()['non_deterministic']:
         msg = name + ' is non deterministic'
         raise SkipTest(msg)
 
@@ -304,7 +272,7 @@ def check_classifiers_classes(name, classifier_orig):
 
     problems = [(X_binary, y_binary, y_names_binary)]
 
-    if not _safe_tags(classifier_orig, 'binary_only'):
+    if not classifier_orig._get_tags()['binary_only']:
         problems.append((X_multiclass, y_multiclass, y_names_multiclass))
 
     for X, y, y_names in problems:
@@ -342,7 +310,7 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False):
     # We will test for both binary and multiclass case
     problems = [(X_b, y_b), (X_m, y_m)]
 
-    tags = _safe_tags(classifier_orig)
+    tags = classifier_orig._get_tags()
 
     for (X, y) in problems:
         classes = np.unique(y)
@@ -469,7 +437,7 @@ def check_estimators_pickle(name, estimator_orig):
 
 @ignore_warnings(category=(DeprecationWarning, FutureWarning))
 def check_supervised_y_2d(name, estimator_orig):
-    tags = _safe_tags(estimator_orig)
+    tags = estimator_orig._get_tags()
     X, y = _create_small_ts_dataset()
     if tags['binary_only']:
         X = X[y != 2]
@@ -526,13 +494,13 @@ def check_classifiers_cont_target(name, estimator_orig):
     y = np.random.random(len(X))
     e = clone(estimator_orig)
     msg = 'Unknown label type: '
-    if not _safe_tags(e, "no_validation"):
+    if not e._get_tags()["no_validation"]:
         assert_raises_regex(ValueError, msg, e.fit, X, y)
 
 
 @ignore_warnings
 def check_pipeline_consistency(name, estimator_orig):
-    if _safe_tags(estimator_orig, 'non_deterministic'):
+    if estimator_orig._get_tags()['non_deterministic']:
         msg = name + ' is non deterministic'
         raise SkipTest(msg)
 
@@ -577,7 +545,7 @@ def check_different_length_fit_predict(name, estimator):
 
 
 def yield_all_checks(name, estimator):
-    tags = _safe_tags(estimator)
+    tags = estimator._get_tags()
     if "2darray" not in tags["X_types"]:
         warnings.warn("Can't test estimator {} which requires input "
                       " of type {}".format(name, tags["X_types"]),
