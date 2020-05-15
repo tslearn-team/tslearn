@@ -3,7 +3,7 @@ The :mod:`tslearn.preprocessing` module gathers time series scalers.
 """
 
 import numpy
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import TransformerMixin
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 from scipy.interpolate import interp1d
@@ -11,6 +11,7 @@ import warnings
 
 from tslearn.utils import (to_time_series_dataset, check_equal_size, ts_size,
                            check_dims)
+from tslearn.bases import TimeSeriesBaseEstimator
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -103,7 +104,7 @@ class TimeSeriesResampler(TransformerMixin):
         return X_out
 
 
-class TimeSeriesScalerMinMax(BaseEstimator, TransformerMixin):
+class TimeSeriesScalerMinMax(TransformerMixin, TimeSeriesBaseEstimator):
     """Scaler for time series. Scales time series so that their span in each
     dimension is between ``min`` and ``max``.
 
@@ -228,11 +229,11 @@ class TimeSeriesScalerMinMax(BaseEstimator, TransformerMixin):
         X_ = nomin / range_t + value_range[0]
         return X_
 
-    def _get_tags(self):
+    def _more_tags(self):
         return {'allow_nan': True}
 
 
-class TimeSeriesScalerMeanVariance(BaseEstimator, TransformerMixin):
+class TimeSeriesScalerMeanVariance(TransformerMixin, TimeSeriesBaseEstimator):
     """Scaler for time series. Scales time series so that their mean (resp.
     standard deviation) in each dimension is
     mu (resp. std).
@@ -325,5 +326,5 @@ class TimeSeriesScalerMeanVariance(BaseEstimator, TransformerMixin):
 
         return X_
 
-    def _get_tags(self):
+    def _more_tags(self):
         return {'allow_nan': True}

@@ -41,8 +41,8 @@ jobs:
   
   - script: |
       set -xe
-      python -m pip install pytest pytest-azurepipelines pytest-timeout
-      python -m pytest -v tslearn/
+      python -m pip install pytest pytest-azurepipelines
+      if [[ "$(python.version)" == '3.5' ]]; then python -m pytest -v tslearn/ -k 'not test_all_estimators'; else python -m pytest -v tslearn/; fi
     displayName: 'Test'
 
 
@@ -82,8 +82,8 @@ jobs:
   
   - script: |
       set -xe
-      python -m pip install pytest pytest-azurepipelines pytest-timeout
-      python -m pytest -v tslearn/
+      python -m pip install pytest pytest-azurepipelines
+      python -m pytest -v tslearn/ -k 'not test_all_estimators'
     displayName: 'Test'
 
 
@@ -122,6 +122,6 @@ jobs:
     displayName: 'Install tslearn'
   
   - script: |
-      python -m pip install pytest pytest-azurepipelines pytest-timeout
-      python -m pytest -v tslearn/
+      python -m pip install pytest pytest-azurepipelines
+      python -m pytest -v tslearn/ --ignore tslearn/tests/test_estimators.py
     displayName: 'Test'

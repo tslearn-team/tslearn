@@ -3,7 +3,7 @@ The :mod:`tslearn.utils` module includes various utilities.
 """
 
 import numpy
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import TransformerMixin
 from sklearn.utils import column_or_1d, check_array
 from sklearn.utils.validation import check_is_fitted
 import warnings
@@ -12,6 +12,7 @@ try:
     from sklearn.utils.estimator_checks import _NotAnArray as NotAnArray
 except ImportError:  # Old sklearn versions
     from sklearn.utils.estimator_checks import NotAnArray
+from tslearn.bases import TimeSeriesBaseEstimator
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -171,7 +172,7 @@ def to_time_series(ts, remove_nans=False):
     to_time_series_dataset : Transforms a dataset of time series
     """
     ts_out = _arraylike_copy(ts)
-    if ts_out.ndim == 1:
+    if ts_out.ndim <= 1:
         ts_out = ts_out.reshape((-1, 1))
     if ts_out.dtype != numpy.float:
         ts_out = ts_out.astype(numpy.float)
@@ -214,14 +215,21 @@ def to_time_series_dataset(dataset, dtype=numpy.float):
     --------
     to_time_series : Transforms a single time series
     """
+    try:
+        import pandas as pd
+        if isinstance(dataset, pd.DataFrame):
+            return to_time_series_dataset(numpy.array(dataset))
+    except ImportError:
+        pass
     if isinstance(dataset, NotAnArray):  # Patch to pass sklearn tests
-        dataset = numpy.array(dataset)
+        return to_time_series_dataset(numpy.array(dataset))
     if len(dataset) == 0:
         return numpy.zeros((0, 0, 0))
     if numpy.array(dataset[0]).ndim == 0:
         dataset = [dataset]
     n_ts = len(dataset)
-    max_sz = max([ts_size(to_time_series(ts)) for ts in dataset])
+    max_sz = max([ts_size(to_time_series(ts, remove_nans=True))
+                  for ts in dataset])
     d = to_time_series(dataset[0]).shape[1]
     dataset_out = numpy.zeros((n_ts, max_sz, d), dtype=dtype) + numpy.nan
     for i in range(n_ts):
@@ -1293,7 +1301,7 @@ def from_cesium_dataset(X):
     return to_time_series_dataset(dataset=dataset)
 
 
-class LabelCategorizer(BaseEstimator, TransformerMixin):
+class LabelCategorizer(TransformerMixin, TimeSeriesBaseEstimator):
     """Transformer to transform indicator-based labels into categorical ones.
 
     Attributes
@@ -1392,11 +1400,11 @@ class LabelCategorizer(BaseEstimator, TransformerMixin):
         params : mapping of string to any
             Parameter names mapped to their values.
         """
-        out = BaseEstimator.get_params(self, deep=deep)
+        out = TimeSeriesBaseEstimator.get_params(self, deep=deep)
         out["single_column_if_binary"] = self.single_column_if_binary
         out["forward_match"] = self.forward_match
         out["backward_match"] = self.backward_match
         return out
 
-    def _get_tags(self):
+    def _more_tags(self):
         return {'X_types': ['1dlabels']}

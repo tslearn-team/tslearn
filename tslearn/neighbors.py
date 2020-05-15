@@ -347,8 +347,8 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
 
 
 class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
-                                     KNeighborsClassifier,
-                                     BaseModelPackage):
+                                     BaseModelPackage,
+                                     KNeighborsClassifier):
     """Classifier implementing the k-nearest neighbors vote for Time Series.
 
     Parameters
@@ -554,7 +554,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             X_ = check_dims(X_, X_fit_dims=self._X_fit.shape, extend=False)
             return super().predict_proba(X_)
 
-    def _get_tags(self):
+    def _more_tags(self):
         return {'allow_nan': True, 'allow_variable_length': True}
 
 
@@ -707,6 +707,5 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
             X_ = check_dims(X_, X_fit_dims=self._X_fit.shape, extend=False)
             return super().predict(X_)
 
-    def _get_tags(self):
-        return {'allow_nan': True, 'allow_variable_length': True,
-                'multioutput': True}
+    def _more_tags(self):
+        return {'allow_nan': True, 'allow_variable_length': True}

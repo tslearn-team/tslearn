@@ -4,11 +4,12 @@ Support Vector Regressor (SVR) models for time series.
 """
 
 from sklearn.svm import SVC, SVR
-from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
+from sklearn.base import ClassifierMixin, RegressorMixin
 import numpy
 
 from tslearn.metrics import cdist_gak, gamma_soft_dtw, VARIABLE_LENGTH_METRICS
 from tslearn.utils import to_time_series_dataset, check_dims
+from tslearn.bases import TimeSeriesBaseEstimator
 from sklearn.utils import check_array, check_X_y
 from sklearn.utils.validation import check_is_fitted
 
@@ -82,7 +83,8 @@ class TimeSeriesSVMMixin:
             return sklearn_X, y
 
 
-class TimeSeriesSVC(TimeSeriesSVMMixin, BaseEstimator, ClassifierMixin):
+class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
+                    TimeSeriesBaseEstimator):
     """Time-series specific Support Vector Classifier.
 
     Parameters
@@ -292,12 +294,13 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, BaseEstimator, ClassifierMixin):
         return self.svm_estimator_.score(sklearn_X, y,
                                          sample_weight=sample_weight)
 
-    def _get_tags(self):
+    def _more_tags(self):
         return {'non_deterministic': True, 'allow_nan': True,
                 'allow_variable_length': True}
 
 
-class TimeSeriesSVR(TimeSeriesSVMMixin, BaseEstimator, RegressorMixin):
+class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
+                    TimeSeriesBaseEstimator):
     """Time-series specific Support Vector Regressor.
 
     Parameters
@@ -451,6 +454,6 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, BaseEstimator, RegressorMixin):
         return self.svm_estimator_.score(sklearn_X, y,
                                          sample_weight=sample_weight)
 
-    def _get_tags(self):
+    def _more_tags(self):
         return {'non_deterministic': True, 'allow_nan': True,
                 'allow_variable_length': True}

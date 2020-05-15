@@ -36,7 +36,6 @@ from tslearn.tests.sklearn_patches import (
                              check_classifiers_cont_target,
                              check_pipeline_consistency,
                              yield_all_checks)
-from tslearn.tests.sklearn_patches import _safe_tags
 from tslearn.shapelets import ShapeletModel, SerializableShapeletModel
 import warnings
 import pytest
@@ -195,7 +194,7 @@ def check_estimator(Estimator):
 def test_all_estimators(name, Estimator):
     """Test all the estimators in tslearn."""
     allow_nan = (hasattr(checks, 'ALLOW_NAN') and
-                 _safe_tags(Estimator(), "allow_nan"))
+                 Estimator().get_tags()["allow_nan"])
     if allow_nan:
         checks.ALLOW_NAN.append(name)
     check_estimator(Estimator)
