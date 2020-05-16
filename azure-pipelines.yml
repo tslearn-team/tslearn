@@ -46,21 +46,54 @@ jobs:
       then
         python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py -k 'not test_all_estimators';
       else
-        pip install coverage==4.3 "pytest-cov<2.6";
-        pip install cesium pandas;
-        python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py --cov=tslearn;
+        python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py;
       fi
+    displayName: 'Test'
+
+- job: 'codecov'
+  pool:
+    vmImage: 'ubuntu-latest'
+  strategy:
+    matrix:
+      Python37:
+        python.version: '3.7'
+  variables:
+    OMP_NUM_THREADS: '2'
+    NUMBA_NUM_THREADS: '2'
+    NUMBA_DISABLE_JIT: '1'
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+    displayName: 'Use Python $(python.version)'
+
+  - script: |
+      set -xe
+      python --version
+      python -m pip install --upgrade pip
+      export PIP_PREFER_BINARY=true
+      python -m pip install -r requirements.txt
+    displayName: 'Install dependencies'
+
+  - script: |
+      set -xe
+      pip install -e .
+    displayName: 'Install tslearn'
+
+  - script: |
+      set -xe
+      python -m pip install pytest pytest-azurepipelines
+      pip install coverage==4.3 "pytest-cov<2.6";
+      pip install cesium pandas;
+      python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py --cov=tslearn;
     displayName: 'Test'
 
   # Upload coverage to codecov.io
   - script: |
-      export CODECLIMATE_REPO_TOKEN=d8c5ae082832ed947bc6e673ebfbd1592278fa04633401bf7d180687238fa397
-      if [[ "$(python.version)" == '3.7' ]];
-      then
-        pip install codeclimate-test-reporter codecov
-        codeclimate-test-reporter;
-        codecov -t $(CODECLIMATE_REPO_TOKEN);
-      fi
+      pip install codeclimate-test-reporter codecov
+      codeclimate-test-reporter;
+      codecov -t $(CODECLIMATE_REPO_TOKEN);
     displayName: 'Upload coverage to codecov.io'
 
 
