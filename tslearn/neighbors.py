@@ -219,14 +219,14 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
     >>> dist, ind = knn.kneighbors(dataset, return_distance=True)
     >>> dist
     array([[0.]])
-    >>> ind
-    array([[0]])
+    >>> print(ind)
+    [[0]]
     >>> knn2 = KNeighborsTimeSeries(n_neighbors=10,
     ...                             metric="euclidean").fit(time_series)
-    >>> knn2.kneighbors(return_distance=False)
-    array([[2, 1],
-           [2, 0],
-           [0, 1]])
+    >>> print(knn2.kneighbors(return_distance=False))
+    [[2 1]
+     [2 0]
+     [0 1]]
     """  # noqa: E501
     def __init__(self, n_neighbors=5, metric="dtw", metric_params=None,
                  n_jobs=None, verbose=0):
