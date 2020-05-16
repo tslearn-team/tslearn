@@ -143,7 +143,7 @@ class NonMyopicEarlyClassifier(ClassifierMixin, TimeSeriesBaseEstimator):
         X = check_dims(X)
         X = to_time_series_dataset(X)
         y_arr = np.array(y)
-        label_set = np.unique(y)
+        label_set = np.unique(y_arr)
 
         self.cluster_ = TimeSeriesKMeans(n_clusters=self.n_clusters,
                                          random_state=self.random_state)
