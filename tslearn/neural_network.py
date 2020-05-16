@@ -8,10 +8,12 @@ These are straight-forward adaptations of scikit-learn models.
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.utils import check_array
 
+from tslearn.bases import TimeSeriesBaseEstimator
+
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
-class TimeSeriesMLPClassifier(MLPClassifier):
+class TimeSeriesMLPClassifier(MLPClassifier, TimeSeriesBaseEstimator):
     """A Multi-Layer Perceptron classifier for time series.
 
     This class mainly reshapes data so that it can be fed to `scikit-learn`'s
@@ -110,7 +112,7 @@ class TimeSeriesMLPClassifier(MLPClassifier):
         return super(TimeSeriesMLPClassifier, self).predict_proba(X_)
 
 
-class TimeSeriesMLPRegressor(MLPRegressor):
+class TimeSeriesMLPRegressor(MLPRegressor, TimeSeriesBaseEstimator):
     """A Multi-Layer Perceptron regressor for time series.
 
     This class mainly reshapes data so that it can be fed to `scikit-learn`'s

@@ -8,7 +8,7 @@ triggered).
 """
 
 from sklearn.metrics import confusion_matrix, accuracy_score
-from sklearn.base import BaseEstimator, ClassifierMixin, clone
+from sklearn.base import ClassifierMixin, clone
 from sklearn.model_selection import train_test_split
 import numpy as np
 from scipy.sparse import coo_matrix
@@ -19,9 +19,10 @@ from sklearn.utils.validation import check_is_fitted
 from tslearn.utils import to_time_series_dataset, to_time_series, check_dims
 from tslearn.neighbors import KNeighborsTimeSeriesClassifier
 from tslearn.clustering import TimeSeriesKMeans
+from tslearn.bases import TimeSeriesBaseEstimator
 
 
-class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
+class NonMyopicEarlyClassifier(ClassifierMixin, TimeSeriesBaseEstimator):
     """Early Classification modelling for time series using the model
     presented in [1]_.
 
@@ -111,6 +112,13 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
         self.cost_time_parameter = cost_time_parameter
         self.random_state = random_state
 
+    @property
+    def classes_(self):
+        if hasattr(self, 'classifiers_'):
+            return self.classifiers_[self.min_t].classes_
+        else:
+            return None
+
     def fit(self, X, y):
         """
         Fit early classifier.
@@ -131,7 +139,7 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
         self : returns an instance of self.
         """
 
-        X = check_array(X, allow_nd=True, force_all_finite=False)
+        X = check_array(X, allow_nd=True)
         X = check_dims(X)
         X = to_time_series_dataset(X)
         y_arr = np.array(y)
@@ -159,7 +167,7 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
 
         label_to_ind = {lab: ind for ind, lab in enumerate(label_set)}
         y_ = np.array([label_to_ind.get(lab, self.__n_classes_ + 1)
-                       for lab in y])
+                       for lab in y_arr])
 
         vector_of_ones = np.ones((X.shape[0], ))
         self.pyck_ = coo_matrix(
@@ -400,7 +408,7 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
             Prediction timestamps.
         """
 
-        X = check_array(X, allow_nd=True, force_all_finite=False)
+        X = check_array(X, allow_nd=True)
         check_is_fitted(self, '_X_fit_dims')
         X = check_dims(X, X_fit_dims=self._X_fit_dims,
                        check_n_features_only=True)
@@ -457,7 +465,7 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
             Prediction timestamps.
         """
 
-        X = check_array(X, allow_nd=True, force_all_finite=False)
+        X = check_array(X, allow_nd=True)
         check_is_fitted(self, '_X_fit_dims')
         X = check_dims(X, X_fit_dims=self._X_fit_dims,
                        check_n_features_only=True)
@@ -551,3 +559,9 @@ class NonMyopicEarlyClassifier(BaseEstimator, ClassifierMixin):
         y_pred, pred_times = self.predict_class_and_earliness(X)
         acc = accuracy_score(y, y_pred)
         return (1. - acc) + np.mean(self._cost_time(pred_times))
+
+    def _more_tags(self):
+        # Because some of the data validation checks rely on datasets that are
+        # too small to pass here (only 1 item in one of the clusters, hence no
+        # stratified split possible)
+        return {"no_validation": True}
