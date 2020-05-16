@@ -94,6 +94,18 @@ class NonMyopicEarlyClassifier(ClassifierMixin, TimeSeriesBaseEstimator):
     array([0, 0, 0, 1, 1, 1, 0, 0])
     >>> pred_times
     array([4, 4, 4, 4, 4, 4, 1, 1])
+    >>> pred_probas, pred_times = model.predict_proba_and_earliness(dataset)
+    >>> pred_probas
+    array([[1., 0.],
+           [1., 0.],
+           [1., 0.],
+           [0., 1.],
+           [0., 1.],
+           [0., 1.],
+           [1., 0.],
+           [1., 0.]])
+    >>> pred_times
+    array([4, 4, 4, 4, 4, 4, 1, 1])
 
     References
     ----------
@@ -335,6 +347,17 @@ class NonMyopicEarlyClassifier(ClassifierMixin, TimeSeriesBaseEstimator):
         return cost + self._cost_time(np.arange(truncated_t,
                                                 self._X_fit_dims[1] + 1))
 
+    def _get_prediction_time(self, Xi):
+        """Compute optimal prediction time for the incoming time series Xi.
+        """
+        time_prediction = None
+        for t in range(self.min_t, self._X_fit_dims[1] + 1):
+            tau_star = np.argmin(self._expected_costs(Xi=Xi[:t]))
+            if (t == self._X_fit_dims[1]) or (tau_star == 0):
+                time_prediction = t
+                break
+        return time_prediction
+
     def _predict_single_series(self, Xi):
         """
         This function classifies a single time series xt
@@ -351,14 +374,9 @@ class NonMyopicEarlyClassifier(ClassifierMixin, TimeSeriesBaseEstimator):
         float : the probability used for computing the cost
         float : the loss when classifying
         """
-        pred, time_prediction = None, None
-        for t in range(self.min_t, self._X_fit_dims[1] + 1):
-            tau_star = np.argmin(self._expected_costs(Xi=Xi[:t]))
-            if (t == self._X_fit_dims[1]) or (tau_star == 0):
-                pred = self.classifiers_[t].predict([Xi[:t]])[0]
-                time_prediction = t
-                break
-        return pred, time_prediction
+        t = self._get_prediction_time(Xi)
+        pred = self.classifiers_[t].predict([Xi[:t]])[0]
+        return pred, t
 
     def _predict_single_series_proba(self, Xi):
         """
@@ -376,14 +394,9 @@ class NonMyopicEarlyClassifier(ClassifierMixin, TimeSeriesBaseEstimator):
         float : the probability used for computing the cost
         float : the loss when classifying
         """
-        time_prediction, probas = None, None
-        for t in range(self.min_t, self._X_fit_dims[1] + 1):
-            tau_star = np.argmin(self._expected_costs(Xi=Xi[:t]))
-            if (t == self._X_fit_dims[1]) or (tau_star == t):
-                probas = self.classifiers_[t].predict_proba([Xi[:t]])[0]
-                time_prediction = t
-                break
-        return probas, time_prediction
+        t = self._get_prediction_time(Xi)
+        pred = self.classifiers_[t].predict_proba([Xi[:t]])[0]
+        return pred, t
 
     def predict_class_and_earliness(self, X):
         """
