@@ -62,6 +62,7 @@ jobs:
     NUMBA_NUM_THREADS: '2'
     NUMBA_DISABLE_JIT: '1'
     PIP_PREFER_BINARY: 'true'
+    CODECLIMATE_REPO_TOKEN: $(CODECLIMATE_REPO_TOKEN)
 
   steps:
   - task: UsePythonVersion@0
@@ -93,7 +94,7 @@ jobs:
   - script: |
       pip install codeclimate-test-reporter codecov
       codeclimate-test-reporter;
-      codecov -t $(CODECLIMATE_REPO_TOKEN);
+      codecov -t ${CODECLIMATE_REPO_TOKEN};
     displayName: 'Upload coverage to codecov.io'
 
 
