@@ -54,17 +54,15 @@ class NonMyopicEarlyClassifier(ClassifierMixin, TimeSeriesBaseEstimator):
     Attributes
     --------------------
 
-    __n_classes_ : Integer
-        The number of classes in the dataset
-
     classifiers_ : list
         A list containing all the classifiers trained for the model, that is,
         (maximum_time_stamp - min_t) elements.
 
-    pyhatyck_ : array like of shape
-        (maximum_time_stamp - min_t, n_cluster, __n_classes, __n_classes)
-        Contains the probabilities of being classified as class y_hat given
-        class y and cluster ck
+    pyhatyck_ : array like of shape (maximum_time_stamp - min_t, n_cluster, __n_classes, __n_classes)
+        Contains the probabilities of being classified as class y_hat given class y and cluster ck
+        for a trained classifier. The penultimate dimension of the array is associated to the true
+        class of the series and the last dimension to the predicted class.
+
 
     pyck_ : array like of shape (__n_classes, n_cluster)
         Contains the probabilities of being of true class y given a cluster ck
