@@ -1343,8 +1343,7 @@ def unnormalized_gak(s1, s2, sigma=1.):
     multidimensional) time series and return it.
 
     It is not required that both time series share the same size, but they must
-    be the same dimension. GAK was
-    originally presented in [1]_.
+    be the same dimension. GAK was originally presented in [1]_.
     This is an unnormalized version.
 
     Parameters
