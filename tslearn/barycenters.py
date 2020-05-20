@@ -214,8 +214,8 @@ def dtw_barycenter_averaging_petitjean(X, barycenter_size=None,
     References
     ----------
     .. [1] F. Petitjean, A. Ketterlin & P. Gancarski. A global averaging method
-       for dynamic time warping, with applications to clustering. Pattern
-       Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
+           for dynamic time warping, with applications to clustering. Pattern
+           Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
     """
     X_ = to_time_series_dataset(X)
     if barycenter_size is None:
@@ -319,8 +319,8 @@ def _subgradient_valence_warping(list_p_k, barycenter_size, weights):
     ----------
 
     .. [1] D. Schultz and B. Jain. Nonsmooth Analysis and Subgradient Methods
-       for Averaging in Dynamic Time Warping Spaces.
-       Pattern Recognition, 74, 340-358.
+           for Averaging in Dynamic Time Warping Spaces.
+           Pattern Recognition, 74, 340-358.
     """
     list_v_k = []
     list_w_k = []
@@ -366,8 +366,8 @@ def _mm_valence_warping(list_p_k, barycenter_size, weights):
     ----------
 
     .. [1] D. Schultz and B. Jain. Nonsmooth Analysis and Subgradient Methods
-       for Averaging in Dynamic Time Warping Spaces.
-       Pattern Recognition, 74, 340-358.
+           for Averaging in Dynamic Time Warping Spaces.
+           Pattern Recognition, 74, 340-358.
     """
     list_v_k, list_w_k = _subgradient_valence_warping(
         list_p_k=list_p_k,
@@ -402,8 +402,8 @@ def _mm_update_barycenter(X, diag_sum_v_k, list_w_k):
     ----------
 
     .. [1] D. Schultz and B. Jain. Nonsmooth Analysis and Subgradient Methods
-       for Averaging in Dynamic Time Warping Spaces.
-       Pattern Recognition, 74, 340-358.
+           for Averaging in Dynamic Time Warping Spaces.
+           Pattern Recognition, 74, 340-358.
     """
     d = X.shape[2]
     barycenter_size = diag_sum_v_k.shape[0]
@@ -447,8 +447,8 @@ def _subgradient_update_barycenter(X, list_diag_v_k, list_w_k, weights_sum,
     ----------
 
     .. [1] D. Schultz and B. Jain. Nonsmooth Analysis and Subgradient Methods
-       for Averaging in Dynamic Time Warping Spaces.
-       Pattern Recognition, 74, 340-358.
+           for Averaging in Dynamic Time Warping Spaces.
+           Pattern Recognition, 74, 340-358.
     """
     d = X.shape[2]
     barycenter_size = barycenter.shape[0]
@@ -552,12 +552,12 @@ def dtw_barycenter_averaging(X, barycenter_size=None, init_barycenter=None,
     References
     ----------
     .. [1] F. Petitjean, A. Ketterlin & P. Gancarski. A global averaging method
-       for dynamic time warping, with applications to clustering. Pattern
-       Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
+           for dynamic time warping, with applications to clustering. Pattern
+           Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
 
     .. [2] D. Schultz and B. Jain. Nonsmooth Analysis and Subgradient Methods
-       for Averaging in Dynamic Time Warping Spaces.
-       Pattern Recognition, 74, 340-358.
+           for Averaging in Dynamic Time Warping Spaces.
+           Pattern Recognition, 74, 340-358.
     """
     best_cost = numpy.inf
     best_barycenter = None
@@ -638,12 +638,12 @@ def dtw_barycenter_averaging_one_init(X, barycenter_size=None,
     References
     ----------
     .. [1] F. Petitjean, A. Ketterlin & P. Gancarski. A global averaging method
-       for dynamic time warping, with applications to clustering. Pattern
-       Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
+           for dynamic time warping, with applications to clustering. Pattern
+           Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
 
     .. [2] D. Schultz and B. Jain. Nonsmooth Analysis and Subgradient Methods
-       for Averaging in Dynamic Time Warping Spaces.
-       Pattern Recognition, 74, 340-358.
+           for Averaging in Dynamic Time Warping Spaces.
+           Pattern Recognition, 74, 340-358.
     """
     X_ = to_time_series_dataset(X)
     if barycenter_size is None:
@@ -758,12 +758,12 @@ def dtw_barycenter_averaging_subgradient(X, barycenter_size=None,
     References
     ----------
     .. [1] F. Petitjean, A. Ketterlin & P. Gancarski. A global averaging method
-       for dynamic time warping, with applications to clustering. Pattern
-       Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
+           for dynamic time warping, with applications to clustering. Pattern
+           Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
 
     .. [2] D. Schultz and B. Jain. Nonsmooth Analysis and Subgradient Methods
-       for Averaging in Dynamic Time Warping Spaces.
-       Pattern Recognition, 74, 340-358.
+           for Averaging in Dynamic Time Warping Spaces.
+           Pattern Recognition, 74, 340-358.
     """
     rng = check_random_state(random_state)
 
@@ -881,7 +881,7 @@ def softdtw_barycenter(X, gamma=1.0, weights=None, method="L-BFGS-B", tol=1e-3,
     References
     ----------
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
-       Time-Series," ICML 2017.
+           Time-Series," ICML 2017.
     """
     X_ = to_time_series_dataset(X)
     weights = _set_weights(weights, X_.shape[0])
