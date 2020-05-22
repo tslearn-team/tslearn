@@ -4,13 +4,17 @@ The :mod:`tslearn.shapelets` module gathers Shapelet-based algorithms.
 It depends on the `keras` library for optimization.
 """
 
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import InputSpec, Dense, Conv1D, Layer, Input, concatenate, add
-from tensorflow.keras.metrics import categorical_accuracy, categorical_crossentropy, binary_accuracy, binary_crossentropy
+from tensorflow.keras.models import Model, model_from_json
+from tensorflow.keras.layers import (InputSpec, Dense, Conv1D, Layer, Input,
+                                     concatenate, add)
+from tensorflow.keras.metrics import (categorical_accuracy,
+                                      categorical_crossentropy,
+                                      binary_accuracy, binary_crossentropy)
 from tensorflow.keras.utils import to_categorical
-from sklearn.preprocessing import LabelBinarizer
-from sklearn.base import BaseEstimator, ClassifierMixin, TransformerMixin
+from sklearn.base import ClassifierMixin, TransformerMixin
 from sklearn.utils import check_array, check_X_y
+from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.multiclass import unique_labels
 from tensorflow.keras.regularizers import l2
 from tensorflow.keras.initializers import Initializer
 import tensorflow.keras.backend as K
@@ -910,12 +914,17 @@ class SerializableShapeletModel(ShapeletModel):
                              total_lengths=total_lengths,
                              random_state=random_state)
         self.learning_rate = learning_rate
+        warnings.warn(
+            "`SerializableShapeletModel` is deprecated in version 0.4 and "
+            "will be removed in 0.6. Use `ShapeletModel` instead, which is "
+            "now fully serializable and clonable.",
+            DeprecationWarning, stacklevel=2)
 
     def _set_model_layers(self, X, ts_sz, d, n_classes):
         super()._set_model_layers(X=X,
-                                      ts_sz=ts_sz,
-                                      d=d,
-                                      n_classes=n_classes)
+                                  ts_sz=ts_sz,
+                                  d=d,
+                                  n_classes=n_classes)
         K.set_value(self.model_.optimizer.lr, self.learning_rate)
 
     def set_params(self, **params):
