@@ -49,7 +49,7 @@ shapelet_sizes = grabocka_params_to_shapelet_size_dict(n_ts=n_ts,
 # Define the model using parameters provided by the authors (except that we
 # use fewer iterations here)
 shp_clf = ShapeletModel(n_shapelets_per_size=shapelet_sizes,
-                        optimizer=tf.optimizers.Adam(.1),
+                        optimizer=tf.optimizers.Adam(.01),
                         batch_size=16,
                         weight_regularizer=.01,
                         max_iter=200,
@@ -76,7 +76,7 @@ plt.show()
 
 # The loss history is accessible via the `model_` that is a keras model
 plt.figure()
-plt.plot(numpy.arange(1, 201), shp_clf.model_.history.history["loss"])
+plt.plot(numpy.arange(1, 201), shp_clf.history_.history["loss"])
 plt.title("Evolution of cross-entropy loss during training")
 plt.xlabel("Epochs")
 plt.show()
