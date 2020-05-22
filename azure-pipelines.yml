@@ -1,0 +1,178 @@
+# Python package
+# Create and test a Python package on multiple Python versions.
+# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/python
+
+jobs:
+
+- job: 'linux'
+  pool:
+    vmImage: 'ubuntu-latest'
+  strategy:
+    matrix:
+      Python35:
+        python.version: '3.5'
+      Python36:
+        python.version: '3.6'
+      Python37:
+        python.version: '3.7'
+  variables:
+    OMP_NUM_THREADS: '2'
+    NUMBA_NUM_THREADS: '2'
+    PIP_PREFER_BINARY: 'true'
+  
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+    displayName: 'Use Python $(python.version)'
+  
+  - script: |
+      set -xe
+      python --version
+      python -m pip install --upgrade pip
+      python -m pip install -r requirements.txt
+    displayName: 'Install dependencies'
+  
+  - script: |
+      set -xe
+      pip install -e .
+    displayName: 'Install tslearn'
+  
+  - script: |
+      set -xe
+      python -m pip install pytest pytest-azurepipelines
+      if [[ "$(python.version)" == '3.5' ]];
+      then
+        python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py -k 'not test_all_estimators';
+      else
+        python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py;
+      fi
+    displayName: 'Test'
+
+- job: 'codecov'
+  pool:
+    vmImage: 'ubuntu-latest'
+  strategy:
+    matrix:
+      Python37:
+        python.version: '3.7'
+  variables:
+    OMP_NUM_THREADS: '2'
+    NUMBA_NUM_THREADS: '2'
+    NUMBA_DISABLE_JIT: '1'
+    PIP_PREFER_BINARY: 'true'
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+    displayName: 'Use Python $(python.version)'
+
+  - script: |
+      set -xe
+      python --version
+      python -m pip install --upgrade pip
+      python -m pip install -r requirements.txt
+    displayName: 'Install dependencies'
+
+  - script: |
+      set -xe
+      pip install -e .
+    displayName: 'Install tslearn'
+
+  - script: |
+      set -xe
+      python -m pip install pytest pytest-azurepipelines
+      pip install coverage==4.3 "pytest-cov<2.6";
+      pip install cesium pandas;
+      python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py --cov=tslearn;
+    displayName: 'Test'
+
+  # Upload coverage to codecov.io
+  - script: |
+      pip install codeclimate-test-reporter codecov
+      codeclimate-test-reporter;
+      codecov -t $(CODECLIMATE_REPO_TOKEN);
+    displayName: 'Upload coverage to codecov.io'
+
+
+- job: 'macOS1014'
+  pool:
+    vmImage: 'macOS-10.14'
+  strategy:
+    matrix:
+      Python35:
+        python.version: '3.5'
+      Python36:
+        python.version: '3.6'
+      Python37:
+        python.version: '3.7'
+  variables:
+    OMP_NUM_THREADS: '2'
+    NUMBA_NUM_THREADS: '2'
+    PIP_PREFER_BINARY: 'true'
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+    displayName: 'Use Python $(python.version)'
+  
+  - script: |
+      set -xe
+      python --version
+      python -m pip install --upgrade pip
+      python -m pip install -r requirements.txt
+    displayName: 'Install dependencies'
+  
+  - script: |
+      set -xe
+      pip install -e .
+    displayName: 'Install tslearn'
+  
+  - script: |
+      set -xe
+      python -m pip install pytest pytest-azurepipelines
+      python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/docs -k 'not test_all_estimators'
+    displayName: 'Test'
+
+
+- job: 'win2016'
+  pool:
+    vmImage: 'vs2017-win2016'
+  strategy:
+    matrix:
+      Python35:
+        python_ver: '35'
+        python.version: '3.5'
+      Python36:
+        python_ver: '36'
+        python.version: '3.6'
+      Python37:
+        python_ver: '37'
+        python.version: '3.7'
+  variables:
+    OMP_NUM_THREADS: '2'
+    NUMBA_NUM_THREADS: '2'
+    PIP_PREFER_BINARY: 'true'
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+  
+  - script: |
+      python --version
+      python -m pip install --upgrade pip
+      python -m pip install -r requirements.txt
+    displayName: 'Install dependencies'
+  
+  - script: |
+      pip install -e .
+    displayName: 'Install tslearn'
+  
+  - script: |
+      python -m pip install pytest pytest-azurepipelines
+      python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/docs --ignore tslearn/tests/test_estimators.py
+    displayName: 'Test'
