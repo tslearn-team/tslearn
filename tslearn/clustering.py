@@ -211,12 +211,6 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
         For metrics that accept parallelization of the cross-distance matrix
         computations, `n_jobs` key passed in `metric_params` is overridden by
         the `n_jobs` argument.
-        Value associated to the `"gamma_sdtw"` key corresponds to the gamma
-        parameter in Soft-DTW.
-
-        .. deprecated:: 0.2
-            `"gamma_sdtw"` as a key for `metric_params` is deprecated in
-            version 0.2 and will be removed in 0.4.
 
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel for cross-distance matrix
@@ -282,14 +276,6 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
         metric_params_ = {}
     else:
         metric_params_ = metric_params.copy()
-    if "gamma_sdtw" in metric_params_.keys():
-        warnings.warn(
-            "'gamma_sdtw' is deprecated in version 0.2 and will be "
-            "removed in 0.4. Use `gamma` instead of `gamma_sdtw` as a "
-            "`metric_params` key to remove this warning.",
-            DeprecationWarning, stacklevel=2)
-        metric_params_["gamma"] = metric_params_["gamma_sdtw"]
-        del metric_params_["gamma_sdtw"]
     for k in kwds.keys():
         metric_params_[k] = kwds[k]
     if "n_jobs" in metric_params_.keys():
@@ -647,12 +633,6 @@ class TimeSeriesKMeans(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
         For metrics that accept parallelization of the cross-distance matrix
         computations, `n_jobs` key passed in `metric_params` is overridden by
         the `n_jobs` argument.
-        Value associated to the `"gamma_sdtw"` key corresponds to the gamma
-        parameter in Soft-DTW.
-
-        .. deprecated:: 0.2
-            `"gamma_sdtw"` as a key for `metric_params` is deprecated in
-            version 0.2 and will be removed in 0.4.
 
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel for cross-distance matrix
@@ -753,14 +733,6 @@ class TimeSeriesKMeans(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
         self.random_state = random_state
         self.init = init
 
-        if self.metric_params is not None and \
-            "gamma_sdtw" in self.metric_params.keys():
-            warnings.warn(
-                "'gamma_sdtw' is deprecated in version 0.2 and will be "
-                "removed in 0.4. Use `gamma` instead of `gamma_sdtw` as a "
-                "`metric_params` key to remove this warning.",
-                DeprecationWarning, stacklevel=2)
-
     def _is_fitted(self):
         check_is_fitted(self, ['cluster_centers_'])
         return True
@@ -776,9 +748,6 @@ class TimeSeriesKMeans(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
             metric_params = {}
         else:
             metric_params = self.metric_params.copy()
-        if "gamma_sdtw" in metric_params.keys():
-            metric_params["gamma"] = metric_params["gamma_sdtw"]
-            del metric_params["gamma_sdtw"]
         if "n_jobs" in metric_params.keys():
             del metric_params["n_jobs"]
         return metric_params
