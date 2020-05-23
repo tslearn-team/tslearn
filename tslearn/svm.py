@@ -271,6 +271,20 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
         return sv
 
     def fit(self, X, y, sample_weight=None):
+        """Fit the SVM model according to the given training data.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset.
+            
+        y : array-like of shape=(n_ts, )
+            Time series labels.
+            
+        sample_weight : array-like of shape (n_samples,), default=None
+            Per-sample weights. Rescale C per sample. Higher weights force the 
+            classifier to put more emphasis on these points.
+        """
         sklearn_X, y = self._preprocess_sklearn(X, y, fit_time=True)
 
         self.svm_estimator_ = SVC(
@@ -287,25 +301,72 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
         return self
 
     def predict(self, X):
+        """Predict class for a given set of time series.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset.
+
+        Returns
+        -------
+        array of shape=(n_ts, ) or (n_ts, n_classes), depending on the shape
+        of the label vector provided at training time.
+            Index of the cluster each sample belongs to or class probability
+            matrix, depending on what was provided at training time.
+        """
         sklearn_X = self._preprocess_sklearn(X, fit_time=False)
         return self.svm_estimator_.predict(sklearn_X)
 
     def decision_function(self, X):
+        """Evaluates the decision function for the samples in X.
+        
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset.
+        
+        Returns
+        -------
+        ndarray of shape (n_samples, n_classes * (n_classes-1) / 2)
+            Returns the decision function of the sample for each class
+            in the model.
+            If decision_function_shape='ovr', the shape is (n_samples,
+            n_classes)."""
         sklearn_X = self._preprocess_sklearn(X, fit_time=False)
         return self.svm_estimator_.decision_function(sklearn_X)
 
     def predict_log_proba(self, X):
+        """Predict class log-probabilities for a given set of time series.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset.
+
+        Returns
+        -------
+        array of shape=(n_ts, n_classes),
+            Class probability matrix.
+        """
         sklearn_X = self._preprocess_sklearn(X, fit_time=False)
         return self.svm_estimator_.predict_log_proba(sklearn_X)
 
     def predict_proba(self, X):
+        """Predict class probability for a given set of time series.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset.
+
+        Returns
+        -------
+        array of shape=(n_ts, n_classes),
+            Class probability matrix.
+        """
         sklearn_X = self._preprocess_sklearn(X, fit_time=False)
         return self.svm_estimator_.predict_proba(sklearn_X)
-
-    def score(self, X, y, sample_weight=None):
-        sklearn_X = self._preprocess_sklearn(X, fit_time=False)
-        return self.svm_estimator_.score(sklearn_X, y,
-                                         sample_weight=sample_weight)
 
     def _more_tags(self):
         return {'non_deterministic': True, 'allow_nan': True,
@@ -460,6 +521,20 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
         return self._X_fit[self.svm_estimator_.support_]
 
     def fit(self, X, y, sample_weight=None):
+        """Fit the SVM model according to the given training data.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset.
+            
+        y : array-like of shape=(n_ts, )
+            Time series labels.
+            
+        sample_weight : array-like of shape (n_samples,), default=None
+            Per-sample weights. Rescale C per sample. Higher weights force the 
+            classifier to put more emphasis on these points.
+        """
         sklearn_X, y = self._preprocess_sklearn(X, y, fit_time=True)
 
         self.svm_estimator_ = SVR(
@@ -472,13 +547,21 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
         return self
 
     def predict(self, X):
+        """Predict class for a given set of time series.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset.
+
+        Returns
+        -------
+        array of shape=(n_ts, ) or (n_ts, dim_output), depending on the shape
+        of the target vector provided at training time.
+            Predicted targets
+        """
         sklearn_X = self._preprocess_sklearn(X, fit_time=False)
         return self.svm_estimator_.predict(sklearn_X)
-
-    def score(self, X, y, sample_weight=None):
-        sklearn_X = self._preprocess_sklearn(X, fit_time=False)
-        return self.svm_estimator_.score(sklearn_X, y,
-                                         sample_weight=sample_weight)
 
     def _more_tags(self):
         return {'non_deterministic': True, 'allow_nan': True,
