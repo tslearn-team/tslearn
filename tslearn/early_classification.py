@@ -53,22 +53,22 @@ class NonMyopicEarlyClassifier(ClassifierMixin, TimeSeriesBaseEstimator):
 
     Attributes
     --------------------
-    silhouette_ : float
-        The silhouette score from the clustering
 
     classifiers_ : list
-        A list containing all the classifiers trained for the model
+        A list containing all the classifiers trained for the model, that is,
+        (maximum_time_stamp - min_t) elements.
 
-    clusters_ : dictionary
-        Contains the times series by clusters
+    pyhatyck_ : array like of shape (maximum_time_stamp - min_t, n_cluster, __n_classes, __n_classes)
+        Contains the probabilities of being classified as class y_hat given class y and cluster ck
+        for a trained classifier. The penultimate dimension of the array is associated to the true
+        class of the series and the last dimension to the predicted class.
 
-    pyhatyck_ : dictionary
-        Contains the probabilities of being classified as class y_hat given
-        class y and cluster ck
 
-    indice_ck_ : list
-        Contains for each clusters the indexes of the time series in the
-        dataset
+    pyck_ : array like of shape (__n_classes, n_cluster)
+        Contains the probabilities of being of true class y given a cluster ck
+
+    X_fit_dims : tuple of the same shape as the training dataset
+
 
     Examples
     --------
@@ -86,6 +86,8 @@ class NonMyopicEarlyClassifier(ClassifierMixin, TimeSeriesBaseEstimator):
     ...                                  random_state=0)
     >>> model.fit(dataset, y)  # doctest: +ELLIPSIS
     NonMyopicEarlyClassifier(...)
+    >>> print(type(model.classifiers_))
+    <class 'dict'>
     >>> print(model.pyck_)
     [[0. 1. 1.]
      [1. 0. 0.]]
