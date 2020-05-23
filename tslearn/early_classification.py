@@ -173,9 +173,12 @@ class NonMyopicEarlyClassifier(ClassifierMixin, TimeSeriesBaseEstimator):
                                    self.n_clusters,
                                    self.__n_classes_, self.__n_classes_))
         c_k = self.cluster_.fit_predict(X)
-        X1, X2, c_k1, c_k2, y1, y2 = train_test_split(X, c_k, y_arr,
-                                                      test_size=0.5,
-                                                      stratify=c_k)
+        X1, X2, c_k1, c_k2, y1, y2 = train_test_split(
+            X, c_k, y_arr,
+            test_size=0.5,
+            stratify=c_k,
+            random_state=self.random_state
+        )
 
         label_to_ind = {lab: ind for ind, lab in enumerate(label_set)}
         y_ = np.array([label_to_ind.get(lab, self.__n_classes_ + 1)
