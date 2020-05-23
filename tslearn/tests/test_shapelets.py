@@ -82,7 +82,7 @@ def test_serializable_shapelets():
                       sorted(['batch_size', 'learning_rate', 'max_iter',
                               'n_shapelets_per_size', 'random_state',
                               'total_lengths', 'shapelet_length', 'verbose',
-                              'verbose_level', 'weight_regularizer'])):
+                              'weight_regularizer'])):
         np.testing.assert_string_equal(s1, s2)
 
     from sklearn.model_selection import cross_validate
