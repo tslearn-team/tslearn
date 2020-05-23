@@ -5,10 +5,12 @@ Support Vector Regressor (SVR) models for time series.
 
 from sklearn.svm import SVC, SVR
 from sklearn.base import ClassifierMixin, RegressorMixin
+from sklearn.utils import deprecated
 import numpy
 
 from tslearn.metrics import cdist_gak, gamma_soft_dtw, VARIABLE_LENGTH_METRICS
-from tslearn.utils import to_time_series_dataset, check_dims
+from tslearn.utils import (to_time_series_dataset, check_dims,
+                           to_sklearn_dataset)
 from tslearn.bases import TimeSeriesBaseEstimator
 from sklearn.utils import check_array, check_X_y
 from sklearn.utils.validation import check_is_fitted
@@ -16,20 +18,6 @@ from sklearn.utils.validation import check_is_fitted
 import warnings
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
-
-
-def _prepare_ts_datasets_sklearn(X):
-    """Prepare time series datasets for sklearn.
-
-    Examples
-    --------
-    >>> X = to_time_series_dataset([[1, 2, 3], [2, 2, 3]])
-    >>> _prepare_ts_datasets_sklearn(X).shape
-    (2, 3)
-    """
-    sklearn_X = to_time_series_dataset(X)
-    n_ts, sz, d = sklearn_X.shape
-    return sklearn_X.reshape((n_ts, -1))
 
 
 class TimeSeriesSVMMixin:
@@ -75,7 +63,7 @@ class TimeSeriesSVMMixin:
                                       verbose=self.verbose)
         else:
             self.estimator_kernel_ = self.kernel
-            sklearn_X = _prepare_ts_datasets_sklearn(X)
+            sklearn_X = to_sklearn_dataset(X)
 
         if y is None:
             return sklearn_X
@@ -249,7 +237,15 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
                       'it is non-trivial to access the underlying libsvm')
         return 1
 
+    @deprecated
     def support_vectors_time_series_(self, X=None):
+        """Support vectors as time series.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Training time series dataset.
+        """
         if X is not None:
             warnings.warn('The use of '
                           '`support_vectors_time_series_` is deprecated in '
@@ -506,7 +502,15 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
                       'it is non-trivial to access the underlying libsvm')
         return 1
 
+    @deprecated
     def support_vectors_time_series_(self, X=None):
+        """Support vectors as time series.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Training time series dataset.
+        """
         if X is not None:
             warnings.warn('The use of '
                           '`support_vectors_time_series_` is deprecated in '
