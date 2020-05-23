@@ -5,10 +5,12 @@ Support Vector Regressor (SVR) models for time series.
 
 from sklearn.svm import SVC, SVR
 from sklearn.base import ClassifierMixin, RegressorMixin
+from sklearn.utils import deprecated
 import numpy
 
 from tslearn.metrics import cdist_gak, gamma_soft_dtw, VARIABLE_LENGTH_METRICS
-from tslearn.utils import to_time_series_dataset, check_dims
+from tslearn.utils import (to_time_series_dataset, check_dims,
+                           to_sklearn_dataset)
 from tslearn.bases import TimeSeriesBaseEstimator
 from sklearn.utils import check_array, check_X_y
 from sklearn.utils.validation import check_is_fitted
@@ -16,20 +18,6 @@ from sklearn.utils.validation import check_is_fitted
 import warnings
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
-
-
-def _prepare_ts_datasets_sklearn(X):
-    """Prepare time series datasets for sklearn.
-
-    Examples
-    --------
-    >>> X = to_time_series_dataset([[1, 2, 3], [2, 2, 3]])
-    >>> _prepare_ts_datasets_sklearn(X).shape
-    (2, 3)
-    """
-    sklearn_X = to_time_series_dataset(X)
-    n_ts, sz, d = sklearn_X.shape
-    return sklearn_X.reshape((n_ts, -1))
 
 
 class TimeSeriesSVMMixin:
@@ -75,7 +63,7 @@ class TimeSeriesSVMMixin:
                                       verbose=self.verbose)
         else:
             self.estimator_kernel_ = self.kernel
-            sklearn_X = _prepare_ts_datasets_sklearn(X)
+            sklearn_X = to_sklearn_dataset(X)
 
         if y is None:
             return sklearn_X
@@ -172,6 +160,9 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
 
     n_support_ : array-like, dtype=int32, shape = [n_class]
         Number of support vectors for each class.
+        
+    support_vectors_ : array of shape [n_SV, sz, d]
+        Support vectors in tslearn dataset format
 
     dual_coef_ : array, shape = [n_class-1, n_SV]
         Coefficients of the support vector in the decision function.
@@ -199,7 +190,7 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
     >>> clf = TimeSeriesSVC(kernel="gak", gamma="auto", probability=True)
     >>> clf.fit(X, y).predict(X).shape
     (20,)
-    >>> sv = clf.support_vectors_time_series_(X)
+    >>> sv = clf.support_vectors_
     >>> len(sv)  # should be equal to the nr of classes in the clf problem
     2
     >>> sv[0].shape  # doctest: +ELLIPSIS
@@ -246,18 +237,50 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
                       'it is non-trivial to access the underlying libsvm')
         return 1
 
-    def support_vectors_time_series_(self, X):
-        X_ = to_time_series_dataset(X)
+    @deprecated
+    def support_vectors_time_series_(self, X=None):
+        """Support vectors as time series.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Training time series dataset.
+        """
+        if X is not None:
+            warnings.warn('The use of '
+                          '`support_vectors_time_series_` is deprecated in '
+                          'tslearn v0.4 and will be removed in v0.6. Use '
+                          '`support_vectors_` property instead.')
+        check_is_fitted(self, '_X_fit')
+        return self._X_fit[self.svm_estimator_.support_]
+
+    @property
+    def support_vectors_(self):
+        check_is_fitted(self, '_X_fit')
         sv = []
         idx_start = 0
         for cl in range(len(self.svm_estimator_.n_support_)):
             idx_end = idx_start + self.svm_estimator_.n_support_[cl]
             indices = self.svm_estimator_.support_[idx_start:idx_end]
-            sv.append(X_[indices])
+            sv.append(self._X_fit[indices])
             idx_start += self.svm_estimator_.n_support_[cl]
         return sv
 
     def fit(self, X, y, sample_weight=None):
+        """Fit the SVM model according to the given training data.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset.
+            
+        y : array-like of shape=(n_ts, )
+            Time series labels.
+            
+        sample_weight : array-like of shape (n_samples,), default=None
+            Per-sample weights. Rescale C per sample. Higher weights force the 
+            classifier to put more emphasis on these points.
+        """
         sklearn_X, y = self._preprocess_sklearn(X, y, fit_time=True)
 
         self.svm_estimator_ = SVC(
@@ -274,25 +297,72 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
         return self
 
     def predict(self, X):
+        """Predict class for a given set of time series.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset.
+
+        Returns
+        -------
+        array of shape=(n_ts, ) or (n_ts, n_classes), depending on the shape
+        of the label vector provided at training time.
+            Index of the cluster each sample belongs to or class probability
+            matrix, depending on what was provided at training time.
+        """
         sklearn_X = self._preprocess_sklearn(X, fit_time=False)
         return self.svm_estimator_.predict(sklearn_X)
 
     def decision_function(self, X):
+        """Evaluates the decision function for the samples in X.
+        
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset.
+        
+        Returns
+        -------
+        ndarray of shape (n_samples, n_classes * (n_classes-1) / 2)
+            Returns the decision function of the sample for each class
+            in the model.
+            If decision_function_shape='ovr', the shape is (n_samples,
+            n_classes)."""
         sklearn_X = self._preprocess_sklearn(X, fit_time=False)
         return self.svm_estimator_.decision_function(sklearn_X)
 
     def predict_log_proba(self, X):
+        """Predict class log-probabilities for a given set of time series.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset.
+
+        Returns
+        -------
+        array of shape=(n_ts, n_classes),
+            Class probability matrix.
+        """
         sklearn_X = self._preprocess_sklearn(X, fit_time=False)
         return self.svm_estimator_.predict_log_proba(sklearn_X)
 
     def predict_proba(self, X):
+        """Predict class probability for a given set of time series.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset.
+
+        Returns
+        -------
+        array of shape=(n_ts, n_classes),
+            Class probability matrix.
+        """
         sklearn_X = self._preprocess_sklearn(X, fit_time=False)
         return self.svm_estimator_.predict_proba(sklearn_X)
-
-    def score(self, X, y, sample_weight=None):
-        sklearn_X = self._preprocess_sklearn(X, fit_time=False)
-        return self.svm_estimator_.score(sklearn_X, y,
-                                         sample_weight=sample_weight)
 
     def _more_tags(self):
         return {'non_deterministic': True, 'allow_nan': True,
@@ -366,6 +436,9 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
     ----------
     support_ : array-like, shape = [n_SV]
         Indices of support vectors.
+        
+    support_vectors_ : array of shape [n_SV, sz, d]
+        Support vectors in tslearn dataset format
 
     dual_coef_ : array, shape = [1, n_SV]
         Coefficients of the support vector in the decision function.
@@ -394,7 +467,7 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
     >>> reg = TimeSeriesSVR(kernel="gak", gamma="auto")
     >>> reg.fit(X, y).predict(X).shape
     (20,)
-    >>> sv = reg.support_vectors_time_series_(X)
+    >>> sv = reg.support_vectors_
     >>> sv.shape  # doctest: +ELLIPSIS
     (..., 64, 2)
     >>> sv.shape[0] <= 20
@@ -429,11 +502,43 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
                       'it is non-trivial to access the underlying libsvm')
         return 1
 
-    def support_vectors_time_series_(self, X):
-        X_ = to_time_series_dataset(X)
-        return X_[self.svm_estimator_.support_]
+    @deprecated
+    def support_vectors_time_series_(self, X=None):
+        """Support vectors as time series.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Training time series dataset.
+        """
+        if X is not None:
+            warnings.warn('The use of '
+                          '`support_vectors_time_series_` is deprecated in '
+                          'tslearn v0.4 and will be removed in v0.6. Use '
+                          '`support_vectors_` property instead.')
+        check_is_fitted(self, '_X_fit')
+        return self._X_fit[self.svm_estimator_.support_]
+
+    @property
+    def support_vectors_(self):
+        check_is_fitted(self, '_X_fit')
+        return self._X_fit[self.svm_estimator_.support_]
 
     def fit(self, X, y, sample_weight=None):
+        """Fit the SVM model according to the given training data.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset.
+            
+        y : array-like of shape=(n_ts, )
+            Time series labels.
+            
+        sample_weight : array-like of shape (n_samples,), default=None
+            Per-sample weights. Rescale C per sample. Higher weights force the 
+            classifier to put more emphasis on these points.
+        """
         sklearn_X, y = self._preprocess_sklearn(X, y, fit_time=True)
 
         self.svm_estimator_ = SVR(
@@ -446,13 +551,21 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
         return self
 
     def predict(self, X):
+        """Predict class for a given set of time series.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset.
+
+        Returns
+        -------
+        array of shape=(n_ts, ) or (n_ts, dim_output), depending on the shape
+        of the target vector provided at training time.
+            Predicted targets
+        """
         sklearn_X = self._preprocess_sklearn(X, fit_time=False)
         return self.svm_estimator_.predict(sklearn_X)
-
-    def score(self, X, y, sample_weight=None):
-        sklearn_X = self._preprocess_sklearn(X, fit_time=False)
-        return self.svm_estimator_.score(sklearn_X, y,
-                                         sample_weight=sample_weight)
 
     def _more_tags(self):
         return {'non_deterministic': True, 'allow_nan': True,
