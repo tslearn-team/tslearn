@@ -62,3 +62,4 @@ def test_shapelets():
     clf.set_weights(weights)
     np.testing.assert_allclose(preds_before,
                                clf.predict_proba(time_series))
+

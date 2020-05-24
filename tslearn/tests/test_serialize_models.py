@@ -149,7 +149,7 @@ def test_serialize_timeserieskmeans():
 
     sdtw_km = TimeSeriesKMeans(n_clusters=3,
                                metric="softdtw",
-                               metric_params={"gamma_sdtw": .01},
+                               metric_params={"gamma": .01},
                                verbose=True)
 
     _check_not_fitted(sdtw_km)

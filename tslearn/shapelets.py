@@ -235,12 +235,6 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
 
     batch_size: int (default: 256)
         Batch size to be used.
-    verbose_level: {0, 1, 2} (default: 0)
-        `keras` verbose level.
-
-        .. deprecated:: 0.2
-            verbose_level is deprecated in version 0.2 and will be
-            removed in 0.4. Use `verbose` instead.
 
     verbose: {0, 1, 2} (default: 0)
         `keras` verbose level.
@@ -311,7 +305,6 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
                  max_iter=10000,
                  batch_size=256,
                  verbose=0,
-                 verbose_level=None,
                  optimizer="sgd",
                  weight_regularizer=0.,
                  shapelet_length=0.15,
@@ -320,7 +313,6 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         self.n_shapelets_per_size = n_shapelets_per_size
         self.max_iter = max_iter
         self.batch_size = batch_size
-        self.verbose_level = verbose_level
         self.verbose = verbose
         self.optimizer = optimizer
         self.weight_regularizer = weight_regularizer
@@ -391,13 +383,6 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         y : array-like of shape=(n_ts, )
             Time series labels.
         """
-        if self.verbose_level is not None:
-            warnings.warn(
-                "'verbose_level' is deprecated in version 0.2 and will be "
-                "removed in 0.4. Use 'verbose' instead.",
-                DeprecationWarning, stacklevel=2)
-            self.verbose = self.verbose_level
-
         X, y = check_X_y(X, y, allow_nd=True)
         X = to_time_series_dataset(X)
         X = check_dims(X)
@@ -824,12 +809,6 @@ class SerializableShapeletModel(ShapeletModel):
 
     batch_size: int (default:256)
         Batch size to be used.
-    verbose_level: {0, 1, 2} (default: 0)
-        `keras` verbose level.
-
-        .. deprecated:: 0.1
-            min is deprecated in version 0.1 and will be
-            removed in 0.2.
 
     verbose: {0, 1, 2} (default: 0)
         `keras` verbose level.
@@ -901,7 +880,6 @@ class SerializableShapeletModel(ShapeletModel):
                  max_iter=10000,
                  batch_size=256,
                  verbose=0,
-                 verbose_level=None,
                  learning_rate=0.01,
                  weight_regularizer=0.,
                  shapelet_length=0.3,
@@ -911,7 +889,6 @@ class SerializableShapeletModel(ShapeletModel):
                              max_iter=max_iter,
                              batch_size=batch_size,
                              verbose=verbose,
-                             verbose_level=verbose_level,
                              weight_regularizer=weight_regularizer,
                              shapelet_length=shapelet_length,
                              total_lengths=total_lengths,
