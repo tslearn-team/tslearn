@@ -130,9 +130,6 @@ class PiecewiseAggregateApproximation(TransformerMixin, BaseModelPackage):
     def get_params(self):
         return {'n_segments': self.n_segments}
 
-    def _get_model_params(self):
-        return {'size_fitted_': self.size_fitted_}
-
     def _fit(self, X, y=None):
         self.size_fitted_ = X.shape[1]
         return self
@@ -350,18 +347,6 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation,
             'alphabet_size_avg': self.alphabet_size_avg
         }
 
-    def _get_model_params(self):
-        p = {
-            'breakpoints_avg_': self.breakpoints_avg_,
-            'breakpoints_avg_middle_': self.breakpoints_avg_middle_
-        }
-
-        p.update(
-            super()._get_model_params()
-        )
-
-        return p
-
     def fit(self, X, y=None):
         """Fit a SAX representation.
 
@@ -575,18 +560,6 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
             'alphabet_size_slope': self.alphabet_size_slope,
             'sigma_l': self.sigma_l
         }
-
-    def _get_model_params(self):
-        p = {
-            'breakpoints_slope_': self.breakpoints_slope_,
-            'breakpoints_slope_middle_': self.breakpoints_slope_middle_,
-        }
-
-        p.update(
-            super()._get_model_params()
-        )
-
-        return p
 
     def _fit(self, X, y=None):
         SymbolicAggregateApproximation._fit(self, X, y)
