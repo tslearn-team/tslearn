@@ -762,15 +762,16 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         # instantiate with hyper-parameters
         inst = cls(**hyper_params)
 
-        # set all model params
-        inst.model_ = model_from_json(
-            model_params.pop("model_"),
-            custom_objects={
-                "LocalSquaredDistanceLayer": LocalSquaredDistanceLayer,
-                "GlobalMinPooling1D": GlobalMinPooling1D
-            }
-        )
-        inst.set_weights(model_params.pop("model_weights_"))
+        if "model_" in model_params.keys():
+            # set all model params
+            inst.model_ = model_from_json(
+                model_params.pop("model_"),
+                custom_objects={
+                    "LocalSquaredDistanceLayer": LocalSquaredDistanceLayer,
+                    "GlobalMinPooling1D": GlobalMinPooling1D
+                }
+            )
+            inst.set_weights(model_params.pop("model_weights_"))
         for p in model_params.keys():
             setattr(inst, p, model_params[p])
         inst._X_fit_dims = tuple(inst._X_fit_dims)

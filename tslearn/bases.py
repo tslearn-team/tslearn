@@ -50,11 +50,13 @@ class BaseModelPackage:
         params = {}
         for attr in dir(self):
             # Do not save properties
-            if hasattr(type(self), attr) and isinstance(getattr(type(self), attr), property):
+            if (hasattr(type(self), attr) and
+                    isinstance(getattr(type(self), attr), property)):
                 continue
-            if not attr.startswith("__") and attr.endswith("_") and not callable(getattr(self, attr)):
+            if (not attr.startswith("__") and
+                    attr.endswith("_") and
+                    not callable(getattr(self, attr))):
                 params[attr] = getattr(self, attr)
-        print(params.keys())
         return params
 
 
