@@ -211,6 +211,10 @@ class UCR_UEA_datasets:
     def list_datasets(self):
         """List univariate datasets in the UCR/UEA archive.
 
+        .. deprecated:: 0.4
+            `list_datasets` is deprecated in version 0.4 and will be removed
+            in 0.6. Use `list_univariate_datasets` instead.
+
         Examples
         --------
         >>> l = UCR_UEA_datasets().list_datasets()
@@ -284,7 +288,7 @@ class UCR_UEA_datasets:
         (1000, 1024, 1)
         >>> X_train, y_train, X_test, y_test = data_loader.load_dataset(
         ...         "DatasetThatDoesNotExist")
-        >>> X_train
+        >>> print(X_train)
         None
         """
         dataset_name = self._filenames.get(dataset_name, dataset_name)

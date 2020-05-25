@@ -48,3 +48,16 @@ If you experiment such an issue, try installing it with the following command:
 before you start installing ``tslearn``.
 If it still does not work, we suggest you switch to `conda` installation.
 
+Other requirements
+------------------
+
+``tslearn`` builds on (and hence depends on) ``scikit-learn``, ``numpy`` and
+``scipy`` libraries.
+
+If you plan to use the :ref:`shapelets <mod-shapelets>` module from
+``tslearn``, ``keras`` and ``tensorflow`` should also be installed.
+``h5py`` is required for reading or writing models using the hdf5 file format.
+In order to load multivariate datasets from the UCR/UEA archive using the
+:ref:`UCR_UEA_dataset <class-ucr_uea_dataset>`` class, installed ``scipy``
+version should be greater than 1.3.0.
+
