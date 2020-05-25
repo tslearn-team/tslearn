@@ -14,11 +14,15 @@
 
 import sys
 import os
+import sphinx_bootstrap_theme
+import subprocess
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
+on_rtd = os.environ.get('READTHEDOCS') == 'True'
+if not on_rtd:
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
 
 # -- General configuration ------------------------------------------------
 
@@ -32,25 +36,48 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.doctest',
-    'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.linkcode',
     'sphinx_gallery.gen_gallery',
+    'numpydoc',
     'nbsphinx'
 ]
+
+numpydoc_show_class_members = True
+numpydoc_class_members_toctree = False
+
 autosummary_generate = True
-# autodoc_default_flags = ['members', 'inherited-members']
+
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/{.major}'.format(
+        sys.version_info), None),
+    'numpy': ('https://numpy.org/doc/stable', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
+    'matplotlib': ('https://matplotlib.org/', None),
+    'sklearn': ('http://scikit-learn.org/stable', None)
+}
 
 sphinx_gallery_conf = {
     'examples_dirs': ['./examples'],
     'gallery_dirs': ['./auto_examples'],
-    'reference_url':  {'tslearn': None,
-                       'matplotlib': 'http://matplotlib.org',
-                       'numpy': 'http://docs.scipy.org/doc/numpy-1.9.1'},
-    'default_thumb_file': 'fig/logo.png',
+    'reference_url':  {'tslearn': None},
+    'default_thumb_file': '_static/img/logo.png',
     'backreferences_dir': 'gen_modules/backreferences',
-    'doc_module': ('tslearn', )
+    'doc_module': ('tslearn',),
+    'subsection_order': ["examples", "examples/metrics", "examples/neighbors",
+                         "examples/clustering", "examples/classification",
+                         "examples/misc"].index
+    # 'binder': {
+    #     # Required keys
+    #     'org': 'rtavenar',
+    #     'repo': 'tslearn',
+    #     'branch': 'master',
+    #     'binderhub_url': 'https://mybinder.org',
+    #     'dependencies': '../../requirements.txt',
+    #     # Optional keys
+    #     'use_jupyter_lab': True
+    # }
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -121,7 +148,54 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'default'
+# html_theme = 'sphinx_rtd_theme'
+html_theme = 'bootstrap'
+html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
+html_theme_options = {
+    # Tab name for entire site. (Default: "Site")
+    'navbar_site_name': "Site map",
+
+    'navbar_links': [
+        ("Quick-start", "quickstart"),
+        ("API Reference", "reference"),
+        ("Examples", "auto_examples/index"),
+        ("Citing tslearn", "citing"),
+    ],
+
+    # Render the next and previous page links in navbar. (Default: true)
+    'navbar_sidebarrel': False,
+
+    # Render the current pages TOC in the navbar. (Default: true)
+    'navbar_pagenav': False,
+
+    # Tab name for the current pages TOC. (Default: "Page")
+    'navbar_pagenav_name': "Current Page",
+
+    # Global TOC depth for "site" navbar tab. (Default: 1)
+    # Switching to -1 shows all levels.
+    'globaltoc_depth': -1,
+    'globaltoc_includehidden': "false",
+
+    # Location of link to source.
+    # Options are "nav" (default), "footer" or anything else to exclude.
+    'source_link_position': "exclude",
+
+    # Bootswatch (http://bootswatch.com/) theme.
+    #
+    # Options are nothing (default) or the name of a valid theme
+    # such as "cosmo" or "sandstone".
+    #
+    # The set of valid themes depend on the version of Bootstrap
+    # that's used (the next config option).
+    #
+    # Currently, the supported themes are:
+    # - Bootstrap 2: https://bootswatch.com/2
+    # - Bootstrap 3: https://bootswatch.com/3
+    'bootswatch_theme': "lumen"
+}
+
+def setup(app):
+    app.add_stylesheet("custom.css") # also can be a full URL
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -279,3 +353,39 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+# The following is used by sphinx.ext.linkcode to provide links to github
+REVISION_CMD = 'git rev-parse --short HEAD'
+
+
+def _get_git_revision():
+    try:
+        revision = subprocess.check_output(REVISION_CMD.split()).strip()
+    except (subprocess.CalledProcessError, OSError):
+        print('Failed to execute git to get revision')
+        return None
+    return revision.decode('utf-8')
+
+def linkcode_resolve(domain, info):
+    def find_source():
+        # try to find the file and line number, based on code from numpy:
+        # https://github.com/numpy/numpy/blob/master/doc/source/conf.py#L286
+        obj = sys.modules[info['module']]
+        for part in info['fullname'].split('.'):
+            obj = getattr(obj, part)
+        import inspect
+        import os
+        fn = inspect.getsourcefile(obj)
+        fn = os.path.relpath(fn, start=os.path.dirname(tslearn.__file__))
+        source, lineno = inspect.getsourcelines(obj)
+        return fn, lineno, lineno + len(source) - 1
+
+    if domain != 'py' or not info['module']:
+        return None
+    try:
+        filename = 'tslearn/%s#L%d-L%d' % find_source()
+    except Exception:
+        filename = info['module'].replace('.', '/') + '.py'
+    revision = _get_git_revision()
+    return "https://github.com/tslearn-team/tslearn/blob/%s/%s" % (revision,
+                                                                   filename)

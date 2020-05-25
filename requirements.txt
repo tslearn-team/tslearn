@@ -1,6 +1,9 @@
 Cython
 numpy
+numba
 scipy
 scikit-learn
-tensorflow
+joblib>=0.12
+tensorflow<2
 keras
+h5py

@@ -1,0 +1,17 @@
+Cython
+numpy
+scipy
+scikit-learn
+numba
+sphinx>=1.6.1
+ipykernel
+nbsphinx
+sphinx-gallery
+pillow
+tensorflow==1.15.*
+keras==2.0.8
+Pygments
+numba
+sphinx_bootstrap_theme
+git+git://github.com/numpy/numpydoc@master
+matplotlib

@@ -1,37 +1,17 @@
-{{ fullname }}
-{{ underline }}
+.. _class-{{ fullname }}:
+
+:mod:`{{module}}`.{{objname}}
+{{ underline }}==============
 
 .. currentmodule:: {{ module }}
 
 .. autoclass:: {{ objname }}
+   :members:
+   :inherited-members:
 
-   {% block methods %}
 
-   {% if methods %}
-   .. rubric:: Methods
-
-   .. autosummary::
-      :toctree: {{ objname }}
-   {% for item in methods %}
-      ~{{ name }}.{{ item }}
-   {%- endfor %}
-   {% endif %}
-   {% endblock %}
-
-   {% block attributes %}
-   {% if attributes %}
-   .. rubric:: Attributes
-
-   .. autosummary::
-      :toctree: {{ objname }}
-   {% for item in attributes %}
-      ~{{ name }}.{{ item }}
-   {%- endfor %}
-   {% endif %}
-   {% endblock %}
-
-.. include:: ../backreferences/{{fullname}}.examples
+.. include:: ../backreferences/{{module}}.{{objname}}.examples
 
 .. raw:: html
 
-     <div style='clear:both'></div>
+    <div class="clearer"></div>
