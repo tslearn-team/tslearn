@@ -45,10 +45,21 @@ class BaseModelPackage:
         """
         pass
 
-    @abstractmethod
     def _get_model_params(self):
         """Get model parameters that are sufficient to recapitulate it."""
-        pass
+        params = {}
+        for attr in dir(self):
+            # Do not save properties
+            if (hasattr(type(self), attr) and
+                    isinstance(getattr(type(self), attr), property)):
+                continue
+            if (not attr.startswith("__") and
+                    attr.endswith("_") and
+                    not callable(getattr(self, attr))):
+                params[attr] = getattr(self, attr)
+        return params
+
+
 
     def _to_dict(self, output=None, hyper_parameters_only=False):
         """

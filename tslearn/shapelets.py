@@ -733,13 +733,11 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
 
     def _get_model_params(self):
         """Get model parameters that are sufficient to recapitulate it."""
-        return {"model_": self.model_.to_json(),
-                "model_weights_": self.get_weights(),
-                "classes_": self.classes_,
-                "label_to_ind_": self.label_to_ind_,
-                "d_": self.d_,
-                "n_shapelets_per_size_": self.n_shapelets_per_size_,
-                "_X_fit_dims": self._X_fit_dims}
+        params = super()._get_model_params()
+        params.update({"_X_fit_dims": self._X_fit_dims,
+                       "model_": self.model_.to_json(),
+                       "model_weights_": self.get_weights()})
+        return params
 
     @staticmethod
     def _organize_model(cls, model):
@@ -766,15 +764,16 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         # instantiate with hyper-parameters
         inst = cls(**hyper_params)
 
-        # set all model params
-        inst.model_ = model_from_json(
-            model_params.pop("model_"),
-            custom_objects={
-                "LocalSquaredDistanceLayer": LocalSquaredDistanceLayer,
-                "GlobalMinPooling1D": GlobalMinPooling1D
-            }
-        )
-        inst.set_weights(model_params.pop("model_weights_"))
+        if "model_" in model_params.keys():
+            # set all model params
+            inst.model_ = model_from_json(
+                model_params.pop("model_"),
+                custom_objects={
+                    "LocalSquaredDistanceLayer": LocalSquaredDistanceLayer,
+                    "GlobalMinPooling1D": GlobalMinPooling1D
+                }
+            )
+            inst.set_weights(model_params.pop("model_weights_"))
         for p in model_params.keys():
             setattr(inst, p, model_params[p])
         inst._X_fit_dims = tuple(inst._X_fit_dims)

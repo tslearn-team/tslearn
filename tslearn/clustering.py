@@ -416,11 +416,9 @@ class GlobalAlignmentKernelKMeans(ClusterMixin, BaseModelPackage,
         return True
 
     def _get_model_params(self):
-        return {
-            '_X_fit': self._X_fit,
-            'sample_weight_': self.sample_weight_,
-            'labels_': self.labels_
-        }
+        params = super()._get_model_params()
+        params.update({'_X_fit': self._X_fit})
+        return params
 
     def _get_kernel(self, X, Y=None):
         return cdist_gak(X, Y, sigma=self.sigma, n_jobs=self.n_jobs,
@@ -737,12 +735,6 @@ class TimeSeriesKMeans(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
         check_is_fitted(self, ['cluster_centers_'])
         return True
 
-    def _get_model_params(self):
-        return {'cluster_centers_': self.cluster_centers_,
-                'inertia_': self.inertia_,
-                'labels_': self.labels_,
-                'n_iter_': self.n_iter_}
-
     def _get_metric_params(self):
         if self.metric_params is None:
             metric_params = {}
@@ -1049,22 +1041,6 @@ class KShape(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
         self.n_init = n_init
         self.verbose = verbose
         self.init = init
-
-    def _get_model_params(self):
-        """
-        Get the model parameters
-
-        Returns
-        -------
-        params : dict
-            Model parameters (attributes) that are sufficient
-            to recapitulate the model
-        """
-
-        return {'cluster_centers_': self.cluster_centers_,
-                'norms_': self.norms_,
-                'norms_centroids_': self.norms_centroids_,
-                }
 
     def _is_fitted(self):
         """
