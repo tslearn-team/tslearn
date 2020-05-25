@@ -331,9 +331,10 @@ class UCR_UEA_datasets:
                     os.path.exists(basename + "_TEST.%s" % ext))
 
     def cache_all(self):
-        """Cache all datasets from the UCR/UEA archive for later use.
+        """Cache all univariate datasets from the UCR/UEA archive for later 
+        use.
         """
-        for dataset_name in self.list_datasets():
+        for dataset_name in self.list_univariate_datasets():
             try:
                 self.load_dataset(dataset_name)
             except:
