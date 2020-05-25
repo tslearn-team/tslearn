@@ -734,7 +734,9 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
     def _get_model_params(self):
         """Get model parameters that are sufficient to recapitulate it."""
         params = super()._get_model_params()
-        params.update({"_X_fit_dims": self._X_fit_dims, "model_": self.model_})
+        params.update({"_X_fit_dims": self._X_fit_dims,
+                       "model_": self.model_.to_json(),
+                       "model_weights_": self.get_weights()})
         return params
 
     @staticmethod
