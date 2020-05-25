@@ -4,10 +4,15 @@ The :mod:`tslearn.utils` module includes various utilities.
 
 import numpy
 from sklearn.base import TransformerMixin
-from scipy.io import arff   #TODO: only if possible
 from sklearn.utils import column_or_1d, check_array
 from sklearn.utils.validation import check_is_fitted
 import warnings
+
+try:
+    from scipy.io import arff
+    HAS_ARFF = True
+except:
+    HAS_ARFF = False
 
 try:
     from sklearn.utils.estimator_checks import _NotAnArray as NotAnArray
@@ -1411,22 +1416,25 @@ class LabelCategorizer(TransformerMixin, TimeSeriesBaseEstimator):
         return {'X_types': ['1dlabels']}
 
 
-def load_arff(dataset_path):
+def _load_arff_uea(dataset_path):
     """
     Load arff file for uni/multi variate dataset
+    
     Parameters
     ----------
     dataset_path: string of dataset_path
+        Path to the ARFF file to be read
 
     Returns
     -------
-    numpy.ndarray
-        y: an 1d-array of examples.
-        x: a time series with dimension
-            (examples, length) for uni variate time seris.
-            (examples, length, channels) for multi variable time series.
+    x: numpy array of shape (n_timeseries, n_timestamps, n_features)
+        Time series dataset
+    y: numpy array of shape (n_timeseries, )
+        Vector of targets
     """
-
+    if not HAS_ARFF:
+        raise ImportError("scipy 1.3.0 or newer is required to load "
+                          "time series datasets from arff format.")
     data, meta = arff.loadarff(dataset_path)
     names = meta.names()  # ["input", "class"] for multi-variate
 
@@ -1455,3 +1463,28 @@ def load_arff(dataset_path):
         x = x.reshape(len(x), -1, 1)
 
     return x, y
+
+
+def _load_txt_uea(dataset_path):
+    """
+    Load arff file for uni/multi variate dataset
+    
+    Parameters
+    ----------
+    dataset_path: string of dataset_path
+        Path to the ARFF file to be read
+
+    Returns
+    -------
+    x: numpy array of shape (n_timeseries, n_timestamps, n_features)
+        Time series dataset
+    y: numpy array of shape (n_timeseries, )
+        Vector of targets
+    """
+    try:
+        data = numpy.loadtxt(dataset_path, delimiter=None)
+        X = to_time_series_dataset(data[:, 1:])
+        y = data[:, 0].astype(numpy.int)
+        return X, y
+    except:
+        return None, None

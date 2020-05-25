@@ -10,6 +10,7 @@ import shutil
 import os
 import sys
 import csv
+import warnings
 try:
     from urllib import urlretrieve
 except ImportError:
@@ -19,8 +20,7 @@ try:
 except ImportError:
     from zipfile import BadZipfile as BadZipFile
 
-from tslearn.utils import to_time_series_dataset
-from tslearn.utils import load_arff
+from tslearn.utils import _load_arff_uea, _load_txt_uea
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -135,12 +135,14 @@ class UCR_UEA_datasets:
         self._ignore_list = ["Data Descriptions"]
         # File names for datasets for which it is not obvious
         # key: from timeseriesclassification.com, value: right dataset name
-        self._filenames = {"AtrialFibrillation": "AtrialFibrilation",
-                           "CinCECGtorso": "CinCECGTorso",
-                           "MixedShapes": "MixedShapesRegularTrain",
-                           "NonInvasiveFetalECGThorax1": "NonInvasiveFatalECGThorax1",
-                           "NonInvasiveFetalECGThorax2": "NonInvasiveFatalECGThorax2",
-                           "StarlightCurves": "StarLightCurves"}
+        self._filenames = {
+            "AtrialFibrillation": "AtrialFibrilation",
+            "CinCECGtorso": "CinCECGTorso",
+            "MixedShapes": "MixedShapesRegularTrain",
+            "NonInvasiveFetalECGThorax1": "NonInvasiveFatalECGThorax1",
+            "NonInvasiveFetalECGThorax2": "NonInvasiveFatalECGThorax2",
+            "StarlightCurves": "StarLightCurves"
+        }
 
     def baseline_accuracy(self, list_datasets=None, list_methods=None):
         """Report baseline performances as provided by UEA/UCR website.
@@ -191,8 +193,8 @@ class UCR_UEA_datasets:
                             pass
         return d_out
 
-    def list_datasets(self):
-        """List datasets in the UCR/UEA archive.
+    def list_univariate_datasets(self):
+        """List univariate datasets in the UCR/UEA archive.
 
         Examples
         --------
@@ -206,13 +208,29 @@ class UCR_UEA_datasets:
             datasets.append(perfs_dict[""])
         return datasets
 
+    def list_datasets(self):
+        """List univariate datasets in the UCR/UEA archive.
+
+        Examples
+        --------
+        >>> l = UCR_UEA_datasets().list_datasets()
+        >>> len(l)
+        85
+        """
+        warnings.warn(
+            "'list_datasets' is deprecated in version 0.4 and will be "
+            "removed in 0.6. Use `list_univariate_datasets` instead.",
+            DeprecationWarning, stacklevel=2)
+        return self.list_univariate_datasets()
+
     def list_cached_datasets(self):
         """List datasets from the UCR/UEA archive that are available in cache.
 
         Examples
         --------
+        >>> beetlefly = UCR_UEA_datasets().load_dataset("BeetleFly")
         >>> l = UCR_UEA_datasets().list_cached_datasets()
-        >>> 0 <= len(l) <= len(UCR_UEA_datasets().list_datasets())
+        >>> "BeetleFly" in l
         True
         """
         return [path for path in os.listdir(self._data_dir)
@@ -244,50 +262,69 @@ class UCR_UEA_datasets:
         >>> data_loader = UCR_UEA_datasets()
         >>> X_train, y_train, X_test, y_test = data_loader.load_dataset(
         ...         "TwoPatterns")
-        >>> print(X_train.shape)
+        >>> X_train.shape
         (1000, 128, 1)
-        >>> print(y_train.shape)
+        >>> y_train.shape
         (1000,)
         >>> X_train, y_train, X_test, y_test = data_loader.load_dataset(
         ...         "StarLightCurves")
-        >>> print(X_train.shape)
+        >>> X_train.shape
         (1000, 1024, 1)
         >>> X_train, y_train, X_test, y_test = data_loader.load_dataset(
         ...         "CinCECGTorso")
-        >>> print(X_train.shape)
+        >>> X_train.shape
         (40, 1639, 1)
-        >>> X_train, y_train, X_test, y_test = UCR_UEA_datasets().load_dataset("PenDigits")
-        >>> print(X_train.shape)
+        >>> X_train, y_train, X_test, y_test = data_loader.load_dataset(
+        ...         "PenDigits")
+        >>> X_train.shape
         (7494, 8, 2)
-        >>> X_train, y_train, X_test, y_test = UCR_UEA_datasets().load_dataset("DatasetThatDoesNotExist")
-        >>> print(X_train)
+        >>> X_train, y_train, X_test, y_test = data_loader.load_dataset(
+        ...         "StarlightCurves")
+        >>> X_train.shape
+        (1000, 1024, 1)
+        >>> X_train, y_train, X_test, y_test = data_loader.load_dataset(
+        ...         "DatasetThatDoesNotExist")
+        >>> X_train
         None
         """
         dataset_name = self._filenames.get(dataset_name, dataset_name)
         full_path = os.path.join(self._data_dir, dataset_name)
-        # TODO: look for txt files first, them arff files
-        fname_train = dataset_name + "_TRAIN.txt"
-        fname_test = dataset_name + "_TEST.txt"
-        if (not os.path.exists(os.path.join(full_path, fname_train)) or
-                not os.path.exists(os.path.join(full_path, fname_test))):
+
+        if not self._has_files(dataset_name):
             url = ("http://www.timeseriesclassification.com/Downloads/%s.zip"
                    % dataset_name)
-            for fname in [fname_train, fname_test]:
-                if os.path.exists(os.path.join(full_path, fname)):
+            if os.path.isdir(full_path):
+                for fname in os.listdir(full_path):
                     os.remove(os.path.join(full_path, fname))
             extract_from_zip_url(url, target_dir=full_path, verbose=False)
-        try:
-            data_train = numpy.loadtxt(os.path.join(full_path, fname_train),
-                                       delimiter=None)
-            data_test = numpy.loadtxt(os.path.join(full_path, fname_test),
-                                      delimiter=None)
-        except:
+        if self._has_files(dataset_name, ext="txt"):
+            X_train, y_train = _load_txt_uea(
+                os.path.join(full_path, dataset_name + "_TRAIN.txt")
+            )
+            X_test, y_test = _load_txt_uea(
+                os.path.join(full_path, dataset_name + "_TEST.txt")
+            )
+        elif self._has_files(dataset_name, ext="arff"):
+            X_train, y_train = _load_arff_uea(
+                os.path.join(full_path, dataset_name + "_TRAIN.arff")
+            )
+            X_test, y_test = _load_arff_uea(
+                os.path.join(full_path, dataset_name + "_TEST.arff")
+            )
+        else:
             return None, None, None, None
-        X_train = to_time_series_dataset(data_train[:, 1:])
-        y_train = data_train[:, 0].astype(numpy.int)
-        X_test = to_time_series_dataset(data_test[:, 1:])
-        y_test = data_test[:, 0].astype(numpy.int)
         return X_train, y_train, X_test, y_test
+
+    def _has_files(self, dataset_name, ext=None):
+        if ext is None:
+            return (self._has_files(dataset_name, ext="txt") or
+                    self._has_files(dataset_name, ext="arff"))
+        else:
+            dataset_name = self._filenames.get(dataset_name, dataset_name)
+            full_path = os.path.join(self._data_dir, dataset_name)
+            basename = os.path.join(full_path, dataset_name)
+            return (os.path.exists(basename + "_TRAIN.%s" % ext) and
+                    os.path.exists(basename + "_TEST.%s" % ext))
 
     def cache_all(self):
         """Cache all datasets from the UCR/UEA archive for later use.
