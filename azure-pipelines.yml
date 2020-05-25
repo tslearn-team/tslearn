@@ -91,9 +91,8 @@ jobs:
 
   # Upload coverage to codecov.io
   - script: |
-      pip install codeclimate-test-reporter codecov
-      codeclimate-test-reporter;
-      codecov -t $(CODECLIMATE_REPO_TOKEN);
+      pip install codecov
+      codecov;
     displayName: 'Upload coverage to codecov.io'
 
 
