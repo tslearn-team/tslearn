@@ -93,7 +93,7 @@ jobs:
   - script: |
       pip install codecov;
       export CODECOV_TOKEN="98518e77-3c53-43de-899f-86b720c000ea";
-      codecov;
+      codecov -t ${CODECOV_TOKEN};
     displayName: 'Upload coverage to codecov.io'
 
 
