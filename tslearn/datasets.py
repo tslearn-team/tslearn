@@ -231,7 +231,8 @@ class UCR_UEA_datasets:
         return datasets
 
     def list_datasets(self):
-        """List univariate datasets in the UCR/UEA archive.
+        """List datasets (both univariate and multivariate) available in the 
+        UCR/UEA archive.
 
         Examples
         --------
