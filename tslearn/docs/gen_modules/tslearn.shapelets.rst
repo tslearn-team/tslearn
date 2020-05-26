@@ -1,3 +1,5 @@
+.. _mod-shapelets:
+
 tslearn.shapelets
 =================
 

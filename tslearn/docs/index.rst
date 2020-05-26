@@ -56,10 +56,6 @@ analysis of time series.
 This package builds on (and hence depends on) ``scikit-learn``, ``numpy`` and
 ``scipy`` libraries.
 
-If you plan to use the ``shapelets`` module from ``tslearn``, ``keras`` and
-``tensorflow`` should also be installed.
-``h5py`` is required for reading or writing models using the hdf5 file format.
-
 This documentation contains :doc:`a quick-start guide <quickstart>` (including
 :doc:`installation procedure <installation>` and
 :doc:`basic usage of the toolkit <gettingstarted>`),
