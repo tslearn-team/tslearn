@@ -118,6 +118,12 @@ class UCR_UEA_datasets:
         if not os.path.exists(self._data_dir):
             os.makedirs(self._data_dir)
         try:
+            url_multivariate = ("http://www.timeseriesclassification.com/" +
+                                "Downloads/Archives/summaryMultivariate.csv")
+            self._list_multivariate_filename = os.path.join(
+                self._data_dir, os.path.basename(url_multivariate)
+            )
+            urlretrieve(url_multivariate, self._list_multivariate_filename)
             url_baseline = ("http://www.timeseriesclassification.com/" +
                             "singleTrainTest.csv")
             self._baseline_scores_filename = os.path.join(
@@ -145,7 +151,8 @@ class UCR_UEA_datasets:
         }
 
     def baseline_accuracy(self, list_datasets=None, list_methods=None):
-        """Report baseline performances as provided by UEA/UCR website.
+        """Report baseline performances as provided by UEA/UCR website (for
+        univariate datasets only).
 
         Parameters
         ----------
@@ -198,7 +205,7 @@ class UCR_UEA_datasets:
 
         Examples
         --------
-        >>> l = UCR_UEA_datasets().list_datasets()
+        >>> l = UCR_UEA_datasets().list_univariate_datasets()
         >>> len(l)
         85
         """
@@ -208,24 +215,36 @@ class UCR_UEA_datasets:
             datasets.append(perfs_dict[""])
         return datasets
 
+    def list_multivariate_datasets(self):
+        """List multivariate datasets in the UCR/UEA archive.
+
+        Examples
+        --------
+        >>> l = UCR_UEA_datasets().list_multivariate_datasets()
+        >>> "PenDigits" in l
+        True
+        """
+        datasets = []
+        for infos_dict in csv.DictReader(
+                open(self._list_multivariate_filename, "r"), delimiter=","):
+            datasets.append(infos_dict["Problem"])
+        return datasets
+
     def list_datasets(self):
         """List univariate datasets in the UCR/UEA archive.
-
-        .. deprecated:: 0.4
-            `list_datasets` is deprecated in version 0.4 and will be removed
-            in 0.6. Use `list_univariate_datasets` instead.
 
         Examples
         --------
         >>> l = UCR_UEA_datasets().list_datasets()
-        >>> len(l)
-        85
+        >>> "PenDigits" in l
+        True
+        >>> "BeetleFly" in l
+        True
+        >>> "DatasetThatDoesNotExist" in l
+        False
         """
-        warnings.warn(
-            "'list_datasets' is deprecated in version 0.4 and will be "
-            "removed in 0.6. Use `list_univariate_datasets` instead.",
-            DeprecationWarning, stacklevel=2)
-        return self.list_univariate_datasets()
+        return (self.list_univariate_datasets()
+                + self.list_multivariate_datasets())
 
     def list_cached_datasets(self):
         """List datasets from the UCR/UEA archive that are available in cache.
@@ -331,10 +350,10 @@ class UCR_UEA_datasets:
                     os.path.exists(basename + "_TEST.%s" % ext))
 
     def cache_all(self):
-        """Cache all univariate datasets from the UCR/UEA archive for later 
+        """Cache all datasets from the UCR/UEA archive for later 
         use.
         """
-        for dataset_name in self.list_univariate_datasets():
+        for dataset_name in self.list_datasets():
             try:
                 self.load_dataset(dataset_name)
             except:
