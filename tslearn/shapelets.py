@@ -271,7 +271,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         Maximum size for time series to be fed to the model. If None, it is 
         set to the size (number of timestamps) of the training time series.
         
-    scaling: bool (default: False)
+    scale: bool (default: False)
         Whether input data should be scaled for each feature of each time 
         series to lie in the [0-1] interval.
         Default for this parameter is set to `False` in version 0.4 to ensure
@@ -335,7 +335,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
                  shapelet_length=0.15,
                  total_lengths=3,
                  max_size=None,
-                 scaling=False,
+                 scale=False,
                  random_state=None):
         self.n_shapelets_per_size = n_shapelets_per_size
         self.max_iter = max_iter
@@ -346,7 +346,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         self.shapelet_length = shapelet_length
         self.total_lengths = total_lengths
         self.max_size = max_size
-        self.scaling = scaling
+        self.scale = scale
         self.random_state = random_state
 
         if max_iter == 10000:
@@ -355,7 +355,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
                           "the model to be more likely to converge. "
                           "Explicitly set your max_iter value to "
                           "avoid this warning.", FutureWarning)
-        if not scaling:
+        if not scale:
             warnings.warn("The default value for scaling is set to False "
                           "in version 0.4 to ensure backward compatibility, "
                           "but is likely to change in a future version.",
@@ -583,7 +583,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         return locations.astype(numpy.int)
 
     def _preprocess_series(self, X):
-        if self.scaling:
+        if self.scale:
             X = TimeSeriesScalerMinMax().fit_transform(X)
         else:
             X = to_time_series_dataset(X)
