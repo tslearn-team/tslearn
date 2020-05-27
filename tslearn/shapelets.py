@@ -343,7 +343,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
                           "the model to be more likely to converge. "
                           "Explicitly set your max_iter value to "
                           "avoid this warning.", FutureWarning)
-        if scaling is False:
+        if not scaling:
             warnings.warn("The default value for scaling is set to False "
                           "in version 0.4 to ensure backward compatibility, "
                           "but is likely to change in a future version.",
