@@ -237,6 +237,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
     n_shapelets_per_size: dict (default: None)
         Dictionary giving, for each shapelet size (key),
         the number of such shapelets to be trained (value)
+        
     max_iter: int (default: 10,000)
         Number of training epochs.
 
@@ -265,6 +266,10 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         The number of different shapelet lengths. Will extract shapelets of
         length i * shapelet_length for i in [1, total_lengths]
         Used only if `n_shapelets_per_size` is None.
+        
+    max_size: int or None (default: None)
+        Maximum size for time series to be fed to the model. If None, it is 
+        set to the size (number of timestamps) of the training time series.
         
     scaling: bool (default: False)
         Whether input data should be scaled for each feature of each time 
@@ -329,6 +334,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
                  weight_regularizer=0.,
                  shapelet_length=0.15,
                  total_lengths=3,
+                 max_size=None,
                  scaling=False,
                  random_state=None):
         self.n_shapelets_per_size = n_shapelets_per_size
@@ -339,6 +345,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         self.weight_regularizer = weight_regularizer
         self.shapelet_length = shapelet_length
         self.total_lengths = total_lengths
+        self.max_size = max_size
         self.scaling = scaling
         self.random_state = random_state
 
@@ -411,10 +418,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
             Time series labels.
         """
         X, y = check_X_y(X, y, allow_nd=True, force_all_finite=False)
-        if self.scaling:
-            X = TimeSeriesScalerMinMax().fit_transform(X)
-        else:
-            X = to_time_series_dataset(X)
+        X = self._preprocess_series(X)
         X = check_dims(X)
 
         numpy.random.seed(seed=self.random_state)
@@ -466,10 +470,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         """
         check_is_fitted(self, '_X_fit_dims')
         X = check_array(X, allow_nd=True, force_all_finite=False)
-        if self.scaling:
-            X = TimeSeriesScalerMinMax().fit_transform(X)
-        else:
-            X = to_time_series_dataset(X)
+        X = self._preprocess_series(X)
         X = check_dims(X, X_fit_dims=self._X_fit_dims,
                        check_n_features_only=True)
 
@@ -494,10 +495,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         """
         check_is_fitted(self, '_X_fit_dims')
         X = check_array(X, allow_nd=True, force_all_finite=False)
-        if self.scaling:
-            X = TimeSeriesScalerMinMax().fit_transform(X)
-        else:
-            X = to_time_series_dataset(X)
+        X = self._preprocess_series(X)
         X = check_dims(X, X_fit_dims=self._X_fit_dims,
                        check_n_features_only=True)
 
@@ -528,10 +526,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         """
         check_is_fitted(self, '_X_fit_dims')
         X = check_array(X, allow_nd=True, force_all_finite=False)
-        if self.scaling:
-            X = TimeSeriesScalerMinMax().fit_transform(X)
-        else:
-            X = to_time_series_dataset(X)
+        X = self._preprocess_series(X)
         X = check_dims(X, X_fit_dims=self._X_fit_dims,
                        check_n_features_only=True)
 
@@ -576,10 +571,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         """
         check_is_fitted(self, '_X_fit_dims')
         X = check_array(X, allow_nd=True, force_all_finite=False)
-        if self.scaling:
-            X = TimeSeriesScalerMinMax().fit_transform(X)
-        else:
-            X = to_time_series_dataset(X)
+        X = self._preprocess_series(X)
         X = check_dims(X, X_fit_dims=self._X_fit_dims,
                        check_n_features_only=True)
 
@@ -589,6 +581,24 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
             batch_size=self.batch_size, verbose=self.verbose
         )
         return locations.astype(numpy.int)
+
+    def _preprocess_series(self, X):
+        if self.scaling:
+            X = TimeSeriesScalerMinMax().fit_transform(X)
+        else:
+            X = to_time_series_dataset(X)
+        if self.max_size is not None and self.max_size != X.shape[1]:
+            if X.shape[1] > self.max_size:
+                raise ValueError(
+                    "Cannot feed model with series of length {} "
+                    "max_size is {}".format(X.shape[1], self.max_size)
+                )
+            X_ = numpy.zeros((X.shape[0], self.max_size, X.shape[2]))
+            X_[:, :X.shape[1]] = X
+            X_[:, X.shape[1]:] = numpy.nan
+            return X_
+        else:
+            return X
 
     def _preprocess_labels(self, y):
         self.classes_ = unique_labels(y)
@@ -646,7 +656,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
                 layer.set_weights([numpy.eye(sz).reshape((sz, 1, sz))])
 
     def _set_model_layers(self, X, ts_sz, d, n_classes):
-        inputs = [Input(shape=(None, 1),
+        inputs = [Input(shape=(self.max_size, 1),
                         name="input_%d" % di)
                   for di in range(d)]
         shapelet_sizes = sorted(self.n_shapelets_per_size_.keys())
