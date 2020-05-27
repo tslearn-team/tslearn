@@ -23,7 +23,7 @@ import tensorflow as tf
 
 import warnings
 
-from tslearn.utils import to_time_series_dataset, check_dims
+from tslearn.utils import to_time_series_dataset, check_dims, ts_size
 from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
 from tslearn.clustering import TimeSeriesKMeans
 from tslearn.preprocessing import TimeSeriesScalerMinMax
@@ -38,6 +38,13 @@ class GlobalMinPooling1D(Layer):
     # Output shape
         2D tensor with shape:
         `(batch_size, features)`
+        
+    Examples
+    --------
+    >>> x = tf.constant([5.0, numpy.nan, 6.8, numpy.nan, numpy.inf])
+    >>> x = tf.reshape(x, [1, 5, 1])
+    >>> GlobalMinPooling1D()(x).numpy()
+    array([[5.]], dtype=float32)
     """
 
     def __init__(self, **kwargs):
@@ -74,8 +81,10 @@ class GlobalArgminPooling1D(Layer):
 def _kmeans_init_shapelets(X, n_shapelets, shp_len, n_draw=10000):
     n_ts, sz, d = X.shape
     indices_ts = numpy.random.choice(n_ts, size=n_draw, replace=True)
-    indices_time = numpy.random.choice(sz - shp_len + 1, size=n_draw,
-                                       replace=True)
+    indices_time = numpy.array(
+        [numpy.random.choice(ts_size(ts) - shp_len + 1, size=1)[0]
+         for ts in X[indices_ts]]
+    )
     subseries = numpy.zeros((n_draw, shp_len, d))
     for i in range(n_draw):
         subseries[i] = X[indices_ts[i],
@@ -292,10 +301,6 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
     history_ : dict
         Dictionary of losses and metrics recorded during fit.
 
-    Notes
-    -----
-        This implementation requires a dataset of equal-sized time series.
-
     Examples
     --------
     >>> from tslearn.generators import random_walk_blobs
@@ -405,7 +410,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         y : array-like of shape=(n_ts, )
             Time series labels.
         """
-        X, y = check_X_y(X, y, allow_nd=True)
+        X, y = check_X_y(X, y, allow_nd=True, force_all_finite=False)
         if self.scaling:
             X = TimeSeriesScalerMinMax().fit_transform(X)
         else:
@@ -460,12 +465,13 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
             matrix, depending on what was provided at training time.
         """
         check_is_fitted(self, '_X_fit_dims')
-        X = check_array(X, allow_nd=True)
+        X = check_array(X, allow_nd=True, force_all_finite=False)
         if self.scaling:
             X = TimeSeriesScalerMinMax().fit_transform(X)
         else:
             X = to_time_series_dataset(X)
-        X = check_dims(X, X_fit_dims=self._X_fit_dims)
+        X = check_dims(X, X_fit_dims=self._X_fit_dims,
+                       check_n_features_only=True)
 
         y_ind = self.predict_proba(X).argmax(axis=1)
         y_label = numpy.array(
@@ -487,12 +493,14 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
             Class probability matrix.
         """
         check_is_fitted(self, '_X_fit_dims')
-        X = check_array(X, allow_nd=True)
+        X = check_array(X, allow_nd=True, force_all_finite=False)
         if self.scaling:
             X = TimeSeriesScalerMinMax().fit_transform(X)
         else:
             X = to_time_series_dataset(X)
-        X = check_dims(X, X_fit_dims=self._X_fit_dims)
+        X = check_dims(X, X_fit_dims=self._X_fit_dims,
+                       check_n_features_only=True)
+
         n_ts, sz, d = X.shape
         categorical_preds = self.model_.predict(
             [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
@@ -519,12 +527,14 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
             Shapelet-Transform of the provided time series.
         """
         check_is_fitted(self, '_X_fit_dims')
-        X = check_array(X, allow_nd=True)
+        X = check_array(X, allow_nd=True, force_all_finite=False)
         if self.scaling:
             X = TimeSeriesScalerMinMax().fit_transform(X)
         else:
             X = to_time_series_dataset(X)
-        X = check_dims(X, X_fit_dims=self._X_fit_dims)
+        X = check_dims(X, X_fit_dims=self._X_fit_dims,
+                       check_n_features_only=True)
+
         n_ts, sz, d = X.shape
         pred = self.transformer_model_.predict(
             [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
@@ -565,12 +575,14 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
                [0]])
         """
         check_is_fitted(self, '_X_fit_dims')
-        X = check_array(X, allow_nd=True)
+        X = check_array(X, allow_nd=True, force_all_finite=False)
         if self.scaling:
             X = TimeSeriesScalerMinMax().fit_transform(X)
         else:
             X = to_time_series_dataset(X)
-        X = check_dims(X, X_fit_dims=self._X_fit_dims)
+        X = check_dims(X, X_fit_dims=self._X_fit_dims,
+                       check_n_features_only=True)
+
         n_ts, sz, d = X.shape
         locations = self.locator_model_.predict(
             [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
@@ -824,7 +836,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         # errors in the `transform` method, while sklearn performs checks
         # that requires the output of transform to have less than 1e-9
         # difference between outputs of same input.
-        return {'non_deterministic': True}
+        return {'allow_nan': True, 'allow_variable_length': True}
 
 
 class SerializableShapeletModel(ShapeletModel):

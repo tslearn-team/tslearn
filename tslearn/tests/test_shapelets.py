@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from sklearn.model_selection import cross_validate
 
-from tslearn.utils import to_time_series
+from tslearn.utils import to_time_series, to_time_series_dataset
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -52,4 +52,19 @@ def test_shapelets():
     clf.set_weights(weights)
     np.testing.assert_allclose(preds_before,
                                clf.predict_proba(time_series))
+
+    # Test variable-length
+    y = [0, 1]
+    time_series = to_time_series_dataset([[1, 2, 3, 4, 5], [3, 2, 1]])
+    clf = ShapeletModel(n_shapelets_per_size={3: 1},
+                        max_iter=1,
+                        verbose=0,
+                        random_state=0)
+    clf.fit(time_series, y)
+    # Change number of iterations, then refit, then set weights
+    weights_shapelet = [np.array([[1, 2, 3]])]
+    clf.set_weights(weights_shapelet, layer_name="shapelets_0_0")
+    tr = clf.transform(time_series)
+    np.testing.assert_allclose(tr,
+                               np.array([[0.], [8. / 3]]))
 
