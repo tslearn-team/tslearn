@@ -26,6 +26,7 @@ import warnings
 from tslearn.utils import to_time_series_dataset, check_dims
 from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
 from tslearn.clustering import TimeSeriesKMeans
+from tslearn.preprocessing import TimeSeriesScalerMinMax
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -238,16 +239,30 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
 
     verbose: {0, 1, 2} (default: 0)
         `keras` verbose level.
+    
     optimizer: str or keras.optimizers.Optimizer (default: "sgd")
         `keras` optimizer to use for training.
+    
     weight_regularizer: float or None (default: 0.)
         Strength of the L2 regularizer to use for training the classification
         (softmax) layer. If 0, no regularization is performed.
-    shapelet_length: float (default 0.15)
-        The length of the shapelets, expressed as a fraction of the ts length
-    total_lengths: int (default 3)
+    
+    shapelet_length: float (default: 0.15)
+        The length of the shapelets, expressed as a fraction of the time 
+        series length.
+        Used only if `n_shapelets_per_size` is None.
+    
+    total_lengths: int (default: 3)
         The number of different shapelet lengths. Will extract shapelets of
         length i * shapelet_length for i in [1, total_lengths]
+        Used only if `n_shapelets_per_size` is None.
+        
+    scaling: bool (default: False)
+        Whether input data should be scaled for each feature of each time 
+        series to lie in the [0-1] interval.
+        Default for this parameter is set to `False` in version 0.4 to ensure
+        backward compatibility, but is likely to change in a future version.        
+    
     random_state : int or None, optional (default: None)
         The seed of the pseudo random number generator to use when shuffling
         the data.  If int, random_state is the seed used by the random number
@@ -309,6 +324,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
                  weight_regularizer=0.,
                  shapelet_length=0.15,
                  total_lengths=3,
+                 scaling=False,
                  random_state=None):
         self.n_shapelets_per_size = n_shapelets_per_size
         self.max_iter = max_iter
@@ -318,14 +334,20 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         self.weight_regularizer = weight_regularizer
         self.shapelet_length = shapelet_length
         self.total_lengths = total_lengths
+        self.scaling = scaling
         self.random_state = random_state
 
         if max_iter == 10000:
-            warnings.warn("The default value of max_iter has changed "
+            warnings.warn("The default value for max_iter has changed "
                           "from 100 to 10000 starting from version 0.3 for "
                           "the model to be more likely to converge. "
                           "Explicitly set your max_iter value to "
                           "avoid this warning.", FutureWarning)
+        if scaling is False:
+            warnings.warn("The default value for scaling is set to False "
+                          "in version 0.4 to ensure backward compatibility, "
+                          "but is likely to change in a future version.",
+                          FutureWarning)
 
     @property
     def _n_shapelet_sizes(self):
@@ -386,6 +408,8 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         X, y = check_X_y(X, y, allow_nd=True)
         X = to_time_series_dataset(X)
         X = check_dims(X)
+        if self.scaling:
+            X = TimeSeriesScalerMinMax().fit_transform(X)
 
         numpy.random.seed(seed=self.random_state)
         tf.random.set_seed(seed=self.random_state)
@@ -435,7 +459,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         """
         check_is_fitted(self, '_X_fit_dims')
         X = check_array(X, allow_nd=True)
-        X = to_time_series_dataset(X)
+        X = TimeSeriesScalerMinMax().fit_transform(X)
         X = check_dims(X, X_fit_dims=self._X_fit_dims)
 
         y_ind = self.predict_proba(X).argmax(axis=1)
@@ -459,7 +483,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         """
         check_is_fitted(self, '_X_fit_dims')
         X = check_array(X, allow_nd=True)
-        X = to_time_series_dataset(X)
+        X = TimeSeriesScalerMinMax().fit_transform(X)
         X = check_dims(X, X_fit_dims=self._X_fit_dims)
         n_ts, sz, d = X.shape
         categorical_preds = self.model_.predict(
@@ -488,7 +512,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         """
         check_is_fitted(self, '_X_fit_dims')
         X = check_array(X, allow_nd=True)
-        X = to_time_series_dataset(X)
+        X = TimeSeriesScalerMinMax().fit_transform(X)
         X = check_dims(X, X_fit_dims=self._X_fit_dims)
         n_ts, sz, d = X.shape
         pred = self.transformer_model_.predict(
@@ -531,7 +555,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         """
         check_is_fitted(self, '_X_fit_dims')
         X = check_array(X, allow_nd=True)
-        X = to_time_series_dataset(X)
+        X = TimeSeriesScalerMinMax().fit_transform(X)
         X = check_dims(X, X_fit_dims=self._X_fit_dims)
         n_ts, sz, d = X.shape
         locations = self.locator_model_.predict(
@@ -794,6 +818,11 @@ class SerializableShapeletModel(ShapeletModel):
 
 
     Learning Time-Series Shapelets was originally presented in [1]_.
+    
+    .. deprecated:: 0.4
+             `SerializableShapeletModel` is deprecated in version 0.4 and
+            will be removed in 0.6. Use `ShapeletModel` instead, which is
+            now fully serializable and clonable.
 
     Parameters
     ----------
