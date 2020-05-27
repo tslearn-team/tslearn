@@ -646,7 +646,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
                 layer.set_weights([numpy.eye(sz).reshape((sz, 1, sz))])
 
     def _set_model_layers(self, X, ts_sz, d, n_classes):
-        inputs = [Input(shape=(ts_sz, 1),
+        inputs = [Input(shape=(None, 1),
                         name="input_%d" % di)
                   for di in range(d)]
         shapelet_sizes = sorted(self.n_shapelets_per_size_.keys())
