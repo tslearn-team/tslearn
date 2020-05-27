@@ -289,8 +289,8 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
     model_ : keras.Model
         Directly predicts the class probabilities for the input timeseries.
 
-    history_ : keras.callbacks.History
-        History of losses and metrics recorded during fit.
+    history_ : dict
+        Dictionary of losses and metrics recorded during fit.
 
     Notes
     -----
@@ -434,12 +434,13 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
 
         self._set_model_layers(X=X, ts_sz=sz, d=d, n_classes=n_labels)
         self._set_weights_false_conv(d=d)
-        self.history_ = self.model_.fit(
+        h = self.model_.fit(
             [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(d)], y_,
             batch_size=self.batch_size, epochs=self.max_iter,
             verbose=self.verbose
         )
-        self.n_iter_ = len(self.model_.history.history)
+        self.history_ = h.history
+        self.n_iter_ = len(self.history_["loss"])
         return self
 
     def predict(self, X):
