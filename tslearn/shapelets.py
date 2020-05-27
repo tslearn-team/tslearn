@@ -441,7 +441,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
             verbose=self.verbose
         )
         self.history_ = h.history
-        self.n_iter_ = len(self.history_["loss"])
+        self.n_iter_ = len(self.history_.get("loss", []))
         return self
 
     def predict(self, X):
