@@ -12,7 +12,7 @@ from tslearn.utils import to_time_series_dataset, ts_size
 from tslearn.cysax import (cydist_sax, cyslopes, cydist_1d_sax,
                            inv_transform_1d_sax, inv_transform_sax,
                            inv_transform_paa)
-
+from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.bases import BaseModelPackage
 
 
@@ -275,8 +275,15 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation,
     ----------
     n_segments : int
         Number of PAA segments to compute
+        
     alphabet_size_avg : int
         Number of SAX symbols to use
+    
+    scale: bool (default: False)
+         Whether input data should be scaled for each feature of each time 
+         series to have zero mean and unit variance.
+         Default for this parameter is set to `False` in version 0.4 to ensure
+         backward compatibility, but is likely to change in a future version.
 
     Attributes
     ----------
@@ -327,24 +334,20 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation,
        representation of time series. Data Mining and Knowledge Discovery,
        2007. vol. 15(107)
     """
-    def __init__(self, n_segments, alphabet_size_avg):
+    def __init__(self, n_segments, alphabet_size_avg, scale=False):
         PiecewiseAggregateApproximation.__init__(self, n_segments)
         self.alphabet_size_avg = alphabet_size_avg
+        self.scale = scale
 
     def _is_fitted(self):
-        if not (
-            hasattr(self, 'breakpoints_avg_')
-            and
-            hasattr(self, 'breakpoints_avg_middle_')
-        ):
-            return False
-
-        return True
+        return (hasattr(self, 'breakpoints_avg_') and
+                hasattr(self, 'breakpoints_avg_middle_'))
 
     def get_params(self):
         return {
             'n_segments': self.n_segments,
-            'alphabet_size_avg': self.alphabet_size_avg
+            'alphabet_size_avg': self.alphabet_size_avg,
+            'scale': self.scale
         }
 
     def fit(self, X, y=None):
@@ -381,6 +384,8 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation,
         return self.fit(X_)._transform(X_)
 
     def _transform(self, X, y=None):
+        if self.scale:
+            X = TimeSeriesScalerMeanVariance().fit_transform(X)
         X_paa = PiecewiseAggregateApproximation._transform(self, X, y)
         return _paa_to_symbols(X_paa, self.breakpoints_avg_)
 
@@ -397,7 +402,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation,
         numpy.ndarray of integers with shape (n_ts, n_segments, d)
             SAX-Transformed dataset
         """
-        return super().transform(X, y)
+        return self._transform(X, y)
 
     def distance_sax(self, sax1, sax2):
         """Compute distance between SAX representations as defined in [1]_.
@@ -481,15 +486,24 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
     ----------
     n_segments : int
         Number of PAA segments to compute.
+        
     alphabet_size_avg : int
         Number of SAX symbols to use to describe average values.
+        
     alphabet_size_slope : int
         Number of SAX symbols to use to describe slopes.
+        
     sigma_l : float or None (default: None)
         Scale parameter of the Gaussian distribution used to quantize slopes.
         If None, the formula given in [1]_ is
         used: :math:`\\sigma_L = \\sqrt{0.03 / L}` where :math:`L` is the
         length of each segment.
+    
+    scale: bool (default: False)
+         Whether input data should be scaled for each feature of each time 
+         series to have zero mean and unit variance.
+         Default for this parameter is set to `False` in version 0.4 to ensure
+         backward compatibility, but is likely to change in a future version.
 
     Attributes
     ----------
@@ -546,10 +560,12 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
        Symbolic Representation for Time Series. IDA 2013.
     """
     def __init__(self, n_segments, alphabet_size_avg, alphabet_size_slope,
-                 sigma_l=None):
+                 sigma_l=None, scale=False):
         SymbolicAggregateApproximation.__init__(
-                self, n_segments,
-                alphabet_size_avg=alphabet_size_avg)
+            self, n_segments,
+            alphabet_size_avg=alphabet_size_avg,
+            scale=scale
+        )
         self.alphabet_size_slope = alphabet_size_slope
         self.sigma_l = sigma_l
 
@@ -558,7 +574,8 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
             'n_segments': self.n_segments,
             'alphabet_size_avg': self.alphabet_size_avg,
             'alphabet_size_slope': self.alphabet_size_slope,
-            'sigma_l': self.sigma_l
+            'sigma_l': self.sigma_l,
+            'scale': self.scale
         }
 
     def _fit(self, X, y=None):
@@ -628,6 +645,8 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         if self.size_fitted_ < 0:
             raise ValueError("Model not fitted yet: cannot be used for " +
                              "distance computation.")
+        if self.scale:
+            X = TimeSeriesScalerMeanVariance().fit_transform(X)
         n_ts, sz_raw, d = X.shape
         X_1d_sax = numpy.empty((n_ts, self.n_segments, 2 * d), dtype=numpy.int)
 
@@ -656,7 +675,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         numpy.ndarray of integers with shape (n_ts, n_segments, 2 * d)
             1d-SAX-Transformed dataset
         """
-        return super().transform(X, y)
+        return self._transform(X, y)
 
     def distance_1d_sax(self, sax1, sax2):
         """Compute distance between 1d-SAX representations as defined in [1]_.
@@ -711,8 +730,8 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         .. [1] S. Malinowski, T. Guyet, R. Quiniou, R. Tavenard. 1d-SAX: a
            Novel Symbolic Representation for Time Series. IDA 2013.
         """
-        sax = self.transform([ts1, ts2])
-        return self.distance_1d_sax(sax[0], sax[1])
+        sax1d = self.transform([ts1, ts2])
+        return self.distance_1d_sax(sax1d[0], sax1d[1])
 
     def inverse_transform(self, X):
         """Compute time series corresponding to given 1d-SAX representations.
