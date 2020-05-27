@@ -406,10 +406,11 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
             Time series labels.
         """
         X, y = check_X_y(X, y, allow_nd=True)
-        X = to_time_series_dataset(X)
-        X = check_dims(X)
         if self.scaling:
             X = TimeSeriesScalerMinMax().fit_transform(X)
+        else:
+            X = to_time_series_dataset(X)
+        X = check_dims(X)
 
         numpy.random.seed(seed=self.random_state)
         tf.random.set_seed(seed=self.random_state)
@@ -460,7 +461,10 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         """
         check_is_fitted(self, '_X_fit_dims')
         X = check_array(X, allow_nd=True)
-        X = TimeSeriesScalerMinMax().fit_transform(X)
+        if self.scaling:
+            X = TimeSeriesScalerMinMax().fit_transform(X)
+        else:
+            X = to_time_series_dataset(X)
         X = check_dims(X, X_fit_dims=self._X_fit_dims)
 
         y_ind = self.predict_proba(X).argmax(axis=1)
@@ -484,7 +488,10 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         """
         check_is_fitted(self, '_X_fit_dims')
         X = check_array(X, allow_nd=True)
-        X = TimeSeriesScalerMinMax().fit_transform(X)
+        if self.scaling:
+            X = TimeSeriesScalerMinMax().fit_transform(X)
+        else:
+            X = to_time_series_dataset(X)
         X = check_dims(X, X_fit_dims=self._X_fit_dims)
         n_ts, sz, d = X.shape
         categorical_preds = self.model_.predict(
@@ -513,7 +520,10 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         """
         check_is_fitted(self, '_X_fit_dims')
         X = check_array(X, allow_nd=True)
-        X = TimeSeriesScalerMinMax().fit_transform(X)
+        if self.scaling:
+            X = TimeSeriesScalerMinMax().fit_transform(X)
+        else:
+            X = to_time_series_dataset(X)
         X = check_dims(X, X_fit_dims=self._X_fit_dims)
         n_ts, sz, d = X.shape
         pred = self.transformer_model_.predict(
@@ -556,7 +566,10 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         """
         check_is_fitted(self, '_X_fit_dims')
         X = check_array(X, allow_nd=True)
-        X = TimeSeriesScalerMinMax().fit_transform(X)
+        if self.scaling:
+            X = TimeSeriesScalerMinMax().fit_transform(X)
+        else:
+            X = to_time_series_dataset(X)
         X = check_dims(X, X_fit_dims=self._X_fit_dims)
         n_ts, sz, d = X.shape
         locations = self.locator_model_.predict(
