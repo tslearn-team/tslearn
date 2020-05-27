@@ -235,12 +235,6 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
 
     batch_size: int (default: 256)
         Batch size to be used.
-    verbose_level: {0, 1, 2} (default: 0)
-        `keras` verbose level.
-
-        .. deprecated:: 0.2
-            verbose_level is deprecated in version 0.2 and will be
-            removed in 0.4. Use `verbose` instead.
 
     verbose: {0, 1, 2} (default: 0)
         `keras` verbose level.
@@ -311,7 +305,6 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
                  max_iter=10000,
                  batch_size=256,
                  verbose=0,
-                 verbose_level=None,
                  optimizer="sgd",
                  weight_regularizer=0.,
                  shapelet_length=0.15,
@@ -320,7 +313,6 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         self.n_shapelets_per_size = n_shapelets_per_size
         self.max_iter = max_iter
         self.batch_size = batch_size
-        self.verbose_level = verbose_level
         self.verbose = verbose
         self.optimizer = optimizer
         self.weight_regularizer = weight_regularizer
@@ -391,13 +383,6 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         y : array-like of shape=(n_ts, )
             Time series labels.
         """
-        if self.verbose_level is not None:
-            warnings.warn(
-                "'verbose_level' is deprecated in version 0.2 and will be "
-                "removed in 0.4. Use 'verbose' instead.",
-                DeprecationWarning, stacklevel=2)
-            self.verbose = self.verbose_level
-
         X, y = check_X_y(X, y, allow_nd=True)
         X = to_time_series_dataset(X)
         X = check_dims(X)
@@ -748,13 +733,11 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
 
     def _get_model_params(self):
         """Get model parameters that are sufficient to recapitulate it."""
-        return {"model_": self.model_.to_json(),
-                "model_weights_": self.get_weights(),
-                "classes_": self.classes_,
-                "label_to_ind_": self.label_to_ind_,
-                "d_": self.d_,
-                "n_shapelets_per_size_": self.n_shapelets_per_size_,
-                "_X_fit_dims": self._X_fit_dims}
+        params = super()._get_model_params()
+        params.update({"_X_fit_dims": self._X_fit_dims,
+                       "model_": self.model_.to_json(),
+                       "model_weights_": self.get_weights()})
+        return params
 
     @staticmethod
     def _organize_model(cls, model):
@@ -781,15 +764,16 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         # instantiate with hyper-parameters
         inst = cls(**hyper_params)
 
-        # set all model params
-        inst.model_ = model_from_json(
-            model_params.pop("model_"),
-            custom_objects={
-                "LocalSquaredDistanceLayer": LocalSquaredDistanceLayer,
-                "GlobalMinPooling1D": GlobalMinPooling1D
-            }
-        )
-        inst.set_weights(model_params.pop("model_weights_"))
+        if "model_" in model_params.keys():
+            # set all model params
+            inst.model_ = model_from_json(
+                model_params.pop("model_"),
+                custom_objects={
+                    "LocalSquaredDistanceLayer": LocalSquaredDistanceLayer,
+                    "GlobalMinPooling1D": GlobalMinPooling1D
+                }
+            )
+            inst.set_weights(model_params.pop("model_weights_"))
         for p in model_params.keys():
             setattr(inst, p, model_params[p])
         inst._X_fit_dims = tuple(inst._X_fit_dims)
@@ -824,12 +808,6 @@ class SerializableShapeletModel(ShapeletModel):
 
     batch_size: int (default:256)
         Batch size to be used.
-    verbose_level: {0, 1, 2} (default: 0)
-        `keras` verbose level.
-
-        .. deprecated:: 0.1
-            min is deprecated in version 0.1 and will be
-            removed in 0.2.
 
     verbose: {0, 1, 2} (default: 0)
         `keras` verbose level.
@@ -901,7 +879,6 @@ class SerializableShapeletModel(ShapeletModel):
                  max_iter=10000,
                  batch_size=256,
                  verbose=0,
-                 verbose_level=None,
                  learning_rate=0.01,
                  weight_regularizer=0.,
                  shapelet_length=0.3,
@@ -911,7 +888,6 @@ class SerializableShapeletModel(ShapeletModel):
                              max_iter=max_iter,
                              batch_size=batch_size,
                              verbose=verbose,
-                             verbose_level=verbose_level,
                              weight_regularizer=weight_regularizer,
                              shapelet_length=shapelet_length,
                              total_lengths=total_lengths,

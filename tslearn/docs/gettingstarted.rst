@@ -8,7 +8,7 @@ Time series format
 ------------------
 
 First, let us have a look at what `tslearn` time series format is. To do so, we will use the ``to_time_series`` utility
-from ``tslearn.utils`` module:
+from :ref:`tslearn.utils <mod-utils>` module:
 
 .. code-block:: python
   

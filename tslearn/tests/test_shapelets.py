@@ -21,16 +21,6 @@ def test_shapelets():
                         verbose=0,
                         optimizer="sgd",
                         random_state=0)
-    clf.fit(time_series, y)
-    clf2 = ShapeletModel(n_shapelets_per_size={2: 5},
-                         max_iter=1,
-                         verbose=0,
-                         optimizer="sgd",
-                         random_state=0)
-    clf2.fit(time_series, y)
-    # This checks that the seed is set correctly
-    for w1, w2 in zip(clf.get_weights(), clf2.get_weights()):
-        np.testing.assert_allclose(w1, w2)
 
     cross_validate(clf, time_series, y, cv=2)
 
@@ -62,3 +52,4 @@ def test_shapelets():
     clf.set_weights(weights)
     np.testing.assert_allclose(preds_before,
                                clf.predict_proba(time_series))
+
