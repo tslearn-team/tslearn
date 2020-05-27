@@ -571,7 +571,9 @@ def yield_all_checks(name, estimator):
     if is_regressor(estimator):
         yield from _yield_regressor_checks(name, estimator)
     if hasattr(estimator, 'transform'):
-        yield from _yield_transformer_checks(name, estimator)
+        # Transformer checks forbid variable-length so we skip shapelet models
+        if not("ShapeletModel" in name):
+            yield from _yield_transformer_checks(name, estimator)
     if isinstance(estimator, ClusterMixin):
         yield from _yield_clustering_checks(name, estimator)
     if is_outlier_detector(estimator):
