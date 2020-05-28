@@ -73,7 +73,7 @@ class KNeighborsTimeSeriesMixin():
         elif self._ts_metric == "sax":
             X = self._sax_preprocess(X, **metric_params)
             X_ = cdist_sax(X, self._sax.breakpoints_avg_,
-                           self._sax.X_fit_dims_[1], other_X,
+                           self._sax._X_fit_dims_[1], other_X,
                            n_jobs=self.n_jobs)
         else:
             raise ValueError("Invalid metric recorded: %s" %

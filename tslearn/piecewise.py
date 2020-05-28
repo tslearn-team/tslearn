@@ -123,11 +123,11 @@ class PiecewiseAggregateApproximation(TransformerMixin,
         self.n_segments = n_segments
 
     def _is_fitted(self):
-        check_is_fitted(self, 'X_fit_dims_')
+        check_is_fitted(self, '_X_fit_dims_')
         return True
 
     def _fit(self, X, y=None):
-        self.X_fit_dims_ = X.shape
+        self._X_fit_dims_ = X.shape
         return self
 
     def fit(self, X, y=None):
@@ -174,7 +174,7 @@ class PiecewiseAggregateApproximation(TransformerMixin,
         """
         self._is_fitted()
         X = check_array(X, allow_nd=True)
-        X = check_dims(X, X_fit_dims=self.X_fit_dims_)
+        X = check_dims(X, X_fit_dims=self._X_fit_dims_)
         return self._transform(X, y)
 
     def fit_transform(self, X, y=None, **fit_params):
@@ -216,7 +216,7 @@ class PiecewiseAggregateApproximation(TransformerMixin,
         """
         self._is_fitted()
         return (numpy.linalg.norm(paa1 - paa2) *
-                numpy.sqrt(self.X_fit_dims_[1] / self.n_segments))
+                numpy.sqrt(self._X_fit_dims_[1] / self.n_segments))
 
     def distance(self, ts1, ts2):
         """Compute distance between PAA representations as defined in [1]_.
@@ -258,7 +258,7 @@ class PiecewiseAggregateApproximation(TransformerMixin,
         self._is_fitted()
         X = check_array(X, allow_nd=True)
         X = check_dims(X)
-        return inv_transform_paa(X, original_size=self.X_fit_dims_[1])
+        return inv_transform_paa(X, original_size=self._X_fit_dims_[1])
 
 
 class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
@@ -398,7 +398,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
         """
         self._is_fitted()
         X = check_array(X, allow_nd=True)
-        X = check_dims(X, X_fit_dims=self.X_fit_dims_)
+        X = check_dims(X, X_fit_dims=self._X_fit_dims_)
         return self._transform(X, y)
 
     def distance_sax(self, sax1, sax2):
@@ -424,7 +424,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
         """
         self._is_fitted()
         return cydist_sax(sax1, sax2,
-                          self.breakpoints_avg_, self.X_fit_dims_[1])
+                          self.breakpoints_avg_, self._X_fit_dims_[1])
 
     def distance(self, ts1, ts2):
         """Compute distance between SAX representations as defined in [1]_.
@@ -470,7 +470,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
         return inv_transform_sax(
                 X,
                 breakpoints_middle_=self.breakpoints_avg_middle_,
-                original_size=self.X_fit_dims_[1])
+                original_size=self._X_fit_dims_[1])
 
 
 class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
@@ -665,7 +665,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         """
         self._is_fitted()
         X = check_array(X, allow_nd=True, dtype=numpy.float)
-        X = check_dims(X, X_fit_dims=self.X_fit_dims_)
+        X = check_dims(X, X_fit_dims=self._X_fit_dims_)
         return self._transform(X, y)
 
     def distance_1d_sax(self, sax1, sax2):
@@ -696,7 +696,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         self._is_fitted()
         return cydist_1d_sax(sax1, sax2, self.breakpoints_avg_middle_,
                              self.breakpoints_slope_middle_,
-                             self.X_fit_dims_[1])
+                             self._X_fit_dims_[1])
 
     def distance(self, ts1, ts2):
         """Compute distance between 1d-SAX representations as defined in [1]_.
@@ -737,11 +737,11 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         """
         self._is_fitted()
         X = check_array(X, allow_nd=True)
-        dims = list(self.X_fit_dims_)
+        dims = list(self._X_fit_dims_)
         dims[1] //= self.n_segments
         X = check_dims(X)
         return inv_transform_1d_sax(
                 X,
                 breakpoints_avg_middle_=self.breakpoints_avg_middle_,
                 breakpoints_slope_middle_=self.breakpoints_slope_middle_,
-                original_size=self.X_fit_dims_[1])
+                original_size=self._X_fit_dims_[1])
