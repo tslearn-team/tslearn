@@ -386,6 +386,8 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation,
     def _transform(self, X, y=None):
         if self.scale:
             X = TimeSeriesScalerMeanVariance().fit_transform(X)
+        else:
+            X = to_time_series_dataset(X)
         X_paa = PiecewiseAggregateApproximation._transform(self, X, y)
         return _paa_to_symbols(X_paa, self.breakpoints_avg_)
 
@@ -647,6 +649,8 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
                              "distance computation.")
         if self.scale:
             X = TimeSeriesScalerMeanVariance().fit_transform(X)
+        else:
+            X = to_time_series_dataset(X)
         n_ts, sz_raw, d = X.shape
         X_1d_sax = numpy.empty((n_ts, self.n_segments, 2 * d), dtype=numpy.int)
 
