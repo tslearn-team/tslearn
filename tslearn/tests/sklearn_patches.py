@@ -536,7 +536,7 @@ def check_pipeline_consistency(name, estimator_orig):
 
 
 @ignore_warnings(category=(DeprecationWarning, FutureWarning))
-def check_different_length_fit_predict(name, estimator):
+def check_different_length_fit_predict_transform(name, estimator):
     # Check if classifier can predict a dataset that does not have the same
     # number of timestamps as the data passed at fit time
 
@@ -548,8 +548,24 @@ def check_different_length_fit_predict(name, estimator):
         new_estimator = estimator
 
     X, y = _create_small_ts_dataset()
+    new_estimator.fit(X, y)
+
     X2 = np.hstack((X, X))
-    new_estimator.fit(X, y).predict(X2)
+    X3 = np.stack((X[:, :, 0], X[:, :, 0]), axis=-1)
+    check_methods = ["predict", "transform", "decision_function",
+                     "predict_proba"]
+    for func_name in check_methods:
+        func = getattr(estimator, func_name, None)
+        if func is not None:
+            method = getattr(new_estimator, func_name)
+            method(X2)
+
+            with assert_raises(
+                ValueError,
+                msg="The estimator {} does not raise an error when number of "
+                    "features (last dimension) is different between "
+                    "fit and {}.".format(name, func_name)):
+                method(X3)
 
 
 def yield_all_checks(name, estimator):
@@ -599,4 +615,4 @@ def yield_all_checks(name, estimator):
             is_regressor(estimator) or
             isinstance(estimator, ClusterMixin)):
         if tags["allow_variable_length"]:
-            yield check_different_length_fit_predict
+            yield check_different_length_fit_predict_transform
