@@ -123,6 +123,7 @@ class PiecewiseAggregateApproximation(TransformerMixin,
         self.n_segments = n_segments
 
     def _is_fitted(self):
+        check_is_fitted(self, '_X_fit_dims_')
         return True
 
     def _fit(self, X, y=None):
