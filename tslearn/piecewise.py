@@ -384,6 +384,8 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation,
         return self.fit(X_)._transform(X_)
 
     def _transform(self, X, y=None):
+        if not self._is_fitted():
+            raise NotFittedError("Model not fitted.")
         if self.scale:
             X = TimeSeriesScalerMeanVariance().fit_transform(X)
         else:
@@ -428,8 +430,8 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation,
            Data Mining and Knowledge Discovery, 2007. vol. 15(107)
         """
         if self.size_fitted_ < 0:
-            raise ValueError("Model not fitted yet: cannot be used for " +
-                             "distance computation.")
+            raise NotFittedError("Model not fitted yet: cannot be used for "
+                                 "distance computation.")
         else:
             return cydist_sax(sax1, sax2,
                               self.breakpoints_avg_, self.size_fitted_)
@@ -645,8 +647,8 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
 
     def _transform(self, X, y=None):
         if self.size_fitted_ < 0:
-            raise ValueError("Model not fitted yet: cannot be used for " +
-                             "distance computation.")
+            raise NotFittedError("Model not fitted yet: cannot be used for "
+                                 "distance computation.")
         if self.scale:
             X = TimeSeriesScalerMeanVariance().fit_transform(X)
         else:
