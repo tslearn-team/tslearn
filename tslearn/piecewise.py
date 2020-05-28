@@ -123,7 +123,6 @@ class PiecewiseAggregateApproximation(TransformerMixin,
         self.n_segments = n_segments
 
     def _is_fitted(self):
-        check_is_fitted(self, '_X_fit_dims_')
         return True
 
     def _fit(self, X, y=None):
@@ -143,7 +142,7 @@ class PiecewiseAggregateApproximation(TransformerMixin,
         PiecewiseAggregateApproximation
             self
         """
-        X = check_array(X, allow_nd=True)
+        X = check_array(X, allow_nd=True, force_all_finite=False)
         X = check_dims(X)
         return self._fit(X, y)
 
@@ -173,8 +172,9 @@ class PiecewiseAggregateApproximation(TransformerMixin,
             PAA-Transformed dataset
         """
         self._is_fitted()
-        X = check_array(X, allow_nd=True)
-        X = check_dims(X, X_fit_dims=tuple(self._X_fit_dims_))
+        X = check_array(X, allow_nd=True, force_all_finite=False)
+        X = check_dims(X, X_fit_dims=tuple(self._X_fit_dims_),
+                       check_n_features_only=True)
         return self._transform(X, y)
 
     def fit_transform(self, X, y=None, **fit_params):
@@ -190,7 +190,7 @@ class PiecewiseAggregateApproximation(TransformerMixin,
         numpy.ndarray of shape (n_ts, n_segments, d)
             PAA-Transformed dataset
         """
-        X = check_array(X, allow_nd=True)
+        X = check_array(X, allow_nd=True, force_all_finite=False)
         X = check_dims(X)
         return self._fit(X)._transform(X)
 
@@ -256,9 +256,12 @@ class PiecewiseAggregateApproximation(TransformerMixin,
             representation.
         """
         self._is_fitted()
-        X = check_array(X, allow_nd=True)
+        X = check_array(X, allow_nd=True, force_all_finite=False)
         X = check_dims(X)
         return inv_transform_paa(X, original_size=self._X_fit_dims_[1])
+
+    def _more_tags(self):
+        return {'allow_nan': True, 'allow_variable_length': True}
 
 
 class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
@@ -356,7 +359,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
         SymbolicAggregateApproximation
             self
         """
-        X = check_array(X, allow_nd=True)
+        X = check_array(X, allow_nd=True, force_all_finite=False)
         X = check_dims(X)
         return self._fit(X, y)
 
@@ -373,7 +376,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
         numpy.ndarray of integers with shape (n_ts, n_segments, d)
             SAX-Transformed dataset
         """
-        X = check_array(X, allow_nd=True)
+        X = check_array(X, allow_nd=True, force_all_finite=False)
         X = check_dims(X)
         return self._fit(X)._transform(X)
 
@@ -397,8 +400,9 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
             SAX-Transformed dataset
         """
         self._is_fitted()
-        X = check_array(X, allow_nd=True)
-        X = check_dims(X, X_fit_dims=tuple(self._X_fit_dims_))
+        X = check_array(X, allow_nd=True, force_all_finite=False)
+        X = check_dims(X, X_fit_dims=tuple(self._X_fit_dims_),
+                       check_n_features_only=True)
         return self._transform(X, y)
 
     def distance_sax(self, sax1, sax2):
@@ -465,8 +469,9 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
             representation.
         """
         self._is_fitted()
-        X = check_array(X, allow_nd=True)
-        X = check_dims(X)
+        X = check_array(X, allow_nd=True, force_all_finite=False)
+        X = check_dims(X, X_fit_dims=(None, None, self._X_fit_dims_[-1]),
+                       check_n_features_only=True)
         return inv_transform_sax(
                 X,
                 breakpoints_middle_=self.breakpoints_avg_middle_,
@@ -599,7 +604,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         OneD_SymbolicAggregateApproximation
             self
         """
-        X = check_array(X, allow_nd=True)
+        X = check_array(X, allow_nd=True, force_all_finite=False)
         X = check_dims(X)
         return self._fit(X)
 
@@ -618,7 +623,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
             first d elements represent average values
             (standard SAX symbols) and the last d are for slopes
         """
-        X = check_array(X, allow_nd=True)
+        X = check_array(X, allow_nd=True, force_all_finite=False)
         X = check_dims(X)
         return self._fit(X)._transform(X)
 
@@ -664,8 +669,10 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
             1d-SAX-Transformed dataset
         """
         self._is_fitted()
-        X = check_array(X, allow_nd=True, dtype=numpy.float)
-        X = check_dims(X, X_fit_dims=tuple(self._X_fit_dims_))
+        X = check_array(X, allow_nd=True, dtype=numpy.float,
+                        force_all_finite=False)
+        X = check_dims(X, X_fit_dims=tuple(self._X_fit_dims_),
+                       check_n_features_only=True)
         return self._transform(X, y)
 
     def distance_1d_sax(self, sax1, sax2):
@@ -737,9 +744,8 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         """
         self._is_fitted()
         X = check_array(X, allow_nd=True)
-        dims = list(self._X_fit_dims_)
-        dims[1] //= self.n_segments
-        X = check_dims(X)
+        X = check_dims(X, X_fit_dims=(None, None, 2 * self._X_fit_dims_[-1]),
+                       check_n_features_only=True)
         return inv_transform_1d_sax(
                 X,
                 breakpoints_avg_middle_=self.breakpoints_avg_middle_,

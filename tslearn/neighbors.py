@@ -35,9 +35,9 @@ class KNeighborsTimeSeriesMixin():
             )
 
         X = to_time_series_dataset(X)
-        X = self._sax.fit_transform(X)
+        X_sax = self._sax.fit_transform(X)
 
-        return X
+        return X_sax
 
     def _get_metric_params(self):
         if self.metric_params is None:
