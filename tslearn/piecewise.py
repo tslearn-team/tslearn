@@ -122,6 +122,10 @@ class PiecewiseAggregateApproximation(TransformerMixin,
     def __init__(self, n_segments=1):
         self.n_segments = n_segments
 
+    def _is_fitted(self):
+        check_is_fitted(self, 'X_fit_dims_')
+        return True
+
     def _fit(self, X, y=None):
         self.X_fit_dims_ = X.shape
         return self
@@ -168,7 +172,7 @@ class PiecewiseAggregateApproximation(TransformerMixin,
         numpy.ndarray of shape (n_ts, n_segments, d)
             PAA-Transformed dataset
         """
-        check_is_fitted(self, 'X_fit_dims_')
+        self._is_fitted()
         X = check_array(X, allow_nd=True)
         X = check_dims(X, X_fit_dims=self.X_fit_dims_)
         return self._transform(X, y)
@@ -210,7 +214,7 @@ class PiecewiseAggregateApproximation(TransformerMixin,
         .. [1] E. Keogh & M. Pazzani. Scaling up dynamic time warping for
            datamining applications. SIGKDD 2000, pp. 285--289.
         """
-        check_is_fitted(self, 'X_fit_dims_')
+        self._is_fitted()
         return (numpy.linalg.norm(paa1 - paa2) *
                 numpy.sqrt(self.X_fit_dims_[1] / self.n_segments))
 
@@ -251,7 +255,7 @@ class PiecewiseAggregateApproximation(TransformerMixin,
             A dataset of time series corresponding to the provided
             representation.
         """
-        check_is_fitted(self, 'X_fit_dims_')
+        self._is_fitted()
         X = check_array(X, allow_nd=True)
         X = check_dims(X)
         return inv_transform_paa(X, original_size=self.X_fit_dims_[1])
@@ -330,6 +334,10 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
         self.alphabet_size_avg = alphabet_size_avg
         self.scale = scale
 
+    def _is_fitted(self):
+        check_is_fitted(self, ['breakpoints_avg_', 'breakpoints_avg_middle_'])
+        return super()._is_fitted()
+
     def _fit(self, X, y=None):
         self.breakpoints_avg_ = _breakpoints(self.alphabet_size_avg)
         self.breakpoints_avg_middle_ = _bin_medians(self.alphabet_size_avg)
@@ -388,7 +396,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
         numpy.ndarray of integers with shape (n_ts, n_segments, d)
             SAX-Transformed dataset
         """
-        check_is_fitted(self, ['breakpoints_avg_', 'X_fit_dims_'])
+        self._is_fitted()
         X = check_array(X, allow_nd=True)
         X = check_dims(X, X_fit_dims=self.X_fit_dims_)
         return self._transform(X, y)
@@ -414,7 +422,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
            symbolic representation of time series.
            Data Mining and Knowledge Discovery, 2007. vol. 15(107)
         """
-        check_is_fitted(self, ['breakpoints_avg_', 'X_fit_dims_'])
+        self._is_fitted()
         return cydist_sax(sax1, sax2,
                           self.breakpoints_avg_, self.X_fit_dims_[1])
 
@@ -456,7 +464,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
             A dataset of time series corresponding to the provided
             representation.
         """
-        check_is_fitted(self, ['breakpoints_avg_middle_', 'X_fit_dims_'])
+        self._is_fitted()
         X = check_array(X, allow_nd=True)
         X = check_dims(X)
         return inv_transform_sax(
@@ -557,6 +565,11 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         self.alphabet_size_slope = alphabet_size_slope
         self.sigma_l = sigma_l
 
+    def _is_fitted(self):
+        check_is_fitted(self,
+                        ['breakpoints_slope_', 'breakpoints_slope_middle_'])
+        return super()._is_fitted()
+
     def _fit(self, X, y=None):
         super()._fit(X, y)
 
@@ -650,8 +663,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         numpy.ndarray of integers with shape (n_ts, n_segments, 2 * d)
             1d-SAX-Transformed dataset
         """
-        check_is_fitted(self, ['X_fit_dims_', 'breakpoints_avg_',
-                               'breakpoints_slope_'])
+        self._is_fitted()
         X = check_array(X, allow_nd=True, dtype=numpy.float)
         X = check_dims(X, X_fit_dims=self.X_fit_dims_)
         return self._transform(X, y)
@@ -681,8 +693,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         .. [1] S. Malinowski, T. Guyet, R. Quiniou, R. Tavenard. 1d-SAX: a
            Novel Symbolic Representation for Time Series. IDA 2013.
         """
-        check_is_fitted(self, ['X_fit_dims_', 'breakpoints_avg_middle_',
-                               'breakpoints_slope_middle_'])
+        self._is_fitted()
         return cydist_1d_sax(sax1, sax2, self.breakpoints_avg_middle_,
                              self.breakpoints_slope_middle_,
                              self.X_fit_dims_[1])
@@ -724,8 +735,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
             A dataset of time series corresponding to the provided
             representation.
         """
-        check_is_fitted(self, ['X_fit_dims_', 'breakpoints_avg_middle_',
-                               'breakpoints_slope_middle_'])
+        self._is_fitted()
         X = check_array(X, allow_nd=True)
         dims = list(self.X_fit_dims_)
         dims[1] //= self.n_segments
