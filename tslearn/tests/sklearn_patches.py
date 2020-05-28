@@ -571,7 +571,11 @@ def yield_all_checks(name, estimator):
     if is_regressor(estimator):
         yield from _yield_regressor_checks(name, estimator)
     if hasattr(estimator, 'transform'):
-        yield from _yield_transformer_checks(name, estimator)
+        if not tags["allow_variable_length"]:
+            # Transformer tests ensure that shapes are the same at fit and
+            # transform time, hence we need to skip them for estimators that
+            # allow variable-length inputs
+            yield from _yield_transformer_checks(name, estimator)
     if isinstance(estimator, ClusterMixin):
         yield from _yield_clustering_checks(name, estimator)
     if is_outlier_detector(estimator):
@@ -591,5 +595,8 @@ def yield_all_checks(name, estimator):
     yield check_dont_overwrite_parameters
     yield check_fit_idempotent
 
-    if tags["allow_variable_length"]:
-        yield check_different_length_fit_predict
+    if (is_classifier(estimator) or
+            is_regressor(estimator) or
+            isinstance(estimator, ClusterMixin)):
+        if tags["allow_variable_length"]:
+            yield check_different_length_fit_predict
