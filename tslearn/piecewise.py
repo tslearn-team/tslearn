@@ -326,14 +326,14 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
        2007. vol. 15(107)
     """
     def __init__(self, n_segments=1, alphabet_size_avg=5, scale=False):
-        PiecewiseAggregateApproximation.__init__(self, n_segments=n_segments)
+        super().__init__(n_segments=n_segments)
         self.alphabet_size_avg = alphabet_size_avg
         self.scale = scale
 
     def _fit(self, X, y=None):
         self.breakpoints_avg_ = _breakpoints(self.alphabet_size_avg)
         self.breakpoints_avg_middle_ = _bin_medians(self.alphabet_size_avg)
-        return PiecewiseAggregateApproximation._fit(X, y)
+        return super()._fit(X, y)
 
     def fit(self, X, y=None):
         """Fit a SAX representation.
@@ -372,7 +372,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
     def _transform(self, X, y=None):
         if self.scale:
             X = TimeSeriesScalerMeanVariance().fit_transform(X)
-        X_paa = PiecewiseAggregateApproximation._transform(self, X, y)
+        X_paa = super()._transform(X, y)
         return _paa_to_symbols(X_paa, self.breakpoints_avg_)
 
     def transform(self, X, y=None):
@@ -549,8 +549,8 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
     """
     def __init__(self, n_segments=1, alphabet_size_avg=5,
                  alphabet_size_slope=5, sigma_l=None, scale=False):
-        SymbolicAggregateApproximation.__init__(
-            self, n_segments,
+        super().__init__(
+            n_segments=n_segments,
             alphabet_size_avg=alphabet_size_avg,
             scale=scale
         )
@@ -558,7 +558,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         self.sigma_l = sigma_l
 
     def _fit(self, X, y=None):
-        SymbolicAggregateApproximation._fit(self, X, y)
+        super()._fit(X, y)
 
         n_ts, sz, d = X.shape
         sz_segment = sz // self.n_segments
