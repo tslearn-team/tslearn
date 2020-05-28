@@ -127,7 +127,7 @@ class PiecewiseAggregateApproximation(TransformerMixin,
         return True
 
     def _fit(self, X, y=None):
-        self._X_fit_dims_ = X.shape
+        self._X_fit_dims_ = numpy.array(X.shape)
         return self
 
     def fit(self, X, y=None):
@@ -174,7 +174,7 @@ class PiecewiseAggregateApproximation(TransformerMixin,
         """
         self._is_fitted()
         X = check_array(X, allow_nd=True)
-        X = check_dims(X, X_fit_dims=self._X_fit_dims_)
+        X = check_dims(X, X_fit_dims=tuple(self._X_fit_dims_))
         return self._transform(X, y)
 
     def fit_transform(self, X, y=None, **fit_params):
@@ -358,7 +358,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
         """
         X = check_array(X, allow_nd=True)
         X = check_dims(X)
-        return self._fit(self, X, y)
+        return self._fit(X, y)
 
     def fit_transform(self, X, y=None, **fit_params):
         """Fit a SAX representation and transform the data accordingly.
@@ -398,7 +398,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
         """
         self._is_fitted()
         X = check_array(X, allow_nd=True)
-        X = check_dims(X, X_fit_dims=self._X_fit_dims_)
+        X = check_dims(X, X_fit_dims=tuple(self._X_fit_dims_))
         return self._transform(X, y)
 
     def distance_sax(self, sax1, sax2):
@@ -665,7 +665,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         """
         self._is_fitted()
         X = check_array(X, allow_nd=True, dtype=numpy.float)
-        X = check_dims(X, X_fit_dims=self._X_fit_dims_)
+        X = check_dims(X, X_fit_dims=tuple(self._X_fit_dims_))
         return self._transform(X, y)
 
     def distance_1d_sax(self, sax1, sax2):
