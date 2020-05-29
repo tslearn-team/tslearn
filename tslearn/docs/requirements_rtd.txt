@@ -1,7 +1,7 @@
 Cython
 numpy
 scipy
-scikit-learn
+scikit-learn==0.22
 numba
 sphinx>=1.6.1
 ipykernel
