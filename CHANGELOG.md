@@ -26,6 +26,8 @@ of which the DTW algorithm can be run
 * `ShapeletModel` is now serializable to JSON and pickle formats
 * Multivariate datasets from the UCR/UEA archive are now available through
 `UCR_UEA_datasets().load_dataset(...)`
+* A new `matrix_profile` module is added that naively computes matrix profile
+transforms
 
 ### Fixed
 

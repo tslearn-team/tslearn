@@ -7,7 +7,7 @@ import numpy
 from numpy.lib.stride_tricks import as_strided
 from scipy.spatial.distance import pdist, squareform
 from sklearn.base import TransformerMixin
-from sklearn.utils.validation import check_array
+from sklearn.utils.validation import check_is_fitted, check_array
 
 from tslearn.utils import check_dims
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
@@ -58,7 +58,11 @@ class MatrixProfile(TransformerMixin,
         self.scale = scale
 
     def _is_fitted(self):
+        check_is_fitted(self, '_X_fit_dims_')
         return True
+
+    def _fit(self, X, y=None):
+        return self
 
     def fit(self, X, y=None):
         """Fit a Matrix Profile representation.
@@ -73,6 +77,9 @@ class MatrixProfile(TransformerMixin,
         PiecewiseAggregateApproximation
             self
         """
+        X = check_array(X, allow_nd=True, force_all_finite=False)
+        X = check_dims(X)
+        self._X_fit_dims = X.shape
         return self
 
     def _transform(self, X, y=None):
@@ -115,7 +122,8 @@ class MatrixProfile(TransformerMixin,
         """
         self._is_fitted()
         X = check_array(X, allow_nd=True, force_all_finite=False)
-        X = check_dims(X)
+        X = check_dims(X, X_fit_dims=self._X_fit_dims,
+                       check_n_features_only=True)
         return self._transform(X, y)
 
     def fit_transform(self, X, y=None, **fit_params):
@@ -133,7 +141,9 @@ class MatrixProfile(TransformerMixin,
             Matrix-Profile-Transformed dataset. `ouput_size` is equal to 
             `sz - subsequence_length + 1`
         """
-        return self.fit(X).transform(X)
+        X = check_array(X, allow_nd=True, force_all_finite=False)
+        X = check_dims(X)
+        return self._fit(X)._transform(X)
 
     def _more_tags(self):
         return {'allow_nan': True, 'allow_variable_length': True}
