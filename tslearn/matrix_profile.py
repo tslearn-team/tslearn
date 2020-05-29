@@ -30,7 +30,7 @@ class MatrixProfile(TransformerMixin,
         Length of the subseries (also called window size) to be used for 
         subseries distance computations.
     
-    scale: bool (default: False)
+    scale: bool (default: True)
          Whether input data should be scaled for each feature of each time 
          series to have zero mean and unit variance.
          Default for this parameter is set to `True` to match the standard 
