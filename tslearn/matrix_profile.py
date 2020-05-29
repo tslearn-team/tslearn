@@ -4,6 +4,7 @@ Matrix Profiles from time series.
 """
 
 import numpy
+from numpy.lib.stride_tricks import as_strided
 from scipy.spatial.distance import pdist, squareform
 from sklearn.base import TransformerMixin
 from sklearn.utils.validation import check_array
@@ -20,10 +21,20 @@ class MatrixProfile(TransformerMixin,
                     BaseModelPackage,
                     TimeSeriesBaseEstimator):
     """TODO
+    
+    Examples
+    --------
+    >>> time_series = [0., 1., 3., 2., 9., 1., 14., 15., 1., 2., 2., 10., 7.]
+    >>> ds = [time_series]
+    >>> mp = MatrixProfile(subsequence_length=4, scale=False)
+    >>> mp.fit_transform(ds)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    array([[ 6.85...,  1.41...,  6.16..., 7.93..., 11.40...,
+            13.56..., 14.07..., 13.96..., 1.41...,  6.16...]])
     """
 
-    def __init__(self, subsequence_legth=1):
-        self.subsequence_length = subsequence_legth
+    def __init__(self, subsequence_length=1, scale=True):
+        self.subsequence_length = subsequence_length
+        self.scale = scale
 
     def _is_fitted(self):
         return True
@@ -39,14 +50,21 @@ class MatrixProfile(TransformerMixin,
         X_transformed = numpy.empty((n_ts, output_dim))
         scaler = TimeSeriesScalerMeanVariance()
         for i_ts in range(n_ts):
-            segments = numpy.array(
-                [X[i_ts, t:t+self.subsequence_length]
-                 for t in range(output_dim)]
-            )  # TODO: look for a pure numpy way to do this
-            segments = scaler.fit_transform(segments)
-            dists = squareform(pdist(segments, "euclidean"))
+            Xi = X[i_ts]
+            elem_size = Xi.strides[0]
+            segments = as_strided(
+                Xi,
+                strides=(elem_size, elem_size, Xi.strides[1]),
+                shape=(Xi.shape[0] - self.subsequence_length + 1,
+                       self.subsequence_length, d),
+                writeable=False
+            )
+            if self.scale:
+                segments = scaler.fit_transform(segments)
+            segments_2d = segments.reshape((-1, self.subsequence_length * d))
+            dists = squareform(pdist(segments_2d, "euclidean"))
             numpy.fill_diagonal(dists, numpy.inf)
-            X_transformed[i_ts] = dists.min(axis=0)
+            X_transformed[i_ts] = dists.min(axis=1)
         return X_transformed
 
     def transform(self, X, y=None):
