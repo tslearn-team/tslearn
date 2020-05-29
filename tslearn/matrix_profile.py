@@ -58,7 +58,7 @@ class MatrixProfile(TransformerMixin,
         self.scale = scale
 
     def _is_fitted(self):
-        check_is_fitted(self, '_X_fit_dims_')
+        check_is_fitted(self, '_X_fit_dims')
         return True
 
     def _fit(self, X, y=None):
@@ -80,7 +80,7 @@ class MatrixProfile(TransformerMixin,
         """
         X = check_array(X, allow_nd=True, force_all_finite=False)
         X = check_dims(X)
-        return self
+        return self._fit(X)
 
     def _transform(self, X, y=None):
         n_ts, sz, d = X.shape
