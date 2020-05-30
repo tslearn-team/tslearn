@@ -12,7 +12,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ### Changed
 
-* Better initialization schemes for `TimeSeriesKMeans` that lead to more 
+* Better initialization schemes for `TimeSeriesKMeans` that lead to more
 consistent clustering runs (helps avoid empty cluster situations)
 * `TimeSeriesScalerMeanVariance` and `TimeSeriesScalerMinMax` are now
 completely sklearn-compliant
@@ -22,7 +22,7 @@ completely sklearn-compliant
 ### Added
 
 * Python 3.8 support
-* `dtw_path_from_metric` allows one to pick a dedicated ground metric on top 
+* `dtw_path_from_metric` allows one to pick a dedicated ground metric on top
 of which the DTW algorithm can be run
 * Nearest Neighbors on SAX representation (with custom distance)
 * Calculate pairwise distance matrix between SAX representations
@@ -38,7 +38,9 @@ pre-processing for better convergence
 * `ShapeletModel` now has a public `history_` attribute that stores
 loss and accuracy along fit epochs
 * SAX and variants now accept a `scale` parameter that drives time series
-pre-processing to fit the N(0,1) underlying hypothesis
+pre-processing to fit the N(0,1) underlying hypothesis for SAX
+* A new `matrix_profile` module is added that naively computes matrix profile
+transforms
 
 ### Fixed
 
