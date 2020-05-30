@@ -236,7 +236,10 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
     ----------
     n_shapelets_per_size: dict (default: None)
         Dictionary giving, for each shapelet size (key),
-        the number of such shapelets to be trained (value)
+        the number of such shapelets to be trained (value). 
+        If None, `grabocka_params_to_shapelet_size_dict` is used and the
+        size used to compute is that of the shortest time series passed at fit 
+        time.
         
     max_iter: int (default: 10,000)
         Number of training epochs.
@@ -430,7 +433,9 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         n_labels = len(self.classes_)
 
         if self.n_shapelets_per_size is None:
-            sizes = grabocka_params_to_shapelet_size_dict(n_ts, sz, n_labels,
+            sizes = grabocka_params_to_shapelet_size_dict(n_ts,
+                                                          self._min_sz_fit,
+                                                          n_labels,
                                                           self.shapelet_length,
                                                           self.total_lengths)
             self.n_shapelets_per_size_ = sizes
@@ -589,17 +594,17 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         length, as set by self.max_size
         """
         sizes = numpy.array([ts_size(Xi) for Xi in X])
+        self._min_sz_fit = sizes.min()
 
         if self.n_shapelets_per_size is not None:
-            max_sz_shapelets = max(self.n_shapelets_per_size.keys())
-            min_sz_X = sizes.min()
-            if max_sz_shapelets > min_sz_X:
+            max_sz_shp = max(self.n_shapelets_per_size.keys())
+            if max_sz_shp > self._min_sz_fit:
                 raise ValueError("Sizes in X do not match maximum "
                                  "shapelet size: there is at least one "
                                  "series in X that is shorter than one of the "
                                  "shapelets. Shortest time series is of "
                                  "length {} and longest shapelet is of length "
-                                 "{}".format(min_sz_X, max_sz_shapelets))
+                                 "{}".format(self._min_sz_fit, max_sz_shp))
 
         if hasattr(self, 'model_') or self.max_size is not None:
             # Model is already fitted
