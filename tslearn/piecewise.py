@@ -279,8 +279,8 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
         Number of SAX symbols to use
     
     scale: bool (default: False)
-         Whether input data should be scaled for each feature of each time 
-         series to have zero mean and unit variance.
+         Whether input data should be scaled for each feature to have zero 
+         mean and unit variance across the dataset passed at fit time.
          Default for this parameter is set to `False` in version 0.4 to ensure
          backward compatibility, but is likely to change in a future version.
 
@@ -340,11 +340,20 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
 
     def _is_fitted(self):
         check_is_fitted(self, ['breakpoints_avg_', 'breakpoints_avg_middle_'])
+        if self.scale:
+            check_is_fitted(self, ['mu_', 'std_'])
         return super()._is_fitted()
 
     def _fit(self, X, y=None):
         self.breakpoints_avg_ = _breakpoints(self.alphabet_size_avg)
         self.breakpoints_avg_middle_ = _bin_medians(self.alphabet_size_avg)
+
+        if self.scale:
+            d = X.shape[2]
+            reshaped_X = X.reshape((-1, d))
+            self.mu_ = numpy.nanmean(reshaped_X, axis=0)
+            self.std_ = numpy.nanstd(reshaped_X, axis=0)
+
         return super()._fit(X, y)
 
     def fit(self, X, y=None):
@@ -381,9 +390,18 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
         X = check_dims(X)
         return self._fit(X)._transform(X)
 
+    def _scale(self, X):
+        if not self.scale:
+            return X
+        # TODO
+
+    def _unscale(self, X):
+        if not self.scale:
+            return X
+        # TODO
+
     def _transform(self, X, y=None):
-        if self.scale:
-            X = TimeSeriesScalerMeanVariance().fit_transform(X)
+        X = self._scale(X)
         X_paa = super()._transform(X, y)
         return _paa_to_symbols(X_paa, self.breakpoints_avg_)
 
@@ -473,10 +491,12 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
         X = check_array(X, allow_nd=True, force_all_finite=False)
         X = check_dims(X, X_fit_dims=(None, None, self._X_fit_dims_[-1]),
                        check_n_features_only=True)
-        return inv_transform_sax(
+        X_orig = inv_transform_sax(
                 X,
                 breakpoints_middle_=self.breakpoints_avg_middle_,
-                original_size=self._X_fit_dims_[1])
+                original_size=self._X_fit_dims_[1]
+        )
+        return self._unscale(X_orig)
 
 
 class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
@@ -639,8 +659,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         return X_slopes
 
     def _transform(self, X, y=None):
-        if self.scale:
-            X = TimeSeriesScalerMeanVariance().fit_transform(X)
+        X = self._scale(X)
         n_ts, sz_raw, d = X.shape
         X_1d_sax = numpy.empty((n_ts, self.n_segments, 2 * d), dtype=numpy.int)
 
@@ -747,8 +766,10 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         X = check_array(X, allow_nd=True)
         X = check_dims(X, X_fit_dims=(None, None, 2 * self._X_fit_dims_[-1]),
                        check_n_features_only=True)
-        return inv_transform_1d_sax(
+        X_orig = inv_transform_1d_sax(
                 X,
                 breakpoints_avg_middle_=self.breakpoints_avg_middle_,
                 breakpoints_slope_middle_=self.breakpoints_slope_middle_,
-                original_size=self._X_fit_dims_[1])
+                original_size=self._X_fit_dims_[1]
+        )
+        return self._unscale(X_orig)
