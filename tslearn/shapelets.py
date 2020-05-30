@@ -614,7 +614,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
                                  "size as set by max_size. "
                                  "Longest time series is of "
                                  "length {} and max_size is "
-                                 "{}".format(max_sz_X, self.max_size))
+                                 "{}".format(max_sz_X, max_size))
 
     def _preprocess_series(self, X):
         if self.scale:
