@@ -2,6 +2,7 @@ import numpy as np
 
 from tslearn.piecewise import OneD_SymbolicAggregateApproximation, \
     SymbolicAggregateApproximation, PiecewiseAggregateApproximation
+from tslearn.neighbors import KNeighborsTimeSeriesClassifier
 from sklearn.exceptions import NotFittedError
 from sklearn.base import clone
 
@@ -32,7 +33,6 @@ def test_sax():
 
     sax_est_no_scale = unfitted_sax
     sax_est_scale = clone(sax_est_no_scale)
-    print(sax_est_scale.set_params)
     sax_est_scale.set_params(scale=True)
     n, sz, d = 2, 10, 3
     rng = np.random.RandomState(0)
@@ -65,3 +65,31 @@ def test_1dsax():
             sax1d_est.distance(X[0], X[1]),
             sax1d_est.distance_1d_sax(sax1d[0], sax1d[1])
         )
+
+
+def test_sax_scale():
+    n, sz, d = 10, 10, 3
+    rng = np.random.RandomState(0)
+    X = rng.rand(n, sz, d)
+    y = rng.choice([0, 1], size=n)
+
+    sax = SymbolicAggregateApproximation(n_segments=3,
+                                         alphabet_size_avg=2,
+                                         scale=True)
+    sax.fit(X)
+    np.testing.assert_array_almost_equal(X,
+                                         sax._unscale(sax._scale(X)))
+
+    np.testing.assert_array_almost_equal(np.zeros((d, )),
+                                         sax._scale(X).reshape((-1, d)).mean())
+    np.testing.assert_array_almost_equal(np.ones((d, )),
+                                         sax._scale(X).reshape((-1, d)).std())
+
+    # Case of kNN-SAX
+    knn_sax = KNeighborsTimeSeriesClassifier(n_neighbors=1, metric="sax",
+                                             metric_params={"scale": True})
+    knn_sax.fit(X, y)
+    X_scale_unscale = knn_sax._sax._unscale(knn_sax._sax._scale(X))
+    np.testing.assert_array_almost_equal(X, X_scale_unscale)
+
+    knn_sax.predict(X)
