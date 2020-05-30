@@ -4,30 +4,29 @@ The :mod:`tslearn.shapelets` module gathers Shapelet-based algorithms.
 It depends on the `keras` library for optimization.
 """
 
-from keras.models import Model, model_from_json
-from keras.layers import Dense, Conv1D, Layer, Input, concatenate, add
-from keras.metrics import (categorical_accuracy, categorical_crossentropy,
-                           binary_accuracy, binary_crossentropy)
-from keras.utils import to_categorical
+from tensorflow.keras.models import Model, model_from_json
+from tensorflow.keras.layers import (InputSpec, Dense, Conv1D, Layer, Input,
+                                     concatenate, add)
+from tensorflow.keras.metrics import (categorical_accuracy,
+                                      categorical_crossentropy,
+                                      binary_accuracy, binary_crossentropy)
+from tensorflow.keras.utils import to_categorical
 from sklearn.base import ClassifierMixin, TransformerMixin
 from sklearn.utils import check_array, check_X_y
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.multiclass import unique_labels
-from keras.regularizers import l2
-from keras.initializers import Initializer
-import keras.backend as K
-from keras.engine import InputSpec
+from tensorflow.keras.regularizers import l2
+from tensorflow.keras.initializers import Initializer
+import tensorflow.keras.backend as K
 import numpy
-try:
-    from tensorflow.compat.v1 import set_random_seed
-except ImportError:
-    from tensorflow import set_random_seed
+import tensorflow as tf
 
 import warnings
 
-from tslearn.utils import to_time_series_dataset, check_dims
+from tslearn.utils import to_time_series_dataset, check_dims, ts_size
 from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
 from tslearn.clustering import TimeSeriesKMeans
+from tslearn.preprocessing import TimeSeriesScalerMinMax
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -39,6 +38,13 @@ class GlobalMinPooling1D(Layer):
     # Output shape
         2D tensor with shape:
         `(batch_size, features)`
+        
+    Examples
+    --------
+    >>> x = tf.constant([5.0, numpy.nan, 6.8, numpy.nan, numpy.inf])
+    >>> x = tf.reshape(x, [1, 5, 1])
+    >>> GlobalMinPooling1D()(x).numpy()
+    array([[5.]], dtype=float32)
     """
 
     def __init__(self, **kwargs):
@@ -75,8 +81,10 @@ class GlobalArgminPooling1D(Layer):
 def _kmeans_init_shapelets(X, n_shapelets, shp_len, n_draw=10000):
     n_ts, sz, d = X.shape
     indices_ts = numpy.random.choice(n_ts, size=n_draw, replace=True)
-    indices_time = numpy.random.choice(sz - shp_len + 1, size=n_draw,
-                                       replace=True)
+    indices_time = numpy.array(
+        [numpy.random.choice(ts_size(ts) - shp_len + 1, size=1)[0]
+         for ts in X[indices_ts]]
+    )
     subseries = numpy.zeros((n_draw, shp_len, d))
     for i in range(n_draw):
         subseries[i] = X[indices_ts[i],
@@ -101,7 +109,7 @@ class KMeansShapeletInitializer(Initializer):
         shapelets = _kmeans_init_shapelets(self.X_,
                                            n_shapelets,
                                            shp_len)[:, :, 0]
-        return K.tensorflow_backend._to_tensor(x=shapelets, dtype=K.floatx())
+        return tf.convert_to_tensor(shapelets, dtype=K.floatx())
 
     def get_config(self):
         return {'data': self.X_}
@@ -119,10 +127,10 @@ class LocalSquaredDistanceLayer(Layer):
     """
     def __init__(self, n_shapelets, X=None, **kwargs):
         self.n_shapelets = n_shapelets
-        if X is None or K.backend() != "tensorflow":
+        if X is None:
             self.initializer = "uniform"
         else:
-            self.initializer = KMeansShapeletInitializer(X)  # TODO: v2-compatible initializer
+            self.initializer = KMeansShapeletInitializer(X)
         super().__init__(**kwargs)
         self.input_spec = InputSpec(ndim=3)
 
@@ -172,7 +180,7 @@ def grabocka_params_to_shapelet_size_dict(n_ts, ts_sz, n_classes, l, r):
     Returns
     -------
     dict
-        Dictionnary giving, for each shapelet length, the number of such
+        Dictionary giving, for each shapelet length, the number of such
         shapelets to be generated
 
     Examples
@@ -228,7 +236,11 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
     ----------
     n_shapelets_per_size: dict (default: None)
         Dictionary giving, for each shapelet size (key),
-        the number of such shapelets to be trained (value)
+        the number of such shapelets to be trained (value). 
+        If None, `grabocka_params_to_shapelet_size_dict` is used and the
+        size used to compute is that of the shortest time series passed at fit 
+        time.
+        
     max_iter: int (default: 10,000)
         Number of training epochs.
 
@@ -240,16 +252,34 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
 
     verbose: {0, 1, 2} (default: 0)
         `keras` verbose level.
+    
     optimizer: str or keras.optimizers.Optimizer (default: "sgd")
         `keras` optimizer to use for training.
+    
     weight_regularizer: float or None (default: 0.)
         Strength of the L2 regularizer to use for training the classification
         (softmax) layer. If 0, no regularization is performed.
-    shapelet_length: float (default 0.15)
-        The length of the shapelets, expressed as a fraction of the ts length
-    total_lengths: int (default 3)
+    
+    shapelet_length: float (default: 0.15)
+        The length of the shapelets, expressed as a fraction of the time 
+        series length.
+        Used only if `n_shapelets_per_size` is None.
+    
+    total_lengths: int (default: 3)
         The number of different shapelet lengths. Will extract shapelets of
         length i * shapelet_length for i in [1, total_lengths]
+        Used only if `n_shapelets_per_size` is None.
+        
+    max_size: int or None (default: None)
+        Maximum size for time series to be fed to the model. If None, it is 
+        set to the size (number of timestamps) of the training time series.
+        
+    scale: bool (default: False)
+        Whether input data should be scaled for each feature of each time 
+        series to lie in the [0-1] interval.
+        Default for this parameter is set to `False` in version 0.4 to ensure
+        backward compatibility, but is likely to change in a future version.        
+    
     random_state : int or None, optional (default: None)
         The seed of the pseudo random number generator to use when shuffling
         the data.  If int, random_state is the seed used by the random number
@@ -276,9 +306,8 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
     model_ : keras.Model
         Directly predicts the class probabilities for the input timeseries.
 
-    Notes
-    -----
-        This implementation requires a dataset of equal-sized time series.
+    history_ : dict
+        Dictionary of losses and metrics recorded during fit.
 
     Examples
     --------
@@ -308,6 +337,8 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
                  weight_regularizer=0.,
                  shapelet_length=0.15,
                  total_lengths=3,
+                 max_size=None,
+                 scale=False,
                  random_state=None):
         self.n_shapelets_per_size = n_shapelets_per_size
         self.max_iter = max_iter
@@ -317,14 +348,15 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         self.weight_regularizer = weight_regularizer
         self.shapelet_length = shapelet_length
         self.total_lengths = total_lengths
+        self.max_size = max_size
+        self.scale = scale
         self.random_state = random_state
 
-        if max_iter == 10000:
-            warnings.warn("The default value of max_iter has changed "
-                          "from 100 to 10000 starting from version 0.3 for "
-                          "the model to be more likely to converge. "
-                          "Explicitly set your max_iter value to "
-                          "avoid this warning.", FutureWarning)
+        if not scale:
+            warnings.warn("The default value for scaling is set to False "
+                          "in version 0.4 to ensure backward compatibility, "
+                          "but is likely to change in a future version.",
+                          FutureWarning)
 
     @property
     def _n_shapelet_sizes(self):
@@ -382,13 +414,13 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         y : array-like of shape=(n_ts, )
             Time series labels.
         """
-        X, y = check_X_y(X, y, allow_nd=True)
-        X = to_time_series_dataset(X)
+        X, y = check_X_y(X, y, allow_nd=True, force_all_finite=False)
+        X = self._preprocess_series(X)
         X = check_dims(X)
+        self._check_series_length(X)
 
-        set_random_seed(seed=self.random_state)
         numpy.random.seed(seed=self.random_state)
-
+        tf.random.set_seed(seed=self.random_state)
         n_ts, sz, d = X.shape
         self._X_fit_dims = X.shape
 
@@ -401,7 +433,9 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         n_labels = len(self.classes_)
 
         if self.n_shapelets_per_size is None:
-            sizes = grabocka_params_to_shapelet_size_dict(n_ts, sz, n_labels,
+            sizes = grabocka_params_to_shapelet_size_dict(n_ts,
+                                                          self._min_sz_fit,
+                                                          n_labels,
                                                           self.shapelet_length,
                                                           self.total_lengths)
             self.n_shapelets_per_size_ = sizes
@@ -410,12 +444,13 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
 
         self._set_model_layers(X=X, ts_sz=sz, d=d, n_classes=n_labels)
         self._set_weights_false_conv(d=d)
-        self.model_.fit(
+        h = self.model_.fit(
             [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(d)], y_,
             batch_size=self.batch_size, epochs=self.max_iter,
             verbose=self.verbose
         )
-        self.n_iter_ = len(self.model_.history.history)
+        self.history_ = h.history
+        self.n_iter_ = len(self.history_.get("loss", []))
         return self
 
     def predict(self, X):
@@ -434,9 +469,11 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
             matrix, depending on what was provided at training time.
         """
         check_is_fitted(self, '_X_fit_dims')
-        X = check_array(X, allow_nd=True)
-        X = to_time_series_dataset(X)
-        X = check_dims(X, X_fit_dims=self._X_fit_dims)
+        X = check_array(X, allow_nd=True, force_all_finite=False)
+        X = self._preprocess_series(X)
+        X = check_dims(X, X_fit_dims=self._X_fit_dims,
+                       check_n_features_only=True)
+        self._check_series_length(X)
 
         y_ind = self.predict_proba(X).argmax(axis=1)
         y_label = numpy.array(
@@ -458,9 +495,12 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
             Class probability matrix.
         """
         check_is_fitted(self, '_X_fit_dims')
-        X = check_array(X, allow_nd=True)
-        X = to_time_series_dataset(X)
-        X = check_dims(X, X_fit_dims=self._X_fit_dims)
+        X = check_array(X, allow_nd=True, force_all_finite=False)
+        X = self._preprocess_series(X)
+        X = check_dims(X, X_fit_dims=self._X_fit_dims,
+                       check_n_features_only=True)
+        self._check_series_length(X)
+
         n_ts, sz, d = X.shape
         categorical_preds = self.model_.predict(
             [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
@@ -487,9 +527,12 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
             Shapelet-Transform of the provided time series.
         """
         check_is_fitted(self, '_X_fit_dims')
-        X = check_array(X, allow_nd=True)
-        X = to_time_series_dataset(X)
-        X = check_dims(X, X_fit_dims=self._X_fit_dims)
+        X = check_array(X, allow_nd=True, force_all_finite=False)
+        X = self._preprocess_series(X)
+        X = check_dims(X, X_fit_dims=self._X_fit_dims,
+                       check_n_features_only=True)
+        self._check_series_length(X)
+
         n_ts, sz, d = X.shape
         pred = self.transformer_model_.predict(
             [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
@@ -530,15 +573,71 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
                [0]])
         """
         check_is_fitted(self, '_X_fit_dims')
-        X = check_array(X, allow_nd=True)
-        X = to_time_series_dataset(X)
-        X = check_dims(X, X_fit_dims=self._X_fit_dims)
+        X = check_array(X, allow_nd=True, force_all_finite=False)
+        X = self._preprocess_series(X)
+        X = check_dims(X, X_fit_dims=self._X_fit_dims,
+                       check_n_features_only=True)
+        self._check_series_length(X)
+
         n_ts, sz, d = X.shape
         locations = self.locator_model_.predict(
             [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
             batch_size=self.batch_size, verbose=self.verbose
         )
         return locations.astype(numpy.int)
+
+    def _check_series_length(self, X):
+        """Ensures that time series in X matches the following requirements:
+        
+        - their length is greater than the size of the longest shapelet
+        - (at predict time) their length is lower than the maximum allowed 
+        length, as set by self.max_size
+        """
+        sizes = numpy.array([ts_size(Xi) for Xi in X])
+        self._min_sz_fit = sizes.min()
+
+        if self.n_shapelets_per_size is not None:
+            max_sz_shp = max(self.n_shapelets_per_size.keys())
+            if max_sz_shp > self._min_sz_fit:
+                raise ValueError("Sizes in X do not match maximum "
+                                 "shapelet size: there is at least one "
+                                 "series in X that is shorter than one of the "
+                                 "shapelets. Shortest time series is of "
+                                 "length {} and longest shapelet is of length "
+                                 "{}".format(self._min_sz_fit, max_sz_shp))
+
+        if hasattr(self, 'model_') or self.max_size is not None:
+            # Model is already fitted
+            max_sz_X = sizes.max()
+
+            if hasattr(self, 'model_'):
+                max_size = self._X_fit_dims[1]
+            else:
+                max_size = self.max_size
+            if max_size < max_sz_X:
+                raise ValueError("Sizes in X do not match maximum allowed "
+                                 "size as set by max_size. "
+                                 "Longest time series is of "
+                                 "length {} and max_size is "
+                                 "{}".format(max_sz_X, max_size))
+
+    def _preprocess_series(self, X):
+        if self.scale:
+            X = TimeSeriesScalerMinMax().fit_transform(X)
+        else:
+            X = to_time_series_dataset(X)
+        if self.max_size is not None and self.max_size != X.shape[1]:
+            if X.shape[1] > self.max_size:
+                raise ValueError(
+                    "Cannot feed model with series of length {} "
+                    "max_size is {}".format(X.shape[1], self.max_size)
+                )
+            X_ = numpy.zeros((X.shape[0], self.max_size, X.shape[2]))
+            X_[:, :X.shape[1]] = X
+            X_[:, X.shape[1]:] = numpy.nan
+            return X_
+        else:
+            return X
 
     def _preprocess_labels(self, y):
         self.classes_ = unique_labels(y)
@@ -596,7 +695,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
                 layer.set_weights([numpy.eye(sz).reshape((sz, 1, sz))])
 
     def _set_model_layers(self, X, ts_sz, d, n_classes):
-        inputs = [Input(shape=(ts_sz, 1),
+        inputs = [Input(shape=(self.max_size, 1),
                         name="input_%d" % di)
                   for di in range(d)]
         shapelet_sizes = sorted(self.n_shapelets_per_size_.keys())
@@ -786,7 +885,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         # errors in the `transform` method, while sklearn performs checks
         # that requires the output of transform to have less than 1e-9
         # difference between outputs of same input.
-        return {'non_deterministic': True}
+        return {'allow_nan': True, 'allow_variable_length': True}
 
 
 class SerializableShapeletModel(ShapeletModel):
@@ -794,6 +893,11 @@ class SerializableShapeletModel(ShapeletModel):
 
 
     Learning Time-Series Shapelets was originally presented in [1]_.
+    
+    .. deprecated:: 0.4
+             `SerializableShapeletModel` is deprecated in version 0.4 and
+            will be removed in 0.6. Use `ShapeletModel` instead, which is
+            now fully serializable and clonable.
 
     Parameters
     ----------
@@ -893,12 +997,17 @@ class SerializableShapeletModel(ShapeletModel):
                              total_lengths=total_lengths,
                              random_state=random_state)
         self.learning_rate = learning_rate
+        warnings.warn(
+            "`SerializableShapeletModel` is deprecated in version 0.4 and "
+            "will be removed in 0.6. Use `ShapeletModel` instead, which is "
+            "now fully serializable and clonable.",
+            DeprecationWarning, stacklevel=2)
 
     def _set_model_layers(self, X, ts_sz, d, n_classes):
         super()._set_model_layers(X=X,
-                                      ts_sz=ts_sz,
-                                      d=d,
-                                      n_classes=n_classes)
+                                  ts_sz=ts_sz,
+                                  d=d,
+                                  n_classes=n_classes)
         K.set_value(self.model_.optimizer.lr, self.learning_rate)
 
     def set_params(self, **params):

@@ -233,7 +233,12 @@ class BaseModelPackage:
         for k in model['model_params'].keys():
             param = model['model_params'][k]
             if type(param) is list:
-                model['model_params'][k] = np.array(param)
+                arr = np.array(param)
+                if arr.dtype == object:
+                    # Then maybe it was rather a list of arrays
+                    # This is very hacky...
+                    arr = [np.array(p) for p in param]
+                model['model_params'][k] = arr
 
         return cls._organize_model(cls, model)
 
