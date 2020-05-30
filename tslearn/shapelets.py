@@ -609,7 +609,6 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
                 max_size = self._X_fit_dims[1]
             else:
                 max_size = self.max_size
-            print(max_size, sizes)
             if max_size < max_sz_X:
                 raise ValueError("Sizes in X do not match maximum allowed "
                                  "size as set by max_size. "
