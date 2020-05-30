@@ -349,12 +349,6 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         self.scale = scale
         self.random_state = random_state
 
-        if max_iter == 10000:
-            warnings.warn("The default value for max_iter has changed "
-                          "from 100 to 10000 starting from version 0.3 for "
-                          "the model to be more likely to converge. "
-                          "Explicitly set your max_iter value to "
-                          "avoid this warning.", FutureWarning)
         if not scale:
             warnings.warn("The default value for scaling is set to False "
                           "in version 0.4 to ensure backward compatibility, "
@@ -420,6 +414,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         X, y = check_X_y(X, y, allow_nd=True, force_all_finite=False)
         X = self._preprocess_series(X)
         X = check_dims(X)
+        self._check_series_length(X)
 
         numpy.random.seed(seed=self.random_state)
         tf.random.set_seed(seed=self.random_state)
@@ -473,6 +468,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         X = self._preprocess_series(X)
         X = check_dims(X, X_fit_dims=self._X_fit_dims,
                        check_n_features_only=True)
+        self._check_series_length(X)
 
         y_ind = self.predict_proba(X).argmax(axis=1)
         y_label = numpy.array(
@@ -498,6 +494,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         X = self._preprocess_series(X)
         X = check_dims(X, X_fit_dims=self._X_fit_dims,
                        check_n_features_only=True)
+        self._check_series_length(X)
 
         n_ts, sz, d = X.shape
         categorical_preds = self.model_.predict(
@@ -529,6 +526,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         X = self._preprocess_series(X)
         X = check_dims(X, X_fit_dims=self._X_fit_dims,
                        check_n_features_only=True)
+        self._check_series_length(X)
 
         n_ts, sz, d = X.shape
         pred = self.transformer_model_.predict(
@@ -574,6 +572,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         X = self._preprocess_series(X)
         X = check_dims(X, X_fit_dims=self._X_fit_dims,
                        check_n_features_only=True)
+        self._check_series_length(X)
 
         n_ts, sz, d = X.shape
         locations = self.locator_model_.predict(
@@ -581,6 +580,42 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
             batch_size=self.batch_size, verbose=self.verbose
         )
         return locations.astype(numpy.int)
+
+    def _check_series_length(self, X):
+        """Ensures that time series in X matches the following requirements:
+        
+        - their length is greater than the size of the longest shapelet
+        - (at predict time) their length is lower than the maximum allowed 
+        length, as set by self.max_size
+        """
+        sizes = numpy.array([ts_size(Xi) for Xi in X])
+
+        if self.n_shapelets_per_size is not None:
+            max_sz_shapelets = max(self.n_shapelets_per_size.keys())
+            min_sz_X = sizes.min()
+            if max_sz_shapelets > min_sz_X:
+                raise ValueError("Sizes in X do not match maximum "
+                                 "shapelet size: there is at least one "
+                                 "series in X that is shorter than one of the "
+                                 "shapelets. Shortest time series is of "
+                                 "length {} and longest shapelet is of length "
+                                 "{}".format(min_sz_X, max_sz_shapelets))
+
+        if hasattr(self, 'model_') or self.max_size is not None:
+            # Model is already fitted
+            max_sz_X = sizes.max()
+
+            if hasattr(self, 'model_'):
+                max_size = self._X_fit_dims[1]
+            else:
+                max_size = self.max_size
+            print(max_size, sizes)
+            if max_size < max_sz_X:
+                raise ValueError("Sizes in X do not match maximum allowed "
+                                 "size as set by max_size. "
+                                 "Longest time series is of "
+                                 "length {} and max_size is "
+                                 "{}".format(max_sz_X, self.max_size))
 
     def _preprocess_series(self, X):
         if self.scale:

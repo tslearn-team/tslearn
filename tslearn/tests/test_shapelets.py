@@ -87,4 +87,25 @@ def test_shapelet_lengths():
     np.testing.assert_allclose(tr,
                                np.array([[0.], [8. / 3]]))
 
+def test_series_lengths():
+    pytest.importorskip('tensorflow')
+    from tslearn.shapelets import ShapeletModel
 
+    # Test long shapelets
+    y = [0, 1]
+    time_series = to_time_series_dataset([[1, 2, 3, 4, 5], [3, 2, 1]])
+    clf = ShapeletModel(n_shapelets_per_size={8: 1},
+                        max_iter=1,
+                        verbose=0,
+                        random_state=0)
+    np.testing.assert_raises(ValueError, clf.fit, time_series, y)
+
+    # Test small max_size
+    y = [0, 1]
+    time_series = to_time_series_dataset([[1, 2, 3, 4, 5], [3, 2, 1]])
+    clf = ShapeletModel(n_shapelets_per_size={3: 1},
+                        max_iter=1,
+                        verbose=0,
+                        max_size=4,
+                        random_state=0)
+    np.testing.assert_raises(ValueError, clf.fit, time_series, y)
