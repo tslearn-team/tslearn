@@ -353,6 +353,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
             reshaped_X = X.reshape((-1, d))
             self.mu_ = numpy.nanmean(reshaped_X, axis=0)
             self.std_ = numpy.nanstd(reshaped_X, axis=0)
+            self.std_[self.std_ == 0.] = 1.
 
         return super()._fit(X, y)
 
@@ -393,12 +394,20 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
     def _scale(self, X):
         if not self.scale:
             return X
-        # TODO
+
+        std = self.std_.reshape((1, 1, -1))
+        mu = self.mu_.reshape((1, 1, -1))
+
+        return (X - mu) / std
 
     def _unscale(self, X):
         if not self.scale:
             return X
-        # TODO
+
+        std = self.std_.reshape((1, 1, -1))
+        mu = self.mu_.reshape((1, 1, -1))
+
+        return X * std + mu
 
     def _transform(self, X, y=None):
         X = self._scale(X)
