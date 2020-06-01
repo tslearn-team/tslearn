@@ -28,6 +28,8 @@ of which the DTW algorithm can be run
 `UCR_UEA_datasets().load_dataset(...)`
 * A new `matrix_profile` module is added that naively computes matrix profile
 transforms
+* `TimeSeriesKMeans` now has a `transform` method that returns distances to
+centroids
 
 ### Fixed
 
