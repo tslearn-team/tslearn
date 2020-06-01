@@ -109,7 +109,7 @@ def _check_params_predict(model, X, test_methods, check_params_fun=None,
 
         # check that hyper-params are the same
         hyper_params = model.get_params()
-        for p in hyper_params .keys():
+        for p in hyper_params.keys():
             numpy.testing.assert_equal(getattr(model, p), getattr(sm, p))
 
     clear_tmp()
@@ -149,7 +149,7 @@ def test_serialize_timeserieskmeans():
 
     sdtw_km = TimeSeriesKMeans(n_clusters=3,
                                metric="softdtw",
-                               metric_params={"gamma_sdtw": .01},
+                               metric_params={"gamma": .01},
                                verbose=True)
 
     _check_not_fitted(sdtw_km)

@@ -24,18 +24,20 @@ neighbors.VALID_METRICS['brute'].extend(['dtw', 'softdtw', 'sax'])
 class KNeighborsTimeSeriesMixin():
     """Mixin for k-neighbors searches on Time Series."""
 
-    def _sax_preprocess(self, X, n_segments=10, alphabet_size_avg=4):
+    def _sax_preprocess(self, X, n_segments=10, alphabet_size_avg=4,
+                        scale=False):
         # Now SAX-transform the time series
         if not hasattr(self, '_sax') or self._sax is None:
             self._sax = SymbolicAggregateApproximation(
                 n_segments=n_segments,
-                alphabet_size_avg=alphabet_size_avg
+                alphabet_size_avg=alphabet_size_avg,
+                scale=scale
             )
 
         X = to_time_series_dataset(X)
-        X = self._sax.fit_transform(X)
+        X_sax = self._sax.fit_transform(X)
 
-        return X
+        return X_sax
 
     def _get_metric_params(self):
         if self.metric_params is None:
@@ -71,7 +73,7 @@ class KNeighborsTimeSeriesMixin():
         elif self._ts_metric == "sax":
             X = self._sax_preprocess(X, **metric_params)
             X_ = cdist_sax(X, self._sax.breakpoints_avg_,
-                           self._sax.size_fitted_, other_X,
+                           self._sax._X_fit_dims_[1], other_X,
                            n_jobs=self.n_jobs)
         else:
             raise ValueError("Invalid metric recorded: %s" %
@@ -192,6 +194,8 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
         For metrics that accept parallelization of the cross-distance matrix
         computations, `n_jobs` and `verbose` keys passed in `metric_params`
         are overridden by the `n_jobs` and `verbose` arguments.
+        For 'sax' metric, these are hyper-parameters to be passed at the 
+        creation of the `SymbolicAggregateApproximation` object.
 
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel for cross-distance matrix
@@ -374,6 +378,8 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         For metrics that accept parallelization of the cross-distance matrix
         computations, `n_jobs` and `verbose` keys passed in `metric_params`
         are overridden by the `n_jobs` and `verbose` arguments.
+        For 'sax' metric, these are hyper-parameters to be passed at the 
+        creation of the `SymbolicAggregateApproximation` object.
 
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel for cross-distance matrix
@@ -585,6 +591,8 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         For metrics that accept parallelization of the cross-distance matrix
         computations, `n_jobs` and `verbose` keys passed in `metric_params`
         are overridden by the `n_jobs` and `verbose` arguments.
+        For 'sax' metric, these are hyper-parameters to be passed at the 
+        creation of the `SymbolicAggregateApproximation` object.
 
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel for cross-distance matrix

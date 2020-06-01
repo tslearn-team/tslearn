@@ -31,18 +31,17 @@ X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")
 X_train = TimeSeriesScalerMinMax().fit_transform(X_train)
 X_test = TimeSeriesScalerMinMax().fit_transform(X_test)
 
-clf = TimeSeriesSVC(kernel="gak",
-                    gamma=.1)
+clf = TimeSeriesSVC(kernel="gak", gamma=.1)
 clf.fit(X_train, y_train)
 print("Correct classification rate:", clf.score(X_test, y_test))
 
 n_classes = len(set(y_train))
 
 plt.figure()
-support_vectors = clf.support_vectors_time_series_(X_train)
+support_vectors = clf.support_vectors_
 for i, cl in enumerate(set(y_train)):
     plt.subplot(n_classes, 1, i + 1)
-    plt.title("Support vectors for class %d" % (cl))
+    plt.title("Support vectors for class %d" % cl)
     for ts in support_vectors[i]:
         plt.plot(ts.ravel())
 
