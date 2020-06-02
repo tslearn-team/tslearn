@@ -3,7 +3,7 @@ The :mod:`tslearn.clustering` module gathers time series specific clustering
 algorithms.
 """
 
-from sklearn.base import ClusterMixin
+from sklearn.base import ClusterMixin, TransformerMixin
 try:
     # Most recent
     from sklearn.cluster._k_means import _k_init
@@ -594,7 +594,8 @@ class TimeSeriesCentroidBasedClusteringMixin:
             self._X_fit = None
 
 
-class TimeSeriesKMeans(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
+class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
+                       TimeSeriesCentroidBasedClusteringMixin,
                        BaseModelPackage, TimeSeriesBaseEstimator):
     """K-means clustering for time-series data.
 
@@ -799,20 +800,23 @@ class TimeSeriesKMeans(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
 
         return self
 
-    def _assign(self, X, update_class_attributes=True):
+    def _transform(self, X):
         metric_params = self._get_metric_params()
         if self.metric == "euclidean":
-            dists = cdist(X.reshape((X.shape[0], -1)),
+            return cdist(X.reshape((X.shape[0], -1)),
                           self.cluster_centers_.reshape((self.n_clusters, -1)),
                           metric="euclidean")
         elif self.metric == "dtw":
-            dists = cdist_dtw(X, self.cluster_centers_, n_jobs=self.n_jobs,
+            return cdist_dtw(X, self.cluster_centers_, n_jobs=self.n_jobs,
                               verbose=self.verbose, **metric_params)
         elif self.metric == "softdtw":
-            dists = cdist_soft_dtw(X, self.cluster_centers_, **metric_params)
+            return cdist_soft_dtw(X, self.cluster_centers_, **metric_params)
         else:
             raise ValueError("Incorrect metric: %s (should be one of 'dtw', "
                              "'softdtw', 'euclidean')" % self.metric)
+
+    def _assign(self, X, update_class_attributes=True):
+        dists = self._transform(X)
         matched_labels = dists.argmin(axis=1)
         if update_class_attributes:
             self.labels_ = matched_labels
@@ -953,6 +957,29 @@ class TimeSeriesKMeans(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
                        extend=True,
                        check_n_features_only=(self.metric != "euclidean"))
         return self._assign(X, update_class_attributes=False)
+
+    def transform(self, X):
+        """Transform X to a cluster-distance space.
+        
+        In the new space, each dimension is the distance to the cluster 
+        centers.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset
+
+        Returns
+        -------
+        distances : array of shape=(n_ts, n_clusters)
+            Distances to cluster centers
+        """
+        X = check_array(X, allow_nd=True, force_all_finite='allow-nan')
+        check_is_fitted(self, 'cluster_centers_')
+        X = check_dims(X, X_fit_dims=self.cluster_centers_.shape,
+                       extend=True,
+                       check_n_features_only=(self.metric != "euclidean"))
+        return self._transform(X)
 
     def _more_tags(self):
         return {'allow_nan': True, 'allow_variable_length': True}

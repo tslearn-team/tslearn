@@ -41,6 +41,8 @@ loss and accuracy along fit epochs
 pre-processing to fit the N(0,1) underlying hypothesis for SAX
 * A new `matrix_profile` module is added that naively computes matrix profile
 transforms
+* `TimeSeriesKMeans` now has a `transform` method that returns distances to
+centroids
 
 ### Fixed
 
