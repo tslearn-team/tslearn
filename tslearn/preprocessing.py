@@ -289,8 +289,8 @@ class TimeSeriesScalerMeanVariance(TransformerMixin, TimeSeriesBaseEstimator):
         X = check_array(X, allow_nd=True, force_all_finite=False)
         X_ = to_time_series_dataset(X)
         X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, extend=False)
-        mean_t = numpy.nanmean(X_, axis=1)[:, numpy.newaxis, :]
-        std_t = numpy.nanstd(X_, axis=1)[:, numpy.newaxis, :]
+        mean_t = numpy.nanmean(X_, axis=1, keepdims=True)
+        std_t = numpy.nanstd(X_, axis=1, keepdims=True)
         std_t[std_t == 0.] = 1.
 
         X_ = (X_ - mean_t) * self.std / std_t + self.mu

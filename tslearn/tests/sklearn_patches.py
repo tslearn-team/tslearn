@@ -550,15 +550,18 @@ def check_pipeline_consistency(name, estimator_orig):
 def check_different_length_fit_predict_transform(name, estimator):
     # Check if classifier can predict a dataset that does not have the same
     # number of timestamps as the data passed at fit time
+    X, y = _create_small_ts_dataset()
 
     # Default for kmeans is Euclidean
     if isinstance(estimator, TimeSeriesKMeans):
         new_estimator = clone(estimator)
         new_estimator.metric = "dtw"
+    elif "ShapeletModel" in name:  # Prepare shapelet model for long series
+        new_estimator = clone(estimator)
+        new_estimator.max_size = 2 * X.shape[1]
     else:
         new_estimator = estimator
 
-    X, y = _create_small_ts_dataset()
     new_estimator.fit(X, y)
 
     X2 = np.hstack((X, X))

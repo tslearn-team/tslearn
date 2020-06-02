@@ -483,8 +483,6 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         if self.metric == "precomputed" and hasattr(self, '_ts_metric'):
             self._ts_fit = X
             if self._ts_metric == 'sax':
-                self._sax_mu = None
-                self._sax_sigma = None
                 if self.metric_params is not None:
                     self._ts_fit = self._sax_preprocess(X,
                                                         **self.metric_params)

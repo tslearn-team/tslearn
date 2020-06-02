@@ -4,6 +4,5 @@ numba
 scipy
 scikit-learn
 joblib>=0.12
-tensorflow<2
-keras
+tensorflow>=2
 h5py
