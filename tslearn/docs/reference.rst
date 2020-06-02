@@ -15,6 +15,7 @@ The complete ``tslearn`` project is automatically documented for every module.
    tslearn.clustering
    tslearn.datasets
    tslearn.generators
+   tslearn.matrix_profile
    tslearn.metrics
    tslearn.neighbors
    tslearn.piecewise

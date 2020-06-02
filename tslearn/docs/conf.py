@@ -157,6 +157,7 @@ html_theme_options = {
 
     'navbar_links': [
         ("Quick-start", "quickstart"),
+        ("User Guide", "userguide"),
         ("API Reference", "reference"),
         ("Examples", "auto_examples/index"),
         ("Citing tslearn", "citing"),
