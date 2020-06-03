@@ -72,7 +72,7 @@ One important hyper-parameters is the ``n_shapelets_per_size``
 which is a dictionary where the keys correspond to the desired lengths of the 
 shapelets and the values to the desired number of shapelets per length. When 
 set to `None`, this dictionary will be determined by a 
-:ref:`heuristic <class-tslearn.shapelets.grabocka_params_to_shapelet_size_dict>`. 
+:ref:`heuristic <_fun-tslearn.shapelets.grabocka_params_to_shapelet_size_dict>`. 
 After creating the model, we can ``fit`` the optimal shapelets 
 using our training data. After a fitting phase, the distances can be calculated 
 using the ``transform`` function. Moreover, you can easily access the 
@@ -94,7 +94,7 @@ passing the data to the**
 **and**
 ``transform``
 **methods, by using our**
-:ref:`preprocessing <class-tslearn.preprocessing>`
+:ref:`preprocessing <_mod-tslearn.preprocessing>`
 **module but this can be done internally by the algorithm itself by setting the**
 ``scale``
 **parameter.**
