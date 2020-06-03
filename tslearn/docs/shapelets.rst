@@ -89,10 +89,15 @@ learned shapelets by using the ``shapelets_as_time_series_`` attribute.
 gradient-descent is used to learn the shapelets, our model can be prone
 to numerical issues (e.g. exploding and vanishing gradients). For that
 reason, it is important to scale your data. This can be done before
-passing the data to the **``fit``** and **``transform``** methods,
-by using our **:ref:`preprocessing <class-tslearn.preprocessing>`**
-module but this can be done internally by the algorithm itself by setting the 
-**``scale``** parameter.**
+passing the data to the**
+``fit``
+**and**
+``transform``
+**methods, by using our**
+:ref:`preprocessing <class-tslearn.preprocessing>`
+**module but this can be done internally by the algorithm itself by setting the**
+``scale``
+**parameter.**
 
 
 .. include:: gen_modules/backreferences/tslearn.shapelets.ShapeletModel.examples
