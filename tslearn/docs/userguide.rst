@@ -5,4 +5,5 @@ User Guide
     :maxdepth: 2
 
     dtw
+    clustering
     shapelets

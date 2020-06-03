@@ -16,7 +16,10 @@ To assess the level of presence, one uses shapelet matches:
         \min_t \| \mathbf{x}_{t\rightarrow t+L} - \mathbf{s} \|_2
 
 where :math:`L` is the length (number of timestamps) of shapelet
-:math:`\mathbf{s}`. If the above-defined distance is small enough, then
+:math:`\mathbf{s}` and :math:`\mathbf{x}_{t\rightarrow t+L}` is the subsequence
+extracted from time series :math:`\mathbf{x}` that starts at time index
+:math:`t` and stops at :math:`t+L`.
+If the above-defined distance is small enough, then
 shapelet :math:`\textbf{s}` is supposed to be present in time series
 :math:`\mathbf{x}`.
 
@@ -41,7 +44,7 @@ Learning Time-series Shapelets
 introduced in [2]_, that is an instance of the latter category.
 In :ref:`Learning Shapelets <class-tslearn.shapelets.ShapeletModel>`,
 shapelets are learned such
-that time series represented in their shapelet-transform space (i.e. their 
+that time series represented in their shapelet-transform space (`i.e.` their
 distances to each of the shapelets) are linearly separable.
 A shapelet-transform representation of a time series :math:`\mathbf{x}` given
 a set of shapelets :math:`\{\mathbf{s}_i\}_{i \leq k}` is the feature vector:
