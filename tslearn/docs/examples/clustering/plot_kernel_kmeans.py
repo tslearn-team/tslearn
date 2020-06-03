@@ -13,6 +13,7 @@ of time series from the training set that were assigned to the considered
 cluster.
 
 [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
+
 [2] I. S. Dhillon, Y. Guan, B. Kulis. Kernel k-means, Spectral Clustering and \
 Normalized Cuts. KDD 2004.
 """
@@ -49,7 +50,7 @@ plt.figure()
 for yi in range(3):
     plt.subplot(3, 1, 1 + yi)
     for xx in X_train[y_pred == yi]:
-        plt.plot(xx.ravel(), "k-")
+        plt.plot(xx.ravel(), "k-", alpha=.2)
     plt.xlim(0, sz)
     plt.ylim(-4, 4)
     plt.title("Cluster %d" % (yi + 1))

@@ -6,8 +6,9 @@ Time Series Clustering
 Dedicated methods exist for time series clustering.
 A first thing to understand is why there is a need for dedicated methods.
 
-The following Figure illustrates this need (code to reproduce is available in
-the Gallery of Examples (**TODO link**):
+The following Figure illustrates this need (code to reproduce is available \
+:ref:`in the Gallery of Examples
+<sphx_glr_auto_examples_clustering_plot_kmeans.py>`):
 
 **TODO img notebook**
 
@@ -32,8 +33,8 @@ ability of Dynamic Time Warping (DTW) to deal with time shifts, as explained
 above.
 Second, cluster centers (aka centroids) are computed with respect to DTW, hence
 they allow to retrieve an average shape whatever the temporal shifts in the
-cluster (see Section DTW barycenters for more details on how these barycenters
-are computed **TODO**).
+cluster (see :ref:`our dedicated User Guide section <dtw-barycenters>`
+for more details on how these barycenters are computed).
 
 In ``tslearn``, clustering a time series dataset with :math:`k`-means and a
 dedicated time series metric is as easy as
@@ -49,7 +50,8 @@ dedicated time series metric is as easy as
 
 where ``X_train`` is the considered unlabelled dataset of time series.
 The ``metric`` parameter can also be set to ``"softdtw"`` as an alternative
-time series metric (`cf.` **TODO link to DTW section on softDTW**).
+time series metric (`cf.`
+:ref:`our User Guide section on soft-DTW <dtw-softdtw>`).
 
 
 Kernel :math:`k`-means and Time Series Kernels
@@ -75,8 +77,9 @@ K-Shape
 **TODO**
 
 
-
-.. include:: gen_modules/backreferences/tslearn.clustering.examples
+.. minigallery:: tslearn.clustering.TimeSeriesKMeans tslearn.clustering.GlobalAlignmentKernelKMeans tslearn.clustering.KShape
+    :add-heading: Examples Using Clustering Estimators
+    :heading-level: -
 
 
 .. raw:: html

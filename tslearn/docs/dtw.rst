@@ -175,6 +175,8 @@ discard complex paths, as described in [2]_:
     cost = dtw_limited_warping_length(x, y, max_length)
 
 
+.. _dtw-barycenters:
+
 Barycenters
 -----------
 
@@ -198,6 +200,8 @@ algorithm presented in [3]_.
 This is the algorithm at stake when invoking
 :ref:`TimeSeriesKMeans <class-tslearn.clustering.TimeSeriesKMeans>` with
 ``metric="dtw"``.
+
+.. _dtw-softdtw:
 
 soft-DTW
 --------
@@ -234,6 +238,16 @@ Also, barycenters for soft-DTW can be estimated through gradient descent:
 This is the algorithm at stake when invoking
 :ref:`TimeSeriesKMeans <class-tslearn.clustering.TimeSeriesKMeans>` with
 ``metric="softdtw"``.
+
+
+.. minigallery:: tslearn.metrics.dtw tslearn.metrics.dtw_path tslearn.metrics.softdtw tslearn.metrics.dtw_path_from_metric tslearn.metrics.dtw_limited_warping_length tslearn.barycenters.softdtw_barycenter
+    :add-heading: Examples Using DTW variants
+    :heading-level: -
+
+
+.. raw:: html
+
+    <div style="clear: both;" />
 
 References
 ----------

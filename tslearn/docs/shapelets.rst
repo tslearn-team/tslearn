@@ -103,7 +103,9 @@ passing the data to the**
 **parameter.**
 
 
-.. include:: gen_modules/backreferences/tslearn.shapelets.ShapeletModel.examples
+.. minigallery:: tslearn.shapelets.ShapeletModel
+    :add-heading: Examples Using Shapelet-based Estimators
+    :heading-level: -
 
 
 .. raw:: html
