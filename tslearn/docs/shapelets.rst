@@ -58,9 +58,9 @@ their corresponding shapelet-transform space, the following code can be used:
 
 .. code-block:: python
 
-    from tslearn.shapelets import ShapeletModel
+    from tslearn.shapelets import LearningShapelets
 
-    model = ShapeletModel(n_shapelets_per_size={3: 2})
+    model = LearningShapelets(n_shapelets_per_size={3: 2})
     model.fit(X_train, y_train)
     train_distances = model.transform(X_train)
     test_distances = model.transform(X_test)
@@ -68,8 +68,9 @@ their corresponding shapelet-transform space, the following code can be used:
 
 
 This first line creates the 
-:ref:`ShapeletModel <class-tslearn.shapelets.ShapeletModel>`. 
-A :ref:`ShapeletModel <class-tslearn.shapelets.ShapeletModel>` has several
+:ref:`LearningShapelets <class-tslearn.shapelets.LearningShapelets>`.
+A :ref:`LearningShapelets <class-tslearn.shapelets.LearningShapelets>` has
+several
 hyper-parameters, such as the maximum number of iterations and the batch size.
 One important hyper-parameters is the ``n_shapelets_per_size``
 which is a dictionary where the keys correspond to the desired lengths of the 
@@ -103,7 +104,7 @@ passing the data to the**
 **parameter.**
 
 
-.. minigallery:: tslearn.shapelets.ShapeletModel
+.. minigallery:: tslearn.shapelets.LearningShapelets
     :add-heading: Examples Using Shapelet-based Estimators
     :heading-level: -
 
