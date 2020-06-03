@@ -88,7 +88,7 @@ learned shapelets by using the ``shapelets_as_time_series_`` attribute.
 **It is important to note that due to the fact that a technique based on
 gradient-descent is used to learn the shapelets, our model can be prone
 to numerical issues (e.g. exploding and vanishing gradients). For that
-reason, it is important to scale your data. This can be done before
+reason, it is important to normalize your data. This can be done before
 passing the data to the**
 ``fit``
 **and**
