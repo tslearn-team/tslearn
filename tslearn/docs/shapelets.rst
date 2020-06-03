@@ -31,7 +31,7 @@ shapelet :math:`\textbf{s}` is supposed to be present in time series
 
 In a classification setting, the goal is then to find the most discriminant
 shapelets given some labeled time series data.
-Shapelets can be sampled from the training set [1]_ or learned using
+Shapelets can be mined from the training set [1]_ or learned using
 gradient-descent.
 
 Learning Time-series Shapelets
