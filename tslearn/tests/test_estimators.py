@@ -197,4 +197,7 @@ def test_all_estimators(name, Estimator):
                  Estimator().get_tags()["allow_nan"])
     if allow_nan:
         checks.ALLOW_NAN.append(name)
+    if name in ["ShapeletModel", "SerializableShapeletModel"]:
+        # Deprecated models
+        return
     check_estimator(Estimator)

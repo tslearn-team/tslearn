@@ -239,10 +239,7 @@ def check_fit_idempotent(name, estimator_orig):
 
 def check_classifiers_classes(name, classifier_orig):
     # Case of shapelet models
-    if name == 'SerializableShapeletModel':
-        raise SkipTest('Skipping check_classifiers_classes for shapelets'
-                       ' due to convergence issues...')
-    elif name == 'ShapeletModel':
+    if name == 'LearningShapelets':
         X_multiclass, y_multiclass = _create_large_ts_dataset()
         classifier_orig = clone(classifier_orig)
         classifier_orig.max_iter = 1000
@@ -290,10 +287,7 @@ def check_classifiers_classes(name, classifier_orig):
 def check_classifiers_train(name, classifier_orig, readonly_memmap=False,
                             X_dtype='float64'):
     # Case of shapelet models
-    if name == 'SerializableShapeletModel':
-        raise SkipTest('Skipping check_classifiers_classes for shapelets'
-                       ' due to convergence issues...')
-    elif name == 'ShapeletModel':
+    if name == 'LearningShapelets':
         X_m, y_m = _create_large_ts_dataset()
         classifier_orig = clone(classifier_orig)
         classifier_orig.max_iter = 1000
@@ -545,7 +539,8 @@ def check_different_length_fit_predict_transform(name, estimator):
     if isinstance(estimator, TimeSeriesKMeans):
         new_estimator = clone(estimator)
         new_estimator.metric = "dtw"
-    elif "ShapeletModel" in name:  # Prepare shapelet model for long series
+    elif name == "LearningShapelets":
+        # Prepare shapelet model for long series
         new_estimator = clone(estimator)
         new_estimator.max_size = 2 * X.shape[1]
     else:
