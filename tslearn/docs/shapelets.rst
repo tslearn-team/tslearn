@@ -64,14 +64,6 @@ their corresponding shapelet-transform space, the following code can be used:
     shapelets = model.shapelets_as_time_series_
 
 
-.. include:: gen_modules/backreferences/tslearn.shapelets.ShapeletModel.examples
-
-
-.. raw:: html
-
-    <div style="clear: both;" />
-
-
 This first line creates the 
 :ref:`ShapeletModel <class-tslearn.shapelets.ShapeletModel>`. 
 A :ref:`ShapeletModel <class-tslearn.shapelets.ShapeletModel>` has several
@@ -106,6 +98,14 @@ by using our :ref:`preprocessing <class-tslearn.preprocessing>`
 module but this can be done internally by the algorithm itself by setting the 
 :ref:`scale <class-tslearn.shapelets.ShapeletModel.scale>`
 parameter.**
+
+
+.. include:: gen_modules/backreferences/tslearn.shapelets.ShapeletModel.examples
+
+
+.. raw:: html
+
+    <div style="clear: both;" />
 
 References
 ----------
