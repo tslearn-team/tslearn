@@ -68,21 +68,18 @@ This first line creates the
 :ref:`ShapeletModel <class-tslearn.shapelets.ShapeletModel>`. 
 A :ref:`ShapeletModel <class-tslearn.shapelets.ShapeletModel>` has several
 hyper-parameters, such as the maximum number of iterations and the batch size.
-One important hyper-parameters is the 
-:ref:`n_shapelets_per_size <class-tslearn.shapelets.ShapeletModel.n_shapelets_per_size>`, 
-which is a dictionary where the keys correspond to the desired lengths of the shapelets
-and the values to the desired number of shapelets per length. When set to `None`,
-this dictionary will be determined by a 
+One important hyper-parameters is the ``n_shapelets_per_size``
+which is a dictionary where the keys correspond to the desired lengths of the 
+shapelets and the values to the desired number of shapelets per length. When 
+set to `None`, this dictionary will be determined by a 
 :ref:`heuristic <class-tslearn.shapelets.grabocka_params_to_shapelet_size_dict>`. 
-After creating the model, we can 
-:ref:`fit <class-tslearn.shapelets.ShapeletModel.fit>` the optimal shapelets 
-using our training data. After a fitting phase, the distances can be calculated using 
-the :ref:`transform <class-tslearn.shapelets.ShapeletModel.transform>` function. Moreover,
-you can easily access the learned shapelets by using 
-:ref:`shapelets_as_time_series_ <class-tslearn.shapelets.ShapeletModel.shapelets_as_time_series_>`.
+After creating the model, we can ``fit`` the optimal shapelets 
+using our training data. After a fitting phase, the distances can be calculated 
+using the ``transform`` function. Moreover, you can easily access the 
+learned shapelets by using the ``shapelets_as_time_series_`` attribute.
 
 .. figure:: _static/img/learning_shapelets.png
-    :width: 100%
+    :width: 80%
     :align: center
 
     A schematic overview of the "Learning Shapelets" approach.
@@ -92,12 +89,10 @@ you can easily access the learned shapelets by using
 gradient-descent is used to learn the shapelets, our model can be prone
 to numerical issues (e.g. exploding and vanishing gradients). For that
 reason, it is important to scale your data. This can be done before
-passing the data to the :ref:`fit <class-tslearn.shapelets.ShapeletModel.fit>`
-and :ref:`transform <class-tslearn.shapelets.ShapeletModel.transform>` methods,
-by using our :ref:`preprocessing <class-tslearn.preprocessing>`
+passing the data to the **``fit``** and **``transform``** methods,
+by using our **:ref:`preprocessing <class-tslearn.preprocessing>`**
 module but this can be done internally by the algorithm itself by setting the 
-:ref:`scale <class-tslearn.shapelets.ShapeletModel.scale>`
-parameter.**
+**``scale``** parameter.**
 
 
 .. include:: gen_modules/backreferences/tslearn.shapelets.ShapeletModel.examples
