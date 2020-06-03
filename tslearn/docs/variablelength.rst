@@ -17,7 +17,7 @@ Classification
 
 * :ref:`KNeighborsTimeSeriesClassifier <class-tslearn.neighbors.KNeighborsTimeSeriesClassifier>`
 * :ref:`TimeSeriesSVC <class-tslearn.svm.TimeSeriesSVC>`
-* :ref:`ShapeletModel <class-tslearn.shapelets.ShapeletModel>`
+* :ref:`LearningShapelets <class-tslearn.shapelets.LearningShapelets>`
 
 Examples
 ~~~~~~~~
@@ -36,8 +36,8 @@ Examples
 
 .. code-block:: python
 
-    from tslearn.shapelets import ShapeletModel
-    clf = ShapeletModel(n_shapelets_per_size={3: 1})
+    from tslearn.shapelets import LearningShapelets
+    clf = LearningShapelets(n_shapelets_per_size={3: 1})
     clf.fit(X, y)
 
 Regression

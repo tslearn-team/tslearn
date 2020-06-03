@@ -42,7 +42,7 @@ Learning Time-series Shapelets
 
 ``tslearn`` provides an implementation of "Learning Time-series Shapelets",
 introduced in [2]_, that is an instance of the latter category.
-In :ref:`Learning Shapelets <class-tslearn.shapelets.ShapeletModel>`,
+In :ref:`Learning Shapelets <class-tslearn.shapelets.LearningShapelets>`,
 shapelets are learned such
 that time series represented in their shapelet-transform space (`i.e.` their
 distances to each of the shapelets) are linearly separable.
