@@ -5,7 +5,7 @@ Shapelets
 
 Shapelets are defined in [1]_ as "subsequences that are in some sense
 maximally representative of a class".
-Unformally, if we assume a binary classification setting, a shapelet is said
+Informally, if we assume a binary classification setting, a shapelet is
 discriminant if it is **present** in most series of one class and absent from
 series of the other class.
 To assess the level of presence, one uses shapelet matches:
@@ -20,10 +20,17 @@ where :math:`L` is the length (number of timestamps) of shapelet
 shapelet :math:`\textbf{s}` is supposed to be present in time series
 :math:`\mathbf{x}`.
 
-**TODO: illustration here**
+.. figure:: _static/img/shap_distance.png
+    :width: 50%
+    :align: center
+
+    The distance from a time series to a shapelet is done by sliding the
+    shorter shapelet over the longer time series and calculating the
+    point-wise distances. The minimal distance found is returned. Figure
+    taken from [1]_.
 
 In a classification setting, the goal is then to find the most discriminant
-shapelets given some time series data.
+shapelets given some labeled time series data.
 Shapelets can be sampled from the training set [1]_ or learned using
 gradient-descent.
 
@@ -34,8 +41,8 @@ Learning Time-series Shapelets
 introduced in [2]_, that is an instance of the latter category.
 In :ref:`Learning Shapelets <class-tslearn.shapelets.ShapeletModel>`,
 shapelets are learned such
-that time series represented in their shapelet-transform space are linearly
-separable.
+that time series represented in their shapelet-transform space (i.e. their 
+distances to each of the shapelets) are linearly separable.
 A shapelet-transform representation of a time series :math:`\mathbf{x}` given
 a set of shapelets :math:`\{\mathbf{s}_i\}_{i \leq k}` is the feature vector:
 
@@ -43,27 +50,17 @@ a set of shapelets :math:`\{\mathbf{s}_i\}_{i \leq k}` is the feature vector:
 
     [d(\mathbf{x}, \mathbf{s}_1), \cdots, d(\mathbf{x}, \mathbf{s}_k)]
 
-In ``tslearn``, computing shapelet-transforms from a fitted model is
+In ``tslearn``, in order to learn shapelets and transform timeseries to
+their corresponding shapelet-transform space, the following code can be used:
 
 .. code-block:: python
 
     from tslearn.shapelets import ShapeletModel
 
     model = ShapeletModel(n_shapelets_per_size={3: 2})
-    model.fit(X, y)
-    shapelet_transform = model.transform(X)
-
-
-**TODO: example of separability here in a 2d space**
-
-Once fit, the model can shamelessly exhibit its shapelets:
-
-.. code-block:: python
-
-    from tslearn.shapelets import ShapeletModel
-
-    model = ShapeletModel(n_shapelets_per_size={3: 2})
-    model.fit(X, y)
+    model.fit(X_train, y_train)
+    train_distances = model.transform(X_train)
+    test_distances = model.transform(X_test)
     shapelets = model.shapelets_as_time_series_
 
 
@@ -73,6 +70,32 @@ Once fit, the model can shamelessly exhibit its shapelets:
 .. raw:: html
 
     <div style="clear: both;" />
+
+
+This first line creates the `ShapeletModel`. A `ShapeletModel` has several
+hyper-parameters, such as the maximum number of iterations and the batch size.
+One important hyper-parameters is the `n_shapelets_per_size`, which is a
+dictionary where the keys correspond to the desired lengths of the shapelets
+and the values to the desired number of shapelets per length. When set to `None`,
+this dictionary will be determined by a heuristic. After creating the model,
+we can `fit` the optimal shapelets using our training data. After a fitting phase,
+the distances can be calculated using the `transform` function. Moreover,
+you can easily access the learned shapelets by using `shapelets_as_time_series_`.
+
+.. figure:: _static/img/learning_shapelets.png
+    :width: 50%
+    :align: center
+
+    A schematic overview of the "Learning Shapelets" approach.
+
+
+**It is important to note that due to the fact that a technique based on
+gradient-descent is used to learn the shapelets, our model can be prone
+to numerical issues (e.g. exploding and vanishing gradients). For that
+reason, it is important to scale your data. This can be done before
+passing the data to the `fit` and `transform` methods, but this can be
+done internally by the algorithm itself by setting the `scale` parameter
+to `True`.**
 
 References
 ----------
