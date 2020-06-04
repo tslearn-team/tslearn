@@ -198,7 +198,7 @@ algorithm presented in [3]_.
 
 
 This is the algorithm at stake when invoking
-:ref:`TimeSeriesKMeans <class-tslearn.clustering.TimeSeriesKMeans>` with
+:class:`tslearn.clustering.TimeSeriesKMeans` with
 ``metric="dtw"``.
 
 .. _dtw-softdtw:
@@ -236,7 +236,7 @@ Also, barycenters for soft-DTW can be estimated through gradient descent:
 
 
 This is the algorithm at stake when invoking
-:ref:`TimeSeriesKMeans <class-tslearn.clustering.TimeSeriesKMeans>` with
+:class:`tslearn.clustering.TimeSeriesKMeans` with
 ``metric="softdtw"``.
 
 

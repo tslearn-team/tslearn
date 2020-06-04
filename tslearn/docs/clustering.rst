@@ -27,7 +27,7 @@ the dataset at stake clearly holds such invariants.
 Hence, it would be profitable to use :math:`k`-means clustering with a metric
 that has these invariants, such as :ref:`Dynamic Time Warping <dtw>`.
 
-The :ref:`clustering <mod-clustering>` module in ``tslearn`` offers that
+The :mod:`tslearn.clustering` module in ``tslearn`` offers that
 option, which leads to better clusters and centroids:
 
 .. figure:: _static/img/kmeans_dtw.svg

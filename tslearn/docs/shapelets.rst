@@ -42,7 +42,7 @@ Learning Time-series Shapelets
 
 ``tslearn`` provides an implementation of "Learning Time-series Shapelets",
 introduced in [2]_, that is an instance of the latter category.
-In :ref:`Learning Shapelets <class-tslearn.shapelets.LearningShapelets>`,
+In Learning Shapelets,
 shapelets are learned such
 that time series represented in their shapelet-transform space (`i.e.` their
 distances to each of the shapelets) are linearly separable.
@@ -67,9 +67,7 @@ their corresponding shapelet-transform space, the following code can be used:
     shapelets = model.shapelets_as_time_series_
 
 
-This first line creates the 
-:ref:`LearningShapelets <class-tslearn.shapelets.LearningShapelets>`.
-A :ref:`LearningShapelets <class-tslearn.shapelets.LearningShapelets>` has
+A :class:`tslearn.shapelets.LearningShapelets` model has
 several
 hyper-parameters, such as the maximum number of iterations and the batch size.
 One important hyper-parameters is the ``n_shapelets_per_size``

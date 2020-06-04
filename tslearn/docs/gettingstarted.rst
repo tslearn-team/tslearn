@@ -7,8 +7,8 @@ using dedicated machine learning algorithms.
 Time series format
 ------------------
 
-First, let us have a look at what `tslearn` time series format is. To do so, we will use the ``to_time_series`` utility
-from :ref:`tslearn.utils <mod-utils>` module:
+First, let us have a look at what ``tslearn`` time series format is. To do so, we will use the ``to_time_series`` utility
+from :mod:`tslearn.utils`:
 
 .. code-block:: python
   
@@ -18,7 +18,7 @@ from :ref:`tslearn.utils <mod-utils>` module:
     >>> print(formatted_time_series.shape)
     (4, 1)
 
-In `tslearn`, a time series is nothing more than a two-dimensional `numpy` array with its first dimension corresponding
+In ``tslearn``, a time series is nothing more than a two-dimensional ``numpy`` array with its first dimension corresponding
 to the time axis and the second one being the feature dimensionality (1 by default).
 
 Then, if we want to manipulate sets of time series, we can cast them to three-dimensional arrays, using
@@ -46,7 +46,7 @@ Importing standard time series datasets
 ---------------------------------------
 
 If you aim at experimenting with standard time series datasets, you should have a look at the
-:ref:`tslearn.datasets <mod-datasets>` module.
+:mod:`tslearn.datasets`.
 
 .. code-block:: python
 
@@ -58,7 +58,7 @@ If you aim at experimenting with standard time series datasets, you should have 
     (1000,)
 
 Note that when working with time series datasets, it can be useful to rescale time series using tools from the
-:ref:`tslearn.preprocessing <mod-preprocessing>` module.
+:mod:`tslearn.preprocessing`.
 
 If you want to import other time series from text files, the expected format is:
 
@@ -74,7 +74,7 @@ the second one is of length 2).
    1.0 0.0 2.5|3.0 2.0 1.0
    1.0 2.0|4.333 2.12
 
-To read from / write to this format, have a look at the :ref:`tslearn.utils <mod-utils>` module:
+To read from / write to this format, have a look at the :mod:`tslearn.utils`:
 
 .. code-block:: python
 
@@ -85,10 +85,10 @@ To read from / write to this format, have a look at the :ref:`tslearn.utils <mod
 Playing with your data
 ----------------------
 
-Once your data is loaded and formatted according to `tslearn` standards, the next step is to feed machine learning
-models with it. Most `tslearn` models inherit from `scikit-learn` base classes, hence interacting with them is very
-similar to interacting with a `scikit-learn` model, except that datasets are not two-dimensional arrays, but rather
-`tslearn` time series datasets (`i.e.` three-dimensional arrays or lists of two-dimensional arrays).
+Once your data is loaded and formatted according to ``tslearn`` standards, the next step is to feed machine learning
+models with it. Most ``tslearn`` models inherit from ``scikit-learn`` base classes, hence interacting with them is very
+similar to interacting with a ``scikit-learn`` model, except that datasets are not two-dimensional arrays, but rather
+``tslearn`` time series datasets (`i.e.` three-dimensional arrays or lists of two-dimensional arrays).
 
 .. code-block:: python
 
