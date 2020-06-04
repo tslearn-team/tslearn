@@ -7,3 +7,4 @@ User Guide
     dtw
     clustering
     shapelets
+    matrix-profile

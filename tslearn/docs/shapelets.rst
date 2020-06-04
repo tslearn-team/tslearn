@@ -98,7 +98,7 @@ passing the data to the**
 **and**
 ``transform``
 **methods, by using our**
-:ref:`preprocessing <mod-preprocessing>`
+:mod:`tslearn.preprocessing`
 **module but this can be done internally by the algorithm itself by setting the**
 ``scale``
 **parameter.**

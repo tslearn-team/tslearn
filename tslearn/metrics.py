@@ -1,5 +1,9 @@
 """
-The :mod:`tslearn.metrics` module gathers time series similarity metrics.
+The :mod:`tslearn.metrics` module delivers time-series specific metrics to be 
+used at the core of machine learning algorithms.
+
+**User guide:** See the :ref:`Dynamic Time Warping (DTW) <dtw>` section for 
+further details.
 """
 
 import warnings

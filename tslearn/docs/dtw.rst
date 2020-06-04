@@ -240,7 +240,7 @@ This is the algorithm at stake when invoking
 ``metric="softdtw"``.
 
 
-.. minigallery:: tslearn.metrics.dtw tslearn.metrics.dtw_path tslearn.metrics.softdtw tslearn.metrics.dtw_path_from_metric tslearn.metrics.dtw_limited_warping_length tslearn.barycenters.softdtw_barycenter
+.. minigallery:: tslearn.metrics.dtw tslearn.metrics.dtw_path tslearn.metrics.soft_dtw tslearn.metrics.dtw_path_from_metric tslearn.metrics.dtw_limited_warping_length tslearn.barycenters.softdtw_barycenter
     :add-heading: Examples Using DTW variants
     :heading-level: -
 

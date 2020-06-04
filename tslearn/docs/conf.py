@@ -48,6 +48,7 @@ numpydoc_show_class_members = True
 numpydoc_class_members_toctree = False
 
 autosummary_generate = True
+autosummary_generate_overwrite = False
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/{.major}'.format(
@@ -207,7 +208,7 @@ html_theme_options = {
 }
 
 def setup(app):
-    app.add_stylesheet("custom.css") # also can be a full URL
+    app.add_css_file("custom.css") # also can be a full URL
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
