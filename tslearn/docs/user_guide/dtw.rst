@@ -51,7 +51,7 @@ The following image exhibits the DTW path (in white) for a given pair of time
 series, on top of the cross-similarity matrix that stores :math:`d(x_i, y_j)`
 values.
 
-.. figure:: _static/img/dtw_thumb.png
+.. figure:: ../_static/img/dtw_thumb.png
     :width: 30%
     :align: center
 
@@ -133,7 +133,7 @@ First, the Sakoe-Chiba band is parametrized by a radius :math:`r` (number of
 off-diagonal elements to consider, also called warping window size sometimes), 
 as illustrated below:
 
-.. figure:: _static/img/sakoe_chiba.png
+.. figure:: ../_static/img/sakoe_chiba.png
     :width: 30%
     :align: center
 
@@ -151,7 +151,7 @@ The corresponding code would be:
 Second, the Itakura parallelogram sets a maximum slope :math:`s` for alignment
 paths, which leads to a parallelogram-shaped constraint:
 
-.. figure:: _static/img/itakura.png
+.. figure:: ../_static/img/itakura.png
     :width: 30%
     :align: center
 

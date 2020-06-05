@@ -71,7 +71,7 @@ Finally, if you use ``tslearn`` in a scientific publication,
     :maxdepth: 2
 
     quickstart
-    userguide
+    user_guide/userguide
     reference
     auto_examples/index
     citing

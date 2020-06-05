@@ -11,7 +11,7 @@ is key (code to reproduce is available
 :ref:`in the Gallery of Examples
 <sphx_glr_auto_examples_clustering_plot_kmeans.py>`).
 
-.. figure:: _static/img/kmeans.svg
+.. figure:: ../_static/img/kmeans.svg
     :width: 100%
     :align: center
 
@@ -35,7 +35,7 @@ The :mod:`tslearn.clustering` module in ``tslearn`` offers an
 option to use DTW as the core metric in a :math:`k`-means algorithm,
 which leads to better clusters and centroids:
 
-.. figure:: _static/img/kmeans_dtw.svg
+.. figure:: ../_static/img/kmeans_dtw.svg
     :width: 100%
     :align: center
 
@@ -79,7 +79,7 @@ Then, the kernel :math:`k`-means algorithm [2]_, that is equivalent to a
 that would operate in the Reproducing Kernel Hilbert Space associated to the
 chosen kernel, can be used:
 
-.. figure:: _static/img/kernel_kmeans.svg
+.. figure:: ../_static/img/kernel_kmeans.svg
     :width: 100%
     :align: center
 

@@ -56,7 +56,7 @@ intersphinx_mapping = {
     'numpy': ('https://numpy.org/doc/stable', None),
     'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
     'matplotlib': ('https://matplotlib.org/', None),
-    'sklearn': ('http://scikit-learn.org/stable', None)
+    'sklearn': ('https://scikit-learn.org/stable', None)
 }
 
 from sphinx_gallery.scrapers import matplotlib_scraper
@@ -169,7 +169,7 @@ html_theme_options = {
 
     'navbar_links': [
         ("Quick Start", "quickstart"),
-        ("User Guide", "userguide"),
+        ("User Guide", "user_guide/userguide"),
         ("API", "reference"),
         ("Examples", "auto_examples/index"),
         ("Citing tslearn", "citing"),

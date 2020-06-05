@@ -23,7 +23,7 @@ If the above-defined distance is small enough, then
 shapelet :math:`\textbf{s}` is supposed to be present in time series
 :math:`\mathbf{x}`.
 
-.. figure:: _static/img/shap_distance.png
+.. figure:: ../_static/img/shap_distance.png
     :width: 50%
     :align: center
 
@@ -80,7 +80,7 @@ using our training data. After a fitting phase, the distances can be calculated
 using the ``transform`` function. Moreover, you can easily access the 
 learned shapelets by using the ``shapelets_as_time_series_`` attribute.
 
-.. figure:: _static/img/learning_shapelets.png
+.. figure:: ../_static/img/learning_shapelets.png
     :width: 80%
     :align: center
 
