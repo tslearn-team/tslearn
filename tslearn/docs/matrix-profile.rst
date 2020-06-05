@@ -7,7 +7,7 @@ Matrix Profile
 
 
 .. minigallery:: tslearn.matrix_profile.MatrixProfile
-    :add-heading: Examples Using Matrix Profile
+    :add-heading: Examples Involving Matrix Profile
     :heading-level: -
 
 

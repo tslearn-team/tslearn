@@ -102,7 +102,7 @@ parameter.
 
 
 .. minigallery:: tslearn.shapelets.LearningShapelets
-    :add-heading: Examples Using Shapelet-based Estimators
+    :add-heading: Examples Involving Shapelet-based Estimators
     :heading-level: -
 
 

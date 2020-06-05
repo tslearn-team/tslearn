@@ -8,3 +8,4 @@ User Guide
     clustering
     shapelets
     matrix-profile
+    early
