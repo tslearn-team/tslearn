@@ -64,14 +64,12 @@ their corresponding shapelet-transform space, the following code can be used:
     shapelets = model.shapelets_as_time_series_
 
 
-This first line creates the 
-:ref:`ShapeletModel <class-tslearn.shapelets.ShapeletModel>`. 
 A :ref:`ShapeletModel <class-tslearn.shapelets.ShapeletModel>` has several
 hyper-parameters, such as the maximum number of iterations and the batch size.
 One important hyper-parameters is the ``n_shapelets_per_size``
 which is a dictionary where the keys correspond to the desired lengths of the 
 shapelets and the values to the desired number of shapelets per length. When 
-set to `None`, this dictionary will be determined by a 
+set to ``None``, this dictionary will be determined by a 
 :ref:`heuristic <fun-tslearn.shapelets.grabocka_params_to_shapelet_size_dict>`. 
 After creating the model, we can ``fit`` the optimal shapelets 
 using our training data. After a fitting phase, the distances can be calculated 
@@ -84,20 +82,19 @@ learned shapelets by using the ``shapelets_as_time_series_`` attribute.
 
     A schematic overview of the "Learning Shapelets" approach.
 
-
-**It is important to note that due to the fact that a technique based on
+It is important to note that due to the fact that a technique based on
 gradient-descent is used to learn the shapelets, our model can be prone
 to numerical issues (e.g. exploding and vanishing gradients). For that
 reason, it is important to normalize your data. This can be done before
-passing the data to the**
+passing the data to the
 ``fit``
-**and**
+and
 ``transform``
-**methods, by using our**
+methods, by using our
 :ref:`preprocessing <mod-preprocessing>`
-**module but this can be done internally by the algorithm itself by setting the**
+module but this can be done internally by the algorithm itself by setting the
 ``scale``
-**parameter.**
+parameter.
 
 
 .. include:: gen_modules/backreferences/tslearn.shapelets.ShapeletModel.examples
