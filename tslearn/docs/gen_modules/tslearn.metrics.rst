@@ -3,13 +3,6 @@
 tslearn.metrics
 ===============
 
-This modules delivers time-series specific metrics to be used at the core of
-machine learning algorithms.
-Dynamic Time Warping (DTW) and variants are described in more details in
-`a dedicated page`_.
-
-.. _a dedicated page: ../dtw.html
-
 .. automodule:: tslearn.metrics
 
 

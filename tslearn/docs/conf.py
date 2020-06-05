@@ -48,6 +48,7 @@ numpydoc_show_class_members = True
 numpydoc_class_members_toctree = False
 
 autosummary_generate = True
+autosummary_generate_overwrite = False
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/{.major}'.format(
@@ -58,6 +59,16 @@ intersphinx_mapping = {
     'sklearn': ('http://scikit-learn.org/stable', None)
 }
 
+from sphinx_gallery.scrapers import matplotlib_scraper
+
+class matplotlib_svg_scraper(object):
+
+    def __repr__(self):
+        return self.__class__.__name__
+
+    def __call__(self, *args, **kwargs):
+        return matplotlib_scraper(*args, format='svg', **kwargs)
+
 sphinx_gallery_conf = {
     'examples_dirs': ['./examples'],
     'gallery_dirs': ['./auto_examples'],
@@ -67,7 +78,8 @@ sphinx_gallery_conf = {
     'doc_module': ('tslearn',),
     'subsection_order': ["examples", "examples/metrics", "examples/neighbors",
                          "examples/clustering", "examples/classification",
-                         "examples/misc"].index
+                         "examples/misc"].index,
+    'image_scrapers': (matplotlib_svg_scraper(),),
     # 'binder': {
     #     # Required keys
     #     'org': 'rtavenar',
@@ -196,7 +208,7 @@ html_theme_options = {
 }
 
 def setup(app):
-    app.add_stylesheet("custom.css") # also can be a full URL
+    app.add_css_file("custom.css") # also can be a full URL
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

@@ -24,7 +24,7 @@ tslearn.shapelets
       :toctree: shapelets
       :template: class.rst
    
-      ShapeletModel
+      LearningShapelets
    
    
 

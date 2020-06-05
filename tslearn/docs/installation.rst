@@ -54,10 +54,10 @@ Other requirements
 ``tslearn`` builds on (and hence depends on) ``scikit-learn``, ``numpy`` and
 ``scipy`` libraries.
 
-If you plan to use the :ref:`shapelets <mod-shapelets>` module from
-``tslearn``, ``keras`` and ``tensorflow`` should also be installed.
+If you plan to use the :mod:`tslearn.shapelets` module from
+``tslearn``, ``tensorflow`` (v2) should also be installed.
 ``h5py`` is required for reading or writing models using the hdf5 file format.
 In order to load multivariate datasets from the UCR/UEA archive using the
-:ref:`UCR_UEA_datasets <class-tslearn.datasets.UCR_UEA_datasets>` class,
+:class:`tslearn.datasets.UCR_UEA_datasets` class,
 installed ``scipy`` version should be greater than 1.3.0.
 

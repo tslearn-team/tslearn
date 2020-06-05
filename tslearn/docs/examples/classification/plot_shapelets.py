@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 
 from tslearn.datasets import CachedDatasets
 from tslearn.preprocessing import TimeSeriesScalerMinMax
-from tslearn.shapelets import ShapeletModel, \
+from tslearn.shapelets import LearningShapelets, \
     grabocka_params_to_shapelet_size_dict
 from tslearn.utils import ts_size
 
@@ -48,13 +48,13 @@ shapelet_sizes = grabocka_params_to_shapelet_size_dict(n_ts=n_ts,
 
 # Define the model using parameters provided by the authors (except that we
 # use fewer iterations here)
-shp_clf = ShapeletModel(n_shapelets_per_size=shapelet_sizes,
-                        optimizer=tf.optimizers.Adam(.01),
-                        batch_size=16,
-                        weight_regularizer=.01,
-                        max_iter=200,
-                        random_state=42,
-                        verbose=0)
+shp_clf = LearningShapelets(n_shapelets_per_size=shapelet_sizes,
+                            optimizer=tf.optimizers.Adam(.01),
+                            batch_size=16,
+                            weight_regularizer=.01,
+                            max_iter=200,
+                            random_state=42,
+                            verbose=0)
 shp_clf.fit(X_train, y_train)
 
 # Make predictions and calculate accuracy score

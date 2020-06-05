@@ -15,9 +15,9 @@ variable-length time series dataset:
 Classification
 --------------
 
-* :ref:`KNeighborsTimeSeriesClassifier <class-tslearn.neighbors.KNeighborsTimeSeriesClassifier>`
-* :ref:`TimeSeriesSVC <class-tslearn.svm.TimeSeriesSVC>`
-* :ref:`ShapeletModel <class-tslearn.shapelets.ShapeletModel>`
+* :class:`tslearn.neighbors.KNeighborsTimeSeriesClassifier`
+* :class:`tslearn.svm.TimeSeriesSVC`
+* :class:`tslearn.shapelets.LearningShapelets`
 
 Examples
 ~~~~~~~~
@@ -36,14 +36,14 @@ Examples
 
 .. code-block:: python
 
-    from tslearn.shapelets import ShapeletModel
-    clf = ShapeletModel(n_shapelets_per_size={3: 1})
+    from tslearn.shapelets import LearningShapelets
+    clf = LearningShapelets(n_shapelets_per_size={3: 1})
     clf.fit(X, y)
 
 Regression
 ----------
 
-* :ref:`TimeSeriesSVR <class-tslearn.svm.TimeSeriesSVR>`
+* :class:`tslearn.svm.TimeSeriesSVR`
 
 Examples
 ~~~~~~~~
@@ -58,7 +58,7 @@ Examples
 Nearest-neighbor search
 -----------------------
 
-* :ref:`KNeighborsTimeSeries <class-tslearn.neighbors.KNeighborsTimeSeries>`
+* :class:`tslearn.neighbors.KNeighborsTimeSeries`
 
 Examples
 ~~~~~~~~
@@ -74,9 +74,9 @@ Examples
 Clustering
 ----------
 
-* :ref:`GlobalAlignmentKernelKMeans <class-tslearn.clustering.GlobalAlignmentKernelKMeans>`
-* :ref:`TimeSeriesKMeans <class-tslearn.clustering.TimeSeriesKMeans>`
-* :ref:`silhouette_score <fun-tslearn.clustering.silhouette_score>`
+* :class:`tslearn.clustering.GlobalAlignmentKernelKMeans`
+* :class:`tslearn.clustering.TimeSeriesKMeans`
+* :class:`tslearn.clustering.silhouette_score`
 
 Examples
 ~~~~~~~~
@@ -108,8 +108,8 @@ Barycenter computation
 ----------------------
 
 
-* :ref:`dtw_barycenter_averaging <fun-tslearn.barycenters.dtw_barycenter_averaging>`
-* :ref:`softdtw_barycenter <fun-tslearn.barycenters.softdtw_barycenter>`
+* :class:`tslearn.barycenters.dtw_barycenter_averaging`
+* :class:`tslearn.barycenters.softdtw_barycenter`
 
 Examples
 ~~~~~~~~
@@ -129,8 +129,8 @@ Examples
 Model selection
 ---------------
 
-Also, model selection tools offered by `sklearn` can be used on variable-length
-data, in a standard way, such as:
+Also, model selection tools offered by ``scikit-learn`` can be used on
+variable-length data, in a standard way, such as:
 
 .. code-block:: python
 
@@ -148,7 +148,7 @@ data, in a standard way, such as:
 Resampling
 ----------
 
-* :ref:`TimeSeriesResampler <class-tslearn.preprocessing.TimeSeriesResampler>`
+* :class:`tslearn.preprocessing.TimeSeriesResampler`
 
 Finally, if you want to use a method that cannot run on variable-length time
 series, one option would be to first resample your data so that all your
