@@ -96,13 +96,8 @@ shape).
 This is because Global Alignment Kernel is not invariant to time shifts, as
 demonstrated in [3]_ for the closely related soft-DTW [4]_.
 
-K-Shape
--------
 
-**TODO**
-
-
-.. minigallery:: tslearn.clustering.TimeSeriesKMeans tslearn.clustering.GlobalAlignmentKernelKMeans tslearn.clustering.KShape
+.. minigallery:: tslearn.clustering.TimeSeriesKMeans tslearn.clustering.GlobalAlignmentKernelKMeans
     :add-heading: Examples Using Clustering Estimators
     :heading-level: -
 
