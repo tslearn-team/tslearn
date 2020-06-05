@@ -168,9 +168,9 @@ html_theme_options = {
     'navbar_site_name': "Site map",
 
     'navbar_links': [
-        ("Quick-start", "quickstart"),
+        ("Quick Start", "quickstart"),
         ("User Guide", "userguide"),
-        ("API Reference", "reference"),
+        ("API", "reference"),
         ("Examples", "auto_examples/index"),
         ("Citing tslearn", "citing"),
     ],
