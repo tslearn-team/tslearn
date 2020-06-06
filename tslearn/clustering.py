@@ -643,6 +643,11 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
 
 class GlobalAlignmentKernelKMeans(KernelKMeans):
     def __init__(self, **kwargs):
+        warnings.warn(
+            "`GlobalAlignmentKernelKMeans` is deprecated in version "
+            "0.4 and will be removed in 0.6. Use `KernelKMeans` "
+            "instead.",
+            DeprecationWarning, stacklevel=2)
         super().__init__(**kwargs)
         self.kernel = "gak"
 
