@@ -27,7 +27,7 @@ def test_check_full_length():
                                                        [1, 2, 3, 4, 5]]))
 
 
-def test_gak_kmeans():
+def test_kernel_kmeans():
     n, sz, d = 15, 10, 3
     rng = np.random.RandomState(0)
     time_series = rng.randn(n, sz, d)
@@ -41,6 +41,12 @@ def test_gak_kmeans():
                           max_iter=5,
                           random_state=rng).fit(time_series)
     assert gak_km._X_fit is None
+
+    gak_km = KernelKMeans(n_clusters=2, verbose=False, kernel="rbf",
+                          kernel_params={"gamma": 1.},
+                          max_iter=5,
+                          random_state=rng).fit(time_series)
+    assert gak_km.sigma_gak_ is None
 
 
 def test_kmeans():

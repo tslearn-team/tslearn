@@ -29,7 +29,7 @@ from sklearn.utils.validation import check_is_fitted
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance, \
     TimeSeriesResampler
 from tslearn.utils import (to_time_series_dataset, to_time_series,
-                           ts_size, check_dims)
+                           to_sklearn_dataset, check_dims)
 from tslearn.cycc import cdist_normalized_cc, y_shifted_sbd_vec
 from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
 
@@ -352,7 +352,8 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
         For Global Alignment Kernel, the only parameter of interest is `sigma`. 
         If set to 'auto', it is computed based on a sampling of the training 
         set
-        (cf :ref:`tslearn.metrics.sigma_gak <fun-tslearn.metrics.sigma_gak>`)
+        (cf :ref:`tslearn.metrics.sigma_gak <fun-tslearn.metrics.sigma_gak>`).
+        If no specific value is set for `sigma`, it is set to 1.
         None means no kernel parameter is set.
 
     sigma : float or "auto" (default: "auto")
@@ -458,7 +459,14 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
             return cdist_gak(X, Y, n_jobs=self.n_jobs, verbose=self.verbose,
                              **kernel_params)
         else:
-            return pairwise_kernels(X, Y, n_jobs=self.n_jobs, **kernel_params)
+            del kernel_params["sigma"]
+            X_sklearn = to_sklearn_dataset(X)
+            if Y is not None:
+                Y_sklearn = to_sklearn_dataset(Y)
+            else:
+                Y_sklearn = Y
+            return pairwise_kernels(X_sklearn, Y_sklearn, metric=self.kernel,
+                                    n_jobs=self.n_jobs, **kernel_params)
 
     def _fit_one_init(self, K, rs):
         n_samples = K.shape[0]
@@ -516,8 +524,11 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
 
         max_attempts = max(self.n_init, 10)
         kernel_params = self._get_kernel_params()
-        if kernel_params.get("sigma", None) == "auto":
-            self.sigma_gak_ = sigma_gak(X)
+        if self.kernel == "gak":
+            if kernel_params.get("sigma", 1.) == "auto":
+                self.sigma_gak_ = sigma_gak(X)
+            else:
+                self.sigma_gak_ = kernel_params.get("sigma", 1.)
         else:
             self.sigma_gak_ = None
 
