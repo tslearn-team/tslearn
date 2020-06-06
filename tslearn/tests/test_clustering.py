@@ -2,7 +2,7 @@ import numpy as np
 
 from tslearn.utils import to_time_series_dataset, ts_size
 from tslearn.clustering import EmptyClusterError, _check_full_length, \
-    _check_no_empty_cluster, TimeSeriesKMeans,  GlobalAlignmentKernelKMeans, \
+    _check_no_empty_cluster, TimeSeriesKMeans,  KernelKMeans, \
     KShape
 from tslearn.metrics import cdist_dtw, cdist_soft_dtw
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
@@ -32,14 +32,14 @@ def test_gak_kmeans():
     rng = np.random.RandomState(0)
     time_series = rng.randn(n, sz, d)
 
-    gak_km = GlobalAlignmentKernelKMeans(n_clusters=3, verbose=False,
-                                         max_iter=5,
-                                         random_state=rng).fit(time_series)
+    gak_km = KernelKMeans(n_clusters=3, verbose=False,
+                          max_iter=5,
+                          random_state=rng).fit(time_series)
     np.testing.assert_allclose(gak_km.labels_, gak_km.predict(time_series))
 
-    gak_km = GlobalAlignmentKernelKMeans(n_clusters=101, verbose=False,
-                                         max_iter=5,
-                                         random_state=rng).fit(time_series)
+    gak_km = KernelKMeans(n_clusters=101, verbose=False,
+                          max_iter=5,
+                          random_state=rng).fit(time_series)
     assert gak_km._X_fit is None
 
 

@@ -10,7 +10,7 @@ from tslearn.neighbors import KNeighborsTimeSeries, \
     KNeighborsTimeSeriesClassifier
 from tslearn.shapelets import ShapeletModel, SerializableShapeletModel
 from tslearn.clustering import KShape, TimeSeriesKMeans, \
-    GlobalAlignmentKernelKMeans
+    KernelKMeans
 from tslearn.generators import random_walks
 from tslearn.piecewise import PiecewiseAggregateApproximation, \
     SymbolicAggregateApproximation, OneD_SymbolicAggregateApproximation
@@ -120,8 +120,8 @@ def test_serialize_global_alignment_kernel_kmeans():
     rng = numpy.random.RandomState(0)
     X = rng.randn(n, sz, d)
 
-    gak_km = GlobalAlignmentKernelKMeans(n_clusters=3, verbose=False,
-                                         max_iter=5)
+    gak_km = KernelKMeans(n_clusters=3, verbose=False,
+                          max_iter=5)
 
     _check_not_fitted(gak_km)
 
