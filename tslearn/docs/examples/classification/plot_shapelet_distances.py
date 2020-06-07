@@ -23,8 +23,7 @@ import matplotlib.pyplot as plt
 
 from tslearn.datasets import CachedDatasets
 from tslearn.preprocessing import TimeSeriesScalerMinMax
-from tslearn.shapelets import LearningShapelets, \
-    grabocka_params_to_shapelet_size_dict
+from tslearn.shapelets import LearningShapelets
 from tensorflow.keras.optimizers import SGD
 
 # Set a seed to ensure determinism
@@ -60,10 +59,13 @@ weights, biases = shp_clf.model_.layers[-1].get_weights()
 # Create a grid for our two shapelets on the left and distances on the right
 viridis = cm.get_cmap('viridis', 4)
 fig = plt.figure(constrained_layout=True)
-gs = fig.add_gridspec(2, 9)
+gs = fig.add_gridspec(3, 9)
 fig_ax1 = fig.add_subplot(gs[0, :2])
 fig_ax2 = fig.add_subplot(gs[0, 2:4])
-fig_ax3 = fig.add_subplot(gs[1, :4])
+fig_ax3a = fig.add_subplot(gs[1, :2])
+fig_ax3b = fig.add_subplot(gs[1, 2:4])
+fig_ax3c = fig.add_subplot(gs[2, :2])
+fig_ax3d = fig.add_subplot(gs[2, 2:4])
 fig_ax4 = fig.add_subplot(gs[:, 4:])
 
 # Plot our two shapelets on the left side
@@ -74,10 +76,10 @@ fig_ax2.plot(shp_clf.shapelets_[1])
 fig_ax2.set_title('Shapelet $\mathbf{s}_2$')
 
 # Create the time series of each class
-for i, y in enumerate(numpy.unique(y_train)):
-	for k, ts in enumerate(X_train[y_train == y]):
-		fig_ax3.plot(ts.flatten(), c=viridis(i / 3), alpha=0.25)
-fig_ax3.set_title('Input time series')
+for i, subfig in enumerate([fig_ax3a, fig_ax3b, fig_ax3c, fig_ax3d]):
+    for k, ts in enumerate(X_train[y_train == i + 1]):
+        subfig.plot(ts.flatten(), c=viridis(i / 3), alpha=0.25)
+fig.text(x=.15, y=.02, s='Input time series', fontsize=12)
 
 # Create a scatter plot of the 2D distances for the time series of each class.
 for i, y in enumerate(numpy.unique(y_train)):
