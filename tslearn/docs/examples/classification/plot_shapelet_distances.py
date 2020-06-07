@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 from tslearn.datasets import CachedDatasets
 from tslearn.preprocessing import TimeSeriesScalerMinMax
 from tslearn.shapelets import LearningShapelets
-from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.optimizers import Adam
 
 # Set a seed to ensure determinism
 numpy.random.seed(42)
@@ -45,8 +45,8 @@ shapelet_sizes = {20: 2}
 # Define the model and fit it using the training data
 shp_clf = LearningShapelets(n_shapelets_per_size=shapelet_sizes,
                             weight_regularizer=0.0001,
-                            optimizer=SGD(lr=0.9),
-                            max_iter=1000,
+                            optimizer=Adam(lr=0.01),
+                            max_iter=300,
                             verbose=0,
                             scale=False,
                             random_state=42)
