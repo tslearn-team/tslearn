@@ -6,9 +6,9 @@ Learning Shapelets: decision boundaries in 2D distance space
 This example illustrates the use of the "Learning Shapelets" method in order
 to learn a collection of shapelets that linearly separates the timeseries.
 In this example, we will extract two shapelets which are then used to
-transform our input time series in a two-dimensional space. Moreover, we
-plot the decision boundaries of our classifier for each of the different
-classes.
+transform our input time series in a two-dimensional space, which is called
+the shapelet-transform space in the related literature. Moreover, we plot the
+decision boundaries of our classifier for each of the different classes.
 
 More information on the method can be found at:
 http://fs.ismll.de/publicspace/LearningShapelets/.
@@ -67,11 +67,13 @@ distances = shp_clf.transform(X_train).reshape((-1, 2))
 weights, biases = shp_clf.model_.layers[-1].get_weights()
 
 # Create a grid for our two shapelets on the left and distances on the right
+viridis = cm.get_cmap('viridis', 4)
 fig = plt.figure(constrained_layout=True)
-gs = fig.add_gridspec(2, 3)
-fig_ax1 = fig.add_subplot(gs[0, 0])
-fig_ax2 = fig.add_subplot(gs[1, 0])
-fig_ax3 = fig.add_subplot(gs[:, 1:])
+gs = fig.add_gridspec(2, 9)
+fig_ax1 = fig.add_subplot(gs[0, :2])
+fig_ax2 = fig.add_subplot(gs[0, 2:4])
+fig_ax3 = fig.add_subplot(gs[1, :4])
+fig_ax4 = fig.add_subplot(gs[:, 4:])
 
 # Plot our two shapelets on the left side
 fig_ax1.plot(shp_clf.shapelets_[0])
@@ -80,10 +82,15 @@ fig_ax1.set_title('Shapelet $\mathbf{s}_1$')
 fig_ax2.plot(shp_clf.shapelets_[1])
 fig_ax2.set_title('Shapelet $\mathbf{s}_2$')
 
-# Create a scatter plot of the 2D distances for the time series of each class.
-viridis = cm.get_cmap('viridis', 4)
+# Create the time series of each class
 for i, y in enumerate(numpy.unique(y_train)):
-    fig_ax3.scatter(distances[y_train == y][:, 0],
+	for k, ts in enumerate(X_train[y_train == y]):
+		fig_ax3.plot(ts.flatten(), c=viridis(i / 3), alpha=0.25)
+fig_ax3.set_title('Input time series')
+
+# Create a scatter plot of the 2D distances for the time series of each class.
+for i, y in enumerate(numpy.unique(y_train)):
+    fig_ax4.scatter(distances[y_train == y][:, 0],
                     distances[y_train == y][:, 1],
                     c=[viridis(i / 3)] * numpy.sum(y_train == y),
                     edgecolors='k',
@@ -101,12 +108,13 @@ for x, y in numpy.c_[xx.ravel(), yy.ravel()]:
     Z.append(numpy.argmax([biases[i] + weights[0][i]*x + weights[1][i]*y
                            for i in range(4)]))
 Z = numpy.array(Z).reshape(xx.shape)
-cs = fig_ax3.contourf(xx, yy, Z / 3, cmap=viridis, alpha=0.25)
+cs = fig_ax4.contourf(xx, yy, Z / 3, cmap=viridis, alpha=0.25)
 
-fig_ax3.legend()
-fig_ax3.set_xlabel('$d(\mathbf{x}, \mathbf{s}_1)$')
-fig_ax3.set_ylabel('$d(\mathbf{x}, \mathbf{s}_2)$')
-fig_ax3.set_xlim((xmin, xmax))
-fig_ax3.set_ylim((ymin, ymax))
-fig_ax3.set_title('Distance transformed time series')
+fig_ax4.legend()
+fig_ax4.set_xlabel('$d(\mathbf{x}, \mathbf{s}_1)$')
+fig_ax4.set_ylabel('$d(\mathbf{x}, \mathbf{s}_2)$')
+fig_ax4.set_xlim((xmin, xmax))
+fig_ax4.set_ylim((ymin, ymax))
+fig_ax4.set_title('Distance transformed time series')
+plt.savefig('shapelet_distance_space.svg', format='svg')
 plt.show()
