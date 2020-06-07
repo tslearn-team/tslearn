@@ -75,10 +75,10 @@ fig_ax3 = fig.add_subplot(gs[:, 1:])
 
 # Plot our two shapelets on the left side
 fig_ax1.plot(shp_clf.shapelets_[0])
-fig_ax1.set_title('$s_1$')
+fig_ax1.set_title('Shapelet $\mathbf{s}_1$')
 
 fig_ax2.plot(shp_clf.shapelets_[1])
-fig_ax2.set_title('$s_2$')
+fig_ax2.set_title('Shapelet $\mathbf{s}_2$')
 
 # Create a scatter plot of the 2D distances for the time series of each class.
 viridis = cm.get_cmap('viridis', 4)
@@ -86,6 +86,7 @@ for i, y in enumerate(numpy.unique(y_train)):
     fig_ax3.scatter(distances[y_train == y][:, 0],
                     distances[y_train == y][:, 1],
                     c=[viridis(i / 3)] * numpy.sum(y_train == y),
+                    edgecolors='k',
                     label='Class {}'.format(y))
 
 # Create a meshgrid of the decision boundaries
@@ -103,8 +104,8 @@ Z = numpy.array(Z).reshape(xx.shape)
 cs = fig_ax3.contourf(xx, yy, Z / 3, cmap=viridis, alpha=0.25)
 
 fig_ax3.legend()
-fig_ax3.set_xlabel('$d(x, s_1)$')
-fig_ax3.set_ylabel('$d(x, s_2)$')
+fig_ax3.set_xlabel('$d(\mathbf{x}, \mathbf{s}_1)$')
+fig_ax3.set_ylabel('$d(\mathbf{x}, \mathbf{s}_2)$')
 fig_ax3.set_xlim((xmin, xmax))
 fig_ax3.set_ylim((ymin, ymax))
 fig_ax3.set_title('Distance transformed time series')
