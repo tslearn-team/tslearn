@@ -23,14 +23,13 @@ If the above-defined distance is small enough, then
 shapelet :math:`\textbf{s}` is supposed to be present in time series
 :math:`\mathbf{x}`.
 
-.. figure:: ../_static/img/shap_distance.png
+.. figure:: ../_static/img/shap_distance.svg
     :width: 50%
     :align: center
 
     The distance from a time series to a shapelet is done by sliding the
     shorter shapelet over the longer time series and calculating the
-    point-wise distances. The minimal distance found is returned. Figure
-    taken from [1]_.
+    point-wise distances. The minimal distance found is returned.
 
 In a classification setting, the goal is then to find the most discriminant
 shapelets given some labeled time series data.

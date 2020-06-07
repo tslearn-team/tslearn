@@ -357,7 +357,7 @@ class LearningShapelets(ClassifierMixin, TransformerMixin,
         self.random_state = random_state
 
         if not scale:
-            warnings.warn("The default value for scaling is set to False "
+            warnings.warn("The default value for 'scale' is set to False "
                           "in version 0.4 to ensure backward compatibility, "
                           "but is likely to change in a future version.",
                           FutureWarning)
