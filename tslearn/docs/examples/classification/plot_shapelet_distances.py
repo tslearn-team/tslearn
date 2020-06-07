@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Aligning discovered shapelets with timeseries
-=============================================
+Learning Shapelets: decision boundaries in 2D distance space
+============================================================
 
 This example illustrates the use of the "Learning Shapelets" method in order
 to learn a collection of shapelets that linearly separates the timeseries.
