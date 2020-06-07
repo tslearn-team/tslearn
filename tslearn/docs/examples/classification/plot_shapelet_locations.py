@@ -89,5 +89,4 @@ ax[1].axvline(numpy.argmin(distances), color='k', linestyle='--', alpha=0.25)
 ax[1].set_title('The distances between the time series and the shapelet')
 
 plt.tight_layout()
-plt.savefig('shap_distance.svg', format='svg')
 plt.show()
