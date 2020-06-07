@@ -33,15 +33,6 @@ numpy.random.seed(42)
 # Load the Trace dataset
 X_train, y_train, _, _ = CachedDatasets().load_dataset("Trace")
 
-# Sample some time series of each class
-sampled_ix = []
-for y in numpy.unique(y_train):
-    class_ix = numpy.where(y_train == y)[0]
-    sampled_ix.extend(list(numpy.random.choice(class_ix, replace=False,
-                                               size=5)))
-X_train = X_train[sampled_ix]
-y_train = y_train[sampled_ix]
-
 # Normalize the time series
 X_train = TimeSeriesScalerMinMax().fit_transform(X_train)
 
@@ -49,7 +40,7 @@ X_train = TimeSeriesScalerMinMax().fit_transform(X_train)
 n_ts, ts_sz = X_train.shape[:2]
 n_classes = len(set(y_train))
 
-# We will extract 1 shapelet and align it with a time series
+# We will extract 2 shapelets and align them with the time series
 shapelet_sizes = {20: 2}
 
 # Define the model and fit it using the training data
