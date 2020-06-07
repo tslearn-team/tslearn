@@ -24,7 +24,7 @@ shapelet :math:`\textbf{s}` is supposed to be present in time series
 :math:`\mathbf{x}`.
 
 .. figure:: ../_static/img/shap_distance.svg
-    :width: 50%
+    :width: 80%
     :align: center
 
     The distance from a time series to a shapelet is done by sliding the
@@ -47,10 +47,8 @@ that time series represented in their shapelet-transform space (`i.e.` their
 distances to each of the shapelets) are linearly separable.
 A shapelet-transform representation of a time series :math:`\mathbf{x}` given
 a set of shapelets :math:`\{\mathbf{s}_i\}_{i \leq k}` is the feature vector:
+:math:`[d(\mathbf{x}, \mathbf{s}_1), \cdots, d(\mathbf{x}, \mathbf{s}_k)]`
 
-.. math::
-
-    [d(\mathbf{x}, \mathbf{s}_1), \cdots, d(\mathbf{x}, \mathbf{s}_k)]
 
 .. figure:: ../_static/img/shapelet_distance_space.svg
     :width: 80%
