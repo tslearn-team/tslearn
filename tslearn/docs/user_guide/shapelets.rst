@@ -47,7 +47,8 @@ that time series represented in their shapelet-transform space (`i.e.` their
 distances to each of the shapelets) are linearly separable.
 A shapelet-transform representation of a time series :math:`\mathbf{x}` given
 a set of shapelets :math:`\{\mathbf{s}_i\}_{i \leq k}` is the feature vector:
-:math:`[d(\mathbf{x}, \mathbf{s}_1), \cdots, d(\mathbf{x}, \mathbf{s}_k)]`
+:math:`[d(\mathbf{x}, \mathbf{s}_1), \cdots, d(\mathbf{x}, \mathbf{s}_k)]`.
+This is illustrated below with a two-dimensional example.
 
 
 .. figure:: ../_static/img/shapelet_distance_space.svg
