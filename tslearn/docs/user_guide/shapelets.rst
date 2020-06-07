@@ -56,7 +56,9 @@ a set of shapelets :math:`\{\mathbf{s}_i\}_{i \leq k}` is the feature vector:
     :width: 80%
     :align: center
 
-    A schematic overview of the "Learning Shapelets" approach.
+    An example of how time series are transformed into linearly separable
+    distances.
+
 
 In ``tslearn``, in order to learn shapelets and transform timeseries to
 their corresponding shapelet-transform space, the following code can be used:
