@@ -52,6 +52,12 @@ a set of shapelets :math:`\{\mathbf{s}_i\}_{i \leq k}` is the feature vector:
 
     [d(\mathbf{x}, \mathbf{s}_1), \cdots, d(\mathbf{x}, \mathbf{s}_k)]
 
+.. figure:: ../_static/img/shapelet_distance_space.svg
+    :width: 80%
+    :align: center
+
+    A schematic overview of the "Learning Shapelets" approach.
+
 In ``tslearn``, in order to learn shapelets and transform timeseries to
 their corresponding shapelet-transform space, the following code can be used:
 
@@ -66,7 +72,6 @@ their corresponding shapelet-transform space, the following code can be used:
     shapelets = model.shapelets_as_time_series_
 
 
-
 A :class:`tslearn.shapelets.LearningShapelets` model has several
 hyper-parameters, such as the maximum number of iterations and the batch size.
 One important hyper-parameters is the ``n_shapelets_per_size``
@@ -78,12 +83,6 @@ After creating the model, we can ``fit`` the optimal shapelets
 using our training data. After a fitting phase, the distances can be calculated 
 using the ``transform`` function. Moreover, you can easily access the 
 learned shapelets by using the ``shapelets_as_time_series_`` attribute.
-
-.. figure:: ../_static/img/learning_shapelets.png
-    :width: 80%
-    :align: center
-
-    A schematic overview of the "Learning Shapelets" approach.
 
 It is important to note that due to the fact that a technique based on
 gradient-descent is used to learn the shapelets, our model can be prone
