@@ -57,6 +57,8 @@ fig_ax1.add_patch(patches.Rectangle((start, numpy.min(ts) - 0.1), subseq_len,
                                     numpy.max(ts) - numpy.min(ts) + 0.2,
                                     facecolor='b', alpha=0.25,
                                     label='segment'))
+fig_ax1.axvline(start, c='b', linestyle='--', lw=2, alpha=0.5,
+	            label='segment start')
 fig_ax1.legend(loc='lower right', ncol=4, fontsize=8)
 fig_ax1.set_title('The time series')
 
@@ -90,6 +92,8 @@ fig_ax4.set_title('Matrix profile')
 fig_ax4.scatter(start, mp[second_min_ix],
                 c='r', marker='x', s=75,
                 label='MP segment = {}'.format(numpy.around(mp[start], 3)))
+fig_ax4.axvline(start, c='b', linestyle='--', lw=2, alpha=0.5,
+	            label='segment start')
 fig_ax4.legend(loc='lower right', fontsize=8)
-
+plt.savefig('distance_matrix_profile.svg', format='svg')
 plt.show()
