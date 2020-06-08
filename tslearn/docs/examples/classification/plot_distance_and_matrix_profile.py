@@ -95,5 +95,5 @@ fig_ax4.scatter(start, mp[second_min_ix],
 fig_ax4.axvline(start, c='b', linestyle='--', lw=2, alpha=0.5,
 	            label='segment start')
 fig_ax4.legend(loc='lower right', fontsize=8)
-plt.savefig('distance_matrix_profile.svg', format='svg')
+
 plt.show()
