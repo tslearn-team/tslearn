@@ -4,8 +4,9 @@ Distance and Matrix Profiles
 ============================
 This example illustrates how the matrix profile is calculated. For each
 segment of a timeseries with a specified length, the distances between
-each subsequence and that segment are calculated. The smallest distance
-that is not zero is then the corresponding value in the matrix profile. 
+each subsequence and that segment are calculated. The smallest distance is
+returned, except for trivial match on the location where the segment is
+extracted from which is equal to zero.
 """
 
 # Author: Gilles Vandewiele

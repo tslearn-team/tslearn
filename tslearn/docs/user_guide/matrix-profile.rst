@@ -9,11 +9,11 @@ The Matrix Profile, :math:`MP`, is a new time series that can be calculated base
     :width: 80%
     :align: center
 
-    For each segment, the distances to all subsequences of the time series are calculated and the minimal distance that is not zero is then used as its corresponding matrix profile value.
+    For each segment, the distances to all subsequences of the time series are calculated and the minimal distance that not corresponds to the original location of the segment (where the distance is zero) is returned.
 
 
 Possible Applications
-=====================
+---------------------
 
 The Matrix Profile allows for many possible applications, which are well documented on the page created by the original authors [2]_. Some of these applications include: motif and shapelet extraction, discord detection, earthquake detection, and many more.
 
