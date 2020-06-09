@@ -27,6 +27,11 @@ The Matrix Profile allows for many possible applications, which are well documen
 
     <div style="clear: both;" />
 
+Other implementations
+---------------------
+
+We acknowledge that there are more efficient Matrix Profile implementations out there that include GPU support, such as [3]_. We provide a matrix profile implementation such that it can easily be used in complement with other tslearn estimators, for example in a pipeline. Moreover, we provide `functionality <https://tslearn.readthedocs.io/en/stable/integration_other_software.html#stumpy>`_ to convert from one format to the other and vice versa.
+
 References
 ----------
 
@@ -35,3 +40,4 @@ References
        Unifying View that Includes Motifs, Discords and Shapelets.
        ICDM 2016.
 .. [2] https://www.cs.ucr.edu/~eamonn/MatrixProfile.html
+.. [3] https://github.com/TDAmeritrade/stumpy
