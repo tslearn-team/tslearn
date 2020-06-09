@@ -349,12 +349,12 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
         
     kernel_params : dict or None (default: None)
         Kernel parameters to be passed to the kernel function.
+        None means no kernel parameter is set.
         For Global Alignment Kernel, the only parameter of interest is `sigma`. 
         If set to 'auto', it is computed based on a sampling of the training 
         set
         (cf :ref:`tslearn.metrics.sigma_gak <fun-tslearn.metrics.sigma_gak>`).
-        If no specific value is set for `sigma`, it is set to 1.
-        None means no kernel parameter is set.
+        If no specific value is set for `sigma`, its defaults to 1.
 
     sigma : float or "auto" (default: "auto")
         Bandwidth parameter for the Global Alignment kernel. If set to 'auto',
@@ -407,8 +407,11 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
     --------
     >>> from tslearn.generators import random_walks
     >>> X = random_walks(n_ts=50, sz=32, d=1)
-    >>> gak_km = KernelKMeans(n_clusters=3, kernel="gak", 
-    ...                       random_state=0).fit(X)
+    >>> gak_km = KernelKMeans(n_clusters=3, kernel="gak", random_state=0)
+    >>> gak_km.fit(X)  # doctest: +ELLIPSIS
+    KernelKMeans(...)
+    >>> numpy.unique(gak_km.labels_)
+    array([0, 1, 2])
 
     References
     ----------
@@ -446,10 +449,10 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
             kernel_params = {}
         else:
             kernel_params = self.kernel_params
-        if hasattr(self, "sigma_gak_"):
-            kernel_params["sigma"] = self.sigma_gak_
-        else:
-            if self.kernel == "gak" and "sigma" not in kernel_params.keys():
+        if self.kernel == "gak":
+            if hasattr(self, "sigma_gak_"):
+                kernel_params["sigma"] = self.sigma_gak_
+            elif "sigma" not in kernel_params.keys():
                 kernel_params["sigma"] = self.sigma
         return kernel_params
 
@@ -459,7 +462,6 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
             return cdist_gak(X, Y, n_jobs=self.n_jobs, verbose=self.verbose,
                              **kernel_params)
         else:
-            del kernel_params["sigma"]
             X_sklearn = to_sklearn_dataset(X)
             if Y is not None:
                 Y_sklearn = to_sklearn_dataset(Y)
@@ -525,10 +527,9 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
         max_attempts = max(self.n_init, 10)
         kernel_params = self._get_kernel_params()
         if self.kernel == "gak":
-            if kernel_params.get("sigma", 1.) == "auto":
+            self.sigma_gak_ = kernel_params.get("sigma", 1.)
+            if self.sigma_gak_ == "auto":
                 self.sigma_gak_ = sigma_gak(X)
-            else:
-                self.sigma_gak_ = kernel_params.get("sigma", 1.)
         else:
             self.sigma_gak_ = None
 
