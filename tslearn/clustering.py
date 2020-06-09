@@ -410,8 +410,8 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
     >>> gak_km = KernelKMeans(n_clusters=3, kernel="gak", random_state=0)
     >>> gak_km.fit(X)  # doctest: +ELLIPSIS
     KernelKMeans(...)
-    >>> numpy.unique(gak_km.labels_)
-    array([0, 1, 2])
+    >>> print(numpy.unique(gak_km.labels_))
+    [0 1 2]
 
     References
     ----------
