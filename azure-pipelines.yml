@@ -87,7 +87,7 @@ jobs:
       set -xe
       python -m pip install pytest pytest-azurepipelines
       pip install coverage==4.3 "pytest-cov<2.6";
-      pip install cesium pandas;
+      pip install cesium pandas stumpy;
       python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py --cov=tslearn;
     displayName: 'Test'
 
