@@ -43,7 +43,7 @@ class MatrixProfile(TransformerMixin,
     >>> mp = MatrixProfile(subsequence_length=4, scale=False)
     >>> mp.fit_transform(ds)[0, :, 0]  # doctest: +ELLIPSIS
     array([ 6.85...,  1.41...,  6.16...,  7.93..., 11.40...,
-           13.56..., 14.07..., 13.96...,  1.41...,  6.16...])
+           13.56..., 18.  ..., 13.96...,  1.41...,  6.16...])
 
     References
     ----------
