@@ -12,6 +12,7 @@ from sklearn.utils.validation import check_is_fitted, check_array
 from tslearn.utils import check_dims
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
+import stumpy
 
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -74,6 +75,12 @@ class MatrixProfile(TransformerMixin,
         Length of the subseries (also called window size) to be used for 
         subseries distance computations.
     
+    algorithm : str (default: None)
+        Algorithm to use to compute the matrix profile.
+        Defaults to None to use the tslearn implementation.
+        Any other algorithm must be one of ['stump'], from the
+        stumpy python library.
+
     scale: bool (default: True)
          Whether input data should be scaled for each feature of each time 
          series to have zero mean and unit variance.
@@ -97,9 +104,21 @@ class MatrixProfile(TransformerMixin,
        ICDM 2016.
     """
 
-    def __init__(self, subsequence_length=1, scale=True):
+    def __init__(self, subsequence_length=1, algorithm=None, scale=True):
         self.subsequence_length = subsequence_length
         self.scale = scale
+        self.check_if_algorithm_exists(algorithm)
+        self.algorithm = algorithm
+
+    def check_if_algorithm_exists(self, algorithm):
+        available_algorithms = ["stump"]
+        if (
+            algorithm is not None
+            and algorithm not in available_algorithms
+        ):
+            raise ValueError(
+                "This matrix profile algorithm is not implemented."
+            )
 
     def _is_fitted(self):
         check_is_fitted(self, '_X_fit_dims')
@@ -130,21 +149,35 @@ class MatrixProfile(TransformerMixin,
         n_ts, sz, d = X.shape
         output_size = sz - self.subsequence_length + 1
         X_transformed = np.empty((n_ts, output_size, 1))
-        scaler = TimeSeriesScalerMeanVariance()
-        band_width = int(np.ceil(self.subsequence_length / 4))
-        for i_ts in range(n_ts):
-            segments = _series_to_segments(X[i_ts], self.subsequence_length)
-            if self.scale:
-                segments = scaler.fit_transform(segments)
-            n_segments = segments.shape[0]
-            segments_2d = segments.reshape((-1, self.subsequence_length * d))
-            dists = squareform(pdist(segments_2d, "euclidean"))
-            band = (np.tri(n_segments, n_segments,
-                           band_width, dtype=np.bool) &
-                    ~np.tri(n_segments, n_segments,
-                            -(band_width + 1), dtype=np.bool))
-            dists[band] = np.inf
-            X_transformed[i_ts] = dists.min(axis=1, keepdims=True)
+
+        if self.algorithm is None:
+            scaler = TimeSeriesScalerMeanVariance()
+            band_width = int(np.ceil(self.subsequence_length / 4))
+            for i_ts in range(n_ts):
+                segments = _series_to_segments(X[i_ts], self.subsequence_length)
+                if self.scale:
+                    segments = scaler.fit_transform(segments)
+                n_segments = segments.shape[0]
+                segments_2d = segments.reshape((-1, self.subsequence_length * d))
+                dists = squareform(pdist(segments_2d, "euclidean"))
+                band = (np.tri(n_segments, n_segments,
+                            band_width, dtype=np.bool) &
+                        ~np.tri(n_segments, n_segments,
+                                -(band_width + 1), dtype=np.bool))
+                dists[band] = np.inf
+                X_transformed[i_ts] = dists.min(axis=1, keepdims=True)
+
+        elif self.algorithm == "stump":
+            if d > 1:
+                raise NotImplementedError("Currently only the single"
+                                          "dimension matrix profile is"
+                                          "supported with stumpy.")
+            for i_ts in range(n_ts):
+                result = stumpy.stump(
+                    T_A=X[i_ts, :, 0].ravel(),
+                    m=self.subsequence_length)
+                X_transformed[i_ts, :, 0] = result[:, 0].astype(np.float)
+
         return X_transformed
 
     def transform(self, X, y=None):
