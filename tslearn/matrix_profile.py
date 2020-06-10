@@ -3,7 +3,7 @@ The :mod:`tslearn.matrix_profile` module gathers methods for the computation of
 Matrix Profiles from time series.
 """
 
-import numpy
+import numpy as np
 from numpy.lib.stride_tricks import as_strided
 from scipy.spatial.distance import pdist, squareform
 from sklearn.base import TransformerMixin
@@ -85,7 +85,7 @@ class MatrixProfile(TransformerMixin,
     def _transform(self, X, y=None):
         n_ts, sz, d = X.shape
         output_size = sz - self.subsequence_length + 1
-        X_transformed = numpy.empty((n_ts, output_size, 1))
+        X_transformed = np.empty((n_ts, output_size, 1))
         scaler = TimeSeriesScalerMeanVariance()
         for i_ts in range(n_ts):
             Xi = X[i_ts]
@@ -99,9 +99,14 @@ class MatrixProfile(TransformerMixin,
             )
             if self.scale:
                 segments = scaler.fit_transform(segments)
+            n_segments = segments.shape[0]
             segments_2d = segments.reshape((-1, self.subsequence_length * d))
             dists = squareform(pdist(segments_2d, "euclidean"))
-            numpy.fill_diagonal(dists, numpy.inf)
+            band = (np.tri(n_segments, n_segments,
+                           self.subsequence_length / 4, dtype=np.bool) &
+                    ~np.tri(n_segments, n_segments,
+                            -(self.subsequence_length / 4 + 1), dtype=np.bool))
+            dists[band] = np.inf
             X_transformed[i_ts] = dists.min(axis=1, keepdims=True)
         return X_transformed
 
