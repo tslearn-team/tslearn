@@ -17,6 +17,50 @@ from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
+def _series_to_segments(time_series, segment_size):
+    """Transforms a time series (or a set of time series) into an array of its 
+    segments of length segment_size.
+      
+    Examples
+    --------
+    >>> from tslearn.utils import to_time_series
+    >>> time_series = to_time_series([1, 2, 3, 4, 5])
+    >>> segments = _series_to_segments(time_series, segment_size=2)
+    >>> segments.shape
+    (4, 2, 1)
+    >>> segments[:, :, 0]
+    array([[1., 2.],
+           [2., 3.],
+           [3., 4.],
+           [4., 5.]])
+    >>> from tslearn.utils import to_time_series_dataset
+    >>> dataset = to_time_series_dataset([time_series])
+    >>> dataset.shape
+    (1, 5, 1)
+    >>> segments = _series_to_segments(dataset, segment_size=2)
+    >>> segments.shape
+    (4, 2, 1)
+    >>> segments[:, :, 0]
+    array([[1., 2.],
+           [2., 3.],
+           [3., 4.],
+           [4., 5.]])
+    """
+    if time_series.ndim == 3:
+        l_segments = [_series_to_segments(ts, segment_size)
+                      for ts in time_series]
+        return np.vstack(l_segments)
+    elem_size = time_series.strides[0]
+    segments = as_strided(
+        time_series,
+        strides=(elem_size, elem_size, time_series.strides[1]),
+        shape=(time_series.shape[0] - segment_size + 1,
+               segment_size, time_series.shape[1]),
+        writeable=False
+    )
+    return segments
+
+
 class MatrixProfile(TransformerMixin,
                     BaseModelPackage,
                     TimeSeriesBaseEstimator):
@@ -75,7 +119,7 @@ class MatrixProfile(TransformerMixin,
 
         Returns
         -------
-        PiecewiseAggregateApproximation
+        MatrixProfile
             self
         """
         X = check_array(X, allow_nd=True, force_all_finite=False)
@@ -88,15 +132,7 @@ class MatrixProfile(TransformerMixin,
         X_transformed = np.empty((n_ts, output_size, 1))
         scaler = TimeSeriesScalerMeanVariance()
         for i_ts in range(n_ts):
-            Xi = X[i_ts]
-            elem_size = Xi.strides[0]
-            segments = as_strided(
-                Xi,
-                strides=(elem_size, elem_size, Xi.strides[1]),
-                shape=(Xi.shape[0] - self.subsequence_length + 1,
-                       self.subsequence_length, d),
-                writeable=False
-            )
+            segments = _series_to_segments(X[i_ts], self.subsequence_length)
             if self.scale:
                 segments = scaler.fit_transform(segments)
             n_segments = segments.shape[0]
