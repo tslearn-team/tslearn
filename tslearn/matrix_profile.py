@@ -19,9 +19,9 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 def _series_to_segments(time_series, segment_size):
-    """Transforms a time series (or a set of time series) into an array of its 
+    """Transforms a time series (or a set of time series) into an array of its
     segments of length segment_size.
-      
+
     Examples
     --------
     >>> from tslearn.utils import to_time_series
@@ -72,9 +72,9 @@ class MatrixProfile(TransformerMixin,
     Parameters
     ----------
     subsequence_length : int (default: 1)
-        Length of the subseries (also called window size) to be used for 
+        Length of the subseries (also called window size) to be used for
         subseries distance computations.
-    
+
     algorithm : str (default: None)
         Algorithm to use to compute the matrix profile.
         Defaults to None to use the tslearn implementation.
@@ -82,11 +82,11 @@ class MatrixProfile(TransformerMixin,
         stumpy python library.
 
     scale: bool (default: True)
-         Whether input data should be scaled for each feature of each time 
+         Whether input data should be scaled for each feature of each time
          series to have zero mean and unit variance.
-         Default for this parameter is set to `True` to match the standard 
+         Default for this parameter is set to `True` to match the standard
          matrix profile setup.
-    
+
     Examples
     --------
     >>> time_series = [0., 1., 3., 2., 9., 1., 14., 15., 1., 2., 2., 10., 7.]
@@ -98,8 +98,8 @@ class MatrixProfile(TransformerMixin,
 
     References
     ----------
-    .. [1] C. M. Yeh, Y. Zhu, L. Ulanova, N.Begum et al. 
-       Matrix Profile I: All Pairs Similarity Joins for Time Series: A 
+    .. [1] C. M. Yeh, Y. Zhu, L. Ulanova, N.Begum et al.
+       Matrix Profile I: All Pairs Similarity Joins for Time Series: A
        Unifying View that Includes Motifs, Discords and Shapelets.
        ICDM 2016.
     """
@@ -192,7 +192,7 @@ class MatrixProfile(TransformerMixin,
         Returns
         -------
         numpy.ndarray of shape (n_ts, output_size, 1)
-            Matrix-Profile-Transformed dataset. `ouput_size` is equal to 
+            Matrix-Profile-Transformed dataset. `ouput_size` is equal to
             `sz - subsequence_length + 1`
         """
         self._is_fitted()
@@ -213,7 +213,7 @@ class MatrixProfile(TransformerMixin,
         Returns
         -------
         numpy.ndarray of shape (n_ts, output_size, 1)
-            Matrix-Profile-Transformed dataset. `ouput_size` is equal to 
+            Matrix-Profile-Transformed dataset. `ouput_size` is equal to
             `sz - subsequence_length + 1`
         """
         X = check_array(X, allow_nd=True, force_all_finite=False)
