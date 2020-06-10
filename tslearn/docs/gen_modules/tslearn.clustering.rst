@@ -15,7 +15,7 @@ tslearn.clustering
       :toctree: clustering
       :template: class.rst
    
-      GlobalAlignmentKernelKMeans
+      KernelKMeans
       KShape
       TimeSeriesKMeans
    

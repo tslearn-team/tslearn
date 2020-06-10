@@ -41,7 +41,7 @@ Load a model from disk::
     For the following models the training data are saved to disk and
     may result in a large model file if the trainig dataset is large:
     ``KNeighborsTimeSeries``, ``KNeighborsTimeSeriesClassifier``, and
-    ``GlobalAlignmentKernelKMeans``
+    ``KernelKMeans``
 
 """
 
