@@ -12,7 +12,6 @@ from sklearn.utils.validation import check_is_fitted, check_array
 from tslearn.utils import check_dims
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
-import stumpy
 
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -168,6 +167,7 @@ class MatrixProfile(TransformerMixin,
                 X_transformed[i_ts] = dists.min(axis=1, keepdims=True)
 
         elif self.algorithm == "stump":
+            import stumpy
             if d > 1:
                 raise NotImplementedError("Currently only the single"
                                           "dimension matrix profile is"
