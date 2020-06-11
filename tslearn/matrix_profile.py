@@ -3,7 +3,7 @@ The :mod:`tslearn.matrix_profile` module gathers methods for the computation of
 Matrix Profiles from time series.
 """
 
-import numpy
+import numpy as np
 from numpy.lib.stride_tricks import as_strided
 from scipy.spatial.distance import pdist, squareform
 from sklearn.base import TransformerMixin
@@ -15,6 +15,50 @@ from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
 
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
+
+
+def _series_to_segments(time_series, segment_size):
+    """Transforms a time series (or a set of time series) into an array of its 
+    segments of length segment_size.
+      
+    Examples
+    --------
+    >>> from tslearn.utils import to_time_series
+    >>> time_series = to_time_series([1, 2, 3, 4, 5])
+    >>> segments = _series_to_segments(time_series, segment_size=2)
+    >>> segments.shape
+    (4, 2, 1)
+    >>> segments[:, :, 0]
+    array([[1., 2.],
+           [2., 3.],
+           [3., 4.],
+           [4., 5.]])
+    >>> from tslearn.utils import to_time_series_dataset
+    >>> dataset = to_time_series_dataset([time_series])
+    >>> dataset.shape
+    (1, 5, 1)
+    >>> segments = _series_to_segments(dataset, segment_size=2)
+    >>> segments.shape
+    (4, 2, 1)
+    >>> segments[:, :, 0]
+    array([[1., 2.],
+           [2., 3.],
+           [3., 4.],
+           [4., 5.]])
+    """
+    if time_series.ndim == 3:
+        l_segments = [_series_to_segments(ts, segment_size)
+                      for ts in time_series]
+        return np.vstack(l_segments)
+    elem_size = time_series.strides[0]
+    segments = as_strided(
+        time_series,
+        strides=(elem_size, elem_size, time_series.strides[1]),
+        shape=(time_series.shape[0] - segment_size + 1,
+               segment_size, time_series.shape[1]),
+        writeable=False
+    )
+    return segments
 
 
 class MatrixProfile(TransformerMixin,
@@ -43,7 +87,7 @@ class MatrixProfile(TransformerMixin,
     >>> mp = MatrixProfile(subsequence_length=4, scale=False)
     >>> mp.fit_transform(ds)[0, :, 0]  # doctest: +ELLIPSIS
     array([ 6.85...,  1.41...,  6.16...,  7.93..., 11.40...,
-           13.56..., 14.07..., 13.96...,  1.41...,  6.16...])
+           13.56..., 18.  ..., 13.96...,  1.41...,  6.16...])
 
     References
     ----------
@@ -75,7 +119,7 @@ class MatrixProfile(TransformerMixin,
 
         Returns
         -------
-        PiecewiseAggregateApproximation
+        MatrixProfile
             self
         """
         X = check_array(X, allow_nd=True, force_all_finite=False)
@@ -85,23 +129,21 @@ class MatrixProfile(TransformerMixin,
     def _transform(self, X, y=None):
         n_ts, sz, d = X.shape
         output_size = sz - self.subsequence_length + 1
-        X_transformed = numpy.empty((n_ts, output_size, 1))
+        X_transformed = np.empty((n_ts, output_size, 1))
         scaler = TimeSeriesScalerMeanVariance()
+        band_width = int(np.ceil(self.subsequence_length / 4))
         for i_ts in range(n_ts):
-            Xi = X[i_ts]
-            elem_size = Xi.strides[0]
-            segments = as_strided(
-                Xi,
-                strides=(elem_size, elem_size, Xi.strides[1]),
-                shape=(Xi.shape[0] - self.subsequence_length + 1,
-                       self.subsequence_length, d),
-                writeable=False
-            )
+            segments = _series_to_segments(X[i_ts], self.subsequence_length)
             if self.scale:
                 segments = scaler.fit_transform(segments)
+            n_segments = segments.shape[0]
             segments_2d = segments.reshape((-1, self.subsequence_length * d))
             dists = squareform(pdist(segments_2d, "euclidean"))
-            numpy.fill_diagonal(dists, numpy.inf)
+            band = (np.tri(n_segments, n_segments,
+                           band_width, dtype=np.bool) &
+                    ~np.tri(n_segments, n_segments,
+                            -(band_width + 1), dtype=np.bool))
+            dists[band] = np.inf
             X_transformed[i_ts] = dists.min(axis=1, keepdims=True)
         return X_transformed
 
