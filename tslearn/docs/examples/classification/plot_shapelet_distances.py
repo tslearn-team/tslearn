@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 from tslearn.datasets import CachedDatasets
 from tslearn.preprocessing import TimeSeriesScalerMinMax
 from tslearn.shapelets import LearningShapelets
-from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.optimizers import Adam
 
 # Set a seed to ensure determinism
 numpy.random.seed(42)
@@ -45,8 +45,8 @@ shapelet_sizes = {20: 2}
 # Define the model and fit it using the training data
 shp_clf = LearningShapelets(n_shapelets_per_size=shapelet_sizes,
                             weight_regularizer=0.0001,
-                            optimizer=SGD(lr=0.9),
-                            max_iter=1000,
+                            optimizer=Adam(lr=0.01),
+                            max_iter=300,
                             verbose=0,
                             scale=False,
                             random_state=42)
@@ -54,7 +54,7 @@ shp_clf.fit(X_train, y_train)
 
 # We will plot our distances in a 2D space
 distances = shp_clf.transform(X_train).reshape((-1, 2))
-weights, biases = shp_clf.model_.layers[-1].get_weights()
+weights, biases = shp_clf.get_weights('classification')
 
 # Create a grid for our two shapelets on the left and distances on the right
 viridis = cm.get_cmap('viridis', 4)
@@ -79,6 +79,7 @@ fig_ax2.set_title('Shapelet $\mathbf{s}_2$')
 for i, subfig in enumerate([fig_ax3a, fig_ax3b, fig_ax3c, fig_ax3d]):
     for k, ts in enumerate(X_train[y_train == i + 1]):
         subfig.plot(ts.flatten(), c=viridis(i / 3), alpha=0.25)
+        subfig.set_title('Class {}'.format(i + 1))
 fig.text(x=.15, y=.02, s='Input time series', fontsize=12)
 
 # Create a scatter plot of the 2D distances for the time series of each class.
