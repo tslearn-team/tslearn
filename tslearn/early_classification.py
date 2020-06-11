@@ -59,8 +59,9 @@ class NonMyopicEarlyClassifier(ClassifierMixin, TimeSeriesBaseEstimator):
         (maximum_time_stamp - min_t) elements.
 
     pyhatyck_ : array like of shape (maximum_time_stamp - min_t, n_cluster, __n_classes, __n_classes)
-        Contains the probabilities of being classified as class y_hat given class y and cluster ck
-        for a trained classifier. The penultimate dimension of the array is associated to the true
+        Contains the probabilities of being classified as class y_hat given 
+        class y and cluster ck for a trained classifier. The penultimate 
+        dimension of the array is associated to the true
         class of the series and the last dimension to the predicted class.
 
 
@@ -206,9 +207,10 @@ class NonMyopicEarlyClassifier(ClassifierMixin, TimeSeriesBaseEstimator):
                                                    labels=label_set)
                     # normalize parameter seems to be quite recent in sklearn,
                     # so let's do it ourselves
-                    conf_matrix = conf_matrix / conf_matrix.sum(axis=0,
-                                                                keepdims=True)
-                    conf_matrix = np.nan_to_num(conf_matrix)
+                    normalizer = conf_matrix.sum(axis=0, keepdims=True)
+                    normalizer[normalizer == 0] = 1  # Avoid divide by 0
+                    conf_matrix = conf_matrix / normalizer
+
                     # pyhatyck_ stores
                     # P_{t+\tau}(\hat{y} | y, c_k) \delta_{y \neq \hat{y}}
                     # elements so it should have a null diagonal because of
