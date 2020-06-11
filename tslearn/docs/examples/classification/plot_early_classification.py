@@ -25,17 +25,17 @@ from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.early_classification import NonMyopicEarlyClassifier
 from tslearn.datasets import UCR_UEA_datasets
 
-def plot_partial(time_series, t, y_true=0, y_pred=0):
-    color = "k"
-    plt.plot(time_series[:t+1].ravel(), color=color)
+def plot_partial(time_series, t, y_true=0, y_pred=0, color="k"):
+    plt.plot(time_series[:t+1].ravel(), color=color, linewidth=1.5)
     plt.plot(numpy.arange(t+1, time_series.shape[0]),
              time_series[t+1:].ravel(),
-             linestyle="dashed", color=color)
-    plt.axvline(x=t, color=color)
+             linestyle="dashed", color=color, linewidth=1.5)
+    plt.axvline(x=t, color=color, linewidth=1.5)
     plt.text(x=t - 20, y=time_series.max() - .25, s="Prediction time")
     plt.title(
         "Sample of class {} predicted as class {}".format(y_true, y_pred)
     )
+    plt.xlim(0, time_series.shape[0] - 1)
 
 numpy.random.seed(0)
 X_train, y_train, X_test, y_test = UCR_UEA_datasets().load_dataset("ECG200")
@@ -44,14 +44,15 @@ X_train, y_train, X_test, y_test = UCR_UEA_datasets().load_dataset("ECG200")
 X_train = TimeSeriesScalerMeanVariance().fit_transform(X_train)
 X_test = TimeSeriesScalerMeanVariance().fit_transform(X_test)
 
-
+size = X_train.shape[1]
 n_classes = len(set(y_train))
 
 plt.figure()
 for i, cl in enumerate(set(y_train)):
     plt.subplot(n_classes, 1, i + 1)
     for ts in X_train[y_train == cl]:
-        plt.plot(ts.ravel(), color="k", alpha=.3)
+        plt.plot(ts.ravel(), color="orange" if cl > 0 else "blue", alpha=.3)
+    plt.xlim(0, size - 1)
 plt.suptitle("Training time series")
 plt.show()
 
@@ -67,12 +68,24 @@ plt.figure()
 plt.subplot(2, 1, 1)
 ts_idx = 0
 t = times[ts_idx]
-plot_partial(X_test[ts_idx], t, y_test[ts_idx], preds[ts_idx])
+plot_partial(X_test[ts_idx], t, y_test[ts_idx], preds[ts_idx], color="orange")
 
 
 plt.subplot(2, 1, 2)
 ts_idx = 9
 t = times[ts_idx]
-plot_partial(X_test[ts_idx], t, y_test[ts_idx], preds[ts_idx])
+plot_partial(X_test[ts_idx], t, y_test[ts_idx], preds[ts_idx], color="blue")
 plt.tight_layout()
+plt.show()
+
+plt.figure()
+plt.hist(times[y_test < 0],
+         color="orange", linewidth=2, alpha=.8, density=True, histtype='step',
+         label="Class -1", bins=numpy.arange(0, size, 3))
+plt.hist(times[y_test > 0],
+         color="blue", linewidth=2, alpha=.8, density=True, histtype='step',
+         label="Class 1", bins=numpy.arange(0, size, 3))
+plt.legend(loc="upper left")
+plt.xlim(0, size - 1)
+plt.xlabel("Prediction times")
 plt.show()
