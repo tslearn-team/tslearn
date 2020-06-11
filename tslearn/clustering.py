@@ -4,6 +4,7 @@ algorithms.
 """
 
 from sklearn.base import ClusterMixin, TransformerMixin
+from sklearn.metrics.pairwise import pairwise_kernels
 try:
     # Most recent
     from sklearn.cluster._k_means import _k_init
@@ -20,7 +21,7 @@ import numpy
 import warnings
 
 from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw, \
-    cdist_soft_dtw_normalized
+    cdist_soft_dtw_normalized, sigma_gak
 from tslearn.barycenters import euclidean_barycenter, \
     dtw_barycenter_averaging, softdtw_barycenter
 from sklearn.utils import check_array
@@ -28,7 +29,7 @@ from sklearn.utils.validation import check_is_fitted
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance, \
     TimeSeriesResampler
 from tslearn.utils import (to_time_series_dataset, to_time_series,
-                           ts_size, check_dims)
+                           to_sklearn_dataset, check_dims)
 from tslearn.cycc import cdist_normalized_cc, y_shifted_sbd_vec
 from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
 
@@ -317,14 +318,20 @@ def _check_initial_guess(init, n_clusters):
             " {} given".format(n_clusters, init.shape[0])
 
 
-class GlobalAlignmentKernelKMeans(ClusterMixin, BaseModelPackage,
-                                  TimeSeriesBaseEstimator):
-    """Global Alignment Kernel K-means.
+class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
+    """Kernel K-means.
 
     Parameters
     ----------
     n_clusters : int (default: 3)
         Number of clusters to form.
+        
+    kernel : string, or callable (default: "gak")
+        The kernel should either be "gak", in which case the Global Alignment
+        Kernel from [2]_ is used or a value that is accepted as a metric
+        by `scikit-learn's pairwise_kernels
+        <https://scikit-learn.org/stable/modules/generated/\
+        sklearn.metrics.pairwise.pairwise_kernels.html>`_
 
     max_iter : int (default: 50)
         Maximum number of iterations of the k-means algorithm for a single run.
@@ -339,11 +346,25 @@ class GlobalAlignmentKernelKMeans(ClusterMixin, BaseModelPackage,
         Number of time the k-means algorithm will be run with different
         centroid seeds. The final results will be the
         best output of n_init consecutive runs in terms of inertia.
+        
+    kernel_params : dict or None (default: None)
+        Kernel parameters to be passed to the kernel function.
+        None means no kernel parameter is set.
+        For Global Alignment Kernel, the only parameter of interest is `sigma`. 
+        If set to 'auto', it is computed based on a sampling of the training 
+        set
+        (cf :ref:`tslearn.metrics.sigma_gak <fun-tslearn.metrics.sigma_gak>`).
+        If no specific value is set for `sigma`, its defaults to 1.
 
     sigma : float or "auto" (default: "auto")
         Bandwidth parameter for the Global Alignment kernel. If set to 'auto',
         it is computed based on a sampling of the training set
         (cf :ref:`tslearn.metrics.sigma_gak <fun-tslearn.metrics.sigma_gak>`)
+        
+        .. deprecated:: 0.4
+            Setting `sigma` directly as a parameter for KernelKMeans and 
+            GlobalAlignmentKernelKMeans is deprecated in version 0.4 and will 
+            be removed in 0.6. Use `kernel_params` instead.
 
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel for GAK cross-similarity matrix
@@ -386,26 +407,29 @@ class GlobalAlignmentKernelKMeans(ClusterMixin, BaseModelPackage,
     --------
     >>> from tslearn.generators import random_walks
     >>> X = random_walks(n_ts=50, sz=32, d=1)
-    >>> gak_km = GlobalAlignmentKernelKMeans(n_clusters=3,
-    ...                                      random_state=0).fit(X)
+    >>> gak_km = KernelKMeans(n_clusters=3, kernel="gak", random_state=0)
+    >>> gak_km.fit(X)  # doctest: +ELLIPSIS
+    KernelKMeans(...)
+    >>> print(numpy.unique(gak_km.labels_))
+    [0 1 2]
 
     References
     ----------
-    Kernel k-means, Spectral Clustering and Normalized Cuts.
-    Inderjit S. Dhillon, Yuqiang Guan, Brian Kulis.
-    KDD 2004.
+    .. [1] Kernel k-means, Spectral Clustering and Normalized Cuts.
+           Inderjit S. Dhillon, Yuqiang Guan, Brian Kulis. KDD 2004.
 
-    Fast Global Alignment Kernels.
-    Marco Cuturi.
-    ICML 2011.
+    .. [2] Fast Global Alignment Kernels. Marco Cuturi. ICML 2011.
     """
 
-    def __init__(self, n_clusters=3, max_iter=50, tol=1e-6, n_init=1, sigma=1.,
-                 n_jobs=None, verbose=0, random_state=None):
+    def __init__(self, n_clusters=3, kernel="gak", max_iter=50, tol=1e-6,
+                 n_init=1, kernel_params=None, sigma=1., n_jobs=None,
+                 verbose=0, random_state=None):
         self.n_clusters = n_clusters
+        self.kernel = kernel
         self.max_iter = max_iter
         self.tol = tol
         self.n_init = n_init
+        self.kernel_params = kernel_params
         self.sigma = sigma
         self.n_jobs = n_jobs
         self.verbose = verbose
@@ -420,9 +444,31 @@ class GlobalAlignmentKernelKMeans(ClusterMixin, BaseModelPackage,
         params.update({'_X_fit': self._X_fit})
         return params
 
+    def _get_kernel_params(self):
+        if self.kernel_params is None:
+            kernel_params = {}
+        else:
+            kernel_params = self.kernel_params
+        if self.kernel == "gak":
+            if hasattr(self, "sigma_gak_"):
+                kernel_params["sigma"] = self.sigma_gak_
+            elif "sigma" not in kernel_params.keys():
+                kernel_params["sigma"] = self.sigma
+        return kernel_params
+
     def _get_kernel(self, X, Y=None):
-        return cdist_gak(X, Y, sigma=self.sigma, n_jobs=self.n_jobs,
-                         verbose=self.verbose)
+        kernel_params = self._get_kernel_params()
+        if self.kernel == "gak":
+            return cdist_gak(X, Y, n_jobs=self.n_jobs, verbose=self.verbose,
+                             **kernel_params)
+        else:
+            X_sklearn = to_sklearn_dataset(X)
+            if Y is not None:
+                Y_sklearn = to_sklearn_dataset(Y)
+            else:
+                Y_sklearn = Y
+            return pairwise_kernels(X_sklearn, Y_sklearn, metric=self.kernel,
+                                    n_jobs=self.n_jobs, **kernel_params)
 
     def _fit_one_init(self, K, rs):
         n_samples = K.shape[0]
@@ -465,6 +511,13 @@ class GlobalAlignmentKernelKMeans(ClusterMixin, BaseModelPackage,
             Weights to be given to time series in the learning process. By
             default, all time series weights are equal.
         """
+        if self.sigma != 1.:
+            warnings.warn(
+                "Setting `sigma` directly as a parameter for KernelKMeans "
+                "and GlobalAlignmentKernelKMeans is deprecated in version "
+                "0.4 and will be removed in 0.6. Use `kernel_params` "
+                "instead.",
+                DeprecationWarning, stacklevel=2)
 
         X = check_array(X, allow_nd=True, force_all_finite=False)
         X = check_dims(X)
@@ -472,6 +525,13 @@ class GlobalAlignmentKernelKMeans(ClusterMixin, BaseModelPackage,
         sample_weight = _check_sample_weight(sample_weight=sample_weight, X=X)
 
         max_attempts = max(self.n_init, 10)
+        kernel_params = self._get_kernel_params()
+        if self.kernel == "gak":
+            self.sigma_gak_ = kernel_params.get("sigma", 1.)
+            if self.sigma_gak_ == "auto":
+                self.sigma_gak_ = sigma_gak(X)
+        else:
+            self.sigma_gak_ = None
 
         self.labels_ = None
         self.inertia_ = None
@@ -580,6 +640,17 @@ class GlobalAlignmentKernelKMeans(ClusterMixin, BaseModelPackage,
 
     def _more_tags(self):
         return {'allow_nan': True, 'allow_variable_length': True}
+
+
+class GlobalAlignmentKernelKMeans(KernelKMeans):
+    def __init__(self, **kwargs):
+        warnings.warn(
+            "`GlobalAlignmentKernelKMeans` is deprecated in version "
+            "0.4 and will be removed in 0.6. Use `KernelKMeans` "
+            "instead.",
+            DeprecationWarning, stacklevel=2)
+        super().__init__(**kwargs)
+        self.kernel = "gak"
 
 
 class TimeSeriesCentroidBasedClusteringMixin:

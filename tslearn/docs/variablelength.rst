@@ -74,7 +74,7 @@ Examples
 Clustering
 ----------
 
-* :class:`tslearn.clustering.GlobalAlignmentKernelKMeans`
+* :class:`tslearn.clustering.KernelKMeans`
 * :class:`tslearn.clustering.TimeSeriesKMeans`
 * :class:`tslearn.clustering.silhouette_score`
 
@@ -83,8 +83,8 @@ Examples
 
 .. code-block:: python
 
-    from tslearn.clustering import GlobalAlignmentKernelKMeans
-    gak_km = GlobalAlignmentKernelKMeans(n_clusters=2)
+    from tslearn.clustering import KernelKMeans
+    gak_km = KernelKMeans(n_clusters=2, kernel="gak")
     labels_gak = gak_km.fit_predict(X)
 
 .. code-block:: python

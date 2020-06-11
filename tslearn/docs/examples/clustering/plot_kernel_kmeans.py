@@ -24,8 +24,7 @@ Normalized Cuts. KDD 2004.
 import numpy
 import matplotlib.pyplot as plt
 
-from tslearn.clustering import GlobalAlignmentKernelKMeans
-from tslearn.metrics import sigma_gak
+from tslearn.clustering import KernelKMeans
 from tslearn.datasets import CachedDatasets
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 
@@ -39,11 +38,12 @@ numpy.random.shuffle(X_train)
 X_train = TimeSeriesScalerMeanVariance().fit_transform(X_train[:50])
 sz = X_train.shape[1]
 
-gak_km = GlobalAlignmentKernelKMeans(n_clusters=3,
-                                     sigma=sigma_gak(X_train),
-                                     n_init=20,
-                                     verbose=True,
-                                     random_state=seed)
+gak_km = KernelKMeans(n_clusters=3,
+                      kernel="gak",
+                      kernel_params={"sigma": "auto"},
+                      n_init=20,
+                      verbose=True,
+                      random_state=seed)
 y_pred = gak_km.fit_predict(X_train)
 
 plt.figure()
