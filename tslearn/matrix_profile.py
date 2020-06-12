@@ -75,13 +75,17 @@ class MatrixProfile(TransformerMixin,
         subseries distance computations.
 
     implementation : str (default: "numpy")
-        Matrix profile implementation from the stumpy library to use for
-        efficient computing of the matrix profile. This library
-        is optimized for speed, performance and memory. See [2]_ for
-        the documentation.
+        Matrix profile implementation to use.
         Defaults to "numpy" to use the pure numpy version.
-        All the available implementations are ["numpy", "stump", "gpu_stump"],
-        all from the stumpy python library except "numpy".
+        All the available implementations are ["numpy", "stump", "gpu_stump"].
+
+        "stump" and "gpu_stump" are both implementations from the stumpy
+        python library, the latter requiring a GPU.
+        Stumpy is a library for efficiently computing the matrix profile which
+        is optimized for speed, performance and memory.
+        See [2]_ for the documentation.
+        "numpy" is the default pure numpy implementation and does not require
+        stumpy to be installed.
 
     scale: bool (default: True)
          Whether input data should be scaled for each feature of each time
@@ -115,7 +119,6 @@ class MatrixProfile(TransformerMixin,
         self.subsequence_length = subsequence_length
         self.scale = scale
         self.implementation = implementation
-        self._available_implementations = ["numpy", "stump", "gpu_stump"]
 
     def _is_fitted(self):
         check_is_fitted(self, '_X_fit_dims')
@@ -189,11 +192,12 @@ class MatrixProfile(TransformerMixin,
                 X_transformed[i_ts] = dists.min(axis=1, keepdims=True)
 
         else:
+            available_implementations = ["numpy", "stump", "gpu_stump"]
             raise ValueError(
-                'This "{}" matrix profile algorithm is not'
+                'This "{}" matrix profile implementation is not'
                 ' recognized. Available implementations are {}.'
                 .format(self.implementation,
-                        self._available_implementations)
+                        available_implementations)
             )
 
         return X_transformed
