@@ -156,7 +156,19 @@ class MatrixProfile(TransformerMixin,
         X_transformed = np.empty((n_ts, output_size, 1))
         self._check_if_implementation_exists()
 
-        if self.implementation is None:
+        if self.implementation == "stump":
+            import stumpy
+            if d > 1:
+                raise NotImplementedError("We currently don't support using "
+                                          "multi-dimensional matrix profiles "
+                                          "from the stumpy library.")
+            for i_ts in range(n_ts):
+                result = stumpy.stump(
+                    T_A=X[i_ts, :, 0].ravel(),
+                    m=self.subsequence_length)
+                X_transformed[i_ts, :, 0] = result[:, 0].astype(np.float)
+
+        else:
             scaler = TimeSeriesScalerMeanVariance()
             band_width = int(np.ceil(self.subsequence_length / 4))
             for i_ts in range(n_ts):
@@ -172,18 +184,6 @@ class MatrixProfile(TransformerMixin,
                                 -(band_width + 1), dtype=np.bool))
                 dists[band] = np.inf
                 X_transformed[i_ts] = dists.min(axis=1, keepdims=True)
-
-        elif self.implementation == "stump":
-            import stumpy
-            if d > 1:
-                raise NotImplementedError("We currently don't support using "
-                                          "multi-dimensional matrix profiles "
-                                          "from the stumpy library.")
-            for i_ts in range(n_ts):
-                result = stumpy.stump(
-                    T_A=X[i_ts, :, 0].ravel(),
-                    m=self.subsequence_length)
-                X_transformed[i_ts, :, 0] = result[:, 0].astype(np.float)
 
         return X_transformed
 
