@@ -3,15 +3,26 @@ The :mod:`tslearn.matrix_profile` module gathers methods for the computation of
 Matrix Profiles from time series.
 """
 
+from warnings import warn
+
 import numpy as np
 from numpy.lib.stride_tricks import as_strided
 from scipy.spatial.distance import pdist, squareform
 from sklearn.base import TransformerMixin
-from sklearn.utils.validation import check_is_fitted, check_array
+from sklearn.utils.validation import check_array, check_is_fitted
 
-from tslearn.utils import check_dims
-from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
+from tslearn.preprocessing import TimeSeriesScalerMeanVariance
+from tslearn.utils import check_dims
+
+stumpy_msg = ('stumpy is not installed, stumpy features will not be'
+              'supported.\n Install stumpy to use stumpy features:'
+              'https://stumpy.readthedocs.io/en/latest/')
+
+try:
+    import stumpy
+except ImportError:
+    warn(stumpy_msg)
 
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -151,7 +162,6 @@ class MatrixProfile(TransformerMixin,
         X_transformed = np.empty((n_ts, output_size, 1))
 
         if self.implementation == "stump":
-            import stumpy
             if d > 1:
                 raise NotImplementedError("We currently don't support using "
                                           "multi-dimensional matrix profiles "
@@ -163,7 +173,6 @@ class MatrixProfile(TransformerMixin,
                 X_transformed[i_ts, :, 0] = result[:, 0].astype(np.float)
 
         elif self.implementation == "gpu_stump":
-            import stumpy
             if d > 1:
                 raise NotImplementedError("We currently don't support using "
                                           "multi-dimensional matrix profiles "
