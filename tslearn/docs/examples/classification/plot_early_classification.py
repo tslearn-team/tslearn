@@ -37,6 +37,10 @@ def plot_partial(time_series, t, y_true=0, y_pred=0, color="k"):
     )
     plt.xlim(0, time_series.shape[0] - 1)
 
+##############################################################################
+# Data loading and visualization
+# ------------------------------
+
 numpy.random.seed(0)
 X_train, y_train, X_test, y_test = UCR_UEA_datasets().load_dataset("ECG200")
 
@@ -55,6 +59,13 @@ for i, cl in enumerate(set(y_train)):
     plt.xlim(0, size - 1)
 plt.suptitle("Training time series")
 plt.show()
+
+##############################################################################
+# Model fitting
+# -------------
+#
+# As observed in the following figure, the optimal classification time as
+# estimated by `NonMyopicEarlyClassifier` is data-dependent.
 
 early_clf = NonMyopicEarlyClassifier(n_clusters=3,
                                      cost_time_parameter=1e-3,
@@ -77,6 +88,13 @@ t = times[ts_idx]
 plot_partial(X_test[ts_idx], t, y_test[ts_idx], preds[ts_idx], color="blue")
 plt.tight_layout()
 plt.show()
+
+##############################################################################
+# Earliness-Accuracy trade-off
+# ----------------------------
+#
+# The trade-off between earliness and accuracy is controlled via
+# ``cost_time_parameter``.
 
 plt.figure()
 colors = ["red", "green", "purple"]
