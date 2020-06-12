@@ -74,10 +74,13 @@ class MatrixProfile(TransformerMixin,
         Length of the subseries (also called window size) to be used for
         subseries distance computations.
 
-    algorithm : str (default: None)
-        Algorithm to use to compute the matrix profile.
-        Defaults to None to use the tslearn implementation.
-        Any other algorithm must be one of ['stump'], from the
+    implementation : str (default: None)
+        Matrix profile implementation from the stumpy library to use for
+        efficient computing of the matrix profile. This library
+        is optimized for speed, performance and memory. See [2]_ for
+        the documentation.
+        Defaults to None to use the pure numpy version.
+        Any other implementation must be one of ['stump'], from the
         stumpy python library.
 
     scale: bool (default: True)
@@ -101,22 +104,25 @@ class MatrixProfile(TransformerMixin,
        Matrix Profile I: All Pairs Similarity Joins for Time Series: A
        Unifying View that Includes Motifs, Discords and Shapelets.
        ICDM 2016.
+
+    .. [2] STUMPY documentation https://stumpy.readthedocs.io/en/latest/
+
     """
 
-    def __init__(self, subsequence_length=1, algorithm=None, scale=True):
+    def __init__(self, subsequence_length=1, implementation=None, scale=True):
         self.subsequence_length = subsequence_length
         self.scale = scale
-        self.check_if_algorithm_exists(algorithm)
-        self.algorithm = algorithm
+        self.check_if_implementation_exists(implementation)
+        self.implementation = implementation
 
-    def check_if_algorithm_exists(self, algorithm):
-        available_algorithms = ["stump"]
+    def check_if_implementation_exists(self, implementation):
+        available_implementations = ["stump"]
         if (
-            algorithm is not None
-            and algorithm not in available_algorithms
+            implementation is not None
+            and implementation not in available_implementations
         ):
             raise ValueError(
-                "This matrix profile algorithm is not implemented."
+                "This matrix profile implementation is not implemented."
             )
 
     def _is_fitted(self):
@@ -149,7 +155,7 @@ class MatrixProfile(TransformerMixin,
         output_size = sz - self.subsequence_length + 1
         X_transformed = np.empty((n_ts, output_size, 1))
 
-        if self.algorithm is None:
+        if self.implementation is None:
             scaler = TimeSeriesScalerMeanVariance()
             band_width = int(np.ceil(self.subsequence_length / 4))
             for i_ts in range(n_ts):
@@ -166,7 +172,7 @@ class MatrixProfile(TransformerMixin,
                 dists[band] = np.inf
                 X_transformed[i_ts] = dists.min(axis=1, keepdims=True)
 
-        elif self.algorithm == "stump":
+        elif self.implementation == "stump":
             import stumpy
             if d > 1:
                 raise NotImplementedError("Currently only the single"
