@@ -254,6 +254,7 @@ class NonMyopicEarlyClassifier(ClassifierMixin, TimeSeriesBaseEstimator):
 
         Examples
         --------
+        >>> from tslearn.utils import to_time_series
         >>> dataset = to_time_series_dataset([[1, 2, 3, 4, 5, 6],
         ...                                   [1, 2, 3, 4, 5, 6],
         ...                                   [1, 2, 3, 4, 5, 6],
@@ -321,6 +322,7 @@ class NonMyopicEarlyClassifier(ClassifierMixin, TimeSeriesBaseEstimator):
 
         Examples
         --------
+        >>> from tslearn.utils import to_time_series
         >>> dataset = to_time_series_dataset([[1, 2, 3, 4, 5, 6],
         ...                                   [1, 2, 3, 4, 5, 6],
         ...                                   [1, 2, 3, 4, 5, 6],
