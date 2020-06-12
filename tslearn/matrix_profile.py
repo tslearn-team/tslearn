@@ -112,17 +112,17 @@ class MatrixProfile(TransformerMixin,
     def __init__(self, subsequence_length=1, implementation=None, scale=True):
         self.subsequence_length = subsequence_length
         self.scale = scale
-        self.check_if_implementation_exists(implementation)
         self.implementation = implementation
 
-    def check_if_implementation_exists(self, implementation):
+    def _check_if_implementation_exists(self):
         available_implementations = ["stump"]
         if (
-            implementation is not None
-            and implementation not in available_implementations
+            self.implementation is not None
+            and self.implementation not in available_implementations
         ):
             raise ValueError(
-                "This matrix profile implementation is not implemented."
+                f'This "{self.implementation}" matrix profile algorithm is not'
+                ' recognized.'
             )
 
     def _is_fitted(self):
@@ -154,6 +154,7 @@ class MatrixProfile(TransformerMixin,
         n_ts, sz, d = X.shape
         output_size = sz - self.subsequence_length + 1
         X_transformed = np.empty((n_ts, output_size, 1))
+        self._check_if_implementation_exists()
 
         if self.implementation is None:
             scaler = TimeSeriesScalerMeanVariance()
@@ -175,9 +176,9 @@ class MatrixProfile(TransformerMixin,
         elif self.implementation == "stump":
             import stumpy
             if d > 1:
-                raise NotImplementedError("Currently only the single"
-                                          "dimension matrix profile is"
-                                          "supported with stumpy.")
+                raise NotImplementedError("We currently don't support using "
+                                          "multi-dimensional matrix profiles "
+                                          "from the stumpy library.")
             for i_ts in range(n_ts):
                 result = stumpy.stump(
                     T_A=X[i_ts, :, 0].ravel(),
