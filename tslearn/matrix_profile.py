@@ -80,8 +80,8 @@ class MatrixProfile(TransformerMixin,
         is optimized for speed, performance and memory. See [2]_ for
         the documentation.
         Defaults to None to use the pure numpy version.
-        Any other implementation must be one of ['stump'], from the
-        stumpy python library.
+        Any other implementation must be one of ["stump", "gpu_stump"],
+        from the stumpy python library.
 
     scale: bool (default: True)
          Whether input data should be scaled for each feature of each time
@@ -115,7 +115,7 @@ class MatrixProfile(TransformerMixin,
         self.implementation = implementation
 
     def _check_if_implementation_exists(self):
-        available_implementations = ["stump"]
+        available_implementations = ["stump", "gpu_stump"]
         if (
             self.implementation is not None
             and self.implementation not in available_implementations
@@ -151,10 +151,10 @@ class MatrixProfile(TransformerMixin,
         return self._fit(X)
 
     def _transform(self, X, y=None):
+        self._check_if_implementation_exists()
         n_ts, sz, d = X.shape
         output_size = sz - self.subsequence_length + 1
         X_transformed = np.empty((n_ts, output_size, 1))
-        self._check_if_implementation_exists()
 
         if self.implementation == "stump":
             import stumpy
@@ -164,6 +164,18 @@ class MatrixProfile(TransformerMixin,
                                           "from the stumpy library.")
             for i_ts in range(n_ts):
                 result = stumpy.stump(
+                    T_A=X[i_ts, :, 0].ravel(),
+                    m=self.subsequence_length)
+                X_transformed[i_ts, :, 0] = result[:, 0].astype(np.float)
+
+        elif self.implementation == "gpu_stump":
+            import stumpy
+            if d > 1:
+                raise NotImplementedError("We currently don't support using "
+                                          "multi-dimensional matrix profiles "
+                                          "from the stumpy library.")
+            for i_ts in range(n_ts):
+                result = stumpy.gpu_stump(
                     T_A=X[i_ts, :, 0].ravel(),
                     m=self.subsequence_length)
                 X_transformed[i_ts, :, 0] = result[:, 0].astype(np.float)
