@@ -16,7 +16,7 @@ from scipy.sparse import coo_matrix
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 
-from tslearn.utils import to_time_series_dataset, to_time_series, check_dims
+from tslearn.utils import to_time_series_dataset, check_dims
 from tslearn.neighbors import KNeighborsTimeSeriesClassifier
 from tslearn.clustering import TimeSeriesKMeans
 from tslearn.bases import TimeSeriesBaseEstimator
@@ -59,8 +59,8 @@ class NonMyopicEarlyClassifier(ClassifierMixin, TimeSeriesBaseEstimator):
         (maximum_time_stamp - min_t) elements.
 
     pyhatyck_ : array like of shape (maximum_time_stamp - min_t, n_cluster, __n_classes, __n_classes)
-        Contains the probabilities of being classified as class y_hat given 
-        class y and cluster ck for a trained classifier. The penultimate 
+        Contains the probabilities of being classified as class y_hat given
+        class y and cluster ck for a trained classifier. The penultimate
         dimension of the array is associated to the true
         class of the series and the last dimension to the predicted class.
 
@@ -291,7 +291,7 @@ class NonMyopicEarlyClassifier(ClassifierMixin, TimeSeriesBaseEstimator):
         return s_k / s_k.sum()
 
     def _expected_costs(self, Xi):
-        """Compute expected future costs from an incoming time series `Xi`.
+        r"""Compute expected future costs from an incoming time series `Xi`.
 
         This cost is computed, for a time horizon :math:`\tau`, as:
 
