@@ -121,8 +121,8 @@ class MatrixProfile(TransformerMixin,
             and self.implementation not in available_implementations
         ):
             raise ValueError(
-                f'This "{self.implementation}" matrix profile algorithm is not'
-                ' recognized.'
+                'This "{}" matrix profile algorithm is not'
+                ' recognized.'.format(self.implementation)
             )
 
     def _is_fitted(self):
