@@ -14,22 +14,11 @@ def test_consistent_with_stumpy():
     X_stumpy = X.ravel()
 
     mp = MatrixProfile(subsequence_length=10)
+    mp_stumpy = MatrixProfile(subsequence_length=10, implementation="stump")
+
     X_tr = mp.fit_transform(X)
+    X_tr_stumpy_wrap = mp_stumpy.fit_transform(X)
     X_tr_stumpy = stumpy.stump(X_stumpy, m=10)[:, 0].astype(np.float)
 
     np.testing.assert_allclose(X_tr.ravel(), X_tr_stumpy)
-
-
-def test_stumpy_wrapper():
-    pytest.importorskip('stumpy')
-    from tslearn.matrix_profile import MatrixProfile
-
-    rng = np.random.RandomState(0)
-    X = rng.randn(1, 20, 1)
-
-    mp_standard = MatrixProfile(subsequence_length=10, algorithm=None)
-    mp_stumpy = MatrixProfile(subsequence_length=10, algorithm="stump")
-    X_tr = mp_standard.fit_transform(X)
-    X_tr_stumpy = mp_stumpy.fit_transform(X)
-
-    np.testing.assert_allclose(X_tr, X_tr_stumpy)
+    np.testing.assert_allclose(X_tr, X_tr_stumpy_wrap)
