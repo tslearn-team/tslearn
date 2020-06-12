@@ -74,14 +74,14 @@ class MatrixProfile(TransformerMixin,
         Length of the subseries (also called window size) to be used for
         subseries distance computations.
 
-    implementation : str (default: None)
+    implementation : str (default: "numpy")
         Matrix profile implementation from the stumpy library to use for
         efficient computing of the matrix profile. This library
         is optimized for speed, performance and memory. See [2]_ for
         the documentation.
-        Defaults to None to use the pure numpy version.
-        Any other implementation must be one of ["stump", "gpu_stump"],
-        from the stumpy python library.
+        Defaults to "numpy" to use the pure numpy version.
+        All the available implementations are ["numpy", "stump", "gpu_stump"],
+        all from the stumpy python library except "numpy".
 
     scale: bool (default: True)
          Whether input data should be scaled for each feature of each time
@@ -109,21 +109,13 @@ class MatrixProfile(TransformerMixin,
 
     """
 
-    def __init__(self, subsequence_length=1, implementation=None, scale=True):
+    def __init__(
+        self, subsequence_length=1, implementation="numpy", scale=True
+    ):
         self.subsequence_length = subsequence_length
         self.scale = scale
         self.implementation = implementation
-
-    def _check_if_implementation_exists(self):
-        available_implementations = ["stump", "gpu_stump"]
-        if (
-            self.implementation is not None
-            and self.implementation not in available_implementations
-        ):
-            raise ValueError(
-                'This "{}" matrix profile algorithm is not'
-                ' recognized.'.format(self.implementation)
-            )
+        self._available_implementations = ["numpy", "stump", "gpu_stump"]
 
     def _is_fitted(self):
         check_is_fitted(self, '_X_fit_dims')
@@ -151,7 +143,6 @@ class MatrixProfile(TransformerMixin,
         return self._fit(X)
 
     def _transform(self, X, y=None):
-        self._check_if_implementation_exists()
         n_ts, sz, d = X.shape
         output_size = sz - self.subsequence_length + 1
         X_transformed = np.empty((n_ts, output_size, 1))
@@ -180,7 +171,7 @@ class MatrixProfile(TransformerMixin,
                     m=self.subsequence_length)
                 X_transformed[i_ts, :, 0] = result[:, 0].astype(np.float)
 
-        else:
+        elif self.implementation == "numpy":
             scaler = TimeSeriesScalerMeanVariance()
             band_width = int(np.ceil(self.subsequence_length / 4))
             for i_ts in range(n_ts):
@@ -196,6 +187,14 @@ class MatrixProfile(TransformerMixin,
                                 -(band_width + 1), dtype=np.bool))
                 dists[band] = np.inf
                 X_transformed[i_ts] = dists.min(axis=1, keepdims=True)
+
+        else:
+            raise ValueError(
+                'This "{}" matrix profile algorithm is not'
+                ' recognized. Available implementations are {}.'
+                .format(self.implementation,
+                        self._available_implementations)
+            )
 
         return X_transformed
 
