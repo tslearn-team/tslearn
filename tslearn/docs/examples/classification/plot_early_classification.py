@@ -79,13 +79,16 @@ plt.tight_layout()
 plt.show()
 
 plt.figure()
-plt.hist(times[y_test < 0],
-         color="orange", linewidth=2, alpha=.8, density=True, histtype='step',
-         label="Class -1", bins=numpy.arange(0, size, 3))
-plt.hist(times[y_test > 0],
-         color="blue", linewidth=2, alpha=.8, density=True, histtype='step',
-         label="Class 1", bins=numpy.arange(0, size, 3))
-plt.legend(loc="upper left")
+colors = ["red", "green", "purple"]
+for i, cost_t in enumerate([1e-4, 1e-3, 1e-2]):
+    early_clf.set_params(cost_time_parameter=cost_t)
+    early_clf.fit(X_train, y_train)
+    preds, times = early_clf.predict_class_and_earliness(X_test)
+    plt.hist(times, color=colors[i], linewidth=2, alpha=.8, density=True,
+             histtype='step', label="$\\alpha={}$".format(cost_t),
+             bins=numpy.arange(0, size, 2))
+plt.legend(loc="upper right")
 plt.xlim(0, size - 1)
 plt.xlabel("Prediction times")
+plt.title("Impact of cost_time_parameter ($\\alpha$)")
 plt.show()
