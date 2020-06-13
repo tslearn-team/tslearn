@@ -59,9 +59,31 @@ positive :math:`\tau` we have
 :math:`f_\tau(\mathbf{x}_{\rightarrow t}, y) \geq f_0(\mathbf{x}_{\rightarrow t}, y)`,
 then a decision is made using classifier :math:`m_t(\cdot)`.
 
-**TODO: code snippet + visualization from the gallery once an example is
-available**
+.. figure:: ../_static/img/early.svg
+    :width: 80%
+    :align: center
 
+    Early classification. At test time, prediction is made at a timestamp such that the expected earliness-accuracy is optimized, which can hence vary between time series.
+
+To use this early classifier in ``tslearn``, one can rely on the
+:class:`tslearn.early_classification.NonMyopicEarlyClassifier` class:
+
+.. code-block:: python
+
+    from tslearn.early_classification import NonMyopicEarlyClassifier
+
+    early_clf = NonMyopicEarlyClassifier(n_clusters=3,
+                                         cost_time_parameter=1e-3,
+                                         lamb=1e2,
+                                         random_state=0)
+    early_clf.fit(X_train, y_train)
+    preds, times = early_clf.predict_class_and_earliness(X_test)
+
+where ``cost_time_parameter`` is the :math:`\alpha` parameter presented above
+and ``lamb`` is a trade-off parameter for the soft-assignment of partial series
+to clusters :math:`P(C_k | \mathbf{x}_{\rightarrow t})` (when ``lamb`` tends to
+infinity, the assignment tends to hard-assignment, and when ``lamb`` is set to
+0, equal probabilities are obtained for all clusters).
 
 .. minigallery:: tslearn.early_classification.NonMyopicEarlyClassifier
     :add-heading: Examples Involving Early Classification Estimators

@@ -14,6 +14,7 @@
 
 import sys
 import os
+import warnings
 import sphinx_bootstrap_theme
 import subprocess
 
@@ -402,3 +403,8 @@ def linkcode_resolve(domain, info):
     revision = _get_git_revision()
     return "https://github.com/tslearn-team/tslearn/blob/%s/%s" % (revision,
                                                                    filename)
+
+
+warnings.filterwarnings("ignore", category=UserWarning,
+                        message='Matplotlib is currently using agg, which is a'
+                                ' non-GUI backend, so cannot show the figure.')
