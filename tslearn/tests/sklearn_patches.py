@@ -164,7 +164,6 @@ def check_clustering(name, clusterer_orig, readonly_memmap=False):
         n_clusters = getattr(clusterer, 'n_clusters')
         assert_greater_equal(n_clusters - 1, labels_sorted[-1])
 
-
 @ignore_warnings(category=(DeprecationWarning, FutureWarning))
 def check_non_transf_est_n_iter(name, estimator_orig):
     # Test that estimators that are not transformers with a parameter
@@ -242,7 +241,7 @@ def check_classifiers_classes(name, classifier_orig):
     if name == 'SerializableShapeletModel':
         raise SkipTest('Skipping check_classifiers_classes for shapelets'
                        ' due to convergence issues...')
-    elif name == 'ShapeletModel':
+    elif name in ['ShapeletModel', 'TimeSeriesMLPClassifier']:
         X_multiclass, y_multiclass = _create_large_ts_dataset()
         classifier_orig = clone(classifier_orig)
         classifier_orig.max_iter = 1000
@@ -293,7 +292,7 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False,
     if name == 'SerializableShapeletModel':
         raise SkipTest('Skipping check_classifiers_classes for shapelets'
                        ' due to convergence issues...')
-    elif name == 'ShapeletModel':
+    elif name in ['ShapeletModel', 'TimeSeriesMLPClassifier']:
         X_m, y_m = _create_large_ts_dataset()
         classifier_orig = clone(classifier_orig)
         classifier_orig.max_iter = 1000
@@ -468,6 +467,18 @@ def check_supervised_y_2d(name, estimator_orig):
         assert "DataConversionWarning('A column-vector y" \
                " was passed when a 1d array was expected" in msg
         assert_allclose(y_pred.ravel(), y_pred_2d.ravel())
+
+@ignore_warnings(category=FutureWarning)
+def check_classifier_data_not_an_array(name, estimator_orig):
+    X, y = _create_large_ts_dataset()
+    y = enforce_estimator_tags_y(estimator_orig, y)
+    for obj_type in ["NotAnArray", "PandasDataframe"]:
+        if obj_type == "PandasDataframe":
+            X_ = X[:, :, 0]  # pandas df cant be 3d
+        else:
+            X_ = X
+        check_estimators_data_not_an_array(name, estimator_orig, X_, y,
+                                           obj_type)
 
 
 @ignore_warnings(category=DeprecationWarning)

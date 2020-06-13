@@ -32,6 +32,7 @@ from tslearn.tests.sklearn_patches import (
                              check_estimators_pickle,
                              check_supervised_y_2d,
                              check_regressor_data_not_an_array,
+                             check_classifier_data_not_an_array,
                              check_regressors_int_patched,
                              check_classifiers_cont_target,
                              check_pipeline_consistency,
@@ -52,6 +53,7 @@ checks.check_classifiers_train = check_classifiers_train
 checks.check_estimators_pickle = check_estimators_pickle
 checks.check_supervised_y_2d = check_supervised_y_2d
 checks.check_regressor_data_not_an_array = check_regressor_data_not_an_array
+checks.check_classifier_data_not_an_array = check_classifier_data_not_an_array
 checks.check_regressors_int = check_regressors_int_patched
 checks.check_classifiers_regression_target = check_classifiers_cont_target
 checks.check_pipeline_consistency = check_pipeline_consistency
