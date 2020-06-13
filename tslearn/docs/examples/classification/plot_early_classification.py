@@ -69,7 +69,7 @@ plt.show()
 
 early_clf = NonMyopicEarlyClassifier(n_clusters=3,
                                      cost_time_parameter=1e-3,
-                                     lamb=100.,
+                                     lamb=1e2,
                                      random_state=0)
 early_clf.fit(X_train, y_train)
 
@@ -97,14 +97,16 @@ plt.show()
 # ``cost_time_parameter``.
 
 plt.figure()
-colors = ["red", "green", "purple"]
+hatches = ["///", "\\\\\\", "*"]
 for i, cost_t in enumerate([1e-4, 1e-3, 1e-2]):
     early_clf.set_params(cost_time_parameter=cost_t)
     early_clf.fit(X_train, y_train)
     preds, times = early_clf.predict_class_and_earliness(X_test)
-    plt.hist(times, color=colors[i], linewidth=2, alpha=.8, density=True,
-             histtype='step', label="$\\alpha={}$".format(cost_t),
-             bins=numpy.arange(0, size, 2))
+    plt.hist(times,
+             alpha=.5, hatch=hatches[i],
+             density=True,
+             label="$\\alpha={}$".format(cost_t),
+             bins=numpy.arange(0, size, 5))
 plt.legend(loc="upper right")
 plt.xlim(0, size - 1)
 plt.xlabel("Prediction times")
