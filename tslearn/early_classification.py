@@ -5,6 +5,9 @@ time series.
 Such classifiers aim at performing prediction as early as possible (i.e. they
 do not necessarily wait for the end of the series before prediction is
 triggered).
+
+**User guide:** See the :ref:`Early Classification <early>` section for further 
+ details.
 """
 
 from sklearn.metrics import confusion_matrix, accuracy_score

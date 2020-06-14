@@ -1,6 +1,9 @@
 """
 The :mod:`tslearn.clustering` module gathers time series specific clustering
 algorithms.
+
+**User guide:** See the :ref:`Clustering <clustering>` section for further 
+ details.
 """
 
 from sklearn.base import ClusterMixin, TransformerMixin

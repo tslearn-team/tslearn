@@ -238,7 +238,7 @@ def check_fit_idempotent(name, estimator_orig):
 
 def check_classifiers_classes(name, classifier_orig):
     # Case of shapelet models
-    if name == 'LearningShapelets':
+    if name in ['LearningShapelets', 'TimeSeriesMLPClassifier']:
         X_multiclass, y_multiclass = _create_large_ts_dataset()
         classifier_orig = clone(classifier_orig)
         classifier_orig.max_iter = 1000
@@ -286,7 +286,7 @@ def check_classifiers_classes(name, classifier_orig):
 def check_classifiers_train(name, classifier_orig, readonly_memmap=False,
                             X_dtype='float64'):
     # Case of shapelet models
-    if name == 'LearningShapelets':
+    if name in ['LearningShapelets', 'TimeSeriesMLPClassifier']:
         X_m, y_m = _create_large_ts_dataset()
         classifier_orig = clone(classifier_orig)
         classifier_orig.max_iter = 1000
