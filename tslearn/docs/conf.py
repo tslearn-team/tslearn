@@ -24,6 +24,7 @@ import subprocess
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
 if not on_rtd:
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
+rtd_version = os.environ.get('READTHEDOCS_VERSION', 'local')
 
 # -- General configuration ------------------------------------------------
 
@@ -210,6 +211,8 @@ html_theme_options = {
 
 def setup(app):
     app.add_css_file("custom.css") # also can be a full URL
+    if rtd_version != 'stable':
+        app.add_javascript("custom.js")
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
