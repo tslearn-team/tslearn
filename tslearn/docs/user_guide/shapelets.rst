@@ -23,7 +23,7 @@ If the above-defined distance is small enough, then
 shapelet :math:`\textbf{s}` is supposed to be present in time series
 :math:`\mathbf{x}`.
 
-.. figure:: ../_static/img/shap_distance.svg
+.. figure:: ../../_images/sphx_glr_plot_shapelet_locations_001.svg
     :width: 80%
     :align: center
 
@@ -51,7 +51,7 @@ a set of shapelets :math:`\{\mathbf{s}_i\}_{i \leq k}` is the feature vector:
 This is illustrated below with a two-dimensional example.
 
 
-.. figure:: ../_static/img/shapelet_distance_space.svg
+.. figure:: ../../_images/sphx_glr_plot_shapelet_distances_001.svg
     :width: 80%
     :align: center
 
