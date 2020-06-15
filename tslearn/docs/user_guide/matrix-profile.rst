@@ -3,7 +3,7 @@
 Matrix Profile
 ==============
 
-The Matrix Profile, :math:`MP`, is a new time series that can be calculated based on an input time series :math:`T` and a subsequence length :math:`m`. :math:`MP_i` corresponds to the minimal distance from the query subsequence :math:`T_{i\rightarrow i+m}` to any subsequence in :math:`T` [1]_.  As the distance from the query subsequence to itself will be equal to zero, :math:`T_{i-\frac{m}{4}\rightarrow i+\frac{m}{4}}` is considered as an exclusion zone. In order to construct the Matrix Profile, a distance profile which is :ref:`similar to the distance calculation used to transform time series into their shapelet-transform space <shapelets>`_, is calculated for each subsequence, as illustrated below:
+The Matrix Profile, :math:`MP`, is a new time series that can be calculated based on an input time series :math:`T` and a subsequence length :math:`m`. :math:`MP_i` corresponds to the minimal distance from the query subsequence :math:`T_{i\rightarrow i+m}` to any subsequence in :math:`T` [1]_.  As the distance from the query subsequence to itself will be equal to zero, :math:`T_{i-\frac{m}{4}\rightarrow i+\frac{m}{4}}` is considered as an exclusion zone. In order to construct the Matrix Profile, a distance profile which is :ref:`similar to the distance calculation used to transform time series into their shapelet-transform space <shapelets>`, is calculated for each subsequence, as illustrated below:
 
 .. figure:: ../../_images/sphx_glr_plot_distance_and_matrix_profile_001.svg
     :width: 80%
