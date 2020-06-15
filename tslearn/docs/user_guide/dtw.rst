@@ -51,7 +51,7 @@ The following image exhibits the DTW path (in white) for a given pair of time
 series, on top of the cross-similarity matrix that stores :math:`d(x_i, y_j)`
 values.
 
-.. figure:: ../_static/img/dtw_thumb.png
+.. figure:: ../_images/sphx_glr_plot_dtw_thumb.svg
     :width: 30%
     :align: center
 

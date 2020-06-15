@@ -59,7 +59,7 @@ positive :math:`\tau` we have
 :math:`f_\tau(\mathbf{x}_{\rightarrow t}, y) \geq f_0(\mathbf{x}_{\rightarrow t}, y)`,
 then a decision is made using classifier :math:`m_t(\cdot)`.
 
-.. figure:: ../_static/img/early.svg
+.. figure:: ../../_images/sphx_glr_plot_early_classification_002.svg
     :width: 80%
     :align: center
 
