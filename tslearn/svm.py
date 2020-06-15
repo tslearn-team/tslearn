@@ -106,9 +106,12 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
     shrinking : boolean, optional (default=True)
         Whether to use the shrinking heuristic.
 
-    probability : boolean, optional (default=True)
+    probability : boolean, optional (default=False)
         Whether to enable probability estimates. This must be enabled prior
         to calling `fit`, and will slow down that method.
+        Also, probability estimates are not guaranteed to match predict output.
+        See our :ref:`dedicated user guide section <kernels-ml>`
+        for more details.
 
     tol : float, optional (default=1e-3)
         Tolerance for stopping criterion.
@@ -334,6 +337,11 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
 
     def predict_log_proba(self, X):
         """Predict class log-probabilities for a given set of time series.
+        
+        Note that probability estimates are not guaranteed to match predict 
+        output.
+        See our :ref:`dedicated user guide section <kernels-ml>`
+        for more details.
 
         Parameters
         ----------
@@ -350,6 +358,11 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
 
     def predict_proba(self, X):
         """Predict class probability for a given set of time series.
+        
+        Note that probability estimates are not guaranteed to match predict 
+        output.
+        See our :ref:`dedicated user guide section <kernels-ml>`
+        for more details.
 
         Parameters
         ----------

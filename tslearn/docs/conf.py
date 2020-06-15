@@ -14,6 +14,7 @@
 
 import sys
 import os
+import warnings
 import sphinx_bootstrap_theme
 import subprocess
 
@@ -49,6 +50,7 @@ numpydoc_show_class_members = True
 numpydoc_class_members_toctree = False
 
 autosummary_generate = True
+autosummary_generate_overwrite = False
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/{.major}'.format(
@@ -56,8 +58,18 @@ intersphinx_mapping = {
     'numpy': ('https://numpy.org/doc/stable', None),
     'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
     'matplotlib': ('https://matplotlib.org/', None),
-    'sklearn': ('http://scikit-learn.org/stable', None)
+    'sklearn': ('https://scikit-learn.org/stable', None)
 }
+
+from sphinx_gallery.scrapers import matplotlib_scraper
+
+class matplotlib_svg_scraper(object):
+
+    def __repr__(self):
+        return self.__class__.__name__
+
+    def __call__(self, *args, **kwargs):
+        return matplotlib_scraper(*args, format='svg', **kwargs)
 
 sphinx_gallery_conf = {
     'examples_dirs': ['./examples'],
@@ -68,7 +80,8 @@ sphinx_gallery_conf = {
     'doc_module': ('tslearn',),
     'subsection_order': ["examples", "examples/metrics", "examples/neighbors",
                          "examples/clustering", "examples/classification",
-                         "examples/misc"].index
+                         "examples/misc"].index,
+    'image_scrapers': (matplotlib_svg_scraper(),),
     # 'binder': {
     #     # Required keys
     #     'org': 'rtavenar',
@@ -157,8 +170,9 @@ html_theme_options = {
     'navbar_site_name': "Site map",
 
     'navbar_links': [
-        ("Quick-start", "quickstart"),
-        ("API Reference", "reference"),
+        ("Quick Start", "quickstart"),
+        ("User Guide", "user_guide/userguide"),
+        ("API", "reference"),
         ("Examples", "auto_examples/index"),
         ("Citing tslearn", "citing"),
     ],
@@ -196,10 +210,9 @@ html_theme_options = {
 }
 
 def setup(app):
-    app.add_stylesheet("custom.css") # also can be a full URL
+    app.add_css_file("custom.css") # also can be a full URL
     if rtd_version != 'stable':
         app.add_javascript("custom.js")
-
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -393,3 +406,8 @@ def linkcode_resolve(domain, info):
     revision = _get_git_revision()
     return "https://github.com/tslearn-team/tslearn/blob/%s/%s" % (revision,
                                                                    filename)
+
+
+warnings.filterwarnings("ignore", category=UserWarning,
+                        message='Matplotlib is currently using agg, which is a'
+                                ' non-GUI backend, so cannot show the figure.')

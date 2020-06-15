@@ -37,7 +37,7 @@ from tslearn.tests.sklearn_patches import (
                              check_classifiers_cont_target,
                              check_pipeline_consistency,
                              yield_all_checks)
-from tslearn.shapelets import ShapeletModel, SerializableShapeletModel
+from tslearn.shapelets import LearningShapelets, SerializableShapeletModel
 import warnings
 import pytest
 
@@ -173,7 +173,7 @@ def check_estimator(Estimator):
         name = type(estimator).__name__
 
     if hasattr(estimator, 'max_iter'):
-        if (isinstance(estimator, ShapeletModel) or
+        if (isinstance(estimator, LearningShapelets) or
                 isinstance(estimator, SerializableShapeletModel)):
             estimator.set_params(max_iter=100)
         else:
@@ -199,7 +199,8 @@ def test_all_estimators(name, Estimator):
                  Estimator().get_tags()["allow_nan"])
     if allow_nan:
         checks.ALLOW_NAN.append(name)
-    if name in ["GlobalAlignmentKernelKMeans"]:
+    if name in ["GlobalAlignmentKernelKMeans", "ShapeletModel",
+                "SerializableShapeletModel"]:
         # Deprecated models
         return
     check_estimator(Estimator)

@@ -1,5 +1,9 @@
 """
-The :mod:`tslearn.metrics` module gathers time series similarity metrics.
+The :mod:`tslearn.metrics` module delivers time-series specific metrics to be 
+used at the core of machine learning algorithms.
+
+**User guide:** See the :ref:`Dynamic Time Warping (DTW) <dtw>` section for 
+further details.
 """
 
 import warnings
@@ -133,7 +137,7 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
 
     It is not required that both time series share the same size, but they must
     be the same dimension. DTW was originally presented in [1]_ and is
-    discussed in more details in our :ref:`dedicated tutorial page <dtw>`.
+    discussed in more details in our :ref:`dedicated user-guide page <dtw>`.
 
     Parameters
     ----------
@@ -410,7 +414,7 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
 
     It is not required that both time series share the same size, but they must
     be the same dimension. DTW was originally presented in [1]_ and is
-    discussed in more details in our :ref:`dedicated tutorial page <dtw>`.
+    discussed in more details in our :ref:`dedicated user-guide page <dtw>`.
 
     Parameters
     ----------
@@ -577,7 +581,7 @@ def dtw_limited_warping_length(s1, s2, max_length):
     be the same dimension. DTW was originally presented in [1]_.
     This constrained-length variant was introduced in [2]_.
     Both bariants are
-    discussed in more details in our :ref:`dedicated tutorial page <dtw>`
+    discussed in more details in our :ref:`dedicated user-guide page <dtw>`
 
     Parameters
     ----------
@@ -680,7 +684,7 @@ def dtw_path_limited_warping_length(s1, s2, max_length):
     be the same dimension. DTW was originally presented in [1]_.
     This constrained-length variant was introduced in [2]_.
     Both variants are
-    discussed in more details in our :ref:`dedicated tutorial page <dtw>`
+    discussed in more details in our :ref:`dedicated user-guide page <dtw>`
 
     Parameters
     ----------
@@ -1234,7 +1238,7 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
         DTW(X, Y) = \sqrt{\sum_{(i, j) \in \pi} (X_{i} - Y_{j})^2}
 
     DTW was originally presented in [1]_ and is
-    discussed in more details in our :ref:`dedicated tutorial page <dtw>`.
+    discussed in more details in our :ref:`dedicated user-guide page <dtw>`.
 
     Parameters
     ----------
@@ -1814,7 +1818,7 @@ def soft_dtw(ts1, ts2, gamma=1.):
 
     Soft-DTW was originally presented in [1]_ and is
     discussed in more details in our
-    :ref:`tutorial page on DTW and its variants<dtw>`.
+    :ref:`user-guide page on DTW and its variants<dtw>`.
 
     Soft-DTW is computed as:
 
@@ -1875,7 +1879,7 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
 
     Soft-DTW was originally presented in [1]_ and is
     discussed in more details in our
-    :ref:`tutorial page on DTW and its variants<dtw>`.
+    :ref:`user-guide page on DTW and its variants<dtw>`.
 
     Soft-DTW is computed as:
 
@@ -1960,7 +1964,7 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.):
 
     Soft-DTW was originally presented in [1]_ and is
     discussed in more details in our
-    :ref:`tutorial page on DTW and its variants<dtw>`.
+    :ref:`user-guide page on DTW and its variants<dtw>`.
 
     Soft-DTW is computed as:
 
