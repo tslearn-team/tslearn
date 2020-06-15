@@ -18,8 +18,8 @@ Implementation
 The Matrix Profile implementation provided in ``tslearn`` uses numpy or wraps around STUMPY [2]_. Three different versions are available:
 
 * ``numpy``: a slow implementation 
-* ``stump``: a fast CPU version
-* ``gpu_stump``: the fastest version, which requires a GPU
+* ``stump``: a fast CPU version, which requires STUMPY to be installed
+* ``gpu_stump``: the fastest version, which requires STUMPY to be installed and a GPU
 
 
 Possible Applications
