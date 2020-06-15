@@ -3,8 +3,6 @@ The :mod:`tslearn.matrix_profile` module gathers methods for the computation of
 Matrix Profiles from time series.
 """
 
-from warnings import warn
-
 import numpy as np
 from numpy.lib.stride_tricks import as_strided
 from scipy.spatial.distance import pdist, squareform
@@ -22,8 +20,9 @@ stumpy_msg = ('stumpy is not installed, stumpy features will not be'
 try:
     import stumpy
 except ImportError:
-    warn(stumpy_msg)
-
+    STUMPY_INSTALLED = False
+else:
+    STUMPY_INSTALLED = True
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -158,14 +157,19 @@ class MatrixProfile(TransformerMixin,
 
     def _transform(self, X, y=None):
         n_ts, sz, d = X.shape
+
+        if d > 1:
+            raise NotImplementedError("We currently don't support using "
+                                      "multi-dimensional matrix profiles "
+                                      "from the stumpy library.")
+
         output_size = sz - self.subsequence_length + 1
         X_transformed = np.empty((n_ts, output_size, 1))
 
         if self.implementation == "stump":
-            if d > 1:
-                raise NotImplementedError("We currently don't support using "
-                                          "multi-dimensional matrix profiles "
-                                          "from the stumpy library.")
+            if not STUMPY_INSTALLED:
+                raise ImportError(stumpy_msg)
+
             for i_ts in range(n_ts):
                 result = stumpy.stump(
                     T_A=X[i_ts, :, 0].ravel(),
@@ -173,10 +177,9 @@ class MatrixProfile(TransformerMixin,
                 X_transformed[i_ts, :, 0] = result[:, 0].astype(np.float)
 
         elif self.implementation == "gpu_stump":
-            if d > 1:
-                raise NotImplementedError("We currently don't support using "
-                                          "multi-dimensional matrix profiles "
-                                          "from the stumpy library.")
+            if not STUMPY_INSTALLED:
+                raise ImportError(stumpy_msg)
+
             for i_ts in range(n_ts):
                 result = stumpy.gpu_stump(
                     T_A=X[i_ts, :, 0].ravel(),
