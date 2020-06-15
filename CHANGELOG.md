@@ -20,6 +20,9 @@ completely sklearn-compliant
 + tensorflow==1.* up to version 0.3)
 * `GlobalAlignmentKernelKMeans` is deprecated in favor of `KernelKMeans` that
 accepts various kernels (and "gak" is the default)
+* `ShapeletModel` is now called `LearningShapelets` to be more explicit about
+which shapelet-based classifier is implemented. `ShapeletModel` is still
+available as an alias, but is now considered part of the private API
 
 ### Added
 
@@ -41,12 +44,14 @@ pre-processing for better convergence
 loss and accuracy along fit epochs
 * SAX and variants now accept a `scale` parameter that drives time series
 pre-processing to fit the N(0,1) underlying hypothesis for SAX
-* A new `matrix_profile` module is added that naively computes matrix profile
-transforms
 * `TimeSeriesKMeans` now has a `transform` method that returns distances to
 centroids
-* `MatrixProfile` now has the possibility to be computed using the stumpy
-library alongside the naive "numpy" implementation.
+* A new `matrix_profile` module is added that allows `MatrixProfile` to be 
+computed using the stumpy library or using a naive "numpy" implementation.
+* A new `early_classification` module is added that offers early classification
+estimators
+* A new `neural_network` module is added that offers Multi Layer Perceptron
+estimators for classification and regression
 
 ### Fixed
 

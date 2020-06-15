@@ -51,7 +51,7 @@ The following image exhibits the DTW path (in white) for a given pair of time
 series, on top of the cross-similarity matrix that stores :math:`d(x_i, y_j)`
 values.
 
-.. figure:: _static/img/dtw_thumb.png
+.. figure:: ../../_images/sphx_glr_plot_dtw_thumb.svg
     :width: 30%
     :align: center
 
@@ -133,7 +133,7 @@ First, the Sakoe-Chiba band is parametrized by a radius :math:`r` (number of
 off-diagonal elements to consider, also called warping window size sometimes), 
 as illustrated below:
 
-.. figure:: _static/img/sakoe_chiba.png
+.. figure:: ../_static/img/sakoe_chiba.png
     :width: 30%
     :align: center
 
@@ -151,7 +151,7 @@ The corresponding code would be:
 Second, the Itakura parallelogram sets a maximum slope :math:`s` for alignment
 paths, which leads to a parallelogram-shaped constraint:
 
-.. figure:: _static/img/itakura.png
+.. figure:: ../_static/img/itakura.png
     :width: 30%
     :align: center
 
@@ -175,6 +175,8 @@ discard complex paths, as described in [2]_:
     cost = dtw_limited_warping_length(x, y, max_length)
 
 
+.. _dtw-barycenters:
+
 Barycenters
 -----------
 
@@ -196,8 +198,10 @@ algorithm presented in [3]_.
 
 
 This is the algorithm at stake when invoking
-:ref:`TimeSeriesKMeans <class-tslearn.clustering.TimeSeriesKMeans>` with
+:class:`tslearn.clustering.TimeSeriesKMeans` with
 ``metric="dtw"``.
+
+.. _dtw-softdtw:
 
 soft-DTW
 --------
@@ -232,8 +236,18 @@ Also, barycenters for soft-DTW can be estimated through gradient descent:
 
 
 This is the algorithm at stake when invoking
-:ref:`TimeSeriesKMeans <class-tslearn.clustering.TimeSeriesKMeans>` with
+:class:`tslearn.clustering.TimeSeriesKMeans` with
 ``metric="softdtw"``.
+
+
+.. minigallery:: tslearn.metrics.dtw tslearn.metrics.dtw_path tslearn.metrics.soft_dtw tslearn.metrics.dtw_path_from_metric tslearn.metrics.dtw_limited_warping_length tslearn.barycenters.softdtw_barycenter
+    :add-heading: Examples Involving DTW variants
+    :heading-level: -
+
+
+.. raw:: html
+
+    <div style="clear: both;" />
 
 References
 ----------

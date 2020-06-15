@@ -101,8 +101,7 @@ ENV/
 # Own stuff
 .idea/
 .DS_Store
-tslearn/examples
-tslearn/docs/auto_examples
+examples/
 .pytest_cache
 .mypy_cache
 .vscode
@@ -112,6 +111,6 @@ tslearn/docs/auto_examples
 tmp-tslearn-test.txt
 
 # Documentation
-tslearn/docs/_build/
-tslearn/docs/auto_examples/
-tslearn/docs/examples/misc/ks_trained.hdf5
+docs/_build/
+docs/auto_examples/
+docs/examples/misc/ks_trained.hdf5

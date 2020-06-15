@@ -1,7 +1,10 @@
 """
 The :mod:`tslearn.shapelets` module gathers Shapelet-based algorithms.
 
-It depends on the `keras` library for optimization.
+It depends on the `tensorflow` library for optimization (TF2 is required).
+
+**User guide:** See the :ref:`Shapelets <shapelets>` section for further 
+details.
 """
 
 from tensorflow.keras.models import Model, model_from_json
@@ -212,8 +215,8 @@ def grabocka_params_to_shapelet_size_dict(n_ts, ts_sz, n_classes, l, r):
     return d
 
 
-class ShapeletModel(ClassifierMixin, TransformerMixin,
-                    BaseModelPackage, TimeSeriesBaseEstimator):
+class LearningShapelets(ClassifierMixin, TransformerMixin,
+                        BaseModelPackage, TimeSeriesBaseEstimator):
     r"""Learning Time-Series Shapelets model.
 
 
@@ -313,7 +316,8 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
     --------
     >>> from tslearn.generators import random_walk_blobs
     >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=16, d=2, n_blobs=3)
-    >>> clf = ShapeletModel(n_shapelets_per_size={4: 5}, max_iter=1, verbose=0)
+    >>> clf = LearningShapelets(n_shapelets_per_size={4: 5}, 
+    ...                         max_iter=1, verbose=0)
     >>> clf.fit(X, y).shapelets_.shape
     (5,)
     >>> clf.shapelets_[0].shape
@@ -353,7 +357,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         self.random_state = random_state
 
         if not scale:
-            warnings.warn("The default value for scaling is set to False "
+            warnings.warn("The default value for 'scale' is set to False "
                           "in version 0.4 to ensure backward compatibility, "
                           "but is likely to change in a future version.",
                           FutureWarning)
@@ -388,7 +392,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         --------
         >>> from tslearn.generators import random_walk_blobs
         >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=256, d=1, n_blobs=3)
-        >>> model = ShapeletModel(n_shapelets_per_size={3: 2, 4: 1},
+        >>> model = LearningShapelets(n_shapelets_per_size={3: 2, 4: 1},
         ...                       max_iter=1)
         >>> _ = model.fit(X, y)
         >>> model.shapelets_as_time_series_.shape
@@ -560,7 +564,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         >>> X[0, 4:7, 0] = numpy.array([1, 2, 3])
         >>> y = [1, 0, 0]
         >>> # Data is all zeros except a motif 1-2-3 in the first time series
-        >>> clf = ShapeletModel(n_shapelets_per_size={3: 1}, max_iter=0,
+        >>> clf = LearningShapelets(n_shapelets_per_size={3: 1}, max_iter=0,
         ...                     verbose=0)
         >>> _ = clf.fit(X, y)
         >>> weights_shapelet = [
@@ -773,7 +777,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         --------
         >>> from tslearn.generators import random_walk_blobs
         >>> X, y = random_walk_blobs(n_ts_per_blob=100, sz=256, d=1, n_blobs=3)
-        >>> clf = ShapeletModel(n_shapelets_per_size={10: 5}, max_iter=0,
+        >>> clf = LearningShapelets(n_shapelets_per_size={10: 5}, max_iter=0,
         ...                     verbose=0)
         >>> clf.fit(X, y).get_weights("classification")[0].shape
         (5, 3)
@@ -809,7 +813,7 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         --------
         >>> from tslearn.generators import random_walk_blobs
         >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=16, d=1, n_blobs=3)
-        >>> clf = ShapeletModel(n_shapelets_per_size={3: 1}, max_iter=0,
+        >>> clf = LearningShapelets(n_shapelets_per_size={3: 1}, max_iter=0,
         ...                     verbose=0)
         >>> _ = clf.fit(X, y)
         >>> weights_shapelet = [
@@ -888,7 +892,10 @@ class ShapeletModel(ClassifierMixin, TransformerMixin,
         return {'allow_nan': True, 'allow_variable_length': True}
 
 
-class SerializableShapeletModel(ShapeletModel):
+ShapeletModel = LearningShapelets
+
+
+class SerializableShapeletModel(LearningShapelets):
     """Serializable variant of the Learning Time-Series Shapelets model.
 
 
@@ -896,7 +903,7 @@ class SerializableShapeletModel(ShapeletModel):
     
     .. deprecated:: 0.4
              `SerializableShapeletModel` is deprecated in version 0.4 and
-            will be removed in 0.6. Use `ShapeletModel` instead, which is
+            will be removed in 0.6. Use `LearningShapelets` instead, which is
             now fully serializable and clonable.
 
     Parameters
@@ -999,8 +1006,8 @@ class SerializableShapeletModel(ShapeletModel):
         self.learning_rate = learning_rate
         warnings.warn(
             "`SerializableShapeletModel` is deprecated in version 0.4 and "
-            "will be removed in 0.6. Use `ShapeletModel` instead, which is "
-            "now fully serializable and clonable.",
+            "will be removed in 0.6. Use `LearningShapelets` instead, which is"
+            " now fully serializable and clonable.",
             DeprecationWarning, stacklevel=2)
 
     def _set_model_layers(self, X, ts_sz, d, n_classes):

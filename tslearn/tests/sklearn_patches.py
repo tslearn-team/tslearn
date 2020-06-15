@@ -164,7 +164,6 @@ def check_clustering(name, clusterer_orig, readonly_memmap=False):
         n_clusters = getattr(clusterer, 'n_clusters')
         assert_greater_equal(n_clusters - 1, labels_sorted[-1])
 
-
 @ignore_warnings(category=(DeprecationWarning, FutureWarning))
 def check_non_transf_est_n_iter(name, estimator_orig):
     # Test that estimators that are not transformers with a parameter
@@ -239,10 +238,7 @@ def check_fit_idempotent(name, estimator_orig):
 
 def check_classifiers_classes(name, classifier_orig):
     # Case of shapelet models
-    if name == 'SerializableShapeletModel':
-        raise SkipTest('Skipping check_classifiers_classes for shapelets'
-                       ' due to convergence issues...')
-    elif name == 'ShapeletModel':
+    if name in ['LearningShapelets', 'TimeSeriesMLPClassifier']:
         X_multiclass, y_multiclass = _create_large_ts_dataset()
         classifier_orig = clone(classifier_orig)
         classifier_orig.max_iter = 1000
@@ -290,10 +286,7 @@ def check_classifiers_classes(name, classifier_orig):
 def check_classifiers_train(name, classifier_orig, readonly_memmap=False,
                             X_dtype='float64'):
     # Case of shapelet models
-    if name == 'SerializableShapeletModel':
-        raise SkipTest('Skipping check_classifiers_classes for shapelets'
-                       ' due to convergence issues...')
-    elif name == 'ShapeletModel':
+    if name in ['LearningShapelets', 'TimeSeriesMLPClassifier']:
         X_m, y_m = _create_large_ts_dataset()
         classifier_orig = clone(classifier_orig)
         classifier_orig.max_iter = 1000
@@ -469,6 +462,18 @@ def check_supervised_y_2d(name, estimator_orig):
                " was passed when a 1d array was expected" in msg
         assert_allclose(y_pred.ravel(), y_pred_2d.ravel())
 
+@ignore_warnings(category=FutureWarning)
+def check_classifier_data_not_an_array(name, estimator_orig):
+    X, y = _create_large_ts_dataset()
+    y = enforce_estimator_tags_y(estimator_orig, y)
+    for obj_type in ["NotAnArray", "PandasDataframe"]:
+        if obj_type == "PandasDataframe":
+            X_ = X[:, :, 0]  # pandas df cant be 3d
+        else:
+            X_ = X
+        check_estimators_data_not_an_array(name, estimator_orig, X_, y,
+                                           obj_type)
+
 
 @ignore_warnings(category=DeprecationWarning)
 def check_regressor_data_not_an_array(name, estimator_orig):
@@ -545,7 +550,8 @@ def check_different_length_fit_predict_transform(name, estimator):
     if isinstance(estimator, TimeSeriesKMeans):
         new_estimator = clone(estimator)
         new_estimator.metric = "dtw"
-    elif "ShapeletModel" in name:  # Prepare shapelet model for long series
+    elif name == "LearningShapelets":
+        # Prepare shapelet model for long series
         new_estimator = clone(estimator)
         new_estimator.max_size = 2 * X.shape[1]
     else:

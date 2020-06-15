@@ -1,5 +1,6 @@
 """
-The :mod:`tslearn.preprocessing` module gathers time series scalers.
+The :mod:`tslearn.preprocessing` module gathers time series scalers and 
+resamplers.
 """
 
 import numpy
