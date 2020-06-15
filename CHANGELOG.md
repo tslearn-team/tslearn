@@ -46,8 +46,8 @@ loss and accuracy along fit epochs
 pre-processing to fit the N(0,1) underlying hypothesis for SAX
 * `TimeSeriesKMeans` now has a `transform` method that returns distances to
 centroids
-* A new `matrix_profile` module is added that naively computes matrix profile
-transforms
+* A new `matrix_profile` module is added that allows `MatrixProfile` to be 
+computed using the stumpy library or using a naive "numpy" implementation.
 * A new `early_classification` module is added that offers early classification
 estimators
 * A new `neural_network` module is added that offers Multi Layer Perceptron

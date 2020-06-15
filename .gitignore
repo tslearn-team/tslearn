@@ -104,6 +104,8 @@ ENV/
 examples/
 .pytest_cache
 .mypy_cache
+.vscode
+.pre-commit-config.yaml
 
 # Test leftovers
 tmp-tslearn-test.txt

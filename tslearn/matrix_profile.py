@@ -10,20 +10,30 @@ import numpy as np
 from numpy.lib.stride_tricks import as_strided
 from scipy.spatial.distance import pdist, squareform
 from sklearn.base import TransformerMixin
-from sklearn.utils.validation import check_is_fitted, check_array
+from sklearn.utils.validation import check_array, check_is_fitted
 
-from tslearn.utils import check_dims
-from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
+from tslearn.preprocessing import TimeSeriesScalerMeanVariance
+from tslearn.utils import check_dims
 
+stumpy_msg = ('stumpy is not installed, stumpy features will not be'
+              'supported.\n Install stumpy to use stumpy features:'
+              'https://stumpy.readthedocs.io/en/latest/')
+
+try:
+    import stumpy
+except ImportError:
+    STUMPY_INSTALLED = False
+else:
+    STUMPY_INSTALLED = True
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 def _series_to_segments(time_series, segment_size):
-    """Transforms a time series (or a set of time series) into an array of its 
+    """Transforms a time series (or a set of time series) into an array of its
     segments of length segment_size.
-      
+
     Examples
     --------
     >>> from tslearn.utils import to_time_series
@@ -74,15 +84,28 @@ class MatrixProfile(TransformerMixin,
     Parameters
     ----------
     subsequence_length : int (default: 1)
-        Length of the subseries (also called window size) to be used for 
+        Length of the subseries (also called window size) to be used for
         subseries distance computations.
-    
+
+    implementation : str (default: "numpy")
+        Matrix profile implementation to use.
+        Defaults to "numpy" to use the pure numpy version.
+        All the available implementations are ["numpy", "stump", "gpu_stump"].
+
+        "stump" and "gpu_stump" are both implementations from the stumpy
+        python library, the latter requiring a GPU.
+        Stumpy is a library for efficiently computing the matrix profile which
+        is optimized for speed, performance and memory.
+        See [2]_ for the documentation.
+        "numpy" is the default pure numpy implementation and does not require
+        stumpy to be installed.
+
     scale: bool (default: True)
-         Whether input data should be scaled for each feature of each time 
+         Whether input data should be scaled for each feature of each time
          series to have zero mean and unit variance.
-         Default for this parameter is set to `True` to match the standard 
+         Default for this parameter is set to `True` to match the standard
          matrix profile setup.
-    
+
     Examples
     --------
     >>> time_series = [0., 1., 3., 2., 9., 1., 14., 15., 1., 2., 2., 10., 7.]
@@ -94,15 +117,21 @@ class MatrixProfile(TransformerMixin,
 
     References
     ----------
-    .. [1] C. M. Yeh, Y. Zhu, L. Ulanova, N.Begum et al. 
-       Matrix Profile I: All Pairs Similarity Joins for Time Series: A 
+    .. [1] C. M. Yeh, Y. Zhu, L. Ulanova, N.Begum et al.
+       Matrix Profile I: All Pairs Similarity Joins for Time Series: A
        Unifying View that Includes Motifs, Discords and Shapelets.
        ICDM 2016.
+
+    .. [2] STUMPY documentation https://stumpy.readthedocs.io/en/latest/
+
     """
 
-    def __init__(self, subsequence_length=1, scale=True):
+    def __init__(
+        self, subsequence_length=1, implementation="numpy", scale=True
+    ):
         self.subsequence_length = subsequence_length
         self.scale = scale
+        self.implementation = implementation
 
     def _is_fitted(self):
         check_is_fitted(self, '_X_fit_dims')
@@ -131,23 +160,61 @@ class MatrixProfile(TransformerMixin,
 
     def _transform(self, X, y=None):
         n_ts, sz, d = X.shape
+
+        if d > 1:
+            raise NotImplementedError("We currently don't support using "
+                                      "multi-dimensional matrix profiles "
+                                      "from the stumpy library.")
+
         output_size = sz - self.subsequence_length + 1
         X_transformed = np.empty((n_ts, output_size, 1))
-        scaler = TimeSeriesScalerMeanVariance()
-        band_width = int(np.ceil(self.subsequence_length / 4))
-        for i_ts in range(n_ts):
-            segments = _series_to_segments(X[i_ts], self.subsequence_length)
-            if self.scale:
-                segments = scaler.fit_transform(segments)
-            n_segments = segments.shape[0]
-            segments_2d = segments.reshape((-1, self.subsequence_length * d))
-            dists = squareform(pdist(segments_2d, "euclidean"))
-            band = (np.tri(n_segments, n_segments,
-                           band_width, dtype=np.bool) &
-                    ~np.tri(n_segments, n_segments,
-                            -(band_width + 1), dtype=np.bool))
-            dists[band] = np.inf
-            X_transformed[i_ts] = dists.min(axis=1, keepdims=True)
+
+        if self.implementation == "stump":
+            if not STUMPY_INSTALLED:
+                raise ImportError(stumpy_msg)
+
+            for i_ts in range(n_ts):
+                result = stumpy.stump(
+                    T_A=X[i_ts, :, 0].ravel(),
+                    m=self.subsequence_length)
+                X_transformed[i_ts, :, 0] = result[:, 0].astype(np.float)
+
+        elif self.implementation == "gpu_stump":
+            if not STUMPY_INSTALLED:
+                raise ImportError(stumpy_msg)
+
+            for i_ts in range(n_ts):
+                result = stumpy.gpu_stump(
+                    T_A=X[i_ts, :, 0].ravel(),
+                    m=self.subsequence_length)
+                X_transformed[i_ts, :, 0] = result[:, 0].astype(np.float)
+
+        elif self.implementation == "numpy":
+            scaler = TimeSeriesScalerMeanVariance()
+            band_width = int(np.ceil(self.subsequence_length / 4))
+            for i_ts in range(n_ts):
+                segments = _series_to_segments(X[i_ts], self.subsequence_length)
+                if self.scale:
+                    segments = scaler.fit_transform(segments)
+                n_segments = segments.shape[0]
+                segments_2d = segments.reshape((-1, self.subsequence_length * d))
+                dists = squareform(pdist(segments_2d, "euclidean"))
+                band = (np.tri(n_segments, n_segments,
+                            band_width, dtype=np.bool) &
+                        ~np.tri(n_segments, n_segments,
+                                -(band_width + 1), dtype=np.bool))
+                dists[band] = np.inf
+                X_transformed[i_ts] = dists.min(axis=1, keepdims=True)
+
+        else:
+            available_implementations = ["numpy", "stump", "gpu_stump"]
+            raise ValueError(
+                'This "{}" matrix profile implementation is not'
+                ' recognized. Available implementations are {}.'
+                .format(self.implementation,
+                        available_implementations)
+            )
+
         return X_transformed
 
     def transform(self, X, y=None):
@@ -162,7 +229,7 @@ class MatrixProfile(TransformerMixin,
         Returns
         -------
         numpy.ndarray of shape (n_ts, output_size, 1)
-            Matrix-Profile-Transformed dataset. `ouput_size` is equal to 
+            Matrix-Profile-Transformed dataset. `ouput_size` is equal to
             `sz - subsequence_length + 1`
         """
         self._is_fitted()
@@ -183,7 +250,7 @@ class MatrixProfile(TransformerMixin,
         Returns
         -------
         numpy.ndarray of shape (n_ts, output_size, 1)
-            Matrix-Profile-Transformed dataset. `ouput_size` is equal to 
+            Matrix-Profile-Transformed dataset. `ouput_size` is equal to
             `sz - subsequence_length + 1`
         """
         X = check_array(X, allow_nd=True, force_all_finite=False)
