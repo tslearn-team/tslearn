@@ -5,6 +5,7 @@ User Guide
     :maxdepth: 2
 
     dtw
+    kernel
     clustering
     shapelets
     matrix-profile

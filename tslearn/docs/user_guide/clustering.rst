@@ -67,6 +67,8 @@ The ``metric`` parameter can also be set to ``"softdtw"`` as an alternative
 time series metric (`cf.`
 :ref:`our User Guide section on soft-DTW <dtw-softdtw>`).
 
+.. _kernel-kmeans:
+
 
 Kernel :math:`k`-means and Time Series Kernels
 ----------------------------------------------
