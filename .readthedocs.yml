@@ -7,7 +7,7 @@ version: 2
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
-  configuration: tslearn/docs/conf.py
+  configuration: docs/conf.py
 
 # Build documentation with MkDocs
 #mkdocs:
@@ -20,7 +20,7 @@ formats: all
 python:
   version: 3.7
   install:
-    - requirements: tslearn/docs/requirements_rtd.txt
+    - requirements: docs/requirements_rtd.txt
     - method: setuptools
       path: .
 

@@ -23,7 +23,7 @@ import subprocess
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
 if not on_rtd:
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 rtd_version = os.environ.get('READTHEDOCS_VERSION', 'local')
 
 # -- General configuration ------------------------------------------------
