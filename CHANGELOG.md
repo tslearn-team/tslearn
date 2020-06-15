@@ -45,6 +45,8 @@ pre-processing to fit the N(0,1) underlying hypothesis for SAX
 transforms
 * `TimeSeriesKMeans` now has a `transform` method that returns distances to
 centroids
+* `MatrixProfile` now has the possibility to be computed using the stumpy
+library alongside the naive "numpy" implementation.
 
 ### Fixed
 
