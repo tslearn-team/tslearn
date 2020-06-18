@@ -509,13 +509,6 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
 
     @deprecated()
     def support_vectors_time_series_(self, X=None):
-        """Support vectors as time series.
-
-        Parameters
-        ----------
-        X : array-like of shape=(n_ts, sz, d)
-            Training time series dataset.
-        """
         warnings.warn('The use of '
                       '`support_vectors_time_series_` is deprecated in '
                       'tslearn v0.4 and will be removed in v0.6. Use '
