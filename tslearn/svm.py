@@ -164,8 +164,8 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
     n_support_ : array-like, dtype=int32, shape = [n_class]
         Number of support vectors for each class.
         
-    support_vectors_ : array of shape [n_SV, sz, d]
-        Support vectors in tslearn dataset format
+    support_vectors_ : list of arrays of shape [n_SV, sz, d]
+        List of support vectors in tslearn dataset format, one array per class
 
     dual_coef_ : array, shape = [n_class-1, n_SV]
         Coefficients of the support vector in the decision function.
@@ -240,20 +240,15 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
                       'it is non-trivial to access the underlying libsvm')
         return 1
 
-    @deprecated
+    @deprecated('The use of '
+                '`support_vectors_time_series_` is deprecated in '
+                'tslearn v0.4 and will be removed in v0.6. Use '
+                '`support_vectors_` property instead.')
     def support_vectors_time_series_(self, X=None):
-        """Support vectors as time series.
-
-        Parameters
-        ----------
-        X : array-like of shape=(n_ts, sz, d)
-            Training time series dataset.
-        """
-        if X is not None:
-            warnings.warn('The use of '
-                          '`support_vectors_time_series_` is deprecated in '
-                          'tslearn v0.4 and will be removed in v0.6. Use '
-                          '`support_vectors_` property instead.')
+        warnings.warn('The use of '
+                      '`support_vectors_time_series_` is deprecated in '
+                      'tslearn v0.4 and will be removed in v0.6. Use '
+                      '`support_vectors_` property instead.')
         check_is_fitted(self, '_X_fit')
         return self._X_fit[self.svm_estimator_.support_]
 
@@ -515,20 +510,15 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
                       'it is non-trivial to access the underlying libsvm')
         return 1
 
-    @deprecated
+    @deprecated('The use of '
+                '`support_vectors_time_series_` is deprecated in '
+                'tslearn v0.4 and will be removed in v0.6. Use '
+                '`support_vectors_` property instead.')
     def support_vectors_time_series_(self, X=None):
-        """Support vectors as time series.
-
-        Parameters
-        ----------
-        X : array-like of shape=(n_ts, sz, d)
-            Training time series dataset.
-        """
-        if X is not None:
-            warnings.warn('The use of '
-                          '`support_vectors_time_series_` is deprecated in '
-                          'tslearn v0.4 and will be removed in v0.6. Use '
-                          '`support_vectors_` property instead.')
+        warnings.warn('The use of '
+                      '`support_vectors_time_series_` is deprecated in '
+                      'tslearn v0.4 and will be removed in v0.6. Use '
+                      '`support_vectors_` property instead.')
         check_is_fitted(self, '_X_fit')
         return self._X_fit[self.svm_estimator_.support_]
 
