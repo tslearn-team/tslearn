@@ -1,7 +1,9 @@
 name: Build dist and wheels
 
-on: release
-
+on:
+  release:
+    types:
+      - published
 jobs:
   build_wheels:
     name: ${{ matrix.os }}
