@@ -30,6 +30,7 @@ def test_deprecated_still_work():
     X = rng.randn(n, sz, d)
     y = rng.randint(low=0, high=2, size=n)
 
-    clf = TimeSeriesSVC().fit(X, y)
-    np.testing.assert_equal(clf.support_vectors_time_series_().shape[1:],
-                            X.shape[1:])
+    for ModelClass in [TimeSeriesSVC, TimeSeriesSVR]:
+        clf = ModelClass().fit(X, y)
+        np.testing.assert_equal(clf.support_vectors_time_series_().shape[1:],
+                                X.shape[1:])
