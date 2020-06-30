@@ -25,17 +25,20 @@ TSLEARN_VALID_METRICS = ["dtw", "gak", "softdtw", "sax"]
 VARIABLE_LENGTH_METRICS = ["dtw", "gak", "softdtw", "sax"]
 
 __all__ = [
-    TSLEARN_VALID_METRICS, VARIABLE_LENGTH_METRICS,
-    dtw, dtw_limited_warping_length,
-    dtw_path_limited_warping_length, subsequence_path,
-    subsequence_cost_matrix,
-    dtw_path, dtw_path_from_metric,
-    dtw_subsequence_path, cdist_dtw,
-    GLOBAL_CONSTRAINT_CODE,
-    lb_envelope, lb_keogh,
-    sakoe_chiba_mask, itakura_mask,
-    cdist_sax,
-    cdist_soft_dtw, cdist_gak,
-    cdist_soft_dtw_normalized, gak, soft_dtw,
-    sigma_gak, gamma_soft_dtw, SquaredEuclidean, SoftDTW
+    "TSLEARN_VALID_METRICS", "VARIABLE_LENGTH_METRICS",
+
+    "dtw", "dtw_limited_warping_length",
+    "dtw_path_limited_warping_length", "subsequence_path",
+    "subsequence_cost_matrix",
+    "dtw_path", "dtw_path_from_metric",
+    "dtw_subsequence_path", "cdist_dtw",
+    "GLOBAL_CONSTRAINT_CODE",
+    "lb_envelope", "lb_keogh",
+    "sakoe_chiba_mask", "itakura_mask",
+
+    "cdist_sax",
+
+    "cdist_soft_dtw", "cdist_gak",
+    "cdist_soft_dtw_normalized", "gak", "soft_dtw",
+    "sigma_gak", "gamma_soft_dtw", "SquaredEuclidean", "SoftDTW"
 ]
