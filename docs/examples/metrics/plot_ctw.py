@@ -63,8 +63,6 @@ rotated_trajectory = trajectory.dot(get_rot2d(np.pi / 4)) + np.array([0., 3.])
 
 path_dtw, _ = dtw_path(trajectory, rotated_trajectory)
 
-best_cost = np.inf
-n_trials = 1
 path_ctw, cca, _ = ctw_path(trajectory, rotated_trajectory,
                             max_iter=100, n_components=2)
 
