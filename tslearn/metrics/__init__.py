@@ -13,6 +13,7 @@ from .dtw_variants import (dtw, dtw_limited_warping_length,
                            GLOBAL_CONSTRAINT_CODE,
                            lb_envelope, lb_keogh,
                            sakoe_chiba_mask, itakura_mask)
+from .ctw import ctw_path
 from .sax import cdist_sax
 from .softdtw_variants import (cdist_soft_dtw, cdist_gak,
                                cdist_soft_dtw_normalized, gak, soft_dtw,
@@ -35,6 +36,8 @@ __all__ = [
     "GLOBAL_CONSTRAINT_CODE",
     "lb_envelope", "lb_keogh",
     "sakoe_chiba_mask", "itakura_mask",
+
+    "ctw_path",
 
     "cdist_sax",
 
