@@ -56,7 +56,6 @@ def ctw_path(seq1, seq2,
 
     # first iteration :
     # identity matrices, this relates to apply first a dtw on the inputs
-    # TODO: if not in same space -> identity between spaces
     new_path, score_match = dtw_path(seq1, seq2,
                                      global_constraint=global_constraint,
                                      sakoe_chiba_radius=sakoe_chiba_radius,
@@ -69,7 +68,9 @@ def ctw_path(seq1, seq2,
 
     for it in range(max_iter-1):
         Wx, Wy = _get_warp_matrices(current_path)
-        seq1_tr, seq2_tr = cca.fit_transform(Wx.dot(seq1), Wy.dot(seq2))
+
+        cca.fit(Wx.dot(seq1), Wy.dot(seq2))
+        seq1_tr, seq2_tr = cca.transform(seq1, seq2)
 
         new_path, score_match = dtw_path(seq1_tr, seq2_tr,
                                          global_constraint=global_constraint,
