@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-DTW computation
-===============
+Dynamic Time Warping
+====================
 
-This example illustrates DTW computation between time series and plots the
-optimal alignment path [1]_.
+This example illustrates Dynamic Time Warping (DTW) computation between time 
+series and plots the optimal alignment path [1]_.
 
 The image represents cost matrix, that is the squared Euclidean distance for
 each time point between both time series, which are represented

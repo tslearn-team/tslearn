@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-CTW computation
-===============
+Canonical Time Warping
+======================
 
 This example illustrates the use of Canonical Time Warping (CTW) between time 
 series and plots the matches obtained by the method [1]_.
