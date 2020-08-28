@@ -137,21 +137,32 @@ class TimeSeriesScalerMinMax(TransformerMixin, TimeSeriesBaseEstimator):
         self.value_range = value_range
 
     def fit(self, X, y=None, **kwargs):
-        """A dummy method such that it complies to the sklearn requirements.
-        Since this method is completely stateless, it just returns itself.
+        """Calculate (min-max) of each timeseries.
 
         Parameters
         ----------
-        X
-            Ignored
+        X : array-like of shape (n_ts, sz, d)
+            Time series dataset to be rescaled.
 
         Returns
         -------
         self
         """
+
+        value_range = self.value_range
+
+        if value_range[0] >= value_range[1]:
+            raise ValueError("Minimum of desired range must be smaller"
+                             " than maximum. Got %s." % str(value_range))
+
         X = check_array(X, allow_nd=True, force_all_finite=False)
-        X = to_time_series_dataset(X)
-        self._X_fit_dims = X.shape
+        X_ = to_time_series_dataset(X)
+        self._X_fit_dims = X_.shape
+
+        X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, extend=False)
+        self.min_t = numpy.nanmin(X_, axis=1)[:, numpy.newaxis, :]
+        self.max_t = numpy.nanmax(X_, axis=1)[:, numpy.newaxis, :]
+
         return self
 
     def fit_transform(self, X, y=None, **kwargs):
@@ -184,19 +195,21 @@ class TimeSeriesScalerMinMax(TransformerMixin, TimeSeriesBaseEstimator):
         numpy.ndarray
             Rescaled time series dataset.
         """
-        value_range = self.value_range
-
-        if value_range[0] >= value_range[1]:
-            raise ValueError("Minimum of desired range must be smaller"
-                             " than maximum. Got %s." % str(value_range))
-
+        
         check_is_fitted(self, '_X_fit_dims')
+
         X = check_array(X, allow_nd=True, force_all_finite=False)
         X_ = to_time_series_dataset(X)
-        X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, extend=False)
-        min_t = numpy.nanmin(X_, axis=1)[:, numpy.newaxis, :]
-        max_t = numpy.nanmax(X_, axis=1)[:, numpy.newaxis, :]
-        range_t = max_t - min_t
+
+        _X_transf_fit_dims = X_.shape
+        if self._X_fit_dims[0] != _X_transf_fit_dims[0]:
+            raise ValueError("Number of individual fitted timeseries must be equal to number of individual transformed timeseries."
+                             "\nExpected %s timeseries got %s timeseries in transform." % (str(self._X_fit_dims[0]), str(_X_transf_fit_dims[0])))
+        
+        value_range = self.value_range
+        range_t = self.max_t - self.min_t
+        min_t = self.min_t
+
         nomin = (X_ - min_t) * (value_range[1] - value_range[0])
         X_ = nomin / range_t + value_range[0]
         return X_
