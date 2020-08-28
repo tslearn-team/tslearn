@@ -1,5 +1,5 @@
 """
-The :mod:`tslearn.preprocessing` module gathers time series scalers and 
+The :mod:`tslearn.preprocessing` module gathers time series scalers and
 resamplers.
 """
 
@@ -195,7 +195,6 @@ class TimeSeriesScalerMinMax(TransformerMixin, TimeSeriesBaseEstimator):
         numpy.ndarray
             Rescaled time series dataset.
         """
-        
         check_is_fitted(self, '_X_fit_dims')
 
         X = check_array(X, allow_nd=True, force_all_finite=False)
@@ -203,9 +202,13 @@ class TimeSeriesScalerMinMax(TransformerMixin, TimeSeriesBaseEstimator):
 
         _X_transf_fit_dims = X_.shape
         if self._X_fit_dims[0] != _X_transf_fit_dims[0]:
-            raise ValueError("Number of individual fitted timeseries must be equal to number of individual transformed timeseries."
-                             "\nExpected %s timeseries got %s timeseries in transform." % (str(self._X_fit_dims[0]), str(_X_transf_fit_dims[0])))
-        
+            raise ValueError("Number of fitted timeseries must be equal "
+                             "to number of transformed timeseries. "
+                             "Expected {} timeseries"
+                             "got {} timeseries.".format(
+                                 str(self._X_fit_dims[0]),
+                                 str(_X_transf_fit_dims[0])
+                                 ))
         value_range = self.value_range
         range_t = self.max_t - self.min_t
         min_t = self.min_t
