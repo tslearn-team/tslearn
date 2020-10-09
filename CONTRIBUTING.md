@@ -1,4 +1,4 @@
-# autopep8
+# Contributing
 
 First of all, thank you for considering contributing to `tslearn`. 
 It's people like you that will help make `tslearn` a great toolkit.
