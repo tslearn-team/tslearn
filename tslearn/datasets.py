@@ -9,6 +9,7 @@ import tempfile
 import shutil
 import os
 import sys
+import warnings
 import csv
 try:
     from urllib import urlretrieve
@@ -26,6 +27,8 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 def extract_from_zip_url(url, target_dir=None, verbose=False):
     """Download a zip file from its URL and unzip it.
+
+    A `RuntimeWarning` is printed on failure.
 
     Parameters
     ----------
@@ -55,10 +58,11 @@ def extract_from_zip_url(url, target_dir=None, verbose=False):
             print("Successfully extracted file %s to path %s" %
                   (local_zip_fname, target_dir))
         return target_dir
-    except BadZipFile:
+    except BadZipFile as exception:
         shutil.rmtree(tmpdir)
-        if verbose:
-            sys.stderr.write("Corrupted zip file encountered, aborting.\n")
+        warnings.warn("Corrupted zip file encountered after downloading %s: %s"
+                      % (url, str(exception)),
+                      category=RuntimeWarning, stacklevel=3)
         return None
 
 
@@ -213,6 +217,8 @@ class UCR_UEA_datasets(object):
     def load_dataset(self, dataset_name):
         """Load a dataset from the UCR/UEA archive from its name.
 
+        A `RuntimeWarning` is printed on failure.
+
         Parameters
         ----------
         dataset_name : str
@@ -253,22 +259,32 @@ class UCR_UEA_datasets(object):
         None
         """
         full_path = os.path.join(self._data_dir, dataset_name)
-        fname_train = dataset_name + "_TRAIN.txt"
-        fname_test = dataset_name + "_TEST.txt"
-        if (not os.path.exists(os.path.join(full_path, fname_train)) or
-                not os.path.exists(os.path.join(full_path, fname_test))):
+        fname_train = os.path.join(full_path, dataset_name + "_TRAIN.txt")
+        fname_test = os.path.join(full_path, dataset_name + "_TEST.txt")
+        if not os.path.exists(fname_train) or not os.path.exists(fname_test):
             url = ("http://www.timeseriesclassification.com/Downloads/%s.zip"
                    % dataset_name)
             for fname in [fname_train, fname_test]:
-                if os.path.exists(os.path.join(full_path, fname)):
-                    os.remove(os.path.join(full_path, fname))
-            extract_from_zip_url(url, target_dir=full_path, verbose=False)
+                if os.path.exists(fname):
+                    os.remove(fname)
+            success = extract_from_zip_url(url,
+                                           target_dir=full_path, verbose=False)
+            if not success:
+                # warning was already raised by #extract_from_zip_url
+                return None, None, None, None
         try:
-            data_train = numpy.loadtxt(os.path.join(full_path, fname_train),
-                                       delimiter=None)
-            data_test = numpy.loadtxt(os.path.join(full_path, fname_test),
-                                      delimiter=None)
-        except:
+            data_train = numpy.loadtxt(fname_train, delimiter=None)
+            data_test = numpy.loadtxt(fname_test, delimiter=None)
+        except Exception as exception:
+            message = str(exception)
+            if message.endswith(".txt not found."):
+                warnings.warn("dataset \"%s\" is not provided in TXT format"
+                              % dataset_name,
+                              category=RuntimeWarning, stacklevel=2)
+            else:
+                warnings.warn("dataset \"%s\" could be downloaded but not loaded: %s"
+                              % (dataset_name, message),
+                              category=RuntimeWarning, stacklevel=2)
             return None, None, None, None
         X_train = to_time_series_dataset(data_train[:, 1:])
         y_train = data_train[:, 0].astype(numpy.int)
