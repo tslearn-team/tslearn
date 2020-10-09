@@ -132,7 +132,7 @@ class UCR_UEA_datasets(object):
                                    "CinCECGtorso", "CinCECGTorso")
             in_file_string_replace(self._baseline_scores_filename,
                                    "StarlightCurves", "StarLightCurves")
-        except:
+        except Exception:
             self._baseline_scores_filename = None
 
         self._ignore_list = ["Data Descriptions"]
@@ -282,8 +282,8 @@ class UCR_UEA_datasets(object):
                               % dataset_name,
                               category=RuntimeWarning, stacklevel=2)
             else:
-                warnings.warn("dataset \"%s\" could be downloaded but not loaded: %s"
-                              % (dataset_name, message),
+                warnings.warn("dataset \"%s\" could be downloaded but not "
+                              "loaded: %s" % (dataset_name, message),
                               category=RuntimeWarning, stacklevel=2)
             return None, None, None, None
         X_train = to_time_series_dataset(data_train[:, 1:])
@@ -298,7 +298,7 @@ class UCR_UEA_datasets(object):
         for dataset_name in self.list_datasets():
             try:
                 self.load_dataset(dataset_name)
-            except:
+            except Exception:
                 sys.stderr.write("Could not cache dataset %s properly.\n"
                                  % dataset_name)
 
