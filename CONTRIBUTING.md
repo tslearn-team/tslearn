@@ -1,4 +1,4 @@
-# Contributing
+# autopep8
 
 First of all, thank you for considering contributing to `tslearn`. 
 It's people like you that will help make `tslearn` a great toolkit.
@@ -120,8 +120,8 @@ tools:
 -  No PEP8 warnings, check with:
 
   ```bash
-  $ pip install pep8
-  $ pep8 path/to/module.py
+  $ pip install pycodestyle
+  $ pycodestyle path/to/module.py
   ```
 
 -  AutoPEP8 can help you fix some of the easy redundant errors:
