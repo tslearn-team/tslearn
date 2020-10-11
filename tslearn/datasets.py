@@ -400,7 +400,7 @@ class UCR_UEA_datasets:
             try:
                 self.load_dataset(dataset_name)
             except Exception as exception:
-                warnings.warn("Could not cache dataset \"%s\" properly: %s"
+                warnings.warn("Could not cache dataset \"%s\": %s"
                               % (dataset_name, str(exception)),
                               category=RuntimeWarning, stacklevel=2)
 
