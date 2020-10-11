@@ -120,13 +120,13 @@ class UCR_UEA_datasets:
         if not os.path.exists(self._data_dir):
             os.makedirs(self._data_dir)
         try:
-            url_multivariate = ("http://www.timeseriesclassification.com/" +
+            url_multivariate = ("https://www.timeseriesclassification.com/" +
                                 "Downloads/Archives/summaryMultivariate.csv")
             self._list_multivariate_filename = os.path.join(
                 self._data_dir, os.path.basename(url_multivariate)
             )
             urlretrieve(url_multivariate, self._list_multivariate_filename)
-            url_baseline = ("http://www.timeseriesclassification.com/" +
+            url_baseline = ("https://www.timeseriesclassification.com/" +
                             "singleTrainTest.csv")
             self._baseline_scores_filename = os.path.join(
                 self._data_dir, os.path.basename(url_baseline))
@@ -322,7 +322,7 @@ class UCR_UEA_datasets:
             # completely clear the target directory first, it will be created
             # by extract_from_zip_url if it does not exist
             shutil.rmtree(full_path)
-            url = ("http://www.timeseriesclassification.com/Downloads/%s.zip"
+            url = ("https://www.timeseriesclassification.com/Downloads/%s.zip"
                    % dataset_name)
             success = extract_from_zip_url(url, target_dir=full_path)
             if not success:
