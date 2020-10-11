@@ -135,7 +135,7 @@ class UCR_UEA_datasets:
                                    "CinCECGtorso", "CinCECGTorso")
             in_file_string_replace(self._baseline_scores_filename,
                                    "StarlightCurves", "StarLightCurves")
-        except:
+        except Exception:
             self._baseline_scores_filename = None
 
         self._ignore_list = ["Data Descriptions"]
@@ -351,13 +351,11 @@ class UCR_UEA_datasets:
                     os.path.exists(basename + "_TEST.%s" % ext))
 
     def cache_all(self):
-        """Cache all datasets from the UCR/UEA archive for later 
-        use.
-        """
+        """Cache all datasets from the UCR/UEA archive for later use."""
         for dataset_name in self.list_datasets():
             try:
                 self.load_dataset(dataset_name)
-            except:
+            except Exception:
                 sys.stderr.write("Could not cache dataset %s properly.\n"
                                  % dataset_name)
 
