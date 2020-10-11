@@ -28,6 +28,8 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 def extract_from_zip_url(url, target_dir=None, verbose=False):
     """Download a zip file from its URL and unzip it.
 
+    A `RuntimeWarning` is printed on failure.
+
     Parameters
     ----------
     url : string
@@ -58,8 +60,8 @@ def extract_from_zip_url(url, target_dir=None, verbose=False):
         return target_dir
     except BadZipFile:
         shutil.rmtree(tmpdir)
-        if verbose:
-            sys.stderr.write("Corrupted zip file encountered, aborting.\n")
+        warnings.warn("Corrupted zip file encountered, aborting",
+                      category=RuntimeWarning)
         return None
 
 
@@ -264,6 +266,8 @@ class UCR_UEA_datasets:
     def load_dataset(self, dataset_name):
         """Load a dataset from the UCR/UEA archive from its name.
 
+        A `RuntimeWarning` is printed on failure.
+
         Parameters
         ----------
         dataset_name : str
@@ -315,31 +319,50 @@ class UCR_UEA_datasets:
         full_path = os.path.join(self._data_dir, dataset_name)
 
         if not self._has_files(dataset_name):
+            # completely clear the target directory first, it will be created
+            # by extract_from_zip_url if it does not exist
+            shutil.rmtree(full_path)
             url = ("http://www.timeseriesclassification.com/Downloads/%s.zip"
                    % dataset_name)
-            if os.path.isdir(full_path):
-                for fname in os.listdir(full_path):
-                    os.remove(os.path.join(full_path, fname))
-            extract_from_zip_url(url, target_dir=full_path, verbose=False)
-        if self._has_files(dataset_name, ext="txt"):
-            X_train, y_train = _load_txt_uea(
-                os.path.join(full_path, dataset_name + "_TRAIN.txt")
-            )
-            X_test, y_test = _load_txt_uea(
-                os.path.join(full_path, dataset_name + "_TEST.txt")
-            )
-        elif self._has_files(dataset_name, ext="arff"):
-            X_train, y_train = _load_arff_uea(
-                os.path.join(full_path, dataset_name + "_TRAIN.arff")
-            )
-            X_test, y_test = _load_arff_uea(
-                os.path.join(full_path, dataset_name + "_TEST.arff")
-            )
-        else:
+            success = extract_from_zip_url(url, target_dir=full_path)
+            if not success:
+                warnings.warn("dataset \"%s\" could not be downloaded or "
+                              "extracted" % dataset_name,
+                              category=RuntimeWarning, stacklevel=2)
+                return None, None, None, None
+
+        try:
+            if self._has_files(dataset_name, ext="txt"):
+                X_train, y_train = _load_txt_uea(
+                    os.path.join(full_path, dataset_name + "_TRAIN.txt")
+                )
+                X_test, y_test = _load_txt_uea(
+                    os.path.join(full_path, dataset_name + "_TEST.txt")
+                )
+            elif self._has_files(dataset_name, ext="arff"):
+                X_train, y_train = _load_arff_uea(
+                    os.path.join(full_path, dataset_name + "_TRAIN.arff")
+                )
+                X_test, y_test = _load_arff_uea(
+                    os.path.join(full_path, dataset_name + "_TEST.arff")
+                )
+            else:
+                warnings.warn("dataset \"%s\" is not provided in either TXT "
+                              "or ARFF format and thus could not be loaded"
+                              % dataset_name,
+                              category=RuntimeWarning, stacklevel=2)
+                return None, None, None, None
+
+            return X_train, y_train, X_test, y_test
+
+        except Exception as exception:
+            warnings.warn("dataset \"%s\" could be downloaded but not "
+                          "parsed: %s" % (dataset_name, str(exception)),
+                          category=RuntimeWarning, stacklevel=2)
             return None, None, None, None
-        return X_train, y_train, X_test, y_test
 
     def _has_files(self, dataset_name, ext=None):
+        """TODO"""
         if ext is None:
             return (self._has_files(dataset_name, ext="txt") or
                     self._has_files(dataset_name, ext="arff"))
@@ -356,8 +379,9 @@ class UCR_UEA_datasets:
             try:
                 self.load_dataset(dataset_name)
             except Exception:
-                sys.stderr.write("Could not cache dataset %s properly.\n"
-                                 % dataset_name)
+                warnings.warn("Could not cache dataset %s properly."
+                              % dataset_name,
+                              category=RuntimeWarning, stacklevel=2)
 
 
 class CachedDatasets:
