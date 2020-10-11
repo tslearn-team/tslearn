@@ -8,7 +8,6 @@ import zipfile
 import tempfile
 import shutil
 import os
-import sys
 import csv
 import warnings
 try:
@@ -94,6 +93,10 @@ class UCR_UEA_datasets:
 
     When using one (or several) of these datasets in research projects, please
     cite [1]_.
+
+    This class will attempt to recover from some known misnamed files, like the
+    `StarLightCurves` dataset being provided in `StarlightCurves.zip` and
+    alike.
 
     Parameters
     ----------
@@ -306,13 +309,11 @@ class UCR_UEA_datasets:
         ...         "PenDigits")
         >>> X_train.shape
         (7494, 8, 2)
-        >>> X_train, y_train, X_test, y_test = data_loader.load_dataset(
-        ...         "StarlightCurves")
-        >>> X_train.shape
-        (1000, 1024, 1)
+
+        `None`s are returned on failures:
         >>> X_train, y_train, X_test, y_test = data_loader.load_dataset(
         ...         "DatasetThatDoesNotExist")
-        >>> print(X_train)
+        >>> X_train
         None
         """
         dataset_name = self._filenames.get(dataset_name, dataset_name)
@@ -332,6 +333,9 @@ class UCR_UEA_datasets:
                 return None, None, None, None
 
         try:
+            # if both TXT and ARFF files are provided, the TXT versions are
+            # used
+            # both training and test data must be available in the same format
             if self._has_files(dataset_name, ext="txt"):
                 X_train, y_train = _load_txt_uea(
                     os.path.join(full_path, dataset_name + "_TRAIN.txt")
@@ -362,7 +366,24 @@ class UCR_UEA_datasets:
             return None, None, None, None
 
     def _has_files(self, dataset_name, ext=None):
-        """TODO"""
+        """Determines whether some downloaded and unzipped dataset provides
+        both training and test data in the given format.
+
+        Parameters
+        ----------
+        dataset_name : str
+            the name of the dataset
+        ext : str or None
+            the file extension without a dot, e.g `"txt"` or `"arff"`;
+            if set to None (the default), `True` will be returned if either TXT
+            or ARFF files are present
+
+        Returns
+        -------
+        bool :
+            if there are both training and test files with the specified
+            file extension
+        """
         if ext is None:
             return (self._has_files(dataset_name, ext="txt") or
                     self._has_files(dataset_name, ext="arff"))
