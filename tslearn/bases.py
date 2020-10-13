@@ -22,6 +22,7 @@ _DEFAULT_TAGS = {
     'allow_variable_length': False,
 }
 
+
 class TimeSeriesBaseEstimator(BaseEstimator):
     def _more_tags(self):
         return _DEFAULT_TAGS
@@ -58,8 +59,6 @@ class BaseModelPackage:
                     not callable(getattr(self, attr))):
                 params[attr] = getattr(self, attr)
         return params
-
-
 
     def _to_dict(self, output=None, hyper_parameters_only=False):
         """
