@@ -81,6 +81,7 @@ class BaseModelPackage:
         # This is just for json support to convert numpy arrays to lists
         if output == 'json':
             d['model_params'] = BaseModelPackage._listify(d['model_params'])
+            d['hyper_params'] = BaseModelPackage._listify(d['hyper_params'])
 
         elif output == 'hdf5':
             d['hyper_params'] = \
