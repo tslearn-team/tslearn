@@ -175,9 +175,8 @@ def test_serialize_kshape():
 
     seed_ixs = [numpy.random.randint(0, X.shape[0] - 1) for i in range(3)]
     seeds = numpy.array([X[i] for i in seed_ixs])
-    init = numpy.swapaxes(numpy.array([seeds]).T, 0, 1)
 
-    ks_seeded = KShape(n_clusters=3, verbose=True, init=init)
+    ks_seeded = KShape(n_clusters=3, verbose=True, init=seeds)
 
     _check_not_fitted(ks_seeded)
 
