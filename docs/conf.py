@@ -175,6 +175,7 @@ html_theme_options = {
         ("API", "reference"),
         ("Examples", "auto_examples/index"),
         ("Citing tslearn", "citing"),
+        ("Code on GitHub", "https://github.com/tslearn-team/tslearn/", True),
     ],
 
     # Render the next and previous page links in navbar. (Default: true)
