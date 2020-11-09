@@ -22,8 +22,8 @@ from .softdtw_variants import (cdist_soft_dtw, cdist_gak,
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
-TSLEARN_VALID_METRICS = ["dtw", "gak", "softdtw", "sax"]
-VARIABLE_LENGTH_METRICS = ["dtw", "gak", "softdtw", "sax"]
+TSLEARN_VALID_METRICS = ["ctw", "dtw", "gak", "sax", "softdtw"]
+VARIABLE_LENGTH_METRICS = ["ctw", "dtw", "gak", "sax", "softdtw"]
 
 __all__ = [
     "TSLEARN_VALID_METRICS", "VARIABLE_LENGTH_METRICS",
