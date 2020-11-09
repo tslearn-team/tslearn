@@ -139,9 +139,11 @@ def ctw_path(s1, s2, max_iter=100, n_components=None,
     cca = CCA(n_components=n_components)
 
     # first iteration :
-    # identity matrices, this relates to apply first a dtw on the inputs
-    # TODO: what if different dimensions -> add a test for that btw
-    current_path, score_match = dtw_path(s1, s2,
+    # identity matrices, this relates to apply first a dtw on the
+    # (possibly truncated to a fixed number of features) inputs
+    seq1_tr = s1.dot(np.eye(s1.shape[1], n_components))
+    seq2_tr = s2.dot(np.eye(s2.shape[1], n_components))
+    current_path, score_match = dtw_path(seq1_tr, seq2_tr,
                                          global_constraint=global_constraint,
                                          sakoe_chiba_radius=sakoe_chiba_radius,
                                          itakura_max_slope=itakura_max_slope)
