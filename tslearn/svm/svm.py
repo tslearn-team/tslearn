@@ -1,19 +1,13 @@
-"""
-The :mod:`tslearn.svm` module contains Support Vector Classifier (SVC) and
-Support Vector Regressor (SVR) models for time series.
-"""
-
 from sklearn.svm import SVC, SVR
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.utils import deprecated
-import numpy
-
-from tslearn.metrics import cdist_gak, gamma_soft_dtw, VARIABLE_LENGTH_METRICS
-from tslearn.utils import (to_time_series_dataset, check_dims,
-                           to_sklearn_dataset)
-from tslearn.bases import TimeSeriesBaseEstimator
 from sklearn.utils import check_array, check_X_y
 from sklearn.utils.validation import check_is_fitted
+import numpy
+
+from ..metrics import cdist_gak, gamma_soft_dtw, VARIABLE_LENGTH_METRICS
+from ..utils import to_time_series_dataset, check_dims, to_sklearn_dataset
+from ..bases import TimeSeriesBaseEstimator
 
 import warnings
 

@@ -1,5 +1,5 @@
 from .utils import _cdist_generic
-from tslearn.cysax import cydist_sax
+from .cysax import cydist_sax
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 

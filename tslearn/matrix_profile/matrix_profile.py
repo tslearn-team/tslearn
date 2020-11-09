@@ -1,11 +1,3 @@
-"""
-The :mod:`tslearn.matrix_profile` module gathers methods for the computation of
-Matrix Profiles from time series.
-
-**User guide:** See the :ref:`Matrix Profile <matrix-profile>` section for 
-further details.
-"""
-
 import numpy as np
 from numpy.lib.stride_tricks import as_strided
 from scipy.spatial.distance import pdist, squareform

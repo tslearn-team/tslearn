@@ -1,14 +1,7 @@
-"""
-The :mod:`tslearn.neural_network` module contains multi-layer perceptron
-models for time series classification and regression.
-
-These are straight-forward adaptations of scikit-learn models.
-"""
-
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.utils import check_array
 
-from tslearn.bases import TimeSeriesBaseEstimator
+from ..bases import TimeSeriesBaseEstimator
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 

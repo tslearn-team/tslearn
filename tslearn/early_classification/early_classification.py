@@ -1,15 +1,3 @@
-"""
-The :mod:`tslearn.early_classification` module gathers early classifiers for
-time series.
-
-Such classifiers aim at performing prediction as early as possible (i.e. they
-do not necessarily wait for the end of the series before prediction is
-triggered).
-
-**User guide:** See the :ref:`Early Classification <early>` section for further 
- details.
-"""
-
 from sklearn.metrics import confusion_matrix, accuracy_score
 from sklearn.base import ClassifierMixin, clone
 from sklearn.model_selection import train_test_split
@@ -19,10 +7,10 @@ from scipy.sparse import coo_matrix
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 
-from tslearn.utils import to_time_series_dataset, check_dims
-from tslearn.neighbors import KNeighborsTimeSeriesClassifier
-from tslearn.clustering import TimeSeriesKMeans
-from tslearn.bases import TimeSeriesBaseEstimator
+from ..utils import to_time_series_dataset, check_dims
+from ..neighbors import KNeighborsTimeSeriesClassifier
+from ..clustering import TimeSeriesKMeans
+from ..bases import TimeSeriesBaseEstimator
 
 
 class NonMyopicEarlyClassifier(ClassifierMixin, TimeSeriesBaseEstimator):

@@ -4,13 +4,13 @@ from numba import njit
 from scipy.spatial.distance import pdist, cdist
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.utils import check_random_state
-from tslearn.soft_dtw_fast import _soft_dtw, _soft_dtw_grad, \
-    _jacobian_product_sq_euc
 
 from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, \
     check_equal_size
 from .utils import _cdist_generic
 from .dtw_variants import dtw
+from .soft_dtw_fast import _soft_dtw, _soft_dtw_grad, \
+    _jacobian_product_sq_euc
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 

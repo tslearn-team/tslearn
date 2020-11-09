@@ -1,12 +1,3 @@
-"""
-The :mod:`tslearn.shapelets` module gathers Shapelet-based algorithms.
-
-It depends on the `tensorflow` library for optimization (TF2 is required).
-
-**User guide:** See the :ref:`Shapelets <shapelets>` section for further 
-details.
-"""
-
 from tensorflow.keras.models import Model, model_from_json
 from tensorflow.keras.layers import (InputSpec, Dense, Conv1D, Layer, Input,
                                      concatenate, add)
@@ -26,10 +17,10 @@ import tensorflow as tf
 
 import warnings
 
-from tslearn.utils import to_time_series_dataset, check_dims, ts_size
-from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
-from tslearn.clustering import TimeSeriesKMeans
-from tslearn.preprocessing import TimeSeriesScalerMinMax
+from ..utils import to_time_series_dataset, check_dims, ts_size
+from ..bases import BaseModelPackage, TimeSeriesBaseEstimator
+from ..clustering import TimeSeriesKMeans
+from ..preprocessing import TimeSeriesScalerMinMax
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
