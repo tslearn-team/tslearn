@@ -85,11 +85,10 @@ class BaseModelPackage:
         elif output == 'hdf5':
             d['hyper_params'] = \
                 BaseModelPackage._none_to_str(d['hyper_params'])
+            d = BaseModelPackage._string2byte(d)
 
         if hyper_parameters_only:
             del d["model_params"]
-
-        d = BaseModelPackage._string2byte(d)
 
         return d
 
@@ -211,7 +210,7 @@ class BaseModelPackage:
             raise ImportError(h5py_msg)
 
         model = hdftools.load_dict(path, 'data')
-        model = cls._byte2string(cls, model)
+        model = cls._byte2string(model)
 
         for k in model['hyper_params'].keys():
             if model['hyper_params'][k] == 'None':
@@ -248,7 +247,7 @@ class BaseModelPackage:
         """
 
         model = json.load(open(path, 'r'))
-        model = cls._byte2string(cls, model)
+        model = cls._byte2string(model)
 
         # Convert the lists back to arrays
         for k in model['model_params'].keys():
@@ -291,5 +290,5 @@ class BaseModelPackage:
         Model instance
         """
         model = pickle.load(open(path, 'rb'))
-        model = cls._byte2string(cls, model)
+        model = cls._byte2string(model)
         return cls._organize_model(cls, model)
