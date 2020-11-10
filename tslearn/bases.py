@@ -85,7 +85,6 @@ class BaseModelPackage:
         elif output == 'hdf5':
             d['hyper_params'] = \
                 BaseModelPackage._none_to_str(d['hyper_params'])
-            d = BaseModelPackage._string2byte(d)
 
         if hyper_parameters_only:
             del d["model_params"]
@@ -159,14 +158,6 @@ class BaseModelPackage:
             for k in model[param_set].keys():
                 if type(model[param_set][k]) == type(b''):
                     model[param_set][k] = model[param_set][k].decode('utf-8')
-        return model
-
-    @classmethod
-    def _string2byte(cls, model):
-        for param_set in ['hyper_params', 'model_params']:
-            for k in model[param_set].keys():
-                if type(model[param_set][k]) == type(''):
-                    model[param_set][k] = model[param_set][k].encode('utf-8')
         return model
 
 
