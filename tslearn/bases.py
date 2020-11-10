@@ -240,6 +240,10 @@ class BaseModelPackage:
                     arr = [np.array(p) for p in param]
                 model['model_params'][k] = arr
 
+        for k in model['hyper_params'].keys():
+            if model['hyper_params'][k] == 'None':
+                model['hyper_params'][k] = None
+
         return cls._organize_model(cls, model)
 
     def to_pickle(self, path):
