@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-DTW computation
-===============
+Dynamic Time Warping
+====================
 
-This example illustrates DTW computation between time series and plots the
-optimal alignment path [1].
+This example illustrates Dynamic Time Warping (DTW) computation between time 
+series and plots the optimal alignment path [1]_.
 
 The image represents cost matrix, that is the squared Euclidean distance for
 each time point between both time series, which are represented
@@ -13,9 +13,9 @@ at the left and at the top of the cost matrix.
 The optimal path, that is the path that minimizes the total cost to go from
 the first time point to the last one, is represented in white on the image.
 
-[1] H. Sakoe and S. Chiba, "Dynamic programming algorithm optimization
-for spoken word recognition". IEEE Transactions on Acoustics, Speech, and
-Signal Processing, 26(1), 43-49 (1978).
+.. [1] H. Sakoe and S. Chiba, "Dynamic programming algorithm optimization
+       for spoken word recognition". IEEE Transactions on Acoustics, Speech,
+       and Signal Processing, 26(1), 43-49 (1978).
 """
 
 # Author: Romain Tavenard
@@ -25,8 +25,6 @@ import numpy
 from scipy.spatial.distance import cdist
 import matplotlib.pyplot as plt
 
-from tslearn.generators import random_walks
-from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn import metrics
 
 numpy.random.seed(0)

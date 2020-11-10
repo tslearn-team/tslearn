@@ -11,14 +11,14 @@ from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 from scipy.spatial.distance import cdist as scipy_cdist
 
-from tslearn.metrics import cdist_dtw, cdist_soft_dtw, \
+from tslearn.metrics import cdist_dtw, cdist_ctw, cdist_soft_dtw, \
     cdist_sax, TSLEARN_VALID_METRICS
 from tslearn.piecewise import SymbolicAggregateApproximation
 from tslearn.utils import (to_time_series_dataset, to_sklearn_dataset,
                            check_dims)
 from tslearn.bases import BaseModelPackage
 
-neighbors.VALID_METRICS['brute'].extend(['dtw', 'softdtw', 'sax'])
+neighbors.VALID_METRICS['brute'].extend(['dtw', 'softdtw', 'sax', 'ctw'])
 
 
 class KNeighborsTimeSeriesMixin():
@@ -68,6 +68,8 @@ class KNeighborsTimeSeriesMixin():
         if self._ts_metric == "dtw":
             X_ = cdist_dtw(X, other_X, n_jobs=self.n_jobs,
                            **metric_params)
+        elif self._ts_metric == "ctw":
+            X_ = cdist_ctw(X, other_X, **metric_params)
         elif self._ts_metric == "softdtw":
             X_ = cdist_soft_dtw(X, other_X, **metric_params)
         elif self._ts_metric == "sax":
@@ -127,7 +129,8 @@ class KNeighborsTimeSeriesMixin():
                 fit_X = self._X_fit
 
             if (self.metric in TSLEARN_VALID_METRICS or
-                    self.metric in [cdist_dtw, cdist_soft_dtw, cdist_sax]):
+                    self.metric in [cdist_dtw, cdist_ctw,
+                                    cdist_soft_dtw, cdist_sax]):
                 full_dist_matrix = self._precompute_cross_dist(X,
                                                                other_X=fit_X)
             elif self.metric in ["euclidean", "sqeuclidean", "cityblock"]:
@@ -180,8 +183,8 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
     n_neighbors : int (default: 5)
         Number of nearest neighbors to be considered for the decision.
 
-    metric : {'dtw', 'softdtw', 'euclidean', 'sqeuclidean', 'cityblock', \
-    'sax'} (default: 'dtw')
+    metric : {'dtw', 'softdtw', 'ctw', 'euclidean', 'sqeuclidean', \
+              'cityblock',  'sax'} (default: 'dtw')
         Metric to be used at the core of the nearest neighbor procedure.
         DTW and SAX are described in more detail in :mod:`tslearn.metrics`.
         When SAX is provided as a metric, the data is expected to be
@@ -322,6 +325,8 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
             if self._ts_metric == "dtw":
                 X_ = cdist_dtw(X, self._ts_fit, n_jobs=self.n_jobs,
                                verbose=self.verbose, **metric_params)
+            elif self._ts_metric == "ctw":
+                X_ = cdist_ctw(X, self._ts_fit, **metric_params)
             elif self._ts_metric == "softdtw":
                 X_ = cdist_soft_dtw(X, self._ts_fit, **metric_params)
             else:
