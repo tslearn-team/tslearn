@@ -419,7 +419,11 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.):
     ...                              gamma=1.)  # doctest: +ELLIPSIS
     >>> dist
     -0.89...
-    >>> a
+    >>> a  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    array([[1.00...e+00, 1.88...e-01, 2.83...e-04, 4.19...e-11],
+           [3.40...e-01, 8.17...e-01, 8.87...e-02, 3.94...e-05],
+           [5.05...e-02, 7.09...e-01, 5.30...e-01, 6.98...e-03],
+           [1.37...e-04, 1.31...e-01, 7.30...e-01, 1.00...e+00]])
 
     See Also
     --------
@@ -432,12 +436,14 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.):
     """
     if gamma == 0.:
         dist, path = dtw(ts1, ts2) ** 2
-        mat = None  # TODO
-        return dist, mat
-    sdtw = SoftDTW(SquaredEuclidean(ts1[:ts_size(ts1)], ts2[:ts_size(ts2)]),
-                   gamma=gamma)
-    dist = sdtw.compute()
-    a = sdtw.grad()
+        a = numpy.zeros((ts_size(ts1), ts_size(ts2)))
+        for i, j in path:
+            a[i, j] = 1.
+    else:
+        sdtw = SoftDTW(SquaredEuclidean(ts1[:ts_size(ts1)], ts2[:ts_size(ts2)]),
+                       gamma=gamma)
+        dist = sdtw.compute()
+        a = sdtw.grad()
     return dist, a
 
 
