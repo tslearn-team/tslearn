@@ -374,6 +374,73 @@ def soft_dtw(ts1, ts2, gamma=1.):
                    gamma=gamma).compute()
 
 
+def soft_dtw_alignment(ts1, ts2, gamma=1.):
+    r"""Compute Soft-DTW metric between two time series and return both the 
+    similarity measure and the alignment matrix.
+
+    Soft-DTW was originally presented in [1]_ and is
+    discussed in more details in our
+    :ref:`user-guide page on DTW and its variants<dtw>`.
+
+    Soft-DTW is computed as:
+
+    .. math::
+
+        \text{soft-DTW}_{\gamma}(X, Y) =
+            \min_{\pi}{}^\gamma \sum_{(i, j) \in \pi} \|X_i, Y_j\|^2
+
+    where :math:`\min^\gamma` is the soft-min operator of parameter
+    :math:`\gamma`.
+
+    In the limit case :math:`\gamma = 0`, :math:`\min^\gamma` reduces to a
+    hard-min operator and soft-DTW is defined as the square of the DTW
+    similarity measure.
+
+    Parameters
+    ----------
+    ts1
+        A time series
+    ts2
+        Another time series
+    gamma : float (default 1.)
+        Gamma paraneter for Soft-DTW
+
+    Returns
+    -------
+    float
+        Similarity
+    numpy.ndarray
+        Soft-alignment matrix
+
+    Examples
+    --------
+    >>> dist, a = soft_dtw_alignment([1, 2, 2, 3],
+    ...                              [1., 2., 3., 4.],
+    ...                              gamma=1.)  # doctest: +ELLIPSIS
+    >>> dist
+    -0.89...
+    >>> a
+
+    See Also
+    --------
+    soft_dtw : Returns soft-DTW score alone
+
+    References
+    ----------
+    .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
+       Time-Series," ICML 2017.
+    """
+    if gamma == 0.:
+        dist, path = dtw(ts1, ts2) ** 2
+        mat = None  # TODO
+        return dist, mat
+    sdtw = SoftDTW(SquaredEuclidean(ts1[:ts_size(ts1)], ts2[:ts_size(ts2)]),
+                   gamma=gamma)
+    dist = sdtw.compute()
+    a = sdtw.grad()
+    return dist, a
+
+
 def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
     r"""Compute cross-similarity matrix using Soft-DTW metric.
 
