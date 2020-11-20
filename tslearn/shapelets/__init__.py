@@ -8,10 +8,11 @@ details.
 """
 
 from .shapelets import LearningShapelets, ShapeletModel, \
-    SerializableShapeletModel
+    SerializableShapeletModel, grabocka_params_to_shapelet_size_dict
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 __all__ = [
-    "LearningShapelets", "ShapeletModel", "SerializableShapeletModel"
+    "LearningShapelets", "ShapeletModel", "SerializableShapeletModel",
+    "grabocka_params_to_shapelet_size_dict"
 ]
