@@ -130,7 +130,6 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
 
     s2
         Another time series.
-        If not given, self-similarity of dataset1 is returned.
 
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
         Global constraint to restrict admissible paths for DTW.

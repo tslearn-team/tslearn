@@ -38,6 +38,39 @@ def test_dtw():
                                atol=1e-5)
 
 
+def test_ctw():
+    # ctw_path
+    path, cca, dist = tslearn.metrics.ctw_path([1, 2, 3], [1., 2., 2., 3.])
+    np.testing.assert_equal(path, [(0, 0), (1, 1), (1, 2), (2, 3)])
+    np.testing.assert_allclose(dist, 0.)
+
+    path, cca, dist = tslearn.metrics.ctw_path([1, 2, 3], [1., 2., 2., 3., 4.])
+    np.testing.assert_allclose(dist, 1.)
+
+    # dtw
+    n1, n2, d1, d2 = 15, 10, 3, 1
+    rng = np.random.RandomState(0)
+    x = rng.randn(n1, d1)
+    y = rng.randn(n2, d2)
+    np.testing.assert_allclose(tslearn.metrics.ctw(x, y),
+                               tslearn.metrics.ctw(y, x))
+    np.testing.assert_allclose(tslearn.metrics.ctw(x, y),
+                               tslearn.metrics.ctw_path(x, y)[-1])
+
+    # cdist_dtw
+    dists = tslearn.metrics.cdist_ctw([[1, 2, 2, 3],
+                                       [1., 2., 3., 4.]])
+    np.testing.assert_allclose(dists,
+                               np.array([[0., 1.],
+                                         [1., 0.]]))
+    dists = tslearn.metrics.cdist_ctw([[1, 2, 2, 3], [1., 2., 3., 4.]],
+                                      [[1, 2, 3], [2, 3, 4, 5]])
+    np.testing.assert_allclose(dists,
+                               np.array([[0., 2.44949],
+                                         [1., 1.414214]]),
+                               atol=1e-5)
+
+
 def test_ldtw():
     n1, n2, d = 15, 10, 3
     rng = np.random.RandomState(0)

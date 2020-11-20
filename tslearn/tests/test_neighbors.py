@@ -41,6 +41,13 @@ def test_constrained_paths():
 
     np.testing.assert_equal(y_pred_dtw, y_pred_softdtw)
 
+    model_ctw = KNeighborsTimeSeriesClassifier(
+            n_neighbors=3,
+            metric="ctw"
+    )
+    # Just testing that things run, nothing smart here :(
+    model_ctw.fit(X, y).predict(X)
+
     model_sax = KNeighborsTimeSeriesClassifier(
             n_neighbors=3,
             metric="sax",

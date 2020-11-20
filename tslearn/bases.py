@@ -152,6 +152,15 @@ class BaseModelPackage:
 
         return inst
 
+    @classmethod
+    def _byte2string(cls, model):
+        for param_set in ['hyper_params', 'model_params']:
+            for k in model[param_set].keys():
+                if type(model[param_set][k]) == type(b''):
+                    model[param_set][k] = model[param_set][k].decode('utf-8')
+        return model
+
+
     def to_hdf5(self, path):
         """
         Save model to a HDF5 file.
@@ -192,6 +201,7 @@ class BaseModelPackage:
             raise ImportError(h5py_msg)
 
         model = hdftools.load_dict(path, 'data')
+        model = cls._byte2string(model)
 
         for k in model['hyper_params'].keys():
             if model['hyper_params'][k] == 'None':
@@ -228,6 +238,7 @@ class BaseModelPackage:
         """
 
         model = json.load(open(path, 'r'))
+        model = cls._byte2string(model)
 
         # Convert the lists back to arrays
         for k in model['model_params'].keys():
@@ -270,4 +281,5 @@ class BaseModelPackage:
         Model instance
         """
         model = pickle.load(open(path, 'rb'))
+        model = cls._byte2string(model)
         return cls._organize_model(cls, model)
