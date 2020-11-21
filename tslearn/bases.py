@@ -230,15 +230,16 @@ class BaseModelPackage:
         model = json.load(open(path, 'r'))
 
         # Convert the lists back to arrays
-        for k in model['model_params'].keys():
-            param = model['model_params'][k]
-            if type(param) is list:
-                arr = np.array(param)
-                if arr.dtype == object:
-                    # Then maybe it was rather a list of arrays
-                    # This is very hacky...
-                    arr = [np.array(p) for p in param]
-                model['model_params'][k] = arr
+        for param_type in ['hyper_params', 'model_params']:
+            for k in model[param_type].keys():
+                param = model[param_type][k]
+                if type(param) is list:
+                    arr = np.array(param)
+                    if arr.dtype == object:
+                        # Then maybe it was rather a list of arrays
+                        # This is very hacky...
+                        arr = [np.array(p) for p in param]
+                    model[param_type][k] = arr
 
         return cls._organize_model(cls, model)
 
