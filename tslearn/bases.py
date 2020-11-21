@@ -230,7 +230,7 @@ class BaseModelPackage:
         model = json.load(open(path, 'r'))
 
         # Convert the lists back to arrays
-        for param_type in ['hyper_params', 'model_params']:
+        for param_type in ['model_params', 'hyper_params']:
             for k in model[param_type].keys():
                 param = model[param_type][k]
                 if type(param) is list:
