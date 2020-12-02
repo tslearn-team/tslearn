@@ -17,6 +17,7 @@ from .ctw import ctw_path, ctw, cdist_ctw
 from .sax import cdist_sax
 from .softdtw_variants import (cdist_soft_dtw, cdist_gak,
                                cdist_soft_dtw_normalized, gak, soft_dtw,
+                               soft_dtw_alignment,
                                sigma_gak, gamma_soft_dtw, SquaredEuclidean,
                                SoftDTW)
 
@@ -42,6 +43,6 @@ __all__ = [
     "cdist_sax",
 
     "cdist_soft_dtw", "cdist_gak",
-    "cdist_soft_dtw_normalized", "gak", "soft_dtw",
+    "cdist_soft_dtw_normalized", "gak", "soft_dtw", "soft_dtw_alignment",
     "sigma_gak", "gamma_soft_dtw", "SquaredEuclidean", "SoftDTW"
 ]

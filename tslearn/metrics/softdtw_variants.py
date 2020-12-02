@@ -8,7 +8,7 @@ from sklearn.utils import check_random_state
 from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, \
     check_equal_size
 from .utils import _cdist_generic
-from .dtw_variants import dtw
+from .dtw_variants import dtw, dtw_path
 from .soft_dtw_fast import _soft_dtw, _soft_dtw_grad, \
     _jacobian_product_sq_euc
 
@@ -407,14 +407,14 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.):
 
     Returns
     -------
-    float
-        Similarity
     numpy.ndarray
         Soft-alignment matrix
+    float
+        Similarity
 
     Examples
     --------
-    >>> dist, a = soft_dtw_alignment([1, 2, 2, 3],
+    >>> a, dist = soft_dtw_alignment([1, 2, 2, 3],
     ...                              [1., 2., 3., 4.],
     ...                              gamma=1.)  # doctest: +ELLIPSIS
     >>> dist
@@ -435,16 +435,17 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.):
        Time-Series," ICML 2017.
     """
     if gamma == 0.:
-        dist, path = dtw(ts1, ts2) ** 2
+        path, dist = dtw_path(ts1, ts2)
+        dist_sq = dist ** 2
         a = numpy.zeros((ts_size(ts1), ts_size(ts2)))
         for i, j in path:
             a[i, j] = 1.
     else:
         sdtw = SoftDTW(SquaredEuclidean(ts1[:ts_size(ts1)], ts2[:ts_size(ts2)]),
                        gamma=gamma)
-        dist = sdtw.compute()
+        dist_sq = sdtw.compute()
         a = sdtw.grad()
-    return dist, a
+    return a, dist_sq
 
 
 def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
