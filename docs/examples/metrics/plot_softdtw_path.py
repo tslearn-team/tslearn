@@ -60,7 +60,7 @@ sz = s_y1.shape[0]
 for gamma in [0., .1, 1.]:
     alignment, sim = metrics.soft_dtw_alignment(s_y1, s_y2, gamma=gamma)
 
-    plt.figure(1, figsize=(8, 8))
+    plt.figure(figsize=(8, 8))
 
     # definitions for the axes
     left, bottom = 0.01, 0.1
