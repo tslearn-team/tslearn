@@ -92,5 +92,4 @@ for gamma in [0., .1, 1.]:
     ax_s_y.axis("off")
     ax_s_y.set_ylim((0, sz - 1))
 
-    plt.tight_layout()
     plt.show()
