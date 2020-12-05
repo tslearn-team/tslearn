@@ -24,8 +24,8 @@ from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, \
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 GLOBAL_CONSTRAINT_CODE = {None: 0, "": 0, "itakura": 1, "sakoe_chiba": 2}
-TSLEARN_VALID_METRICS = ["dtw", "gak", "softdtw", "sax"]
-VARIABLE_LENGTH_METRICS = ["dtw", "gak", "softdtw", "sax"]
+TSLEARN_VALID_METRICS = ["dtw", "gak", "softdtw", "sax", "lcss"]
+VARIABLE_LENGTH_METRICS = ["dtw", "gak", "softdtw", "sax", "lcss"]
 
 
 @njit()
@@ -36,6 +36,12 @@ def _local_squared_dist(x, y):
         dist += diff * diff
     return dist
 
+@njit()
+def _local_eucl_dist(x, y):
+    dist = 0.
+    for di in range(x.shape[0]):
+        dist += abs(x[di] - y[di])
+    return dist
 
 @njit()
 def njit_accumulated_matrix(s1, s2, mask):
@@ -247,6 +253,41 @@ def njit_accumulated_matrix_from_dist_matrix(dist_matrix, mask):
                                              cum_sum[i, j])
     return cum_sum[1:, 1:]
 
+@njit(nogil=True)
+def njit_lcss(s1, s2, eps, delta):
+    """Compute the longest common subsequence similarity score between two time series.
+
+    Parameters
+    ----------
+    s1 : array, shape = (sz1,)
+        First time series.
+
+    s2 : array, shape = (sz2,)
+        Second time series.
+
+    eps : float
+        Matching threshold.
+
+    delta : int
+        Maximum distance between indexes of matching values.
+    Returns
+    -------
+    lcss_score : float
+        Longest Common Subsequence similarity score between both time series.
+
+    """
+    l1 = s1.shape[0]
+    l2 = s2.shape[0]
+    M = numpy.full((l1 + 1, l2 + 1), 0)
+
+    for i in range(1, l1 + 1):
+        for j in range(1, l2 + 1):
+            if _local_eucl_dist(s1[i - 1], s2[j - 1]) <= eps and abs(i - j) <= delta:
+                M[i][j] = 1 + M[i - 1][j - 1]
+            else:
+                M[i][j] = max(M[i][j - 1], M[i - 1][j])
+
+    return round(float(M[l1][l2]) / min([l1, l2]), 2)
 
 def dtw_path_from_metric(s1, s2=None, metric="euclidean",
                          global_constraint=None, sakoe_chiba_radius=None,
@@ -2029,6 +2070,70 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.):
     d_ii = numpy.diag(dists)
     dists -= .5 * (d_ii.reshape((-1, 1)) + d_ii.reshape((1, -1)))
     return dists
+
+
+def lcss(s1, s2, eps=1., delta=numpy.inf):
+    r"""Compute the Longest Common Subsequence (LCSS) similarity measure between
+    (possibly multidimensional) time series and return it.
+
+    LCSS is computed by matching indexes that are met up until the eps threshold,
+    so it leaves some points unmatched and focuses on the similar parts of two sequences.
+    The matching can occur even if the time indexes are different, regulated through the delta
+    parameter that defines how far it can go.
+
+    To retrieve a meaningful similarity value from the length of the longest common subsequence,
+    the percentage of that value regarding the length of the shortest time series is returned:
+
+    According to this definition, the values returned by LCSS range from 0 to 1, the highest value
+    taken when two time series fully match, and vice-versa.
+    It is not required that both time series share the same size, but they must
+    be the same dimension. LCSS was originally presented in [1]_ and is
+    discussed in more details in our :ref:`dedicated user-guide page <lcss>`.
+
+    Parameters
+    ----------
+    s1
+        A time series.
+
+    s2
+        Another time series.
+
+    eps : float (default: 1.)
+        Maximum matching distance threshold.
+
+    delta : int (default: inf)
+        Maximum distance in the x-axis (time) for the matching to occur.
+
+    Returns
+    -------
+    float
+        Similarity score
+
+    Examples
+    --------
+    >>> lcss([1, 2, 3], [1., 2., 2., 3.])
+    1.0
+    >>> lcss([1, 2, 3], [1., 2., 2., 4., 7.])
+    1.0
+    >>> lcss([1, 2, 3], [1., 2., 2., 2., 3.], eps=0, delta=1)
+    0.67
+    >>> lcss([1, 2, 3], [-2., 5., 7.], eps=3)
+    0.67
+
+    See Also
+    --------
+
+    References
+    ----------
+    .. [1] M. Vlachos, D. Gunopoulos, and G. Kollios. 2002. "Discovering Similar
+           Multidimensional Trajectories", In Proceedings of the 18th International
+           Conference on Data Engineering (ICDE '02). IEEE Computer Society, USA, 673.
+
+    """
+    s1 = to_time_series(s1, remove_nans=True)
+    s2 = to_time_series(s2, remove_nans=True)
+
+    return njit_lcss(s1, s2, eps, delta)
 
 
 class SoftDTW:

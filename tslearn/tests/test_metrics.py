@@ -79,6 +79,19 @@ def test_ldtw():
     assert len(path) <= n1 + 2
 
 
+def test_lcss():
+    sim = tslearn.metrics.lcss([1, 2, 3], [1., 2., 2., 3.])
+    np.testing.assert_equal(sim, 1.)
+
+    sim = tslearn.metrics.lcss([1, 2, 3], [1., 2., 2., 4.])
+    np.testing.assert_equal(sim, 1.)
+
+    sim = tslearn.metrics.lcss([1, 2, 3], [-2., 5., 7.], eps=3)
+    np.testing.assert_equal(sim, 0.67)
+
+    sim = tslearn.metrics.lcss([1, 2, 3], [1., 2., 2., 2., 3.], eps=0, delta=1)
+    np.testing.assert_equal(sim, 0.67)
+
 def test_constrained_paths():
     n, d = 10, 3
     rng = np.random.RandomState(0)
