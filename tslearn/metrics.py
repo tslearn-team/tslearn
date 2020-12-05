@@ -2133,6 +2133,7 @@ def lcss(s1, s2, eps=1., delta=numpy.inf):
     s1 = to_time_series(s1, remove_nans=True)
     s2 = to_time_series(s2, remove_nans=True)
 
+
     return njit_lcss(s1, s2, eps, delta)
 
 
