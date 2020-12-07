@@ -22,6 +22,7 @@ _DEFAULT_TAGS = {
     'allow_variable_length': False,
 }
 
+
 class TimeSeriesBaseEstimator(BaseEstimator):
     def _more_tags(self):
         return _DEFAULT_TAGS
@@ -59,8 +60,6 @@ class BaseModelPackage:
                 params[attr] = getattr(self, attr)
         return params
 
-
-
     def _to_dict(self, output=None, hyper_parameters_only=False):
         """
         Get model hyper-parameters and model-parameters
@@ -81,6 +80,7 @@ class BaseModelPackage:
         # This is just for json support to convert numpy arrays to lists
         if output == 'json':
             d['model_params'] = BaseModelPackage._listify(d['model_params'])
+            d['hyper_params'] = BaseModelPackage._listify(d['hyper_params'])
 
         elif output == 'hdf5':
             d['hyper_params'] = \
@@ -241,15 +241,16 @@ class BaseModelPackage:
         model = cls._byte2string(model)
 
         # Convert the lists back to arrays
-        for k in model['model_params'].keys():
-            param = model['model_params'][k]
-            if type(param) is list:
-                arr = np.array(param)
-                if arr.dtype == object:
-                    # Then maybe it was rather a list of arrays
-                    # This is very hacky...
-                    arr = [np.array(p) for p in param]
-                model['model_params'][k] = arr
+        for param_type in ['model_params', 'hyper_params']:
+            for k in model[param_type].keys():
+                param = model[param_type][k]
+                if type(param) is list:
+                    arr = np.array(param)
+                    if arr.dtype == object:
+                        # Then maybe it was rather a list of arrays
+                        # This is very hacky...
+                        arr = [np.array(p) for p in param]
+                    model[param_type][k] = arr
 
         return cls._organize_model(cls, model)
 
