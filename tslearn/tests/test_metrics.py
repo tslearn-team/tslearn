@@ -362,5 +362,5 @@ def test_softdtw():
     # Test of using a scipy distance function
     matrix_path, dist = tslearn.metrics.soft_dtw_alignment(s1, s2, gamma=0.)
 
-    np.testing.assert_equal(dist, dist_ref)
+    np.testing.assert_equal(dist, dist_ref ** 2)
     np.testing.assert_allclose(matrix_path, mat_path_ref)
