@@ -230,7 +230,7 @@ smoothing of the resulting metric (squared DTW corresponds to the limit case
 When a strictly positive value is set for :math:`\gamma`, the corresponding
 alignment matrix corresponds to a blurred version of the DTW one:
 
-.. figure:: ../../_images/softdtw_alignment.png
+.. figure:: ../_static/img/softdtw_alignment.png
     :width: 30%
     :align: center
 
