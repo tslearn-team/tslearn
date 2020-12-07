@@ -8,7 +8,7 @@ from sklearn.utils import check_random_state
 from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, \
     check_equal_size
 from .utils import _cdist_generic
-from .dtw_variants import dtw
+from .dtw_variants import dtw, dtw_path
 from .soft_dtw_fast import _soft_dtw, _soft_dtw_grad, \
     _jacobian_product_sq_euc
 
@@ -372,6 +372,80 @@ def soft_dtw(ts1, ts2, gamma=1.):
         return dtw(ts1, ts2) ** 2
     return SoftDTW(SquaredEuclidean(ts1[:ts_size(ts1)], ts2[:ts_size(ts2)]),
                    gamma=gamma).compute()
+
+
+def soft_dtw_alignment(ts1, ts2, gamma=1.):
+    r"""Compute Soft-DTW metric between two time series and return both the 
+    similarity measure and the alignment matrix.
+
+    Soft-DTW was originally presented in [1]_ and is
+    discussed in more details in our
+    :ref:`user-guide page on DTW and its variants<dtw>`.
+
+    Soft-DTW is computed as:
+
+    .. math::
+
+        \text{soft-DTW}_{\gamma}(X, Y) =
+            \min_{\pi}{}^\gamma \sum_{(i, j) \in \pi} \|X_i, Y_j\|^2
+
+    where :math:`\min^\gamma` is the soft-min operator of parameter
+    :math:`\gamma`.
+
+    In the limit case :math:`\gamma = 0`, :math:`\min^\gamma` reduces to a
+    hard-min operator and soft-DTW is defined as the square of the DTW
+    similarity measure.
+
+    Parameters
+    ----------
+    ts1
+        A time series
+    ts2
+        Another time series
+    gamma : float (default 1.)
+        Gamma paraneter for Soft-DTW
+
+    Returns
+    -------
+    numpy.ndarray
+        Soft-alignment matrix
+    float
+        Similarity
+
+    Examples
+    --------
+    >>> a, dist = soft_dtw_alignment([1, 2, 2, 3],
+    ...                              [1., 2., 3., 4.],
+    ...                              gamma=1.)  # doctest: +ELLIPSIS
+    >>> dist
+    -0.89...
+    >>> a  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    array([[1.00...e+00, 1.88...e-01, 2.83...e-04, 4.19...e-11],
+           [3.40...e-01, 8.17...e-01, 8.87...e-02, 3.94...e-05],
+           [5.05...e-02, 7.09...e-01, 5.30...e-01, 6.98...e-03],
+           [1.37...e-04, 1.31...e-01, 7.30...e-01, 1.00...e+00]])
+
+    See Also
+    --------
+    soft_dtw : Returns soft-DTW score alone
+
+    References
+    ----------
+    .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
+       Time-Series," ICML 2017.
+    """
+    if gamma == 0.:
+        path, dist = dtw_path(ts1, ts2)
+        dist_sq = dist ** 2
+        a = numpy.zeros((ts_size(ts1), ts_size(ts2)))
+        for i, j in path:
+            a[i, j] = 1.
+    else:
+        sdtw = SoftDTW(SquaredEuclidean(ts1[:ts_size(ts1)], ts2[:ts_size(ts2)]),
+                       gamma=gamma)
+        dist_sq = sdtw.compute()
+        a = sdtw.grad()
+    return a, dist_sq
 
 
 def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):

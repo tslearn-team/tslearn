@@ -227,6 +227,14 @@ smoothing of the resulting metric (squared DTW corresponds to the limit case
     soft_dtw_score = soft_dtw(x, y, gamma=.1)
 
 
+When a strictly positive value is set for :math:`\gamma`, the corresponding
+alignment matrix corresponds to a blurred version of the DTW one:
+
+.. figure:: ../_static/img/softdtw_alignment.png
+    :width: 30%
+    :align: center
+
+
 Also, barycenters for soft-DTW can be estimated through gradient descent:
 
 .. code-block:: python
@@ -240,7 +248,7 @@ This is the algorithm at stake when invoking
 ``metric="softdtw"``.
 
 
-.. minigallery:: tslearn.metrics.dtw tslearn.metrics.dtw_path tslearn.metrics.soft_dtw tslearn.metrics.dtw_path_from_metric tslearn.metrics.dtw_limited_warping_length tslearn.barycenters.softdtw_barycenter
+.. minigallery:: tslearn.metrics.dtw tslearn.metrics.dtw_path tslearn.metrics.soft_dtw tslearn.metrics.soft_dtw_alignment tslearn.metrics.dtw_path_from_metric tslearn.metrics.dtw_limited_warping_length tslearn.barycenters.softdtw_barycenter
     :add-heading: Examples Involving DTW variants
     :heading-level: -
 
