@@ -92,6 +92,12 @@ def test_lcss():
     sim = tslearn.metrics.lcss([1, 2, 3], [1., 2., 2., 2., 3.], eps=0, delta=1)
     np.testing.assert_equal(sim, 0.67)
 
+
+def test_lcss_path():
+    path, sim = tslearn.metrics.lcss_path([1, 2, 3], [1., 2., 2., 3.])
+    np.testing.assert_equal(sim, 1.)
+
+
 def test_constrained_paths():
     n, d = 10, 3
     rng = np.random.RandomState(0)

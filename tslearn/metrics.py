@@ -253,41 +253,6 @@ def njit_accumulated_matrix_from_dist_matrix(dist_matrix, mask):
                                              cum_sum[i, j])
     return cum_sum[1:, 1:]
 
-@njit(nogil=True)
-def njit_lcss(s1, s2, eps, delta):
-    """Compute the longest common subsequence similarity score between two time series.
-
-    Parameters
-    ----------
-    s1 : array, shape = (sz1,)
-        First time series.
-
-    s2 : array, shape = (sz2,)
-        Second time series.
-
-    eps : float
-        Matching threshold.
-
-    delta : int
-        Maximum distance between indexes of matching values.
-    Returns
-    -------
-    lcss_score : float
-        Longest Common Subsequence similarity score between both time series.
-
-    """
-    l1 = s1.shape[0]
-    l2 = s2.shape[0]
-    M = numpy.full((l1 + 1, l2 + 1), 0)
-
-    for i in range(1, l1 + 1):
-        for j in range(1, l2 + 1):
-            if _local_eucl_dist(s1[i - 1], s2[j - 1]) <= eps and abs(i - j) <= delta:
-                M[i][j] = 1 + M[i - 1][j - 1]
-            else:
-                M[i][j] = max(M[i][j - 1], M[i - 1][j])
-
-    return round(float(M[l1][l2]) / min([l1, l2]), 2)
 
 def dtw_path_from_metric(s1, s2=None, metric="euclidean",
                          global_constraint=None, sakoe_chiba_radius=None,
@@ -2072,6 +2037,66 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.):
     return dists
 
 
+@njit(nogil=True)
+def njit_lcss_accumulated_matrix(s1, s2, eps, delta):
+    """Compute the longest common subsequence similarity score between two time series.
+
+    Parameters
+    ----------
+    s1 : array, shape = (sz1,)
+        First time series.
+
+    s2 : array, shape = (sz2,)
+        Second time series.
+
+    eps : float
+        Matching threshold.
+
+    delta : int
+        Maximum distance between indexes of matching values.
+    Returns
+    -------
+    lcss_score : float
+        Longest Common Subsequence similarity score between both time series.
+
+    """
+    l1 = s1.shape[0]
+    l2 = s2.shape[0]
+    M = numpy.full((l1 + 1, l2 + 1), 0)
+
+    for i in range(1, l1 + 1):
+        for j in range(1, l2 + 1):
+            if _local_eucl_dist(s1[i - 1], s2[j - 1]) <= eps and abs(i - j) <= delta:
+                M[i][j] = 1 + M[i - 1][j - 1]
+            else:
+                M[i][j] = max(M[i][j - 1], M[i - 1][j])
+
+    return M[1:, 1:]
+
+
+@njit(nogil=True)
+def njit_lcss(s1, s2, eps, delta):
+    """Compute the longest common subsequence score between two time series.
+
+    Parameters
+    ----------
+    s1 : array, shape = (sz1,)
+        First time series.
+
+    s2 : array, shape = (sz2,)
+        Second time series
+
+    Returns
+    -------
+    lcss_score : float
+        Longest Common Subsquence score between both time series.
+    """
+    l1 = s1.shape[0]
+    l2 = s2.shape[0]
+    M = njit_lcss_accumulated_matrix(s1, s2, eps, delta)
+    return round(float(M[l1][l2]) / min([l1, l2]), 2)
+
+
 def lcss(s1, s2, eps=1., delta=numpy.inf):
     r"""Compute the Longest Common Subsequence (LCSS) similarity measure between
     (possibly multidimensional) time series and return it.
@@ -2133,8 +2158,102 @@ def lcss(s1, s2, eps=1., delta=numpy.inf):
     s1 = to_time_series(s1, remove_nans=True)
     s2 = to_time_series(s2, remove_nans=True)
 
-
     return njit_lcss(s1, s2, eps, delta)
+
+def _return_lcss_path(acc_cost_mat):
+    sz1, sz2 = acc_cost_mat.shape
+    i, j = (sz1 - 1, sz2 - 1)
+    path = []
+    max_sim = acc_cost_mat[-1][-1]
+
+    while max_sim != 0 or i == 0 or j == 0:
+        arr = numpy.array([acc_cost_mat[i - 1][j - 1],
+                           acc_cost_mat[i - 1][j],
+                           acc_cost_mat[i][j - 1]])
+        max_sim = numpy.max(arr)
+        argmax = numpy.where(arr == max_sim)
+
+        if len(argmax) > 1:
+            path.append((i - 1, j - 1))
+
+        if argmax == 0:
+            i,j = (i - 1, j - 1)
+        elif argmax == 1:
+            i,j = (i - 1, j)
+        else:
+            i,j = (i, j - 1)
+    return path
+
+
+def lcss_path(s1, s2, eps=1, delta=numpy.inf):
+    r"""Compute the Longest Common Subsequence (LCSS) similarity measure between
+     (possibly multidimensional) time series and return it.
+
+     LCSS is computed by matching indexes that are met up until the eps threshold,
+     so it leaves some points unmatched and focuses on the similar parts of two sequences.
+     The matching can occur even if the time indexes are different, regulated through the delta
+     parameter that defines how far it can go.
+
+     To retrieve a meaningful similarity value from the length of the longest common subsequence,
+     the percentage of that value regarding the length of the shortest time series is returned:
+
+     According to this definition, the values returned by LCSS range from 0 to 1, the highest value
+     taken when two time series fully match, and vice-versa.
+     It is not required that both time series share the same size, but they must
+     be the same dimension. LCSS was originally presented in [1]_ and is
+     discussed in more details in our :ref:`dedicated user-guide page <lcss>`.
+
+     Parameters
+     ----------
+     s1
+         A time series.
+
+     s2
+         Another time series.
+
+     eps : float (default: 1.)
+         Maximum matching distance threshold.
+
+     delta : int (default: inf)
+         Maximum distance in the x-axis (time) for the matching to occur.
+
+     Returns
+     -------
+    list of integer pairs
+        Matching path represented as a list of index pairs. In each pair, the
+        first index corresponds to s1 and the second one corresponds to s2
+
+    float
+        Similarity score
+
+    Examples
+    --------
+    >>> path, dist = lcss_path([1, 2, 3], [1., 2., 2., 3.])
+    >>> path
+    [(0, 0), (1, 1), (1, 2), (2, 3)]
+    >>> dist
+    0.0
+    >>> lcss_path([1, 2, 3], [1., 2., 2., 3., 4.])[1]
+    1.0
+
+    See Also
+    --------
+    lcss : Get only the similarity score for LCSS
+
+    References
+    ----------
+     .. [1] M. Vlachos, D. Gunopoulos, and G. Kollios. 2002. "Discovering Similar
+            Multidimensional Trajectories", In Proceedings of the 18th International
+            Conference on Data Engineering (ICDE '02). IEEE Computer Society, USA, 673.
+
+    """
+    s1 = to_time_series(s1, remove_nans=True)
+    s2 = to_time_series(s2, remove_nans=True)
+
+    acc_cost_mat = njit_lcss_accumulated_matrix(s1, s2, eps, delta)
+    path = _return_lcss_path(acc_cost_mat)
+
+    return path, acc_cost_mat[-1, -1]
 
 
 class SoftDTW:
