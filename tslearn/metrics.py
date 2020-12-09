@@ -2160,28 +2160,19 @@ def lcss(s1, s2, eps=1., delta=numpy.inf):
 
     return njit_lcss(s1, s2, eps, delta)
 
-def _return_lcss_path(acc_cost_mat):
-    sz1, sz2 = acc_cost_mat.shape
-    i, j = (sz1 - 1, sz2 - 1)
+
+def _return_lcss_path(s1, s2, acc_cost_mat, sz1, sz2, eps):
+    i, j = (sz1, sz2)
     path = []
-    max_sim = acc_cost_mat[-1][-1]
 
-    while max_sim != 0 or i == 0 or j == 0:
-        arr = numpy.array([acc_cost_mat[i - 1][j - 1],
-                           acc_cost_mat[i - 1][j],
-                           acc_cost_mat[i][j - 1]])
-        max_sim = numpy.max(arr)
-        argmax = numpy.where(arr == max_sim)
-
-        if len(argmax) > 1:
-            path.append((i - 1, j - 1))
-
-        if argmax == 0:
-            i,j = (i - 1, j - 1)
-        elif argmax == 1:
-            i,j = (i - 1, j)
+    while i > 0 and j > 0:
+        if _local_eucl_dist(s1[i - 1], s2[j - 1]) <= eps:
+            path = [(i - 1, j - 1)] + path
+            i, j = (i - 1, j - 1)
+        elif acc_cost_mat[i - 1][j] > acc_cost_mat[i][j-1]:
+            i = i - 1
         else:
-            i,j = (i, j - 1)
+            j = j - 1
     return path
 
 
@@ -2250,10 +2241,13 @@ def lcss_path(s1, s2, eps=1, delta=numpy.inf):
     s1 = to_time_series(s1, remove_nans=True)
     s2 = to_time_series(s2, remove_nans=True)
 
-    acc_cost_mat = njit_lcss_accumulated_matrix(s1, s2, eps, delta)
-    path = _return_lcss_path(acc_cost_mat)
+    l1 = s1.shape[0]
+    l2 = s2.shape[0]
 
-    return path, acc_cost_mat[-1, -1]
+    acc_cost_mat = njit_lcss_accumulated_matrix(s1, s2, eps, delta)
+    path = _return_lcss_path(s1, s2, acc_cost_mat, l1, l2, eps)
+
+    return path, round(float(acc_cost_mat[-1][-1]) / min([l1, l2]), 2)
 
 
 class SoftDTW:
