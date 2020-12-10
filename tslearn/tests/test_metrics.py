@@ -81,6 +81,7 @@ def test_ldtw():
 
 def test_lcss():
     sim = tslearn.metrics.lcss([1, 2, 3], [1., 2., 2., 3.])
+
     np.testing.assert_equal(sim, 1.)
 
     sim = tslearn.metrics.lcss([1, 2, 3], [1., 2., 2., 4.])
@@ -94,21 +95,21 @@ def test_lcss():
 
 
 def test_lcss_path():
-    path, sim = tslearn.metrics.lcss_path([1, 2, 3], [1., 2., 2., 3.])
-    np.testing.assert_equal(sim, 1.)
-    np.testing.assert_equal(path, [(0,1), (1, 2), (2, 3)])
-
-    path, sim = tslearn.metrics.lcss_path([1, 2, 3], [1., 2., 2., 4.])
+    path, sim = tslearn.metrics.lcss_path([1., 2., 3.], [1., 2., 2., 3.])
     np.testing.assert_equal(sim, 1.)
     np.testing.assert_equal(path, [(0, 1), (1, 2), (2, 3)])
 
-    path, sim = tslearn.metrics.lcss_path([1, 2, 3], [-2., 5., 7.], eps=3)
-    np.testing.assert_equal(sim, 0.67)
+    path, sim = tslearn.metrics.lcss_path([1., 2., 3.], [1., 2., 2., 4.])
+    np.testing.assert_equal(sim, 1.)
     np.testing.assert_equal(path, [(0, 1), (1, 2), (2, 3)])
 
-    path, sim = tslearn.metrics.lcss_path([1, 2, 3], [1., 2., 2., 2., 3.], eps=0, delta=1)
+    path, sim = tslearn.metrics.lcss_path([1., 2., 3.], [-2., 5., 7.], eps=3)
     np.testing.assert_equal(sim, 0.67)
-    np.testing.assert_equal(path, [(0, 1), (1, 2), (2, 3)])
+    np.testing.assert_equal(path, [(0, 0), (2, 1)])
+
+    path, sim = tslearn.metrics.lcss_path([1., 2., 3.], [1., 2., 2., 2., 3.], eps=0, delta=1)
+    np.testing.assert_equal(sim, 0.67)
+    np.testing.assert_equal(path, [(0, 0), (1, 1)])
 
 
 def test_constrained_paths():

@@ -36,12 +36,14 @@ def _local_squared_dist(x, y):
         dist += diff * diff
     return dist
 
+
 @njit()
 def _local_eucl_dist(x, y):
     dist = 0.
     for di in range(x.shape[0]):
         dist += abs(x[di] - y[di])
     return dist
+
 
 @njit()
 def njit_accumulated_matrix(s1, s2, mask):
@@ -2039,7 +2041,8 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.):
 
 @njit(nogil=True)
 def njit_lcss_accumulated_matrix(s1, s2, eps, delta):
-    """Compute the longest common subsequence similarity score between two time series.
+    """Compute the longest common subsequence similarity score between
+    two time series.
 
     Parameters
     ----------
@@ -2053,7 +2056,8 @@ def njit_lcss_accumulated_matrix(s1, s2, eps, delta):
         Matching threshold.
 
     delta : int
-        Maximum distance between indexes of matching values.
+        Maximum distance in the x-axis (time) for the matching to occur.
+
     Returns
     -------
     lcss_score : float
@@ -2062,16 +2066,18 @@ def njit_lcss_accumulated_matrix(s1, s2, eps, delta):
     """
     l1 = s1.shape[0]
     l2 = s2.shape[0]
-    M = numpy.full((l1 + 1, l2 + 1), 0)
+    acc_cost_mat = numpy.full((l1 + 1, l2 + 1), 0)
 
     for i in range(1, l1 + 1):
         for j in range(1, l2 + 1):
-            if _local_eucl_dist(s1[i - 1], s2[j - 1]) <= eps and abs(i - j) <= delta:
-                M[i][j] = 1 + M[i - 1][j - 1]
+            if _local_eucl_dist(s1[i - 1], s2[j - 1]) <= eps\
+                    and abs(i - j) <= delta:
+                acc_cost_mat[i][j] = 1 + acc_cost_mat[i - 1][j - 1]
             else:
-                M[i][j] = max(M[i][j - 1], M[i - 1][j])
+                acc_cost_mat[i][j] = max(acc_cost_mat[i][j - 1],
+                                         acc_cost_mat[i - 1][j])
 
-    return M[1:, 1:]
+    return acc_cost_mat
 
 
 @njit(nogil=True)
@@ -2086,6 +2092,12 @@ def njit_lcss(s1, s2, eps, delta):
     s2 : array, shape = (sz2,)
         Second time series
 
+    eps : float (default: 1.)
+        Maximum matching distance threshold.
+
+    delta : int (default: inf)
+        Maximum distance in the x-axis (time) for the matching to occur.
+
     Returns
     -------
     lcss_score : float
@@ -2093,27 +2105,31 @@ def njit_lcss(s1, s2, eps, delta):
     """
     l1 = s1.shape[0]
     l2 = s2.shape[0]
-    M = njit_lcss_accumulated_matrix(s1, s2, eps, delta)
-    return round(float(M[l1][l2]) / min([l1, l2]), 2)
+    acc_cost_mat = njit_lcss_accumulated_matrix(s1, s2, eps, delta)
+
+    return round(float(acc_cost_mat[-1][-1]) / min([l1, l2]), 2)
 
 
 def lcss(s1, s2, eps=1., delta=numpy.inf):
-    r"""Compute the Longest Common Subsequence (LCSS) similarity measure between
-    (possibly multidimensional) time series and return it.
+    r"""Compute the Longest Common Subsequence (LCSS) similarity measure
+    between (possibly multidimensional) time series and return both the
+    path and the similarity.
 
-    LCSS is computed by matching indexes that are met up until the eps threshold,
-    so it leaves some points unmatched and focuses on the similar parts of two sequences.
-    The matching can occur even if the time indexes are different, regulated through the delta
-    parameter that defines how far it can go.
+    LCSS is computed by matching indexes that are met up until the eps
+    threshold, so it leaves some points unmatched and focuses on the
+    similar parts of two sequences. The matching can occur even if the
+    time indexes are different, regulated through the delta parameter
+    that defines how far it can go. To retrieve a meaningful similarity
+    value from the length of the longest common subsequence, the
+    percentage of that value regarding the length of the shortest time
+    series is returned.
 
-    To retrieve a meaningful similarity value from the length of the longest common subsequence,
-    the percentage of that value regarding the length of the shortest time series is returned:
-
-    According to this definition, the values returned by LCSS range from 0 to 1, the highest value
-    taken when two time series fully match, and vice-versa.
-    It is not required that both time series share the same size, but they must
-    be the same dimension. LCSS was originally presented in [1]_ and is
-    discussed in more details in our :ref:`dedicated user-guide page <lcss>`.
+    According to this definition, the values returned by LCSS range from
+    0 to 1, the highest value taken when two time series fully match,
+    and vice-versa. It is not required that both time series share the
+    same size, but they must be the same dimension. LCSS was originally
+    presented in [1]_ and is discussed in more details in our
+    :ref:`dedicated user-guide page <lcss>`.
 
     Parameters
     ----------
@@ -2147,12 +2163,14 @@ def lcss(s1, s2, eps=1., delta=numpy.inf):
 
     See Also
     --------
+    lcss_path: Get both the matching path and the similarity score for LCSS
 
     References
     ----------
-    .. [1] M. Vlachos, D. Gunopoulos, and G. Kollios. 2002. "Discovering Similar
-           Multidimensional Trajectories", In Proceedings of the 18th International
-           Conference on Data Engineering (ICDE '02). IEEE Computer Society, USA, 673.
+     .. [1] M. Vlachos, D. Gunopoulos, and G. Kollios. 2002. "Discovering
+            Similar Multidimensional Trajectories", In Proceedings of the
+            18th International Conference on Data Engineering (ICDE '02).
+            IEEE Computer Society, USA, 673.
 
     """
     s1 = to_time_series(s1, remove_nans=True)
@@ -2161,38 +2179,43 @@ def lcss(s1, s2, eps=1., delta=numpy.inf):
     return njit_lcss(s1, s2, eps, delta)
 
 
-def _return_lcss_path(s1, s2, acc_cost_mat, sz1, sz2, eps):
+@njit()
+def _return_lcss_path(s1, s2, eps, delta, acc_cost_mat, sz1, sz2):
     i, j = (sz1, sz2)
     path = []
 
     while i > 0 and j > 0:
-        if _local_eucl_dist(s1[i - 1], s2[j - 1]) <= eps:
-            path = [(i - 1, j - 1)] + path
+        if _local_eucl_dist(s1[i - 1], s2[j - 1]) <= eps \
+                and abs(i - j) <= delta:
+            path.append((i - 1, j - 1))
             i, j = (i - 1, j - 1)
         elif acc_cost_mat[i - 1][j] > acc_cost_mat[i][j-1]:
             i = i - 1
         else:
             j = j - 1
-    return path
+    return path[::-1]
 
 
 def lcss_path(s1, s2, eps=1, delta=numpy.inf):
-    r"""Compute the Longest Common Subsequence (LCSS) similarity measure between
-     (possibly multidimensional) time series and return it.
+    r"""Compute the Longest Common Subsequence (LCSS) similarity measure
+    between (possibly multidimensional) time series and return both the
+    path and the similarity.
 
-     LCSS is computed by matching indexes that are met up until the eps threshold,
-     so it leaves some points unmatched and focuses on the similar parts of two sequences.
-     The matching can occur even if the time indexes are different, regulated through the delta
-     parameter that defines how far it can go.
+    LCSS is computed by matching indexes that are met up until the eps
+    threshold, so it leaves some points unmatched and focuses on the
+    similar parts of two sequences. The matching can occur even if the
+    time indexes are different, regulated through the delta parameter
+    that defines how far it can go. To retrieve a meaningful similarity
+    value from the length of the longest common subsequence, the
+    percentage of that value regarding the length of the shortest time
+    series is returned.
 
-     To retrieve a meaningful similarity value from the length of the longest common subsequence,
-     the percentage of that value regarding the length of the shortest time series is returned:
-
-     According to this definition, the values returned by LCSS range from 0 to 1, the highest value
-     taken when two time series fully match, and vice-versa.
-     It is not required that both time series share the same size, but they must
-     be the same dimension. LCSS was originally presented in [1]_ and is
-     discussed in more details in our :ref:`dedicated user-guide page <lcss>`.
+    According to this definition, the values returned by LCSS range from
+    0 to 1, the highest value taken when two time series fully match,
+    and vice-versa. It is not required that both time series share the
+    same size, but they must be the same dimension. LCSS was originally
+    presented in [1]_ and is discussed in more details in our
+    :ref:`dedicated user-guide page <lcss>`.
 
      Parameters
      ----------
@@ -2219,12 +2242,12 @@ def lcss_path(s1, s2, eps=1, delta=numpy.inf):
 
     Examples
     --------
-    >>> path, dist = lcss_path([1, 2, 3], [1., 2., 2., 3.])
+    >>> path, sim = lcss_path([1, 2, 3], [1., 2., 2., 3.])
     >>> path
-    [(0, 0), (1, 1), (1, 2), (2, 3)]
-    >>> dist
-    0.0
-    >>> lcss_path([1, 2, 3], [1., 2., 2., 3., 4.])[1]
+    [(0, 1), (1, 2), (2, 3)]
+    >>> sim
+    1.0
+    >>> lcss_path([1, 2, 3], [1., 2., 2., 4.])[1]
     1.0
 
     See Also
@@ -2233,9 +2256,10 @@ def lcss_path(s1, s2, eps=1, delta=numpy.inf):
 
     References
     ----------
-     .. [1] M. Vlachos, D. Gunopoulos, and G. Kollios. 2002. "Discovering Similar
-            Multidimensional Trajectories", In Proceedings of the 18th International
-            Conference on Data Engineering (ICDE '02). IEEE Computer Society, USA, 673.
+     .. [1] M. Vlachos, D. Gunopoulos, and G. Kollios. 2002. "Discovering
+            Similar Multidimensional Trajectories", In Proceedings of the
+            18th International Conference on Data Engineering (ICDE '02).
+            IEEE Computer Society, USA, 673.
 
     """
     s1 = to_time_series(s1, remove_nans=True)
@@ -2245,7 +2269,7 @@ def lcss_path(s1, s2, eps=1, delta=numpy.inf):
     l2 = s2.shape[0]
 
     acc_cost_mat = njit_lcss_accumulated_matrix(s1, s2, eps, delta)
-    path = _return_lcss_path(s1, s2, acc_cost_mat, l1, l2, eps)
+    path = _return_lcss_path(s1, s2, eps, delta, acc_cost_mat, l1, l2)
 
     return path, round(float(acc_cost_mat[-1][-1]) / min([l1, l2]), 2)
 
