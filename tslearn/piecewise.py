@@ -113,18 +113,8 @@ class PiecewiseAggregateApproximation(TransformerMixin, BaseModelPackage):
 
     References
     ----------
-<<<<<<< HEAD
-<<<<<<< HEAD
-    .. [1] E. Keogh, M. Pazzani "Scaling up dynamic time warping for
-           datamining applications," SIGKDD 2000, pp. 285--289.
-=======
     .. [1] E. Keogh & M. Pazzani. Scaling up dynamic time warping for
        datamining applications. SIGKDD 2000, pp. 285--289.
->>>>>>> parent of b466565... Fixing identation of refs in docs
-=======
-    .. [1] E. Keogh & M. Pazzani. Scaling up dynamic time warping for
-           datamining applications. SIGKDD 2000, pp. 285--289.
->>>>>>> parent of a121b7b... trying to reformat 1 reference
     """
 
     def __init__(self, n_segments):
