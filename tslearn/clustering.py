@@ -250,9 +250,9 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
     References
     ----------
     .. [1] `Peter J. Rousseeuw (1987). "Silhouettes: a Graphical Aid to the
-           Interpretation and Validation of Cluster Analysis". Computational
-           and Applied Mathematics 20: 53-65.
-           <http://www.sciencedirect.com/science/article/pii/0377042787901257>`_
+       Interpretation and Validation of Cluster Analysis". Computational
+       and Applied Mathematics 20: 53-65.
+       <http://www.sciencedirect.com/science/article/pii/0377042787901257>`_
     .. [2] `Wikipedia entry on the Silhouette Coefficient
            <https://en.wikipedia.org/wiki/Silhouette_(clustering)>`_
 
@@ -1068,7 +1068,7 @@ class KShape(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
     References
     ----------
     .. [1] J. Paparrizos & L. Gravano. k-Shape: Efficient and Accurate
-           Clustering of Time Series. SIGMOD 2015. pp. 1855-1870.
+       Clustering of Time Series. SIGMOD 2015. pp. 1855-1870.
     """
 
     def __init__(self, n_clusters=3, max_iter=100, tol=1e-6, n_init=1,

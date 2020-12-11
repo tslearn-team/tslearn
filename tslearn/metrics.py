@@ -1717,7 +1717,7 @@ def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
     References
     ----------
     .. [1] Keogh, E. Exact indexing of dynamic time warping. In International
-           Conference on Very Large Data Bases, 2002. pp 406-417.
+       Conference on Very Large Data Bases, 2002. pp 406-417.
     """
     if ts_candidate is None:
         envelope_down, envelope_up = envelope_candidate
@@ -1803,7 +1803,7 @@ def lb_envelope(ts, radius=1):
     References
     ----------
     .. [1] Keogh, E. Exact indexing of dynamic time warping. In International
-           Conference on Very Large Data Bases, 2002. pp 406-417.
+       Conference on Very Large Data Bases, 2002. pp 406-417.
     """
     return njit_lb_envelope(to_time_series(ts), radius=radius)
 
@@ -1861,7 +1861,7 @@ def soft_dtw(ts1, ts2, gamma=1.):
     References
     ----------
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
-           Time-Series," ICML 2017.
+       Time-Series," ICML 2017.
     """
     if gamma == 0.:
         return dtw(ts1, ts2) ** 2
@@ -1923,7 +1923,7 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
     References
     ----------
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
-           Time-Series," ICML 2017.
+       Time-Series," ICML 2017.
     """
     dataset1 = to_time_series_dataset(dataset1, dtype=numpy.float64)
     self_similarity = False
@@ -2018,7 +2018,7 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.):
     References
     ----------
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
-           Time-Series," ICML 2017.
+       Time-Series," ICML 2017.
     """
     dists = cdist_soft_dtw(dataset1, dataset2=dataset2, gamma=gamma)
     d_ii = numpy.diag(dists)

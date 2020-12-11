@@ -29,7 +29,7 @@ image.
 .. [2] Definition of the length of an arc on `Wikipedia
        <https://en.wikipedia.org/wiki/Arc_(geometry)#Length_of_an_arc_of_a_circle>`_.
 
-.. [3] See Hamming distance in `Scipy's documentation
+.. [3] See Hammig distance in `Scipy's documentation
        <https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.hamming.html>`_.
 
 """

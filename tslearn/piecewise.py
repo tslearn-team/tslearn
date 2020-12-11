@@ -113,8 +113,13 @@ class PiecewiseAggregateApproximation(TransformerMixin, BaseModelPackage):
 
     References
     ----------
+<<<<<<< HEAD
     .. [1] E. Keogh, M. Pazzani "Scaling up dynamic time warping for
            datamining applications," SIGKDD 2000, pp. 285--289.
+=======
+    .. [1] E. Keogh & M. Pazzani. Scaling up dynamic time warping for
+       datamining applications. SIGKDD 2000, pp. 285--289.
+>>>>>>> parent of b466565... Fixing identation of refs in docs
     """
 
     def __init__(self, n_segments):
@@ -218,7 +223,7 @@ class PiecewiseAggregateApproximation(TransformerMixin, BaseModelPackage):
         References
         ----------
         .. [1] E. Keogh & M. Pazzani. Scaling up dynamic time warping for
-               datamining applications. SIGKDD 2000, pp. 285--289.
+           datamining applications. SIGKDD 2000, pp. 285--289.
         """
         if not self._is_fitted():
             raise NotFittedError("Model not fitted yet: cannot be used for " +
@@ -245,7 +250,7 @@ class PiecewiseAggregateApproximation(TransformerMixin, BaseModelPackage):
         References
         ----------
         .. [1] E. Keogh & M. Pazzani. Scaling up dynamic time warping for
-               datamining applications. SIGKDD 2000, pp. 285--289.
+           datamining applications. SIGKDD 2000, pp. 285--289.
         """
         paa = self.transform([ts1, ts2])
         return self.distance_paa(paa[0], paa[1])
@@ -327,8 +332,8 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation,
     References
     ----------
     .. [1] J. Lin, E. Keogh, L. Wei, et al. Experiencing SAX: a novel symbolic
-           representation of time series. Data Mining and Knowledge Discovery,
-           2007. vol. 15(107)
+       representation of time series. Data Mining and Knowledge Discovery,
+       2007. vol. 15(107)
     """
     def __init__(self, n_segments, alphabet_size_avg):
         PiecewiseAggregateApproximation.__init__(self, n_segments)
@@ -432,8 +437,8 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation,
         References
         ----------
         .. [1] J. Lin, E. Keogh, L. Wei, et al. Experiencing SAX: a novel
-               symbolic representation of time series.
-               Data Mining and Knowledge Discovery, 2007. vol. 15(107)
+           symbolic representation of time series.
+           Data Mining and Knowledge Discovery, 2007. vol. 15(107)
         """
         if self.size_fitted_ < 0:
             raise ValueError("Model not fitted yet: cannot be used for " +
@@ -460,8 +465,8 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation,
         References
         ----------
         .. [1] J. Lin, E. Keogh, L. Wei, et al. Experiencing SAX: a novel
-               symbolic representation of time series. Data Mining and Knowledge
-               Discovery, 2007. vol. 15(107)
+           symbolic representation of time series. Data Mining and Knowledge
+           Discovery, 2007. vol. 15(107)
         """
         sax = self.transform([ts1, ts2])
         return self.distance_sax(sax[0], sax[1])
@@ -558,7 +563,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
     References
     ----------
     .. [1] S. Malinowski, T. Guyet, R. Quiniou, R. Tavenard. 1d-SAX: a Novel
-           Symbolic Representation for Time Series. IDA 2013.
+       Symbolic Representation for Time Series. IDA 2013.
     """
     def __init__(self, n_segments, alphabet_size_avg, alphabet_size_slope,
                  sigma_l=None):
@@ -708,7 +713,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         References
         ----------
         .. [1] S. Malinowski, T. Guyet, R. Quiniou, R. Tavenard. 1d-SAX: a
-               Novel Symbolic Representation for Time Series. IDA 2013.
+           Novel Symbolic Representation for Time Series. IDA 2013.
         """
         if not self._is_fitted():
             raise NotFittedError("Model not fitted yet: cannot be used for " +
@@ -736,7 +741,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         References
         ----------
         .. [1] S. Malinowski, T. Guyet, R. Quiniou, R. Tavenard. 1d-SAX: a
-               Novel Symbolic Representation for Time Series. IDA 2013.
+           Novel Symbolic Representation for Time Series. IDA 2013.
         """
         sax = self.transform([ts1, ts2])
         return self.distance_1d_sax(sax[0], sax[1])

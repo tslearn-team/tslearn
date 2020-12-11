@@ -107,7 +107,7 @@ class UCR_UEA_datasets:
     References
     ----------
     .. [1] A. Bagnall, J. Lines, W. Vickers and E. Keogh, The UEA & UCR Time
-           Series Classification Repository, www.timeseriesclassification.com
+       Series Classification Repository, www.timeseriesclassification.com
     """
     def __init__(self, use_cache=True):
         self.use_cache = use_cache
@@ -295,7 +295,7 @@ class CachedDatasets:
     References
     ----------
     .. [1] A. Bagnall, J. Lines, W. Vickers and E. Keogh, The UEA & UCR Time
-           Series Classification Repository, www.timeseriesclassification.com
+       Series Classification Repository, www.timeseriesclassification.com
     """
     def __init__(self):
         self.path = os.path.join(os.path.dirname(__file__), ".cached_datasets")

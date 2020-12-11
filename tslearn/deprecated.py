@@ -94,8 +94,8 @@ if True:  # pragma: no cover
         References
         ----------
         .. [1] F. Petitjean, A. Ketterlin & P. Gancarski. A global averaging
-               method for dynamic time warping, with applications to clustering.
-               Pattern Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
+           method for dynamic time warping, with applications to clustering.
+           Pattern Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
 
 
         .. deprecated:: 0.1.15
