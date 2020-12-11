@@ -11,23 +11,54 @@ Changelogs for this project are recorded in this file since v0.2.0.
 ## [Towards v0.4.0]
 
 ### Changed
-* Better initialization schemes for `TimeSeriesKMeans` that lead to more 
+
+* Better initialization schemes for `TimeSeriesKMeans` that lead to more
 consistent clustering runs (helps avoid empty cluster situations)
-* TimeSeriesScalerMeanVariance and TimeSeriesScalerMinMax are now completely sklearn-compliant
-* Bugfix in kneighbors() methods.
+* `TimeSeriesScalerMeanVariance` and `TimeSeriesScalerMinMax` are now
+completely sklearn-compliant
+* The `shapelets` module now requires tensorflow>=2 as dependency (was keras
++ tensorflow==1.* up to version 0.3)
+* `GlobalAlignmentKernelKMeans` is deprecated in favor of `KernelKMeans` that
+accepts various kernels (and "gak" is the default)
+* `ShapeletModel` is now called `LearningShapelets` to be more explicit about
+which shapelet-based classifier is implemented. `ShapeletModel` is still
+available as an alias, but is now considered part of the private API
 
 ### Added
-* `dtw_path_from_metric` allows one to pick a dedicated ground metric on top 
+
+* Python 3.8 support
+* `dtw_path_from_metric` allows one to pick a dedicated ground metric on top
 of which the DTW algorithm can be run
 * Nearest Neighbors on SAX representation (with custom distance)
 * Calculate pairwise distance matrix between SAX representations
-* PiecewiseAggregateApproximation can now handle variable lengths
+* `PiecewiseAggregateApproximation` can now handle variable lengths
+* `ShapeletModel` is now serializable to JSON and pickle formats
+* Multivariate datasets from the UCR/UEA archive are now available through
+`UCR_UEA_datasets().load_dataset(...)`
+* `ShapeletModel` now accepts variable-length time series dataset; a `max_size`
+parameter has been introduced to save room at fit time for possibly longer
+series to be fed to the model afterwards
+* `ShapeletModel` now accepts a `scale` parameter that drives time series
+pre-processing for better convergence
+* `ShapeletModel` now has a public `history_` attribute that stores
+loss and accuracy along fit epochs
+* SAX and variants now accept a `scale` parameter that drives time series
+pre-processing to fit the N(0,1) underlying hypothesis for SAX
+* `TimeSeriesKMeans` now has a `transform` method that returns distances to
+centroids
+* A new `matrix_profile` module is added that allows `MatrixProfile` to be 
+computed using the stumpy library or using a naive "numpy" implementation.
+* A new `early_classification` module is added that offers early classification
+estimators
+* A new `neural_network` module is added that offers Multi Layer Perceptron
+estimators for classification and regression
 
 ### Fixed
 
 * Estimators that can operate on variable length time series now allow 
 for test time datasets to have a different length from the one that was
 passed at fit time
+* Bugfix in `kneighbors()` methods.
 
 ### Removed
 

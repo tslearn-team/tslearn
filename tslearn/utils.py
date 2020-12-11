@@ -9,6 +9,12 @@ from sklearn.utils.validation import check_is_fitted
 import warnings
 
 try:
+    from scipy.io import arff
+    HAS_ARFF = True
+except:
+    HAS_ARFF = False
+
+try:
     from sklearn.utils.estimator_checks import _NotAnArray as NotAnArray
 except ImportError:  # Old sklearn versions
     from sklearn.utils.estimator_checks import NotAnArray
@@ -1408,3 +1414,77 @@ class LabelCategorizer(TransformerMixin, TimeSeriesBaseEstimator):
 
     def _more_tags(self):
         return {'X_types': ['1dlabels']}
+
+
+def _load_arff_uea(dataset_path):
+    """
+    Load arff file for uni/multi variate dataset
+    
+    Parameters
+    ----------
+    dataset_path: string of dataset_path
+        Path to the ARFF file to be read
+
+    Returns
+    -------
+    x: numpy array of shape (n_timeseries, n_timestamps, n_features)
+        Time series dataset
+    y: numpy array of shape (n_timeseries, )
+        Vector of targets
+    """
+    if not HAS_ARFF:
+        raise ImportError("scipy 1.3.0 or newer is required to load "
+                          "time series datasets from arff format.")
+    data, meta = arff.loadarff(dataset_path)
+    names = meta.names()  # ["input", "class"] for multi-variate
+
+    # firstly get y_train
+    y_ = data[names[-1]]  # data["class"]
+    y = numpy.array(y_).astype("str")
+
+    # get x_train
+    if len(names) == 2:  # len=2 => multi-variate
+        x_ = data[names[0]]
+        x_ = numpy.asarray(x_.tolist())
+
+        nb_example = x_.shape[0]
+        nb_channel = x_.shape[1]
+        length_one_channel = len(x_.dtype.descr)
+        x = numpy.empty([nb_example, length_one_channel, nb_channel])
+
+        for i in range(length_one_channel):
+            # x_.dtype.descr: [('t1', '<f8'), ('t2', '<f8'), ('t3', '<f8')]
+            time_stamp = x_.dtype.descr[i][0]  # ["t1", "t2", "t3"]
+            x[:, i, :] = x_[time_stamp]
+
+    else:  # uni-variate situation
+        x_ = data[names[:-1]]
+        x = numpy.asarray(x_.tolist(), dtype=numpy.float32)
+        x = x.reshape(len(x), -1, 1)
+
+    return x, y
+
+
+def _load_txt_uea(dataset_path):
+    """
+    Load arff file for uni/multi variate dataset
+    
+    Parameters
+    ----------
+    dataset_path: string of dataset_path
+        Path to the ARFF file to be read
+
+    Returns
+    -------
+    x: numpy array of shape (n_timeseries, n_timestamps, n_features)
+        Time series dataset
+    y: numpy array of shape (n_timeseries, )
+        Vector of targets
+    """
+    try:
+        data = numpy.loadtxt(dataset_path, delimiter=None)
+        X = to_time_series_dataset(data[:, 1:])
+        y = data[:, 0].astype(numpy.int)
+        return X, y
+    except:
+        return None, None

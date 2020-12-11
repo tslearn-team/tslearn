@@ -11,31 +11,33 @@ from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 from scipy.spatial.distance import cdist as scipy_cdist
 
-from tslearn.metrics import cdist_dtw, cdist_soft_dtw, \
+from tslearn.metrics import cdist_dtw, cdist_ctw, cdist_soft_dtw, \
     cdist_sax, TSLEARN_VALID_METRICS
 from tslearn.piecewise import SymbolicAggregateApproximation
 from tslearn.utils import (to_time_series_dataset, to_sklearn_dataset,
                            check_dims)
 from tslearn.bases import BaseModelPackage
 
-neighbors.VALID_METRICS['brute'].extend(['dtw', 'softdtw', 'sax'])
+neighbors.VALID_METRICS['brute'].extend(['dtw', 'softdtw', 'sax', 'ctw'])
 
 
 class KNeighborsTimeSeriesMixin():
     """Mixin for k-neighbors searches on Time Series."""
 
-    def _sax_preprocess(self, X, n_segments=10, alphabet_size_avg=4):
+    def _sax_preprocess(self, X, n_segments=10, alphabet_size_avg=4,
+                        scale=False):
         # Now SAX-transform the time series
         if not hasattr(self, '_sax') or self._sax is None:
             self._sax = SymbolicAggregateApproximation(
                 n_segments=n_segments,
-                alphabet_size_avg=alphabet_size_avg
+                alphabet_size_avg=alphabet_size_avg,
+                scale=scale
             )
 
         X = to_time_series_dataset(X)
-        X = self._sax.fit_transform(X)
+        X_sax = self._sax.fit_transform(X)
 
-        return X
+        return X_sax
 
     def _get_metric_params(self):
         if self.metric_params is None:
@@ -66,12 +68,14 @@ class KNeighborsTimeSeriesMixin():
         if self._ts_metric == "dtw":
             X_ = cdist_dtw(X, other_X, n_jobs=self.n_jobs,
                            **metric_params)
+        elif self._ts_metric == "ctw":
+            X_ = cdist_ctw(X, other_X, **metric_params)
         elif self._ts_metric == "softdtw":
             X_ = cdist_soft_dtw(X, other_X, **metric_params)
         elif self._ts_metric == "sax":
             X = self._sax_preprocess(X, **metric_params)
             X_ = cdist_sax(X, self._sax.breakpoints_avg_,
-                           self._sax.size_fitted_, other_X,
+                           self._sax._X_fit_dims_[1], other_X,
                            n_jobs=self.n_jobs)
         else:
             raise ValueError("Invalid metric recorded: %s" %
@@ -125,7 +129,8 @@ class KNeighborsTimeSeriesMixin():
                 fit_X = self._X_fit
 
             if (self.metric in TSLEARN_VALID_METRICS or
-                    self.metric in [cdist_dtw, cdist_soft_dtw, cdist_sax]):
+                    self.metric in [cdist_dtw, cdist_ctw,
+                                    cdist_soft_dtw, cdist_sax]):
                 full_dist_matrix = self._precompute_cross_dist(X,
                                                                other_X=fit_X)
             elif self.metric in ["euclidean", "sqeuclidean", "cityblock"]:
@@ -178,8 +183,8 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
     n_neighbors : int (default: 5)
         Number of nearest neighbors to be considered for the decision.
 
-    metric : {'dtw', 'softdtw', 'euclidean', 'sqeuclidean', 'cityblock', \
-    'sax'} (default: 'dtw')
+    metric : {'dtw', 'softdtw', 'ctw', 'euclidean', 'sqeuclidean', \
+              'cityblock',  'sax'} (default: 'dtw')
         Metric to be used at the core of the nearest neighbor procedure.
         DTW and SAX are described in more detail in :mod:`tslearn.metrics`.
         When SAX is provided as a metric, the data is expected to be
@@ -192,6 +197,8 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
         For metrics that accept parallelization of the cross-distance matrix
         computations, `n_jobs` and `verbose` keys passed in `metric_params`
         are overridden by the `n_jobs` and `verbose` arguments.
+        For 'sax' metric, these are hyper-parameters to be passed at the 
+        creation of the `SymbolicAggregateApproximation` object.
 
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel for cross-distance matrix
@@ -318,6 +325,8 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
             if self._ts_metric == "dtw":
                 X_ = cdist_dtw(X, self._ts_fit, n_jobs=self.n_jobs,
                                verbose=self.verbose, **metric_params)
+            elif self._ts_metric == "ctw":
+                X_ = cdist_ctw(X, self._ts_fit, **metric_params)
             elif self._ts_metric == "softdtw":
                 X_ = cdist_soft_dtw(X, self._ts_fit, **metric_params)
             else:
@@ -374,6 +383,8 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         For metrics that accept parallelization of the cross-distance matrix
         computations, `n_jobs` and `verbose` keys passed in `metric_params`
         are overridden by the `n_jobs` and `verbose` arguments.
+        For 'sax' metric, these are hyper-parameters to be passed at the 
+        creation of the `SymbolicAggregateApproximation` object.
 
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel for cross-distance matrix
@@ -477,8 +488,6 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         if self.metric == "precomputed" and hasattr(self, '_ts_metric'):
             self._ts_fit = X
             if self._ts_metric == 'sax':
-                self._sax_mu = None
-                self._sax_sigma = None
                 if self.metric_params is not None:
                     self._ts_fit = self._sax_preprocess(X,
                                                         **self.metric_params)
@@ -585,6 +594,8 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         For metrics that accept parallelization of the cross-distance matrix
         computations, `n_jobs` and `verbose` keys passed in `metric_params`
         are overridden by the `n_jobs` and `verbose` arguments.
+        For 'sax' metric, these are hyper-parameters to be passed at the 
+        creation of the `SymbolicAggregateApproximation` object.
 
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel for cross-distance matrix

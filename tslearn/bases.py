@@ -22,6 +22,7 @@ _DEFAULT_TAGS = {
     'allow_variable_length': False,
 }
 
+
 class TimeSeriesBaseEstimator(BaseEstimator):
     def _more_tags(self):
         return _DEFAULT_TAGS
@@ -45,10 +46,19 @@ class BaseModelPackage:
         """
         pass
 
-    @abstractmethod
     def _get_model_params(self):
         """Get model parameters that are sufficient to recapitulate it."""
-        pass
+        params = {}
+        for attr in dir(self):
+            # Do not save properties
+            if (hasattr(type(self), attr) and
+                    isinstance(getattr(type(self), attr), property)):
+                continue
+            if (not attr.startswith("__") and
+                    attr.endswith("_") and
+                    not callable(getattr(self, attr))):
+                params[attr] = getattr(self, attr)
+        return params
 
     def _to_dict(self, output=None, hyper_parameters_only=False):
         """
@@ -70,6 +80,7 @@ class BaseModelPackage:
         # This is just for json support to convert numpy arrays to lists
         if output == 'json':
             d['model_params'] = BaseModelPackage._listify(d['model_params'])
+            d['hyper_params'] = BaseModelPackage._listify(d['hyper_params'])
 
         elif output == 'hdf5':
             d['hyper_params'] = \
@@ -141,6 +152,15 @@ class BaseModelPackage:
 
         return inst
 
+    @classmethod
+    def _byte2string(cls, model):
+        for param_set in ['hyper_params', 'model_params']:
+            for k in model[param_set].keys():
+                if type(model[param_set][k]) == type(b''):
+                    model[param_set][k] = model[param_set][k].decode('utf-8')
+        return model
+
+
     def to_hdf5(self, path):
         """
         Save model to a HDF5 file.
@@ -181,6 +201,7 @@ class BaseModelPackage:
             raise ImportError(h5py_msg)
 
         model = hdftools.load_dict(path, 'data')
+        model = cls._byte2string(model)
 
         for k in model['hyper_params'].keys():
             if model['hyper_params'][k] == 'None':
@@ -217,12 +238,19 @@ class BaseModelPackage:
         """
 
         model = json.load(open(path, 'r'))
+        model = cls._byte2string(model)
 
         # Convert the lists back to arrays
-        for k in model['model_params'].keys():
-            param = model['model_params'][k]
-            if type(param) is list:
-                model['model_params'][k] = np.array(param)
+        for param_type in ['model_params', 'hyper_params']:
+            for k in model[param_type].keys():
+                param = model[param_type][k]
+                if type(param) is list:
+                    arr = np.array(param)
+                    if arr.dtype == object:
+                        # Then maybe it was rather a list of arrays
+                        # This is very hacky...
+                        arr = [np.array(p) for p in param]
+                    model[param_type][k] = arr
 
         return cls._organize_model(cls, model)
 
@@ -254,4 +282,5 @@ class BaseModelPackage:
         Model instance
         """
         model = pickle.load(open(path, 'rb'))
+        model = cls._byte2string(model)
         return cls._organize_model(cls, model)

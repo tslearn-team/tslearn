@@ -16,6 +16,8 @@ jobs:
         python.version: '3.6'
       Python37:
         python.version: '3.7'
+      Python38:
+        python.version: '3.8'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -44,9 +46,9 @@ jobs:
       python -m pip install pytest pytest-azurepipelines
       if [[ "$(python.version)" == '3.5' ]];
       then
-        python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py -k 'not test_all_estimators';
+        python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/deprecated.py -k 'not test_all_estimators';
       else
-        python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py;
+        python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/deprecated.py;
       fi
     displayName: 'Test'
 
@@ -85,15 +87,13 @@ jobs:
       set -xe
       python -m pip install pytest pytest-azurepipelines
       pip install coverage==4.3 "pytest-cov<2.6";
-      pip install cesium pandas;
-      python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/docs --ignore tslearn/deprecated.py --cov=tslearn;
+      pip install cesium pandas stumpy;
+      python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/deprecated.py --cov=tslearn;
     displayName: 'Test'
 
   # Upload coverage to codecov.io
   - script: |
-      pip install codeclimate-test-reporter codecov
-      codeclimate-test-reporter;
-      codecov -t $(CODECLIMATE_REPO_TOKEN);
+      bash <(curl -s https://codecov.io/bash) -v
     displayName: 'Upload coverage to codecov.io'
 
 
@@ -108,6 +108,8 @@ jobs:
         python.version: '3.6'
       Python37:
         python.version: '3.7'
+      Python38:
+        python.version: '3.8'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -134,7 +136,7 @@ jobs:
   - script: |
       set -xe
       python -m pip install pytest pytest-azurepipelines
-      python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/docs -k 'not test_all_estimators'
+      python -m pytest -v tslearn/ --doctest-modules -k 'not test_all_estimators'
     displayName: 'Test'
 
 
@@ -152,6 +154,9 @@ jobs:
       Python37:
         python_ver: '37'
         python.version: '3.7'
+      Python38:
+        python_ver: '38'
+        python.version: '3.8'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -174,5 +179,5 @@ jobs:
   
   - script: |
       python -m pip install pytest pytest-azurepipelines
-      python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/docs --ignore tslearn/tests/test_estimators.py
+      python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/tests/test_estimators.py
     displayName: 'Test'

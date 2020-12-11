@@ -2,37 +2,36 @@ import numpy as np
 import pytest
 from sklearn.model_selection import cross_validate
 
-from tslearn.utils import to_time_series
+from tslearn.utils import to_time_series, to_time_series_dataset
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 def test_shapelets():
-    pytest.importorskip('keras')
-    from tslearn.shapelets import ShapeletModel
+    pytest.importorskip('tensorflow')
+    from tslearn.shapelets import LearningShapelets
+    import tensorflow as tf
 
     n, sz, d = 15, 10, 2
     rng = np.random.RandomState(0)
     time_series = rng.randn(n, sz, d)
     y = rng.randint(2, size=n)
-    clf = ShapeletModel(n_shapelets_per_size={2: 5},
-                        max_iter=1,
-                        verbose=0,
-                        optimizer="sgd",
-                        random_state=0)
-    clf.fit(time_series, y)
-    np.testing.assert_allclose(clf.shapelets_[0],
-                               np.array([[0.56373, 0.494684],
-                                         [1.235707, 1.119235]]),
-                               atol=1e-2)
-    np.testing.assert_allclose(clf.predict(time_series),
-                               np.array([0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0,
-                                         1, 0]))
+    clf = LearningShapelets(n_shapelets_per_size={2: 5},
+                            max_iter=1,
+                            verbose=0,
+                            optimizer="sgd",
+                            random_state=0)
 
     cross_validate(clf, time_series, y, cv=2)
 
-    model = ShapeletModel(n_shapelets_per_size={3: 2, 4: 1},
-                          max_iter = 1)
+    clf = LearningShapelets(n_shapelets_per_size={2: 5},
+                            max_iter=1,
+                            verbose=0,
+                            optimizer=tf.optimizers.Adam(.1),
+                            random_state=0)
+    cross_validate(clf, time_series, y, cv=2)
+
+    model = LearningShapelets(n_shapelets_per_size={3: 2, 4: 1}, max_iter=1)
     model.fit(time_series, y)
     for shp, shp_bis in zip(model.shapelets_,
                             model.shapelets_as_time_series_):
@@ -40,10 +39,10 @@ def test_shapelets():
                                    to_time_series(shp_bis, remove_nans=True))
 
     # Test set_weights / get_weights
-    clf = ShapeletModel(n_shapelets_per_size={2: 5},
-                        max_iter=1,
-                        verbose=0,
-                        random_state=0)
+    clf = LearningShapelets(n_shapelets_per_size={2: 5},
+                            max_iter=1,
+                            verbose=0,
+                            random_state=0)
     clf.fit(time_series, y)
     preds_before = clf.predict_proba(time_series)
     weights = clf.get_weights()
@@ -54,36 +53,59 @@ def test_shapelets():
     np.testing.assert_allclose(preds_before,
                                clf.predict_proba(time_series))
 
+def test_shapelet_lengths():
+    pytest.importorskip('tensorflow')
+    from tslearn.shapelets import LearningShapelets
 
-def test_serializable_shapelets():
-    pytest.importorskip('keras')
-    from tslearn.shapelets import SerializableShapeletModel
-
-    n, sz, d = 15, 10, 2
-    rng = np.random.RandomState(0)
-    time_series = rng.randn(n, sz, d)
-    y = rng.randint(2, size=n)
-    clf = SerializableShapeletModel(n_shapelets_per_size={2: 5},
-                                    max_iter=1,
-                                    verbose=0,
-                                    learning_rate=0.01,
-                                    random_state=0)
+    # Test variable-length
+    y = [0, 1]
+    time_series = to_time_series_dataset([[1, 2, 3, 4, 5], [3, 2, 1]])
+    clf = LearningShapelets(n_shapelets_per_size={3: 1},
+                            max_iter=1,
+                            verbose=0,
+                            random_state=0)
     clf.fit(time_series, y)
-    np.testing.assert_allclose(clf.shapelets_[0],
-                               np.array([[0.563342, 0.494981],
-                                         [1.236804, 1.11963]]),
-                               atol=1e-2)
-    np.testing.assert_allclose(clf.predict(time_series),
-                               np.array([0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0,
-                                         1, 0]))
 
-    params = clf.get_params(deep=True)
-    for s1, s2 in zip(sorted(params.keys()),
-                      sorted(['batch_size', 'learning_rate', 'max_iter',
-                              'n_shapelets_per_size', 'random_state',
-                              'total_lengths', 'shapelet_length', 'verbose',
-                              'verbose_level', 'weight_regularizer'])):
-        np.testing.assert_string_equal(s1, s2)
+    weights_shapelet = [np.array([[1, 2, 3]])]
+    clf.set_weights(weights_shapelet, layer_name="shapelets_0_0")
+    tr = clf.transform(time_series)
+    np.testing.assert_allclose(tr,
+                               np.array([[0.], [8. / 3]]))
 
-    from sklearn.model_selection import cross_validate
-    cross_validate(clf, time_series, y, cv=2)
+    # Test max_size to predict longer series than those passed at fit time
+    y = [0, 1]
+    time_series = to_time_series_dataset([[1, 2, 3, 4, 5], [3, 2, 1]])
+    clf = LearningShapelets(n_shapelets_per_size={3: 1},
+                            max_iter=1,
+                            verbose=0,
+                            max_size=6,
+                            random_state=0)
+    clf.fit(time_series[:, :-1], y)  # Fit with size 4
+    weights_shapelet = [np.array([[1, 2, 3]])]
+    clf.set_weights(weights_shapelet, layer_name="shapelets_0_0")
+    tr = clf.transform(time_series)
+    np.testing.assert_allclose(tr,
+                               np.array([[0.], [8. / 3]]))
+
+def test_series_lengths():
+    pytest.importorskip('tensorflow')
+    from tslearn.shapelets import LearningShapelets
+
+    # Test long shapelets
+    y = [0, 1]
+    time_series = to_time_series_dataset([[1, 2, 3, 4, 5], [3, 2, 1]])
+    clf = LearningShapelets(n_shapelets_per_size={8: 1},
+                            max_iter=1,
+                            verbose=0,
+                            random_state=0)
+    np.testing.assert_raises(ValueError, clf.fit, time_series, y)
+
+    # Test small max_size
+    y = [0, 1]
+    time_series = to_time_series_dataset([[1, 2, 3, 4, 5], [3, 2, 1]])
+    clf = LearningShapelets(n_shapelets_per_size={3: 1},
+                            max_iter=1,
+                            verbose=0,
+                            max_size=4,
+                            random_state=0)
+    np.testing.assert_raises(ValueError, clf.fit, time_series, y)

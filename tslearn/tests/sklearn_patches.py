@@ -164,7 +164,6 @@ def check_clustering(name, clusterer_orig, readonly_memmap=False):
         n_clusters = getattr(clusterer, 'n_clusters')
         assert_greater_equal(n_clusters - 1, labels_sorted[-1])
 
-
 @ignore_warnings(category=(DeprecationWarning, FutureWarning))
 def check_non_transf_est_n_iter(name, estimator_orig):
     # Test that estimators that are not transformers with a parameter
@@ -239,10 +238,7 @@ def check_fit_idempotent(name, estimator_orig):
 
 def check_classifiers_classes(name, classifier_orig):
     # Case of shapelet models
-    if name == 'SerializableShapeletModel':
-        raise SkipTest('Skipping check_classifiers_classes for shapelets'
-                       ' due to convergence issues...')
-    elif name == 'ShapeletModel':
+    if name in ['LearningShapelets', 'TimeSeriesMLPClassifier']:
         X_multiclass, y_multiclass = _create_large_ts_dataset()
         classifier_orig = clone(classifier_orig)
         classifier_orig.max_iter = 1000
@@ -290,10 +286,7 @@ def check_classifiers_classes(name, classifier_orig):
 def check_classifiers_train(name, classifier_orig, readonly_memmap=False,
                             X_dtype='float64'):
     # Case of shapelet models
-    if name == 'SerializableShapeletModel':
-        raise SkipTest('Skipping check_classifiers_classes for shapelets'
-                       ' due to convergence issues...')
-    elif name == 'ShapeletModel':
+    if name in ['LearningShapelets', 'TimeSeriesMLPClassifier']:
         X_m, y_m = _create_large_ts_dataset()
         classifier_orig = clone(classifier_orig)
         classifier_orig.max_iter = 1000
@@ -469,6 +462,18 @@ def check_supervised_y_2d(name, estimator_orig):
                " was passed when a 1d array was expected" in msg
         assert_allclose(y_pred.ravel(), y_pred_2d.ravel())
 
+@ignore_warnings(category=FutureWarning)
+def check_classifier_data_not_an_array(name, estimator_orig):
+    X, y = _create_large_ts_dataset()
+    y = enforce_estimator_tags_y(estimator_orig, y)
+    for obj_type in ["NotAnArray", "PandasDataframe"]:
+        if obj_type == "PandasDataframe":
+            X_ = X[:, :, 0]  # pandas df cant be 3d
+        else:
+            X_ = X
+        check_estimators_data_not_an_array(name, estimator_orig, X_, y,
+                                           obj_type)
+
 
 @ignore_warnings(category=DeprecationWarning)
 def check_regressor_data_not_an_array(name, estimator_orig):
@@ -536,20 +541,40 @@ def check_pipeline_consistency(name, estimator_orig):
 
 
 @ignore_warnings(category=(DeprecationWarning, FutureWarning))
-def check_different_length_fit_predict(name, estimator):
+def check_different_length_fit_predict_transform(name, estimator):
     # Check if classifier can predict a dataset that does not have the same
     # number of timestamps as the data passed at fit time
+    X, y = _create_small_ts_dataset()
 
     # Default for kmeans is Euclidean
     if isinstance(estimator, TimeSeriesKMeans):
         new_estimator = clone(estimator)
         new_estimator.metric = "dtw"
+    elif name == "LearningShapelets":
+        # Prepare shapelet model for long series
+        new_estimator = clone(estimator)
+        new_estimator.max_size = 2 * X.shape[1]
     else:
         new_estimator = estimator
 
-    X, y = _create_small_ts_dataset()
+    new_estimator.fit(X, y)
+
     X2 = np.hstack((X, X))
-    new_estimator.fit(X, y).predict(X2)
+    X3 = np.stack((X[:, :, 0], X[:, :, 0]), axis=-1)
+    check_methods = ["predict", "transform", "decision_function",
+                     "predict_proba"]
+    for func_name in check_methods:
+        func = getattr(estimator, func_name, None)
+        if func is not None:
+            method = getattr(new_estimator, func_name)
+            method(X2)
+
+            with assert_raises(
+                ValueError,
+                msg="The estimator {} does not raise an error when number of "
+                    "features (last dimension) is different between "
+                    "fit and {}.".format(name, func_name)):
+                method(X3)
 
 
 def yield_all_checks(name, estimator):
@@ -571,7 +596,11 @@ def yield_all_checks(name, estimator):
     if is_regressor(estimator):
         yield from _yield_regressor_checks(name, estimator)
     if hasattr(estimator, 'transform'):
-        yield from _yield_transformer_checks(name, estimator)
+        if not tags["allow_variable_length"]:
+            # Transformer tests ensure that shapes are the same at fit and
+            # transform time, hence we need to skip them for estimators that
+            # allow variable-length inputs
+            yield from _yield_transformer_checks(name, estimator)
     if isinstance(estimator, ClusterMixin):
         yield from _yield_clustering_checks(name, estimator)
     if is_outlier_detector(estimator):
@@ -591,5 +620,8 @@ def yield_all_checks(name, estimator):
     yield check_dont_overwrite_parameters
     yield check_fit_idempotent
 
-    if tags["allow_variable_length"]:
-        yield check_different_length_fit_predict
+    if (is_classifier(estimator) or
+            is_regressor(estimator) or
+            isinstance(estimator, ClusterMixin)):
+        if tags["allow_variable_length"]:
+            yield check_different_length_fit_predict_transform

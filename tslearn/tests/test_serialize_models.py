@@ -8,9 +8,9 @@ from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 
 from tslearn.neighbors import KNeighborsTimeSeries, \
     KNeighborsTimeSeriesClassifier
-from tslearn.shapelets import ShapeletModel, SerializableShapeletModel
+from tslearn.shapelets import LearningShapelets, SerializableShapeletModel
 from tslearn.clustering import KShape, TimeSeriesKMeans, \
-    GlobalAlignmentKernelKMeans
+    KernelKMeans
 from tslearn.generators import random_walks
 from tslearn.piecewise import PiecewiseAggregateApproximation, \
     SymbolicAggregateApproximation, OneD_SymbolicAggregateApproximation
@@ -109,7 +109,7 @@ def _check_params_predict(model, X, test_methods, check_params_fun=None,
 
         # check that hyper-params are the same
         hyper_params = model.get_params()
-        for p in hyper_params .keys():
+        for p in hyper_params.keys():
             numpy.testing.assert_equal(getattr(model, p), getattr(sm, p))
 
     clear_tmp()
@@ -120,8 +120,8 @@ def test_serialize_global_alignment_kernel_kmeans():
     rng = numpy.random.RandomState(0)
     X = rng.randn(n, sz, d)
 
-    gak_km = GlobalAlignmentKernelKMeans(n_clusters=3, verbose=False,
-                                         max_iter=5)
+    gak_km = KernelKMeans(n_clusters=3, verbose=False,
+                          max_iter=5)
 
     _check_not_fitted(gak_km)
 
@@ -149,7 +149,7 @@ def test_serialize_timeserieskmeans():
 
     sdtw_km = TimeSeriesKMeans(n_clusters=3,
                                metric="softdtw",
-                               metric_params={"gamma_sdtw": .01},
+                               metric_params={"gamma": .01},
                                verbose=True)
 
     _check_not_fitted(sdtw_km)
@@ -172,6 +172,17 @@ def test_serialize_kshape():
     ks.fit(X)
 
     _check_params_predict(ks, X, ['predict'])
+
+    seed_ixs = [numpy.random.randint(0, X.shape[0] - 1) for i in range(3)]
+    seeds = numpy.array([X[i] for i in seed_ixs])
+
+    ks_seeded = KShape(n_clusters=3, verbose=True, init=seeds)
+
+    _check_not_fitted(ks_seeded)
+
+    ks_seeded.fit(X)
+
+    _check_params_predict(ks_seeded, X, ['predict'])
 
 
 def test_serialize_knn():
@@ -273,7 +284,7 @@ def test_serialize_shapelets():
     for y in [rng.randint(low=0, high=3, size=n),
               rng.choice(["one", "two", "three"], size=n)]:
 
-        shp = ShapeletModel(max_iter=1)
+        shp = LearningShapelets(max_iter=1)
         _check_not_fitted(shp)
         shp.fit(X, y)
         _check_params_predict(shp, X, ['predict'],

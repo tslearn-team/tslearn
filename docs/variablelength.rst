@@ -1,0 +1,167 @@
+Methods for variable-length time series
+=======================================
+
+This page lists machine learning methods in `tslearn` that are able to deal
+with datasets containing time series of different lengths.
+We also provide example usage for these methods using the following
+variable-length time series dataset:
+
+.. code-block:: python
+
+    from tslearn.utils import to_time_series_dataset
+    X = to_time_series_dataset([[1, 2, 3, 4], [1, 2, 3], [2, 5, 6, 7, 8, 9]])
+    y = [0, 0, 1]
+
+Classification
+--------------
+
+* :class:`tslearn.neighbors.KNeighborsTimeSeriesClassifier`
+* :class:`tslearn.svm.TimeSeriesSVC`
+* :class:`tslearn.shapelets.LearningShapelets`
+
+Examples
+~~~~~~~~
+
+.. code-block:: python
+
+    from tslearn.neighbors import KNeighborsTimeSeriesClassifier
+    knn = KNeighborsTimeSeriesClassifier(n_neighbors=2)
+    knn.fit(X, y)
+
+.. code-block:: python
+
+    from tslearn.svm import TimeSeriesSVC
+    clf = TimeSeriesSVC(C=1.0, kernel="gak")
+    clf.fit(X, y)
+
+.. code-block:: python
+
+    from tslearn.shapelets import LearningShapelets
+    clf = LearningShapelets(n_shapelets_per_size={3: 1})
+    clf.fit(X, y)
+
+Regression
+----------
+
+* :class:`tslearn.svm.TimeSeriesSVR`
+
+Examples
+~~~~~~~~
+
+.. code-block:: python
+
+    from tslearn.svm import TimeSeriesSVR
+    clf = TimeSeriesSVR(C=1.0, kernel="gak")
+    y_reg = [1.3, 5.2, -12.2]
+    clf.fit(X, y_reg)
+
+Nearest-neighbor search
+-----------------------
+
+* :class:`tslearn.neighbors.KNeighborsTimeSeries`
+
+Examples
+~~~~~~~~
+
+.. code-block:: python
+
+    from tslearn.neighbors import KNeighborsTimeSeries
+    knn = KNeighborsTimeSeries(n_neighbors=2)
+    knn.fit(X)
+    knn.kneighbors()    # Search for neighbors using series from `X` as queries
+    knn.kneighbors(X2)  # Search for neighbors using series from `X2` as queries
+
+Clustering
+----------
+
+* :class:`tslearn.clustering.KernelKMeans`
+* :class:`tslearn.clustering.TimeSeriesKMeans`
+* :class:`tslearn.clustering.silhouette_score`
+
+Examples
+~~~~~~~~
+
+.. code-block:: python
+
+    from tslearn.clustering import KernelKMeans
+    gak_km = KernelKMeans(n_clusters=2, kernel="gak")
+    labels_gak = gak_km.fit_predict(X)
+
+.. code-block:: python
+
+    from tslearn.clustering import TimeSeriesKMeans
+    km = TimeSeriesKMeans(n_clusters=2, metric="dtw")
+    labels = km.fit_predict(X)
+    km_bis = TimeSeriesKMeans(n_clusters=2, metric="softdtw")
+    labels_bis = km_bis.fit_predict(X)
+
+.. code-block:: python
+
+    from tslearn.clustering import TimeSeriesKMeans, silhouette_score
+    km = TimeSeriesKMeans(n_clusters=2, metric="dtw")
+    labels = km.fit_predict(X)
+    silhouette_score(X, labels, metric="dtw")
+
+.. _variable-length-barycenter:
+
+Barycenter computation
+----------------------
+
+
+* :class:`tslearn.barycenters.dtw_barycenter_averaging`
+* :class:`tslearn.barycenters.softdtw_barycenter`
+
+Examples
+~~~~~~~~
+
+.. code-block:: python
+
+    from tslearn.barycenters import dtw_barycenter_averaging
+    bar = dtw_barycenter_averaging(X, barycenter_size=3)
+
+.. code-block:: python
+
+    from tslearn.barycenters import softdtw_barycenter
+    from tslearn.utils import ts_zeros
+    initial_barycenter = ts_zeros(sz=5)
+    bar = softdtw_barycenter(X, init=initial_barycenter)
+
+Model selection
+---------------
+
+Also, model selection tools offered by ``scikit-learn`` can be used on
+variable-length data, in a standard way, such as:
+
+.. code-block:: python
+
+    from sklearn.model_selection import KFold, GridSearchCV
+    from tslearn.neighbors import KNeighborsTimeSeriesClassifier
+
+    knn = KNeighborsTimeSeriesClassifier(metric="dtw")
+    p_grid = {"n_neighbors": [1, 5]}
+
+    cv = KFold(n_splits=2, shuffle=True, random_state=0)
+    clf = GridSearchCV(estimator=knn, param_grid=p_grid, cv=cv)
+    clf.fit(X, y)
+
+
+Resampling
+----------
+
+* :class:`tslearn.preprocessing.TimeSeriesResampler`
+
+Finally, if you want to use a method that cannot run on variable-length time
+series, one option would be to first resample your data so that all your
+time series have the same length and then run your method on this resampled 
+version of your dataset.
+
+Note however that resampling will introduce temporal distortions in your 
+data. Use with great care!
+
+.. code-block:: python
+
+    from tslearn.preprocessing import TimeSeriesResampler
+
+    resampled_X = TimeSeriesResampler(sz=X.shape[1]).fit_transform(X)
+
+

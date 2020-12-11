@@ -1,5 +1,6 @@
 """
-The :mod:`tslearn.preprocessing` module gathers time series scalers.
+The :mod:`tslearn.preprocessing` module gathers time series scalers and 
+resamplers.
 """
 
 import numpy
@@ -106,26 +107,12 @@ class TimeSeriesResampler(TransformerMixin):
 
 class TimeSeriesScalerMinMax(TransformerMixin, TimeSeriesBaseEstimator):
     """Scaler for time series. Scales time series so that their span in each
-    dimension is between ``min`` and ``max``.
+    dimension is between ``min`` and ``max`` where ``value_range=(min, max)``.
 
     Parameters
     ----------
     value_range : tuple (default: (0., 1.))
         The minimum and maximum value for the output time series.
-
-    min : float (default: 0.)
-        Minimum value for output time series.
-
-        .. deprecated:: 0.2
-            min is deprecated in version 0.2 and will be
-            removed in 0.4. Use value_range instead.
-
-    max : float (default: 1.)
-        Maximum value for output time series.
-
-        .. deprecated:: 0.2
-            min is deprecated in version 0.2 and will be
-            removed in 0.4. Use value_range instead.
 
     Notes
     -----
@@ -146,10 +133,8 @@ class TimeSeriesScalerMinMax(TransformerMixin, TimeSeriesBaseEstimator):
             [ 1.],
             [ 2.]]])
     """
-    def __init__(self, value_range=(0., 1.), min=None, max=None):
+    def __init__(self, value_range=(0., 1.)):
         self.value_range = value_range
-        self.min = min
-        self.max = max
 
     def fit(self, X, y=None, **kwargs):
         """A dummy method such that it complies to the sklearn requirements.
@@ -200,19 +185,6 @@ class TimeSeriesScalerMinMax(TransformerMixin, TimeSeriesBaseEstimator):
             Rescaled time series dataset.
         """
         value_range = self.value_range
-        if self.min is not None:
-            warnings.warn(
-                "'min' is deprecated in version 0.2 and will be "
-                "removed in 0.4. Use value_range instead.",
-                DeprecationWarning, stacklevel=2)
-            value_range = (self.min, value_range[1])
-
-        if self.max is not None:
-            warnings.warn(
-                "'max' is deprecated in version 0.2 and will be "
-                "removed in 0.4. Use value_range instead.",
-                DeprecationWarning, stacklevel=2)
-            value_range = (value_range[0], self.max)
 
         if value_range[0] >= value_range[1]:
             raise ValueError("Minimum of desired range must be smaller"
@@ -319,8 +291,8 @@ class TimeSeriesScalerMeanVariance(TransformerMixin, TimeSeriesBaseEstimator):
         X = check_array(X, allow_nd=True, force_all_finite=False)
         X_ = to_time_series_dataset(X)
         X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, extend=False)
-        mean_t = numpy.nanmean(X_, axis=1)[:, numpy.newaxis, :]
-        std_t = numpy.nanstd(X_, axis=1)[:, numpy.newaxis, :]
+        mean_t = numpy.nanmean(X_, axis=1, keepdims=True)
+        std_t = numpy.nanstd(X_, axis=1, keepdims=True)
         std_t[std_t == 0.] = 1.
 
         X_ = (X_ - mean_t) * self.std / std_t + self.mu

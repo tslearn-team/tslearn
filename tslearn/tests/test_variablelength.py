@@ -5,7 +5,7 @@ from sklearn.model_selection import cross_val_score, KFold
 from tslearn.neighbors import KNeighborsTimeSeriesClassifier
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.svm import TimeSeriesSVC, TimeSeriesSVR
-from tslearn.clustering import GlobalAlignmentKernelKMeans, TimeSeriesKMeans
+from tslearn.clustering import KernelKMeans, TimeSeriesKMeans
 from tslearn.utils import to_time_series_dataset
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -59,7 +59,7 @@ def test_variable_length_clustering():
                                 [3, 5, 6, 7, 8]])
     rng = np.random.RandomState(0)
 
-    clf = GlobalAlignmentKernelKMeans(n_clusters=2, random_state=rng)
+    clf = KernelKMeans(n_clusters=2, random_state=rng)
     clf.fit(X)
 
     clf = TimeSeriesKMeans(n_clusters=2, metric="dtw", random_state=rng)

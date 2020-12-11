@@ -1,0 +1,16 @@
+Cython
+numpy
+scipy
+scikit-learn
+numba
+sphinx>=1.6.1
+ipykernel
+nbsphinx
+sphinx-gallery
+pillow
+tensorflow>=2
+Pygments
+numba
+sphinx_bootstrap_theme
+git+git://github.com/numpy/numpydoc@master
+matplotlib

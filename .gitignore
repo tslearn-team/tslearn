@@ -66,9 +66,6 @@ instance/
 # Scrapy stuff:
 .scrapy
 
-# Sphinx documentation
-tslearn/docs/_build/
-
 # PyBuilder
 target/
 
@@ -101,16 +98,16 @@ ENV/
 # Own stuff
 .idea/
 .DS_Store
-tslearn/examples
-tslearn/docs/auto_examples
+local_examples/
 .pytest_cache
 .mypy_cache
+.vscode
+.pre-commit-config.yaml
 
 # Test leftovers
 tmp-tslearn-test.txt
 
 # Documentation
-tslearn/docs/_build/
-tslearn/docs/auto_examples/
-tslearn/docs/gen_modules/
-tslearn/docs/examples/misc/ks_trained.hdf5
+docs/_build/
+docs/auto_examples/
+docs/examples/misc/ks_trained.hdf5
