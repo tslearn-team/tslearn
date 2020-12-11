@@ -225,6 +225,7 @@ class TimeSeriesScalerMinMax(TransformerMixin, TimeSeriesBaseEstimator):
         min_t = numpy.nanmin(X_, axis=1)[:, numpy.newaxis, :]
         max_t = numpy.nanmax(X_, axis=1)[:, numpy.newaxis, :]
         range_t = max_t - min_t
+        range_t[range_t == 0.] = 1.
         nomin = (X_ - min_t) * (value_range[1] - value_range[0])
         X_ = nomin / range_t + value_range[0]
         return X_
