@@ -65,10 +65,10 @@ def extract_from_zip_url(url, target_dir=None, verbose=False):
 
 
 def in_file_string_replace(filename, old_string, new_string):
-    """ String replacement within a text file. It is used to fix typos in
+    """String replacement within a text file. It is used to fix typos in
     downloaded csv file.
-    The code was modified from "https://stackoverflow.com/questions/4128144/\
-    replace-string-within-file-contents"
+
+    The code was modified from "https://stackoverflow.com/questions/4128144/"
 
     Parameters
     ----------
@@ -78,7 +78,6 @@ def in_file_string_replace(filename, old_string, new_string):
         The string to be replaced in the file.
     new_string : str
         The new string that will replace old_string
-
     """
     with open(filename) as f:
         s = f.read()
@@ -191,19 +190,19 @@ class UCR_UEA_datasets:
         >>> len(dict_acc)
         85
         """
-        d_out = {}
-        for perfs_dict in csv.DictReader(
-                open(self._baseline_scores_filename, "r"), delimiter=","):
-            dataset_name = perfs_dict[""]
-            if list_datasets is None or dataset_name in list_datasets:
-                d_out[dataset_name] = {}
-                for m in perfs_dict.keys():
-                    if m != "" and (list_methods is None or m in list_methods):
-                        try:
-                            d_out[dataset_name][m] = float(perfs_dict[m])
-                        except ValueError:  # Missing score case (score == "")
-                            pass
-        return d_out
+        with open(self._list_multivariate_filename, "r") as f:
+            d_out = dict()
+            for perfs_dict in csv.DictReader(f, delimiter=","):
+                dataset_name = perfs_dict[""]
+                if list_datasets is None or dataset_name in list_datasets:
+                    d_out[dataset_name] = {}
+                    for m in perfs_dict.keys():
+                        if m != "" and (list_methods is None or m in list_methods):
+                            try:
+                                d_out[dataset_name][m] = float(perfs_dict[m])
+                            except ValueError:  # Missing score case (score == "")
+                                pass
+            return d_out
 
     def list_univariate_datasets(self):
         """List univariate datasets in the UCR/UEA archive.
@@ -213,12 +212,17 @@ class UCR_UEA_datasets:
         >>> l = UCR_UEA_datasets().list_univariate_datasets()
         >>> len(l)
         85
+
+        Returns
+        -------
+        list of str:
+            A list of the names of all univariate dataset namas.
         """
-        datasets = []
-        for perfs_dict in csv.DictReader(
-                open(self._baseline_scores_filename, "r"), delimiter=","):
-            datasets.append(perfs_dict[""])
-        return datasets
+        with open(self._baseline_scores_filename, "r") as f:
+            return [
+                perfs_dict[""]  # get the dataset name
+                for perfs_dict in csv.DictReader(f, delimiter=",")
+            ]
 
     def list_multivariate_datasets(self):
         """List multivariate datasets in the UCR/UEA archive.
@@ -228,12 +232,17 @@ class UCR_UEA_datasets:
         >>> l = UCR_UEA_datasets().list_multivariate_datasets()
         >>> "PenDigits" in l
         True
+
+        Returns
+        -------
+        list of str:
+            A list of the names of all multivariate dataset namas.
         """
-        datasets = []
-        for infos_dict in csv.DictReader(
-                open(self._list_multivariate_filename, "r"), delimiter=","):
-            datasets.append(infos_dict["Problem"])
-        return datasets
+        with open(self._list_multivariate_filename, "r") as f:
+            return [
+                infos_dict["Problem"]  # get the dataset name
+                for infos_dict in csv.DictReader(f, delimiter=",")
+            ]
 
     def list_datasets(self):
         """List datasets (both univariate and multivariate) available in the 
@@ -248,6 +257,11 @@ class UCR_UEA_datasets:
         True
         >>> "DatasetThatDoesNotExist" in l
         False
+
+        Returns
+        -------
+        list of str:
+            A list of names of all (univariate and multivariate) dataset namas.
         """
         return (self.list_univariate_datasets()
                 + self.list_multivariate_datasets())
@@ -380,7 +394,7 @@ class UCR_UEA_datasets:
 
         Returns
         -------
-        bool :
+        bool
             if there are both training and test files with the specified
             file extension
         """
@@ -453,6 +467,11 @@ class CachedDatasets:
         (100, 275, 1)
         >>> print(y_train.shape)
         (100,)
+
+        Raises
+        ------
+        IOError
+            If the dataset does not exist or cannot be read.
         """
         npzfile = numpy.load(os.path.join(self.path, dataset_name + ".npz"))
         X_train = npzfile["X_train"]
