@@ -93,14 +93,22 @@ class UCR_UEA_datasets:
     Parameters
     ----------
     use_cache : bool (default: True)
-        Whether a cached version of the dataset should be used, if found.
+        Whether a cached version of the dataset should be used in
+        :meth:`~load_dataset`, if one is found.
+        Datasets are always cached upon loading, and this parameter only
+        determines whether the cached version shall be refreshed upon loading.
 
     Notes
     -----
         Downloading dataset files can be time-consuming, it is recommended
-        using `use_cache=True` (default) in order to
-        only experience downloading time once per dataset and work on a cached
-        version of the datasets after it.
+        using `use_cache=True` (default) in order to only experience
+        downloading time once per dataset and work on a cached version of the
+        datasets afterward.
+
+    See Also
+    --------
+    Class :class:`CachedDatasets`
+        Provides distinct selected datasets for offline use.
 
     References
     ----------
@@ -179,8 +187,8 @@ class UCR_UEA_datasets:
         2
         >>> dict_acc["Adiac"]  # doctest: +ELLIPSIS
         {'C45': 0.542199...}
-        >>> dict_acc = uea_ucr.baseline_accuracy()
-        >>> len(dict_acc)
+        >>> all_dict_acc = uea_ucr.baseline_accuracy()
+        >>> len(all_dict_acc)
         85
         """
         with open(self._baseline_scores_filename, "r") as f:
@@ -319,7 +327,7 @@ class UCR_UEA_datasets:
         dataset_name = self._filenames.get(dataset_name, dataset_name)
         full_path = os.path.join(self._data_dir, dataset_name)
 
-        if not self._has_files(dataset_name):
+        if not self._has_files(dataset_name) or not self.use_cache:
             # completely clear the target directory first, it will be created
             # by extract_from_zip_url if it does not exist
             try:
@@ -416,6 +424,9 @@ class UCR_UEA_datasets:
 
 class CachedDatasets:
     """A convenience class to access cached time series datasets.
+
+    Note, that these *cached datasets* are statically included into *tslearn*
+    and are distinct from the ones in :class:`UCR_UEA_datasets`.
 
     When using the Trace dataset, please cite [1]_.
 
