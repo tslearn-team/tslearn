@@ -107,8 +107,7 @@ class UCR_UEA_datasets:
 
     See Also
     --------
-    Class :class:`CachedDatasets`
-        Provides distinct selected datasets for offline use.
+    CachedDatasets : Provides pre-selected datasets for offline use.
 
     References
     ----------
@@ -429,6 +428,10 @@ class CachedDatasets:
     and are distinct from the ones in :class:`UCR_UEA_datasets`.
 
     When using the Trace dataset, please cite [1]_.
+
+    See Also
+    --------
+    UCR_UEA_datasets : Provides more datasets and supports caching.
 
     References
     ----------
