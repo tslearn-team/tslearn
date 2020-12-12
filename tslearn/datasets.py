@@ -10,14 +10,7 @@ import shutil
 import os
 import csv
 import warnings
-try:
-    from urllib import urlretrieve
-except ImportError:
-    from urllib.request import urlretrieve
-try:
-    from zipfile import BadZipFile as BadZipFile
-except ImportError:
-    from zipfile import BadZipfile as BadZipFile
+from urllib.request import urlretrieve
 
 from tslearn.utils import _load_arff_uea, _load_txt_uea
 
@@ -48,20 +41,20 @@ def extract_from_zip_url(url, target_dir=None, verbose=False):
     tmpdir = tempfile.mkdtemp()
     local_zip_fname = os.path.join(tmpdir, fname)
     urlretrieve(url, local_zip_fname)
+    os.makedirs(target_dir, exist_ok=True)
     try:
-        if not os.path.exists(target_dir):
-            os.makedirs(target_dir)
-        zipfile.ZipFile(local_zip_fname, "r").extractall(path=target_dir)
-        shutil.rmtree(tmpdir)
+        with zipfile.ZipFile(local_zip_fname, "r") as f:
+            f.extractall(path=target_dir)
         if verbose:
             print("Successfully extracted file %s to path %s" %
                   (local_zip_fname, target_dir))
         return target_dir
-    except BadZipFile:
-        shutil.rmtree(tmpdir)
+    except zipfile.BadZipFile:
         warnings.warn("Corrupted or missing zip file encountered, aborting",
                       category=RuntimeWarning)
         return None
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
 
 
 def in_file_string_replace(filename, old_string, new_string):
@@ -72,7 +65,7 @@ def in_file_string_replace(filename, old_string, new_string):
 
     Parameters
     ----------
-    filename : string
+    filename : str
         Path to the file where strings should be replaced
     old_string : str
         The string to be replaced in the file.
@@ -116,19 +109,19 @@ class UCR_UEA_datasets:
     """
     def __init__(self, use_cache=True):
         self.use_cache = use_cache
-        base_dir = os.path.expanduser(os.path.join("~", ".tslearn",
-                                                   "datasets", "UCR_UEA"))
-        self._data_dir = base_dir
-        if not os.path.exists(self._data_dir):
-            os.makedirs(self._data_dir)
+        self._data_dir = os.path.expanduser(os.path.join(
+            "~", ".tslearn", "datasets", "UCR_UEA"
+        ))
+        os.makedirs(self._data_dir, exist_ok=True)
+
         try:
-            url_multivariate = ("https://www.timeseriesclassification.com/" +
+            url_multivariate = ("https://www.timeseriesclassification.com/"
                                 "Downloads/Archives/summaryMultivariate.csv")
             self._list_multivariate_filename = os.path.join(
                 self._data_dir, os.path.basename(url_multivariate)
             )
             urlretrieve(url_multivariate, self._list_multivariate_filename)
-            url_baseline = ("https://www.timeseriesclassification.com/" +
+            url_baseline = ("https://www.timeseriesclassification.com/"
                             "singleTrainTest.csv")
             self._baseline_scores_filename = os.path.join(
                 self._data_dir, os.path.basename(url_baseline))
@@ -283,7 +276,8 @@ class UCR_UEA_datasets:
     def load_dataset(self, dataset_name):
         """Load a dataset from the UCR/UEA archive from its name.
 
-        A `RuntimeWarning` is printed on failure.
+        On failure, `None` is returned for each of the four values and a
+        `RuntimeWarning` is printed.
 
         Parameters
         ----------
@@ -312,10 +306,6 @@ class UCR_UEA_datasets:
         >>> y_train.shape
         (1000,)
         >>> X_train, y_train, X_test, y_test = data_loader.load_dataset(
-        ...         "StarLightCurves")
-        >>> X_train.shape
-        (1000, 1024, 1)
-        >>> X_train, y_train, X_test, y_test = data_loader.load_dataset(
         ...         "CinCECGTorso")
         >>> X_train.shape
         (40, 1639, 1)
@@ -323,12 +313,8 @@ class UCR_UEA_datasets:
         ...         "PenDigits")
         >>> X_train.shape
         (7494, 8, 2)
-
-        `None`s are returned for all four values on failure:
-        >>> X_train, y_train, X_test, y_test = data_loader.load_dataset(
+        >>> assert (None, None, None, None) == data_loader.load_dataset(
         ...         "DatasetThatDoesNotExist")
-        >>> X_train is None
-        True
         """
         dataset_name = self._filenames.get(dataset_name, dataset_name)
         full_path = os.path.join(self._data_dir, dataset_name)
@@ -336,7 +322,16 @@ class UCR_UEA_datasets:
         if not self._has_files(dataset_name):
             # completely clear the target directory first, it will be created
             # by extract_from_zip_url if it does not exist
-            shutil.rmtree(full_path)
+            try:
+                # maybe it is a normal file (not a directory) for some obscure reason
+                os.remove(full_path)
+            except FileNotFoundError:
+                pass  # nothing to do here, already deleted
+            except IsADirectoryError:
+                # we then need this function to recursively remove the directory:
+                shutil.rmtree(full_path, ignore_errors=True)
+            # else, actually raise the error!
+
             url = ("https://www.timeseriesclassification.com/Downloads/%s.zip"
                    % dataset_name)
             success = extract_from_zip_url(url, target_dir=full_path)
@@ -433,7 +428,21 @@ class CachedDatasets:
         self.path = os.path.join(os.path.dirname(__file__), ".cached_datasets")
 
     def list_datasets(self):
-        """List cached datasets."""
+        """List cached datasets.
+
+        Examples
+        --------
+        >>> _ = UCR_UEA_datasets().load_dataset("Trace")
+        >>> cached = UCR_UEA_datasets().list_cached_datasets()
+        >>> "Trace" in cached
+        True
+
+        Returns
+        -------
+        list of str:
+            A list of names of all cached (univariate and multivariate) dataset
+            namas.
+        """
         return [fname[:fname.rfind(".")]
                 for fname in os.listdir(self.path)
                 if fname.endswith(".npz")]
@@ -445,7 +454,7 @@ class CachedDatasets:
         ----------
         dataset_name : str
             Name of the dataset. Should be in the list returned by
-            `list_datasets`
+            :meth:`~list_datasets`.
 
         Returns
         -------
