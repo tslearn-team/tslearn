@@ -81,7 +81,6 @@ def test_ldtw():
 
 def test_lcss():
     sim = tslearn.metrics.lcss([1, 2, 3], [1., 2., 2., 3.])
-
     np.testing.assert_equal(sim, 1.)
 
     sim = tslearn.metrics.lcss([1, 2, 3], [1., 2., 2., 4.])
@@ -90,8 +89,8 @@ def test_lcss():
     sim = tslearn.metrics.lcss([1, 2, 3], [-2., 5., 7.], eps=3)
     np.testing.assert_equal(sim, 0.67)
 
-    sim = tslearn.metrics.lcss([1, 2, 3], [1., 2., 2., 2., 3.], eps=0, delta=1)
-    np.testing.assert_equal(sim, 0.67)
+    sim = tslearn.metrics.lcss([1, 2, 3], [1., 2., 2., 2., 3.], eps=0, sakoe_chiba_radius=0)
+    np.testing.assert_equal(sim, 1.)
 
 
 def test_lcss_path():
@@ -107,9 +106,39 @@ def test_lcss_path():
     np.testing.assert_equal(sim, 0.67)
     np.testing.assert_equal(path, [(0, 0), (2, 1)])
 
-    path, sim = tslearn.metrics.lcss_path([1., 2., 3.], [1., 2., 2., 2., 3.], eps=0, delta=1)
-    np.testing.assert_equal(sim, 0.67)
-    np.testing.assert_equal(path, [(0, 0), (1, 1)])
+    path, sim = tslearn.metrics.lcss_path([1., 2., 3.], [1., 2., 2., 2., 3.], eps=0, sakoe_chiba_radius=0.)
+    np.testing.assert_equal(sim, 1.)
+    np.testing.assert_equal(path, [(0, 0), (1, 3), (2, 4)])
+
+
+def test_lcss_path_from_metric():
+    rng = np.random.RandomState(0)
+    s1, s2 = rng.rand(10, 2), rng.rand(30, 2)
+
+    # Use lcss_path as a reference
+    path_ref, sim_ref = tslearn.metrics.lcss_path(s1, s2)
+
+    # Test of using a scipy distance function
+    path, sim = tslearn.metrics.lcss_path_from_metric(s1, s2,
+                                                      metric="sqeuclidean")
+    np.testing.assert_equal(path, path_ref)
+    np.testing.assert_equal(sim, sim_ref)
+
+    # Test of defining a custom function
+    def sqeuclidean(x, y):
+        return np.sum((x-y)**2)
+
+    path, sim = tslearn.metrics.lcss_path_from_metric(s1, s2,
+                                                      metric=sqeuclidean)
+    np.testing.assert_equal(path, path_ref)
+    np.testing.assert_equal(sim, sim_ref)
+
+    # Test of precomputing the distance matrix
+    dist_matrix = cdist(s1, s2, metric="sqeuclidean")
+    path, sim = tslearn.metrics.lcss_path_from_metric(dist_matrix,
+                                                      metric="precomputed")
+    np.testing.assert_equal(path, path_ref)
+    np.testing.assert_equal(sim, sim_ref)
 
 
 def test_constrained_paths():
