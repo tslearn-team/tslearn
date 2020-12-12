@@ -59,7 +59,7 @@ def extract_from_zip_url(url, target_dir=None, verbose=False):
         return target_dir
     except BadZipFile:
         shutil.rmtree(tmpdir)
-        warnings.warn("Corrupted zip file encountered, aborting",
+        warnings.warn("Corrupted or missing zip file encountered, aborting",
                       category=RuntimeWarning)
         return None
 
@@ -190,7 +190,7 @@ class UCR_UEA_datasets:
         >>> len(dict_acc)
         85
         """
-        with open(self._list_multivariate_filename, "r") as f:
+        with open(self._baseline_scores_filename, "r") as f:
             d_out = dict()
             for perfs_dict in csv.DictReader(f, delimiter=","):
                 dataset_name = perfs_dict[""]
@@ -324,11 +324,11 @@ class UCR_UEA_datasets:
         >>> X_train.shape
         (7494, 8, 2)
 
-        `None`s are returned on failures:
+        `None`s are returned for all four values on failure:
         >>> X_train, y_train, X_test, y_test = data_loader.load_dataset(
         ...         "DatasetThatDoesNotExist")
-        >>> X_train
-        None
+        >>> X_train is None
+        True
         """
         dataset_name = self._filenames.get(dataset_name, dataset_name)
         full_path = os.path.join(self._data_dir, dataset_name)
