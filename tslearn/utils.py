@@ -4,6 +4,7 @@ The :mod:`tslearn.utils` module includes various utilities.
 
 import os
 import warnings
+from io import StringIO
 
 import numpy
 from sklearn.base import TransformerMixin
@@ -273,7 +274,7 @@ def time_series_to_str(ts, fmt="%.18e"):
     ts : array-like
         Time series to be represented.
     fmt : string (default: "%.18e")
-        Format to be used to write each value.
+        Format to be used to write each value (only ASCII characters).
 
     Returns
     -------
@@ -293,11 +294,9 @@ def time_series_to_str(ts, fmt="%.18e"):
     str_to_time_series : Transform a string into a time series
     """
     ts_ = to_time_series(ts)
-    dimensions = (
-        " ".join([fmt % value for value in ts_[:, dim]])
-        for dim in range(ts_.shape[1])
-    )
-    return "|".join(dimensions)
+    out = StringIO()
+    numpy.savetxt(out, ts_.T, fmt=fmt, delimiter=" ", newline="|", encoding="bytes")
+    return out.getvalue()[:-1]  # cut away the trailing "|"
 
 
 timeseries_to_str = time_series_to_str
@@ -334,7 +333,7 @@ def str_to_time_series(ts_str):
     time_series_to_str : Transform a time series into a string
     """
     dimensions = ts_str.split("|")
-    ts = [dim_str.split(" ") for dim_str in dimensions]
+    ts = [numpy.fromstring(dim_str, sep=" ") for dim_str in dimensions]
     return to_time_series(numpy.transpose(ts))
 
 
@@ -394,10 +393,10 @@ def load_time_series_txt(fname):
     save_time_series_txt : Save time series to disk
     """
     with open(fname, "r") as f:
-        return to_time_series_dataset(
+        return to_time_series_dataset([
             str_to_time_series(row)
             for row in f.readlines()
-        )
+        ])
 
 
 load_timeseries_txt = load_time_series_txt
