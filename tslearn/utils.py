@@ -393,10 +393,7 @@ def load_time_series_txt(fname):
     save_time_series_txt : Save time series to disk
     """
     with open(fname, "r") as f:
-        return to_time_series_dataset([
-            str_to_time_series(row)
-            for row in f.readlines()
-        ])
+        return to_time_series_dataset(str_to_time_series(f.read()))
 
 
 load_timeseries_txt = load_time_series_txt
