@@ -1,7 +1,6 @@
 STUFF_cycc = "cycc"
 
 import numpy
-from tslearn.utils import bit_length
 
 cimport numpy
 cimport cython
@@ -21,9 +20,8 @@ def normalized_cc(numpy.ndarray[DTYPE_t, ndim=2] s1, numpy.ndarray[DTYPE_t, ndim
     cdef DTYPE_t s = 0.
     cdef int sz = s1.shape[0]
     cdef int d = s1.shape[1]
-    # Compute fft size based on tip from
-    # https://stackoverflow.com/questions/14267555/how-can-i-find-the-smallest-power-of-2-greater-than-n-in-python
-    cdef int fft_sz = 1 << bit_length(2 * sz - 1)
+    # Compute fft size based on tip from https://stackoverflow.com/questions/14267555/
+    cdef int fft_sz = 1 << (2 * sz - 1).bit_length()
     cdef float denom = 0.
     cdef numpy.ndarray[DTYPE_t, ndim=2] cc
 

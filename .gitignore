@@ -111,3 +111,4 @@ tmp-tslearn-test.txt
 docs/_build/
 docs/auto_examples/
 docs/examples/misc/ks_trained.hdf5
+docs/gen_modules/*/
