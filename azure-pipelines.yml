@@ -102,7 +102,7 @@ jobs:
 
 - job: 'macOS'
   pool:
-    vmImage: 'macOS-10.14'
+    vmImage: 'macOS-latest'
   strategy:
     matrix:
       Python35:
@@ -147,7 +147,7 @@ jobs:
 
 - job: 'windows'
   pool:
-    vmImage: 'vs2017-win2016'
+    vmImage: 'windows-latest'
   strategy:
     matrix:
       Python35:
