@@ -2,11 +2,14 @@
 The :mod:`tslearn.utils` module includes various utilities.
 """
 
+import os
+import warnings
+from io import StringIO
+
 import numpy
 from sklearn.base import TransformerMixin
 from sklearn.utils import column_or_1d, check_array
 from sklearn.utils.validation import check_is_fitted
-import warnings
 
 try:
     from scipy.io import arff
@@ -110,30 +113,6 @@ def check_dims(X, X_fit_dims=None, extend=True, check_n_features_only=False):
     return X
 
 
-def bit_length(n):
-    """Returns the number of bits necessary to represent an integer in binary,
-    excluding the sign and leading zeros.
-
-    This function is provided for Python 2.6 compatibility.
-
-    Examples
-    --------
-    >>> bit_length(0)
-    0
-    >>> bit_length(1)
-    1
-    >>> bit_length(2)
-    2
-    """
-    k = 0
-    try:
-        if n > 0:
-            k = n.bit_length()
-    except AttributeError:  # In Python2.6, bit_length does not exist
-        k = 1 + int(numpy.log2(abs(n)))
-    return k
-
-
 def to_time_series(ts, remove_nans=False):
     """Transforms a time series so that it fits the format used in ``tslearn``
     models.
@@ -186,7 +165,8 @@ def to_time_series_dataset(dataset, dtype=numpy.float):
     Parameters
     ----------
     dataset : array-like
-        The dataset of time series to be transformed.
+        The dataset of time series to be transformed. A single time series will
+        be automatically wrapped into a dataset with a single entry.
     dtype : data type (default: numpy.float)
         Data type for the returned dataset.
 
@@ -200,6 +180,9 @@ def to_time_series_dataset(dataset, dtype=numpy.float):
     >>> to_time_series_dataset([[1, 2]])
     array([[[1.],
             [2.]]])
+    >>> to_time_series_dataset([1, 2])
+    array([[[1.],
+            [2.]]])
     >>> to_time_series_dataset([[1, 2], [1, 4, 3]])
     array([[[ 1.],
             [ 2.],
@@ -208,6 +191,8 @@ def to_time_series_dataset(dataset, dtype=numpy.float):
            [[ 1.],
             [ 4.],
             [ 3.]]])
+    >>> to_time_series_dataset([]).shape
+    (0, 0, 0)
 
     See Also
     --------
@@ -288,7 +273,7 @@ def time_series_to_str(ts, fmt="%.18e"):
     ts : array-like
         Time series to be represented.
     fmt : string (default: "%.18e")
-        Format to be used to write each value.
+        Format to be used to write each value (only ASCII characters).
 
     Returns
     -------
@@ -308,13 +293,9 @@ def time_series_to_str(ts, fmt="%.18e"):
     str_to_time_series : Transform a string into a time series
     """
     ts_ = to_time_series(ts)
-    dim = ts_.shape[1]
-    s = ""
-    for d in range(dim):
-        s += " ".join([fmt % v for v in ts_[:, d]])
-        if d < dim - 1:
-            s += "|"
-    return s
+    out = StringIO()
+    numpy.savetxt(out, ts_.T, fmt=fmt, delimiter=" ", newline="|", encoding="bytes")
+    return out.getvalue()[:-1]  # cut away the trailing "|"
 
 
 timeseries_to_str = time_series_to_str
@@ -351,7 +332,7 @@ def str_to_time_series(ts_str):
     time_series_to_str : Transform a time series into a string
     """
     dimensions = ts_str.split("|")
-    ts = [dim_str.split(" ") for dim_str in dimensions]
+    ts = [numpy.fromstring(dim_str, sep=" ") for dim_str in dimensions]
     return to_time_series(numpy.transpose(ts))
 
 
@@ -379,10 +360,9 @@ def save_time_series_txt(fname, dataset, fmt="%.18e"):
     --------
     load_time_series_txt : Load time series from disk
     """
-    fp = open(fname, "wt")
-    for ts in dataset:
-        fp.write(time_series_to_str(ts, fmt=fmt) + "\n")
-    fp.close()
+    with open(fname, "w") as f:
+        for ts in dataset:
+            f.write(time_series_to_str(ts, fmt=fmt) + "\n")
 
 
 save_timeseries_txt = save_time_series_txt
@@ -411,13 +391,11 @@ def load_time_series_txt(fname):
     --------
     save_time_series_txt : Save time series to disk
     """
-    dataset = []
-    fp = open(fname, "rt")
-    for row in fp.readlines():
-        ts = str_to_time_series(row)
-        dataset.append(ts)
-    fp.close()
-    return to_time_series_dataset(dataset)
+    with open(fname, "r") as f:
+        return to_time_series_dataset([
+            str_to_time_series(row)
+            for row in f.readlines()
+        ])
 
 
 load_timeseries_txt = load_time_series_txt
@@ -442,23 +420,23 @@ def check_equal_size(dataset):
     True
     >>> check_equal_size([[1, 2, 3, 4], [4, 5, 6], [5, 3, 2]])
     False
+    >>> check_equal_size([])
+    True
     """
     dataset_ = to_time_series_dataset(dataset)
-    sz = -1
-    for ts in dataset_:
-        if sz < 0:
-            sz = ts_size(ts)
-        else:
-            if sz != ts_size(ts):
-                return False
-    return True
+    if len(dataset_) == 0:
+        return True
+
+    size = ts_size(dataset[0])
+    return all(ts_size(ds) == size for ds in dataset_[1:])
 
 
 def ts_size(ts):
     """Returns actual time series size.
 
-    Final timesteps that have NaN values for all dimensions will be removed
-    from the count.
+    Final timesteps that have `NaN` values for all dimensions will be removed
+    from the count. Infinity and negative infinity ar considered valid time
+    series values.
 
     Parameters
     ----------
@@ -484,10 +462,12 @@ def ts_size(ts):
     ...          [numpy.nan, 2],
     ...          [numpy.nan, numpy.nan]])
     4
+    >>> ts_size([numpy.nan, 3, numpy.inf, numpy.nan])
+    3
     """
     ts_ = to_time_series(ts)
     sz = ts_.shape[0]
-    while sz > 0 and not numpy.any(numpy.isfinite(ts_[sz - 1])):
+    while sz > 0 and numpy.all(numpy.isnan(ts_[sz - 1])):
         sz -= 1
     return sz
 
