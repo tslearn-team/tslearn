@@ -1417,8 +1417,7 @@ class LabelCategorizer(TransformerMixin, TimeSeriesBaseEstimator):
 
 
 def _load_arff_uea(dataset_path):
-    """
-    Load arff file for uni/multi variate dataset
+    """Load arff file for uni/multi variate dataset
     
     Parameters
     ----------
@@ -1431,6 +1430,12 @@ def _load_arff_uea(dataset_path):
         Time series dataset
     y: numpy array of shape (n_timeseries, )
         Vector of targets
+
+    Raises
+    ------
+    ImportError: if the version of *Scipy* is too old (pre 1.3.0)
+    Exception: on any failure, e.g. if the given file does not exist or is
+               corrupted
     """
     if not HAS_ARFF:
         raise ImportError("scipy 1.3.0 or newer is required to load "
@@ -1466,13 +1471,12 @@ def _load_arff_uea(dataset_path):
 
 
 def _load_txt_uea(dataset_path):
-    """
-    Load arff file for uni/multi variate dataset
-    
+    """Load arff file for uni/multi variate dataset
+
     Parameters
     ----------
     dataset_path: string of dataset_path
-        Path to the ARFF file to be read
+        Path to the TXT file to be read
 
     Returns
     -------
@@ -1480,11 +1484,13 @@ def _load_txt_uea(dataset_path):
         Time series dataset
     y: numpy array of shape (n_timeseries, )
         Vector of targets
+
+    Raises
+    ------
+    Exception: on any failure, e.g. if the given file does not exist or is
+               corrupted
     """
-    try:
-        data = numpy.loadtxt(dataset_path, delimiter=None)
-        X = to_time_series_dataset(data[:, 1:])
-        y = data[:, 0].astype(numpy.int)
-        return X, y
-    except:
-        return None, None
+    data = numpy.loadtxt(dataset_path)
+    X = to_time_series_dataset(data[:, 1:])
+    y = data[:, 0].astype(numpy.int)
+    return X, y
