@@ -24,7 +24,7 @@ jobs:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
     PIP_PREFER_BINARY: 'true'
-  
+
   steps:
   - task: UsePythonVersion@0
     inputs:
@@ -45,61 +45,22 @@ jobs:
   
   - script: |
       set -xe
-      python -m pip install pytest pytest-azurepipelines
+      python -m pip install pytest pytest-azurepipelines coverage==4.3 "pytest-cov<2.6"
       if [[ "$(python.version)" == '3.5' ]];
       then
-        python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/deprecated.py -k 'not test_all_estimators';
+        python -m pytest -v tslearn/ --doctest-modules --cov=tslearn --ignore tslearn/deprecated.py -k 'not test_all_estimators';
       else
-        python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/deprecated.py;
+        python -m pytest -v tslearn/ --doctest-modules --cov=tslearn --ignore tslearn/deprecated.py;
       fi
     displayName: 'Test'
 
-- job: 'codecov'
-  pool:
-    vmImage: 'ubuntu-latest'
-  strategy:
-    matrix:
-      Python39:
-        python.version: '3.9'
-  variables:
-    OMP_NUM_THREADS: '2'
-    NUMBA_NUM_THREADS: '2'
-    NUMBA_DISABLE_JIT: '1'
-    PIP_PREFER_BINARY: 'true'
-
-  steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '$(python.version)'
-    displayName: 'Use Python $(python.version)'
-
-  - script: |
-      set -xe
-      python --version
-      python -m pip install --upgrade pip
-      python -m pip install -r requirements.txt
-    displayName: 'Install dependencies'
-
-  - script: |
-      set -xe
-      pip install -e .
-    displayName: 'Install tslearn'
-
-  - script: |
-      set -xe
-      python -m pip install pytest pytest-azurepipelines
-      pip install coverage==4.3 "pytest-cov<2.6"
-      pip install cesium pandas stumpy
-      python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/deprecated.py --cov=tslearn
-    displayName: 'Test'
-
-  # Upload coverage to codecov.io
-  - script: |
-      bash <(curl -s https://codecov.io/bash) -v
-    displayName: 'Upload coverage to codecov.io'
+    # Upload coverage to codecov.io
+    - script: |
+        bash <(curl -s https://codecov.io/bash) -v
+      displayName: 'Upload coverage to codecov.io'
 
 
-- job: 'macOS1015'
+- job: 'macOS'
   pool:
     vmImage: 'macOS-latest'
   strategy:
@@ -144,7 +105,7 @@ jobs:
     displayName: 'Test'
 
 
-- job: 'win2016'
+- job: 'windows'
   pool:
     vmImage: 'windows-latest'
   strategy:
