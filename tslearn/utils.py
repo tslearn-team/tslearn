@@ -363,7 +363,7 @@ def save_time_series_txt(fname, dataset, fmt="%.18e"):
     """
     with open(fname, "w") as f:
         for ts in dataset:
-            f.write(time_series_to_str(ts, fmt=fmt) + os.linesep)
+            f.write(time_series_to_str(ts, fmt=fmt) + "\n")
 
 
 save_timeseries_txt = save_time_series_txt
@@ -393,7 +393,10 @@ def load_time_series_txt(fname):
     save_time_series_txt : Save time series to disk
     """
     with open(fname, "r") as f:
-        return to_time_series_dataset(str_to_time_series(f.read()))
+        return to_time_series_dataset([
+            str_to_time_series(row)
+            for row in f.readlines()
+        ])
 
 
 load_timeseries_txt = load_time_series_txt
@@ -458,10 +461,12 @@ def ts_size(ts):
     ...          [numpy.nan, 2],
     ...          [numpy.nan, numpy.nan]])
     4
+    >>> ts_size([numpy.nan, 3, numpy.inf, numpy.nan])
+    3
     """
     ts_ = to_time_series(ts)
     sz = ts_.shape[0]
-    while sz > 0 and not numpy.any(numpy.isfinite(ts_[sz - 1])):
+    while sz > 0 and numpy.all(numpy.isnan(ts_[sz - 1])):
         sz -= 1
     return sz
 
