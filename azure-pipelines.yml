@@ -59,7 +59,7 @@ jobs:
     vmImage: 'ubuntu-latest'
   strategy:
     matrix:
-      Python37:
+      Python39:
         python.version: '3.9'
   variables:
     OMP_NUM_THREADS: '2'
@@ -88,9 +88,9 @@ jobs:
   - script: |
       set -xe
       python -m pip install pytest pytest-azurepipelines
-      pip install coverage==4.3 "pytest-cov<2.6";
-      pip install cesium pandas stumpy;
-      python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/deprecated.py --cov=tslearn;
+      pip install coverage==4.3 "pytest-cov<2.6"
+      pip install cesium pandas stumpy
+      python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/deprecated.py --cov=tslearn
     displayName: 'Test'
 
   # Upload coverage to codecov.io
@@ -99,9 +99,9 @@ jobs:
     displayName: 'Upload coverage to codecov.io'
 
 
-- job: 'macOS1014'
+- job: 'macOS1015'
   pool:
-    vmImage: 'macOS-10.14'
+    vmImage: 'macOS-latest'
   strategy:
     matrix:
       Python35:
@@ -146,7 +146,7 @@ jobs:
 
 - job: 'win2016'
   pool:
-    vmImage: 'vs2017-win2016'
+    vmImage: 'windows-latest'
   strategy:
     matrix:
       Python35:
