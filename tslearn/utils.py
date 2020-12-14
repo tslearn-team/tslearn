@@ -149,7 +149,8 @@ def to_time_series(ts, remove_nans=False):
     Returns
     -------
     numpy.ndarray of shape (sz, d)
-        The transformed time series.
+        The transformed time series. This is always guaraneteed to be a new
+        time series and never just a view into the old one.
 
     Examples
     --------
@@ -168,7 +169,7 @@ def to_time_series(ts, remove_nans=False):
     --------
     to_time_series_dataset : Transforms a dataset of time series
     """
-    ts_out = numpy.array(ts)
+    ts_out = numpy.array(ts, copy=True)
     if ts_out.ndim <= 1:
         ts_out = ts_out.reshape((-1, 1))
     if ts_out.dtype != numpy.float:
