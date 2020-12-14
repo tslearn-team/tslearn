@@ -90,8 +90,8 @@ jobs:
       set -xe
       python -m pip install pytest pytest-azurepipelines
       pip install coverage pytest-cov
-      pip install cesium pandas stumpy;
-      python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/deprecated.py --cov=tslearn;
+      pip install cesium pandas stumpy
+      python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/deprecated.py --cov=tslearn
     displayName: 'Test'
 
   # Upload coverage to codecov.io
