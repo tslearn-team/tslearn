@@ -45,19 +45,56 @@ jobs:
   
   - script: |
       set -xe
-      python -m pip install pytest pytest-azurepipelines coverage==4.3 "pytest-cov<2.6"
+      python -m pip install pytest pytest-azurepipelines
       if [[ "$(python.version)" == '3.5' ]];
       then
-        python -m pytest -v tslearn/ --doctest-modules --cov=tslearn --ignore tslearn/deprecated.py -k 'not test_all_estimators';
+        python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/deprecated.py -k 'not test_all_estimators';
       else
-        python -m pytest -v tslearn/ --doctest-modules --cov=tslearn --ignore tslearn/deprecated.py;
+        python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/deprecated.py;
       fi
     displayName: 'Test'
 
-    # Upload coverage to codecov.io
-    - script: |
-        bash <(curl -s https://codecov.io/bash) -v
-      displayName: 'Upload coverage to codecov.io'
+
+- job: 'codecov'  # must be a separate job to only disable Numbas's JIT here
+  pool:
+    vmImage: 'ubuntu-latest'
+  strategy:
+    matrix:
+      Python39:
+        python.version: '3.8'
+  variables:
+    OMP_NUM_THREADS: '2'
+    NUMBA_NUM_THREADS: '2'
+    NUMBA_DISABLE_JIT: '1'  # special for coverage testing
+    PIP_PREFER_BINARY: 'true'
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+    displayName: 'Use Python $(python.version)'
+
+  - script: |
+      set -xe
+      python --version
+      python -m pip install --upgrade pip
+      python -m pip install -r requirements.txt
+    displayName: 'Install dependencies'
+  - script: |
+      set -xe
+      pip install -e .
+    displayName: 'Install tslearn'
+  - script: |
+      set -xe
+      python -m pip install pytest pytest-azurepipelines
+      pip install coverage pytest-cov
+      pip install cesium pandas stumpy;
+      python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/deprecated.py --cov=tslearn;
+    displayName: 'Test'
+  # Upload coverage to codecov.io
+  - script: |
+      bash <(curl -s https://codecov.io/bash) -v
+    displayName: 'Upload coverage to codecov.io'
 
 
 - job: 'macOS'
