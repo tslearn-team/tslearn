@@ -110,15 +110,6 @@ def check_dims(X, X_fit_dims=None, extend=True, check_n_features_only=False):
     return X
 
 
-def _arraylike_copy(arr):
-    """Duplicate content of arr into a numpy array.
-     """
-    if type(arr) != numpy.ndarray:
-        return numpy.array(arr)
-    else:
-        return arr.copy()
-
-
 def bit_length(n):
     """Returns the number of bits necessary to represent an integer in binary,
     excluding the sign and leading zeros.
@@ -177,7 +168,7 @@ def to_time_series(ts, remove_nans=False):
     --------
     to_time_series_dataset : Transforms a dataset of time series
     """
-    ts_out = _arraylike_copy(ts)
+    ts_out = numpy.array(ts, copy=True)
     if ts_out.ndim <= 1:
         ts_out = ts_out.reshape((-1, 1))
     if ts_out.dtype != numpy.float:
