@@ -2329,13 +2329,15 @@ def njit_lcss_accumulated_matrix_from_dist_matrix(dist_matrix, eps, mask):
     return acc_cost_mat
 
 
-def lcss_path_from_metric(s1, s2=None, eps=1, sakoe_chiba_radius=None, metric="euclidean", **kwds):
+def lcss_path_from_metric(s1, s2=None, eps=1,
+                          metric="euclidean", sakoe_chiba_radius=None, **kwds):
     r"""Compute the Longest Common Subsequence (LCSS) similarity measure between
     (possibly multidimensional) time series using a distance metric defined by
     the user and return both the path and the similarity.
 
-    Similarity is computed as the cumulative cost along the aligned time
-    series.
+    Having the length of the longest commom subsequence between two time-series,
+    the similarity is computed as the percentage of that value regarding the
+    length of the shortest time series.
 
     It is not required that both time series share the same size, but they must
     be the same dimension. LCSS was originally presented in [1]_.
@@ -2386,7 +2388,7 @@ def lcss_path_from_metric(s1, s2=None, eps=1, sakoe_chiba_radius=None, metric="e
         first index corresponds to s1 and the second one corresponds to s2.
 
     float
-        Similarity score (sum of metric along the wrapped time series).
+        Similarity score.
 
     Examples
     --------
@@ -2401,13 +2403,13 @@ def lcss_path_from_metric(s1, s2=None, eps=1, sakoe_chiba_radius=None, metric="e
 
     >>> lcss_path_from_metric(s1, s2,
     ...                      metric="sqeuclidean")  # doctest: +ELLIPSIS
-    ([(0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.117...)
+    ([(0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1)
 
     Or by defining a custom distance function:
 
     >>> sqeuclidean = lambda x, y: np.sum((x-y)**2)
     >>> lcss_path_from_metric(s1, s2, metric=sqeuclidean)  # doctest: +ELLIPSIS
-    ([(0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.117...)
+    ([(0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1)
 
     Or by using a precomputed distance matrix as input:
 
@@ -2415,16 +2417,18 @@ def lcss_path_from_metric(s1, s2=None, eps=1, sakoe_chiba_radius=None, metric="e
     >>> dist_matrix = pairwise_distances(s1, s2, metric="sqeuclidean")
     >>> lcss_path_from_metric(dist_matrix,
     ...                      metric="precomputed")  # doctest: +ELLIPSIS
-    ([(0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.117...)
+    ([(0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1)
 
     Notes
     --------
     By using a squared euclidean distance metric as shown above, the output
-    path is the same as the one obtained by using lcss_path but the similarity
-    score is the sum of squared distances instead of the euclidean distance.
+    path and similarity is the same as the one obtained by using lcss_path 
+    (which uses the euclidean distance) simply because with the sum of squared
+    distances the matching threhold is still not reached.
 
     See Also
     --------
+    lcss: Get only the similarity score for LCSS
     lcss_path : Get both the matching path and the similarity score for LCSS
 
     References
@@ -2446,8 +2450,6 @@ def lcss_path_from_metric(s1, s2=None, eps=1, sakoe_chiba_radius=None, metric="e
         mask = compute_mask(
             sz1, sz2, sakoe_chiba_radius)
         dist_mat = s1
-        acc_cost_mat = njit_lcss_accumulated_matrix_from_dist_matrix(dist_mat, eps, mask)
-        path = _return_lcss_path_from_dist_matrix(dist_mat, eps, mask, acc_cost_mat, sz1, sz2)
     else:
         s1 = to_time_series(s1, remove_nans=True)
         s2 = to_time_series(s2, remove_nans=True)
@@ -2456,8 +2458,9 @@ def lcss_path_from_metric(s1, s2=None, eps=1, sakoe_chiba_radius=None, metric="e
         mask = compute_mask(
             s1, s2, sakoe_chiba_radius)
         dist_mat = pairwise_distances(s1, s2, metric=metric, **kwds)
-        acc_cost_mat = njit_lcss_accumulated_matrix_from_dist_matrix(dist_mat, eps, mask)
-        path = _return_lcss_path(s1, s2, eps, acc_cost_mat, mask, sz1, sz2)
+
+    acc_cost_mat = njit_lcss_accumulated_matrix_from_dist_matrix(dist_mat, eps, mask)
+    path = _return_lcss_path_from_dist_matrix(dist_mat, eps, acc_cost_mat, mask, sz1, sz2)
 
     return path, round(float(acc_cost_mat[-1][-1]) / min([sz1, sz2]), 2)
 
