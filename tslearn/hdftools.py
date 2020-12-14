@@ -39,7 +39,7 @@ def save_dict(d, filename, group, raise_type_fail=True):
         the argument `raise_type_fail` is set to `True`
     """
     if os.path.isfile(filename):
-        raise FileExistsError
+        raise FileExistsError()
 
     with h5py.File(filename, 'w') as h5file:
         _dicts_to_group(h5file, "{}/".format(group), d,
