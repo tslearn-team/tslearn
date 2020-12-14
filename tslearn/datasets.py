@@ -216,7 +216,7 @@ class UCR_UEA_datasets:
         Returns
         -------
         list of str:
-            A list of the names of all univariate dataset namas.
+            A list of the names of all univariate datasets.
         """
         with open(self._baseline_scores_filename, "r") as f:
             return [
