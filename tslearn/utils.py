@@ -168,7 +168,7 @@ def to_time_series(ts, remove_nans=False):
     --------
     to_time_series_dataset : Transforms a dataset of time series
     """
-    ts_out = numpy.array(ts, copy=True)
+    ts_out = numpy.array(ts)
     if ts_out.ndim <= 1:
         ts_out = ts_out.reshape((-1, 1))
     if ts_out.dtype != numpy.float:
