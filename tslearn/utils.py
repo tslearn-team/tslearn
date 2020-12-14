@@ -172,7 +172,8 @@ def to_time_series_dataset(dataset, dtype=numpy.float):
     Parameters
     ----------
     dataset : array-like
-        The dataset of time series to be transformed.
+        The dataset of time series to be transformed. A single time series will
+        be automatically wrapped into a dataset with a single entry.
     dtype : data type (default: numpy.float)
         Data type for the returned dataset.
 
@@ -186,6 +187,9 @@ def to_time_series_dataset(dataset, dtype=numpy.float):
     >>> to_time_series_dataset([[1, 2]])
     array([[[1.],
             [2.]]])
+    >>> to_time_series_dataset([1, 2])
+    array([[[1.],
+            [2.]]])
     >>> to_time_series_dataset([[1, 2], [1, 4, 3]])
     array([[[ 1.],
             [ 2.],
@@ -194,6 +198,8 @@ def to_time_series_dataset(dataset, dtype=numpy.float):
            [[ 1.],
             [ 4.],
             [ 3.]]])
+    >>> to_time_series_dataset([]).shape
+    (0, 0, 0)
 
     See Also
     --------
@@ -421,6 +427,8 @@ def check_equal_size(dataset):
     True
     >>> check_equal_size([[1, 2, 3, 4], [4, 5, 6], [5, 3, 2]])
     False
+    >>> check_equal_size([])
+    True
     """
     dataset_ = to_time_series_dataset(dataset)
     if len(dataset_) == 0:
