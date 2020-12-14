@@ -61,7 +61,7 @@ jobs:
   strategy:
     matrix:
       Python39:
-        python.version: '3.8'
+        python.version: '3.9'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
