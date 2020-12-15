@@ -49,7 +49,7 @@ class GlobalMinPooling1D(Layer):
         return input_shape[0], input_shape[2]
 
     def call(self, inputs, **kwargs):
-        return K.min(inputs, axis=1)
+        return tf.reduce_min(inputs, axis=1)
 
 
 class GlobalArgminPooling1D(Layer):
