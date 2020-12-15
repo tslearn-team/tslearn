@@ -15,12 +15,6 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 EXAMPLE_FILE = join(gettempdir(), "tslearn_pytest_file.txt")
 
 
-def test_arraylike_copy():
-    X_npy = np.array([1, 2, 3])
-    assert_allclose(tslearn.utils._arraylike_copy(X_npy), X_npy)
-    assert_allclose(tslearn.utils._arraylike_copy(X_npy) is X_npy, False)
-
-
 def test_save_load_random():
     n, sz, d = 15, 10, 3
     rng = np.random.RandomState(0)

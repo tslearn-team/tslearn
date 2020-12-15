@@ -113,14 +113,6 @@ def check_dims(X, X_fit_dims=None, extend=True, check_n_features_only=False):
     return X
 
 
-def _arraylike_copy(arr):
-    """Duplicate content of arr into a new numpy array."""
-    if type(arr) != numpy.ndarray:
-        return numpy.array(arr)
-    else:
-        return arr.copy()
-
-
 def to_time_series(ts, remove_nans=False):
     """Transforms a time series so that it fits the format used in ``tslearn``
     models.
@@ -136,7 +128,8 @@ def to_time_series(ts, remove_nans=False):
     Returns
     -------
     numpy.ndarray of shape (sz, d)
-        The transformed time series.
+        The transformed time series. This is always guaraneteed to be a new
+        time series and never just a view into the old one.
 
     Examples
     --------
@@ -155,7 +148,7 @@ def to_time_series(ts, remove_nans=False):
     --------
     to_time_series_dataset : Transforms a dataset of time series
     """
-    ts_out = _arraylike_copy(ts)
+    ts_out = numpy.array(ts, copy=True)
     if ts_out.ndim <= 1:
         ts_out = ts_out.reshape((-1, 1))
     if ts_out.dtype != numpy.float:
