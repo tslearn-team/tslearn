@@ -38,6 +38,39 @@ def test_dtw():
                                atol=1e-5)
 
 
+def test_ctw():
+    # ctw_path
+    path, cca, dist = tslearn.metrics.ctw_path([1, 2, 3], [1., 2., 2., 3.])
+    np.testing.assert_equal(path, [(0, 0), (1, 1), (1, 2), (2, 3)])
+    np.testing.assert_allclose(dist, 0.)
+
+    path, cca, dist = tslearn.metrics.ctw_path([1, 2, 3], [1., 2., 2., 3., 4.])
+    np.testing.assert_allclose(dist, 1.)
+
+    # dtw
+    n1, n2, d1, d2 = 15, 10, 3, 1
+    rng = np.random.RandomState(0)
+    x = rng.randn(n1, d1)
+    y = rng.randn(n2, d2)
+    np.testing.assert_allclose(tslearn.metrics.ctw(x, y),
+                               tslearn.metrics.ctw(y, x))
+    np.testing.assert_allclose(tslearn.metrics.ctw(x, y),
+                               tslearn.metrics.ctw_path(x, y)[-1])
+
+    # cdist_dtw
+    dists = tslearn.metrics.cdist_ctw([[1, 2, 2, 3],
+                                       [1., 2., 3., 4.]])
+    np.testing.assert_allclose(dists,
+                               np.array([[0., 1.],
+                                         [1., 0.]]))
+    dists = tslearn.metrics.cdist_ctw([[1, 2, 2, 3], [1., 2., 3., 4.]],
+                                      [[1, 2, 3], [2, 3, 4, 5]])
+    np.testing.assert_allclose(dists,
+                               np.array([[0., 2.44949],
+                                         [1., 1.414214]]),
+                               atol=1e-5)
+
+
 def test_ldtw():
     n1, n2, d = 15, 10, 3
     rng = np.random.RandomState(0)
@@ -314,3 +347,20 @@ def test_dtw_path_from_metric():
                                                       metric="precomputed")
     np.testing.assert_equal(path, path_ref)
     np.testing.assert_allclose(np.sqrt(dist), dist_ref)
+
+
+def test_softdtw():
+    rng = np.random.RandomState(0)
+    s1, s2 = rng.rand(10, 2), rng.rand(30, 2)
+
+    # Use dtw_path as a reference
+    path_ref, dist_ref = tslearn.metrics.dtw_path(s1, s2)
+    mat_path_ref = np.zeros((10, 30))
+    for i, j in path_ref:
+        mat_path_ref[i, j] = 1.
+
+    # Test of using a scipy distance function
+    matrix_path, dist = tslearn.metrics.soft_dtw_alignment(s1, s2, gamma=0.)
+
+    np.testing.assert_equal(dist, dist_ref ** 2)
+    np.testing.assert_allclose(matrix_path, mat_path_ref)

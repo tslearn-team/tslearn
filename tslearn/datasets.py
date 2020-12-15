@@ -8,17 +8,9 @@ import zipfile
 import tempfile
 import shutil
 import os
-import sys
 import csv
 import warnings
-try:
-    from urllib import urlretrieve
-except ImportError:
-    from urllib.request import urlretrieve
-try:
-    from zipfile import BadZipFile as BadZipFile
-except ImportError:
-    from zipfile import BadZipfile as BadZipFile
+from urllib.request import urlretrieve
 
 from tslearn.utils import _load_arff_uea, _load_txt_uea
 
@@ -27,6 +19,8 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 def extract_from_zip_url(url, target_dir=None, verbose=False):
     """Download a zip file from its URL and unzip it.
+
+    A `RuntimeWarning` is printed on failure.
 
     Parameters
     ----------
@@ -47,37 +41,36 @@ def extract_from_zip_url(url, target_dir=None, verbose=False):
     tmpdir = tempfile.mkdtemp()
     local_zip_fname = os.path.join(tmpdir, fname)
     urlretrieve(url, local_zip_fname)
+    os.makedirs(target_dir, exist_ok=True)
     try:
-        if not os.path.exists(target_dir):
-            os.makedirs(target_dir)
-        zipfile.ZipFile(local_zip_fname, "r").extractall(path=target_dir)
-        shutil.rmtree(tmpdir)
+        with zipfile.ZipFile(local_zip_fname, "r") as f:
+            f.extractall(path=target_dir)
         if verbose:
             print("Successfully extracted file %s to path %s" %
                   (local_zip_fname, target_dir))
         return target_dir
-    except BadZipFile:
-        shutil.rmtree(tmpdir)
-        if verbose:
-            sys.stderr.write("Corrupted zip file encountered, aborting.\n")
+    except zipfile.BadZipFile:
+        warnings.warn("Corrupted or missing zip file encountered, aborting",
+                      category=RuntimeWarning)
         return None
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
 
 
 def in_file_string_replace(filename, old_string, new_string):
-    """ String replacement within a text file. It is used to fix typos in
+    """String replacement within a text file. It is used to fix typos in
     downloaded csv file.
-    The code was modified from "https://stackoverflow.com/questions/4128144/\
-    replace-string-within-file-contents"
+
+    The code was modified from "https://stackoverflow.com/questions/4128144/"
 
     Parameters
     ----------
-    filename : string
+    filename : str
         Path to the file where strings should be replaced
     old_string : str
         The string to be replaced in the file.
     new_string : str
         The new string that will replace old_string
-
     """
     with open(filename) as f:
         s = f.read()
@@ -93,17 +86,28 @@ class UCR_UEA_datasets:
     When using one (or several) of these datasets in research projects, please
     cite [1]_.
 
+    This class will attempt to recover from some known misnamed files, like the
+    `StarLightCurves` dataset being provided in `StarlightCurves.zip` and
+    alike.
+
     Parameters
     ----------
     use_cache : bool (default: True)
-        Whether a cached version of the dataset should be used, if found.
+        Whether a cached version of the dataset should be used in
+        :meth:`~load_dataset`, if one is found.
+        Datasets are always cached upon loading, and this parameter only
+        determines whether the cached version shall be refreshed upon loading.
 
     Notes
     -----
         Downloading dataset files can be time-consuming, it is recommended
-        using `use_cache=True` (default) in order to
-        only experience downloading time once per dataset and work on a cached
-        version of the datasets after it.
+        using `use_cache=True` (default) in order to only experience
+        downloading time once per dataset and work on a cached version of the
+        datasets afterward.
+
+    See Also
+    --------
+    CachedDatasets : Provides pre-selected datasets for offline use.
 
     References
     ----------
@@ -112,19 +116,19 @@ class UCR_UEA_datasets:
     """
     def __init__(self, use_cache=True):
         self.use_cache = use_cache
-        base_dir = os.path.expanduser(os.path.join("~", ".tslearn",
-                                                   "datasets", "UCR_UEA"))
-        self._data_dir = base_dir
-        if not os.path.exists(self._data_dir):
-            os.makedirs(self._data_dir)
+        self._data_dir = os.path.expanduser(os.path.join(
+            "~", ".tslearn", "datasets", "UCR_UEA"
+        ))
+        os.makedirs(self._data_dir, exist_ok=True)
+
         try:
-            url_multivariate = ("http://www.timeseriesclassification.com/" +
+            url_multivariate = ("https://www.timeseriesclassification.com/"
                                 "Downloads/Archives/summaryMultivariate.csv")
             self._list_multivariate_filename = os.path.join(
                 self._data_dir, os.path.basename(url_multivariate)
             )
             urlretrieve(url_multivariate, self._list_multivariate_filename)
-            url_baseline = ("http://www.timeseriesclassification.com/" +
+            url_baseline = ("https://www.timeseriesclassification.com/"
                             "singleTrainTest.csv")
             self._baseline_scores_filename = os.path.join(
                 self._data_dir, os.path.basename(url_baseline))
@@ -135,7 +139,7 @@ class UCR_UEA_datasets:
                                    "CinCECGtorso", "CinCECGTorso")
             in_file_string_replace(self._baseline_scores_filename,
                                    "StarlightCurves", "StarLightCurves")
-        except:
+        except Exception:
             self._baseline_scores_filename = None
 
         self._ignore_list = ["Data Descriptions"]
@@ -182,23 +186,23 @@ class UCR_UEA_datasets:
         2
         >>> dict_acc["Adiac"]  # doctest: +ELLIPSIS
         {'C45': 0.542199...}
-        >>> dict_acc = uea_ucr.baseline_accuracy()
-        >>> len(dict_acc)
+        >>> all_dict_acc = uea_ucr.baseline_accuracy()
+        >>> len(all_dict_acc)
         85
         """
-        d_out = {}
-        for perfs_dict in csv.DictReader(
-                open(self._baseline_scores_filename, "r"), delimiter=","):
-            dataset_name = perfs_dict[""]
-            if list_datasets is None or dataset_name in list_datasets:
-                d_out[dataset_name] = {}
-                for m in perfs_dict.keys():
-                    if m != "" and (list_methods is None or m in list_methods):
-                        try:
-                            d_out[dataset_name][m] = float(perfs_dict[m])
-                        except ValueError:  # Missing score case (score == "")
-                            pass
-        return d_out
+        with open(self._baseline_scores_filename, "r") as f:
+            d_out = dict()
+            for perfs_dict in csv.DictReader(f, delimiter=","):
+                dataset_name = perfs_dict[""]
+                if list_datasets is None or dataset_name in list_datasets:
+                    d_out[dataset_name] = {}
+                    for m in perfs_dict.keys():
+                        if m != "" and (list_methods is None or m in list_methods):
+                            try:
+                                d_out[dataset_name][m] = float(perfs_dict[m])
+                            except ValueError:  # Missing score case (score == "")
+                                pass
+            return d_out
 
     def list_univariate_datasets(self):
         """List univariate datasets in the UCR/UEA archive.
@@ -208,12 +212,17 @@ class UCR_UEA_datasets:
         >>> l = UCR_UEA_datasets().list_univariate_datasets()
         >>> len(l)
         85
+
+        Returns
+        -------
+        list of str:
+            A list of the names of all univariate datasets.
         """
-        datasets = []
-        for perfs_dict in csv.DictReader(
-                open(self._baseline_scores_filename, "r"), delimiter=","):
-            datasets.append(perfs_dict[""])
-        return datasets
+        with open(self._baseline_scores_filename, "r") as f:
+            return [
+                perfs_dict[""]  # get the dataset name
+                for perfs_dict in csv.DictReader(f, delimiter=",")
+            ]
 
     def list_multivariate_datasets(self):
         """List multivariate datasets in the UCR/UEA archive.
@@ -223,12 +232,17 @@ class UCR_UEA_datasets:
         >>> l = UCR_UEA_datasets().list_multivariate_datasets()
         >>> "PenDigits" in l
         True
+
+        Returns
+        -------
+        list of str:
+            A list of the names of all multivariate dataset namas.
         """
-        datasets = []
-        for infos_dict in csv.DictReader(
-                open(self._list_multivariate_filename, "r"), delimiter=","):
-            datasets.append(infos_dict["Problem"])
-        return datasets
+        with open(self._list_multivariate_filename, "r") as f:
+            return [
+                infos_dict["Problem"]  # get the dataset name
+                for infos_dict in csv.DictReader(f, delimiter=",")
+            ]
 
     def list_datasets(self):
         """List datasets (both univariate and multivariate) available in the 
@@ -243,6 +257,11 @@ class UCR_UEA_datasets:
         True
         >>> "DatasetThatDoesNotExist" in l
         False
+
+        Returns
+        -------
+        list of str:
+            A list of names of all (univariate and multivariate) dataset namas.
         """
         return (self.list_univariate_datasets()
                 + self.list_multivariate_datasets())
@@ -263,6 +282,9 @@ class UCR_UEA_datasets:
 
     def load_dataset(self, dataset_name):
         """Load a dataset from the UCR/UEA archive from its name.
+
+        On failure, `None` is returned for each of the four values and a
+        `RuntimeWarning` is printed.
 
         Parameters
         ----------
@@ -291,10 +313,6 @@ class UCR_UEA_datasets:
         >>> y_train.shape
         (1000,)
         >>> X_train, y_train, X_test, y_test = data_loader.load_dataset(
-        ...         "StarLightCurves")
-        >>> X_train.shape
-        (1000, 1024, 1)
-        >>> X_train, y_train, X_test, y_test = data_loader.load_dataset(
         ...         "CinCECGTorso")
         >>> X_train.shape
         (40, 1639, 1)
@@ -302,44 +320,86 @@ class UCR_UEA_datasets:
         ...         "PenDigits")
         >>> X_train.shape
         (7494, 8, 2)
-        >>> X_train, y_train, X_test, y_test = data_loader.load_dataset(
-        ...         "StarlightCurves")
-        >>> X_train.shape
-        (1000, 1024, 1)
-        >>> X_train, y_train, X_test, y_test = data_loader.load_dataset(
+        >>> assert (None, None, None, None) == data_loader.load_dataset(
         ...         "DatasetThatDoesNotExist")
-        >>> print(X_train)
-        None
         """
         dataset_name = self._filenames.get(dataset_name, dataset_name)
         full_path = os.path.join(self._data_dir, dataset_name)
 
-        if not self._has_files(dataset_name):
-            url = ("http://www.timeseriesclassification.com/Downloads/%s.zip"
+        if not self._has_files(dataset_name) or not self.use_cache:
+            # completely clear the target directory first, it will be created
+            # by extract_from_zip_url if it does not exist
+            try:
+                # maybe it is a normal file (not a directory) for some obscure reason
+                os.remove(full_path)
+            except FileNotFoundError:
+                pass  # nothing to do here, already deleted
+            except IsADirectoryError:
+                # we then need this function to recursively remove the directory:
+                shutil.rmtree(full_path, ignore_errors=True)
+            # else, actually raise the error!
+
+            url = ("https://www.timeseriesclassification.com/Downloads/%s.zip"
                    % dataset_name)
-            if os.path.isdir(full_path):
-                for fname in os.listdir(full_path):
-                    os.remove(os.path.join(full_path, fname))
-            extract_from_zip_url(url, target_dir=full_path, verbose=False)
-        if self._has_files(dataset_name, ext="txt"):
-            X_train, y_train = _load_txt_uea(
-                os.path.join(full_path, dataset_name + "_TRAIN.txt")
-            )
-            X_test, y_test = _load_txt_uea(
-                os.path.join(full_path, dataset_name + "_TEST.txt")
-            )
-        elif self._has_files(dataset_name, ext="arff"):
-            X_train, y_train = _load_arff_uea(
-                os.path.join(full_path, dataset_name + "_TRAIN.arff")
-            )
-            X_test, y_test = _load_arff_uea(
-                os.path.join(full_path, dataset_name + "_TEST.arff")
-            )
-        else:
+            success = extract_from_zip_url(url, target_dir=full_path)
+            if not success:
+                warnings.warn("dataset \"%s\" could not be downloaded or "
+                              "extracted" % dataset_name,
+                              category=RuntimeWarning, stacklevel=2)
+                return None, None, None, None
+
+        try:
+            # if both TXT and ARFF files are provided, the TXT versions are
+            # used
+            # both training and test data must be available in the same format
+            if self._has_files(dataset_name, ext="txt"):
+                X_train, y_train = _load_txt_uea(
+                    os.path.join(full_path, dataset_name + "_TRAIN.txt")
+                )
+                X_test, y_test = _load_txt_uea(
+                    os.path.join(full_path, dataset_name + "_TEST.txt")
+                )
+            elif self._has_files(dataset_name, ext="arff"):
+                X_train, y_train = _load_arff_uea(
+                    os.path.join(full_path, dataset_name + "_TRAIN.arff")
+                )
+                X_test, y_test = _load_arff_uea(
+                    os.path.join(full_path, dataset_name + "_TEST.arff")
+                )
+            else:
+                warnings.warn("dataset \"%s\" is not provided in either TXT "
+                              "or ARFF format and thus could not be loaded"
+                              % dataset_name,
+                              category=RuntimeWarning, stacklevel=2)
+                return None, None, None, None
+
+            return X_train, y_train, X_test, y_test
+
+        except Exception as exception:
+            warnings.warn("dataset \"%s\" could be downloaded but not "
+                          "parsed: %s" % (dataset_name, str(exception)),
+                          category=RuntimeWarning, stacklevel=2)
             return None, None, None, None
-        return X_train, y_train, X_test, y_test
 
     def _has_files(self, dataset_name, ext=None):
+        """Determines whether some downloaded and unzipped dataset provides
+        both training and test data in the given format.
+
+        Parameters
+        ----------
+        dataset_name : str
+            the name of the dataset
+        ext : str or None
+            the file extension without a dot, e.g `"txt"` or `"arff"`;
+            if set to None (the default), `True` will be returned if either TXT
+            or ARFF files are present
+
+        Returns
+        -------
+        bool
+            if there are both training and test files with the specified
+            file extension
+        """
         if ext is None:
             return (self._has_files(dataset_name, ext="txt") or
                     self._has_files(dataset_name, ext="arff"))
@@ -351,21 +411,27 @@ class UCR_UEA_datasets:
                     os.path.exists(basename + "_TEST.%s" % ext))
 
     def cache_all(self):
-        """Cache all datasets from the UCR/UEA archive for later 
-        use.
-        """
+        """Cache all datasets from the UCR/UEA archive for later use."""
         for dataset_name in self.list_datasets():
             try:
                 self.load_dataset(dataset_name)
-            except:
-                sys.stderr.write("Could not cache dataset %s properly.\n"
-                                 % dataset_name)
+            except Exception as exception:
+                warnings.warn("Could not cache dataset \"%s\": %s"
+                              % (dataset_name, str(exception)),
+                              category=RuntimeWarning, stacklevel=2)
 
 
 class CachedDatasets:
     """A convenience class to access cached time series datasets.
 
+    Note, that these *cached datasets* are statically included into *tslearn*
+    and are distinct from the ones in :class:`UCR_UEA_datasets`.
+
     When using the Trace dataset, please cite [1]_.
+
+    See Also
+    --------
+    UCR_UEA_datasets : Provides more datasets and supports caching.
 
     References
     ----------
@@ -376,7 +442,21 @@ class CachedDatasets:
         self.path = os.path.join(os.path.dirname(__file__), ".cached_datasets")
 
     def list_datasets(self):
-        """List cached datasets."""
+        """List cached datasets.
+
+        Examples
+        --------
+        >>> _ = UCR_UEA_datasets().load_dataset("Trace")
+        >>> cached = UCR_UEA_datasets().list_cached_datasets()
+        >>> "Trace" in cached
+        True
+
+        Returns
+        -------
+        list of str:
+            A list of names of all cached (univariate and multivariate) dataset
+            namas.
+        """
         return [fname[:fname.rfind(".")]
                 for fname in os.listdir(self.path)
                 if fname.endswith(".npz")]
@@ -388,7 +468,7 @@ class CachedDatasets:
         ----------
         dataset_name : str
             Name of the dataset. Should be in the list returned by
-            `list_datasets`
+            :meth:`~list_datasets`.
 
         Returns
         -------
@@ -410,6 +490,11 @@ class CachedDatasets:
         (100, 275, 1)
         >>> print(y_train.shape)
         (100,)
+
+        Raises
+        ------
+        IOError
+            If the dataset does not exist or cannot be read.
         """
         npzfile = numpy.load(os.path.join(self.path, dataset_name + ".npz"))
         X_train = npzfile["X_train"]
