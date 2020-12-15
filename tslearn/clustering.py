@@ -2,7 +2,7 @@
 The :mod:`tslearn.clustering` module gathers time series specific clustering
 algorithms.
 
-**User guide:** See the :ref:`Clustering <clustering>` section for further 
+**User guide:** See the :ref:`Clustering <clustering>` section for further
  details.
 """
 
@@ -22,6 +22,7 @@ from sklearn.utils.validation import _check_sample_weight
 from scipy.spatial.distance import cdist
 import numpy
 import warnings
+from joblib import parallel_backend, Parallel, delayed
 
 from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw, \
     cdist_soft_dtw_normalized, sigma_gak
@@ -181,14 +182,14 @@ def _compute_inertia(distances, assignments, squared=True):
 
 
 def silhouette_score(X, labels, metric=None, sample_size=None,
-                     metric_params=None, n_jobs=None, verbose=0, 
+                     metric_params=None, n_jobs=None, verbose=0,
                      random_state=None, **kwds):
     """Compute the mean Silhouette Coefficient of all samples (cf.  [1]_ and
     [2]_).
 
     Read more in the `scikit-learn documentation
     <http://scikit-learn.org/stable/modules/clustering.html\
-    #silhouette-coefficient>`_.
+    # silhouette-coefficient>`_.
 
     Parameters
     ----------
@@ -228,7 +229,7 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
 
     verbose : int (default: 0)
         If nonzero, print information about the inertia while learning
-        the model and joblib progress messages are printed.  
+        the model and joblib progress messages are printed.
 
     random_state : int, RandomState instance or None, optional (default: None)
         The generator used to randomly select a subset of samples.  If int,
@@ -287,7 +288,7 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
     if metric == "precomputed":
         sklearn_X = X
     elif metric == "dtw" or metric is None:
-        sklearn_X = cdist_dtw(X, n_jobs=n_jobs, verbose=verbose,
+        sklearn_X = cdist_dtw(X, n_jobs=n_jobs, verbose=verbose, global_constraint='sakoe_chiba',
                               **metric_params_)
     elif metric == "softdtw":
         sklearn_X = cdist_soft_dtw_normalized(X, **metric_params_)
@@ -328,7 +329,7 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
     ----------
     n_clusters : int (default: 3)
         Number of clusters to form.
-        
+
     kernel : string, or callable (default: "gak")
         The kernel should either be "gak", in which case the Global Alignment
         Kernel from [2]_ is used or a value that is accepted as a metric
@@ -349,12 +350,12 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
         Number of time the k-means algorithm will be run with different
         centroid seeds. The final results will be the
         best output of n_init consecutive runs in terms of inertia.
-        
+
     kernel_params : dict or None (default: None)
         Kernel parameters to be passed to the kernel function.
         None means no kernel parameter is set.
-        For Global Alignment Kernel, the only parameter of interest is `sigma`. 
-        If set to 'auto', it is computed based on a sampling of the training 
+        For Global Alignment Kernel, the only parameter of interest is `sigma`.
+        If set to 'auto', it is computed based on a sampling of the training
         set
         (cf :ref:`tslearn.metrics.sigma_gak <fun-tslearn.metrics.sigma_gak>`).
         If no specific value is set for `sigma`, its defaults to 1.
@@ -363,10 +364,10 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
         Bandwidth parameter for the Global Alignment kernel. If set to 'auto',
         it is computed based on a sampling of the training set
         (cf :ref:`tslearn.metrics.sigma_gak <fun-tslearn.metrics.sigma_gak>`)
-        
+
         .. deprecated:: 0.4
-            Setting `sigma` directly as a parameter for KernelKMeans and 
-            GlobalAlignmentKernelKMeans is deprecated in version 0.4 and will 
+            Setting `sigma` directly as a parameter for KernelKMeans and
+            GlobalAlignmentKernelKMeans is deprecated in version 0.4 and will
             be removed in 0.6. Use `kernel_params` instead.
 
     n_jobs : int or None, optional (default=None)
@@ -378,7 +379,7 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
         for more details.
 
     verbose : int (default: 0)
-        If nonzero, joblib progress messages are printed.  
+        If nonzero, joblib progress messages are printed.
 
     random_state : integer or numpy.RandomState, optional
         Generator used to initialize the centers. If an integer is given, it
@@ -658,6 +659,7 @@ class GlobalAlignmentKernelKMeans(KernelKMeans):
 
 class TimeSeriesCentroidBasedClusteringMixin:
     """Mixin class for centroid-based clustering of time series."""
+
     def _post_fit(self, X_fitted, centroids, inertia):
         if numpy.isfinite(inertia) and (centroids is not None):
             self.cluster_centers_ = centroids
@@ -722,7 +724,7 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
 
     verbose : int (default: 0)
         If nonzero, print information about the inertia while learning
-        the model and joblib progress messages are printed.  
+        the model and joblib progress messages are printed.
 
     random_state : integer or numpy.RandomState, optional
         Generator used to initialize the centers. If an integer is given, it
@@ -836,7 +838,7 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
                 if self.metric == "dtw":
                     def metric_fun(x, y):
                         return cdist_dtw(x, y, n_jobs=self.n_jobs,
-                                         verbose=self.verbose, **metric_params)
+                                         verbose=self.verbose, global_constraint='sakoe_chiba', **metric_params)
 
                 elif self.metric == "softdtw":
                     def metric_fun(x, y):
@@ -857,32 +859,30 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
                              "is invalid" % self.init)
         self.cluster_centers_ = _check_full_length(self.cluster_centers_)
         old_inertia = numpy.inf
-
         for it in range(self.max_iter):
+            print('Iteration number: ' + str(it))
             self._assign(X)
             if self.verbose:
                 print("%.3f" % self.inertia_, end=" --> ")
             self._update_centroids(X)
-
             if numpy.abs(old_inertia - self.inertia_) < self.tol:
                 break
             old_inertia = self.inertia_
-        if self.verbose:
-            print("")
+            if self.verbose:
+                print("")
 
         self._iter = it + 1
-
         return self
 
     def _transform(self, X):
         metric_params = self._get_metric_params()
         if self.metric == "euclidean":
             return cdist(X.reshape((X.shape[0], -1)),
-                          self.cluster_centers_.reshape((self.n_clusters, -1)),
-                          metric="euclidean")
+                         self.cluster_centers_.reshape((self.n_clusters, -1)),
+                         metric="euclidean")
         elif self.metric == "dtw":
-            return cdist_dtw(X, self.cluster_centers_, n_jobs=self.n_jobs,
-                              verbose=self.verbose, **metric_params)
+            return cdist_dtw(X, self.cluster_centers_, n_jobs=self.n_jobs, global_constraint='sakoe_chiba',
+                             verbose=self.verbose, **metric_params)
         elif self.metric == "softdtw":
             return cdist_soft_dtw(X, self.cluster_centers_, **metric_params)
         else:
@@ -897,7 +897,7 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
             _check_no_empty_cluster(self.labels_, self.n_clusters)
             if self.dtw_inertia and self.metric != "dtw":
                 inertia_dists = cdist_dtw(X, self.cluster_centers_,
-                                          n_jobs=self.n_jobs,
+                                          n_jobs=self.n_jobs, global_constraint='sakoe_chiba',
                                           verbose=self.verbose)
             else:
                 inertia_dists = dists
@@ -908,23 +908,37 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
 
     def _update_centroids(self, X):
         metric_params = self._get_metric_params()
+        X_list = []
         for k in range(self.n_clusters):
-            if self.metric == "dtw":
-                self.cluster_centers_[k] = dtw_barycenter_averaging(
-                    X=X[self.labels_ == k],
-                    barycenter_size=None,
-                    init_barycenter=self.cluster_centers_[k],
-                    metric_params=metric_params,
-                    verbose=False)
-            elif self.metric == "softdtw":
-                self.cluster_centers_[k] = softdtw_barycenter(
-                    X=X[self.labels_ == k],
-                    max_iter=self.max_iter_barycenter,
-                    init=self.cluster_centers_[k],
-                    **metric_params)
-            else:
-                self.cluster_centers_[k] = euclidean_barycenter(
-                    X=X[self.labels_ == k])
+           X_list.append(X[self.labels_ == k])
+        cluster_centers = Parallel(backend='threading', prefer='threads', require='sharedmem', n_jobs=self.n_clusters, verbose=5)(delayed(dtw_barycenter_averaging)(
+						X=X_list[k],
+						barycenter_size=None,
+						init_barycenter=self.cluster_centers_[k],
+						metric_params=metric_params, max_iter = 3,
+						verbose=True) for k in range(self.n_clusters))
+        for k in range(self.n_clusters):
+            self.cluster_centers_[k] = cluster_centers[k]
+#    def _update_centroids(self, X):
+#        metric_params = self._get_metric_params()
+#        for k in range(self.n_clusters):
+#            if self.metric == "dtw":
+#                self.cluster_centers_[k] = (dtw_barycenter_averaging(
+#						X=X[self.labels_ == k],
+#						barycenter_size=None,
+#						init_barycenter=self.cluster_centers_[k],
+#						metric_params=metric_params, max_iter = 3,
+#						verbose=False))
+#           elif self.metric == "softdtw":
+#                self.cluster_centers_[k] = softdtw_barycenter(
+#						X=X[self.labels_ == k],
+#						max_iter=self.max_iter_barycenter,
+#						init=self.cluster_centers_[k],
+#						**metric_params)
+#            else:
+#                self.cluster_centers_[k] = euclidean_barycenter(
+#						X=X[self.labels_ == k])
+#        print(self.cluster_centers_[0])
 
     def fit(self, X, y=None):
         """Compute k-means clustering.
@@ -945,7 +959,6 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
                            extend=True,
                            check_n_features_only=(self.metric != "euclidean"))
 
-
         self.labels_ = None
         self.inertia_ = numpy.inf
         self.cluster_centers_ = None
@@ -956,7 +969,7 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
 
         max_attempts = max(self.n_init, 10)
 
-        X_ = to_time_series_dataset(X)
+        X_ = X
         rs = check_random_state(self.random_state)
 
         if self.init == "k-means++" and self.metric == "euclidean":
@@ -1034,7 +1047,7 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
 
     def transform(self, X):
         """Transform X to a cluster-distance space.
-        
+
         In the new space, each dimension is the distance to the cluster 
         centers.
 
