@@ -2099,10 +2099,11 @@ def njit_lcss(s1, s2, eps, mask):
     l2 = s2.shape[0]
     acc_cost_mat = njit_lcss_accumulated_matrix(s1, s2, eps, mask)
 
-    return round(float(acc_cost_mat[-1][-1]) / min([l1, l2]), 2)
+    return float(acc_cost_mat[-1][-1]) / min([l1, l2])
 
 
-def lcss(s1, s2, eps=1., sakoe_chiba_radius=None):
+def lcss(s1, s2, eps=1., global_constraint=None, sakoe_chiba_radius=None,
+        itakura_max_slope=None):
     r"""Compute the Longest Common Subsequence (LCSS) similarity measure
     between (possibly multidimensional) time series and return both the
     path and the similarity.
@@ -2134,9 +2135,28 @@ def lcss(s1, s2, eps=1., sakoe_chiba_radius=None):
     eps : float (default: 1.)
         Maximum matching distance threshold.
 
+    global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
+        Global constraint to restrict admissible paths for LCSS.
+
     sakoe_chiba_radius : int or None (default: None)
-        Radius to be used for Sakoe-Chiba band global constraint,
-        to restrict admissable paths for LCSS.
+        Radius to be used for Sakoe-Chiba band global constraint.
+        If None and `global_constraint` is set to "sakoe_chiba", a radius of
+        1 is used.
+        If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+        `global_constraint` is used to infer which constraint to use among the
+        two. In this case, if `global_constraint` corresponds to no global
+        constraint, a `RuntimeWarning` is raised and no global constraint is
+        used.
+
+    itakura_max_slope : float or None (default: None)
+        Maximum slope for the Itakura parallelogram constraint.
+        If None and `global_constraint` is set to "itakura", a maximum slope
+        of 2. is used.
+        If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+        `global_constraint` is used to infer which constraint to use among the
+        two. In this case, if `global_constraint` corresponds to no global
+        constraint, a `RuntimeWarning` is raised and no global constraint is
+        used.
 
     Returns
     -------
@@ -2152,7 +2172,7 @@ def lcss(s1, s2, eps=1., sakoe_chiba_radius=None):
     >>> lcss([1, 2, 3], [1., 2., 2., 2., 3.], eps=0, sakoe_chiba_radius=0)
     1.0
     >>> lcss([1, 2, 3], [-2., 5., 7.], eps=3)
-    0.67
+    0.6666666666666666
 
     See Also
     --------
@@ -2171,7 +2191,9 @@ def lcss(s1, s2, eps=1., sakoe_chiba_radius=None):
 
     mask = compute_mask(
         s1, s2,
-        sakoe_chiba_radius=sakoe_chiba_radius)
+        GLOBAL_CONSTRAINT_CODE[global_constraint],
+        sakoe_chiba_radius=sakoe_chiba_radius,
+        itakura_max_slope=itakura_max_slope)
 
     return njit_lcss(s1, s2, eps, mask)
 
@@ -2210,7 +2232,8 @@ def _return_lcss_path_from_dist_matrix(dist_matrix, eps, mask, acc_cost_mat, sz1
     return path[::-1]
 
 
-def lcss_path(s1, s2, eps=1, sakoe_chiba_radius=None):
+def lcss_path(s1, s2, eps=1, global_constraint=None, sakoe_chiba_radius=None,
+             itakura_max_slope=None):
     r"""Compute the Longest Common Subsequence (LCSS) similarity measure
     between (possibly multidimensional) time series and return both the
     path and the similarity.
@@ -2243,9 +2266,28 @@ def lcss_path(s1, s2, eps=1, sakoe_chiba_radius=None):
      eps : float (default: 1.)
          Maximum matching distance threshold.
 
+     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
+        Global constraint to restrict admissible paths for LCSS.
+
      sakoe_chiba_radius : int or None (default: None)
-         Radius to be used for Sakoe-Chiba band global constraint,
-         to restrict admissable paths for LCSS.
+        Radius to be used for Sakoe-Chiba band global constraint.
+        If None and `global_constraint` is set to "sakoe_chiba", a radius of
+        1 is used.
+        If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+        `global_constraint` is used to infer which constraint to use among the
+        two. In this case, if `global_constraint` corresponds to no global
+        constraint, a `RuntimeWarning` is raised and no global constraint is
+        used.
+
+     itakura_max_slope : float or None (default: None)
+        Maximum slope for the Itakura parallelogram constraint.
+        If None and `global_constraint` is set to "itakura", a maximum slope
+        of 2. is used.
+        If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+        `global_constraint` is used to infer which constraint to use among the
+        two. In this case, if `global_constraint` corresponds to no global
+        constraint, a `RuntimeWarning` is raised and no global constraint is
+        used.
 
      Returns
      -------
@@ -2269,6 +2311,7 @@ def lcss_path(s1, s2, eps=1, sakoe_chiba_radius=None):
     See Also
     --------
     lcss : Get only the similarity score for LCSS
+    lcss_path_from_metric: Compute LCSS using a user-defined distance metric
 
     References
     ----------
@@ -2280,9 +2323,11 @@ def lcss_path(s1, s2, eps=1, sakoe_chiba_radius=None):
     """
     s1 = to_time_series(s1, remove_nans=True)
     s2 = to_time_series(s2, remove_nans=True)
+
     mask = compute_mask(
         s1, s2,
-        sakoe_chiba_radius=sakoe_chiba_radius)
+        GLOBAL_CONSTRAINT_CODE[global_constraint],
+        sakoe_chiba_radius, itakura_max_slope)
 
     l1 = s1.shape[0]
     l2 = s2.shape[0]
@@ -2290,7 +2335,7 @@ def lcss_path(s1, s2, eps=1, sakoe_chiba_radius=None):
     acc_cost_mat = njit_lcss_accumulated_matrix(s1, s2, eps, mask)
     path = _return_lcss_path(s1, s2, eps, mask, acc_cost_mat, l1, l2)
 
-    return path, round(float(acc_cost_mat[-1][-1]) / min([l1, l2]), 2)
+    return path, float(acc_cost_mat[-1][-1]) / min([l1, l2])
 
 
 def njit_lcss_accumulated_matrix_from_dist_matrix(dist_matrix, eps, mask):
@@ -2329,8 +2374,9 @@ def njit_lcss_accumulated_matrix_from_dist_matrix(dist_matrix, eps, mask):
     return acc_cost_mat
 
 
-def lcss_path_from_metric(s1, s2=None, eps=1,
-                          metric="euclidean", sakoe_chiba_radius=None, **kwds):
+def lcss_path_from_metric(s1, s2=None, eps=1, metric="euclidean",
+                          global_constraint=None, sakoe_chiba_radius=None,
+                          itakura_max_slope=None, **kwds):
     r"""Compute the Longest Common Subsequence (LCSS) similarity measure between
     (possibly multidimensional) time series using a distance metric defined by
     the user and return both the path and the similarity.
@@ -2359,10 +2405,6 @@ def lcss_path_from_metric(s1, s2=None, eps=1,
     eps : float (default: 1.)
         Maximum matching distance threshold.
         
-    sakoe_chiba_radius : int or None (default: None)
-        Radius to be used for Sakoe-Chiba band global constraint, 
-        to restrict admissable paths for LCSS. 
-        
     metric : string or callable (default: "euclidean")
         Function used to compute the pairwise distances between each points of
         `s1` and `s2`.
@@ -2376,6 +2418,29 @@ def lcss_path_from_metric(s1, s2=None, eps=1,
         of rows of `s1` and `s2`. The callable should take two 1 dimensional
         arrays as input and return a value indicating the distance between
         them.
+        
+    global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
+        Global constraint to restrict admissible paths for LCSS.
+        
+    sakoe_chiba_radius : int or None (default: None)
+        Radius to be used for Sakoe-Chiba band global constraint.
+        If None and `global_constraint` is set to "sakoe_chiba", a radius of
+        1 is used.
+        If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+        `global_constraint` is used to infer which constraint to use among the
+        two. In this case, if `global_constraint` corresponds to no global
+        constraint, a `RuntimeWarning` is raised and no global constraint is
+        used.
+        
+    itakura_max_slope : float or None (default: None)
+        Maximum slope for the Itakura parallelogram constraint.
+        If None and `global_constraint` is set to "itakura", a maximum slope
+        of 2. is used.
+        If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+        `global_constraint` is used to infer which constraint to use among the
+        two. In this case, if `global_constraint` corresponds to no global
+        constraint, a `RuntimeWarning` is raised and no global constraint is
+        used.
         
     **kwds
         Additional arguments to pass to sklearn pairwise_distances to compute
@@ -2424,7 +2489,7 @@ def lcss_path_from_metric(s1, s2=None, eps=1,
     By using a squared euclidean distance metric as shown above, the output
     path and similarity is the same as the one obtained by using lcss_path 
     (which uses the euclidean distance) simply because with the sum of squared
-    distances the matching threhold is still not reached.
+    distances the matching threshold is still not reached.
 
     See Also
     --------
@@ -2448,7 +2513,9 @@ def lcss_path_from_metric(s1, s2=None, eps=1,
     if metric == "precomputed":  # Pairwise distance given as input
         sz1, sz2 = s1.shape
         mask = compute_mask(
-            sz1, sz2, sakoe_chiba_radius)
+            sz1, sz2, GLOBAL_CONSTRAINT_CODE[global_constraint],
+            sakoe_chiba_radius, itakura_max_slope
+        )
         dist_mat = s1
     else:
         s1 = to_time_series(s1, remove_nans=True)
@@ -2456,13 +2523,15 @@ def lcss_path_from_metric(s1, s2=None, eps=1,
         sz1 = s1.shape[0]
         sz2 = s2.shape[0]
         mask = compute_mask(
-            s1, s2, sakoe_chiba_radius)
+            s1, s2, GLOBAL_CONSTRAINT_CODE[global_constraint],
+            sakoe_chiba_radius, itakura_max_slope
+        )
         dist_mat = pairwise_distances(s1, s2, metric=metric, **kwds)
 
     acc_cost_mat = njit_lcss_accumulated_matrix_from_dist_matrix(dist_mat, eps, mask)
     path = _return_lcss_path_from_dist_matrix(dist_mat, eps, acc_cost_mat, mask, sz1, sz2)
 
-    return path, round(float(acc_cost_mat[-1][-1]) / min([sz1, sz2]), 2)
+    return path, float(acc_cost_mat[-1][-1]) / min([sz1, sz2])
 
 
 class SoftDTW:

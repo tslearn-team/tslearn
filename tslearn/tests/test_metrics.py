@@ -87,7 +87,7 @@ def test_lcss():
     np.testing.assert_equal(sim, 1.)
 
     sim = tslearn.metrics.lcss([1, 2, 3], [-2., 5., 7.], eps=3)
-    np.testing.assert_equal(sim, 0.67)
+    np.testing.assert_equal(round(sim, 2), 0.67)
 
     sim = tslearn.metrics.lcss([1, 2, 3], [1., 2., 2., 2., 3.], eps=0, sakoe_chiba_radius=0)
     np.testing.assert_equal(sim, 1.)
@@ -103,7 +103,7 @@ def test_lcss_path():
     np.testing.assert_equal(path, [(0, 1), (1, 2), (2, 3)])
 
     path, sim = tslearn.metrics.lcss_path([1., 2., 3.], [-2., 5., 7.], eps=3)
-    np.testing.assert_equal(sim, 0.67)
+    np.testing.assert_equal(round(sim, 2), 0.67)
     np.testing.assert_equal(path, [(0, 0), (2, 1)])
 
     path, sim = tslearn.metrics.lcss_path([1., 2., 3.], [1., 2., 2., 2., 3.], eps=0, sakoe_chiba_radius=0.)
