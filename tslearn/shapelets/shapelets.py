@@ -49,7 +49,10 @@ class GlobalMinPooling1D(Layer):
         return input_shape[0], input_shape[2]
 
     def call(self, inputs, **kwargs):
-        return tf.reduce_min(inputs[tf.math.is_finite(inputs)], axis=1)
+        inputs_without_nans = tf.where(tf.math.is_finite(inputs),
+                                       inputs,
+                                       tf.zeros_like(inputs) + numpy.inf)
+        return tf.reduce_min(inputs_without_nans, axis=1)
 
 
 class GlobalArgminPooling1D(Layer):
