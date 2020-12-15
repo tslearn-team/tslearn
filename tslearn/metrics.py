@@ -2300,12 +2300,12 @@ def lcss_path(s1, s2, eps=1, global_constraint=None, sakoe_chiba_radius=None,
 
     Examples
     --------
-    >>> path, sim = lcss_path([1, 2, 3], [1., 2., 2., 3.])
+    >>> path, sim = lcss_path([1., 2., 3.], [1., 2., 2., 3.])
     >>> path
     [(0, 1), (1, 2), (2, 3)]
     >>> sim
     1.0
-    >>> lcss_path([1, 2, 3], [1., 2., 2., 4.])[1]
+    >>> lcss_path([1., 2., 3.], [1., 2., 2., 4.])[1]
     1.0
 
     See Also
