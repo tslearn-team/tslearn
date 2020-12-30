@@ -82,8 +82,7 @@ def _k_init_metric(X, n_clusters, cdist_metric, random_state, n_local_trials=Non
     """
     n_samples, n_timestamps, n_features = X.shape
 
-    centers = numpy.empty(
-        (n_clusters, n_timestamps, n_features), dtype=X.dtype)
+    centers = numpy.empty((n_clusters, n_timestamps, n_features), dtype=X.dtype)
 
     # Set the number of local seeding trials if none is given
     if n_local_trials is None:
@@ -105,11 +104,9 @@ def _k_init_metric(X, n_clusters, cdist_metric, random_state, n_local_trials=Non
         # Choose center candidates by sampling with probability proportional
         # to the squared distance to the closest existing center
         rand_vals = random_state.random_sample(n_local_trials) * current_pot
-        candidate_ids = numpy.searchsorted(
-            stable_cumsum(closest_dist_sq), rand_vals)
+        candidate_ids = numpy.searchsorted(stable_cumsum(closest_dist_sq), rand_vals)
         # XXX: numerical imprecision can result in a candidate_id out of range
-        numpy.clip(candidate_ids, None,
-                   closest_dist_sq.size - 1, out=candidate_ids)
+        numpy.clip(candidate_ids, None, closest_dist_sq.size - 1, out=candidate_ids)
 
         # Compute distances to center candidates
         distance_to_candidates = cdist_metric(X[candidate_ids], X) ** 2
@@ -146,8 +143,7 @@ class EmptyClusterError(Exception):
 
 
 def _check_no_empty_cluster(labels, n_clusters):
-    """Check that all clusters have at least one sample assigned.
-    """
+    """Check that all clusters have at least one sample assigned."""
 
     for k in range(n_clusters):
         if numpy.sum(labels == k) == 0:
@@ -298,8 +294,7 @@ def silhouette_score(
     if metric == "precomputed":
         sklearn_X = X
     elif metric == "dtw" or metric is None:
-        sklearn_X = cdist_dtw(
-            X, n_jobs=n_jobs, verbose=verbose, **metric_params_)
+        sklearn_X = cdist_dtw(X, n_jobs=n_jobs, verbose=verbose, **metric_params_)
     elif metric == "softdtw":
         sklearn_X = cdist_soft_dtw_normalized(X, **metric_params_)
     elif metric == "euclidean":
@@ -330,9 +325,10 @@ def silhouette_score(
 
 def _check_initial_guess(init, n_clusters):
     if hasattr(init, "__array__"):
-        assert init.shape[0] == n_clusters, (
-            "Initial guess index array must contain {} samples,"
-            " {} given".format(n_clusters, init.shape[0])
+        assert (
+            init.shape[0] == n_clusters
+        ), "Initial guess index array must contain {} samples," " {} given".format(
+            n_clusters, init.shape[0]
         )
 
 
@@ -579,8 +575,7 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
 
         n_samples = X.shape[0]
         K = self._get_kernel(X)
-        sw = sample_weight if sample_weight is not None else numpy.ones(
-            n_samples)
+        sw = sample_weight if sample_weight is not None else numpy.ones(n_samples)
         self.sample_weight_ = sw
         rs = check_random_state(self.random_state)
 
@@ -624,8 +619,7 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
             # NB: we use a normalized kernel so k(x,x) = 1 for all x
             # (including the centroid)
             dist[:, j] = (
-                2 - 2 * numpy.sum(sw[mask] * K[:, mask],
-                                  axis=1) / sw[mask].sum()
+                2 - 2 * numpy.sum(sw[mask] * K[:, mask], axis=1) / sw[mask].sum()
             )
 
     @staticmethod
@@ -669,8 +663,7 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
         """
         X = check_array(X, allow_nd=True, force_all_finite=False)
         check_is_fitted(self, "_X_fit")
-        X = check_dims(X, X_fit_dims=self._X_fit.shape,
-                       check_n_features_only=True)
+        X = check_dims(X, X_fit_dims=self._X_fit.shape, check_n_features_only=True)
         K = self._get_kernel(X, self._X_fit)
         n_samples = X.shape[0]
         dist = numpy.zeros((n_samples, self.n_clusters))
@@ -911,8 +904,7 @@ class TimeSeriesKMeans(
             indices = rs.choice(X.shape[0], self.n_clusters)
             self.cluster_centers_ = X[indices].copy()
         else:
-            raise ValueError(
-                "Value %r for parameter 'init'" "is invalid" % self.init)
+            raise ValueError("Value %r for parameter 'init'" "is invalid" % self.init)
         self.cluster_centers_ = _check_full_length(self.cluster_centers_)
         old_inertia = numpy.inf
 
@@ -992,8 +984,7 @@ class TimeSeriesKMeans(
                     **metric_params
                 )
             else:
-                self.cluster_centers_[k] = euclidean_barycenter(
-                    X=X[self.labels_ == k])
+                self.cluster_centers_[k] = euclidean_barycenter(X=X[self.labels_ == k])
 
     def fit(self, X, y=None):
         """Compute k-means clustering.
@@ -1109,7 +1100,7 @@ class TimeSeriesKMeans(
     def transform(self, X):
         """Transform X to a cluster-distance space.
 
-        In the new space, each dimension is the distance to the cluster 
+        In the new space, each dimension is the distance to the cluster
         centers.
 
         Parameters
@@ -1241,8 +1232,7 @@ class KShape(
         bool
         """
 
-        check_is_fitted(self, ["cluster_centers_",
-                               "norms_", "norms_centroids_"])
+        check_is_fitted(self, ["cluster_centers_", "norms_", "norms_centroids_"])
         return True
 
     def _shape_extraction(self, X, k):
@@ -1275,8 +1265,7 @@ class KShape(
         self.cluster_centers_ = TimeSeriesScalerMeanVariance(
             mu=0.0, std=1.0
         ).fit_transform(self.cluster_centers_)
-        self.norms_centroids_ = numpy.linalg.norm(
-            self.cluster_centers_, axis=(1, 2))
+        self.norms_centroids_ = numpy.linalg.norm(self.cluster_centers_, axis=(1, 2))
 
     def _cross_dists(self, X):
         return 1.0 - cdist_normalized_cc(
@@ -1300,10 +1289,8 @@ class KShape(
             indices = rs.choice(X.shape[0], self.n_clusters)
             self.cluster_centers_ = X[indices].copy()
         else:
-            raise ValueError(
-                "Value %r for parameter 'init' is " "invalid" % self.init)
-        self.norms_centroids_ = numpy.linalg.norm(
-            self.cluster_centers_, axis=(1, 2))
+            raise ValueError("Value %r for parameter 'init' is " "invalid" % self.init)
+        self.norms_centroids_ = numpy.linalg.norm(self.cluster_centers_, axis=(1, 2))
         self._assign(X)
         old_inertia = numpy.inf
 
@@ -1379,8 +1366,7 @@ class KShape(
             except EmptyClusterError:
                 if self.verbose:
                     print("Resumed because of empty cluster")
-        self.norms_centroids_ = numpy.linalg.norm(
-            self.cluster_centers_, axis=(1, 2))
+        self.norms_centroids_ = numpy.linalg.norm(self.cluster_centers_, axis=(1, 2))
         self._post_fit(X_, best_correct_centroids, min_inertia)
         return self
 
@@ -1420,8 +1406,7 @@ class KShape(
             Index of the cluster each sample belongs to.
         """
         X = check_array(X, allow_nd=True)
-        check_is_fitted(self, ["cluster_centers_",
-                               "norms_", "norms_centroids_"])
+        check_is_fitted(self, ["cluster_centers_", "norms_", "norms_centroids_"])
 
         X_ = check_dims(X, X_fit_dims=self.cluster_centers_.shape)
         X_ = TimeSeriesScalerMeanVariance(mu=0.0, std=1.0).fit_transform(X_)
