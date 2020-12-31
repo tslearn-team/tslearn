@@ -1,9 +1,10 @@
 import numpy as np
 
 from tslearn.utils import to_time_series_dataset, ts_size
-from tslearn.clustering import EmptyClusterError, _check_full_length, \
-    _check_no_empty_cluster, TimeSeriesKMeans,  KernelKMeans, \
-    KShape
+from tslearn.clustering import EmptyClusterError, TimeSeriesKMeans, \
+    KernelKMeans, KShape
+from tslearn.clustering.utils import _check_full_length, \
+    _check_no_empty_cluster
 from tslearn.metrics import cdist_dtw, cdist_soft_dtw
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 
