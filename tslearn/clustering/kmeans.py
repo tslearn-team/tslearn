@@ -1,6 +1,5 @@
 from sklearn.base import ClusterMixin, TransformerMixin
 from sklearn.metrics.pairwise import pairwise_kernels
-from sklearn.cluster._k_means import _k_init
 from sklearn.cluster._kmeans import kmeans_plusplus
 from sklearn.utils import check_random_state
 from sklearn.utils.extmath import stable_cumsum
