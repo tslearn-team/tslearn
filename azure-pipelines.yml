@@ -171,7 +171,7 @@ jobs:
   - script: |
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -r requirements.txt
+      python -m pip install -r requirements_nocast.txt
     displayName: 'Install dependencies'
   
   - script: |
@@ -180,5 +180,5 @@ jobs:
   
   - script: |
       python -m pip install pytest pytest-azurepipelines
-      python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/tests/test_estimators.py
+      python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/tests/test_estimators.py --ignore tslearn/utils/cast.py
     displayName: 'Test'
