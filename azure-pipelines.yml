@@ -22,7 +22,7 @@ jobs:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
     PIP_PREFER_BINARY: 'true'
-  
+
   steps:
   - task: UsePythonVersion@0
     inputs:
@@ -52,17 +52,18 @@ jobs:
       fi
     displayName: 'Test'
 
-- job: 'codecov'
+
+- job: 'codecov'  # must be a separate job to only disable Numbas's JIT here
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
     matrix:
-      Python37:
-        python.version: '3.7'
+      Python38:
+        python.version: '3.8'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
-    NUMBA_DISABLE_JIT: '1'
+    NUMBA_DISABLE_JIT: '1'  # special for coverage testing
     PIP_PREFER_BINARY: 'true'
 
   steps:
@@ -86,9 +87,9 @@ jobs:
   - script: |
       set -xe
       python -m pip install pytest pytest-azurepipelines
-      pip install coverage==4.3 "pytest-cov<2.6";
-      pip install cesium pandas stumpy;
-      python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/deprecated.py --cov=tslearn;
+      pip install coverage pytest-cov
+      pip install cesium pandas stumpy
+      python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/deprecated.py --cov=tslearn
     displayName: 'Test'
 
   # Upload coverage to codecov.io
@@ -97,9 +98,9 @@ jobs:
     displayName: 'Upload coverage to codecov.io'
 
 
-- job: 'macOS1014'
+- job: 'macOS'
   pool:
-    vmImage: 'macOS-10.14'
+    vmImage: 'macOS-latest'
   strategy:
     matrix:
       Python35:
@@ -140,9 +141,9 @@ jobs:
     displayName: 'Test'
 
 
-- job: 'win2016'
+- job: 'windows'
   pool:
-    vmImage: 'vs2017-win2016'
+    vmImage: 'windows-latest'
   strategy:
     matrix:
       Python35:
