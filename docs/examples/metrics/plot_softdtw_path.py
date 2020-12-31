@@ -12,6 +12,7 @@ time series and plots the optimal soft alignment matrices [1]_.
 
 # Author: Romain Tavenard
 # License: BSD 3 clause
+# sphinx_gallery_thumbnail_number = 3
 
 import numpy
 from scipy.spatial.distance import cdist
