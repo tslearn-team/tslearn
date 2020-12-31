@@ -28,7 +28,7 @@ setup(
     install_requires=['numpy', 'scipy', 'scikit-learn', 'Cython', 'numba',
                       'joblib'],
     extras_require={'tests': ['pytest']},
-    ext_modules=cythonize(["tslearn/*.pyx", "tslearn/metrics/*.pyx"],
+    ext_modules=cythonize(["tslearn/metrics/*.pyx"],
                           include_path=[numpy.get_include()]),
     version=VERSION,
     url="http://tslearn.readthedocs.io/",
