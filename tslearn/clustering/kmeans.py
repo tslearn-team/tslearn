@@ -1,11 +1,7 @@
 from sklearn.base import ClusterMixin, TransformerMixin
 from sklearn.metrics.pairwise import pairwise_kernels
-try:
-    # Most recent
-    from sklearn.cluster._k_means import _k_init
-except ImportError:
-    # Deprecated from sklearn v0.24 onwards
-    from sklearn.cluster.k_means_ import _k_init
+from sklearn.cluster._k_means import _k_init
+from sklearn.cluster._kmeans import kmeans_plusplus
 from sklearn.utils import check_random_state
 from sklearn.utils.extmath import stable_cumsum
 from sklearn.utils.validation import _check_sample_weight
@@ -610,7 +606,7 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
             self.cluster_centers_ = self.init.copy()
         elif self.init == "k-means++":
             if self.metric == "euclidean":
-                self.cluster_centers_ = _k_init(
+                self.cluster_centers_ = kmeans_plusplus(
                     X.reshape((n_ts, -1)),
                     self.n_clusters,
                     x_squared_norms,

@@ -1,11 +1,6 @@
 from sklearn.base import ClusterMixin
 
-try:
-    # Most recent
-    from sklearn.cluster._k_means import _k_init
-except ImportError:
-    # Deprecated from sklearn v0.24 onwards
-    from sklearn.cluster.k_means_ import _k_init
+from sklearn.cluster._kmeans import kmeans_plusplus
 from sklearn.utils import check_random_state
 import numpy
 
