@@ -1,0 +1,8 @@
+Cython
+numpy
+numba
+scipy
+scikit-learn<0.24
+joblib>=0.12
+tensorflow>=2
+h5py
