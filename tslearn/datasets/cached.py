@@ -28,6 +28,7 @@ class CachedDatasets:
 
         Examples
         --------
+        >>> from tslearn.datasets import UCR_UEA_datasets
         >>> _ = UCR_UEA_datasets().load_dataset("Trace")
         >>> cached = UCR_UEA_datasets().list_cached_datasets()
         >>> "Trace" in cached

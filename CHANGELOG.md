@@ -19,6 +19,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 ### Added
 
 * Added canonical time warping (`ctw` and `ctw_path`)
+* `soft_dtw_alignment` provides soft alignment path for soft-dtw
 
 ### Fixed
 

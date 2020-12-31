@@ -46,9 +46,9 @@ jobs:
       python -m pip install pytest pytest-azurepipelines
       if [[ "$(python.version)" == '3.5' ]];
       then
-        python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/deprecated.py -k 'not test_all_estimators';
+        python -m pytest -v tslearn/ --doctest-modules -k 'not test_all_estimators';
       else
-        python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/deprecated.py;
+        python -m pytest -v tslearn/ --doctest-modules;
       fi
     displayName: 'Test'
 
@@ -89,7 +89,7 @@ jobs:
       python -m pip install pytest pytest-azurepipelines
       pip install coverage pytest-cov
       pip install cesium pandas stumpy
-      python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/deprecated.py --cov=tslearn
+      python -m pytest -v tslearn/ --doctest-modules --cov=tslearn
     displayName: 'Test'
 
   # Upload coverage to codecov.io
