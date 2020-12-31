@@ -8,7 +8,27 @@ and this project adheres to
 
 Changelogs for this project are recorded in this file since v0.2.0.
 
-## [Towards v0.4.0]
+## [Towards v0.5.0]
+
+### Changed
+
+* Code refactoring to have all subpackages in subfolders
+* Improved warnings in `datasets` loading
+* `shapelets` module is now compatible with `tensorflow` 2.4
+
+### Added
+
+* Added canonical time warping (`ctw` and `ctw_path`)
+* `soft_dtw_alignment` provides soft alignment path for soft-dtw
+
+### Fixed
+
+* numpy array hyper-parameters can now be serialized using `to_*()`
+methods
+* avoid `DivisionByZero` in `MinMaxScaler`
+
+
+## [v0.4.0]
 
 ### Changed
 
