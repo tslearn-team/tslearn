@@ -20,6 +20,7 @@ from .softdtw_variants import (cdist_soft_dtw, cdist_gak,
                                soft_dtw_alignment,
                                sigma_gak, gamma_soft_dtw, SquaredEuclidean,
                                SoftDTW)
+from .cycc import cdist_normalized_cc, y_shifted_sbd_vec
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -44,5 +45,7 @@ __all__ = [
 
     "cdist_soft_dtw", "cdist_gak",
     "cdist_soft_dtw_normalized", "gak", "soft_dtw", "soft_dtw_alignment",
-    "sigma_gak", "gamma_soft_dtw", "SquaredEuclidean", "SoftDTW"
+    "sigma_gak", "gamma_soft_dtw", "SquaredEuclidean", "SoftDTW",
+
+    "cdist_normalized_cc", "y_shifted_sbd_vec"
 ]

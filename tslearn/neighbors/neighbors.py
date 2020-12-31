@@ -1,8 +1,3 @@
-"""
-The :mod:`tslearn.neighbors` module gathers nearest neighbor algorithms using
-time series metrics.
-"""
-
 import numpy
 from sklearn import neighbors
 from sklearn.neighbors import (KNeighborsClassifier, NearestNeighbors,

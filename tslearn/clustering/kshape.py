@@ -14,7 +14,7 @@ from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.utils import to_time_series_dataset, check_dims
-from tslearn.cycc import cdist_normalized_cc, y_shifted_sbd_vec
+from tslearn.metrics import cdist_normalized_cc, y_shifted_sbd_vec
 from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
 
 from .utils import (TimeSeriesCentroidBasedClusteringMixin,
