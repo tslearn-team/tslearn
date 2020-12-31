@@ -1,8 +1,3 @@
-"""
-The :mod:`tslearn.piecewise` module gathers time series piecewise
-approximation algorithms.
-"""
-
 import numpy
 from scipy.stats import norm
 from sklearn.base import TransformerMixin

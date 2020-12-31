@@ -1,8 +1,3 @@
-"""
-The :mod:`tslearn.preprocessing` module gathers time series scalers and 
-resamplers.
-"""
-
 import numpy
 from sklearn.base import TransformerMixin
 from sklearn.utils import check_array
