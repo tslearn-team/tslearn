@@ -24,8 +24,8 @@ from .cycc import cdist_normalized_cc, y_shifted_sbd_vec
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
-TSLEARN_VALID_METRICS = ["ctw", "dtw", "gak", "sax", "softdtw"]
-VARIABLE_LENGTH_METRICS = ["ctw", "dtw", "gak", "sax", "softdtw"]
+TSLEARN_VALID_METRICS = ["ctw", "dtw", "gak", "sax", "softdtw", "lcss"]
+VARIABLE_LENGTH_METRICS = ["ctw", "dtw", "gak", "sax", "softdtw", "lcss"]
 
 __all__ = [
     "TSLEARN_VALID_METRICS", "VARIABLE_LENGTH_METRICS",
