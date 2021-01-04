@@ -12,7 +12,8 @@ from .dtw_variants import (dtw, dtw_limited_warping_length,
                            dtw_subsequence_path, cdist_dtw,
                            GLOBAL_CONSTRAINT_CODE,
                            lb_envelope, lb_keogh,
-                           sakoe_chiba_mask, itakura_mask)
+                           sakoe_chiba_mask, itakura_mask,
+                           lcss, lcss_path, lcss_path_from_metric)
 from .ctw import ctw_path, ctw, cdist_ctw
 from .sax import cdist_sax
 from .softdtw_variants import (cdist_soft_dtw, cdist_gak,
@@ -38,6 +39,7 @@ __all__ = [
     "GLOBAL_CONSTRAINT_CODE",
     "lb_envelope", "lb_keogh",
     "sakoe_chiba_mask", "itakura_mask",
+    "lcss", "lcss_path", "lcss_path_from_metric"
 
     "ctw_path", "ctw", "cdist_ctw",
 
