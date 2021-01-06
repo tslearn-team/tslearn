@@ -12,13 +12,22 @@ try:
     from sklearn.cluster._kmeans import _kmeans_plusplus
 except:
     try:
-        from sklearn.cluster._kmeans import _k_init as _kmeans_plusplus
+        from sklearn.cluster._kmeans import _k_init
         warnings.warn(
-            "Scikit-learn <0.24 will be deprecated in a future release of tslearn")
+            "Scikit-learn <0.24 will be deprecated in a "
+            "future release of tslearn"
+        )
     except:
-        from sklearn.cluster.k_means_ import _k_init as _kmeans_plusplus
+        from sklearn.cluster.k_means_ import _k_init
         warnings.warn(
-            "Scikit-learn <0.24 will be deprecated in a future release of tslearn")
+            "Scikit-learn <0.24 will be deprecated in a "
+            "future release of tslearn"
+        )
+    # sklearn < 0.24: _k_init only returns centroids, not indices
+    # So we need to add a second (fake) return value to make it match
+    # _kmeans_plusplus' signature
+    def _kmeans_plusplus(*args, **kwargs):
+        return _k_init(*args, **kwargs), None
 
 from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw, sigma_gak
 from tslearn.barycenters import euclidean_barycenter, \
