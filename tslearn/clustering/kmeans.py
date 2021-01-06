@@ -13,10 +13,12 @@ try:
 except:
     try:
         from sklearn.cluster._kmeans import _k_init as _kmeans_plusplus
-        warnings.warn("Scikit-learn <0.24 will be deprecated in a future release of tslearn")
+        warnings.warn(
+            "Scikit-learn <0.24 will be deprecated in a future release of tslearn")
     except:
         from sklearn.cluster.k_means_ import _k_init as _kmeans_plusplus
-        warnings.warn("Scikit-learn <0.24 will be deprecated in a future release of tslearn")
+        warnings.warn(
+            "Scikit-learn <0.24 will be deprecated in a future release of tslearn")
 
 from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw, sigma_gak
 from tslearn.barycenters import euclidean_barycenter, \
@@ -129,7 +131,7 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
     ----------
     n_clusters : int (default: 3)
         Number of clusters to form.
-        
+
     kernel : string, or callable (default: "gak")
         The kernel should either be "gak", in which case the Global Alignment
         Kernel from [2]_ is used or a value that is accepted as a metric
@@ -150,7 +152,7 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
         Number of time the k-means algorithm will be run with different
         centroid seeds. The final results will be the
         best output of n_init consecutive runs in terms of inertia.
-        
+
     kernel_params : dict or None (default: None)
         Kernel parameters to be passed to the kernel function.
         None means no kernel parameter is set.
@@ -164,7 +166,7 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
         Bandwidth parameter for the Global Alignment kernel. If set to 'auto',
         it is computed based on a sampling of the training set
         (cf :ref:`tslearn.metrics.sigma_gak <fun-tslearn.metrics.sigma_gak>`)
-        
+
         .. deprecated:: 0.4
             Setting `sigma` directly as a parameter for KernelKMeans and 
             GlobalAlignmentKernelKMeans is deprecated in version 0.4 and will 
@@ -618,8 +620,8 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
                 self.cluster_centers_ = _kmeans_plusplus(
                     X.reshape((n_ts, -1)),
                     self.n_clusters,
-                    x_squared_norms = x_squared_norms,
-                    random_state = rs
+                    x_squared_norms=x_squared_norms,
+                    random_state=rs
                 )[0].reshape((-1, sz, d))
             else:
                 if self.metric == "dtw":
@@ -667,11 +669,11 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
         metric_params = self._get_metric_params()
         if self.metric == "euclidean":
             return cdist(X.reshape((X.shape[0], -1)),
-                          self.cluster_centers_.reshape((self.n_clusters, -1)),
-                          metric="euclidean")
+                         self.cluster_centers_.reshape((self.n_clusters, -1)),
+                         metric="euclidean")
         elif self.metric == "dtw":
             return cdist_dtw(X, self.cluster_centers_, n_jobs=self.n_jobs,
-                              verbose=self.verbose, **metric_params)
+                             verbose=self.verbose, **metric_params)
         elif self.metric == "softdtw":
             return cdist_soft_dtw(X, self.cluster_centers_, **metric_params)
         else:
@@ -733,7 +735,6 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
             X = check_dims(X, X_fit_dims=self.init.shape,
                            extend=True,
                            check_n_features_only=(self.metric != "euclidean"))
-
 
         self.labels_ = None
         self.inertia_ = numpy.inf
@@ -823,7 +824,7 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
 
     def transform(self, X):
         """Transform X to a cluster-distance space.
-        
+
         In the new space, each dimension is the distance to the cluster 
         centers.
 
@@ -846,4 +847,3 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
 
     def _more_tags(self):
         return {'allow_nan': True, 'allow_variable_length': True}
-        
