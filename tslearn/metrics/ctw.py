@@ -113,7 +113,7 @@ def ctw_path(s1, s2, max_iter=100, n_components=None,
     >>> path
     [(0, 0), (1, 1), (1, 2), (2, 3)]
     >>> type(cca)
-    <class 'sklearn.cross_decomposition._cca.CCA'>
+    <class 'sklearn.cross_decomposition._pls.CCA'>
     >>> dist
     0.0
     >>> path, cca, dist = ctw_path([1, 2, 3], 
