@@ -1,6 +1,5 @@
 from sklearn.base import ClusterMixin
 
-from sklearn.cluster._kmeans import kmeans_plusplus
 from sklearn.utils import check_random_state
 import numpy
 
@@ -290,3 +289,4 @@ class KShape(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
         dists = self._cross_dists(X_)
         return dists.argmin(axis=1)
+        
