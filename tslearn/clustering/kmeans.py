@@ -608,8 +608,8 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
                 self.cluster_centers_ = _kmeans_plusplus(
                     X.reshape((n_ts, -1)),
                     self.n_clusters,
-                    x_squared_norms,
-                    rs
+                    x_squared_norms = x_squared_norms,
+                    random_state = rs
                 )[0].reshape((-1, sz, d))
             else:
                 if self.metric == "dtw":
@@ -836,3 +836,4 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
 
     def _more_tags(self):
         return {'allow_nan': True, 'allow_variable_length': True}
+        
