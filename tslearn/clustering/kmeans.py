@@ -1,12 +1,22 @@
 from sklearn.base import ClusterMixin, TransformerMixin
 from sklearn.metrics.pairwise import pairwise_kernels
-from sklearn.cluster._kmeans import _kmeans_plusplus
+
 from sklearn.utils import check_random_state
 from sklearn.utils.extmath import stable_cumsum
 from sklearn.utils.validation import _check_sample_weight
 from scipy.spatial.distance import cdist
 import numpy
 import warnings
+
+try:
+    from sklearn.cluster._kmeans import _kmeans_plusplus
+except:
+    try:
+        from sklearn.cluster._kmeans import _k_init as _kmeans_plusplus
+        warnings.warn("Scikit-learn <0.24 will be deprecated in a future release of tslearn")
+    except:
+        from sklearn.cluster.k_means_ import _k_init as _kmeans_plusplus
+        warnings.warn("Scikit-learn <0.24 will be deprecated in a future release of tslearn")
 
 from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw, sigma_gak
 from tslearn.barycenters import euclidean_barycenter, \
