@@ -50,7 +50,6 @@ from sklearn.utils.estimator_checks import (
     check_methods_subset_invariance,
     check_regressors_int
 )
-from sklearn.datasets import make_regression
 
 try:
     # Most recent
@@ -498,7 +497,7 @@ def check_classifier_data_not_an_array(name, estimator_orig):
 def check_regressor_data_not_an_array(name, estimator_orig):
     if name in ['TimeSeriesSVR']:
         return
-    X, y = make_regression(n_samples=50)
+    X, y = BOSTON
     X = pairwise_estimator_convert_X(X, estimator_orig)
     y = enforce_estimator_tags_y(estimator_orig, y)
     for obj_type in ["NotAnArray", "PandasDataframe"]:
