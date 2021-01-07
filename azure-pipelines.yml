@@ -48,6 +48,7 @@ jobs:
       then
         python -m pytest -v tslearn/ --doctest-modules -k 'not test_all_estimators';
       else
+        pip install scikit-learn==0.23
         python -m pytest -v tslearn/ --doctest-modules;
       fi
     displayName: 'Test'
@@ -89,6 +90,7 @@ jobs:
       python -m pip install pytest pytest-azurepipelines
       pip install coverage pytest-cov
       pip install cesium pandas stumpy
+      pip install scikit-learn==0.23
       python -m pytest -v tslearn/ --doctest-modules --cov=tslearn
     displayName: 'Test'
 

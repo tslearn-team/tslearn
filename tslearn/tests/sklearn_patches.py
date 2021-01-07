@@ -2,6 +2,7 @@ from tslearn.generators import random_walk_blobs
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 
 import sklearn
+import warnings
 from sklearn.base import clone
 
 from sklearn.base import is_classifier, is_outlier_detector, is_regressor
@@ -12,11 +13,29 @@ from sklearn.datasets import make_blobs
 from sklearn.metrics.pairwise import rbf_kernel
 
 from sklearn.utils import shuffle
-from sklearn.utils.testing import (
-    set_random_state, assert_equal, assert_greater, assert_array_equal,
-    assert_raises, assert_array_almost_equal, assert_greater_equal,
-    assert_allclose, assert_raises_regex, assert_allclose_dense_sparse
-)
+try:
+    from sklearn.utils._testing import (
+        set_random_state, assert_array_equal,
+        assert_raises, assert_array_almost_equal,
+        assert_allclose, assert_raises_regex, assert_allclose_dense_sparse
+    )
+
+    from unittest import TestCase
+    _dummy = TestCase('__init__')
+    assert_equal = _dummy.assertEqual
+    assert_greater = _dummy.assertGreater
+    assert_greater_equal = _dummy.assertGreaterEqual
+except:
+    from sklearn.utils.testing import (
+        set_random_state, assert_equal, assert_greater, assert_array_equal,
+        assert_raises, assert_array_almost_equal, assert_greater_equal,
+        assert_allclose, assert_raises_regex, assert_allclose_dense_sparse
+    )
+    warnings.warn(
+        "Scikit-learn <0.24 will be deprecated in a "
+        "future release of tslearn"
+    )
+
 from sklearn.utils.estimator_checks import (
     check_classifiers_predictions,
     check_fit2d_1sample,
@@ -29,8 +48,7 @@ from sklearn.utils.estimator_checks import (
     check_estimators_data_not_an_array,
     check_fit2d_predict1d,
     check_methods_subset_invariance,
-    check_regressors_int,
-    _boston_subset
+    check_regressors_int
 )
 
 try:
@@ -479,7 +497,7 @@ def check_classifier_data_not_an_array(name, estimator_orig):
 def check_regressor_data_not_an_array(name, estimator_orig):
     if name in ['TimeSeriesSVR']:
         return
-    X, y = _boston_subset(n_samples=50)
+    X, y = BOSTON
     X = pairwise_estimator_convert_X(X, estimator_orig)
     y = enforce_estimator_tags_y(estimator_orig, y)
     for obj_type in ["NotAnArray", "PandasDataframe"]:

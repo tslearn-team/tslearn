@@ -1,11 +1,5 @@
 from sklearn.base import ClusterMixin
 
-try:
-    # Most recent
-    from sklearn.cluster._k_means import _k_init
-except ImportError:
-    # Deprecated from sklearn v0.24 onwards
-    from sklearn.cluster.k_means_ import _k_init
 from sklearn.utils import check_random_state
 import numpy
 
@@ -295,3 +289,4 @@ class KShape(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
         dists = self._cross_dists(X_)
         return dists.argmin(axis=1)
+        

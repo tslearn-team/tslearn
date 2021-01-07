@@ -32,6 +32,8 @@ methods
 
 ### Changed
 
+* k-means initialization function within `clustering/kmeans.py` updated
+to be compatible with `scikit-learn` 0.24
 * Better initialization schemes for `TimeSeriesKMeans` that lead to more
 consistent clustering runs (helps avoid empty cluster situations)
 * `TimeSeriesScalerMeanVariance` and `TimeSeriesScalerMinMax` are now
