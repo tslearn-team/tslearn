@@ -1,5 +1,5 @@
 """
-The :mod:`tslearn.preprocessing` module gathers time series scalers and 
+The :mod:`tslearn.preprocessing` module gathers time series scalers and
 resamplers.
 """
 
@@ -14,5 +14,5 @@ __all__ = [
     "TimeSeriesResampler",
     "TimeSeriesScalerMinMax",
     "TimeSeriesScalerMeanVariance",
-    "TimeSeriesScaleMeanMaxVariance",
+    "TimeSeriesScaleMeanMaxVariance"
 ]
