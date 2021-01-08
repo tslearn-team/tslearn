@@ -624,7 +624,7 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
         n_ts, sz, d = X.shape
         if hasattr(self.init, '__array__'):
             self.cluster_centers_ = self.init.copy()
-        elif self.init == "k-means++":
+        elif isinstance(self.init, str) and self.init == "k-means++":
             if self.metric == "euclidean":
                 self.cluster_centers_ = _kmeans_plusplus(
                     X.reshape((n_ts, -1)),
@@ -758,7 +758,8 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
         X_ = to_time_series_dataset(X)
         rs = check_random_state(self.random_state)
 
-        if self.init == "k-means++" and self.metric == "euclidean":
+        if isinstance(self.init, str) and self.init == "k-means++" and \
+                        self.metric == "euclidean":
             n_ts, sz, d = X_.shape
             x_squared_norms = cdist(X_.reshape((n_ts, -1)),
                                     numpy.zeros((1, sz * d)),
