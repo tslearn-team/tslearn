@@ -20,6 +20,9 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 * Added canonical time warping (`ctw` and `ctw_path`)
 * `soft_dtw_alignment` provides soft alignment path for soft-dtw
+* `lcss` is a similarity measure based on the longest common subsequence
+* `lcss_path_from_metric` allows one to pick a dedicated ground metric on top
+of which the LCSS algorithm can be run
 
 ### Fixed
 
