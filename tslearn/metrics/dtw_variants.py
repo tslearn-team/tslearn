@@ -1505,7 +1505,7 @@ def lcss(s1, s2, eps=1., global_constraint=None, sakoe_chiba_radius=None,
     1.0
     >>> lcss([1, 2, 3], [1., 2., 2., 4., 7.])
     1.0
-    >>> lcss([1, 2, 3], [1., 2., 2., 2., 3.], eps=0, sakoe_chiba_radius=0)
+    >>> lcss([1, 2, 3], [1., 2., 2., 2., 3.], eps=0)
     1.0
     >>> lcss([1, 2, 3], [-2., 5., 7.], eps=3)
     0.6666666666666666

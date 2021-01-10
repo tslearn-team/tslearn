@@ -19,7 +19,7 @@ corresponding time series are represented at the left and at the top of each
 cost matrix.
 
 The alignment path, that is the path where the matches between the two time-series
-occured within the pre-defined threshold, is represented in white on the image.
+occurred within the pre-defined threshold, is represented in white on the image.
 
 .. [1] M. Vlachos, D. Gunopoulos, and G. Kollios. 2002. "Discovering Similar
     Multidimensional Trajectories", In Proceedings of the 18th International
