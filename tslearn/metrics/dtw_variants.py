@@ -1591,6 +1591,10 @@ def lcss_path(s1, s2, eps=1, global_constraint=None, sakoe_chiba_radius=None,
     presented in [1]_ and is discussed in more details in our
     :ref:`dedicated user-guide page <lcss>`.
 
+    Note
+    ----
+    Contrary to Dynamic Time Warping and variants, an LCSS path does not need to be contiguous.
+
      Parameters
      ----------
      s1
