@@ -1826,7 +1826,8 @@ def lcss_path_from_metric(s1, s2=None, eps=1, metric="euclidean",
     path and similarity is the same as the one obtained by using lcss_path 
     (which uses the euclidean distance) simply because with the sum of squared
     distances the matching threshold is still not reached.
-
+    Also, contrary to Dynamic Time Warping and variants, an LCSS path does not need to be contiguous.
+    
     See Also
     --------
     lcss: Get only the similarity score for LCSS
