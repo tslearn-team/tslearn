@@ -5,6 +5,7 @@ User Guide
     :maxdepth: 2
 
     dtw
+    lcss
     kernel
     clustering
     shapelets

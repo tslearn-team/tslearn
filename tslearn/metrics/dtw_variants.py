@@ -1441,8 +1441,8 @@ def njit_lcss(s1, s2, eps, mask):
 def lcss(s1, s2, eps=1., global_constraint=None, sakoe_chiba_radius=None,
         itakura_max_slope=None):
     r"""Compute the Longest Common Subsequence (LCSS) similarity measure
-    between (possibly multidimensional) time series and return both the
-    path and the similarity.
+    between (possibly multidimensional) time series and return the
+    similarity.
 
     LCSS is computed by matching indexes that are met up until the eps
     threshold, so it leaves some points unmatched and focuses on the
@@ -1516,7 +1516,7 @@ def lcss(s1, s2, eps=1., global_constraint=None, sakoe_chiba_radius=None,
 
     References
     ----------
-     .. [1] M. Vlachos, D. Gunopoulos, and G. Kollios. 2002. "Discovering
+    .. [1] M. Vlachos, D. Gunopoulos, and G. Kollios. 2002. "Discovering
             Similar Multidimensional Trajectories", In Proceedings of the
             18th International Conference on Data Engineering (ICDE '02).
             IEEE Computer Society, USA, 673.
@@ -1595,42 +1595,42 @@ def lcss_path(s1, s2, eps=1, global_constraint=None, sakoe_chiba_radius=None,
     ----
     Contrary to Dynamic Time Warping and variants, an LCSS path does not need to be contiguous.
 
-     Parameters
-     ----------
-     s1
-         A time series.
+    Parameters
+    ----------
+    s1
+        A time series.
 
-     s2
-         Another time series.
+    s2
+        Another time series.
 
-     eps : float (default: 1.)
-         Maximum matching distance threshold.
+    eps : float (default: 1.)
+        Maximum matching distance threshold.
 
-     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
-        Global constraint to restrict admissible paths for LCSS.
+    global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
+       Global constraint to restrict admissible paths for LCSS.
 
-     sakoe_chiba_radius : int or None (default: None)
-        Radius to be used for Sakoe-Chiba band global constraint.
-        If None and `global_constraint` is set to "sakoe_chiba", a radius of
-        1 is used.
-        If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
-        `global_constraint` is used to infer which constraint to use among the
-        two. In this case, if `global_constraint` corresponds to no global
-        constraint, a `RuntimeWarning` is raised and no global constraint is
-        used.
+    sakoe_chiba_radius : int or None (default: None)
+       Radius to be used for Sakoe-Chiba band global constraint.
+       If None and `global_constraint` is set to "sakoe_chiba", a radius of
+       1 is used.
+       If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+       `global_constraint` is used to infer which constraint to use among the
+       two. In this case, if `global_constraint` corresponds to no global
+       constraint, a `RuntimeWarning` is raised and no global constraint is
+       used.
 
-     itakura_max_slope : float or None (default: None)
-        Maximum slope for the Itakura parallelogram constraint.
-        If None and `global_constraint` is set to "itakura", a maximum slope
-        of 2. is used.
-        If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
-        `global_constraint` is used to infer which constraint to use among the
-        two. In this case, if `global_constraint` corresponds to no global
-        constraint, a `RuntimeWarning` is raised and no global constraint is
-        used.
+    itakura_max_slope : float or None (default: None)
+       Maximum slope for the Itakura parallelogram constraint.
+       If None and `global_constraint` is set to "itakura", a maximum slope
+       of 2. is used.
+       If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+       `global_constraint` is used to infer which constraint to use among the
+       two. In this case, if `global_constraint` corresponds to no global
+       constraint, a `RuntimeWarning` is raised and no global constraint is
+       used.
 
-     Returns
-     -------
+    Returns
+    -------
     list of integer pairs
         Matching path represented as a list of index pairs. In each pair, the
         first index corresponds to s1 and the second one corresponds to s2
@@ -1655,7 +1655,7 @@ def lcss_path(s1, s2, eps=1, global_constraint=None, sakoe_chiba_radius=None,
 
     References
     ----------
-     .. [1] M. Vlachos, D. Gunopoulos, and G. Kollios. 2002. "Discovering
+    .. [1] M. Vlachos, D. Gunopoulos, and G. Kollios. 2002. "Discovering
             Similar Multidimensional Trajectories", In Proceedings of the
             18th International Conference on Data Engineering (ICDE '02).
             IEEE Computer Society, USA, 673.

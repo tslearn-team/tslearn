@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-LCSS computation
+Longest Common Subsequence
 ===============
 
 This example illustrates LCSS computation between time series and plots the
