@@ -25,6 +25,7 @@ tslearn.metrics
       dtw_subsequence_path
       gak
       soft_dtw
+      soft_dtw_alignment
       cdist_soft_dtw
       cdist_soft_dtw_normalized
       lb_envelope
