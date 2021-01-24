@@ -8,7 +8,7 @@ and this project adheres to
 
 Changelogs for this project are recorded in this file since v0.2.0.
 
-## [Towards v0.5.0]
+## [v0.5.0]
 
 ### Changed
 
@@ -29,6 +29,7 @@ of which the LCSS algorithm can be run
 * numpy array hyper-parameters can now be serialized using `to_*()`
 methods
 * avoid `DivisionByZero` in `MinMaxScaler`
+* Fixed incompatibilities with `scikit-learn` 0.24
 
 
 ## [v0.4.0]
@@ -42,7 +43,7 @@ consistent clustering runs (helps avoid empty cluster situations)
 * `TimeSeriesScalerMeanVariance` and `TimeSeriesScalerMinMax` are now
 completely sklearn-compliant
 * The `shapelets` module now requires tensorflow>=2 as dependency (was keras
-+ tensorflow==1.* up to version 0.3)
+tensorflow==1.* up to version 0.3)
 * `GlobalAlignmentKernelKMeans` is deprecated in favor of `KernelKMeans` that
 accepts various kernels (and "gak" is the default)
 * `ShapeletModel` is now called `LearningShapelets` to be more explicit about
