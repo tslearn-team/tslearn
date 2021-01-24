@@ -29,7 +29,7 @@ jobs:
         python -m pip install cibuildwheel==1.3.0
     - name: Build wheel
       env:
-        CIBW_SKIP: "pp*-win* *cp27* *pp27* *cp35* *pp35*"
+        CIBW_SKIP: "pp*-win* *cp27* *cp35* *pp*"
         CIBW_BEFORE_BUILD: "pip install numpy cython"
       run: |
         python -m cibuildwheel --output-dir wheelhouse
