@@ -15,6 +15,8 @@ tslearn.metrics
 
       cdist_dtw
       cdist_gak
+      ctw
+      ctw_path
       dtw
       dtw_path
       dtw_path_from_metric
