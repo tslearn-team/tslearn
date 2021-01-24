@@ -12,7 +12,8 @@ from .dtw_variants import (dtw, dtw_limited_warping_length,
                            dtw_subsequence_path, cdist_dtw,
                            GLOBAL_CONSTRAINT_CODE,
                            lb_envelope, lb_keogh,
-                           sakoe_chiba_mask, itakura_mask)
+                           sakoe_chiba_mask, itakura_mask,
+                           lcss, lcss_path, lcss_path_from_metric)
 from .ctw import ctw_path, ctw, cdist_ctw
 from .sax import cdist_sax
 from .softdtw_variants import (cdist_soft_dtw, cdist_gak,
@@ -24,8 +25,8 @@ from .cycc import cdist_normalized_cc, y_shifted_sbd_vec
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
-TSLEARN_VALID_METRICS = ["ctw", "dtw", "gak", "sax", "softdtw"]
-VARIABLE_LENGTH_METRICS = ["ctw", "dtw", "gak", "sax", "softdtw"]
+TSLEARN_VALID_METRICS = ["ctw", "dtw", "gak", "sax", "softdtw", "lcss"]
+VARIABLE_LENGTH_METRICS = ["ctw", "dtw", "gak", "sax", "softdtw", "lcss"]
 
 __all__ = [
     "TSLEARN_VALID_METRICS", "VARIABLE_LENGTH_METRICS",
@@ -38,6 +39,7 @@ __all__ = [
     "GLOBAL_CONSTRAINT_CODE",
     "lb_envelope", "lb_keogh",
     "sakoe_chiba_mask", "itakura_mask",
+    "lcss", "lcss_path", "lcss_path_from_metric"
 
     "ctw_path", "ctw", "cdist_ctw",
 

@@ -23,6 +23,9 @@ tslearn.metrics
       subsequence_path
       subsequence_cost_matrix
       dtw_subsequence_path
+      lcss
+      lcss_path
+      lcss_path_from_metric
       gak
       soft_dtw
       soft_dtw_alignment

@@ -1365,3 +1365,515 @@ def lb_envelope(ts, radius=1):
        Conference on Very Large Data Bases, 2002. pp 406-417.
     """
     return njit_lb_envelope(to_time_series(ts), radius=radius)
+
+
+@njit(nogil=True)
+def njit_lcss_accumulated_matrix(s1, s2, eps, mask):
+    """Compute the longest common subsequence similarity score between
+    two time series.
+
+    Parameters
+    ----------
+    s1 : array, shape = (sz1,)
+        First time series.
+
+    s2 : array, shape = (sz2,)
+        Second time series.
+
+    eps : float
+        Matching threshold.
+
+    mask : array, shape = (sz1, sz2)
+        Mask. Unconsidered cells must have infinite values.
+
+    Returns
+    -------
+    lcss_score : float
+        Longest Common Subsequence similarity score between both time series.
+
+    """
+    l1 = s1.shape[0]
+    l2 = s2.shape[0]
+    acc_cost_mat = numpy.full((l1 + 1, l2 + 1), 0)
+
+    for i in range(1, l1 + 1):
+        for j in range(1, l2 + 1):
+            if numpy.isfinite(mask[i - 1, j - 1]):
+                if numpy.sqrt(_local_squared_dist(s1[i - 1], s2[j - 1])) <= eps:
+                    acc_cost_mat[i][j] = 1 + acc_cost_mat[i - 1][j - 1]
+                else:
+                    acc_cost_mat[i][j] = max(acc_cost_mat[i][j - 1],
+                                             acc_cost_mat[i - 1][j])
+
+    return acc_cost_mat
+
+
+@njit(nogil=True)
+def njit_lcss(s1, s2, eps, mask):
+    """Compute the longest common subsequence score between two time series.
+
+    Parameters
+    ----------
+    s1 : array, shape = (sz1,)
+        First time series.
+
+    s2 : array, shape = (sz2,)
+        Second time series
+
+    eps : float (default: 1.)
+        Maximum matching distance threshold.
+
+    mask : array, shape = (sz1, sz2)
+        Mask. Unconsidered cells must have infinite values.
+
+    Returns
+    -------
+    lcss_score : float
+        Longest Common Subsquence score between both time series.
+    """
+    l1 = s1.shape[0]
+    l2 = s2.shape[0]
+    acc_cost_mat = njit_lcss_accumulated_matrix(s1, s2, eps, mask)
+
+    return float(acc_cost_mat[-1][-1]) / min([l1, l2])
+
+
+def lcss(s1, s2, eps=1., global_constraint=None, sakoe_chiba_radius=None,
+        itakura_max_slope=None):
+    r"""Compute the Longest Common Subsequence (LCSS) similarity measure
+    between (possibly multidimensional) time series and return the
+    similarity.
+
+    LCSS is computed by matching indexes that are met up until the eps
+    threshold, so it leaves some points unmatched and focuses on the
+    similar parts of two sequences. The matching can occur even if the
+    time indexes are different, regulated through the delta parameter
+    that defines how far it can go. To retrieve a meaningful similarity
+    value from the length of the longest common subsequence, the
+    percentage of that value regarding the length of the shortest time
+    series is returned.
+
+    According to this definition, the values returned by LCSS range from
+    0 to 1, the highest value taken when two time series fully match,
+    and vice-versa. It is not required that both time series share the
+    same size, but they must be the same dimension. LCSS was originally
+    presented in [1]_ and is discussed in more details in our
+    :ref:`dedicated user-guide page <lcss>`.
+
+    Note
+    ----
+    Contrary to Dynamic Time Warping and variants, an LCSS path does not need to be contiguous.
+
+    Parameters
+    ----------
+    s1
+        A time series.
+
+    s2
+        Another time series.
+
+    eps : float (default: 1.)
+        Maximum matching distance threshold.
+
+    global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
+        Global constraint to restrict admissible paths for LCSS.
+
+    sakoe_chiba_radius : int or None (default: None)
+        Radius to be used for Sakoe-Chiba band global constraint.
+        If None and `global_constraint` is set to "sakoe_chiba", a radius of
+        1 is used.
+        If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+        `global_constraint` is used to infer which constraint to use among the
+        two. In this case, if `global_constraint` corresponds to no global
+        constraint, a `RuntimeWarning` is raised and no global constraint is
+        used.
+
+    itakura_max_slope : float or None (default: None)
+        Maximum slope for the Itakura parallelogram constraint.
+        If None and `global_constraint` is set to "itakura", a maximum slope
+        of 2. is used.
+        If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+        `global_constraint` is used to infer which constraint to use among the
+        two. In this case, if `global_constraint` corresponds to no global
+        constraint, a `RuntimeWarning` is raised and no global constraint is
+        used.
+
+    Returns
+    -------
+    float
+        Similarity score
+
+    Examples
+    --------
+    >>> lcss([1, 2, 3], [1., 2., 2., 3.])
+    1.0
+    >>> lcss([1, 2, 3], [1., 2., 2., 4., 7.])
+    1.0
+    >>> lcss([1, 2, 3], [1., 2., 2., 2., 3.], eps=0)
+    1.0
+    >>> lcss([1, 2, 3], [-2., 5., 7.], eps=3)
+    0.6666666666666666
+
+    See Also
+    --------
+    lcss_path: Get both the matching path and the similarity score for LCSS
+
+    References
+    ----------
+    .. [1] M. Vlachos, D. Gunopoulos, and G. Kollios. 2002. "Discovering
+            Similar Multidimensional Trajectories", In Proceedings of the
+            18th International Conference on Data Engineering (ICDE '02).
+            IEEE Computer Society, USA, 673.
+
+    """
+    s1 = to_time_series(s1, remove_nans=True)
+    s2 = to_time_series(s2, remove_nans=True)
+
+    mask = compute_mask(
+        s1, s2,
+        GLOBAL_CONSTRAINT_CODE[global_constraint],
+        sakoe_chiba_radius=sakoe_chiba_radius,
+        itakura_max_slope=itakura_max_slope)
+
+    return njit_lcss(s1, s2, eps, mask)
+
+
+@njit()
+def _return_lcss_path(s1, s2, eps, mask, acc_cost_mat, sz1, sz2):
+    i, j = (sz1, sz2)
+    path = []
+
+    while i > 0 and j > 0:
+        if numpy.isfinite(mask[i - 1, j - 1]):
+            if numpy.sqrt(_local_squared_dist(s1[i - 1], s2[j - 1])) <= eps:
+                path.append((i - 1, j - 1))
+                i, j = (i - 1, j - 1)
+            elif acc_cost_mat[i - 1][j] > acc_cost_mat[i][j-1]:
+                i = i - 1
+            else:
+                j = j - 1
+    return path[::-1]
+
+
+@njit()
+def _return_lcss_path_from_dist_matrix(dist_matrix, eps, mask, acc_cost_mat, sz1, sz2):
+    i, j = (sz1, sz2)
+    path = []
+
+    while i > 0 and j > 0:
+        if numpy.isfinite(mask[i - 1, j - 1]):
+            if dist_matrix[i - 1, j - 1] <= eps:
+                path.append((i - 1, j - 1))
+                i, j = (i - 1, j - 1)
+            elif acc_cost_mat[i - 1][j] > acc_cost_mat[i][j-1]:
+                i = i - 1
+            else:
+                j = j - 1
+    return path[::-1]
+
+
+def lcss_path(s1, s2, eps=1, global_constraint=None, sakoe_chiba_radius=None,
+             itakura_max_slope=None):
+    r"""Compute the Longest Common Subsequence (LCSS) similarity measure
+    between (possibly multidimensional) time series and return both the
+    path and the similarity.
+
+    LCSS is computed by matching indexes that are met up until the eps
+    threshold, so it leaves some points unmatched and focuses on the
+    similar parts of two sequences. The matching can occur even if the
+    time indexes are different, which can be regulated through the sakoe
+    chiba radius parameter that defines how far it can go.
+
+    To retrieve a meaningful similarity value from the length of the
+    longest common subsequence, the percentage of that value regarding
+    the length of the shortest time series is returned.
+
+    According to this definition, the values returned by LCSS range from
+    0 to 1, the highest value taken when two time series fully match,
+    and vice-versa. It is not required that both time series share the
+    same size, but they must be the same dimension. LCSS was originally
+    presented in [1]_ and is discussed in more details in our
+    :ref:`dedicated user-guide page <lcss>`.
+
+    Note
+    ----
+    Contrary to Dynamic Time Warping and variants, an LCSS path does not need to be contiguous.
+
+    Parameters
+    ----------
+    s1
+        A time series.
+
+    s2
+        Another time series.
+
+    eps : float (default: 1.)
+        Maximum matching distance threshold.
+
+    global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
+       Global constraint to restrict admissible paths for LCSS.
+
+    sakoe_chiba_radius : int or None (default: None)
+       Radius to be used for Sakoe-Chiba band global constraint.
+       If None and `global_constraint` is set to "sakoe_chiba", a radius of
+       1 is used.
+       If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+       `global_constraint` is used to infer which constraint to use among the
+       two. In this case, if `global_constraint` corresponds to no global
+       constraint, a `RuntimeWarning` is raised and no global constraint is
+       used.
+
+    itakura_max_slope : float or None (default: None)
+       Maximum slope for the Itakura parallelogram constraint.
+       If None and `global_constraint` is set to "itakura", a maximum slope
+       of 2. is used.
+       If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+       `global_constraint` is used to infer which constraint to use among the
+       two. In this case, if `global_constraint` corresponds to no global
+       constraint, a `RuntimeWarning` is raised and no global constraint is
+       used.
+
+    Returns
+    -------
+    list of integer pairs
+        Matching path represented as a list of index pairs. In each pair, the
+        first index corresponds to s1 and the second one corresponds to s2
+
+    float
+        Similarity score
+
+    Examples
+    --------
+    >>> path, sim = lcss_path([1., 2., 3.], [1., 2., 2., 3.])
+    >>> path
+    [(0, 1), (1, 2), (2, 3)]
+    >>> sim
+    1.0
+    >>> lcss_path([1., 2., 3.], [1., 2., 2., 4.])[1]
+    1.0
+
+    See Also
+    --------
+    lcss : Get only the similarity score for LCSS
+    lcss_path_from_metric: Compute LCSS using a user-defined distance metric
+
+    References
+    ----------
+    .. [1] M. Vlachos, D. Gunopoulos, and G. Kollios. 2002. "Discovering
+            Similar Multidimensional Trajectories", In Proceedings of the
+            18th International Conference on Data Engineering (ICDE '02).
+            IEEE Computer Society, USA, 673.
+
+    """
+    s1 = to_time_series(s1, remove_nans=True)
+    s2 = to_time_series(s2, remove_nans=True)
+
+    mask = compute_mask(
+        s1, s2,
+        GLOBAL_CONSTRAINT_CODE[global_constraint],
+        sakoe_chiba_radius, itakura_max_slope)
+
+    l1 = s1.shape[0]
+    l2 = s2.shape[0]
+
+    acc_cost_mat = njit_lcss_accumulated_matrix(s1, s2, eps, mask)
+    path = _return_lcss_path(s1, s2, eps, mask, acc_cost_mat, l1, l2)
+
+    return path, float(acc_cost_mat[-1][-1]) / min([l1, l2])
+
+
+def njit_lcss_accumulated_matrix_from_dist_matrix(dist_matrix, eps, mask):
+    """Compute the accumulated cost matrix score between two time series using
+    a precomputed distance matrix.
+
+    Parameters
+    ----------
+    dist_matrix : array, shape = (sz1, sz2)
+        Array containing the pairwise distances.
+
+    eps : float (default: 1.)
+        Maximum matching distance threshold.
+
+    mask : array, shape = (sz1, sz2)
+        Mask. Unconsidered cells must have infinite values.
+
+    Returns
+    -------
+    mat : array, shape = (sz1, sz2)
+        Accumulated cost matrix.
+
+    """
+    l1, l2 = dist_matrix.shape
+    acc_cost_mat = numpy.full((l1 + 1, l2 + 1), 0)
+
+    for i in range(1, l1 + 1):
+        for j in range(1, l2 + 1):
+            if numpy.isfinite(mask[i - 1, j - 1]):
+                if dist_matrix[i - 1, j - 1] <= eps:
+                    acc_cost_mat[i][j] = 1 + acc_cost_mat[i - 1][j - 1]
+                else:
+                    acc_cost_mat[i][j] = max(acc_cost_mat[i][j - 1],
+                                             acc_cost_mat[i - 1][j])
+
+    return acc_cost_mat
+
+
+def lcss_path_from_metric(s1, s2=None, eps=1, metric="euclidean",
+                          global_constraint=None, sakoe_chiba_radius=None,
+                          itakura_max_slope=None, **kwds):
+    r"""Compute the Longest Common Subsequence (LCSS) similarity measure between
+    (possibly multidimensional) time series using a distance metric defined by
+    the user and return both the path and the similarity.
+
+    Having the length of the longest commom subsequence between two time-series,
+    the similarity is computed as the percentage of that value regarding the
+    length of the shortest time series.
+
+    It is not required that both time series share the same size, but they must
+    be the same dimension. LCSS was originally presented in [1]_.
+
+    Valid values for metric are the same as for scikit-learn
+    `pairwise_distances`_ function i.e. a string (e.g. "euclidean",
+    "sqeuclidean", "hamming") or a function that is used to compute the
+    pairwise distances. See `scikit`_ and `scipy`_ documentations for more
+    information about the available metrics.
+
+    Parameters
+    ----------
+    s1 : array, shape = (sz1, d) if metric!="precomputed", (sz1, sz2) otherwise
+        A time series or an array of pairwise distances between samples.
+
+    s2 : array, shape = (sz2, d), optional (default: None)
+        A second time series, only allowed if metric != "precomputed".
+
+    eps : float (default: 1.)
+        Maximum matching distance threshold.
+        
+    metric : string or callable (default: "euclidean")
+        Function used to compute the pairwise distances between each points of
+        `s1` and `s2`.
+
+        If metric is "precomputed", `s1` is assumed to be a distance matrix.
+
+        If metric is an other string, it must be one of the options compatible
+        with sklearn.metrics.pairwise_distances.
+
+        Alternatively, if metric is a callable function, it is called on pairs
+        of rows of `s1` and `s2`. The callable should take two 1 dimensional
+        arrays as input and return a value indicating the distance between
+        them.
+        
+    global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
+        Global constraint to restrict admissible paths for LCSS.
+        
+    sakoe_chiba_radius : int or None (default: None)
+        Radius to be used for Sakoe-Chiba band global constraint.
+        If None and `global_constraint` is set to "sakoe_chiba", a radius of
+        1 is used.
+        If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+        `global_constraint` is used to infer which constraint to use among the
+        two. In this case, if `global_constraint` corresponds to no global
+        constraint, a `RuntimeWarning` is raised and no global constraint is
+        used.
+        
+    itakura_max_slope : float or None (default: None)
+        Maximum slope for the Itakura parallelogram constraint.
+        If None and `global_constraint` is set to "itakura", a maximum slope
+        of 2. is used.
+        If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+        `global_constraint` is used to infer which constraint to use among the
+        two. In this case, if `global_constraint` corresponds to no global
+        constraint, a `RuntimeWarning` is raised and no global constraint is
+        used.
+        
+    **kwds
+        Additional arguments to pass to sklearn pairwise_distances to compute
+        the pairwise distances.
+
+    Returns
+    -------
+    list of integer pairs
+        Matching path represented as a list of index pairs. In each pair, the
+        first index corresponds to s1 and the second one corresponds to s2.
+
+    float
+        Similarity score.
+
+    Examples
+    --------
+    Lets create 2 numpy arrays to wrap:
+
+    >>> import numpy as np
+    >>> rng = np.random.RandomState(0)
+    >>> s1, s2 = rng.rand(5, 2), rng.rand(6, 2)
+
+    The wrapping can be done by passing a string indicating the metric to pass
+    to scikit-learn pairwise_distances:
+
+    >>> lcss_path_from_metric(s1, s2,
+    ...                      metric="sqeuclidean")  # doctest: +ELLIPSIS
+    ([(0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.0)
+
+    Or by defining a custom distance function:
+
+    >>> sqeuclidean = lambda x, y: np.sum((x-y)**2)
+    >>> lcss_path_from_metric(s1, s2, metric=sqeuclidean)  # doctest: +ELLIPSIS
+    ([(0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.0)
+
+    Or by using a precomputed distance matrix as input:
+
+    >>> from sklearn.metrics.pairwise import pairwise_distances
+    >>> dist_matrix = pairwise_distances(s1, s2, metric="sqeuclidean")
+    >>> lcss_path_from_metric(dist_matrix,
+    ...                      metric="precomputed")  # doctest: +ELLIPSIS
+    ([(0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.0)
+
+    Notes
+    --------
+    By using a squared euclidean distance metric as shown above, the output
+    path and similarity is the same as the one obtained by using lcss_path 
+    (which uses the euclidean distance) simply because with the sum of squared
+    distances the matching threshold is still not reached.
+    Also, contrary to Dynamic Time Warping and variants, an LCSS path does not need to be contiguous.
+    
+    See Also
+    --------
+    lcss: Get only the similarity score for LCSS
+    lcss_path : Get both the matching path and the similarity score for LCSS
+
+    References
+    ----------
+    .. [1] M. Vlachos, D. Gunopoulos, and G. Kollios. 2002. "Discovering
+            Similar Multidimensional Trajectories", In Proceedings of the
+            18th International Conference on Data Engineering (ICDE '02).
+            IEEE Computer Society, USA, 673.
+
+    .. _pairwise_distances: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.pairwise_distances.html
+
+    .. _scikit: https://scikit-learn.org/stable/modules/metrics.html
+
+    .. _scipy: https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html
+
+    """  # noqa: E501
+    if metric == "precomputed":  # Pairwise distance given as input
+        sz1, sz2 = s1.shape
+        mask = compute_mask(
+            sz1, sz2, GLOBAL_CONSTRAINT_CODE[global_constraint],
+            sakoe_chiba_radius, itakura_max_slope
+        )
+        dist_mat = s1
+    else:
+        s1 = to_time_series(s1, remove_nans=True)
+        s2 = to_time_series(s2, remove_nans=True)
+        sz1 = s1.shape[0]
+        sz2 = s2.shape[0]
+        mask = compute_mask(
+            s1, s2, GLOBAL_CONSTRAINT_CODE[global_constraint],
+            sakoe_chiba_radius, itakura_max_slope
+        )
+        dist_mat = pairwise_distances(s1, s2, metric=metric, **kwds)
+
+    acc_cost_mat = njit_lcss_accumulated_matrix_from_dist_matrix(dist_mat, eps, mask)
+    path = _return_lcss_path_from_dist_matrix(dist_mat, eps, acc_cost_mat, mask, sz1, sz2)
+
+    return path, float(acc_cost_mat[-1][-1]) / min([sz1, sz2])
