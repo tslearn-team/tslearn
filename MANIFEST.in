@@ -1,0 +1,12 @@
+include *.rst
+recursive-include tslearn *.c *.h *.pyx
+include LICENSE
+include README.md
+include pyproject.toml
+include conftest.py
+include MANIFEST.in
+
+# exclude from sdist
+recursive-exclude .github *
+exclude .readthedocs.yml
+exclude azure-pipelines.yml

@@ -2,6 +2,7 @@ from setuptools import setup, find_packages
 from codecs import open
 import numpy
 import os
+from Cython.Build import cythonize
 
 # thanks Pipy for handling markdown now
 ROOT = os.path.abspath(os.path.dirname(__file__))
@@ -19,7 +20,6 @@ VERSION = tslearn.__version__
 # is copied from sklearn as a way to avoid cythonizing source
 # files in source dist
 # We need to import setuptools before because it monkey-patches distutils
-import setuptools  # noqa
 from distutils.command.sdist import sdist
 cmdclass = {'sdist': sdist}
 
@@ -29,9 +29,10 @@ setup(
     long_description=README,
     long_description_content_type='text/markdown',
     include_dirs=[numpy.get_include()],
+    ext_modules=cythonize("tslearn/metrics/*.pyx",
+                          include_path=[numpy.get_include()]),
     packages=find_packages(),
     package_data={"tslearn": [".cached_datasets/Trace.npz"]},
-    data_files=[("", ["LICENSE", "README.md"])],
     install_requires=['numpy', 'scipy', 'scikit-learn', 'Cython', 'numba',
                       'joblib'],
     extras_require={'tests': ['pytest']},
