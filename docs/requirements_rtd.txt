@@ -12,5 +12,5 @@ tensorflow>=2
 Pygments
 numba
 sphinx_bootstrap_theme
-git+git://github.com/numpy/numpydoc@master
+git+git://github.com/numpy/numpydoc@main
 matplotlib
