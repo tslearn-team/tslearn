@@ -1,6 +1,6 @@
 Cython
-numpy
-scipy
+numpy==1.19.5
+scipy==1.4.1
 scikit-learn
 numba
 sphinx>=1.6.1
@@ -12,5 +12,5 @@ tensorflow>=2
 Pygments
 numba
 sphinx_bootstrap_theme
-git+git://github.com/numpy/numpydoc@master
+git+git://github.com/numpy/numpydoc@main
 matplotlib
