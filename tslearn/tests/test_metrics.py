@@ -435,9 +435,9 @@ def test_dtw_path_with_empty_or_nan_inputs():
     s2_empty = np.zeros((0, 10))
     with pytest.raises(ValueError) as excinfo:
         dtw_path(s1, s2_empty)
-    assert str(excinfo.value) == "One of the input time series contains only nans or has empty length."
+    assert str(excinfo.value) == "One of the input time series contains only nans or has zero length."
 
     s2_nan = np.full((3, 10), np.nan)
     with pytest.raises(ValueError) as excinfo:
         dtw_path(s1, s2_nan)
-    assert str(excinfo.value) == "One of the input time series contains only nans or has empty length."
+    assert str(excinfo.value) == "One of the input time series contains only nans or has zero length."
