@@ -1,8 +1,10 @@
+import pytest
 import numpy as np
 from scipy.spatial.distance import cdist
 import tslearn.metrics
 import tslearn.clustering
 from tslearn.utils import to_time_series
+from tslearn.metrics.dtw_variants import dtw_path
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -426,3 +428,16 @@ def test_softdtw():
 
     np.testing.assert_equal(dist, dist_ref ** 2)
     np.testing.assert_allclose(matrix_path, mat_path_ref)
+
+
+def test_dtw_path_with_empty_or_nan_inputs():
+    s1 = np.zeros((3, 10))
+    s2_empty = np.zeros((0, 10))
+    with pytest.raises(ValueError) as excinfo:
+        dtw_path(s1, s2_empty)
+    assert str(excinfo.value) == "One of the input time series contains only nans or has zero length."
+
+    s2_nan = np.full((3, 10), np.nan)
+    with pytest.raises(ValueError) as excinfo:
+        dtw_path(s1, s2_nan)
+    assert str(excinfo.value) == "One of the input time series contains only nans or has zero length."
