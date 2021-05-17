@@ -1,6 +1,6 @@
 Cython
-numpy==1.19.5
-scipy==1.4.1
+numpy
+scipy
 scikit-learn
 numba
 sphinx>=1.6.1
