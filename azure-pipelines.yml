@@ -131,6 +131,8 @@ jobs:
   - script: |
       set -xe
       python --version
+      brew install openblas
+      export OPENBLAS=$(brew --prefix openblas)
       python -m pip install --upgrade pip
       python -m pip install -r requirements.txt
     displayName: 'Install dependencies'
