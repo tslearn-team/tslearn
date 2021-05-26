@@ -131,7 +131,7 @@ jobs:
   - script: |
       set -xe
       python --version
-      brew install openblas
+      brew install openblas  # required due to https://github.com/numpy/numpy/issues/15947
       export OPENBLAS=$(brew --prefix openblas)
       python -m pip install --upgrade pip
       python -m pip install -r requirements.txt
