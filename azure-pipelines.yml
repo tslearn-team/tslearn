@@ -40,7 +40,7 @@ jobs:
   
   - script: |
       set -xe
-      pip install -e .
+      python -m pip install -e .
     displayName: 'Install tslearn'
   
   - script: |
@@ -50,7 +50,7 @@ jobs:
       then
         python -m pytest -v tslearn/ --doctest-modules -k 'not test_all_estimators';
       else
-        pip install scikit-learn==0.23
+        python -m pip install scikit-learn==0.23
         python -m pytest -v tslearn/ --doctest-modules;
       fi
     displayName: 'Test'
@@ -84,15 +84,15 @@ jobs:
 
   - script: |
       set -xe
-      pip install -e .
+      python -m pip install -e .
     displayName: 'Install tslearn'
 
   - script: |
       set -xe
       python -m pip install pytest pytest-azurepipelines
-      pip install coverage pytest-cov
-      pip install cesium pandas stumpy
-      pip install scikit-learn==0.23
+      python -m pip install coverage pytest-cov
+      python -m pip install cesium pandas stumpy
+      python -m pip install scikit-learn==0.23
       python -m pytest -v tslearn/ --doctest-modules --cov=tslearn
     displayName: 'Test'
 
@@ -139,7 +139,8 @@ jobs:
   
   - script: |
       set -xe
-      pip install -e .
+      export OPENBLAS=$(brew --prefix openblas)
+      python -m pip install -e .
     displayName: 'Install tslearn'
   
   - script: |
@@ -186,7 +187,7 @@ jobs:
     displayName: 'Install dependencies'
   
   - script: |
-      pip install -e .
+      python -m pip install -e .
     displayName: 'Install tslearn'
   
   - script: |
