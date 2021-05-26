@@ -131,7 +131,7 @@ jobs:
   - script: |
       set -xe
       python --version
-      python -m pip install --upgrade pip setuptools wheel
+      python -m pip install --upgrade pip
       python -m pip install -r requirements.txt
     displayName: 'Install dependencies'
   
