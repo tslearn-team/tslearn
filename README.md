@@ -17,10 +17,10 @@
         <img alt="Documentation" src="https://readthedocs.org/projects/tslearn/badge/?version=stable">
     </a>
     <a href="https://dev.azure.com/romaintavenard/tslearn/_build">
-        <img alt="Build (Azure Pipelines)" src="https://dev.azure.com/romaintavenard/tslearn/_apis/build/status/tslearn-team.tslearn?branchName=master">
+        <img alt="Build (Azure Pipelines)" src="https://dev.azure.com/romaintavenard/tslearn/_apis/build/status/tslearn-team.tslearn?branchName=main">
     </a>
     <a href="https://codecov.io/gh/tslearn-team/tslearn">
-        <img alt="Codecov" src="https://codecov.io/gh/tslearn-team/tslearn/branch/master/graph/badge.svg">
+        <img alt="Codecov" src="https://codecov.io/gh/tslearn-team/tslearn/branch/main/graph/badge.svg">
     </a>
     <a href="https://pepy.tech/project/tslearn">
         <img alt="Downloads" src="https://pepy.tech/badge/tslearn">
