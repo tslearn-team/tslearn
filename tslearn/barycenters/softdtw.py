@@ -100,7 +100,7 @@ def softdtw_barycenter(X, gamma=1.0, weights=None, method="L-BFGS-B", tol=1e-3,
         barycenter = init
 
     if max_iter > 0:
-        X_ = numpy.array([to_time_series(d, remove_nans=True) for d in X_])
+        X_ = numpy.array([to_time_series(d, remove_nans=True) for d in X_],dtype=object)
 
         def f(Z):
             return _softdtw_func(Z, X_, weights, barycenter, gamma)
