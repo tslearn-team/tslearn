@@ -1141,8 +1141,12 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
 
     .. math::
 
-        DTW(X, Y) = \sqrt{\sum_{(i, j) \in \pi} (X_{i} - Y_{j})^2}
+        DTW(X, Y) = \sqrt{\sum_{(i, j) \in \pi} \|X_{i} - Y_{j}\|^2}
+    
+    Note that this formula is still valid for the multivariate case.
 
+    It is not required that time series share the same size, but they 
+    must be the same dimension.
     DTW was originally presented in [1]_ and is
     discussed in more details in our :ref:`dedicated user-guide page <dtw>`.
 

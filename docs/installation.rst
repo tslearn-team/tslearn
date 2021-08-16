@@ -31,7 +31,7 @@ repository hosted at github:
 
 .. code-block:: bash
 
-    python -m pip install https://github.com/tslearn-team/tslearn/archive/master.zip
+    python -m pip install https://github.com/tslearn-team/tslearn/archive/main.zip
 
 In this case, you should have ``numpy``, ``cython`` and C++ build tools
 available at build time.

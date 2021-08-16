@@ -8,6 +8,12 @@ and this project adheres to
 
 Changelogs for this project are recorded in this file since v0.2.0.
 
+## [v0.5.2]
+
+### Changed
+
+* In docs, change references to `master` branch to `main` branch.
+
 ## [v0.5.0]
 
 ### Changed
