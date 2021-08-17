@@ -13,11 +13,11 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
-    - uses: actions/checkout@v1
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v1
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: 3.9
 
     - name: Install dependencies
       run: |
@@ -33,7 +33,7 @@ jobs:
         CIBW_BEFORE_BUILD: "pip install numpy cython"
       run: |
         python -m cibuildwheel --output-dir wheelhouse
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v2
       with:
         name: wheels
         path: ./wheelhouse

@@ -18,6 +18,8 @@ jobs:
         python.version: '3.7'
       Python38:
         python.version: '3.8'
+      Python39:
+        python.version: '3.9'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -38,7 +40,7 @@ jobs:
   
   - script: |
       set -xe
-      pip install -e .
+      python -m pip install -e .
     displayName: 'Install tslearn'
   
   - script: |
@@ -48,7 +50,7 @@ jobs:
       then
         python -m pytest -v tslearn/ --doctest-modules -k 'not test_all_estimators';
       else
-        pip install scikit-learn==0.23
+        python -m pip install scikit-learn==0.23
         python -m pytest -v tslearn/ --doctest-modules;
       fi
     displayName: 'Test'
@@ -59,8 +61,8 @@ jobs:
     vmImage: 'ubuntu-latest'
   strategy:
     matrix:
-      Python38:
-        python.version: '3.8'
+      Python39:
+        python.version: '3.9'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -82,15 +84,15 @@ jobs:
 
   - script: |
       set -xe
-      pip install -e .
+      python -m pip install -e .
     displayName: 'Install tslearn'
 
   - script: |
       set -xe
       python -m pip install pytest pytest-azurepipelines
-      pip install coverage pytest-cov
-      pip install cesium pandas stumpy
-      pip install scikit-learn==0.23
+      python -m pip install coverage pytest-cov
+      python -m pip install cesium pandas stumpy
+      python -m pip install scikit-learn==0.23
       python -m pytest -v tslearn/ --doctest-modules --cov=tslearn
     displayName: 'Test'
 
@@ -113,6 +115,8 @@ jobs:
         python.version: '3.7'
       Python38:
         python.version: '3.8'
+      Python39:
+        python.version: '3.9'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -127,13 +131,16 @@ jobs:
   - script: |
       set -xe
       python --version
+      brew install openblas  # required due to https://github.com/numpy/numpy/issues/15947
+      export OPENBLAS=$(brew --prefix openblas)
       python -m pip install --upgrade pip
       python -m pip install -r requirements.txt
     displayName: 'Install dependencies'
   
   - script: |
       set -xe
-      pip install -e .
+      export OPENBLAS=$(brew --prefix openblas)
+      python -m pip install -e .
     displayName: 'Install tslearn'
   
   - script: |
@@ -160,6 +167,9 @@ jobs:
       Python38:
         python_ver: '38'
         python.version: '3.8'
+      Python39:
+        python_ver: '39'
+        python.version: '3.9'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -177,7 +187,7 @@ jobs:
     displayName: 'Install dependencies'
   
   - script: |
-      pip install -e .
+      python -m pip install -e .
     displayName: 'Install tslearn'
   
   - script: |
