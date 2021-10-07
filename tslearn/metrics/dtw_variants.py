@@ -193,6 +193,9 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
         raise ValueError(
             "One of the input time series contains only nans or has zero length.")
 
+    if s1.shape[1] != s2.shape[1]:
+        raise ValueError('dimension mismatch')
+
     mask = compute_mask(
         s1, s2, GLOBAL_CONSTRAINT_CODE[global_constraint],
         sakoe_chiba_radius, itakura_max_slope
@@ -460,6 +463,13 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
     """
     s1 = to_time_series(s1, remove_nans=True)
     s2 = to_time_series(s2, remove_nans=True)
+
+    if len(s1) == 0 or len(s2) == 0:
+        raise ValueError(
+            "One of the input time series contains only nans or has zero length.")
+
+    if s1.shape[1] != s2.shape[1]:
+        raise ValueError('dimension mismatch')
 
     mask = compute_mask(
         s1, s2,
