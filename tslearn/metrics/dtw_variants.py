@@ -190,7 +190,8 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
     s2 = to_time_series(s2, remove_nans=True)
 
     if len(s1) == 0 or len(s2) == 0:
-        raise ValueError("One of the input time series contains only nans or has zero length.")
+        raise ValueError(
+            "One of the input time series contains only nans or has zero length.")
 
     mask = compute_mask(
         s1, s2, GLOBAL_CONSTRAINT_CODE[global_constraint],
@@ -1142,7 +1143,7 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
     .. math::
 
         DTW(X, Y) = \sqrt{\sum_{(i, j) \in \pi} \|X_{i} - Y_{j}\|^2}
-    
+
     Note that this formula is still valid for the multivariate case.
 
     It is not required that time series share the same size, but they 
@@ -1227,6 +1228,7 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
                           global_constraint=global_constraint,
                           sakoe_chiba_radius=sakoe_chiba_radius,
                           itakura_max_slope=itakura_max_slope)
+
 
 def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
     r"""Compute LB_Keogh.
@@ -1446,7 +1448,7 @@ def njit_lcss(s1, s2, eps, mask):
 
 
 def lcss(s1, s2, eps=1., global_constraint=None, sakoe_chiba_radius=None,
-        itakura_max_slope=None):
+         itakura_max_slope=None):
     r"""Compute the Longest Common Subsequence (LCSS) similarity measure
     between (possibly multidimensional) time series and return the
     similarity.
@@ -1580,7 +1582,7 @@ def _return_lcss_path_from_dist_matrix(dist_matrix, eps, mask, acc_cost_mat, sz1
 
 
 def lcss_path(s1, s2, eps=1, global_constraint=None, sakoe_chiba_radius=None,
-             itakura_max_slope=None):
+              itakura_max_slope=None):
     r"""Compute the Longest Common Subsequence (LCSS) similarity measure
     between (possibly multidimensional) time series and return both the
     path and the similarity.
@@ -1755,7 +1757,7 @@ def lcss_path_from_metric(s1, s2=None, eps=1, metric="euclidean",
 
     eps : float (default: 1.)
         Maximum matching distance threshold.
-        
+
     metric : string or callable (default: "euclidean")
         Function used to compute the pairwise distances between each points of
         `s1` and `s2`.
@@ -1769,10 +1771,10 @@ def lcss_path_from_metric(s1, s2=None, eps=1, metric="euclidean",
         of rows of `s1` and `s2`. The callable should take two 1 dimensional
         arrays as input and return a value indicating the distance between
         them.
-        
+
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
         Global constraint to restrict admissible paths for LCSS.
-        
+
     sakoe_chiba_radius : int or None (default: None)
         Radius to be used for Sakoe-Chiba band global constraint.
         If None and `global_constraint` is set to "sakoe_chiba", a radius of
@@ -1782,7 +1784,7 @@ def lcss_path_from_metric(s1, s2=None, eps=1, metric="euclidean",
         two. In this case, if `global_constraint` corresponds to no global
         constraint, a `RuntimeWarning` is raised and no global constraint is
         used.
-        
+
     itakura_max_slope : float or None (default: None)
         Maximum slope for the Itakura parallelogram constraint.
         If None and `global_constraint` is set to "itakura", a maximum slope
@@ -1792,7 +1794,7 @@ def lcss_path_from_metric(s1, s2=None, eps=1, metric="euclidean",
         two. In this case, if `global_constraint` corresponds to no global
         constraint, a `RuntimeWarning` is raised and no global constraint is
         used.
-        
+
     **kwds
         Additional arguments to pass to sklearn pairwise_distances to compute
         the pairwise distances.
@@ -1842,7 +1844,7 @@ def lcss_path_from_metric(s1, s2=None, eps=1, metric="euclidean",
     (which uses the euclidean distance) simply because with the sum of squared
     distances the matching threshold is still not reached.
     Also, contrary to Dynamic Time Warping and variants, an LCSS path does not need to be contiguous.
-    
+
     See Also
     --------
     lcss: Get only the similarity score for LCSS
@@ -1880,7 +1882,9 @@ def lcss_path_from_metric(s1, s2=None, eps=1, metric="euclidean",
         )
         dist_mat = pairwise_distances(s1, s2, metric=metric, **kwds)
 
-    acc_cost_mat = njit_lcss_accumulated_matrix_from_dist_matrix(dist_mat, eps, mask)
-    path = _return_lcss_path_from_dist_matrix(dist_mat, eps, acc_cost_mat, mask, sz1, sz2)
+    acc_cost_mat = njit_lcss_accumulated_matrix_from_dist_matrix(
+        dist_mat, eps, mask)
+    path = _return_lcss_path_from_dist_matrix(
+        dist_mat, eps, acc_cost_mat, mask, sz1, sz2)
 
     return path, float(acc_cost_mat[-1][-1]) / min([sz1, sz2])
