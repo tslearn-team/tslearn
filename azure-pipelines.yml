@@ -10,8 +10,6 @@ jobs:
     vmImage: 'ubuntu-latest'
   strategy:
     matrix:
-      Python35:
-        python.version: '3.5'
       Python36:
         python.version: '3.6'
       Python37:
@@ -46,13 +44,8 @@ jobs:
   - script: |
       set -xe
       python -m pip install pytest pytest-azurepipelines
-      if [[ "$(python.version)" == '3.5' ]];
-      then
-        python -m pytest -v tslearn/ --doctest-modules -k 'not test_all_estimators';
-      else
-        python -m pip install scikit-learn==0.23
-        python -m pytest -v tslearn/ --doctest-modules;
-      fi
+      python -m pip install scikit-learn==0.23
+      python -m pytest -v tslearn/ --doctest-modules;
     displayName: 'Test'
 
 
@@ -107,8 +100,6 @@ jobs:
     vmImage: 'macOS-latest'
   strategy:
     matrix:
-      Python35:
-        python.version: '3.5'
       Python36:
         python.version: '3.6'
       Python37:
@@ -155,9 +146,6 @@ jobs:
     vmImage: 'windows-latest'
   strategy:
     matrix:
-      Python35:
-        python_ver: '35'
-        python.version: '3.5'
       Python36:
         python_ver: '36'
         python.version: '3.6'
