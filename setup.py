@@ -29,6 +29,9 @@ setup(
     long_description=README,
     long_description_content_type='text/markdown',
     license='BSD-2-Clause',
+    classifiers=[
+            "License :: BSD-2-Clause"
+    ]
     include_dirs=[numpy.get_include()],
     ext_modules=cythonize("tslearn/metrics/*.pyx",
                           include_path=[numpy.get_include()]),
