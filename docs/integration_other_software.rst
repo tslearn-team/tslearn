@@ -177,7 +177,7 @@ and vice versa.
 tsfresh
 ^^^^^^^
 
-`tsfresh <https://tsfresh.readthedocs.io>`_ iis a python package automatically
+`tsfresh <https://tsfresh.readthedocs.io>`_ is a python package automatically
 calculating a large number of time series characteristics.
 :func:`tslearn.utils.to_tsfresh_dataset` and :func:`tslearn.utils.from_tsfresh_dataset`
 allow users to convert a data set from ``tslearn`` format to ``tsfresh`` format
