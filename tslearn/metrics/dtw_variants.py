@@ -194,7 +194,7 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
             "One of the input time series contains only nans or has zero length.")
 
     if s1.shape[1] != s2.shape[1]:
-        raise ValueError('dimension mismatch')
+        raise ValueError("All input time series must be the same shape.")
 
     mask = compute_mask(
         s1, s2, GLOBAL_CONSTRAINT_CODE[global_constraint],
@@ -469,7 +469,7 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
             "One of the input time series contains only nans or has zero length.")
 
     if s1.shape[1] != s2.shape[1]:
-        raise ValueError('dimension mismatch')
+        raise ValueError("All input time series must be the same shape.")
 
     mask = compute_mask(
         s1, s2,
