@@ -6,6 +6,7 @@ be used for testing.
 import tslearn
 import pkgutil
 import inspect
+from functools import partial
 from operator import itemgetter
 
 import sklearn
@@ -21,7 +22,8 @@ except ImportError:
 from sklearn.exceptions import SkipTestWarning
 from sklearn.utils.estimator_checks import (
     check_no_attributes_set_in_init,
-    check_parameters_default_constructible
+    check_parameters_default_constructible,
+    _maybe_skip
 )
 from tslearn.tests.sklearn_patches import (
                              check_clustering,
@@ -36,7 +38,8 @@ from tslearn.tests.sklearn_patches import (
                              check_regressors_int_patched,
                              check_classifiers_cont_target,
                              check_pipeline_consistency,
-                             yield_all_checks)
+                             yield_all_checks,
+                             _create_large_ts_dataset)
 from tslearn.shapelets import LearningShapelets, SerializableShapeletModel
 import warnings
 import pytest
@@ -57,6 +60,7 @@ checks.check_classifier_data_not_an_array = check_classifier_data_not_an_array
 checks.check_regressors_int = check_regressors_int_patched
 checks.check_classifiers_regression_target = check_classifiers_cont_target
 checks.check_pipeline_consistency = check_pipeline_consistency
+checks._regression_dataset = _create_large_ts_dataset
 
 
 def _get_all_classes():
@@ -165,7 +169,7 @@ def check_estimator(Estimator):
         name = Estimator.__name__
         estimator = Estimator()
 
-        check_parameters_default_constructible(name, Estimator)
+        check_parameters_default_constructible(name, estimator)
         check_no_attributes_set_in_init(name, estimator)
     else:
         # got an instance
@@ -183,9 +187,14 @@ def check_estimator(Estimator):
     if hasattr(estimator, 'probability'):
         estimator.set_params(probability=True)
 
-    for check in checks._yield_all_checks(name, estimator):
+    def checks_generator():
+        for check in checks._yield_all_checks(name, estimator):
+            check = _maybe_skip(estimator, check)
+            yield estimator, partial(check, name)
+
+    for estimator, check in checks_generator():
         try:
-            check(name, estimator)
+            check(estimator)
         except SkipTest as exception:
             # the only SkipTest thrown currently results from not
             # being able to import pandas.
