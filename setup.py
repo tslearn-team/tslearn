@@ -12,9 +12,9 @@ with open(os.path.join(ROOT, 'README.md'), encoding="utf-8") as f:
 
 # We can actually import a restricted version of tslearn that
 # does not need the compiled code
-#import tslearn
+import tslearn
 
-#VERSION = tslearn.__version__
+VERSION = tslearn.__version__
 
 # The following block
 # is copied from sklearn as a way to avoid cythonizing source
@@ -40,7 +40,7 @@ setup(
     install_requires=['numpy', 'scipy', 'scikit-learn', 'Cython', 'numba',
                       'joblib'],
     extras_require={'tests': ['pytest']},
-    version='0.5.2',
+    version=VERSION,
     url="http://tslearn.readthedocs.io/",
     author="Romain Tavenard",
     author_email="romain.tavenard@univ-rennes2.fr",

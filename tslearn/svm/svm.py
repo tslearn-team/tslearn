@@ -368,12 +368,7 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
 
     def _more_tags(self):
         return {'non_deterministic': True, 'allow_nan': True,
-                'allow_variable_length': True,
-                "_xfail_checks": {
-                    "check_sample_weights_invariance": (
-                            "zero sample_weight is not equivalent to removing samples"
-                        ),
-                }}
+                'allow_variable_length': True}
 
 
 class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
@@ -571,9 +566,4 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
 
     def _more_tags(self):
         return {'non_deterministic': True, 'allow_nan': True,
-                'allow_variable_length': True,
-                "_xfail_checks": {
-                    "check_sample_weights_invariance": (
-                            "zero sample_weight is not equivalent to removing samples"
-                        ),
-                }}
+                'allow_variable_length': True}

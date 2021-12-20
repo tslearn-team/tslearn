@@ -608,21 +608,21 @@ def yield_all_checks(name, estimator):
                       SkipTestWarning)
         return
 
-    yield from _yield_checks(estimator)
+    yield from _yield_checks(name, estimator)
     if is_classifier(estimator):
-        yield from _yield_classifier_checks(estimator)
+        yield from _yield_classifier_checks(name, estimator)
     if is_regressor(estimator):
-        yield from _yield_regressor_checks(estimator)
+        yield from _yield_regressor_checks(name, estimator)
     if hasattr(estimator, 'transform'):
         if not tags["allow_variable_length"]:
             # Transformer tests ensure that shapes are the same at fit and
             # transform time, hence we need to skip them for estimators that
             # allow variable-length inputs
-            yield from _yield_transformer_checks(estimator)
+            yield from _yield_transformer_checks(name, estimator)
     if isinstance(estimator, ClusterMixin):
-        yield from _yield_clustering_checks(estimator)
+        yield from _yield_clustering_checks(name, estimator)
     if is_outlier_detector(estimator):
-        yield from _yield_outliers_checks(estimator)
+        yield from _yield_outliers_checks(name, estimator)
     # We are not strict on presence/absence of the 3rd dimension
     # yield check_fit2d_predict1d
 
