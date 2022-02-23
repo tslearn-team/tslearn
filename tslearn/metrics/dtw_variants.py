@@ -1895,6 +1895,6 @@ def lcss_path_from_metric(s1, s2=None, eps=1, metric="euclidean",
     acc_cost_mat = njit_lcss_accumulated_matrix_from_dist_matrix(
         dist_mat, eps, mask)
     path = _return_lcss_path_from_dist_matrix(
-        dist_mat, eps, acc_cost_mat, mask, sz1, sz2)
+        dist_mat, eps, mask, acc_cost_mat, sz1, sz2)
 
     return path, float(acc_cost_mat[-1][-1]) / min([sz1, sz2])
