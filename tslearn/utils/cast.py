@@ -12,7 +12,7 @@ except:
 from .utils import check_dataset, ts_size, to_time_series_dataset
 
 
-def to_sklearn_dataset(dataset, dtype=numpy.float, return_dim=False):
+def to_sklearn_dataset(dataset, dtype=float, return_dim=False):
     """Transforms a time series dataset so that it fits the format used in
     ``sklearn`` estimators.
 
@@ -20,7 +20,7 @@ def to_sklearn_dataset(dataset, dtype=numpy.float, return_dim=False):
     ----------
     dataset : array-like
         The dataset of time series to be transformed.
-    dtype : data type (default: numpy.float)
+    dtype : data type (default: float64)
         Data type for the returned dataset.
     return_dim : boolean  (optional, default: False)
         Whether the dimensionality (third dimension should be returned together
@@ -311,7 +311,7 @@ def to_sktime_dataset(X):
         raise ImportError("Conversion from/to sktime cannot be performed "
                           "if pandas is not installed.")
     X_ = check_dataset(X)
-    X_pd = pd.DataFrame(dtype=numpy.float32)
+    X_pd = pd.DataFrame(dtype=float)
     for dim in range(X_.shape[2]):
         X_pd['dim_' + str(dim)] = [pd.Series(data=Xi[:ts_size(Xi), dim])
                                    for Xi in X_]
@@ -439,7 +439,7 @@ def to_pyflux_dataset(X):
     X_ = check_dataset(X,
                        force_equal_length=True,
                        force_single_time_series=True)
-    X_pd = pd.DataFrame(X[0], dtype=numpy.float32)
+    X_pd = pd.DataFrame(X[0], dtype=float)
     X_pd.columns = ["dim_%d" % di for di in range(X_.shape[2])]
     return X_pd
 
@@ -554,7 +554,7 @@ def to_tsfresh_dataset(X):
         Xi_ = Xi[:ts_size(Xi)]
         sz = Xi_.shape[0]
         df["time"] = numpy.arange(sz)
-        df["id"] = numpy.zeros((sz, ), dtype=numpy.int32) + i
+        df["id"] = numpy.zeros((sz, ), dtype=int) + i
         for di in range(d):
             df["dim_%d" % di] = Xi_[:, di]
         dataframes.append(df)
