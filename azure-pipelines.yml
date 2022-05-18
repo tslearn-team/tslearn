@@ -45,7 +45,6 @@ jobs:
       set -xe
       python -m pip install pytest pytest-azurepipelines
       python -m pip install scikit-learn==0.23
-      pip install pycocotools==2.0.0
       python -m pytest -v tslearn/ --doctest-modules;
     displayName: 'Test'
 
@@ -87,7 +86,6 @@ jobs:
       python -m pip install coverage pytest-cov
       python -m pip install cesium pandas stumpy
       python -m pip install scikit-learn==0.23
-      pip install pycocotools==2.0.0
       python -m pytest -v tslearn/ --doctest-modules --cov=tslearn
     displayName: 'Test'
 
@@ -138,7 +136,6 @@ jobs:
   
   - script: |
       set -xe
-      pip install pycocotools==2.0.0
       python -m pip install pytest pytest-azurepipelines
       python -m pytest -v tslearn/ --doctest-modules -k 'not test_all_estimators'
     displayName: 'Test'
