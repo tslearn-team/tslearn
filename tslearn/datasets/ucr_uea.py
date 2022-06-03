@@ -241,9 +241,9 @@ class UCR_UEA_datasets:
         >>> y_train.shape
         (1000,)
         >>> X_train, y_train, X_test, y_test = data_loader.load_dataset(
-        ...         "CinCECGTorso")
+        ...         "Adiac")
         >>> X_train.shape
-        (40, 1639, 1)
+        (390, 176, 1)
         >>> X_train, y_train, X_test, y_test = data_loader.load_dataset(
         ...         "PenDigits")
         >>> X_train.shape
