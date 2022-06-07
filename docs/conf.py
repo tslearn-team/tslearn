@@ -212,7 +212,6 @@ html_theme_options = {
 
 def setup(app):
     html_css_files = ["custom.css"]
-    app.add_css_file("custom.css") # also can be a full URL
     if rtd_version != 'stable':
         html_js_files = ["custom.js"]
 
