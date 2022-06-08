@@ -347,5 +347,3 @@ class UCR_UEA_datasets:
                 warnings.warn("Could not cache dataset \"%s\": %s"
                               % (dataset_name, str(exception)),
                               category=RuntimeWarning, stacklevel=2)
-
-
