@@ -23,7 +23,7 @@ def _paa_to_symbols(X_paa, breakpoints):
     array([0, 1, 1])
     """
     alphabet_size = breakpoints.shape[0] + 1
-    X_symbols = numpy.zeros(X_paa.shape, dtype=numpy.int) - 1
+    X_symbols = numpy.zeros(X_paa.shape, dtype=int) - 1
     for idx_bp, bp in enumerate(breakpoints):
         indices = numpy.logical_and(X_symbols < 0, X_paa < bp)
         X_symbols[indices] = idx_bp
@@ -663,7 +663,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
     def _transform(self, X, y=None):
         X = self._scale(X)
         n_ts, sz_raw, d = X.shape
-        X_1d_sax = numpy.empty((n_ts, self.n_segments, 2 * d), dtype=numpy.int)
+        X_1d_sax = numpy.empty((n_ts, self.n_segments, 2 * d), dtype=int)
 
         # Average
         X_1d_sax_avg = SymbolicAggregateApproximation._transform(self, X)
@@ -691,7 +691,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
             1d-SAX-Transformed dataset
         """
         self._is_fitted()
-        X = check_array(X, allow_nd=True, dtype=numpy.float,
+        X = check_array(X, allow_nd=True, dtype=float,
                         force_all_finite=False)
         X = check_dims(X, X_fit_dims=tuple(self._X_fit_dims_),
                        check_n_features_only=True)

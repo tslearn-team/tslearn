@@ -82,8 +82,8 @@ def _dicts_to_group(h5file, path, d, raise_meta_fail):
                 # h5file[path + key].attrs['dtype'] = item.dtype.str
 
         # single pieces of data
-        elif isinstance(item, (str, np.int, np.int8,
-                               np.int16, np.int32, np.int64, np.float,
+        elif isinstance(item, (str, int, np.int8,
+                               np.int16, np.int32, np.int64, float,
                                np.float16, np.float32, np.float64)):
             h5file[path + key] = item
 
