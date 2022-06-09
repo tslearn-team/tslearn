@@ -5,6 +5,7 @@ from .utils import _set_weights
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
+
 def euclidean_barycenter(X, weights=None):
     """Standard Euclidean barycenter computed from a set of time series.
 

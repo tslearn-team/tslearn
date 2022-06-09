@@ -6,7 +6,7 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 def _cdist_generic(dist_fun, dataset1, dataset2, n_jobs, verbose,
-                   compute_diagonal=True, dtype=numpy.float, *args, **kwargs):
+                   compute_diagonal=True, dtype=float, *args, **kwargs):
     """Compute cross-similarity matrix with joblib parallelization for a given
     similarity function.
 
