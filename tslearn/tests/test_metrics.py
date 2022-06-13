@@ -158,10 +158,6 @@ def test_lcss_path_from_metric():
         path, sim = tslearn.metrics.lcss_path_from_metric(s1, s2,
                                                           metric="sqeuclidean")
 
-        print('d:', d)
-        print('lcss:', path_ref, sim_ref)
-        print('lcss from metric:', path, sim)
-
         np.testing.assert_equal(path, path_ref)
         np.testing.assert_equal(sim, sim_ref)
 
