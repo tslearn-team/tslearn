@@ -8,6 +8,12 @@ and this project adheres to
 
 Changelogs for this project are recorded in this file since v0.2.0.
 
+## [Towards v0.5.3]
+
+### Fixed
+
+* Fixed a bug about result of path in `lcss_path_from_metric` function.
+
 ## [v0.5.2]
 
 ### Changed
