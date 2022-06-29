@@ -42,6 +42,9 @@ setup(
     extras_require={'tests': ['pytest']},
     version=VERSION,
     url="http://tslearn.readthedocs.io/",
+    project_urls={
+        "Source": "https://github.com/tslearn-team/tslearn",
+    },
     author="Romain Tavenard",
     author_email="romain.tavenard@univ-rennes2.fr",
     cmdclass=cmdclass

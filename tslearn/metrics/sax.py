@@ -56,4 +56,3 @@ def cdist_sax(dataset1, breakpoints_avg, size_fitted, dataset2=None,
     """  # noqa: E501
     return _cdist_generic(cydist_sax, dataset1, dataset2, n_jobs, verbose,
                           False, int, breakpoints_avg, size_fitted)
-
