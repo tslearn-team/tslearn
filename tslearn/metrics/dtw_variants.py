@@ -229,7 +229,7 @@ def njit_accumulated_matrix_from_dist_matrix(dist_matrix, mask):
     cum_sum[0, 0] = 0.
 
     for i in prange(l1):
-        for j in prange(l2):
+        for j in range(l2):
             if numpy.isfinite(mask[i, j]):
                 cum_sum[i + 1, j + 1] = dist_matrix[i, j]
                 cum_sum[i + 1, j + 1] += min(cum_sum[i, j + 1],
@@ -1156,7 +1156,7 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
 
     Note that this formula is still valid for the multivariate case.
 
-    It is not required that time series share the same size, but they 
+    It is not required that time series share the same size, but they
     must be the same dimension.
     DTW was originally presented in [1]_ and is
     discussed in more details in our :ref:`dedicated user-guide page <dtw>`.
@@ -1328,7 +1328,7 @@ def njit_lb_envelope(time_series, radius):
             min_idx = 0
         if max_idx > sz:
             max_idx = sz
-        for di in prange(d):
+        for di in range(d):
             enveloppe_down[i, di] = numpy.min(time_series[min_idx:max_idx, di])
             enveloppe_up[i, di] = numpy.max(time_series[min_idx:max_idx, di])
 
@@ -1850,7 +1850,7 @@ def lcss_path_from_metric(s1, s2=None, eps=1, metric="euclidean",
     Notes
     --------
     By using a squared euclidean distance metric as shown above, the output
-    path and similarity is the same as the one obtained by using lcss_path 
+    path and similarity is the same as the one obtained by using lcss_path
     (which uses the euclidean distance) simply because with the sum of squared
     distances the matching threshold is still not reached.
     Also, contrary to Dynamic Time Warping and variants, an LCSS path does not need to be contiguous.
