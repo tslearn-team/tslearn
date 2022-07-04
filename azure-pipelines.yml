@@ -32,6 +32,7 @@ jobs:
       python --version
       python -m pip install --upgrade pip
       python -m pip install -r requirements.txt
+      python -m pip install numpy --upgrade
     displayName: 'Install dependencies'
   
   - script: |
@@ -71,6 +72,7 @@ jobs:
       python --version
       python -m pip install --upgrade pip
       python -m pip install -r requirements.txt
+      python -m pip install numpy --upgrade
     displayName: 'Install dependencies'
 
   - script: |
@@ -122,6 +124,7 @@ jobs:
       export OPENBLAS=$(brew --prefix openblas)
       python -m pip install --upgrade pip
       python -m pip install -r requirements.txt
+      python -m pip install numpy --upgrade
     displayName: 'Install dependencies'
   
   - script: |
