@@ -10,44 +10,6 @@ jobs:
     vmImage: 'ubuntu-latest'
   strategy:
     matrix:
-      Python37:
-        python.version: '3.7'
-  variables:
-    OMP_NUM_THREADS: '2'
-    NUMBA_NUM_THREADS: '2'
-    PIP_PREFER_BINARY: 'true'
-
-  steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '$(python.version)'
-    displayName: 'Use Python $(python.version)'
-  
-  - script: |
-      set -xe
-      python --version
-      python -m pip install --upgrade pip
-      python -m pip install -r requirements.txt
-    displayName: 'Install dependencies'
-  
-  - script: |
-      set -xe
-      python -m pip install -e .
-    displayName: 'Install tslearn'
-  
-  - script: |
-      set -xe
-      python -m pip install pytest pytest-azurepipelines
-      python -m pip install scikit-learn==1.0
-      python -m pytest -v tslearn/ --doctest-modules
-    displayName: 'Test'
-
-
-- job: 'linux'
-  pool:
-    vmImage: 'ubuntu-latest'
-  strategy:
-    matrix:
       Python38:
         python.version: '3.8'
       Python39:
