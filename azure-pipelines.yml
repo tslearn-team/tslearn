@@ -29,7 +29,7 @@ jobs:
       set -xe
       python --version
       python -m pip install --upgrade pip
-      python -m pip install numpy=1.22
+      python -m pip install numpy==1.22
       python -m pip install -r requirements.txt
     displayName: 'Install dependencies'
 
@@ -41,7 +41,7 @@ jobs:
   - script: |
       set -xe
       python -m pip install pytest pytest-azurepipelines
-      python -m pip install numpy=1.22
+      python -m pip install numpy==1.22
       python -m pip install scikit-learn==1.0
       python -m pytest -v tslearn/ --doctest-modules
     displayName: 'Test'
