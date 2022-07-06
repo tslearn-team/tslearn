@@ -31,6 +31,7 @@ jobs:
       set -xe
       python --version
       python -m pip install --upgrade pip
+      python -m pip install numpy --upgrade --ignore-installed
       python -m pip install -r requirements.txt
     displayName: 'Install dependencies'
   
@@ -42,7 +43,7 @@ jobs:
   - script: |
       set -xe
       python -m pip install pytest pytest-azurepipelines
-      python -m pip install numpy
+      python -m pip install numpy --upgrade --ignore-installed
       python -m pip install scikit-learn
       python -m pytest -v tslearn/ --doctest-modules;
     displayName: 'Test'
@@ -71,6 +72,7 @@ jobs:
       set -xe
       python --version
       python -m pip install --upgrade pip
+      python -m pip install numpy --upgrade --ignore-installed
       python -m pip install -r requirements.txt
     displayName: 'Install dependencies'
 
@@ -83,7 +85,7 @@ jobs:
       set -xe
       python -m pip install pytest pytest-azurepipelines
       python -m pip install coverage pytest-cov
-      python -m pip install numpy
+      python -m pip install numpy --upgrade --ignore-installed
       python -m pip install cesium pandas stumpy
       python -m pip install scikit-learn
       python -m pytest -v tslearn/ --doctest-modules --cov=tslearn
@@ -123,6 +125,7 @@ jobs:
       brew install openblas  # required due to https://github.com/numpy/numpy/issues/15947
       export OPENBLAS=$(brew --prefix openblas)
       python -m pip install --upgrade pip
+      python -m pip install numpy --upgrade --ignore-installed
       python -m pip install -r requirements.txt
     displayName: 'Install dependencies'
   
