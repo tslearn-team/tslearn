@@ -31,7 +31,7 @@ jobs:
       set -xe
       python --version
       python -m pip install --upgrade pip
-      python -m pip install --upgrade -r requirements.txt
+      python3 -m pip install --upgrade --upgrade-strategy "eager" -r requirements.txt
     displayName: 'Install dependencies'
   
   - script: |
@@ -70,7 +70,7 @@ jobs:
       set -xe
       python --version
       python -m pip install --upgrade pip
-      python -m pip install --upgrade -r requirements.txt
+      python3 -m pip install --upgrade --upgrade-strategy "eager" -r requirements.txt
     displayName: 'Install dependencies'
 
   - script: |
@@ -121,7 +121,7 @@ jobs:
       brew install openblas  # required due to https://github.com/numpy/numpy/issues/15947
       export OPENBLAS=$(brew --prefix openblas)
       python -m pip install --upgrade pip
-      python -m pip install --upgrade -r requirements.txt
+      python3 -m pip install --upgrade --upgrade-strategy "eager" -r requirements.txt
     displayName: 'Install dependencies'
   
   - script: |
@@ -164,7 +164,7 @@ jobs:
   - script: |
       python --version
       python -m pip install --upgrade pip
-      python -m pip install --upgrade -r requirements_nocast.txt
+      python3 -m pip install --upgrade --upgrade-strategy "eager" -r requirements_nocast.txt
     displayName: 'Install dependencies'
   
   - script: |
