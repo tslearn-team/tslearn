@@ -228,7 +228,7 @@ def njit_accumulated_matrix_from_dist_matrix(dist_matrix, mask):
     cum_sum = numpy.full((l1 + 1, l2 + 1), numpy.inf)
     cum_sum[0, 0] = 0.
 
-    for i in prange(l1):
+    for i in range(l1):
         for j in range(l2):
             if numpy.isfinite(mask[i, j]):
                 cum_sum[i + 1, j + 1] = dist_matrix[i, j]
@@ -917,7 +917,7 @@ def dtw_subsequence_path(subseq, longseq):
     return path, numpy.sqrt(acc_cost_mat[-1, :][global_optimal_match])
 
 
-@njit()
+@njit(parallel=True)
 def sakoe_chiba_mask(sz1, sz2, radius=1):
     """Compute the Sakoe-Chiba mask.
 
@@ -969,7 +969,7 @@ def sakoe_chiba_mask(sz1, sz2, radius=1):
     return mask
 
 
-@njit()
+@njit(parallel=True)
 def _njit_itakura_mask(sz1, sz2, max_slope=2.):
     """Compute the Itakura mask without checking that the constraints
     are feasible. In most cases, you should use itakura_mask instead.
@@ -1053,12 +1053,12 @@ def itakura_mask(sz1, sz2, max_slope=2.):
 
     # Post-check
     raise_warning = False
-    for i in prange(sz1):
+    for i in range(sz1):
         if not numpy.any(numpy.isfinite(mask[i])):
             raise_warning = True
             break
     if not raise_warning:
-        for j in prange(sz2):
+        for j in range(sz2):
             if not numpy.any(numpy.isfinite(mask[:, j])):
                 raise_warning = True
                 break
@@ -1315,11 +1315,11 @@ def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
                                         envelope_down[indices_down, 0]) ** 2)
 
 
-@njit()
+@njit(parallel=True)
 def njit_lb_envelope(time_series, radius):
     sz, d = time_series.shape
-    enveloppe_up = numpy.empty((sz, d))
-    enveloppe_down = numpy.empty((sz, d))
+    envelope_down = numpy.empty((sz, d))
+    envelope_up = numpy.empty((sz, d))
 
     for i in prange(sz):
         min_idx = i - radius
@@ -1329,10 +1329,10 @@ def njit_lb_envelope(time_series, radius):
         if max_idx > sz:
             max_idx = sz
         for di in range(d):
-            enveloppe_down[i, di] = numpy.min(time_series[min_idx:max_idx, di])
-            enveloppe_up[i, di] = numpy.max(time_series[min_idx:max_idx, di])
+            envelope_down[i, di] = numpy.min(time_series[min_idx:max_idx, di])
+            envelope_up[i, di] = numpy.max(time_series[min_idx:max_idx, di])
 
-    return enveloppe_down, enveloppe_up
+    return envelope_down, envelope_up
 
 
 def lb_envelope(ts, radius=1):
@@ -1557,7 +1557,7 @@ def lcss(s1, s2, eps=1., global_constraint=None, sakoe_chiba_radius=None,
     return njit_lcss(s1, s2, eps, mask)
 
 
-@njit()
+@njit(fastmath={'afn', 'nsz', 'arcp'})
 def _return_lcss_path(s1, s2, eps, mask, acc_cost_mat, sz1, sz2):
     i, j = (sz1, sz2)
     path = []
@@ -1701,6 +1701,7 @@ def lcss_path(s1, s2, eps=1, global_constraint=None, sakoe_chiba_radius=None,
     return path, float(acc_cost_mat[-1][-1]) / min([l1, l2])
 
 
+@njit()
 def njit_lcss_accumulated_matrix_from_dist_matrix(dist_matrix, eps, mask):
     """Compute the accumulated cost matrix score between two time series using
     a precomputed distance matrix.
