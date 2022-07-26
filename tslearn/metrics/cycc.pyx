@@ -85,7 +85,7 @@ def y_shifted_sbd_vec(numpy.ndarray[DTYPE_t, ndim=2] ref_ts, numpy.ndarray[DTYPE
     for i in range(dataset.shape[0]):
         cc = normalized_cc(ref_ts, dataset[i], norm1=norm_ref, norm2=norms_dataset[i])
         idx = numpy.argmax(cc)
-        shift = idx - sz
+        shift = idx + 1 - sz
         if shift > 0:
             dataset_shifted[i, shift:] = dataset[i, :-shift, :]
         elif shift < 0:
