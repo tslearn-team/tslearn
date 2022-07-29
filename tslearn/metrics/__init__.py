@@ -1,8 +1,8 @@
 """
-The :mod:`tslearn.metrics` module delivers time-series specific metrics to be 
+The :mod:`tslearn.metrics` module delivers time-series specific metrics to be
 used at the core of machine learning algorithms.
 
-**User guide:** See the :ref:`Dynamic Time Warping (DTW) <dtw>` section for 
+**User guide:** See the :ref:`Dynamic Time Warping (DTW) <dtw>` section for
 further details.
 """
 from .dtw_variants import (dtw, dtw_limited_warping_length,
@@ -39,7 +39,7 @@ __all__ = [
     "GLOBAL_CONSTRAINT_CODE",
     "lb_envelope", "lb_keogh",
     "sakoe_chiba_mask", "itakura_mask",
-    "lcss", "lcss_path", "lcss_path_from_metric"
+    "lcss", "lcss_path", "lcss_path_from_metric",
 
     "ctw_path", "ctw", "cdist_ctw",
 
