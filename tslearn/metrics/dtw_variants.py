@@ -12,16 +12,16 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 GLOBAL_CONSTRAINT_CODE = {None: 0, "": 0, "itakura": 1, "sakoe_chiba": 2}
 
 
-@njit()
+@njit(parallel=True)
 def _local_squared_dist(x, y):
     dist = 0.
     for di in range(x.shape[0]):
-        diff = (x[di] - y[di])
+        diff = x[di] - y[di]
         dist += diff * diff
     return dist
 
 
-@njit()
+@njit
 def njit_accumulated_matrix(s1, s2, mask):
     """Compute the accumulated cost matrix score between two time series.
 
@@ -82,7 +82,7 @@ def njit_dtw(s1, s2, mask):
     return numpy.sqrt(cum_sum[-1, -1])
 
 
-@njit()
+@njit
 def _return_path(acc_cost_mat):
     sz1, sz2 = acc_cost_mat.shape
     path = [(sz1 - 1, sz2 - 1)]
@@ -205,7 +205,7 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
     return path, numpy.sqrt(acc_cost_mat[-1, -1])
 
 
-@njit()
+@njit
 def njit_accumulated_matrix_from_dist_matrix(dist_matrix, mask):
     """Compute the accumulated cost matrix score between two time series using
     a precomputed distance matrix.
@@ -793,7 +793,7 @@ def subsequence_cost_matrix(subseq, longseq):
     return _subsequence_cost_matrix(subseq, longseq)
 
 
-@njit()
+@njit
 def _subsequence_path(acc_cost_mat, idx_path_end):
     sz1, sz2 = acc_cost_mat.shape
     path = [(sz1 - 1, idx_path_end)]
@@ -1557,7 +1557,7 @@ def lcss(s1, s2, eps=1., global_constraint=None, sakoe_chiba_radius=None,
     return njit_lcss(s1, s2, eps, mask)
 
 
-@njit(fastmath={'afn', 'nsz', 'arcp'})
+@njit
 def _return_lcss_path(s1, s2, eps, mask, acc_cost_mat, sz1, sz2):
     i, j = (sz1, sz2)
     path = []
@@ -1574,7 +1574,7 @@ def _return_lcss_path(s1, s2, eps, mask, acc_cost_mat, sz1, sz2):
     return path[::-1]
 
 
-@njit()
+@njit
 def _return_lcss_path_from_dist_matrix(dist_matrix, eps, mask, acc_cost_mat, sz1, sz2):
     i, j = (sz1, sz2)
     path = []
@@ -1701,7 +1701,7 @@ def lcss_path(s1, s2, eps=1, global_constraint=None, sakoe_chiba_radius=None,
     return path, float(acc_cost_mat[-1][-1]) / min([l1, l2])
 
 
-@njit()
+@njit
 def njit_lcss_accumulated_matrix_from_dist_matrix(dist_matrix, eps, mask):
     """Compute the accumulated cost matrix score between two time series using
     a precomputed distance matrix.
