@@ -3,6 +3,7 @@ STUFF_cycc = "cycc"
 import numpy
 
 cimport numpy
+numpy.import_array()
 cimport cython
 from cpython cimport bool
 

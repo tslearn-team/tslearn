@@ -4,6 +4,7 @@ import numpy
 from sklearn.linear_model import LinearRegression
 
 cimport numpy
+numpy.import_array()
 cimport cython
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
