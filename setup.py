@@ -2,7 +2,6 @@ from setuptools import setup, find_packages
 from codecs import open
 import numpy
 import os
-from Cython.Build import cythonize
 
 # thanks Pipy for handling markdown now
 ROOT = os.path.abspath(os.path.dirname(__file__))
@@ -33,8 +32,6 @@ setup(
             "License :: BSD-2-Clause"
     ],
     include_dirs=[numpy.get_include()],
-    ext_modules=cythonize("tslearn/metrics/*.pyx",
-                          include_path=[numpy.get_include()]),
     packages=find_packages(),
     package_data={"tslearn": [".cached_datasets/Trace.npz"]},
     install_requires=['numpy', 'scipy', 'scikit-learn', 'Cython', 'numba',
