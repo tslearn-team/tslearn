@@ -1,14 +1,16 @@
 STUFF_cysax = "cysax"
 
 import numpy as np
+from numba import njit, prange
 from sklearn.linear_model import LinearRegression
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
-DTYPE = np.float
-DTYPE_INT = np.int
+DTYPE = float
+DTYPE_INT = int
 
 
+@njit(parallel=True)
 def inv_transform_paa(dataset_paa, original_size):
     n_ts = dataset_paa.shape[0]
     sz = dataset_paa.shape[1]
@@ -20,7 +22,7 @@ def inv_transform_paa(dataset_paa, original_size):
     seg_sz = original_size // sz
     dataset_out = np.zeros((n_ts, original_size, d))
 
-    for i in range(n_ts):
+    for i in prange(n_ts):
         for t in range(sz):
             t0 = t * seg_sz
             for di in range(d):
@@ -28,6 +30,7 @@ def inv_transform_paa(dataset_paa, original_size):
     return dataset_out
 
 
+@njit(parallel=True)
 def cydist_sax(sax1, sax2, breakpoints, original_size):
     assert sax1.shape[0] == sax2.shape[0] and sax1.shape[1] == sax2.shape[1]
     s = 0.0
@@ -35,7 +38,7 @@ def cydist_sax(sax1, sax2, breakpoints, original_size):
     d = sax1.shape[1]
     t = 0
     di = 0
-    for t in range(sz):
+    for t in prange(sz):
         for di in range(d):
             if np.abs(sax1[t, di] - sax2[t, di]) > 1:
                 max_symbol = max(sax1[t, di], sax2[t, di])
@@ -44,6 +47,7 @@ def cydist_sax(sax1, sax2, breakpoints, original_size):
     return np.sqrt(s * float(original_size) / sz)
 
 
+@njit(parallel=True)
 def inv_transform_sax(dataset_sax, breakpoints_middle_, original_size):
     n_ts = dataset_sax.shape[0]
     sz = dataset_sax.shape[1]
@@ -55,7 +59,7 @@ def inv_transform_sax(dataset_sax, breakpoints_middle_, original_size):
     seg_sz = original_size // sz
     dataset_out = np.zeros((n_ts, original_size, d))
 
-    for i in range(n_ts):
+    for i in prange(n_ts):
         for t in range(sz):
             t0 = t * seg_sz
             for di in range(d):
@@ -65,6 +69,7 @@ def inv_transform_sax(dataset_sax, breakpoints_middle_, original_size):
     return dataset_out
 
 
+@njit(parallel=True)
 def cyslopes(dataset, t0):
     i = 0
     d = 0
@@ -72,7 +77,7 @@ def cyslopes(dataset, t0):
     dataset_out = np.empty((dataset.shape[0], dataset.shape[2]))
     vec_t = np.arange(t0, t0 + sz).reshape((-1, 1))
 
-    for i in range(dataset.shape[0]):
+    for i in prange(dataset.shape[0]):
         for d in range(dataset.shape[2]):
             dataset_out[i, d] = (
                 LinearRegression()
@@ -82,6 +87,7 @@ def cyslopes(dataset, t0):
     return dataset_out
 
 
+@njit(parallel=True)
 def cydist_1d_sax(
     sax1, sax2, breakpoints_avg_middle_, breakpoints_slope_middle_, original_size
 ):
@@ -99,7 +105,7 @@ def cydist_1d_sax(
     avg1 = 0.0
     avg2 = 0.0
 
-    for t in range(sz):
+    for t in prange(sz):
         t0 = t * seg_sz
         t_middle = float(t0) + 0.5 * seg_sz
         for di in range(d):
@@ -114,6 +120,7 @@ def cydist_1d_sax(
     return np.sqrt(s)
 
 
+@njit(parallel=True)
 def inv_transform_1d_sax(
     dataset_sax, breakpoints_avg_middle_, breakpoints_slope_middle_, original_size
 ):
@@ -131,7 +138,7 @@ def inv_transform_1d_sax(
     avg = 0.0
     dataset_out = np.empty((n_ts, original_size, d))
 
-    for i in range(n_ts):
+    for i in prange(n_ts):
         for t in range(sz):
             t0 = t * seg_sz
             t_middle = float(t0) + 0.5 * (seg_sz - 1)
