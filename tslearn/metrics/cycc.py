@@ -5,12 +5,10 @@ from numba import njit, prange
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
-DTYPE = np.float64
-
 
 @njit(parallel=True)
 def normalized_cc(s1, s2, norm1=-1.0, norm2=-1.0):
-    assert s1.dtype == DTYPE and s2.dtype == DTYPE
+    assert s1.dtype == np.float64 and s2.dtype == np.float64
     assert s1.shape[1] == s2.shape[1]
     s = 0.0
     sz = s1.shape[0]
@@ -40,7 +38,7 @@ def normalized_cc(s1, s2, norm1=-1.0, norm2=-1.0):
 
 @njit(parallel=True)
 def cdist_normalized_cc(dataset1, dataset2, norms1, norms2, self_similarity):
-    assert dataset1.dtype == DTYPE and dataset2.dtype == DTYPE
+    assert dataset1.dtype == np.float64 and dataset2.dtype == np.float64
     assert dataset1.shape[2] == dataset2.shape[2]
     dists = np.empty((dataset1.shape[0], dataset2.shape[0]))
 
@@ -64,7 +62,7 @@ def cdist_normalized_cc(dataset1, dataset2, norms1, norms2, self_similarity):
 
 @njit(parallel=True)
 def y_shifted_sbd_vec(ref_ts, dataset, norm_ref, norms_dataset):
-    assert dataset.dtype == DTYPE and ref_ts.dtype == DTYPE
+    assert dataset.dtype == np.float64 and ref_ts.dtype == np.float64
     assert dataset.shape[1] == ref_ts.shape[0] and dataset.shape[2] == ref_ts.shape[1]
     sz = dataset.shape[1]
     dataset_shifted = np.zeros((dataset.shape[0], dataset.shape[1], dataset.shape[2]))

@@ -6,7 +6,6 @@
 import numpy as np
 from numba import njit, prange
 
-DTYPE = np.float64
 DBL_MAX = np.finfo("double").max
 
 
@@ -33,12 +32,8 @@ def _soft_dtw(D, R, gamma):
     n = D.shape[1]
 
     # Initialization.
-    for i in prange(m + 1):
-        R[i, 0] = DBL_MAX
-
-    for j in prange(n + 1):
-        R[0, j] = DBL_MAX
-
+    R[: m + 1, 0] = DBL_MAX
+    R[0, : n + 1] = DBL_MAX
     R[0, 0] = 0
 
     # DP recursion.
@@ -53,29 +48,22 @@ def _soft_dtw(D, R, gamma):
 @njit(parallel=True)
 def _soft_dtw_grad(D, R, E, gamma):
 
-    # We added an extra row and an extra column on the Python side.
     m = D.shape[0] - 1
     n = D.shape[1] - 1
 
     # Initialization.
-    for i in prange(1, m + 1):
-        # For D, indices start from 0 throughout.
-        D[i - 1, n] = 0
-        R[i, n + 1] = -DBL_MAX
-
-    for j in prange(1, n + 1):
-        D[m, j - 1] = 0
-        R[m + 1, j] = -DBL_MAX
+    D[:m, n] = 0
+    D[m, :n] = 0
+    R[1 : m + 1, n + 1] = -DBL_MAX
+    R[m + 1, 1 : n + 1] = -DBL_MAX
 
     E[m + 1, n + 1] = 1
     R[m + 1, n + 1] = R[m, n]
     D[m, n] = 0
 
     # DP recursion.
-    for k in prange(n):
-        j = n - k  # ranges from n to 1
-        for p in range(m):
-            i = m - p  # ranges from m to 1
+    for j in prange(n, 0, -1):  # ranges from n to 1
+        for i in range(m, 0, -1):  # ranges from m to 1
             a = np.exp((R[i + 1, j] - R[i, j] - D[i, j - 1]) / gamma)
             b = np.exp((R[i, j + 1] - R[i, j] - D[i - 1, j]) / gamma)
             c = np.exp((R[i + 1, j + 1] - R[i, j] - D[i, j]) / gamma)

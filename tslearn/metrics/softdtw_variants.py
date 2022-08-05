@@ -1,19 +1,20 @@
 import numpy
 from joblib import Parallel, delayed
 from numba import njit
-from scipy.spatial.distance import pdist, cdist
+from scipy.spatial.distance import cdist, pdist
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.utils import check_random_state
 
 from tslearn.utils import (
+    check_equal_size,
     to_time_series,
     to_time_series_dataset,
     ts_size,
-    check_equal_size,
 )
-from .utils import _cdist_generic
+
 from .dtw_variants import dtw, dtw_path
-from .soft_dtw_fast import _soft_dtw, _soft_dtw_grad, _jacobian_product_sq_euc
+from .soft_dtw_fast import _jacobian_product_sq_euc, _soft_dtw, _soft_dtw_grad
+from .utils import _cdist_generic
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
