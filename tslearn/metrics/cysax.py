@@ -6,8 +6,7 @@ from sklearn.linear_model import LinearRegression
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
-DTYPE = float
-DTYPE_INT = int
+DTYPE = np.float64
 
 
 @njit(parallel=True)

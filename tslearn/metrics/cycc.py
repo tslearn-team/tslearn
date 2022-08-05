@@ -5,7 +5,7 @@ from numba import njit, prange
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
-DTYPE = float
+DTYPE = np.float64
 
 
 @njit(parallel=True)
