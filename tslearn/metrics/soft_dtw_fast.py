@@ -32,7 +32,7 @@ def _soft_dtw(D, R, gamma):
     n = D.shape[1]
 
     # Initialization.
-    R = np.zeros([m + 1, n + 1])
+    R = np.zeros([m + 1, n + 1], dtype=float)
     R[: m + 1, 0] = DBL_MAX
     R[0, : n + 1] = DBL_MAX
     R[0, 0] = 0
