@@ -6,7 +6,7 @@ from numba import njit, prange
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
 
-@njit(parallel=True)
+# @njit(parallel=True)
 def normalized_cc(s1, s2, norm1=-1.0, norm2=-1.0):
     """Normalize cc.
 
@@ -47,7 +47,7 @@ def normalized_cc(s1, s2, norm1=-1.0, norm2=-1.0):
     return norm_cc
 
 
-@njit(parallel=True)
+# @njit(parallel=True)
 def cdist_normalized_cc(dataset1, dataset2, norms1, norms2, self_similarity):
     """Compute the distance matrix between two time series dataset.
 
@@ -87,7 +87,7 @@ def cdist_normalized_cc(dataset1, dataset2, norms1, norms2, self_similarity):
     return dists
 
 
-@njit(parallel=True)
+# @njit(parallel=True)
 def y_shifted_sbd_vec(ref_ts, dataset, norm_ref, norms_dataset):
     """Shift a time series dataset w.r.t. a time series of reference.
 

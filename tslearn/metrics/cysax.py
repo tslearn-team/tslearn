@@ -7,7 +7,7 @@ from sklearn.linear_model import LinearRegression
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
 
-@njit(parallel=True)
+# @njit(parallel=True)
 def inv_transform_paa(dataset_paa, original_size):
     """Compute time series corresponding to given PAA representations.
 
@@ -33,7 +33,7 @@ def inv_transform_paa(dataset_paa, original_size):
     return dataset_out
 
 
-@njit(parallel=True)
+# @njit(parallel=True)
 def cydist_sax(sax1, sax2, breakpoints, original_size):
     """Compute distance between SAX representations as defined in [1]_.
 
@@ -71,7 +71,7 @@ def cydist_sax(sax1, sax2, breakpoints, original_size):
     return dist_sax
 
 
-@njit(parallel=True)
+# @njit(parallel=True)
 def inv_transform_sax(dataset_sax, breakpoints_middle_, original_size):
     """Compute time series corresponding to given SAX representations.
 
@@ -100,7 +100,7 @@ def inv_transform_sax(dataset_sax, breakpoints_middle_, original_size):
     return dataset_out
 
 
-@njit(parallel=True)
+# @njit(parallel=True)
 def cyslopes(dataset, t0):
     """Compute slopes.
 
@@ -127,7 +127,7 @@ def cyslopes(dataset, t0):
     return dataset_out
 
 
-@njit(parallel=True)
+# @njit(parallel=True)
 def cydist_1d_sax(
     sax1, sax2, breakpoints_avg_middle_, breakpoints_slope_middle_, original_size
 ):
@@ -179,7 +179,7 @@ def cydist_1d_sax(
     return dist_1d_sax
 
 
-@njit(parallel=True)
+# @njit(parallel=True)
 def inv_transform_1d_sax(
     dataset_sax, breakpoints_avg_middle_, breakpoints_slope_middle_, original_size
 ):
