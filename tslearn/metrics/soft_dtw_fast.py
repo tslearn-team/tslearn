@@ -11,6 +11,19 @@ DBL_MAX = np.finfo("double").max
 
 @njit(parallel=True)
 def _softmin3(a, b, c, gamma):
+    """Compute softmin of 3 input variables with parameter gamma.
+
+    Parameters
+    ----------
+    a : float64
+    b : float64
+    c : float64
+    gamma : float64
+
+    Returns
+    -------
+    softmin_value : float64
+    """
     a /= -gamma
     b /= -gamma
     c /= -gamma
@@ -21,18 +34,25 @@ def _softmin3(a, b, c, gamma):
     tmp += np.exp(a - max_val)
     tmp += np.exp(b - max_val)
     tmp += np.exp(c - max_val)
-
-    return -gamma * (np.log(tmp) + max_val)
+    softmin_value = -gamma * (np.log(tmp) + max_val)
+    return softmin_value
 
 
 @njit(parallel=True)
 def _soft_dtw(D, R, gamma):
+    """Compute soft dynamic time warping.
 
+    Parameters
+    ----------
+    D : array-like, shape=[m, n]
+    R : array-like, shape=[m+2, n+2]
+    gamma : float64
+    """
     m = D.shape[0]
     n = D.shape[1]
 
     # Initialization.
-    R = np.zeros([m + 1, n + 1], dtype=float)
+    # R = np.zeros([m + 2, n + 2], dtype=np.float64)
     R[: m + 1, 0] = DBL_MAX
     R[0, : n + 1] = DBL_MAX
     R[0, 0] = 0
@@ -48,7 +68,15 @@ def _soft_dtw(D, R, gamma):
 
 @njit(parallel=True)
 def _soft_dtw_grad(D, R, E, gamma):
+    """Compute gradient of soft-DTW w.r.t. D.
 
+    Parameters
+    ----------
+    D : array-like, shape=[m, n]
+    R : array-like, shape=[m+2, n+2]
+    E : array-like, shape=[m+2, n+2]
+    gamma : float64
+    """
     m = D.shape[0] - 1
     n = D.shape[1] - 1
 
@@ -73,6 +101,20 @@ def _soft_dtw_grad(D, R, E, gamma):
 
 @njit(parallel=True)
 def _jacobian_product_sq_euc(X, Y, E, G):
+    """Compute the square Euclidean product between the Jacobian
+    (a linear map from m x d to m x n) and a matrix E.
+
+    Parameters
+    ----------
+    X: array, shape = [m, d]
+        First time series.
+    Y: array, shape = [n, d]
+        Second time series.
+    E: array, shape = [m, n]
+    G: array, shape = [m, d]
+        Product with Jacobian
+        ([m x d, m x n] * [m x n] = [m x d]).
+    """
     m = X.shape[0]
     n = Y.shape[0]
     d = X.shape[1]

@@ -9,7 +9,21 @@ __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
 @njit(parallel=True)
 def inv_transform_paa(dataset_paa, original_size):
-    n_ts, sz, d = dataset_paa.shape[0]
+    """Compute time series corresponding to given PAA representations.
+
+    Parameters
+    ----------
+    dataset_paa : array-like, shape=[n_ts, sz, d]
+        A dataset of PAA series.
+    original_size : int
+
+    Returns
+    -------
+    dataset_out : array-like, shape=[n_ts, original_size, d]
+        A dataset of time series corresponding to the provided
+        representation.
+    """
+    n_ts, sz, d = dataset_paa.shape
     seg_sz = original_size // sz
     dataset_out = np.zeros((n_ts, original_size, d))
 
@@ -21,6 +35,28 @@ def inv_transform_paa(dataset_paa, original_size):
 
 @njit(parallel=True)
 def cydist_sax(sax1, sax2, breakpoints, original_size):
+    """Compute distance between SAX representations as defined in [1]_.
+
+    Parameters
+    ----------
+    sax1 : array-like, shape=[sz, d]
+        SAX representation of a time series.
+    sax2 : array-like, shape=[sz, d]
+        SAX representation of another time series.
+    breakpoints : array-like, ndim=1
+    original_size : int
+
+    Returns
+    -------
+    dist_sax : float
+        SAX distance.
+
+    References
+    ----------
+    .. [1] J. Lin, E. Keogh, L. Wei, et al. Experiencing SAX: a novel
+       symbolic representation of time series.
+       Data Mining and Knowledge Discovery, 2007. vol. 15(107)
+    """
     assert sax1.shape == sax2.shape
     s = 0.0
     sz, d = sax1.shape
@@ -30,19 +66,27 @@ def cydist_sax(sax1, sax2, breakpoints, original_size):
                 max_symbol = max(sax1[t, di], sax2[t, di])
                 min_symbol = min(sax1[t, di], sax2[t, di])
                 s += (breakpoints[max_symbol - 1] - breakpoints[min_symbol]) ** 2
+    dist_sax = np.sqrt(s * float(original_size) / sz)
 
-    return np.sqrt(s * float(original_size) / sz)
+    return dist_sax
 
 
 @njit(parallel=True)
 def inv_transform_sax(dataset_sax, breakpoints_middle_, original_size):
-    n_ts = dataset_sax.shape[0]
-    sz = dataset_sax.shape[1]
-    d = dataset_sax.shape[2]
-    i = 0
-    t = 0
-    di = 0
-    t0 = 0
+    """Compute time series corresponding to given SAX representations.
+
+    Parameters
+    ----------
+    dataset_sax : array-like, shape=[n_ts, sz, d]
+        A dataset of SAX series.
+    breakpoints_middle_ : array-like, ndim=1
+    original_size : int
+
+    Returns
+    -------
+    dataset_out : array-like, shape=[n_ts, original_size, d]
+    """
+    n_ts, sz, d = dataset_sax.shape
     seg_sz = original_size // sz
     dataset_out = np.zeros((n_ts, original_size, d))
 
@@ -58,12 +102,23 @@ def inv_transform_sax(dataset_sax, breakpoints_middle_, original_size):
 
 @njit(parallel=True)
 def cyslopes(dataset, t0):
-    sz = dataset.shape[1]
-    dataset_out = np.empty((dataset.shape[0], dataset.shape[2]))
+    """Compute slopes.
+
+    Parameters
+    ----------
+    dataset : array-like, shape=[n_ts, sz, d]
+    t0 : int
+
+    Returns
+    -------
+    dataset_out : array-like, shape=[n_ts, d]
+    """
+    n_ts, sz, d = dataset.shape
+    dataset_out = np.empty((n_ts, d))
     vec_t = np.arange(t0, t0 + sz).reshape((-1, 1))
 
-    for i in prange(dataset.shape[0]):
-        for d in range(dataset.shape[2]):
+    for i in prange(n_ts):
+        for d in range(d):
             dataset_out[i, d] = (
                 LinearRegression()
                 .fit(vec_t, dataset[i, :, d].reshape((-1, 1)))
@@ -76,52 +131,86 @@ def cyslopes(dataset, t0):
 def cydist_1d_sax(
     sax1, sax2, breakpoints_avg_middle_, breakpoints_slope_middle_, original_size
 ):
-    assert sax1.shape[0] == sax2.shape[0] and sax1.shape[1] == sax2.shape[1]
+    """Compute distance between 1d-SAX representations as defined in [1]_.
+
+    Parameters
+    ----------
+    sax1 : array-like, shape=[sz, d]
+        1d-SAX representation of a time series.
+    sax2 : array-like, shape=[sz, d]
+        1d-SAX representation of another time series.
+    breakpoints_avg_middle_ : array-like, ndim=1
+    breakpoints_slope_middle_ : array-like, ndim=1
+    original_size : int
+
+    Returns
+    -------
+    dist_1d_sax : float
+
+    Notes
+    -----
+    Unlike SAX distance, 1d-SAX distance does not lower bound Euclidean
+    distance between original time series.
+
+    References
+    ----------
+    .. [1] S. Malinowski, T. Guyet, R. Quiniou, R. Tavenard. 1d-SAX: a
+       Novel Symbolic Representation for Time Series. IDA 2013.
+    """
+    sz, d = sax1.shape
+    assert sz == sax2.shape[0] and d == sax2.shape[1]
     s = 0.0
-    sz = sax1.shape[0]
-    d = sax1.shape[1] // 2
+    d_slope = d // 2
     seg_sz = original_size // sz
 
     for t in prange(sz):
         t0 = t * seg_sz
         t_middle = float(t0) + 0.5 * seg_sz
-        for di in range(d):
+        for di in range(d_slope):
             avg1 = breakpoints_avg_middle_[sax1[t, di]]
             avg2 = breakpoints_avg_middle_[sax2[t, di]]
-            slope1 = breakpoints_slope_middle_[sax1[t, di + d]]
-            slope2 = breakpoints_slope_middle_[sax2[t, di + d]]
+            slope1 = breakpoints_slope_middle_[sax1[t, di + d_slope]]
+            slope2 = breakpoints_slope_middle_[sax2[t, di + d_slope]]
             for tt in range(t0, seg_sz * (t + 1)):
                 s += (
                     avg1 + slope1 * (tt - t_middle) - (avg2 + slope2 * (tt - t_middle))
                 ) ** 2
-    return np.sqrt(s)
+    dist_1d_sax = np.sqrt(s)
+    return dist_1d_sax
 
 
 @njit(parallel=True)
 def inv_transform_1d_sax(
     dataset_sax, breakpoints_avg_middle_, breakpoints_slope_middle_, original_size
 ):
+    """Compute time series corresponding to given 1d-SAX representations.
 
-    n_ts = dataset_sax.shape[0]
-    sz = dataset_sax.shape[1]
-    d = dataset_sax.shape[2] // 2
-    i = 0
-    t = 0
-    di = 0
-    t0 = 0
+    Parameters
+    ----------
+    dataset_sax : array-like, shape=[n_ts, sz, d]
+        A dataset of SAX series.
+    breakpoints_avg_middle_ : array-like, ndim=1
+    breakpoints_slope_middle_ : array-like, ndim=1
+    original_size : int
+
+    Returns
+    -------
+    dataset_out : array-like, shape=[n_ts, original_size, d // 2]
+        A dataset of time series corresponding to the provided
+            representation.
+    """
+    n_ts, sz, d = dataset_sax.shape
+    d_out = d // 2
     seg_sz = original_size // sz
-    t_middle = 0.0
-    slope = 0.0
-    avg = 0.0
-    dataset_out = np.empty((n_ts, original_size, d))
+    dataset_out = np.empty((n_ts, original_size, d_out))
 
     for i in prange(n_ts):
         for t in range(sz):
             t0 = t * seg_sz
             t_middle = float(t0) + 0.5 * (seg_sz - 1)
-            for di in range(d):
+            for di in range(d_out):
                 avg = breakpoints_avg_middle_[dataset_sax[i, t, di]]
-                slope = breakpoints_slope_middle_[dataset_sax[i, t, di + d]]
+                slope = breakpoints_slope_middle_[dataset_sax[i, t, di + d_out]]
                 for tt in range(t0, seg_sz * (t + 1)):
                     dataset_out[i, tt, di] = avg + slope * (tt - t_middle)
     return dataset_out
