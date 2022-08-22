@@ -4,12 +4,13 @@
 # encoding: utf-8
 
 import numpy as np
-from numba import njit, prange
+from numba import jit, njit, prange
 
 DBL_MAX = np.finfo("double").max
 
 
 # @njit(parallel=True)
+@jit
 def _softmin3(a, b, c, gamma):
     """Compute softmin of 3 input variables with parameter gamma.
 
@@ -39,6 +40,7 @@ def _softmin3(a, b, c, gamma):
 
 
 # @njit(parallel=True)
+@jit
 def _soft_dtw(D, R, gamma):
     """Compute soft dynamic time warping.
 
@@ -67,6 +69,7 @@ def _soft_dtw(D, R, gamma):
 
 
 # @njit(parallel=True)
+@jit
 def _soft_dtw_grad(D, R, E, gamma):
     """Compute gradient of soft-DTW w.r.t. D.
 
@@ -100,6 +103,7 @@ def _soft_dtw_grad(D, R, E, gamma):
 
 
 # @njit(parallel=True)
+@jit
 def _jacobian_product_sq_euc(X, Y, E, G):
     """Compute the square Euclidean product between the Jacobian
     (a linear map from m x d to m x n) and a matrix E.
