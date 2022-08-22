@@ -116,12 +116,11 @@ def cyslopes(dataset, t0):
     n_ts, sz, d = dataset.shape
     dataset_out = np.empty((n_ts, d))
     vec_t = np.arange(t0, t0 + sz).reshape((-1, 1))
-
     for i in prange(n_ts):
-        for d in range(d):
-            dataset_out[i, d] = (
+        for di in range(d):
+            dataset_out[i, di] = (
                 LinearRegression()
-                .fit(vec_t, dataset[i, :, d].reshape((-1, 1)))
+                .fit(vec_t, dataset[i, :, di].reshape((-1, 1)))
                 .coef_[0]
             )
     return dataset_out
