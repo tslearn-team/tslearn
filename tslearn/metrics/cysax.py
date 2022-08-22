@@ -26,10 +26,10 @@ def inv_transform_paa(dataset_paa, original_size):
     n_ts, sz, d = dataset_paa.shape
     seg_sz = original_size // sz
     dataset_out = np.zeros((n_ts, original_size, d))
-
     for t in prange(sz):
         t0 = t * seg_sz
-        dataset_out[:, t0 : t0 + seg_sz, :] = dataset_paa[:, t, :]
+        for i_ts in range(n_ts):
+            dataset_out[i_ts, t0 : t0 + seg_sz, :] = dataset_paa[i_ts, t, :]
     return dataset_out
 
 
@@ -134,9 +134,9 @@ def cydist_1d_sax(
 
     Parameters
     ----------
-    sax1 : array-like, shape=[sz, d]
+    sax1 : array-like, shape=[sz, 2 * d]
         1d-SAX representation of a time series.
-    sax2 : array-like, shape=[sz, d]
+    sax2 : array-like, shape=[sz, 2 * d]
         1d-SAX representation of another time series.
     breakpoints_avg_middle_ : array-like, ndim=1
     breakpoints_slope_middle_ : array-like, ndim=1
@@ -156,20 +156,20 @@ def cydist_1d_sax(
     .. [1] S. Malinowski, T. Guyet, R. Quiniou, R. Tavenard. 1d-SAX: a
        Novel Symbolic Representation for Time Series. IDA 2013.
     """
-    sz, d = sax1.shape
-    assert sz == sax2.shape[0] and d == sax2.shape[1]
+    sz, d_1d_sax = sax1.shape
+    assert sz == sax2.shape[0] and d_1d_sax == sax2.shape[1]
     s = 0.0
-    d_slope = d // 2
+    d = d_1d_sax // 2
     seg_sz = original_size // sz
 
     for t in prange(sz):
         t0 = t * seg_sz
         t_middle = float(t0) + 0.5 * seg_sz
-        for di in range(d_slope):
+        for di in range(d):
             avg1 = breakpoints_avg_middle_[sax1[t, di]]
             avg2 = breakpoints_avg_middle_[sax2[t, di]]
-            slope1 = breakpoints_slope_middle_[sax1[t, di + d_slope]]
-            slope2 = breakpoints_slope_middle_[sax2[t, di + d_slope]]
+            slope1 = breakpoints_slope_middle_[sax1[t, di + d]]
+            slope2 = breakpoints_slope_middle_[sax2[t, di + d]]
             for tt in range(t0, seg_sz * (t + 1)):
                 s += (
                     avg1 + slope1 * (tt - t_middle) - (avg2 + slope2 * (tt - t_middle))
@@ -186,7 +186,7 @@ def inv_transform_1d_sax(
 
     Parameters
     ----------
-    dataset_sax : array-like, shape=[n_ts, sz, d]
+    dataset_sax : array-like, shape=[n_ts, sz, 2 * d]
         A dataset of SAX series.
     breakpoints_avg_middle_ : array-like, ndim=1
     breakpoints_slope_middle_ : array-like, ndim=1
@@ -194,22 +194,22 @@ def inv_transform_1d_sax(
 
     Returns
     -------
-    dataset_out : array-like, shape=[n_ts, original_size, d // 2]
+    dataset_out : array-like, shape=[n_ts, original_size, d]
         A dataset of time series corresponding to the provided
             representation.
     """
-    n_ts, sz, d = dataset_sax.shape
-    d_out = d // 2
+    n_ts, sz, d_1d_sax = dataset_sax.shape
+    d = d_1d_sax // 2
     seg_sz = original_size // sz
-    dataset_out = np.empty((n_ts, original_size, d_out))
+    dataset_out = np.empty((n_ts, original_size, d))
 
     for i in prange(n_ts):
         for t in range(sz):
             t0 = t * seg_sz
             t_middle = float(t0) + 0.5 * (seg_sz - 1)
-            for di in range(d_out):
+            for di in range(d):
                 avg = breakpoints_avg_middle_[dataset_sax[i, t, di]]
-                slope = breakpoints_slope_middle_[dataset_sax[i, t, di + d_out]]
+                slope = breakpoints_slope_middle_[dataset_sax[i, t, di + d]]
                 for tt in range(t0, seg_sz * (t + 1)):
                     dataset_out[i, tt, di] = avg + slope * (tt - t_middle)
     return dataset_out
