@@ -1,7 +1,7 @@
 STUFF_cycc = "cycc"
 
 import numpy as np
-from numba import jit, njit, prange
+from numba import jit, njit, prange, float64
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
@@ -22,7 +22,7 @@ def normalized_cc(s1, s2, norm1=-1.0, norm2=-1.0):
     -------
     norm_cc : array-like, shape=[sz]
     """
-    assert s1.dtype == float and s2.dtype == float
+    # assert s1.dtype == np.float64 and s2.dtype == np.float64
     assert s1.shape[1] == s2.shape[1]
     sz = s1.shape[0]
     # Compute fft size based on tip from https://stackoverflow.com/questions/14267555/
@@ -67,7 +67,7 @@ def cdist_normalized_cc(dataset1, dataset2, norms1, norms2, self_similarity):
     """
     n_ts1, sz, d = dataset1.shape
     n_ts2 = dataset2.shape[0]
-    assert dataset1.dtype == float and dataset2.dtype == float
+    # assert dataset1.dtype == np.float64 and dataset2.dtype == np.float64
     assert d == dataset2.shape[2]
     dists = np.empty((n_ts1, n_ts2))
 
@@ -108,7 +108,7 @@ def y_shifted_sbd_vec(ref_ts, dataset, norm_ref, norms_dataset):
     -------
     dataset_shifted : array-like, shape=[n_ts, sz, d]
     """
-    assert dataset.dtype == float and ref_ts.dtype == float
+    # assert dataset.dtype == np.float64 and ref_ts.dtype == np.float64
     n_ts = dataset.shape[0]
     sz = dataset.shape[1]
     d = dataset.shape[2]
