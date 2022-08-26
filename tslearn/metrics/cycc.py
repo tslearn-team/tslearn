@@ -7,7 +7,7 @@ __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
 
 # @njit(parallel=True)
-@jit
+@jit(float64[:](float64[:, :], float64[:, :], float64, float64))
 def normalized_cc(s1, s2, norm1=-1.0, norm2=-1.0):
     """Normalize cc.
 
