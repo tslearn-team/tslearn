@@ -1,14 +1,14 @@
 STUFF_cysax = "cysax"
 
 import numpy as np
-from numba import jit, njit, prange
+from numba import jit, njit, prange, float64, int32, int64
 from sklearn.linear_model import LinearRegression
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
 
 # @njit(parallel=True)
-@jit
+@jit(float64[:, :, :](float64[:, :, :], int32))
 def inv_transform_paa(dataset_paa, original_size):
     """Compute time series corresponding to given PAA representations.
 
@@ -35,7 +35,7 @@ def inv_transform_paa(dataset_paa, original_size):
 
 
 # @njit(parallel=True)
-@jit
+@jit(float64(int64[:, :], int64[:, :], float64[:], int64))
 def cydist_sax(sax1, sax2, breakpoints, original_size):
     """Compute distance between SAX representations as defined in [1]_.
 
@@ -74,7 +74,7 @@ def cydist_sax(sax1, sax2, breakpoints, original_size):
 
 
 # @njit(parallel=True)
-@jit
+@jit(float64[:, :, :](int32[:, :, :], float64[:], int32))
 def inv_transform_sax(dataset_sax, breakpoints_middle_, original_size):
     """Compute time series corresponding to given SAX representations.
 
@@ -104,7 +104,7 @@ def inv_transform_sax(dataset_sax, breakpoints_middle_, original_size):
 
 
 # @njit(parallel=True)
-@jit
+@jit(float64[:, :](float64[:, :, :], int32))
 def cyslopes(dataset, t0):
     """Compute slopes.
 
@@ -131,7 +131,7 @@ def cyslopes(dataset, t0):
 
 
 # @njit(parallel=True)
-@jit
+@jit(float64(int64[:, :], int64[:, :], float64[:], float64[:], int64))
 def cydist_1d_sax(
     sax1, sax2, breakpoints_avg_middle_, breakpoints_slope_middle_, original_size
 ):
@@ -184,7 +184,7 @@ def cydist_1d_sax(
 
 
 # @njit(parallel=True)
-@jit
+@jit(float64[:, :, :](int32[:, :, :], float64[:], float64[:], int32))
 def inv_transform_1d_sax(
     dataset_sax, breakpoints_avg_middle_, breakpoints_slope_middle_, original_size
 ):
