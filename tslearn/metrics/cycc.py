@@ -1,7 +1,7 @@
 STUFF_cycc = "cycc"
 
 import numpy as np
-from numba import jit, njit, prange, float64
+from numba import jit, njit, prange, float64, boolean
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
@@ -49,7 +49,7 @@ def normalized_cc(s1, s2, norm1=-1.0, norm2=-1.0):
 
 
 # @njit(parallel=True)
-@jit
+@jit(float64[:, :](float64[:, :, :], float64[:, :, :], float64[:], float64[:], boolean))
 def cdist_normalized_cc(dataset1, dataset2, norms1, norms2, self_similarity):
     """Compute the distance matrix between two time series dataset.
 
@@ -90,7 +90,7 @@ def cdist_normalized_cc(dataset1, dataset2, norms1, norms2, self_similarity):
 
 
 # @njit(parallel=True)
-@jit
+@jit(float64[:, :, :](float64[:, :], float64[:, :, :], float64, float64[:]))
 def y_shifted_sbd_vec(ref_ts, dataset, norm_ref, norms_dataset):
     """Shift a time series dataset w.r.t. a time series of reference.
 
