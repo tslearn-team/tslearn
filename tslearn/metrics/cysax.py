@@ -1,7 +1,7 @@
 STUFF_cysax = "cysax"
 
 import numpy as np
-from numba import jit, njit, prange, float64, int32, int64
+from numba import jit, njit, objmode, prange, float64, int32, int64
 from sklearn.linear_model import LinearRegression
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
@@ -45,7 +45,8 @@ tslearn/piecewise/piecewise.py:451:        return cydist_sax(sax1, sax2,
 
 
 # @njit(parallel=True)
-@njit(float64(int64[:, :], int64[:, :], float64[:], int64))
+# @njit(float64(int64[:, :], int64[:, :], float64[:], int64))
+@njit(float64(int32[:, :], int32[:, :], float64[:], int32))
 def cydist_sax(sax1, sax2, breakpoints, original_size):
     """Compute distance between SAX representations as defined in [1]_.
 
@@ -128,7 +129,7 @@ tslearn/piecewise/piecewise.py:660:            X_slopes[:, i_seg, :] = cyslopes(
 
 
 # @njit(parallel=True)
-@jit(float64[:, :](float64[:, :, :], int32))
+@njit(float64[:, :](float64[:, :, :], int32))
 def cyslopes(dataset, t0):
     """Compute slopes.
 
@@ -146,11 +147,13 @@ def cyslopes(dataset, t0):
     vec_t = np.arange(t0, t0 + sz).reshape((-1, 1))
     for i in prange(n_ts):
         for di in range(d):
-            dataset_out[i, di] = (
-                LinearRegression()
-                .fit(vec_t, dataset[i, :, di].reshape((-1, 1)))
-                .coef_[0]
-            )
+            with objmode(dataset_out_i_di='float64'):
+                dataset_out_i_di = (
+                    LinearRegression()
+                    .fit(vec_t, dataset[i, :, di].reshape((-1, 1)))
+                    .coef_[0]
+                )
+            dataset_out[i, di] = dataset_out_i_di
     return dataset_out
 
 
