@@ -1,13 +1,29 @@
 STUFF_cycc = "cycc"
 
 import numpy as np
-from numba import jit, njit, prange, float64, boolean
+from numpy.fft import *
+from numba import jit, njit, objmode, prange, float64, boolean
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
 
+"""njit --> Fail
+Compilation is falling back to object mode WITH looplifting enabled because Function "normalized_cc" failed type 
+inference due to: Unknown attribute 'ifft' of type Module(<module 'numpy.fft'
+ERROR tslearn/tests/test_barycenters.py - numba.core.errors.TypingError: Failed in nopython mode pipeline (step: nopython frontend)
+ERROR tslearn/tests/test_clustering.py - numba.core.errors.TypingError: Failed in nopython mode pipeline (step: nopython frontend)
+ERROR tslearn/tests/test_estimators.py - numba.core.errors.TypingError: Failed in nopython mode pipeline (step: nopython frontend)
+ERROR tslearn/tests/test_metrics.py - numba.core.errors.TypingError: Failed in nopython mode pipeline (step: nopython frontend)
+ERROR tslearn/tests/test_neighbors.py - numba.core.errors.TypingError: Failed in nopython mode pipeline (step: nopython frontend)
+ERROR tslearn/tests/test_piecewise.py - numba.core.errors.TypingError: Failed in nopython mode pipeline (step: nopython frontend)
+ERROR tslearn/tests/test_serialize_models.py - numba.core.errors.TypingError: Failed in nopython mode pipeline (step: nopython frontend)
+ERROR tslearn/tests/test_svm.py - numba.core.errors.TypingError: Failed in nopython mode pipeline (step: nopython frontend)
+ERROR tslearn/tests/test_variablelength.py - numba.core.errors.TypingError: Failed in nopython mode pipeline (step: nopython frontend)
+"""
+
+
 # @njit(parallel=True)
-@jit(float64[:](float64[:, :], float64[:, :], float64, float64))
+@njit(float64[:](float64[:, :], float64[:, :], float64, float64))
 def normalized_cc(s1, s2, norm1=-1.0, norm2=-1.0):
     """Normalize cc.
 
@@ -26,7 +42,9 @@ def normalized_cc(s1, s2, norm1=-1.0, norm2=-1.0):
     assert s1.shape[1] == s2.shape[1]
     sz = s1.shape[0]
     # Compute fft size based on tip from https://stackoverflow.com/questions/14267555/
-    fft_sz = 1 << (2 * sz - 1).bit_length()
+    # fft_sz = 1 << (2 * sz - 1).bit_length()
+    n_bits = 1 + int(np.log2(2 * sz - 1))
+    fft_sz = 2 ** n_bits
 
     if norm1 < 0.0:
         norm1 = np.linalg.norm(s1)
@@ -37,15 +55,21 @@ def normalized_cc(s1, s2, norm1=-1.0, norm2=-1.0):
     if denom < 1e-9:  # To avoid NaNs
         denom = np.inf
 
-    cc = np.real(
-        np.fft.ifft(
-            np.fft.fft(s1, fft_sz, axis=0) * np.conj(np.fft.fft(s2, fft_sz, axis=0)),
-            axis=0,
+    with objmode(cc='float64[:, :]'):
+        cc = np.real(
+            np.fft.ifft(
+                np.fft.fft(s1, fft_sz, axis=0) * np.conj(np.fft.fft(s2, fft_sz, axis=0)),
+                axis=0,
+            )
         )
-    )
     cc = np.vstack((cc[-(sz - 1) :], cc[:sz]))
     norm_cc = np.real(cc).sum(axis=-1) / denom
     return norm_cc
+
+
+"""njit --> Fail
+tslearn/clustering/kshape.py:148:        return 1. - cdist_normalized_cc(X, self.cluster_centers_,
+"""
 
 
 # @njit(parallel=True)
@@ -87,6 +111,11 @@ def cdist_normalized_cc(dataset1, dataset2, norms1, norms2, self_similarity):
                     dataset1[i], dataset2[j], norm1=norms1[i], norm2=norms2[j]
                 ).max()
     return dists
+
+
+"""njit --> Fail
+tslearn/clustering/kshape.py:120:        Xp = y_shifted_sbd_vec(self.cluster_centers_[k], X[self.labels_ == k],
+"""
 
 
 # @njit(parallel=True)

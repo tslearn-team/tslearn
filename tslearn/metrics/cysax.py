@@ -7,8 +7,13 @@ from sklearn.linear_model import LinearRegression
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
 
+"""njit --> Ok
+tslearn/piecewise/piecewise.py:255:        return inv_transform_paa(X, original_size=self._X_fit_dims_[1])
+"""
+
+
 # @njit(parallel=True)
-@jit(float64[:, :, :](float64[:, :, :], int32))
+@njit(float64[:, :, :](float64[:, :, :], int32))
 def inv_transform_paa(dataset_paa, original_size):
     """Compute time series corresponding to given PAA representations.
 
@@ -34,8 +39,13 @@ def inv_transform_paa(dataset_paa, original_size):
     return dataset_out
 
 
+"""njit --> Ok
+tslearn/piecewise/piecewise.py:451:        return cydist_sax(sax1, sax2,
+"""
+
+
 # @njit(parallel=True)
-@jit(float64(int64[:, :], int64[:, :], float64[:], int64))
+@njit(float64(int64[:, :], int64[:, :], float64[:], int64))
 def cydist_sax(sax1, sax2, breakpoints, original_size):
     """Compute distance between SAX representations as defined in [1]_.
 
@@ -73,8 +83,14 @@ def cydist_sax(sax1, sax2, breakpoints, original_size):
     return dist_sax
 
 
+"""njit --> Ok
+tslearn/piecewise/piecewise.py:496:        X_orig = inv_transform_sax(
+"""
+
+
 # @njit(parallel=True)
-@jit(float64[:, :, :](int32[:, :, :], float64[:], int32))
+# @njit(float64[:, :, :](int32[:, :, :], float64[:], int32))
+@njit(float64[:, :, :](int64[:, :, :], float64[:], int64))
 def inv_transform_sax(dataset_sax, breakpoints_middle_, original_size):
     """Compute time series corresponding to given SAX representations.
 
@@ -101,6 +117,14 @@ def inv_transform_sax(dataset_sax, breakpoints_middle_, original_size):
                     dataset_sax[i, t, di]
                 ]
     return dataset_out
+
+
+"""njit --> Fail
+Compilation is falling back to object mode WITH looplifting enabled because Function "cyslopes" failed type inference 
+due to: Untyped global name 'LinearRegression': Cannot determine Numba type of <class 'abc.ABCMeta'>
+
+tslearn/piecewise/piecewise.py:660:            X_slopes[:, i_seg, :] = cyslopes(X[:, start:end, :], start)
+"""
 
 
 # @njit(parallel=True)
@@ -130,8 +154,14 @@ def cyslopes(dataset, t0):
     return dataset_out
 
 
+"""njit --> Ok
+
+tslearn/piecewise/piecewise.py:726:        return cydist_1d_sax(sax1, sax2, self.breakpoints_avg_middle_,
+"""
+
+
 # @njit(parallel=True)
-@jit(float64(int64[:, :], int64[:, :], float64[:], float64[:], int64))
+@njit(float64(int64[:, :], int64[:, :], float64[:], float64[:], int64))
 def cydist_1d_sax(
     sax1, sax2, breakpoints_avg_middle_, breakpoints_slope_middle_, original_size
 ):
@@ -183,8 +213,14 @@ def cydist_1d_sax(
     return dist_1d_sax
 
 
+"""njit --> Fail
+
+tslearn/piecewise/piecewise.py:771:        X_orig = inv_transform_1d_sax(
+"""
+
+
 # @njit(parallel=True)
-@jit(float64[:, :, :](int32[:, :, :], float64[:], float64[:], int32))
+# @njit(float64[:, :, :](int32[:, :, :], float64[:], float64[:], int32))
 def inv_transform_1d_sax(
     dataset_sax, breakpoints_avg_middle_, breakpoints_slope_middle_, original_size
 ):
