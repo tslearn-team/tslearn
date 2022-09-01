@@ -1,7 +1,7 @@
 STUFF_cysax = "cysax"
 
 import numpy as np
-from numba import jit, njit, objmode, prange, float64, intp, int32, int64
+from numba import jit, njit, objmode, prange, float64, intp, int32, int64, typeof
 from sklearn.linear_model import LinearRegression
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
@@ -47,7 +47,8 @@ tslearn/piecewise/piecewise.py:451:        return cydist_sax(sax1, sax2,
 # @njit(parallel=True)
 # @njit(float64(int64[:, :], int64[:, :], float64[:], int64))
 # @njit(float64(int32[:, :], int32[:, :], float64[:], int32))
-@njit(float64(intp[:, :], intp[:, :], float64[:], intp))
+# @njit(float64(intp[:, :], intp[:, :], float64[:], intp))
+@njit(float64(typeof(1)[:, :], typeof(1)[:, :], float64[:], typeof(1)))
 def cydist_sax(sax1, sax2, breakpoints, original_size):
     """Compute distance between SAX representations as defined in [1]_.
 
