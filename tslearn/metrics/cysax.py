@@ -94,7 +94,7 @@ tslearn/piecewise/piecewise.py:496:        X_orig = inv_transform_sax(
 
 # @njit(parallel=True)
 # @njit(float64[:, :, :](int32[:, :, :], float64[:], int32))
-@njit(float64[:, :, :](int64[:, :, :], float64[:], int64))
+@njit(float64[:, :, :](typeof(np.array([[[1], [2]], [[3], [4]]])), float64[:], typeof(1)))
 def inv_transform_sax(dataset_sax, breakpoints_middle_, original_size):
     """Compute time series corresponding to given SAX representations.
 
