@@ -48,7 +48,8 @@ tslearn/piecewise/piecewise.py:451:        return cydist_sax(sax1, sax2,
 # @njit(float64(int64[:, :], int64[:, :], float64[:], int64))
 # @njit(float64(int32[:, :], int32[:, :], float64[:], int32))
 # @njit(float64(intp[:, :], intp[:, :], float64[:], intp))
-@njit(float64(typeof(1)[:, :], typeof(1)[:, :], float64[:], typeof(1)))
+# @njit(float64(typeof(1)[:, :], typeof(1)[:, :], float64[:], typeof(1)))
+@njit(float64(typeof(np.array([[1], [2]])), typeof(np.array([[1], [2]])), float64[:], typeof(1)))
 def cydist_sax(sax1, sax2, breakpoints, original_size):
     """Compute distance between SAX representations as defined in [1]_.
 
