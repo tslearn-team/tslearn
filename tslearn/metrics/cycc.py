@@ -1,24 +1,12 @@
 STUFF_cycc = "cycc"
 
 import numpy as np
-from numpy.fft import *
 from numba import jit, njit, objmode, prange, float64, boolean
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
 
-"""njit --> Fail
-Compilation is falling back to object mode WITH looplifting enabled because Function "normalized_cc" failed type 
-inference due to: Unknown attribute 'ifft' of type Module(<module 'numpy.fft'
-ERROR tslearn/tests/test_barycenters.py - numba.core.errors.TypingError: Failed in nopython mode pipeline (step: nopython frontend)
-ERROR tslearn/tests/test_clustering.py - numba.core.errors.TypingError: Failed in nopython mode pipeline (step: nopython frontend)
-ERROR tslearn/tests/test_estimators.py - numba.core.errors.TypingError: Failed in nopython mode pipeline (step: nopython frontend)
-ERROR tslearn/tests/test_metrics.py - numba.core.errors.TypingError: Failed in nopython mode pipeline (step: nopython frontend)
-ERROR tslearn/tests/test_neighbors.py - numba.core.errors.TypingError: Failed in nopython mode pipeline (step: nopython frontend)
-ERROR tslearn/tests/test_piecewise.py - numba.core.errors.TypingError: Failed in nopython mode pipeline (step: nopython frontend)
-ERROR tslearn/tests/test_serialize_models.py - numba.core.errors.TypingError: Failed in nopython mode pipeline (step: nopython frontend)
-ERROR tslearn/tests/test_svm.py - numba.core.errors.TypingError: Failed in nopython mode pipeline (step: nopython frontend)
-ERROR tslearn/tests/test_variablelength.py - numba.core.errors.TypingError: Failed in nopython mode pipeline (step: nopython frontend)
+"""njit --> Ok
 """
 
 
@@ -73,7 +61,7 @@ tslearn/clustering/kshape.py:148:        return 1. - cdist_normalized_cc(X, self
 
 
 # @njit(parallel=True)
-@jit(float64[:, :](float64[:, :, :], float64[:, :, :], float64[:], float64[:], boolean))
+@njit(float64[:, :](float64[:, :, :], float64[:, :, :], float64[:], float64[:], boolean))
 def cdist_normalized_cc(dataset1, dataset2, norms1, norms2, self_similarity):
     """Compute the distance matrix between two time series dataset.
 
@@ -81,8 +69,8 @@ def cdist_normalized_cc(dataset1, dataset2, norms1, norms2, self_similarity):
     ----------
     dataset1 : array-like, shape=[n_ts1, sz, d]
     dataset2 : array-like, shape=[n_ts2, sz, d]
-    norms1 : array-like, shape=[n_ts]
-    norms2 : array-like, shape=[n_ts]
+    norms1 : array-like, shape=[n_ts1]
+    norms2 : array-like, shape=[n_ts2]
     self_similarity : bool
 
     Returns
@@ -96,10 +84,13 @@ def cdist_normalized_cc(dataset1, dataset2, norms1, norms2, self_similarity):
     dists = np.empty((n_ts1, n_ts2))
 
     if (norms1 < 0.0).any():
-        norms1 = np.linalg.norm(dataset1, axis=(1, 2))
+        # norms1 = np.linalg.norm(dataset1, axis=(1, 2))
+        for i_ts1 in prange(n_ts1):
+            norms1[i_ts1] = np.linalg.norm(dataset1[i_ts1, ...])
     if (norms2 < 0.0).any():
-        norms2 = np.linalg.norm(dataset2, axis=(1, 2))
-
+        # norms2 = np.linalg.norm(dataset2, axis=(1, 2))
+        for i_ts2 in prange(n_ts2):
+            norms2[i_ts2] = np.linalg.norm(dataset2[i_ts2, ...])
     for i in prange(n_ts1):
         for j in range(n_ts2):
             if self_similarity and j < i:
@@ -119,7 +110,7 @@ tslearn/clustering/kshape.py:120:        Xp = y_shifted_sbd_vec(self.cluster_cen
 
 
 # @njit(parallel=True)
-@jit(float64[:, :, :](float64[:, :], float64[:, :, :], float64, float64[:]))
+@njit(float64[:, :, :](float64[:, :], float64[:, :, :], float64, float64[:]))
 def y_shifted_sbd_vec(ref_ts, dataset, norm_ref, norms_dataset):
     """Shift a time series dataset w.r.t. a time series of reference.
 
@@ -147,7 +138,9 @@ def y_shifted_sbd_vec(ref_ts, dataset, norm_ref, norms_dataset):
     if norm_ref < 0:
         norm_ref = np.linalg.norm(ref_ts)
     if (norms_dataset < 0.0).any():
-        norms_dataset = np.linalg.norm(dataset, axis=(1, 2))
+        # norms_dataset = np.linalg.norm(dataset, axis=(1, 2))
+        for i_ts in prange(n_ts):
+            norms_dataset[i_ts] = np.linalg.norm(dataset[i_ts, ...])
 
     for i in prange(n_ts):
         cc = normalized_cc(ref_ts, dataset[i], norm1=norm_ref, norm2=norms_dataset[i])
