@@ -167,7 +167,7 @@ tslearn/piecewise/piecewise.py:726:        return cydist_1d_sax(sax1, sax2, self
 
 
 # @njit(parallel=True)
-@njit(float64(int64[:, :], int64[:, :], float64[:], float64[:], int64))
+@njit(float64(typeof(np.array([[1], [2]])), typeof(np.array([[1], [2]])), float64[:], float64[:], typeof(1)))
 def cydist_1d_sax(
     sax1, sax2, breakpoints_avg_middle_, breakpoints_slope_middle_, original_size
 ):
