@@ -55,7 +55,7 @@ def normalized_cc(s1, s2, norm1=-1.0, norm2=-1.0):
     return norm_cc
 
 
-"""njit --> Fail
+"""njit --> Ok
 tslearn/clustering/kshape.py:148:        return 1. - cdist_normalized_cc(X, self.cluster_centers_,
 """
 
@@ -104,7 +104,7 @@ def cdist_normalized_cc(dataset1, dataset2, norms1, norms2, self_similarity):
     return dists
 
 
-"""njit --> Fail
+"""njit --> Ok
 tslearn/clustering/kshape.py:120:        Xp = y_shifted_sbd_vec(self.cluster_centers_[k], X[self.labels_ == k],
 """
 

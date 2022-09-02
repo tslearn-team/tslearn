@@ -123,10 +123,7 @@ def inv_transform_sax(dataset_sax, breakpoints_middle_, original_size):
     return dataset_out
 
 
-"""njit --> Fail
-Compilation is falling back to object mode WITH looplifting enabled because Function "cyslopes" failed type inference 
-due to: Untyped global name 'LinearRegression': Cannot determine Numba type of <class 'abc.ABCMeta'>
-
+"""njit --> Ok
 tslearn/piecewise/piecewise.py:660:            X_slopes[:, i_seg, :] = cyslopes(X[:, start:end, :], start)
 """
 
@@ -219,14 +216,14 @@ def cydist_1d_sax(
     return dist_1d_sax
 
 
-"""njit --> Fail
+"""njit --> Ok
 
 tslearn/piecewise/piecewise.py:771:        X_orig = inv_transform_1d_sax(
 """
 
 
 # @njit(parallel=True)
-# @njit(float64[:, :, :](int32[:, :, :], float64[:], float64[:], int32))
+@njit(float64[:, :, :](typeof(np.array([[[1], [2]], [[3], [4]]])), float64[:], float64[:], typeof(1)))
 def inv_transform_1d_sax(
     dataset_sax, breakpoints_avg_middle_, breakpoints_slope_middle_, original_size
 ):
