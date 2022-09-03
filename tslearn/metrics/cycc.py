@@ -11,7 +11,7 @@ __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
 
 # @njit(parallel=True)
-@njit(float64[:](float64[:, :], float64[:, :], float64, float64), parallel=True)
+@njit(float64[:](float64[:, :], float64[:, :], float64, float64), parallel=True, fastmath=True)
 def normalized_cc(s1, s2, norm1=-1.0, norm2=-1.0):
     """Normalize cc.
 
@@ -61,7 +61,7 @@ tslearn/clustering/kshape.py:148:        return 1. - cdist_normalized_cc(X, self
 
 
 # @njit(parallel=True)
-@njit(float64[:, :](float64[:, :, :], float64[:, :, :], float64[:], float64[:], boolean), parallel=True)
+@njit(float64[:, :](float64[:, :, :], float64[:, :, :], float64[:], float64[:], boolean), parallel=True, fastmath=True)
 def cdist_normalized_cc(dataset1, dataset2, norms1, norms2, self_similarity):
     """Compute the distance matrix between two time series dataset.
 
@@ -110,7 +110,7 @@ tslearn/clustering/kshape.py:120:        Xp = y_shifted_sbd_vec(self.cluster_cen
 
 
 # @njit(parallel=True)
-@njit(float64[:, :, :](float64[:, :], float64[:, :, :], float64, float64[:]), parallel=True)
+@njit(float64[:, :, :](float64[:, :], float64[:, :, :], float64, float64[:]), parallel=True, fastmath=True)
 def y_shifted_sbd_vec(ref_ts, dataset, norm_ref, norms_dataset):
     """Shift a time series dataset w.r.t. a time series of reference.
 
