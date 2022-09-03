@@ -13,7 +13,7 @@ tslearn/piecewise/piecewise.py:255:        return inv_transform_paa(X, original_
 
 
 # @njit(parallel=True)
-@njit(float64[:, :, :](float64[:, :, :], int32))
+@njit(float64[:, :, :](float64[:, :, :], int32), parallel=True)
 def inv_transform_paa(dataset_paa, original_size):
     """Compute time series corresponding to given PAA representations.
 
@@ -49,7 +49,7 @@ tslearn/piecewise/piecewise.py:451:        return cydist_sax(sax1, sax2,
 # @njit(float64(int32[:, :], int32[:, :], float64[:], int32))
 # @njit(float64(intp[:, :], intp[:, :], float64[:], intp))
 # @njit(float64(typeof(1)[:, :], typeof(1)[:, :], float64[:], typeof(1)))
-@njit(float64(typeof(np.array([[1], [2]])), typeof(np.array([[1], [2]])), float64[:], typeof(1)))
+@njit(float64(typeof(np.array([[1], [2]])), typeof(np.array([[1], [2]])), float64[:], typeof(1)), parallel=True)
 def cydist_sax(sax1, sax2, breakpoints, original_size):
     """Compute distance between SAX representations as defined in [1]_.
 
@@ -94,7 +94,7 @@ tslearn/piecewise/piecewise.py:496:        X_orig = inv_transform_sax(
 
 # @njit(parallel=True)
 # @njit(float64[:, :, :](int32[:, :, :], float64[:], int32))
-@njit(float64[:, :, :](typeof(np.array([[[1], [2]], [[3], [4]]])), float64[:], typeof(1)))
+@njit(float64[:, :, :](typeof(np.array([[[1], [2]], [[3], [4]]])), float64[:], typeof(1)), parallel=True)
 def inv_transform_sax(dataset_sax, breakpoints_middle_, original_size):
     """Compute time series corresponding to given SAX representations.
 
@@ -129,7 +129,7 @@ tslearn/piecewise/piecewise.py:660:            X_slopes[:, i_seg, :] = cyslopes(
 
 
 # @njit(parallel=True)
-@njit(float64[:, :](float64[:, :, :], int32))
+@njit(float64[:, :](float64[:, :, :], int32), parallel=True)
 def cyslopes(dataset, t0):
     """Compute slopes.
 
@@ -164,7 +164,7 @@ tslearn/piecewise/piecewise.py:726:        return cydist_1d_sax(sax1, sax2, self
 
 
 # @njit(parallel=True)
-@njit(float64(typeof(np.array([[1], [2]])), typeof(np.array([[1], [2]])), float64[:], float64[:], typeof(1)))
+@njit(float64(typeof(np.array([[1], [2]])), typeof(np.array([[1], [2]])), float64[:], float64[:], typeof(1)), parallel=True)
 def cydist_1d_sax(
     sax1, sax2, breakpoints_avg_middle_, breakpoints_slope_middle_, original_size
 ):
@@ -223,7 +223,7 @@ tslearn/piecewise/piecewise.py:771:        X_orig = inv_transform_1d_sax(
 
 
 # @njit(parallel=True)
-@njit(float64[:, :, :](typeof(np.array([[[1], [2]], [[3], [4]]])), float64[:], float64[:], typeof(1)))
+@njit(float64[:, :, :](typeof(np.array([[[1], [2]], [[3], [4]]])), float64[:], float64[:], typeof(1)), parallel=True)
 def inv_transform_1d_sax(
     dataset_sax, breakpoints_avg_middle_, breakpoints_slope_middle_, original_size
 ):
