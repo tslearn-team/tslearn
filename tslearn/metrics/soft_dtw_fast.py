@@ -151,7 +151,7 @@ def _soft_dtw_grad(D, R, E, gamma):
 
 """parallel --> Ok
 
-tslearn/metrics/softdtw_variants.py:735:        _jacobian_product_sq_euc(self.X, self.Y, E.astype(numpy.float64), G)
+tslearn/metrics/softdtw_variants.py:735: _jacobian_product_sq_euc(self.X, self.Y, E.astype(numpy.float64), G)
 """
 
 
