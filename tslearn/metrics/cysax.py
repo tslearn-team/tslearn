@@ -1,7 +1,7 @@
 STUFF_cysax = "cysax"
 
 import numpy as np
-from numba import jit, njit, objmode, prange, float64, intp, int32, int64, typeof
+from numba import njit, objmode, prange, float64, int32, typeof
 from sklearn.linear_model import LinearRegression
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"

@@ -1,7 +1,7 @@
 STUFF_cycc = "cycc"
 
 import numpy as np
-from numba import jit, njit, objmode, prange, float64, boolean
+from numba import njit, objmode, prange, float64, boolean
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 

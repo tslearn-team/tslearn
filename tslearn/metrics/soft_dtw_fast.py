@@ -4,7 +4,7 @@
 # encoding: utf-8
 
 import numpy as np
-from numba import jit, njit, prange, float64, void
+from numba import njit, prange, float64, void
 
 DBL_MAX = np.finfo("double").max
 
