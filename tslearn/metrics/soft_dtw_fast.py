@@ -47,7 +47,7 @@ def _softmin3(a, b, c, gamma):
     return softmin_value
 
 
-"""parallel --> Fail
+"""parallel --> Failed with prange.
 
 FAILED tslearn/tests/test_barycenters.py::test_softdtw_barycenter - AssertionError: 
 FAILED tslearn/tests/test_clustering.py::test_kmeans - AssertionError: 
@@ -67,7 +67,7 @@ tslearn/metrics/softdtw_variants.py:653:        _soft_dtw(self.D, self.R_, gamma
 
 
 # @njit(parallel=True)
-@njit((float64[:, :], float64[:, :], float64), fastmath=True)
+@njit((float64[:, :], float64[:, :], float64), parallel=True, fastmath=True)
 def _soft_dtw(D, R, gamma):
     """Compute soft dynamic time warping.
 
@@ -87,7 +87,7 @@ def _soft_dtw(D, R, gamma):
     R[0, 0] = 0
 
     # DP recursion.
-    for i in prange(1, m + 1):
+    for i in range(1, m + 1):
         for j in range(1, n + 1):
             # D is indexed starting from 0.
             R[i, j] = D[i - 1, j - 1] + _softmin3(
@@ -95,7 +95,7 @@ def _soft_dtw(D, R, gamma):
             )
 
 
-"""parallel --> Fail
+"""parallel --> Failed with prange.
 
 FAILED tslearn/tests/test_barycenters.py::test_softdtw_barycenter - AssertionError: 
 
@@ -114,7 +114,7 @@ tslearn/metrics/softdtw_variants.py:682:        _soft_dtw_grad(D, self.R_, E, ga
 
 
 # @njit(parallel=True)
-@njit((float64[:, :], float64[:, :], float64[:, :], float64), fastmath=True)
+@njit((float64[:, :], float64[:, :], float64[:, :], float64), parallel=True, fastmath=True)
 def _soft_dtw_grad(D, R, E, gamma):
     """Compute gradient of soft-DTW w.r.t. D.
 
@@ -140,7 +140,7 @@ def _soft_dtw_grad(D, R, E, gamma):
 
     # DP recursion.
     # for j in prange(n, 0, -1):  # ranges from n to 1
-    for k in prange(n):
+    for k in range(n):
         j = n - k
         for i in range(m, 0, -1):  # ranges from m to 1
             a = np.exp((R[i + 1, j] - R[i, j] - D[i, j - 1]) / gamma)
