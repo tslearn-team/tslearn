@@ -4,7 +4,7 @@
 # encoding: utf-8
 
 import numpy as np
-from numba import jit, njit, prange, float64
+from numba import jit, njit, prange, float64, void
 
 DBL_MAX = np.finfo("double").max
 
@@ -67,7 +67,7 @@ tslearn/metrics/softdtw_variants.py:653:        _soft_dtw(self.D, self.R_, gamma
 
 
 # @njit(parallel=True)
-@njit((float64[:, :], float64[:, :], float64), parallel=True, fastmath=True)
+@njit(void(float64[:, :], float64[:, :], float64), parallel=True, fastmath=True)
 def _soft_dtw(D, R, gamma):
     """Compute soft dynamic time warping.
 
@@ -114,7 +114,7 @@ tslearn/metrics/softdtw_variants.py:682:        _soft_dtw_grad(D, self.R_, E, ga
 
 
 # @njit(parallel=True)
-@njit((float64[:, :], float64[:, :], float64[:, :], float64), parallel=True, fastmath=True)
+@njit(void(float64[:, :], float64[:, :], float64[:, :], float64), parallel=True, fastmath=True)
 def _soft_dtw_grad(D, R, E, gamma):
     """Compute gradient of soft-DTW w.r.t. D.
 
@@ -156,7 +156,7 @@ tslearn/metrics/softdtw_variants.py:735: _jacobian_product_sq_euc(self.X, self.Y
 
 
 # @njit(parallel=True)
-@njit((float64[:, :], float64[:, :], float64[:, :], float64[:, :]), parallel=True, fastmath=True)
+@njit(void(float64[:, :], float64[:, :], float64[:, :], float64[:, :]), parallel=True, fastmath=True)
 def _jacobian_product_sq_euc(X, Y, E, G):
     """Compute the square Euclidean product between the Jacobian
     (a linear map from m x d to m x n) and a matrix E.
