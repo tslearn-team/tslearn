@@ -139,9 +139,9 @@ def _soft_dtw_grad(D, R, E, gamma):
     D[m, n] = 0
 
     # DP recursion.
-    # for j in prange(n, 0, -1):  # ranges from n to 1
-    for k in range(n):
-        j = n - k
+    # for k in range(n):
+    #     j = n - k
+    for j in range(n, 0, -1):  # ranges from n to 1
         for i in range(m, 0, -1):  # ranges from m to 1
             a = np.exp((R[i + 1, j] - R[i, j] - D[i, j - 1]) / gamma)
             b = np.exp((R[i, j + 1] - R[i, j] - D[i - 1, j]) / gamma)
