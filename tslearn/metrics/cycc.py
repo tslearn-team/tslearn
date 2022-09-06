@@ -81,7 +81,8 @@ def cdist_normalized_cc(dataset1, dataset2, norms1, norms2, self_similarity):
     n_ts2 = dataset2.shape[0]
     # assert dataset1.dtype == np.float64 and dataset2.dtype == np.float64
     assert d == dataset2.shape[2]
-    dists = np.empty((n_ts1, n_ts2))
+    # dists = np.empty((n_ts1, n_ts2))
+    dists = np.zeros((n_ts1, n_ts2))
 
     if (norms1 < 0.0).any():
         # norms1 = np.linalg.norm(dataset1, axis=(1, 2))
@@ -91,13 +92,26 @@ def cdist_normalized_cc(dataset1, dataset2, norms1, norms2, self_similarity):
         # norms2 = np.linalg.norm(dataset2, axis=(1, 2))
         for i_ts2 in prange(n_ts2):
             norms2[i_ts2] = np.linalg.norm(dataset2[i_ts2, ...])
-    for i in prange(n_ts1):
-        for j in range(n_ts2):
-            if self_similarity and j < i:
-                dists[i, j] = dists[j, i]
-            elif self_similarity and i == j:
-                dists[i, j] = 0.0
-            else:
+    # for i in prange(n_ts1):
+    #     for j in range(n_ts2):
+    #         if self_similarity and j < i:
+    #             dists[i, j] = dists[j, i]
+    #         elif self_similarity and i == j:
+    #             dists[i, j] = 0.0
+    #         else:
+    #             dists[i, j] = normalized_cc(
+    #                 dataset1[i], dataset2[j], norm1=norms1[i], norm2=norms2[j]
+    #             ).max()
+    if self_similarity:
+        for i in prange(1, n_ts1):
+            for j in range(i):
+                dists[i, j] = normalized_cc(
+                    dataset1[i], dataset2[j], norm1=norms1[i], norm2=norms2[j]
+                ).max()
+        dists += dists.T
+    else:
+        for i in prange(n_ts1):
+            for j in range(n_ts2):
                 dists[i, j] = normalized_cc(
                     dataset1[i], dataset2[j], norm1=norms1[i], norm2=norms2[j]
                 ).max()
