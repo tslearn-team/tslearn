@@ -24,7 +24,7 @@ def normalized_cc(s1, s2, norm1=-1.0, norm2=-1.0):
 
     Returns
     -------
-    norm_cc : array-like, shape=[sz]
+    norm_cc : array-like, shape=[2 * sz - 1]
     """
     # assert s1.dtype == np.float64 and s2.dtype == np.float64
     assert s1.shape[1] == s2.shape[1]
