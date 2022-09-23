@@ -1,25 +1,25 @@
 STUFF_cysax = "cysax"
 
 import numpy as np
-from numba import njit, objmode, prange, float64, int32, typeof
+from numba import njit, objmode, prange
 from sklearn.linear_model import LinearRegression
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
 
-@njit(float64[:, :, :](float64[:, :, :], int32), parallel=True, fastmath=True)
+@njit(parallel=True, fastmath=True)
 def inv_transform_paa(dataset_paa, original_size):
     """Compute time series corresponding to given PAA representations.
 
     Parameters
     ----------
-    dataset_paa : array-like, shape=[n_ts, sz, d]
+    dataset_paa : array-like, shape=[n_ts, sz, d], dtype=float64
         A dataset of PAA series.
-    original_size : int
+    original_size : int32
 
     Returns
     -------
-    dataset_out : array-like, shape=[n_ts, original_size, d]
+    dataset_out : array-like, shape=[n_ts, original_size, d], dtype=float64
         A dataset of time series corresponding to the provided
         representation.
     """
@@ -33,22 +33,22 @@ def inv_transform_paa(dataset_paa, original_size):
     return dataset_out
 
 
-@njit(float64(typeof(np.array([[1]])), typeof(np.array([[1]])), float64[:], typeof(1)), parallel=True, fastmath=True)
+@njit(parallel=True, fastmath=True)
 def cydist_sax(sax1, sax2, breakpoints, original_size):
     """Compute distance between SAX representations as defined in [1]_.
 
     Parameters
     ----------
-    sax1 : array-like, shape=[sz, d]
+    sax1 : array-like, shape=[sz, d], dtype=float64 (Linux and MacOS) or float32 (Windows)
         SAX representation of a time series.
-    sax2 : array-like, shape=[sz, d]
+    sax2 : array-like, shape=[sz, d], dtype=float64 (Linux and MacOS) or float32 (Windows)
         SAX representation of another time series.
-    breakpoints : array-like, ndim=1
-    original_size : int
+    breakpoints : array-like, ndim=1, dtype=float64
+    original_size : int64 (Linux and MacOS) or int32 (Windows)
 
     Returns
     -------
-    dist_sax : float
+    dist_sax : float64
         SAX distance.
 
     References
@@ -71,20 +71,20 @@ def cydist_sax(sax1, sax2, breakpoints, original_size):
     return dist_sax
 
 
-@njit(float64[:, :, :](typeof(np.array([[[1]]])), float64[:], typeof(1)), parallel=True, fastmath=True)
+@njit(parallel=True, fastmath=True)
 def inv_transform_sax(dataset_sax, breakpoints_middle_, original_size):
     """Compute time series corresponding to given SAX representations.
 
     Parameters
     ----------
-    dataset_sax : array-like, shape=[n_ts, sz, d]
+    dataset_sax : array-like, shape=[n_ts, sz, d], dtype=float64 (Linux and MacOS) or float32 (Windows)
         A dataset of SAX series.
-    breakpoints_middle_ : array-like, ndim=1
-    original_size : int
+    breakpoints_middle_ : array-like, ndim=1, dtype=float64
+    original_size : int64 (Linux and MacOS) or int32 (Windows)
 
     Returns
     -------
-    dataset_out : array-like, shape=[n_ts, original_size, d]
+    dataset_out : array-like, shape=[n_ts, original_size, d], dtype=float64
     """
     n_ts, sz, d = dataset_sax.shape
     seg_sz = original_size // sz
@@ -100,25 +100,25 @@ def inv_transform_sax(dataset_sax, breakpoints_middle_, original_size):
     return dataset_out
 
 
-@njit(float64[:, :](float64[:, :, :], int32), parallel=True, fastmath=True)
+@njit(parallel=True, fastmath=True)
 def cyslopes(dataset, t0):
     """Compute slopes.
 
     Parameters
     ----------
-    dataset : array-like, shape=[n_ts, sz, d]
-    t0 : int
+    dataset : array-like, shape=[n_ts, sz, d], dtype=float64
+    t0 : int32
 
     Returns
     -------
-    dataset_out : array-like, shape=[n_ts, d]
+    dataset_out : array-like, shape=[n_ts, d], dtype=float64
     """
     n_ts, sz, d = dataset.shape
     dataset_out = np.empty((n_ts, d))
     vec_t = np.arange(t0, t0 + sz).reshape((-1, 1))
     for i in prange(n_ts):
         for di in range(d):
-            with objmode(dataset_out_i_di='float64'):
+            with objmode(dataset_out_i_di="float64"):
                 dataset_out_i_di = (
                     LinearRegression()
                     .fit(vec_t, dataset[i, :, di].reshape((-1, 1)))
@@ -128,7 +128,7 @@ def cyslopes(dataset, t0):
     return dataset_out
 
 
-@njit(float64(typeof(np.array([[1]])), typeof(np.array([[1]])), float64[:], float64[:], typeof(1)), parallel=True, fastmath=True)
+@njit(parallel=True, fastmath=True)
 def cydist_1d_sax(
     sax1, sax2, breakpoints_avg_middle_, breakpoints_slope_middle_, original_size
 ):
@@ -136,17 +136,17 @@ def cydist_1d_sax(
 
     Parameters
     ----------
-    sax1 : array-like, shape=[sz, 2 * d]
+    sax1 : array-like, shape=[sz, 2 * d], dtype=float64 (Linux and MacOS) or float32 (Windows)
         1d-SAX representation of a time series.
-    sax2 : array-like, shape=[sz, 2 * d]
+    sax2 : array-like, shape=[sz, 2 * d], dtype=float64 (Linux and MacOS) or float32 (Windows)
         1d-SAX representation of another time series.
-    breakpoints_avg_middle_ : array-like, ndim=1
-    breakpoints_slope_middle_ : array-like, ndim=1
-    original_size : int
+    breakpoints_avg_middle_ : array-like, ndim=1, dtype=float64
+    breakpoints_slope_middle_ : array-like, ndim=1, dtype=float64
+    original_size : int64 (Linux and MacOS) or int32 (Windows)
 
     Returns
     -------
-    dist_1d_sax : float
+    dist_1d_sax : float64
 
     Notes
     -----
@@ -180,7 +180,7 @@ def cydist_1d_sax(
     return dist_1d_sax
 
 
-@njit(float64[:, :, :](typeof(np.array([[[1]]])), float64[:], float64[:], typeof(1)), parallel=True, fastmath=True)
+@njit(parallel=True, fastmath=True)
 def inv_transform_1d_sax(
     dataset_sax, breakpoints_avg_middle_, breakpoints_slope_middle_, original_size
 ):
@@ -188,15 +188,15 @@ def inv_transform_1d_sax(
 
     Parameters
     ----------
-    dataset_sax : array-like, shape=[n_ts, sz, 2 * d]
+    dataset_sax : array-like, shape=[n_ts, sz, 2 * d], dtype=float64 (Linux and MacOS) or float32 (Windows)
         A dataset of SAX series.
-    breakpoints_avg_middle_ : array-like, ndim=1
-    breakpoints_slope_middle_ : array-like, ndim=1
-    original_size : int
+    breakpoints_avg_middle_ : array-like, ndim=1, dtype=float64
+    breakpoints_slope_middle_ : array-like, ndim=1, dtype=float64
+    original_size : int64 (Linux and MacOS) or int32 (Windows)
 
     Returns
     -------
-    dataset_out : array-like, shape=[n_ts, original_size, d]
+    dataset_out : array-like, shape=[n_ts, original_size, d], dtype=float64
         A dataset of time series corresponding to the provided
             representation.
     """

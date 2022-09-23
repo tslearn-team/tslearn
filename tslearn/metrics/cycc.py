@@ -1,30 +1,30 @@
 STUFF_cycc = "cycc"
 
 import numpy as np
-from numba import njit, objmode, prange, float64, boolean
+from numba import njit, objmode, prange
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
 
-@njit(float64[:](float64[:, :], float64[:, :], float64, float64), parallel=True, fastmath=True)
+@njit(parallel=True, fastmath=True)
 def normalized_cc(s1, s2, norm1=-1.0, norm2=-1.0):
     """Normalize cc.
 
     Parameters
     ----------
-    s1 : array-like, shape=[sz, d]
-    s2 : array-like, shape=[sz, d]
-    norm1 : float, default=-1.0
-    norm2 : float, default=-1.0
+    s1 : array-like, shape=[sz, d], dtype=float64
+    s2 : array-like, shape=[sz, d], dtype=float64
+    norm1 : float64, default=-1.0
+    norm2 : float64, default=-1.0
 
     Returns
     -------
-    norm_cc : array-like, shape=[2 * sz - 1]
+    norm_cc : array-like, shape=[2 * sz - 1], dtype=float64
     """
     assert s1.shape[1] == s2.shape[1]
     sz = s1.shape[0]
     n_bits = 1 + int(np.log2(2 * sz - 1))
-    fft_sz = 2 ** n_bits
+    fft_sz = 2**n_bits
 
     if norm1 < 0.0:
         norm1 = np.linalg.norm(s1)
@@ -35,10 +35,11 @@ def normalized_cc(s1, s2, norm1=-1.0, norm2=-1.0):
     if denom < 1e-9:  # To avoid NaNs
         denom = np.inf
 
-    with objmode(cc='float64[:, :]'):
+    with objmode(cc="float64[:, :]"):
         cc = np.real(
             np.fft.ifft(
-                np.fft.fft(s1, fft_sz, axis=0) * np.conj(np.fft.fft(s2, fft_sz, axis=0)),
+                np.fft.fft(s1, fft_sz, axis=0)
+                * np.conj(np.fft.fft(s2, fft_sz, axis=0)),
                 axis=0,
             )
         )
@@ -47,21 +48,21 @@ def normalized_cc(s1, s2, norm1=-1.0, norm2=-1.0):
     return norm_cc
 
 
-@njit(float64[:, :](float64[:, :, :], float64[:, :, :], float64[:], float64[:], boolean), parallel=True, fastmath=True)
+@njit(parallel=True, fastmath=True)
 def cdist_normalized_cc(dataset1, dataset2, norms1, norms2, self_similarity):
     """Compute the distance matrix between two time series dataset.
 
     Parameters
     ----------
-    dataset1 : array-like, shape=[n_ts1, sz, d]
-    dataset2 : array-like, shape=[n_ts2, sz, d]
-    norms1 : array-like, shape=[n_ts1]
-    norms2 : array-like, shape=[n_ts2]
+    dataset1 : array-like, shape=[n_ts1, sz, d], dtype=float64
+    dataset2 : array-like, shape=[n_ts2, sz, d], dtype=float64
+    norms1 : array-like, shape=[n_ts1], dtype=float64
+    norms2 : array-like, shape=[n_ts2], dtype=float64
     self_similarity : bool
 
     Returns
     -------
-    dists : array-like, shape=[n_ts1, n_ts2]
+    dists : array-like, shape=[n_ts1, n_ts2], dtype=float64
     """
     n_ts1, sz, d = dataset1.shape
     n_ts2 = dataset2.shape[0]
@@ -90,23 +91,23 @@ def cdist_normalized_cc(dataset1, dataset2, norms1, norms2, self_similarity):
     return dists
 
 
-@njit(float64[:, :, :](float64[:, :], float64[:, :, :], float64, float64[:]), parallel=True, fastmath=True)
+@njit(parallel=True, fastmath=True)
 def y_shifted_sbd_vec(ref_ts, dataset, norm_ref, norms_dataset):
     """Shift a time series dataset w.r.t. a time series of reference.
 
     Parameters
     ----------
-    ref_ts : array-like, shape=[sz, d]
+    ref_ts : array-like, shape=[sz, d], dtype=float64
         Time series of reference.
-    dataset : array-like, shape=[n_ts, sz, d]
+    dataset : array-like, shape=[n_ts, sz, d], dtype=float64
         Time series dataset.
-    norm_ref : float
-    norms_dataset : array-like, shape=[n_ts]
+    norm_ref : float64
+    norms_dataset : array-like, shape=[n_ts], dtype=float64
         Norms of the time series dataset.
 
     Returns
     -------
-    dataset_shifted : array-like, shape=[n_ts, sz, d]
+    dataset_shifted : array-like, shape=[n_ts, sz, d], dtype=float64
     """
     n_ts = dataset.shape[0]
     sz = dataset.shape[1]

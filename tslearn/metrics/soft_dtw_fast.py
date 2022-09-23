@@ -4,12 +4,12 @@
 # encoding: utf-8
 
 import numpy as np
-from numba import njit, prange, float64, void
+from numba import njit, prange
 
 DBL_MAX = np.finfo("double").max
 
 
-@njit(float64(float64, float64, float64, float64), fastmath=True)
+@njit(fastmath=True)
 def _softmin3(a, b, c, gamma):
     """Compute softmin of 3 input variables with parameter gamma.
 
@@ -38,14 +38,14 @@ def _softmin3(a, b, c, gamma):
     return softmin_value
 
 
-@njit(void(float64[:, :], float64[:, :], float64), parallel=True, fastmath=True)
+@njit(parallel=True, fastmath=True)
 def _soft_dtw(D, R, gamma):
     """Compute soft dynamic time warping.
 
     Parameters
     ----------
-    D : array-like, shape=[m, n]
-    R : array-like, shape=[m+2, n+2]
+    D : array-like, shape=[m, n], dtype=float64
+    R : array-like, shape=[m+2, n+2], dtype=float64
     gamma : float64
     """
     m = D.shape[0]
@@ -65,15 +65,15 @@ def _soft_dtw(D, R, gamma):
             )
 
 
-@njit(void(float64[:, :], float64[:, :], float64[:, :], float64), parallel=True, fastmath=True)
+@njit(parallel=True, fastmath=True)
 def _soft_dtw_grad(D, R, E, gamma):
     """Compute gradient of soft-DTW w.r.t. D.
 
     Parameters
     ----------
-    D : array-like, shape=[m, n]
-    R : array-like, shape=[m+2, n+2]
-    E : array-like, shape=[m+2, n+2]
+    D : array-like, shape=[m, n], dtype=float64
+    R : array-like, shape=[m+2, n+2], dtype=float64
+    E : array-like, shape=[m+2, n+2], dtype=float64
     gamma : float64
     """
     m = D.shape[0] - 1
@@ -97,19 +97,19 @@ def _soft_dtw_grad(D, R, E, gamma):
             E[i, j] = E[i + 1, j] * a + E[i, j + 1] * b + E[i + 1, j + 1] * c
 
 
-@njit(void(float64[:, :], float64[:, :], float64[:, :], float64[:, :]), parallel=True, fastmath=True)
+@njit(parallel=True, fastmath=True)
 def _jacobian_product_sq_euc(X, Y, E, G):
     """Compute the square Euclidean product between the Jacobian
     (a linear map from m x d to m x n) and a matrix E.
 
     Parameters
     ----------
-    X: array, shape = [m, d]
+    X: array, shape = [m, d], dtype=float64
         First time series.
-    Y: array, shape = [n, d]
+    Y: array, shape = [n, d], dtype=float64
         Second time series.
-    E: array, shape = [m, n]
-    G: array, shape = [m, d]
+    E: array, shape = [m, n], dtype=float64
+    G: array, shape = [m, d], dtype=float64
         Product with Jacobian
         ([m x d, m x n] * [m x n] = [m x d]).
     """
