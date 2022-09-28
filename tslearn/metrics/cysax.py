@@ -93,10 +93,9 @@ def inv_transform_sax(dataset_sax, breakpoints_middle_, original_size):
     for i in prange(n_ts):
         for t in range(sz):
             t0 = t * seg_sz
-            for di in range(d):
-                dataset_out[i, t0 : t0 + seg_sz, di] = breakpoints_middle_[
-                    dataset_sax[i, t, di]
-                ]
+            dataset_out[i, t0 : t0 + seg_sz, :] = breakpoints_middle_[
+                dataset_sax[i, t, :]
+            ]
     return dataset_out
 
 
