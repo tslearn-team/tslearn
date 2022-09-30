@@ -310,11 +310,9 @@ def gamma_soft_dtw(dataset, n_samples=100, random_state=None):
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """
-    return (
-        2.0
-        * sigma_gak(dataset=dataset, n_samples=n_samples, random_state=random_state)
-        ** 2
-    )
+    return 2. * sigma_gak(dataset=dataset,
+                          n_samples=n_samples,
+                          random_state=random_state) ** 2
 
 
 def soft_dtw(ts1, ts2, gamma=1.0):
