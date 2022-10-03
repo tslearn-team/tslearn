@@ -39,7 +39,7 @@ __all__ = [
     "GLOBAL_CONSTRAINT_CODE",
     "lb_envelope", "lb_keogh",
     "sakoe_chiba_mask", "itakura_mask",
-    "lcss", "lcss_path", "lcss_path_from_metric"
+    "lcss", "lcss_path", "lcss_path_from_metric",
 
     "ctw_path", "ctw", "cdist_ctw",
 
