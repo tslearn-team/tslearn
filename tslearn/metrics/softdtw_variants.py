@@ -1,18 +1,22 @@
 import numpy
 from joblib import Parallel, delayed
 from numba import njit
-from scipy.spatial.distance import pdist, cdist
+from scipy.spatial.distance import cdist, pdist
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.utils import check_random_state
 
-from tslearn.utils import to_time_series, to_time_series_dataset, ts_size, \
-    check_equal_size
-from .utils import _cdist_generic
-from .dtw_variants import dtw, dtw_path
-from .soft_dtw_fast import _soft_dtw, _soft_dtw_grad, \
-    _jacobian_product_sq_euc
+from tslearn.utils import (
+    check_equal_size,
+    to_time_series,
+    to_time_series_dataset,
+    ts_size,
+)
 
-__author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
+from .dtw_variants import dtw, dtw_path
+from .soft_dtw_fast import _jacobian_product_sq_euc, _soft_dtw, _soft_dtw_grad
+from .utils import _cdist_generic
+
+__author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
 GLOBAL_CONSTRAINT_CODE = {None: 0, "": 0, "itakura": 1, "sakoe_chiba": 2}
 TSLEARN_VALID_METRICS = ["dtw", "gak", "softdtw", "sax"]
@@ -25,24 +29,24 @@ def njit_gak(s1, s2, gram):
     l2 = s2.shape[0]
 
     cum_sum = numpy.zeros((l1 + 1, l2 + 1))
-    cum_sum[0, 0] = 1.
+    cum_sum[0, 0] = 1.0
 
     for i in range(l1):
         for j in range(l2):
-            cum_sum[i + 1, j + 1] = (cum_sum[i, j + 1] +
-                                     cum_sum[i + 1, j] +
-                                     cum_sum[i, j]) * gram[i, j]
+            cum_sum[i + 1, j + 1] = (
+                cum_sum[i, j + 1] + cum_sum[i + 1, j] + cum_sum[i, j]
+            ) * gram[i, j]
 
     return cum_sum[l1, l2]
 
 
-def _gak_gram(s1, s2, sigma=1.):
-    gram = - cdist(s1, s2, "sqeuclidean") / (2 * sigma ** 2)
+def _gak_gram(s1, s2, sigma=1.0):
+    gram = -cdist(s1, s2, "sqeuclidean") / (2 * sigma**2)
     gram -= numpy.log(2 - numpy.exp(gram))
     return numpy.exp(gram)
 
 
-def unnormalized_gak(s1, s2, sigma=1.):
+def unnormalized_gak(s1, s2, sigma=1.0):
     r"""Compute Global Alignment Kernel (GAK) between (possibly
     multidimensional) time series and return it.
 
@@ -93,7 +97,7 @@ def unnormalized_gak(s1, s2, sigma=1.):
     return gak_val
 
 
-def gak(s1, s2, sigma=1.):  # TODO: better doc (formula for the kernel)
+def gak(s1, s2, sigma=1.0):  # TODO: better doc (formula for the kernel)
     r"""Compute Global Alignment Kernel (GAK) between (possibly
     multidimensional) time series and return it.
 
@@ -132,12 +136,13 @@ def gak(s1, s2, sigma=1.):  # TODO: better doc (formula for the kernel)
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """
-    denom = numpy.sqrt(unnormalized_gak(s1, s1, sigma=sigma) *
-                       unnormalized_gak(s2, s2, sigma=sigma))
+    denom = numpy.sqrt(
+        unnormalized_gak(s1, s1, sigma=sigma) * unnormalized_gak(s2, s2, sigma=sigma)
+    )
     return unnormalized_gak(s1, s2, sigma=sigma) / denom
 
 
-def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None, verbose=0):
+def cdist_gak(dataset1, dataset2=None, sigma=1.0, n_jobs=None, verbose=0):
     r"""Compute cross-similarity matrix using Global Alignment kernel (GAK).
 
     GAK was originally presented in [1]_.
@@ -188,33 +193,31 @@ def cdist_gak(dataset1, dataset2=None, sigma=1., n_jobs=None, verbose=0):
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """  # noqa: E501
-    unnormalized_matrix = _cdist_generic(dist_fun=unnormalized_gak,
-                                         dataset1=dataset1,
-                                         dataset2=dataset2,
-                                         n_jobs=n_jobs,
-                                         verbose=verbose,
-                                         sigma=sigma,
-                                         compute_diagonal=True)
+    unnormalized_matrix = _cdist_generic(
+        dist_fun=unnormalized_gak,
+        dataset1=dataset1,
+        dataset2=dataset2,
+        n_jobs=n_jobs,
+        verbose=verbose,
+        sigma=sigma,
+        compute_diagonal=True,
+    )
     dataset1 = to_time_series_dataset(dataset1)
     if dataset2 is None:
-        diagonal = numpy.diag(numpy.sqrt(1. / numpy.diag(unnormalized_matrix)))
+        diagonal = numpy.diag(numpy.sqrt(1.0 / numpy.diag(unnormalized_matrix)))
         diagonal_left = diagonal_right = diagonal
     else:
         dataset2 = to_time_series_dataset(dataset2)
-        diagonal_left = Parallel(n_jobs=n_jobs,
-                                 prefer="threads",
-                                 verbose=verbose)(
+        diagonal_left = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
             delayed(unnormalized_gak)(dataset1[i], dataset1[i], sigma=sigma)
             for i in range(len(dataset1))
         )
-        diagonal_right = Parallel(n_jobs=n_jobs,
-                                  prefer="threads",
-                                  verbose=verbose)(
+        diagonal_right = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
             delayed(unnormalized_gak)(dataset2[j], dataset2[j], sigma=sigma)
             for j in range(len(dataset2))
         )
-        diagonal_left = numpy.diag(1. / numpy.sqrt(diagonal_left))
-        diagonal_right = numpy.diag(1. / numpy.sqrt(diagonal_right))
+        diagonal_left = numpy.diag(1.0 / numpy.sqrt(diagonal_left))
+        diagonal_right = numpy.diag(1.0 / numpy.sqrt(diagonal_right))
     return (diagonal_left.dot(unnormalized_matrix)).dot(diagonal_right)
 
 
@@ -264,11 +267,10 @@ def sigma_gak(dataset, n_samples=100, random_state=None):
         replace = True
     else:
         replace = False
-    sample_indices = random_state.choice(n_ts * sz,
-                                         size=n_samples,
-                                         replace=replace)
-    dists = pdist(dataset[:, :sz, :].reshape((-1, d))[sample_indices],
-                  metric="euclidean")
+    sample_indices = random_state.choice(n_ts * sz, size=n_samples, replace=replace)
+    dists = pdist(
+        dataset[:, :sz, :].reshape((-1, d))[sample_indices], metric="euclidean"
+    )
     return numpy.median(dists) * numpy.sqrt(sz)
 
 
@@ -313,7 +315,7 @@ def gamma_soft_dtw(dataset, n_samples=100, random_state=None):
                           random_state=random_state) ** 2
 
 
-def soft_dtw(ts1, ts2, gamma=1.):
+def soft_dtw(ts1, ts2, gamma=1.0):
     r"""Compute Soft-DTW metric between two time series.
 
     Soft-DTW was originally presented in [1]_ and is
@@ -341,7 +343,7 @@ def soft_dtw(ts1, ts2, gamma=1.):
     ts2
         Another time series
     gamma : float (default 1.)
-        Gamma paraneter for Soft-DTW
+        Gamma parameter for Soft-DTW
 
     Returns
     -------
@@ -368,14 +370,15 @@ def soft_dtw(ts1, ts2, gamma=1.):
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
        Time-Series," ICML 2017.
     """
-    if gamma == 0.:
+    if gamma == 0.0:
         return dtw(ts1, ts2) ** 2
-    return SoftDTW(SquaredEuclidean(ts1[:ts_size(ts1)], ts2[:ts_size(ts2)]),
-                   gamma=gamma).compute()
+    return SoftDTW(
+        SquaredEuclidean(ts1[: ts_size(ts1)], ts2[: ts_size(ts2)]), gamma=gamma
+    ).compute()
 
 
-def soft_dtw_alignment(ts1, ts2, gamma=1.):
-    r"""Compute Soft-DTW metric between two time series and return both the 
+def soft_dtw_alignment(ts1, ts2, gamma=1.0):
+    r"""Compute Soft-DTW metric between two time series and return both the
     similarity measure and the alignment matrix.
 
     Soft-DTW was originally presented in [1]_ and is
@@ -403,7 +406,7 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.):
     ts2
         Another time series
     gamma : float (default 1.)
-        Gamma paraneter for Soft-DTW
+        Gamma parameter for Soft-DTW
 
     Returns
     -------
@@ -434,21 +437,22 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.):
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
        Time-Series," ICML 2017.
     """
-    if gamma == 0.:
+    if gamma == 0.0:
         path, dist = dtw_path(ts1, ts2)
-        dist_sq = dist ** 2
+        dist_sq = dist**2
         a = numpy.zeros((ts_size(ts1), ts_size(ts2)))
         for i, j in path:
-            a[i, j] = 1.
+            a[i, j] = 1.0
     else:
-        sdtw = SoftDTW(SquaredEuclidean(ts1[:ts_size(ts1)], ts2[:ts_size(ts2)]),
-                       gamma=gamma)
+        sdtw = SoftDTW(
+            SquaredEuclidean(ts1[: ts_size(ts1)], ts2[: ts_size(ts2)]), gamma=gamma
+        )
         dist_sq = sdtw.compute()
         a = sdtw.grad()
     return a, dist_sq
 
 
-def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
+def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0):
     r"""Compute cross-similarity matrix using Soft-DTW metric.
 
     Soft-DTW was originally presented in [1]_ and is
@@ -476,7 +480,7 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
     dataset2
         Another dataset of time series
     gamma : float (default 1.)
-        Gamma paraneter for Soft-DTW
+        Gamma parameter for Soft-DTW
 
     Returns
     -------
@@ -518,12 +522,12 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
         if equal_size_ds1:
             ts1_short = ts1
         else:
-            ts1_short = ts1[:ts_size(ts1)]
+            ts1_short = ts1[: ts_size(ts1)]
         for j, ts2 in enumerate(dataset2):
             if equal_size_ds2:
                 ts2_short = ts2
             else:
-                ts2_short = ts2[:ts_size(ts2)]
+                ts2_short = ts2[: ts_size(ts2)]
             if self_similarity and j < i:
                 dists[i, j] = dists[j, i]
             else:
@@ -532,7 +536,7 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.):
     return dists
 
 
-def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.):
+def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0):
     r"""Compute cross-similarity matrix using a normalized version of the
     Soft-DTW metric.
 
@@ -575,7 +579,7 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.):
         Another dataset of time series
 
     gamma : float (default 1.)
-        Gamma paraneter for Soft-DTW
+        Gamma parameter for Soft-DTW
 
     Returns
     -------
@@ -601,12 +605,12 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.):
     """
     dists = cdist_soft_dtw(dataset1, dataset2=dataset2, gamma=gamma)
     d_ii = numpy.diag(dists)
-    dists -= .5 * (d_ii.reshape((-1, 1)) + d_ii.reshape((1, -1)))
+    dists -= 0.5 * (d_ii.reshape((-1, 1)) + d_ii.reshape((1, -1)))
     return dists
 
 
 class SoftDTW:
-    def __init__(self, D, gamma=1.):
+    def __init__(self, D, gamma=1.0):
         """
         Parameters
         ----------
