@@ -542,114 +542,19 @@ def check_pipeline_consistency(name, estimator_orig):
     X = pairwise_estimator_convert_X(X, estimator_orig, kernel=rbf_kernel)
     estimator = clone(estimator_orig)
     y = multioutput_estimator_convert_y_2d(estimator, y)
-    if name == 'LearningShapelets':
-        print('\n')
-        print('name')
-        print(name)
-        print('\n')
-        print('X')
-        print(X)
-        print('\n')
-        print('y')
-        print(y)
-        print('\n')
-        print('estimator')
-        print(estimator)
     set_random_state(estimator)
     pipeline = make_pipeline(estimator)
-    if name == 'LearningShapelets':
-        print('\n')
-        print('estimator after set random state')
-        print(estimator)
-
-        print('estimator variables before fit')
-        for key, value in vars(estimator).items():
-            print(key, value)
-
-        print('\n')
-        print('pipeline')
-        print(pipeline)
-        print('\n')
-        print('learningshapelets inside pipeline')
-        print(pipeline['learningshapelets'])
-
-        print('pipeline variables before fit')
-        for key, value in vars(pipeline['learningshapelets']).items():
-            print(key, value)
-
-        print('ESTIMATOR AND PIPELINE ARE EQUAL BEFORE FIT')
-        print(vars(estimator) == vars(pipeline['learningshapelets']))
-
     estimator.fit(X, y)
     pipeline.fit(X, y)
-    if name == 'LearningShapelets':
-        print('\n')
-        print('estimator after fit')
-        print(estimator)
-
-        print('estimator variables after fit')
-        for key, value in vars(estimator).items():
-            print(key, value)
-
-        print('\n')
-        print('pipeline after fit')
-        print(pipeline)
-
-        print('pipeline variables after fit')
-        for key, value in vars(pipeline['learningshapelets']).items():
-            print(key, value)
-
-        print('ESTIMATOR AND PIPELINE ARE EQUAL AFTER FIT')
-        print(vars(estimator) == vars(pipeline['learningshapelets']))
 
     funcs = ["score", "fit_transform"]
 
     for func_name in funcs:
-        if name == 'LearningShapelets':
-            print('\n')
-            print('func_name')
-            print(func_name)
         func = getattr(estimator, func_name, None)
         if func is not None:
             func_pipeline = getattr(pipeline, func_name)
-            if name == 'LearningShapelets':
-                print('\n')
-                print('func')
-                print(func)
-                print('\n')
-                print('func_pipeline')
-                print(func_pipeline)
-                print('\n')
-                print('estimator variables before func')
-                for key, value in vars(estimator).items():
-                    print(key, value)
-                print('\n')
-                print('pipeline variables before func_pipeline')
-                for key, value in vars(pipeline['learningshapelets']).items():
-                    print(key, value)
-                print('\n')
-                print('ESTIMATOR AND PIPELINE ARE EQUAL BEFORE FUNC')
-                print(vars(estimator) == vars(pipeline['learningshapelets']))
             result = func(X, y)
             result_pipe = func_pipeline(X, y)
-            if name == 'LearningShapelets':
-                print('\n')
-                print('estimator variables after func')
-                for key, value in vars(estimator).items():
-                    print(key, value)
-                print('\n')
-                print('pipeline variables after func_pipeline')
-                for key, value in vars(pipeline['learningshapelets']).items():
-                    print(key, value)
-                print('\n')
-                print('ESTIMATOR AND PIPELINE ARE EQUAL AFTER FUNC')
-                print(vars(estimator) == vars(pipeline['learningshapelets']))
-                print('\n')
-                print('result')
-                print(result)
-                print('\n')
-                print('result pipe')
-                print(result_pipe)
             assert_allclose_dense_sparse(result, result_pipe)
 
 
