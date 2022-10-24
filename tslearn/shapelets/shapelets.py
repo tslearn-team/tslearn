@@ -417,8 +417,10 @@ class LearningShapelets(ClassifierMixin, TransformerMixin,
         X = check_dims(X)
         self._check_series_length(X)
 
-        if self.random_state is not None:
-            tf.keras.utils.set_random_seed(seed=self.random_state)
+        # if self.random_state is not None:
+        #     tf.keras.utils.set_random_seed(seed=self.random_state)
+        numpy.random.seed(seed=self.random_state)
+        tf.random.set_seed(seed=self.random_state)
 
         n_ts, sz, d = X.shape
         self._X_fit_dims = X.shape
