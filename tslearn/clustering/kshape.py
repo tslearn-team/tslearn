@@ -117,7 +117,6 @@ class KShape(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
 
     def _shape_extraction(self, X, k):
         sz = X.shape[1]
-        print('y_shifted_sbd_vec')
         Xp = y_shifted_sbd_vec(self.cluster_centers_[k], X[self.labels_ == k],
                                norm_ref=-1,
                                norms_dataset=self.norms_[self.labels_ == k])
@@ -146,7 +145,6 @@ class KShape(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
                                                   axis=(1, 2))
 
     def _cross_dists(self, X):
-        print('cdist_normalized_cc')
         return 1. - cdist_normalized_cc(X, self.cluster_centers_,
                                         norms1=self.norms_,
                                         norms2=self.norms_centroids_,
