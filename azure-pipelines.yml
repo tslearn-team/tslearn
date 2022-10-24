@@ -135,7 +135,6 @@ jobs:
   - script: |
       set -xe
       python -m pip install pytest pytest-azurepipelines
-      python -m pip install tensorflow==2.9.0
       python -m pytest -v tslearn/ --doctest-modules -k 'not test_all_estimators'
     displayName: 'Test'
 
