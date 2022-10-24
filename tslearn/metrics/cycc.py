@@ -6,7 +6,7 @@ from numba import njit, objmode, prange
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
 
-@njit(parallel=True, fastmath=True)
+@njit(fastmath=True)
 def normalized_cc(s1, s2, norm1=-1.0, norm2=-1.0):
     """Normalize cc.
 
