@@ -12,29 +12,29 @@ class BaseBackend(object):
 
     @staticmethod
     def shape(data):
-        return NotImplementedError("Not implemented")
+        raise NotImplementedError("Not implemented")
 
     @staticmethod
     def array(data, dtype=None):
-        return NotImplementedError("Not implemented")
+        raise NotImplementedError("Not implemented")
 
     @staticmethod
     def exp(data, dtype=None):
-        return NotImplementedError("Not implemented")
+        raise NotImplementedError("Not implemented")
 
     @staticmethod
     def log(data, dtype=None):
-        return NotImplementedError("Not implemented")
+        raise NotImplementedError("Not implemented")
 
     @staticmethod
     def zeros(shape, dtype=None):
-        return NotImplementedError("Not implemented")
+        raise NotImplementedError("Not implemented")
 
 
 class BaseBackendLinalg:
     @staticmethod
     def inv(x):
-        return NotImplementedError("Not implemented")
+        raise NotImplementedError("Not implemented")
 
 
 class NumpyBackend(BaseBackend):
