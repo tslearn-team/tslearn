@@ -17,7 +17,9 @@ def log(x):
     return be.log(x)
 
 
-def _inv_matrix_aux(x, be=GenericBackend()):
+def _inv_matrix_aux(x, be=None):
+    if be is None:
+        be = GenericBackend(x)
     return be.linalg.inv(x)
 
 
