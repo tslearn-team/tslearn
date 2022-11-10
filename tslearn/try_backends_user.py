@@ -2,7 +2,7 @@
 
 import numpy as np
 import torch
-from try_backends_definition import GenericBackend
+from try_backends_definition import Backend
 from try_backends_tslearn_functions import add, exp, inv_matrices_main, log
 
 x_numpy = np.array([1.0, 2.0, 0.1])
@@ -30,10 +30,10 @@ print("inv matrices")
 print(inv_matrices_main(matrices_numpy))
 print(inv_matrices_main(matrices_torch))
 
-be = GenericBackend()
+be = Backend()
 b = be.array([[1, 2], [3, 4]])
 print(b)
 
-be = GenericBackend("pytorch")
+be = Backend("pytorch")
 a = be.array([[1, 2], [3, 4]])
 print(a)

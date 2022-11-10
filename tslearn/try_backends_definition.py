@@ -4,9 +4,11 @@ import numpy as _np
 import torch as _torch
 
 
-class Backend(object):
+class BaseBackend(object):
+    """Class for the base  backend."""
+
     def __init__(self):
-        self.linalg = BackendLinalg()
+        self.linalg = BaseBackendLinalg()
 
     @staticmethod
     def shape(data):
@@ -29,13 +31,15 @@ class Backend(object):
         return NotImplementedError("Not implemented")
 
 
-class BackendLinalg:
+class BaseBackendLinalg:
     @staticmethod
     def inv(x):
         return NotImplementedError("Not implemented")
 
 
-class NumpyBackend(Backend):
+class NumpyBackend(BaseBackend):
+    """Class for the Numpy  backend."""
+
     def __init__(self):
         self.linalg = NumpyLinalg()
 
@@ -66,7 +70,9 @@ class NumpyLinalg:
         return _np.linalg.inv(x)
 
 
-class PyTorchBackend(Backend):
+class PyTorchBackend(BaseBackend):
+    """Class for the PyTorch  backend."""
+
     def __init__(self):
         self.linalg = PyTorchLinalg()
 
@@ -98,7 +104,7 @@ class PyTorchLinalg:
 
 
 def select_backend(data):
-    """Class for the generic backend.
+    """Select backend.
 
     Parameter
     ---------
@@ -123,8 +129,8 @@ def select_backend(data):
         raise NotImplementedError("Not implemented backend")
 
 
-class GenericBackend(object):
-    """Class for the generic backend.
+class Backend(object):
+    """Class for the  backend.
 
     Parameter
     ---------
