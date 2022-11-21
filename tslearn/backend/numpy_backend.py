@@ -12,10 +12,6 @@ class NumpyBackend(BaseBackend):
         self.linalg = NumpyLinalg()
 
     @staticmethod
-    def shape(data):
-        return _np.shape(data)
-
-    @staticmethod
     def array(data, dtype=None):
         return _np.array(data, dtype=dtype)
 
@@ -26,6 +22,14 @@ class NumpyBackend(BaseBackend):
     @staticmethod
     def log(data, dtype=None):
         return _np.log(data)
+
+    @staticmethod
+    def shape(data):
+        return _np.shape(data)
+
+    @staticmethod
+    def to_numpy(x):
+        return x
 
     @staticmethod
     def zeros(shape, dtype=None):

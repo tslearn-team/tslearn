@@ -48,23 +48,26 @@ class Backend(object):
         self.backend = select_backend(data)
         self.linalg = self.backend.linalg
 
-    def set_backend(self, data=None):
-        self.backend = select_backend(data)
-
-    def get_backend(self):
-        return self.backend
-
-    def shape(self, data):
-        return self.backend.shape(data)
-
     def array(self, data, dtype=None):
         return self.backend.array(data, dtype=dtype)
 
     def exp(self, data, dtype=None):
         return self.backend.exp(data, dtype=dtype)
 
+    def get_backend(self):
+        return self.backend
+
     def log(self, data, dtype=None):
         return self.backend.log(data, dtype=dtype)
+
+    def set_backend(self, data=None):
+        self.backend = select_backend(data)
+
+    def shape(self, data):
+        return self.backend.shape(data)
+
+    def to_numpy(self, data):
+        return self.backend.to_numpy(data)
 
     def zeros(self, shape, dtype=None):
         return self.backend.zeros(shape, dtype=dtype)
