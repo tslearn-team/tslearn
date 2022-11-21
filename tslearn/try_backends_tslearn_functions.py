@@ -1,6 +1,6 @@
 """Simple functions representing the tslearn functions."""
 
-from try_backends_definition import Backend
+from backend.backend import Backend
 
 
 def add(x, y):

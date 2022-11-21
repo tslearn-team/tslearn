@@ -2,7 +2,7 @@
 
 import numpy as np
 import torch
-from try_backends_definition import Backend
+from backend.backend import Backend
 from try_backends_tslearn_functions import add, exp, inv_matrices_main, log
 
 x_numpy = np.array([1.0, 2.0, 0.1])
