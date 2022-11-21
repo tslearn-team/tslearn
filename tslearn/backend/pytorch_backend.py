@@ -12,10 +12,6 @@ class PyTorchBackend(BaseBackend):
         self.linalg = PyTorchLinalg()
 
     @staticmethod
-    def shape(data):
-        return tuple(_torch.Tensor.size(data))
-
-    @staticmethod
     def array(data, dtype=None):
         return _torch.tensor(data, dtype=dtype)
 
@@ -26,6 +22,14 @@ class PyTorchBackend(BaseBackend):
     @staticmethod
     def log(data, dtype=None):
         return _torch.log(data)
+
+    @staticmethod
+    def shape(data):
+        return tuple(_torch.Tensor.size(data))
+
+    @staticmethod
+    def to_numpy(x):
+        return x.numpy()
 
     @staticmethod
     def zeros(shape, dtype=None):

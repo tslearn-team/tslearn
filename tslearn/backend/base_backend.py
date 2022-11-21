@@ -8,10 +8,6 @@ class BaseBackend(object):
         self.linalg = BaseBackendLinalg()
 
     @staticmethod
-    def shape(data):
-        raise NotImplementedError("Not implemented")
-
-    @staticmethod
     def array(data, dtype=None):
         raise NotImplementedError("Not implemented")
 
@@ -21,6 +17,14 @@ class BaseBackend(object):
 
     @staticmethod
     def log(data, dtype=None):
+        raise NotImplementedError("Not implemented")
+
+    @staticmethod
+    def shape(data):
+        raise NotImplementedError("Not implemented")
+
+    @staticmethod
+    def to_numpy(data):
         raise NotImplementedError("Not implemented")
 
     @staticmethod
