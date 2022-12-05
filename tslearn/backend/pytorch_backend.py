@@ -10,6 +10,7 @@ class PyTorchBackend(BaseBackend):
 
     def __init__(self):
         self.linalg = PyTorchLinalg()
+        self.dbl_max = _torch.finfo(_torch.double).max
 
     @staticmethod
     def array(data, dtype=None):

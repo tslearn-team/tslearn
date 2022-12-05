@@ -5,11 +5,12 @@ import numpy as _np
 from .base_backend import BaseBackend
 
 
-class NumpyBackend(BaseBackend):
+class NumPyBackend(BaseBackend):
     """Class for the Numpy  backend."""
 
     def __init__(self):
-        self.linalg = NumpyLinalg()
+        self.linalg = NumPyLinalg()
+        self.dbl_max = _np.finfo("double").max
 
     @staticmethod
     def array(data, dtype=None):
@@ -36,7 +37,7 @@ class NumpyBackend(BaseBackend):
         return _np.zeros(shape, dtype=dtype)
 
 
-class NumpyLinalg:
+class NumPyLinalg:
     @staticmethod
     def inv(x):
         return _np.linalg.inv(x)
