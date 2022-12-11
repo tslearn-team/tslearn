@@ -16,6 +16,7 @@ try:
     from sklearn.utils.estimator_checks import _NotAnArray as NotAnArray
 except ImportError:  # Old sklearn versions
     from sklearn.utils.estimator_checks import NotAnArray
+from tslearn.backend import Backend
 from tslearn.bases import TimeSeriesBaseEstimator
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -108,7 +109,7 @@ def check_dims(X, X_fit_dims=None, extend=True, check_n_features_only=False):
     return X
 
 
-def to_time_series(ts, remove_nans=False):
+def to_time_series(ts, remove_nans=False, be=None):
     """Transforms a time series so that it fits the format used in ``tslearn``
     models.
 
@@ -119,6 +120,8 @@ def to_time_series(ts, remove_nans=False):
     remove_nans : bool (default: False)
         Whether trailing NaNs at the end of the time series should be removed
         or not
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
@@ -143,13 +146,15 @@ def to_time_series(ts, remove_nans=False):
     --------
     to_time_series_dataset : Transforms a dataset of time series
     """
-    ts_out = numpy.array(ts, copy=True)
+    if be is None:
+        be = Backend(ts)
+    ts_out = be.array(ts, copy=True)
     if ts_out.ndim <= 1:
         ts_out = ts_out.reshape((-1, 1))
-    if ts_out.dtype != float:
-        ts_out = ts_out.astype(float)
+    if not be.is_float(ts_out):
+        ts_out = be.to_float(ts_out)
     if remove_nans:
-        ts_out = ts_out[:ts_size(ts_out)]
+        ts_out = ts_out[:ts_size(ts_out, be=be)]
     return ts_out
 
 
@@ -383,7 +388,7 @@ def check_equal_size(dataset):
     return all(ts_size(ds) == size for ds in dataset_[1:])
 
 
-def ts_size(ts):
+def ts_size(ts, be=None):
     """Returns actual time series size.
 
     Final timesteps that have `NaN` values for all dimensions will be removed
@@ -394,6 +399,8 @@ def ts_size(ts):
     ----------
     ts : array-like
         A time series.
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
@@ -417,9 +424,11 @@ def ts_size(ts):
     >>> ts_size([numpy.nan, 3, numpy.inf, numpy.nan])
     3
     """
-    ts_ = to_time_series(ts)
+    if be is None:
+        be = Backend(ts)
+    ts_ = to_time_series(ts, be=be)
     sz = ts_.shape[0]
-    while sz > 0 and numpy.all(numpy.isnan(ts_[sz - 1])):
+    while sz > 0 and be.all(be.isnan(ts_[sz - 1])):
         sz -= 1
     return sz
 
