@@ -114,8 +114,8 @@ def unnormalized_gak(s1, s2, sigma=1.0, be=None):
     """
     if be is None:
         be = Backend(s1)
-    s1 = to_time_series(s1, remove_nans=True)
-    s2 = to_time_series(s2, remove_nans=True)
+    s1 = to_time_series(s1, remove_nans=True, be=be)
+    s2 = to_time_series(s2, remove_nans=True, be=be)
 
     gram = _gak_gram(s1, s2, sigma=sigma, be=be)
 
@@ -142,6 +142,8 @@ def gak(s1, s2, sigma=1.0, be=None):  # TODO: better doc (formula for the kernel
         Another time series
     sigma : float (default 1.)
         Bandwidth of the internal gaussian kernel used for GAK
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
@@ -197,6 +199,8 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.0, n_jobs=None, verbose=0, be=Non
         If it more than 10, all iterations are reported.
         `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`__
         for more details.
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
@@ -267,6 +271,8 @@ def sigma_gak(dataset, n_samples=100, random_state=None, be=None):
     random_state : integer or numpy.RandomState or None (default: None)
         The generator used to draw the samples. If an integer is given, it
         fixes the seed. Defaults to the global numpy random number generator.
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
@@ -322,6 +328,8 @@ def gamma_soft_dtw(dataset, n_samples=100, random_state=None, be=None):
     random_state : integer or numpy.RandomState or None (default: None)
         The generator used to draw the samples. If an integer is given, it
         fixes the seed. Defaults to the global numpy random number generator.
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
@@ -380,6 +388,8 @@ def soft_dtw(ts1, ts2, gamma=1.0, be=None):
         Another time series
     gamma : float (default 1.)
         Gamma parameter for Soft-DTW
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
@@ -445,6 +455,8 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None):
         Another time series
     gamma : float (default 1.)
         Gamma parameter for Soft-DTW
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
@@ -521,6 +533,8 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0, be=None):
         Another dataset of time series
     gamma : float (default 1.)
         Gamma parameter for Soft-DTW
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
@@ -616,12 +630,12 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None):
     ----------
     dataset1
         A dataset of time series
-
     dataset2
         Another dataset of time series
-
     gamma : float (default 1.)
         Gamma parameter for Soft-DTW
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
@@ -661,6 +675,8 @@ class SoftDTW:
         gamma: float
             Regularization parameter.
             Lower is less smoothed (closer to true DTW).
+        be : Backend object or string or None
+            Backend.
 
         Attributes
         ----------
@@ -737,6 +753,8 @@ class SquaredEuclidean:
             First time series.
         Y: array, shape = [n, d]
             Second time series.
+        be : Backend object or string or None
+            Backend.
 
         Examples
         --------
