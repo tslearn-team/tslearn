@@ -5,6 +5,7 @@ from scipy.spatial.distance import cdist, pdist
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.utils import check_random_state
 
+from tslearn.backend import Backend
 from tslearn.utils import (
     check_equal_size,
     to_time_series,
@@ -14,6 +15,7 @@ from tslearn.utils import (
 
 from .dtw_variants import dtw, dtw_path
 from .soft_dtw_fast import _jacobian_product_sq_euc, _soft_dtw, _soft_dtw_grad
+from .soft_dtw_fast_numba import _njit_jacobian_product_sq_euc, _njit_soft_dtw, _njit_soft_dtw_grad
 from .utils import _cdist_generic
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
@@ -23,8 +25,26 @@ TSLEARN_VALID_METRICS = ["dtw", "gak", "softdtw", "sax"]
 VARIABLE_LENGTH_METRICS = ["dtw", "gak", "softdtw", "sax"]
 
 
+def _gak(s1, s2, gram, be=None):
+    if be is None:
+        be = Backend(gram)
+    l1 = s1.shape[0]
+    l2 = s2.shape[0]
+
+    cum_sum = be.zeros((l1 + 1, l2 + 1))
+    cum_sum[0, 0] = 1.0
+
+    for i in range(l1):
+        for j in range(l2):
+            cum_sum[i + 1, j + 1] = (
+                cum_sum[i, j + 1] + cum_sum[i + 1, j] + cum_sum[i, j]
+            ) * gram[i, j]
+
+    return cum_sum[l1, l2]
+
+
 @njit(nogil=True)
-def njit_gak(s1, s2, gram):
+def _njit_gak(s1, s2, gram):
     l1 = s1.shape[0]
     l2 = s2.shape[0]
 
@@ -40,13 +60,15 @@ def njit_gak(s1, s2, gram):
     return cum_sum[l1, l2]
 
 
-def _gak_gram(s1, s2, sigma=1.0):
+def _gak_gram(s1, s2, sigma=1.0, be=None):
+    if be is None:
+        be = Backend(s1)
     gram = -cdist(s1, s2, "sqeuclidean") / (2 * sigma**2)
-    gram -= numpy.log(2 - numpy.exp(gram))
-    return numpy.exp(gram)
+    gram -= be.log(2 - be.exp(gram))
+    return be.exp(gram)
 
 
-def unnormalized_gak(s1, s2, sigma=1.0):
+def unnormalized_gak(s1, s2, sigma=1.0, be=None):
     r"""Compute Global Alignment Kernel (GAK) between (possibly
     multidimensional) time series and return it.
 
@@ -63,6 +85,8 @@ def unnormalized_gak(s1, s2, sigma=1.0):
         Another time series
     sigma : float (default 1.)
         Bandwidth of the internal gaussian kernel used for GAK
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
@@ -88,16 +112,19 @@ def unnormalized_gak(s1, s2, sigma=1.0):
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """
+    if be is None:
+        be = Backend(s1)
     s1 = to_time_series(s1, remove_nans=True)
     s2 = to_time_series(s2, remove_nans=True)
 
-    gram = _gak_gram(s1, s2, sigma=sigma)
+    gram = _gak_gram(s1, s2, sigma=sigma, be=be)
 
-    gak_val = njit_gak(s1, s2, gram)
-    return gak_val
+    if be.is_numpy:
+        return _njit_gak(s1, s2, gram)
+    return _gak(s1, s2, gram, be=be)
 
 
-def gak(s1, s2, sigma=1.0):  # TODO: better doc (formula for the kernel)
+def gak(s1, s2, sigma=1.0, be=None):  # TODO: better doc (formula for the kernel)
     r"""Compute Global Alignment Kernel (GAK) between (possibly
     multidimensional) time series and return it.
 
@@ -136,13 +163,15 @@ def gak(s1, s2, sigma=1.0):  # TODO: better doc (formula for the kernel)
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """
-    denom = numpy.sqrt(
-        unnormalized_gak(s1, s1, sigma=sigma) * unnormalized_gak(s2, s2, sigma=sigma)
+    if be is None:
+        be = Backend(s1)
+    denom = be.sqrt(
+        unnormalized_gak(s1, s1, sigma=sigma, be=be) * unnormalized_gak(s2, s2, sigma=sigma, be=be)
     )
-    return unnormalized_gak(s1, s2, sigma=sigma) / denom
+    return unnormalized_gak(s1, s2, sigma=sigma, be=be) / denom
 
 
-def cdist_gak(dataset1, dataset2=None, sigma=1.0, n_jobs=None, verbose=0):
+def cdist_gak(dataset1, dataset2=None, sigma=1.0, n_jobs=None, verbose=0, be=None):
     r"""Compute cross-similarity matrix using Global Alignment kernel (GAK).
 
     GAK was originally presented in [1]_.
@@ -193,6 +222,9 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.0, n_jobs=None, verbose=0):
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """  # noqa: E501
+    if be is None:
+        be = Backend(dataset1)
+
     unnormalized_matrix = _cdist_generic(
         dist_fun=unnormalized_gak,
         dataset1=dataset1,
@@ -221,7 +253,7 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.0, n_jobs=None, verbose=0):
     return (diagonal_left.dot(unnormalized_matrix)).dot(diagonal_right)
 
 
-def sigma_gak(dataset, n_samples=100, random_state=None):
+def sigma_gak(dataset, n_samples=100, random_state=None, be=None):
     r"""Compute sigma value to be used for GAK.
 
     This method was originally presented in [1]_.
@@ -258,6 +290,8 @@ def sigma_gak(dataset, n_samples=100, random_state=None):
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """
+    if be is None:
+        be = Backend(dataset)
     random_state = check_random_state(random_state)
     dataset = to_time_series_dataset(dataset)
     n_ts, sz, d = dataset.shape
@@ -274,7 +308,7 @@ def sigma_gak(dataset, n_samples=100, random_state=None):
     return numpy.median(dists) * numpy.sqrt(sz)
 
 
-def gamma_soft_dtw(dataset, n_samples=100, random_state=None):
+def gamma_soft_dtw(dataset, n_samples=100, random_state=None, be=None):
     r"""Compute gamma value to be used for GAK/Soft-DTW.
 
     This method was originally presented in [1]_.
@@ -310,12 +344,14 @@ def gamma_soft_dtw(dataset, n_samples=100, random_state=None):
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """
+    if be is None:
+        be = Backend(dataset)
     return 2. * sigma_gak(dataset=dataset,
                           n_samples=n_samples,
                           random_state=random_state) ** 2
 
 
-def soft_dtw(ts1, ts2, gamma=1.0):
+def soft_dtw(ts1, ts2, gamma=1.0, be=None):
     r"""Compute Soft-DTW metric between two time series.
 
     Soft-DTW was originally presented in [1]_ and is
@@ -370,6 +406,8 @@ def soft_dtw(ts1, ts2, gamma=1.0):
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
        Time-Series," ICML 2017.
     """
+    if be is None:
+        be = Backend(ts1)
     if gamma == 0.0:
         return dtw(ts1, ts2) ** 2
     return SoftDTW(
@@ -377,7 +415,7 @@ def soft_dtw(ts1, ts2, gamma=1.0):
     ).compute()
 
 
-def soft_dtw_alignment(ts1, ts2, gamma=1.0):
+def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None):
     r"""Compute Soft-DTW metric between two time series and return both the
     similarity measure and the alignment matrix.
 
@@ -437,6 +475,8 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0):
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
        Time-Series," ICML 2017.
     """
+    if be is None:
+        be = Backend(ts1)
     if gamma == 0.0:
         path, dist = dtw_path(ts1, ts2)
         dist_sq = dist**2
@@ -452,7 +492,7 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0):
     return a, dist_sq
 
 
-def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0):
+def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0, be=None):
     r"""Compute cross-similarity matrix using Soft-DTW metric.
 
     Soft-DTW was originally presented in [1]_ and is
@@ -508,6 +548,8 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0):
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
        Time-Series," ICML 2017.
     """
+    if be is None:
+        be = Backend(dataset1)
     dataset1 = to_time_series_dataset(dataset1, dtype=numpy.float64)
     self_similarity = False
     if dataset2 is None:
@@ -536,7 +578,7 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0):
     return dists
 
 
-def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0):
+def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None):
     r"""Compute cross-similarity matrix using a normalized version of the
     Soft-DTW metric.
 
@@ -603,6 +645,8 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0):
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
        Time-Series," ICML 2017.
     """
+    if be is None:
+        be = Backend(dataset1)
     dists = cdist_soft_dtw(dataset1, dataset2=dataset2, gamma=gamma)
     d_ii = numpy.diag(dists)
     dists -= 0.5 * (d_ii.reshape((-1, 1)) + d_ii.reshape((1, -1)))
@@ -610,7 +654,7 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0):
 
 
 class SoftDTW:
-    def __init__(self, D, gamma=1.0):
+    def __init__(self, D, gamma=1.0, be=None):
         """
         Parameters
         ----------
@@ -623,20 +667,22 @@ class SoftDTW:
         self.R_: array, shape = [m + 2, n + 2]
             Accumulated cost matrix (stored after calling `compute`).
         """
+        if be is None:
+            self.be = Backend(D)
         if hasattr(D, "compute"):
             self.D = D.compute()
         else:
             self.D = D
-        self.D = self.D.astype(numpy.float64)
+        self.D = self.D.astype(self.be.float64)
 
         # Allocate memory.
         # We need +2 because we use indices starting from 1
         # and to deal with edge cases in the backward recursion.
         m, n = self.D.shape
-        self.R_ = numpy.zeros((m + 2, n + 2), dtype=numpy.float64)
+        self.R_ = self.be.zeros((m + 2, n + 2), dtype=self.be.float64)
         self.computed = False
 
-        self.gamma = numpy.float64(gamma)
+        self.gamma = self.be.float64(gamma)
 
     def compute(self):
         """Compute soft-DTW by dynamic programming.
@@ -669,13 +715,13 @@ class SoftDTW:
 
         # Add an extra row and an extra column to D.
         # Needed to deal with edge cases in the recursion.
-        D = numpy.vstack((self.D, numpy.zeros(n)))
-        D = numpy.hstack((D, numpy.zeros((m + 1, 1))))
+        D = self.be.vstack((self.D, self.be.zeros(n)))
+        D = self.be.hstack((D, self.be.zeros((m + 1, 1))))
 
         # Allocate memory.
         # We need +2 because we use indices starting from 1
         # and to deal with edge cases in the recursion.
-        E = numpy.zeros((m + 2, n + 2), dtype=numpy.float64)
+        E = self.be.zeros((m + 2, n + 2), dtype=self.be.float64)
 
         _soft_dtw_grad(D, self.R_, E, gamma=self.gamma)
 
@@ -683,7 +729,7 @@ class SoftDTW:
 
 
 class SquaredEuclidean:
-    def __init__(self, X, Y):
+    def __init__(self, X, Y, be=None):
         """
         Parameters
         ----------
@@ -700,8 +746,10 @@ class SquaredEuclidean:
                [1., 0., 1., 4.],
                [4., 1., 0., 1.]])
         """
-        self.X = to_time_series(X).astype(numpy.float64)
-        self.Y = to_time_series(Y).astype(numpy.float64)
+        if be is None:
+            self.be = Backend(X)
+        self.X = to_time_series(X).astype(self.be.float64)
+        self.Y = to_time_series(Y).astype(self.be.float64)
 
     def compute(self):
         """Compute distance matrix.
@@ -728,8 +776,11 @@ class SquaredEuclidean:
             Product with Jacobian
             ([m x d, m x n] * [m x n] = [m x d]).
         """
-        G = numpy.zeros_like(self.X, dtype=numpy.float64)
+        G = self.be.zeros_like(self.X, dtype=self.be.float64)
 
-        _jacobian_product_sq_euc(self.X, self.Y, E.astype(numpy.float64), G)
+        if self.be.is_numpy:
+            _njit_jacobian_product_sq_euc(self.X, self.Y, E.astype(numpy.float64), G)
+        else:
+            _jacobian_product_sq_euc(self.X, self.Y, E.astype(self.be.float64), G)
 
         return G
