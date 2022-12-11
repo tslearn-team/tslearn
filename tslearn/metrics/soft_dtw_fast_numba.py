@@ -10,7 +10,7 @@ DBL_MAX = np.finfo("double").max
 
 
 @njit(fastmath=True)
-def _softmin3(a, b, c, gamma):
+def _njit_softmin3(a, b, c, gamma):
     """Compute softmin of 3 input variables with parameter gamma.
 
     Parameters
@@ -39,7 +39,7 @@ def _softmin3(a, b, c, gamma):
 
 
 @njit(parallel=True, fastmath=True)
-def _soft_dtw(D, R, gamma):
+def _njit_soft_dtw(D, R, gamma):
     """Compute soft dynamic time warping.
 
     Parameters
@@ -60,13 +60,13 @@ def _soft_dtw(D, R, gamma):
     for i in range(1, m + 1):
         for j in range(1, n + 1):
             # D is indexed starting from 0.
-            R[i, j] = D[i - 1, j - 1] + _softmin3(
+            R[i, j] = D[i - 1, j - 1] + _njit_softmin3(
                 R[i - 1, j], R[i - 1, j - 1], R[i, j - 1], gamma
             )
 
 
 @njit(parallel=True, fastmath=True)
-def _soft_dtw_grad(D, R, E, gamma):
+def _njit_soft_dtw_grad(D, R, E, gamma):
     """Compute gradient of soft-DTW w.r.t. D.
 
     Parameters
@@ -98,7 +98,7 @@ def _soft_dtw_grad(D, R, E, gamma):
 
 
 @njit(parallel=True, fastmath=True)
-def _jacobian_product_sq_euc(X, Y, E, G):
+def _njit_jacobian_product_sq_euc(X, Y, E, G):
     """Compute the square Euclidean product between the Jacobian
     (a linear map from m x d to m x n) and a matrix E.
 
