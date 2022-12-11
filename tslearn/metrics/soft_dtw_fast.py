@@ -6,8 +6,6 @@
 import numpy as np
 from numba import njit, prange
 
-from tslearn.backend.decorators import njit_if_numpy_backend, convert_backend_to_numpy
-
 DBL_MAX = np.finfo("double").max
 
 
