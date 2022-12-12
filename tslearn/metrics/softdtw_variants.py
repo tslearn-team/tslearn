@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 from joblib import Parallel, delayed
 from numba import njit
 from scipy.spatial.distance import cdist, pdist
@@ -15,7 +15,11 @@ from tslearn.utils import (
 
 from .dtw_variants import dtw, dtw_path
 from .soft_dtw_fast import _jacobian_product_sq_euc, _soft_dtw, _soft_dtw_grad
-from .soft_dtw_fast_numba import _njit_jacobian_product_sq_euc, _njit_soft_dtw, _njit_soft_dtw_grad
+from .soft_dtw_fast_numba import (
+    _njit_jacobian_product_sq_euc,
+    _njit_soft_dtw,
+    _njit_soft_dtw_grad,
+)
 from .utils import _cdist_generic
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
@@ -48,7 +52,7 @@ def _njit_gak(s1, s2, gram):
     l1 = s1.shape[0]
     l2 = s2.shape[0]
 
-    cum_sum = numpy.zeros((l1 + 1, l2 + 1))
+    cum_sum = np.zeros((l1 + 1, l2 + 1))
     cum_sum[0, 0] = 1.0
 
     for i in range(l1):
@@ -168,7 +172,8 @@ def gak(s1, s2, sigma=1.0, be=None):  # TODO: better doc (formula for the kernel
     if be is None:
         be = Backend(s1)
     denom = be.sqrt(
-        unnormalized_gak(s1, s1, sigma=sigma, be=be) * unnormalized_gak(s2, s2, sigma=sigma, be=be)
+        unnormalized_gak(s1, s1, sigma=sigma, be=be)
+        * unnormalized_gak(s2, s2, sigma=sigma, be=be)
     )
     return unnormalized_gak(s1, s2, sigma=sigma, be=be) / denom
 
@@ -237,23 +242,24 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.0, n_jobs=None, verbose=0, be=Non
         verbose=verbose,
         sigma=sigma,
         compute_diagonal=True,
+        be=be,
     )
-    dataset1 = to_time_series_dataset(dataset1)
+    dataset1 = to_time_series_dataset(dataset1, be=be)
     if dataset2 is None:
-        diagonal = numpy.diag(numpy.sqrt(1.0 / numpy.diag(unnormalized_matrix)))
+        diagonal = be.diag(be.sqrt(1.0 / be.diag(unnormalized_matrix)))
         diagonal_left = diagonal_right = diagonal
     else:
-        dataset2 = to_time_series_dataset(dataset2)
+        dataset2 = to_time_series_dataset(dataset2, be=be)
         diagonal_left = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
-            delayed(unnormalized_gak)(dataset1[i], dataset1[i], sigma=sigma)
+            delayed(unnormalized_gak)(dataset1[i], dataset1[i], sigma=sigma, be=be)
             for i in range(len(dataset1))
         )
         diagonal_right = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
-            delayed(unnormalized_gak)(dataset2[j], dataset2[j], sigma=sigma)
+            delayed(unnormalized_gak)(dataset2[j], dataset2[j], sigma=sigma, be=be)
             for j in range(len(dataset2))
         )
-        diagonal_left = numpy.diag(1.0 / numpy.sqrt(diagonal_left))
-        diagonal_right = numpy.diag(1.0 / numpy.sqrt(diagonal_right))
+        diagonal_left = be.diag(1.0 / be.sqrt(diagonal_left))
+        diagonal_right = be.diag(1.0 / be.sqrt(diagonal_right))
     return (diagonal_left.dot(unnormalized_matrix)).dot(diagonal_right)
 
 
@@ -299,19 +305,20 @@ def sigma_gak(dataset, n_samples=100, random_state=None, be=None):
     if be is None:
         be = Backend(dataset)
     random_state = check_random_state(random_state)
-    dataset = to_time_series_dataset(dataset)
-    n_ts, sz, d = dataset.shape
-    if not check_equal_size(dataset):
-        sz = numpy.min([ts_size(ts) for ts in dataset])
+    dataset = to_time_series_dataset(dataset, be=be)
+    n_ts, sz, d = be.shape(dataset)
+    if not check_equal_size(dataset, be=be):
+        sz = be.min([ts_size(ts) for ts in dataset])
     if n_ts * sz < n_samples:
         replace = True
     else:
         replace = False
     sample_indices = random_state.choice(n_ts * sz, size=n_samples, replace=replace)
     dists = pdist(
-        dataset[:, :sz, :].reshape((-1, d))[sample_indices], metric="euclidean"
+        dataset[:, :sz, :].reshape((-1, d))[sample_indices],
+        metric="euclidean",
     )
-    return numpy.median(dists) * numpy.sqrt(sz)
+    return be.median(dists) * be.sqrt(sz)
 
 
 def gamma_soft_dtw(dataset, n_samples=100, random_state=None, be=None):
@@ -354,9 +361,13 @@ def gamma_soft_dtw(dataset, n_samples=100, random_state=None, be=None):
     """
     if be is None:
         be = Backend(dataset)
-    return 2. * sigma_gak(dataset=dataset,
-                          n_samples=n_samples,
-                          random_state=random_state) ** 2
+    return (
+        2.0
+        * sigma_gak(
+            dataset=dataset, n_samples=n_samples, random_state=random_state, be=be
+        )
+        ** 2
+    )
 
 
 def soft_dtw(ts1, ts2, gamma=1.0, be=None):
@@ -419,9 +430,11 @@ def soft_dtw(ts1, ts2, gamma=1.0, be=None):
     if be is None:
         be = Backend(ts1)
     if gamma == 0.0:
-        return dtw(ts1, ts2) ** 2
+        return dtw(ts1, ts2, be=be) ** 2
     return SoftDTW(
-        SquaredEuclidean(ts1[: ts_size(ts1)], ts2[: ts_size(ts2)]), gamma=gamma
+        SquaredEuclidean(ts1[: ts_size(ts1)], ts2[: ts_size(ts2)], be=be),
+        gamma=gamma,
+        be=be,
     ).compute()
 
 
@@ -490,14 +503,16 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None):
     if be is None:
         be = Backend(ts1)
     if gamma == 0.0:
-        path, dist = dtw_path(ts1, ts2)
+        path, dist = dtw_path(ts1, ts2, be=be)
         dist_sq = dist**2
-        a = numpy.zeros((ts_size(ts1), ts_size(ts2)))
+        a = be.zeros((ts_size(ts1), ts_size(ts2)))
         for i, j in path:
             a[i, j] = 1.0
     else:
         sdtw = SoftDTW(
-            SquaredEuclidean(ts1[: ts_size(ts1)], ts2[: ts_size(ts2)]), gamma=gamma
+            SquaredEuclidean(ts1[: ts_size(ts1)], ts2[: ts_size(ts2)], be=be),
+            gamma=gamma,
+            be=be,
         )
         dist_sq = sdtw.compute()
         a = sdtw.grad()
@@ -564,16 +579,16 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0, be=None):
     """
     if be is None:
         be = Backend(dataset1)
-    dataset1 = to_time_series_dataset(dataset1, dtype=numpy.float64)
+    dataset1 = to_time_series_dataset(dataset1, dtype=be.float64)
     self_similarity = False
     if dataset2 is None:
         dataset2 = dataset1
         self_similarity = True
     else:
-        dataset2 = to_time_series_dataset(dataset2, dtype=numpy.float64)
-    dists = numpy.empty((dataset1.shape[0], dataset2.shape[0]))
-    equal_size_ds1 = check_equal_size(dataset1)
-    equal_size_ds2 = check_equal_size(dataset2)
+        dataset2 = to_time_series_dataset(dataset2, dtype=be.float64)
+    dists = be.empty((dataset1.shape[0], dataset2.shape[0]))
+    equal_size_ds1 = check_equal_size(dataset1, be=be)
+    equal_size_ds2 = check_equal_size(dataset2, be=be)
     for i, ts1 in enumerate(dataset1):
         if equal_size_ds1:
             ts1_short = ts1
@@ -587,7 +602,7 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0, be=None):
             if self_similarity and j < i:
                 dists[i, j] = dists[j, i]
             else:
-                dists[i, j] = soft_dtw(ts1_short, ts2_short, gamma=gamma)
+                dists[i, j] = soft_dtw(ts1_short, ts2_short, gamma=gamma, be=be)
 
     return dists
 
@@ -661,9 +676,9 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None):
     """
     if be is None:
         be = Backend(dataset1)
-    dists = cdist_soft_dtw(dataset1, dataset2=dataset2, gamma=gamma)
-    d_ii = numpy.diag(dists)
-    dists -= 0.5 * (d_ii.reshape((-1, 1)) + d_ii.reshape((1, -1)))
+    dists = cdist_soft_dtw(dataset1, dataset2=dataset2, gamma=gamma, be=be)
+    d_ii = be.diag(dists)
+    dists -= 0.5 * (be.reshape(d_ii, (-1, 1)) + be.reshape(d_ii, (1, -1)))
     return dists
 
 
@@ -689,16 +704,16 @@ class SoftDTW:
             self.D = D.compute()
         else:
             self.D = D
-        self.D = self.D.astype(self.be.float64)
+        self.D = self.be.cast(self.D, dtype=self.be.float64)
 
         # Allocate memory.
         # We need +2 because we use indices starting from 1
         # and to deal with edge cases in the backward recursion.
-        m, n = self.D.shape
+        m, n = self.be.shape(self.D)
         self.R_ = self.be.zeros((m + 2, n + 2), dtype=self.be.float64)
         self.computed = False
 
-        self.gamma = self.be.float64(gamma)
+        self.gamma = self.be.cast(gamma, dtype=self.be.float64)
 
     def compute(self):
         """Compute soft-DTW by dynamic programming.
@@ -708,9 +723,12 @@ class SoftDTW:
         sdtw: float
             soft-DTW discrepancy.
         """
-        m, n = self.D.shape
+        m, n = self.be.shape(self.D)
 
-        _soft_dtw(self.D, self.R_, gamma=self.gamma)
+        if self.be.is_numpy:
+            _njit_soft_dtw(self.D, self.R_, gamma=self.gamma)
+        else:
+            _soft_dtw(self.D, self.R_, gamma=self.gamma, be=self.be)
 
         self.computed = True
 
@@ -727,7 +745,7 @@ class SoftDTW:
         if not self.computed:
             raise ValueError("Needs to call compute() first.")
 
-        m, n = self.D.shape
+        m, n = self.be.shape(self.D)
 
         # Add an extra row and an extra column to D.
         # Needed to deal with edge cases in the recursion.
@@ -739,7 +757,10 @@ class SoftDTW:
         # and to deal with edge cases in the recursion.
         E = self.be.zeros((m + 2, n + 2), dtype=self.be.float64)
 
-        _soft_dtw_grad(D, self.R_, E, gamma=self.gamma)
+        if self.be.is_numpy:
+            _njit_soft_dtw_grad(D, self.R_, E, gamma=self.gamma)
+        else:
+            _soft_dtw_grad(D, self.R_, E, gamma=self.gamma, be=self.be)
 
         return E[1:-1, 1:-1]
 
@@ -766,8 +787,8 @@ class SquaredEuclidean:
         """
         if be is None:
             self.be = Backend(X)
-        self.X = to_time_series(X).astype(self.be.float64)
-        self.Y = to_time_series(Y).astype(self.be.float64)
+        self.X = self.be.cast(to_time_series(X), dtype=self.be.float64)
+        self.Y = self.be.cast(to_time_series(Y), dtype=self.be.float64)
 
     def compute(self):
         """Compute distance matrix.
@@ -797,8 +818,10 @@ class SquaredEuclidean:
         G = self.be.zeros_like(self.X, dtype=self.be.float64)
 
         if self.be.is_numpy:
-            _njit_jacobian_product_sq_euc(self.X, self.Y, E.astype(numpy.float64), G)
+            _njit_jacobian_product_sq_euc(self.X, self.Y, E.astype(np.float64), G)
         else:
-            _jacobian_product_sq_euc(self.X, self.Y, E.astype(self.be.float64), G)
+            _jacobian_product_sq_euc(
+                self.X, self.Y, self.be.cast(E, self.be.float64), G, be=self.be
+            )
 
         return G

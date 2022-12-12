@@ -1,12 +1,23 @@
-import numpy
 from joblib import Parallel, delayed
+
+from tslearn.backend import Backend
 from tslearn.utils import to_time_series_dataset
 
-__author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
+__author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
 
-def _cdist_generic(dist_fun, dataset1, dataset2, n_jobs, verbose,
-                   compute_diagonal=True, dtype=float, *args, **kwargs):
+def _cdist_generic(
+    dist_fun,
+    dataset1,
+    dataset2,
+    n_jobs,
+    verbose,
+    compute_diagonal=True,
+    dtype=float,
+    be=None,
+    *args,
+    **kwargs
+):
     """Compute cross-similarity matrix with joblib parallelization for a given
     similarity function.
 
@@ -50,36 +61,30 @@ def _cdist_generic(dist_fun, dataset1, dataset2, n_jobs, verbose,
     cdist : numpy.ndarray
         Cross-similarity matrix
     """  # noqa: E501
-    dataset1 = to_time_series_dataset(dataset1, dtype=dtype)
+    if be is None:
+        be = Backend(dataset1)
+    dataset1 = to_time_series_dataset(dataset1, dtype=dtype, be=be)
 
     if dataset2 is None:
         # Inspired from code by @GillesVandewiele:
         # https://github.com/rtavenar/tslearn/pull/128#discussion_r314978479
-        matrix = numpy.zeros((len(dataset1), len(dataset1)))
-        indices = numpy.triu_indices(len(dataset1),
-                                     k=0 if compute_diagonal else 1,
-                                     m=len(dataset1))
-        matrix[indices] = Parallel(n_jobs=n_jobs,
-                                   prefer="threads",
-                                   verbose=verbose)(
-            delayed(dist_fun)(
-                dataset1[i], dataset1[j],
-                *args, **kwargs
-            )
-            for i in range(len(dataset1))
-            for j in range(i if compute_diagonal else i + 1,
-                           len(dataset1))
+        matrix = be.zeros((len(dataset1), len(dataset1)))
+        indices = be.triu_indices(
+            len(dataset1), k=0 if compute_diagonal else 1, m=len(dataset1)
         )
-        indices = numpy.tril_indices(len(dataset1), k=-1, m=len(dataset1))
+        matrix[indices] = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
+            delayed(dist_fun)(dataset1[i], dataset1[j], *args, **kwargs)
+            for i in range(len(dataset1))
+            for j in range(i if compute_diagonal else i + 1, len(dataset1))
+        )
+        indices = be.tril_indices(len(dataset1), k=-1, m=len(dataset1))
         matrix[indices] = matrix.T[indices]
         return matrix
     else:
-        dataset2 = to_time_series_dataset(dataset2, dtype=dtype)
+        dataset2 = to_time_series_dataset(dataset2, dtype=dtype, be=be)
         matrix = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
-            delayed(dist_fun)(
-                dataset1[i], dataset2[j],
-                *args, **kwargs
-            )
-            for i in range(len(dataset1)) for j in range(len(dataset2))
+            delayed(dist_fun)(dataset1[i], dataset2[j], *args, **kwargs)
+            for i in range(len(dataset1))
+            for j in range(len(dataset2))
         )
-        return numpy.array(matrix).reshape((len(dataset1), -1))
+        return be.reshape(be.array(matrix), (len(dataset1), -1))
