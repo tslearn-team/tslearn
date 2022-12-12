@@ -36,9 +36,11 @@ class PyTorchBackend(BaseBackend):
         self.median = _torch.median
         self.min = _torch.min
         self.nan = _torch.nan
+        self.reshape = _torch.reshape
         self.sqrt = _torch.sqrt
         self.vstack = _torch.vstack
         self.zeros = _torch.zeros
+        self.zeros_like = _torch.zeros_like
 
     @staticmethod
     def all(x, axis=None):

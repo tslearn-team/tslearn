@@ -37,10 +37,12 @@ class NumPyBackend(BaseBackend):
         self.median = _np.median
         self.min = _np.min
         self.nan = _np.nan
+        self.reshape = _np.reshape
         self.shape = _np.shape
         self.sqrt = _np.sqrt
         self.vstack = _np.vstack
         self.zeros = _np.zeros
+        self.zeros_like = _np.zeros_like
 
     @staticmethod
     def is_array(x):

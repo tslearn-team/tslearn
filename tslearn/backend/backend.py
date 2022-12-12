@@ -86,6 +86,7 @@ class Backend(object):
         self.min = self.backend.min
         self.nan = self.backend.nan
         self.ndim = self.backend.ndim
+        self.reshape = self.backend.reshape
         self.shape = self.backend.shape
         self.sqrt = self.backend.sqrt
         self.to_float = self.backend.to_float
@@ -94,6 +95,7 @@ class Backend(object):
         self.to_numpy = self.backend.to_numpy
         self.vstack = self.backend.vstack
         self.zeros = self.backend.zeros
+        self.zeros_like = self.backend.zeros_like
 
     def get_backend(self):
         return self.backend
