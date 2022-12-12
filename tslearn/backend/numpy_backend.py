@@ -22,14 +22,22 @@ class NumPyBackend(BaseBackend):
         self.complex128 = _np.complex128
 
         self.all = _np.all
+        self.any = _np.any
+        self.arange = _np.arange
+        self.argmax = _np.argmax
+        self.argmin = _np.argmin
         self.array = _np.array
+        self.ceil = _np.ceil
         self.dbl_max = _np.finfo("double").max
         self.diag = _np.diag
         self.empty = _np.empty
         self.exp = _np.exp
+        self.floor = _np.floor
+        self.full = _np.full
         self.hstack = _np.hstack
         self.inf = _np.inf
         self.iscomplex = _np.iscomplex
+        self.isfinite = _np.isfinite
         self.isnan = _np.isnan
         self.log = _np.log
         self.max = _np.max
@@ -40,9 +48,19 @@ class NumPyBackend(BaseBackend):
         self.reshape = _np.reshape
         self.shape = _np.shape
         self.sqrt = _np.sqrt
+        self.tril_indices = _np.tril_indices
+        self.triu_indices = _np.triu_indices
         self.vstack = _np.vstack
         self.zeros = _np.zeros
         self.zeros_like = _np.zeros_like
+
+    @staticmethod
+    def cast(x, dtype):
+        return x.astype(dtype)
+
+    @staticmethod
+    def from_numpy(x):
+        return x
 
     @staticmethod
     def is_array(x):
@@ -63,18 +81,6 @@ class NumPyBackend(BaseBackend):
     @staticmethod
     def ndim(x):
         return x.ndim
-
-    @staticmethod
-    def to_float(x):
-        return x.astype(float)
-
-    @staticmethod
-    def to_float32(x):
-        return x.astype(_np.float32)
-
-    @staticmethod
-    def to_float64(x):
-        return x.astype(_np.float64)
 
     @staticmethod
     def to_numpy(x):

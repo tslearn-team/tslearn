@@ -1,5 +1,6 @@
 """The PyTorch backend."""
 
+import numpy as _np
 import torch as _torch
 
 from .base_backend import BaseBackend
@@ -21,14 +22,22 @@ class PyTorchBackend(BaseBackend):
         self.complex64 = _torch.complex64
         self.complex128 = _torch.complex128
 
+        self.any = _torch.any
+        self.arange = _torch.arange
+        self.argmax = _torch.argmax
+        self.argmin = _torch.argmin
         self.array = _torch.tensor
         self.dbl_max = _torch.finfo(_torch.double).max
+        self.ceil = _torch.ceil
         self.diag = _torch.diag
         self.empty = _torch.empty
         self.exp = _torch.exp
+        self.floor = _torch.floor
+        self.full = _torch.full
         self.hstack = _torch.hstack
         self.inf = _torch.inf
         self.is_array = _torch.is_tensor
+        self.isfinite = _torch.isfinite
         self.isnan = _torch.isnan
         self.log = _torch.log
         self.max = _torch.max
@@ -38,6 +47,8 @@ class PyTorchBackend(BaseBackend):
         self.nan = _torch.nan
         self.reshape = _torch.reshape
         self.sqrt = _torch.sqrt
+        self.tril_indices = _torch.tril_indices
+        self.triu_indices = _torch.triu_indices
         self.vstack = _torch.vstack
         self.zeros = _torch.zeros
         self.zeros_like = _torch.zeros_like
@@ -58,6 +69,35 @@ class PyTorchBackend(BaseBackend):
                 axis[i_axis] = x.ndim() + one_axis
         new_axis = tuple(k - 1 if k >= 0 else k for k in axis[1:])
         return all(_torch.all(x.bool(), axis[0]), new_axis)
+
+    def array(self, val, dtype=None):
+        if _torch.is_tensor(val):
+            if dtype is None or val.dtype == dtype:
+                return val.clone()
+
+            return self.cast(val, dtype=dtype)
+
+        elif isinstance(val, _np.ndarray):
+            tensor = self.from_numpy(val)
+            if dtype is not None and tensor.dtype != dtype:
+                tensor = self.cast(tensor, dtype=dtype)
+
+            return tensor
+
+        elif isinstance(val, (list, tuple)) and len(val):
+            tensors = [self.array(tensor, dtype=dtype) for tensor in val]
+            return _torch.stack(tensors)
+
+        return _torch.tensor(val, dtype=dtype)
+
+    def cast(self, x, dtype):
+        if _torch.is_tensor(x):
+            return x.to(dtype=dtype)
+        return self.array(x, dtype=dtype)
+
+    @staticmethod
+    def from_numpy(x):
+        return _torch.from_numpy(x)
 
     @staticmethod
     def iscomplex(x):
@@ -87,18 +127,6 @@ class PyTorchBackend(BaseBackend):
         if not self.is_array(data):
             val = self.array(data)
         return tuple(_torch.Tensor.size(data))
-
-    @staticmethod
-    def to_float(data):
-        return data.to(_torch.float)
-
-    @staticmethod
-    def to_float32(data):
-        return data.to(_torch.float32)
-
-    @staticmethod
-    def to_float64(data):
-        return data.to(_torch.float64)
 
     @staticmethod
     def to_numpy(x):
