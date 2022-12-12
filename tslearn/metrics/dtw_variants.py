@@ -4,19 +4,31 @@ import numpy
 from numba import njit, prange
 from sklearn.metrics.pairwise import pairwise_distances
 
+from tslearn.backend import Backend
 from tslearn.utils import to_time_series
+
 from .utils import _cdist_generic
 
-__author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
+__author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
 GLOBAL_CONSTRAINT_CODE = {None: 0, "": 0, "itakura": 1, "sakoe_chiba": 2}
 
 
 @njit()
-def _local_squared_dist(x, y):
-    dist = 0.
+def _njit_local_squared_dist(x, y):
+    dist = 0.0
     for di in range(x.shape[0]):
-        diff = (x[di] - y[di])
+        diff = x[di] - y[di]
+        dist += diff * diff
+    return dist
+
+
+def _local_squared_dist(x, y, be=None):
+    if be is None:
+        be = Backend(x)
+    dist = 0.0
+    for di in range(be.shape(x)[0]):
+        diff = x[di] - y[di]
         dist += diff * diff
     return dist
 
@@ -45,20 +57,57 @@ def njit_accumulated_matrix(s1, s2, mask):
     l1 = s1.shape[0]
     l2 = s2.shape[0]
     cum_sum = numpy.full((l1 + 1, l2 + 1), numpy.inf)
-    cum_sum[0, 0] = 0.
+    cum_sum[0, 0] = 0.0
 
     for i in range(l1):
         for j in range(l2):
             if numpy.isfinite(mask[i, j]):
-                cum_sum[i + 1, j + 1] = _local_squared_dist(s1[i], s2[j])
-                cum_sum[i + 1, j + 1] += min(cum_sum[i, j + 1],
-                                             cum_sum[i + 1, j],
-                                             cum_sum[i, j])
+                cum_sum[i + 1, j + 1] = _njit_local_squared_dist(s1[i], s2[j])
+                cum_sum[i + 1, j + 1] += min(
+                    cum_sum[i, j + 1], cum_sum[i + 1, j], cum_sum[i, j]
+                )
+    return cum_sum[1:, 1:]
+
+
+def accumulated_matrix(s1, s2, mask, be=None):
+    """Compute the accumulated cost matrix score between two time series.
+
+    Parameters
+    ----------
+    s1 : array, shape = (sz1,)
+        First time series.
+    s2 : array, shape = (sz2,)
+        Second time series
+    mask : array, shape = (sz1, sz2)
+        Mask. Unconsidered cells must have infinite values.
+    be : Backend object or string or None
+        Backend.
+
+    Returns
+    -------
+    mat : array, shape = (sz1, sz2)
+        Accumulated cost matrix.
+
+    """
+    if be is None:
+        be = Backend(s1)
+    l1 = be.shape(s1)[0]
+    l2 = be.shape(s2)[0]
+    cum_sum = be.full((l1 + 1, l2 + 1), be.inf)
+    cum_sum[0, 0] = 0.0
+
+    for i in range(l1):
+        for j in range(l2):
+            if be.isfinite(mask[i, j]):
+                cum_sum[i + 1, j + 1] = _local_squared_dist(s1[i], s2[j], be=be)
+                cum_sum[i + 1, j + 1] += min(
+                    cum_sum[i, j + 1], cum_sum[i + 1, j], cum_sum[i, j]
+                )
     return cum_sum[1:, 1:]
 
 
 @njit(nogil=True)
-def njit_dtw(s1, s2, mask):
+def _njit_dtw(s1, s2, mask):
     """Compute the dynamic time warping score between two time series.
 
     Parameters
@@ -82,8 +131,34 @@ def njit_dtw(s1, s2, mask):
     return numpy.sqrt(cum_sum[-1, -1])
 
 
+def _dtw(s1, s2, mask, be=None):
+    """Compute the dynamic time warping score between two time series.
+
+    Parameters
+    ----------
+    s1 : array, shape = (sz1,)
+        First time series.
+    s2 : array, shape = (sz2,)
+        Second time series
+    mask : array, shape = (sz1, sz2)
+        Mask. Unconsidered cells must have infinite values.
+    be : Backend object or string or None
+        Backend.
+
+    Returns
+    -------
+    dtw_score : float
+        Dynamic Time Warping score between both time series.
+
+    """
+    if be is None:
+        be = Backend(s1)
+    cum_sum = njit_accumulated_matrix(s1, s2, mask)
+    return be.sqrt(cum_sum[-1, -1])
+
+
 @njit()
-def _return_path(acc_cost_mat):
+def _njit_return_path(acc_cost_mat):
     sz1, sz2 = acc_cost_mat.shape
     path = [(sz1 - 1, sz2 - 1)]
     while path[-1] != (0, 0):
@@ -93,9 +168,13 @@ def _return_path(acc_cost_mat):
         elif j == 0:
             path.append((i - 1, 0))
         else:
-            arr = numpy.array([acc_cost_mat[i - 1][j - 1],
-                               acc_cost_mat[i - 1][j],
-                               acc_cost_mat[i][j - 1]])
+            arr = numpy.array(
+                [
+                    acc_cost_mat[i - 1][j - 1],
+                    acc_cost_mat[i - 1][j],
+                    acc_cost_mat[i][j - 1],
+                ]
+            )
             argmin = numpy.argmin(arr)
             if argmin == 0:
                 path.append((i - 1, j - 1))
@@ -106,8 +185,43 @@ def _return_path(acc_cost_mat):
     return path[::-1]
 
 
-def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
-             itakura_max_slope=None):
+def _return_path(acc_cost_mat, be=None):
+    if be is None:
+        be = Backend(acc_cost_mat)
+    sz1, sz2 = be.shape(acc_cost_mat)
+    path = [(sz1 - 1, sz2 - 1)]
+    while path[-1] != (0, 0):
+        i, j = path[-1]
+        if i == 0:
+            path.append((0, j - 1))
+        elif j == 0:
+            path.append((i - 1, 0))
+        else:
+            arr = be.array(
+                [
+                    acc_cost_mat[i - 1][j - 1],
+                    acc_cost_mat[i - 1][j],
+                    acc_cost_mat[i][j - 1],
+                ]
+            )
+            argmin = be.argmin(arr)
+            if argmin == 0:
+                path.append((i - 1, j - 1))
+            elif argmin == 1:
+                path.append((i - 1, j))
+            else:
+                path.append((i, j - 1))
+    return path[::-1]
+
+
+def dtw_path(
+    s1,
+    s2,
+    global_constraint=None,
+    sakoe_chiba_radius=None,
+    itakura_max_slope=None,
+    be=None,
+):
     r"""Compute Dynamic Time Warping (DTW) similarity measure between
     (possibly multidimensional) time series and return both the path and the
     similarity.
@@ -127,13 +241,10 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
     ----------
     s1
         A time series.
-
     s2
         Another time series.
-
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
         Global constraint to restrict admissible paths for DTW.
-
     sakoe_chiba_radius : int or None (default: None)
         Radius to be used for Sakoe-Chiba band global constraint.
         If None and `global_constraint` is set to "sakoe_chiba", a radius of
@@ -143,7 +254,6 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
         two. In this case, if `global_constraint` corresponds to no global
         constraint, a `RuntimeWarning` is raised and no global constraint is
         used.
-
     itakura_max_slope : float or None (default: None)
         Maximum slope for the Itakura parallelogram constraint.
         If None and `global_constraint` is set to "itakura", a maximum slope
@@ -153,6 +263,8 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
         two. In this case, if `global_constraint` corresponds to no global
         constraint, a `RuntimeWarning` is raised and no global constraint is
         used.
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
@@ -186,23 +298,34 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
 
     """
-    s1 = to_time_series(s1, remove_nans=True)
-    s2 = to_time_series(s2, remove_nans=True)
+    if be is None:
+        be = Backend(s1)
+    s1 = to_time_series(s1, remove_nans=True, be=be)
+    s2 = to_time_series(s2, remove_nans=True, be=be)
 
     if len(s1) == 0 or len(s2) == 0:
         raise ValueError(
-            "One of the input time series contains only nans or has zero length.")
+            "One of the input time series contains only nans or has zero length."
+        )
 
-    if s1.shape[1] != s2.shape[1]:
+    if be.shape(s1)[1] != be.shape(s2)[1]:
         raise ValueError("All input time series must have the same feature size.")
 
     mask = compute_mask(
-        s1, s2, GLOBAL_CONSTRAINT_CODE[global_constraint],
-        sakoe_chiba_radius, itakura_max_slope
+        s1,
+        s2,
+        GLOBAL_CONSTRAINT_CODE[global_constraint],
+        sakoe_chiba_radius,
+        itakura_max_slope,
+        be=be,
     )
-    acc_cost_mat = njit_accumulated_matrix(s1, s2, mask=mask)
-    path = _return_path(acc_cost_mat)
-    return path, numpy.sqrt(acc_cost_mat[-1, -1])
+    if be.is_numpy:
+        acc_cost_mat = njit_accumulated_matrix(s1, s2, mask=mask)
+        path = _njit_return_path(acc_cost_mat)
+    else:
+        acc_cost_mat = accumulated_matrix(s1, s2, mask=mask, be=be)
+        path = _return_path(acc_cost_mat, be=be)
+    return path, be.sqrt(acc_cost_mat[-1, -1])
 
 
 @njit()
@@ -226,21 +349,27 @@ def njit_accumulated_matrix_from_dist_matrix(dist_matrix, mask):
     """
     l1, l2 = dist_matrix.shape
     cum_sum = numpy.full((l1 + 1, l2 + 1), numpy.inf)
-    cum_sum[0, 0] = 0.
+    cum_sum[0, 0] = 0.0
 
     for i in prange(l1):
         for j in prange(l2):
             if numpy.isfinite(mask[i, j]):
                 cum_sum[i + 1, j + 1] = dist_matrix[i, j]
-                cum_sum[i + 1, j + 1] += min(cum_sum[i, j + 1],
-                                             cum_sum[i + 1, j],
-                                             cum_sum[i, j])
+                cum_sum[i + 1, j + 1] += min(
+                    cum_sum[i, j + 1], cum_sum[i + 1, j], cum_sum[i, j]
+                )
     return cum_sum[1:, 1:]
 
 
-def dtw_path_from_metric(s1, s2=None, metric="euclidean",
-                         global_constraint=None, sakoe_chiba_radius=None,
-                         itakura_max_slope=None, **kwds):
+def dtw_path_from_metric(
+    s1,
+    s2=None,
+    metric="euclidean",
+    global_constraint=None,
+    sakoe_chiba_radius=None,
+    itakura_max_slope=None,
+    **kwds
+):
     r"""Compute Dynamic Time Warping (DTW) similarity measure between
     (possibly multidimensional) time series using a distance metric defined by
     the user and return both the path and the similarity.
@@ -370,16 +499,22 @@ def dtw_path_from_metric(s1, s2=None, metric="euclidean",
     if metric == "precomputed":  # Pairwise distance given as input
         sz1, sz2 = s1.shape
         mask = compute_mask(
-            sz1, sz2, GLOBAL_CONSTRAINT_CODE[global_constraint],
-            sakoe_chiba_radius, itakura_max_slope
+            sz1,
+            sz2,
+            GLOBAL_CONSTRAINT_CODE[global_constraint],
+            sakoe_chiba_radius,
+            itakura_max_slope,
         )
         dist_mat = s1
     else:
         s1 = to_time_series(s1, remove_nans=True)
         s2 = to_time_series(s2, remove_nans=True)
         mask = compute_mask(
-            s1, s2, GLOBAL_CONSTRAINT_CODE[global_constraint],
-            sakoe_chiba_radius, itakura_max_slope
+            s1,
+            s2,
+            GLOBAL_CONSTRAINT_CODE[global_constraint],
+            sakoe_chiba_radius,
+            itakura_max_slope,
         )
         dist_mat = pairwise_distances(s1, s2, metric=metric, **kwds)
 
@@ -388,8 +523,14 @@ def dtw_path_from_metric(s1, s2=None, metric="euclidean",
     return path, acc_cost_mat[-1, -1]
 
 
-def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
-        itakura_max_slope=None):
+def dtw(
+    s1,
+    s2,
+    global_constraint=None,
+    sakoe_chiba_radius=None,
+    itakura_max_slope=None,
+    be=None,
+):
     r"""Compute Dynamic Time Warping (DTW) similarity measure between
     (possibly multidimensional) time series and return it.
 
@@ -461,22 +602,30 @@ def dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
 
     """
-    s1 = to_time_series(s1, remove_nans=True)
-    s2 = to_time_series(s2, remove_nans=True)
+    if be is None:
+        be = Backend(s1)
+    s1 = to_time_series(s1, remove_nans=True, be=be)
+    s2 = to_time_series(s2, remove_nans=True, be=be)
 
     if len(s1) == 0 or len(s2) == 0:
         raise ValueError(
-            "One of the input time series contains only nans or has zero length.")
+            "One of the input time series contains only nans or has zero length."
+        )
 
-    if s1.shape[1] != s2.shape[1]:
+    if be.shape(s1)[1] != be.shape(s2)[1]:
         raise ValueError("All input time series must have the same feature size.")
 
     mask = compute_mask(
-        s1, s2,
+        s1,
+        s2,
         GLOBAL_CONSTRAINT_CODE[global_constraint],
         sakoe_chiba_radius=sakoe_chiba_radius,
-        itakura_max_slope=itakura_max_slope)
-    return njit_dtw(s1, s2, mask=mask)
+        itakura_max_slope=itakura_max_slope,
+        be=be,
+    )
+    if be.is_numpy:
+        return _njit_dtw(s1, s2, mask=mask)
+    return _dtw(s1, s2, mask=mask, be=be)
 
 
 def _max_steps(i, j, max_length, length_1, length_2):
@@ -555,7 +704,7 @@ def _limited_warping_length_cost(s1, s2, max_length):
                 dict_costs[i, j][s] += min(
                     dict_costs[i, j - 1].get(s - 1, numpy.inf),
                     dict_costs[i - 1, j].get(s - 1, numpy.inf),
-                    dict_costs[i - 1, j - 1].get(s - 1, numpy.inf)
+                    dict_costs[i - 1, j - 1].get(s - 1, numpy.inf),
                 )
     return dict_costs
 
@@ -626,8 +775,10 @@ def dtw_limited_warping_length(s1, s2, max_length):
     s2 = to_time_series(s2, remove_nans=True)
 
     if max_length < max(s1.shape[0], s2.shape[0]):
-        raise ValueError("Cannot find a path of length {} to align given "
-                         "time series.".format(max_length))
+        raise ValueError(
+            "Cannot find a path of length {} to align given "
+            "time series.".format(max_length)
+        )
 
     accumulated_costs = _limited_warping_length_cost(s1, s2, max_length)
     idx_pair = (s1.shape[0] - 1, s2.shape[0] - 1)
@@ -635,8 +786,7 @@ def dtw_limited_warping_length(s1, s2, max_length):
     return numpy.sqrt(optimal_cost)
 
 
-def _return_path_limited_warping_length(accum_costs, target_indices,
-                                        optimal_length):
+def _return_path_limited_warping_length(accum_costs, target_indices, optimal_length):
     path = [target_indices]
     cur_length = optimal_length
     while path[-1] != (0, 0):
@@ -647,9 +797,11 @@ def _return_path_limited_warping_length(accum_costs, target_indices,
             path.append((i - 1, 0))
         else:
             arr = numpy.array(
-                [accum_costs[i - 1, j - 1].get(cur_length - 1, numpy.inf),
-                 accum_costs[i - 1, j].get(cur_length - 1, numpy.inf),
-                 accum_costs[i, j - 1].get(cur_length - 1, numpy.inf)]
+                [
+                    accum_costs[i - 1, j - 1].get(cur_length - 1, numpy.inf),
+                    accum_costs[i - 1, j].get(cur_length - 1, numpy.inf),
+                    accum_costs[i, j - 1].get(cur_length - 1, numpy.inf),
+                ]
             )
             argmin = numpy.argmin(arr)
             if argmin == 0:
@@ -740,8 +892,10 @@ def dtw_path_limited_warping_length(s1, s2, max_length):
     s2 = to_time_series(s2, remove_nans=True)
 
     if max_length < max(s1.shape[0], s2.shape[0]):
-        raise ValueError("Cannot find a path of length {} to align given "
-                         "time series.".format(max_length))
+        raise ValueError(
+            "Cannot find a path of length {} to align given "
+            "time series.".format(max_length)
+        )
 
     accumulated_costs = _limited_warping_length_cost(s1, s2, max_length)
     idx_pair = (s1.shape[0] - 1, s2.shape[0] - 1)
@@ -751,9 +905,9 @@ def dtw_path_limited_warping_length(s1, s2, max_length):
         if v < optimal_cost:
             optimal_cost = v
             optimal_length = k
-    path = _return_path_limited_warping_length(accumulated_costs,
-                                               idx_pair,
-                                               optimal_length)
+    path = _return_path_limited_warping_length(
+        accumulated_costs, idx_pair, optimal_length
+    )
     return path, numpy.sqrt(optimal_cost)
 
 
@@ -762,14 +916,14 @@ def _subsequence_cost_matrix(subseq, longseq):
     l1 = subseq.shape[0]
     l2 = longseq.shape[0]
     cum_sum = numpy.full((l1 + 1, l2 + 1), numpy.inf)
-    cum_sum[0, :] = 0.
+    cum_sum[0, :] = 0.0
 
     for i in range(l1):
         for j in range(l2):
             cum_sum[i + 1, j + 1] = _local_squared_dist(subseq[i], longseq[j])
-            cum_sum[i + 1, j + 1] += min(cum_sum[i, j + 1],
-                                         cum_sum[i + 1, j],
-                                         cum_sum[i, j])
+            cum_sum[i + 1, j + 1] += min(
+                cum_sum[i, j + 1], cum_sum[i + 1, j], cum_sum[i, j]
+            )
     return cum_sum[1:, 1:]
 
 
@@ -804,9 +958,13 @@ def _subsequence_path(acc_cost_mat, idx_path_end):
         elif j == 0:
             path.append((i - 1, 0))
         else:
-            arr = numpy.array([acc_cost_mat[i - 1][j - 1],
-                               acc_cost_mat[i - 1][j],
-                               acc_cost_mat[i][j - 1]])
+            arr = numpy.array(
+                [
+                    acc_cost_mat[i - 1][j - 1],
+                    acc_cost_mat[i - 1][j],
+                    acc_cost_mat[i][j - 1],
+                ]
+            )
             argmin = numpy.argmin(arr)
             if argmin == 0:
                 path.append((i - 1, j - 1))
@@ -910,27 +1068,75 @@ def dtw_subsequence_path(subseq, longseq):
     """
     subseq = to_time_series(subseq)
     longseq = to_time_series(longseq)
-    acc_cost_mat = subsequence_cost_matrix(subseq=subseq,
-                                           longseq=longseq)
+    acc_cost_mat = subsequence_cost_matrix(subseq=subseq, longseq=longseq)
     global_optimal_match = numpy.argmin(acc_cost_mat[-1, :])
     path = subsequence_path(acc_cost_mat, global_optimal_match)
     return path, numpy.sqrt(acc_cost_mat[-1, :][global_optimal_match])
 
 
 @njit()
-def sakoe_chiba_mask(sz1, sz2, radius=1):
+def njit_sakoe_chiba_mask(sz1, sz2, radius=1):
     """Compute the Sakoe-Chiba mask.
 
     Parameters
     ----------
     sz1 : int
         The size of the first time series
-
     sz2 : int
         The size of the second time series.
-
     radius : int
         The radius of the band.
+
+    Returns
+    -------
+    mask : array, shape = (sz1, sz2)
+        Sakoe-Chiba mask.
+
+    Examples
+    --------
+    >>> njit_sakoe_chiba_mask(4, 4, 1)
+    array([[ 0.,  0., inf, inf],
+           [ 0.,  0.,  0., inf],
+           [inf,  0.,  0.,  0.],
+           [inf, inf,  0.,  0.]])
+    >>> njit_sakoe_chiba_mask(7, 3, 1)
+    array([[ 0.,  0., inf],
+           [ 0.,  0.,  0.],
+           [ 0.,  0.,  0.],
+           [ 0.,  0.,  0.],
+           [ 0.,  0.,  0.],
+           [ 0.,  0.,  0.],
+           [inf,  0.,  0.]])
+    """
+    mask = numpy.full((sz1, sz2), numpy.inf)
+    if sz1 > sz2:
+        width = sz1 - sz2 + radius
+        for i in prange(sz2):
+            lower = max(0, i - radius)
+            upper = min(sz1, i + width) + 1
+            mask[lower:upper, i] = 0.0
+    else:
+        width = sz2 - sz1 + radius
+        for i in prange(sz1):
+            lower = max(0, i - radius)
+            upper = min(sz2, i + width) + 1
+            mask[i, lower:upper] = 0.0
+    return mask
+
+
+def sakoe_chiba_mask(sz1, sz2, radius=1, be=None):
+    """Compute the Sakoe-Chiba mask.
+
+    Parameters
+    ----------
+    sz1 : int
+        The size of the first time series
+    sz2 : int
+        The size of the second time series.
+    radius : int
+        The radius of the band.
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
@@ -953,24 +1159,26 @@ def sakoe_chiba_mask(sz1, sz2, radius=1):
            [ 0.,  0.,  0.],
            [inf,  0.,  0.]])
     """
-    mask = numpy.full((sz1, sz2), numpy.inf)
+    if be is None:
+        be = Backend("numpy")
+    mask = be.full((sz1, sz2), be.inf)
     if sz1 > sz2:
         width = sz1 - sz2 + radius
-        for i in prange(sz2):
+        for i in range(sz2):
             lower = max(0, i - radius)
             upper = min(sz1, i + width) + 1
-            mask[lower:upper, i] = 0.
+            mask[lower:upper, i] = 0.0
     else:
         width = sz2 - sz1 + radius
-        for i in prange(sz1):
+        for i in range(sz1):
             lower = max(0, i - radius)
             upper = min(sz2, i + width) + 1
-            mask[i, lower:upper] = 0.
+            mask[i, lower:upper] = 0.0
     return mask
 
 
 @njit()
-def _njit_itakura_mask(sz1, sz2, max_slope=2.):
+def _njit_itakura_mask(sz1, sz2, max_slope=2.0):
     """Compute the Itakura mask without checking that the constraints
     are feasible. In most cases, you should use itakura_mask instead.
 
@@ -991,48 +1199,90 @@ def _njit_itakura_mask(sz1, sz2, max_slope=2.):
         Itakura mask.
     """
     min_slope = 1 / float(max_slope)
-    max_slope *= (float(sz1) / float(sz2))
-    min_slope *= (float(sz1) / float(sz2))
+    max_slope *= float(sz1) / float(sz2)
+    min_slope *= float(sz1) / float(sz2)
 
     lower_bound = numpy.empty((2, sz2))
     lower_bound[0] = min_slope * numpy.arange(sz2)
-    lower_bound[1] = ((sz1 - 1) - max_slope * (sz2 - 1)
-                      + max_slope * numpy.arange(sz2))
+    lower_bound[1] = (sz1 - 1) - max_slope * (sz2 - 1) + max_slope * numpy.arange(sz2)
     lower_bound_ = numpy.empty(sz2)
     for i in prange(sz2):
-        lower_bound_[i] = max(round(lower_bound[0, i], 2),
-                              round(lower_bound[1, i], 2))
+        lower_bound_[i] = max(round(lower_bound[0, i], 2), round(lower_bound[1, i], 2))
     lower_bound_ = numpy.ceil(lower_bound_)
 
     upper_bound = numpy.empty((2, sz2))
     upper_bound[0] = max_slope * numpy.arange(sz2)
-    upper_bound[1] = ((sz1 - 1) - min_slope * (sz2 - 1)
-                      + min_slope * numpy.arange(sz2))
+    upper_bound[1] = (sz1 - 1) - min_slope * (sz2 - 1) + min_slope * numpy.arange(sz2)
     upper_bound_ = numpy.empty(sz2)
     for i in prange(sz2):
-        upper_bound_[i] = min(round(upper_bound[0, i], 2),
-                              round(upper_bound[1, i], 2))
+        upper_bound_[i] = min(round(upper_bound[0, i], 2), round(upper_bound[1, i], 2))
     upper_bound_ = numpy.floor(upper_bound_ + 1)
 
     mask = numpy.full((sz1, sz2), numpy.inf)
     for i in prange(sz2):
-        mask[int(lower_bound_[i]):int(upper_bound_[i]), i] = 0.
+        mask[int(lower_bound_[i]) : int(upper_bound_[i]), i] = 0.0
     return mask
 
 
-def itakura_mask(sz1, sz2, max_slope=2.):
+def _itakura_mask(sz1, sz2, max_slope=2.0, be=None):
+    """Compute the Itakura mask without checking that the constraints
+    are feasible. In most cases, you should use itakura_mask instead.
+
+    Parameters
+    ----------
+    sz1 : int
+        The size of the first time series
+    sz2 : int
+        The size of the second time series.
+    max_slope : float (default = 2)
+        The maximum slope of the parallelogram.
+    be : Backend object or string or None
+        Backend.
+
+    Returns
+    -------
+    mask : array, shape = (sz1, sz2)
+        Itakura mask.
+    """
+    min_slope = 1 / float(max_slope)
+    max_slope *= float(sz1) / float(sz2)
+    min_slope *= float(sz1) / float(sz2)
+
+    lower_bound = be.empty((2, sz2))
+    lower_bound[0] = min_slope * be.arange(sz2)
+    lower_bound[1] = (sz1 - 1) - max_slope * (sz2 - 1) + max_slope * be.arange(sz2)
+    lower_bound_ = be.empty(sz2)
+    for i in range(sz2):
+        lower_bound_[i] = max(round(lower_bound[0, i], 2), round(lower_bound[1, i], 2))
+    lower_bound_ = be.ceil(lower_bound_)
+
+    upper_bound = be.empty((2, sz2))
+    upper_bound[0] = max_slope * be.arange(sz2)
+    upper_bound[1] = (sz1 - 1) - min_slope * (sz2 - 1) + min_slope * be.arange(sz2)
+    upper_bound_ = be.empty(sz2)
+    for i in range(sz2):
+        upper_bound_[i] = min(round(upper_bound[0, i], 2), round(upper_bound[1, i], 2))
+    upper_bound_ = be.floor(upper_bound_ + 1)
+
+    mask = be.full((sz1, sz2), be.inf)
+    for i in range(sz2):
+        mask[int(lower_bound_[i]) : int(upper_bound_[i]), i] = 0.0
+    return mask
+
+
+def itakura_mask(sz1, sz2, max_slope=2.0, be=None):
     """Compute the Itakura mask.
 
     Parameters
     ----------
     sz1 : int
         The size of the first time series
-
     sz2 : int
         The size of the second time series.
-
     max_slope : float (default = 2)
         The maximum slope of the parallelogram.
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
@@ -1049,46 +1299,57 @@ def itakura_mask(sz1, sz2, max_slope=2.):
            [inf, inf, inf,  0.,  0., inf],
            [inf, inf, inf, inf, inf,  0.]])
     """
-    mask = _njit_itakura_mask(sz1, sz2, max_slope=max_slope)
+    if be is None:
+        be = Backend("numpy")
+
+    if be.is_numpy:
+        mask = _njit_itakura_mask(sz1, sz2, max_slope=max_slope)
+    else:
+        mask = _itakura_mask(sz1, sz2, max_slope=max_slope, be=be)
 
     # Post-check
     raise_warning = False
-    for i in prange(sz1):
-        if not numpy.any(numpy.isfinite(mask[i])):
+    for i in range(sz1):
+        if not be.any(be.isfinite(mask[i])):
             raise_warning = True
             break
     if not raise_warning:
-        for j in prange(sz2):
-            if not numpy.any(numpy.isfinite(mask[:, j])):
+        for j in range(sz2):
+            if not be.any(be.isfinite(mask[:, j])):
                 raise_warning = True
                 break
     if raise_warning:
-        warnings.warn("'itakura_max_slope' constraint is unfeasible "
-                      "(ie. leads to no admissible path) for the "
-                      "provided time series sizes",
-                      RuntimeWarning)
+        warnings.warn(
+            "'itakura_max_slope' constraint is unfeasible "
+            "(ie. leads to no admissible path) for the "
+            "provided time series sizes",
+            RuntimeWarning,
+        )
 
     return mask
 
 
-def compute_mask(s1, s2, global_constraint=0,
-                 sakoe_chiba_radius=None, itakura_max_slope=None):
+def compute_mask(
+    s1,
+    s2,
+    global_constraint=0,
+    sakoe_chiba_radius=None,
+    itakura_max_slope=None,
+    be=None,
+):
     """Compute the mask (region constraint).
 
     Parameters
     ----------
     s1 : array
         A time series or integer.
-
     s2: array
         Another time series or integer.
-
     global_constraint : {0, 1, 2} (default: 0)
         Global constraint to restrict admissible paths for DTW:
         - "itakura" if 1
         - "sakoe_chiba" if 2
         - no constraint otherwise
-
     sakoe_chiba_radius : int or None (default: None)
         Radius to be used for Sakoe-Chiba band global constraint.
         If None and `global_constraint` is set to 2 (sakoe-chiba), a radius of
@@ -1098,7 +1359,6 @@ def compute_mask(s1, s2, global_constraint=0,
         two. In this case, if `global_constraint` corresponds to no global
         constraint, a `RuntimeWarning` is raised and no global constraint is
         used.
-
     itakura_max_slope : float or None (default: None)
         Maximum slope for the Itakura parallelogram constraint.
         If None and `global_constraint` is set to 1 (itakura), a maximum slope
@@ -1108,42 +1368,62 @@ def compute_mask(s1, s2, global_constraint=0,
         two. In this case, if `global_constraint` corresponds to no global
         constraint, a `RuntimeWarning` is raised and no global constraint is
         used.
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
     mask : array
         Constraint region.
     """
+    if be is None:
+        be = Backend(s1)
     # The output mask will be of shape (sz1, sz2)
     if isinstance(s1, int) and isinstance(s2, int):
         sz1, sz2 = s1, s2
     else:
-        sz1 = s1.shape[0]
-        sz2 = s2.shape[0]
-    if (global_constraint == 0 and sakoe_chiba_radius is not None
-            and itakura_max_slope is not None):
-        raise RuntimeWarning("global_constraint is not set for DTW, but both "
-                             "sakoe_chiba_radius and itakura_max_slope are "
-                             "set, hence global_constraint cannot be inferred "
-                             "and no global constraint will be used.")
-    if global_constraint == 2 or (global_constraint == 0
-                                  and sakoe_chiba_radius is not None):
+        sz1 = be.shape(s1)[0]
+        sz2 = be.shape(s2)[0]
+    if (
+        global_constraint == 0
+        and sakoe_chiba_radius is not None
+        and itakura_max_slope is not None
+    ):
+        raise RuntimeWarning(
+            "global_constraint is not set for DTW, but both "
+            "sakoe_chiba_radius and itakura_max_slope are "
+            "set, hence global_constraint cannot be inferred "
+            "and no global constraint will be used."
+        )
+    if global_constraint == 2 or (
+        global_constraint == 0 and sakoe_chiba_radius is not None
+    ):
         if sakoe_chiba_radius is None:
             sakoe_chiba_radius = 1
-        mask = sakoe_chiba_mask(sz1, sz2, radius=sakoe_chiba_radius)
-    elif global_constraint == 1 or (global_constraint == 0
-                                    and itakura_max_slope is not None):
+        if be.is_numpy:
+            mask = njit_sakoe_chiba_mask(sz1, sz2, radius=sakoe_chiba_radius)
+        else:
+            mask = sakoe_chiba_mask(sz1, sz2, radius=sakoe_chiba_radius, be=be)
+    elif global_constraint == 1 or (
+        global_constraint == 0 and itakura_max_slope is not None
+    ):
         if itakura_max_slope is None:
-            itakura_max_slope = 2.
-        mask = itakura_mask(sz1, sz2, max_slope=itakura_max_slope)
+            itakura_max_slope = 2.0
+        mask = itakura_mask(sz1, sz2, max_slope=itakura_max_slope, be=be)
     else:
-        mask = numpy.zeros((sz1, sz2))
+        mask = be.zeros((sz1, sz2))
     return mask
 
 
-def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
-              sakoe_chiba_radius=None, itakura_max_slope=None, n_jobs=None,
-              verbose=0):
+def cdist_dtw(
+    dataset1,
+    dataset2=None,
+    global_constraint=None,
+    sakoe_chiba_radius=None,
+    itakura_max_slope=None,
+    n_jobs=None,
+    verbose=0,
+):
     r"""Compute cross-similarity matrix using Dynamic Time Warping (DTW)
     similarity measure.
 
@@ -1156,7 +1436,7 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
 
     Note that this formula is still valid for the multivariate case.
 
-    It is not required that time series share the same size, but they 
+    It is not required that time series share the same size, but they
     must be the same dimension.
     DTW was originally presented in [1]_ and is
     discussed in more details in our :ref:`dedicated user-guide page <dtw>`.
@@ -1232,12 +1512,17 @@ def cdist_dtw(dataset1, dataset2=None, global_constraint=None,
            spoken word recognition," IEEE Transactions on Acoustics, Speech and
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
     """  # noqa: E501
-    return _cdist_generic(dist_fun=dtw, dataset1=dataset1, dataset2=dataset2,
-                          n_jobs=n_jobs, verbose=verbose,
-                          compute_diagonal=False,
-                          global_constraint=global_constraint,
-                          sakoe_chiba_radius=sakoe_chiba_radius,
-                          itakura_max_slope=itakura_max_slope)
+    return _cdist_generic(
+        dist_fun=dtw,
+        dataset1=dataset1,
+        dataset2=dataset2,
+        n_jobs=n_jobs,
+        verbose=verbose,
+        compute_diagonal=False,
+        global_constraint=global_constraint,
+        sakoe_chiba_radius=sakoe_chiba_radius,
+        itakura_max_slope=itakura_max_slope,
+    )
 
 
 def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
@@ -1301,18 +1586,21 @@ def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
         envelope_down, envelope_up = envelope_candidate
     else:
         ts_candidate = to_time_series(ts_candidate)
-        assert ts_candidate.shape[1] == 1, \
-            "LB_Keogh is available only for monodimensional time series"
+        assert (
+            ts_candidate.shape[1] == 1
+        ), "LB_Keogh is available only for monodimensional time series"
         envelope_down, envelope_up = lb_envelope(ts_candidate, radius)
     ts_query = to_time_series(ts_query)
-    assert ts_query.shape[1] == 1, \
-        "LB_Keogh is available only for monodimensional time series"
+    assert (
+        ts_query.shape[1] == 1
+    ), "LB_Keogh is available only for monodimensional time series"
     indices_up = ts_query[:, 0] > envelope_up[:, 0]
     indices_down = ts_query[:, 0] < envelope_down[:, 0]
-    return numpy.sqrt(numpy.linalg.norm(ts_query[indices_up, 0] -
-                                        envelope_up[indices_up, 0]) ** 2 +
-                      numpy.linalg.norm(ts_query[indices_down, 0] -
-                                        envelope_down[indices_down, 0]) ** 2)
+    return numpy.sqrt(
+        numpy.linalg.norm(ts_query[indices_up, 0] - envelope_up[indices_up, 0]) ** 2
+        + numpy.linalg.norm(ts_query[indices_down, 0] - envelope_down[indices_down, 0])
+        ** 2
+    )
 
 
 @njit()
@@ -1421,8 +1709,9 @@ def njit_lcss_accumulated_matrix(s1, s2, eps, mask):
                 if numpy.sqrt(_local_squared_dist(s1[i - 1], s2[j - 1])) <= eps:
                     acc_cost_mat[i][j] = 1 + acc_cost_mat[i - 1][j - 1]
                 else:
-                    acc_cost_mat[i][j] = max(acc_cost_mat[i][j - 1],
-                                             acc_cost_mat[i - 1][j])
+                    acc_cost_mat[i][j] = max(
+                        acc_cost_mat[i][j - 1], acc_cost_mat[i - 1][j]
+                    )
 
     return acc_cost_mat
 
@@ -1457,8 +1746,14 @@ def njit_lcss(s1, s2, eps, mask):
     return float(acc_cost_mat[-1][-1]) / min([l1, l2])
 
 
-def lcss(s1, s2, eps=1., global_constraint=None, sakoe_chiba_radius=None,
-         itakura_max_slope=None):
+def lcss(
+    s1,
+    s2,
+    eps=1.0,
+    global_constraint=None,
+    sakoe_chiba_radius=None,
+    itakura_max_slope=None,
+):
     r"""Compute the Longest Common Subsequence (LCSS) similarity measure
     between (possibly multidimensional) time series and return the
     similarity.
@@ -1549,10 +1844,12 @@ def lcss(s1, s2, eps=1., global_constraint=None, sakoe_chiba_radius=None,
     s2 = to_time_series(s2, remove_nans=True)
 
     mask = compute_mask(
-        s1, s2,
+        s1,
+        s2,
         GLOBAL_CONSTRAINT_CODE[global_constraint],
         sakoe_chiba_radius=sakoe_chiba_radius,
-        itakura_max_slope=itakura_max_slope)
+        itakura_max_slope=itakura_max_slope,
+    )
 
     return njit_lcss(s1, s2, eps, mask)
 
@@ -1567,7 +1864,7 @@ def _return_lcss_path(s1, s2, eps, mask, acc_cost_mat, sz1, sz2):
             if numpy.sqrt(_local_squared_dist(s1[i - 1], s2[j - 1])) <= eps:
                 path.append((i - 1, j - 1))
                 i, j = (i - 1, j - 1)
-            elif acc_cost_mat[i - 1][j] > acc_cost_mat[i][j-1]:
+            elif acc_cost_mat[i - 1][j] > acc_cost_mat[i][j - 1]:
                 i = i - 1
             else:
                 j = j - 1
@@ -1584,15 +1881,21 @@ def _return_lcss_path_from_dist_matrix(dist_matrix, eps, mask, acc_cost_mat, sz1
             if dist_matrix[i - 1, j - 1] <= eps:
                 path.append((i - 1, j - 1))
                 i, j = (i - 1, j - 1)
-            elif acc_cost_mat[i - 1][j] > acc_cost_mat[i][j-1]:
+            elif acc_cost_mat[i - 1][j] > acc_cost_mat[i][j - 1]:
                 i = i - 1
             else:
                 j = j - 1
     return path[::-1]
 
 
-def lcss_path(s1, s2, eps=1, global_constraint=None, sakoe_chiba_radius=None,
-              itakura_max_slope=None):
+def lcss_path(
+    s1,
+    s2,
+    eps=1,
+    global_constraint=None,
+    sakoe_chiba_radius=None,
+    itakura_max_slope=None,
+):
     r"""Compute the Longest Common Subsequence (LCSS) similarity measure
     between (possibly multidimensional) time series and return both the
     path and the similarity.
@@ -1688,9 +1991,12 @@ def lcss_path(s1, s2, eps=1, global_constraint=None, sakoe_chiba_radius=None,
     s2 = to_time_series(s2, remove_nans=True)
 
     mask = compute_mask(
-        s1, s2,
+        s1,
+        s2,
         GLOBAL_CONSTRAINT_CODE[global_constraint],
-        sakoe_chiba_radius, itakura_max_slope)
+        sakoe_chiba_radius,
+        itakura_max_slope,
+    )
 
     l1 = s1.shape[0]
     l2 = s2.shape[0]
@@ -1731,15 +2037,23 @@ def njit_lcss_accumulated_matrix_from_dist_matrix(dist_matrix, eps, mask):
                 if dist_matrix[i - 1, j - 1] <= eps:
                     acc_cost_mat[i][j] = 1 + acc_cost_mat[i - 1][j - 1]
                 else:
-                    acc_cost_mat[i][j] = max(acc_cost_mat[i][j - 1],
-                                             acc_cost_mat[i - 1][j])
+                    acc_cost_mat[i][j] = max(
+                        acc_cost_mat[i][j - 1], acc_cost_mat[i - 1][j]
+                    )
 
     return acc_cost_mat
 
 
-def lcss_path_from_metric(s1, s2=None, eps=1, metric="euclidean",
-                          global_constraint=None, sakoe_chiba_radius=None,
-                          itakura_max_slope=None, **kwds):
+def lcss_path_from_metric(
+    s1,
+    s2=None,
+    eps=1,
+    metric="euclidean",
+    global_constraint=None,
+    sakoe_chiba_radius=None,
+    itakura_max_slope=None,
+    **kwds
+):
     r"""Compute the Longest Common Subsequence (LCSS) similarity measure between
     (possibly multidimensional) time series using a distance metric defined by
     the user and return both the path and the similarity.
@@ -1850,7 +2164,7 @@ def lcss_path_from_metric(s1, s2=None, eps=1, metric="euclidean",
     Notes
     --------
     By using a squared euclidean distance metric as shown above, the output
-    path and similarity is the same as the one obtained by using lcss_path 
+    path and similarity is the same as the one obtained by using lcss_path
     (which uses the euclidean distance) simply because with the sum of squared
     distances the matching threshold is still not reached.
     Also, contrary to Dynamic Time Warping and variants, an LCSS path does not need to be contiguous.
@@ -1877,8 +2191,11 @@ def lcss_path_from_metric(s1, s2=None, eps=1, metric="euclidean",
     if metric == "precomputed":  # Pairwise distance given as input
         sz1, sz2 = s1.shape
         mask = compute_mask(
-            sz1, sz2, GLOBAL_CONSTRAINT_CODE[global_constraint],
-            sakoe_chiba_radius, itakura_max_slope
+            sz1,
+            sz2,
+            GLOBAL_CONSTRAINT_CODE[global_constraint],
+            sakoe_chiba_radius,
+            itakura_max_slope,
         )
         dist_mat = s1
     else:
@@ -1887,14 +2204,17 @@ def lcss_path_from_metric(s1, s2=None, eps=1, metric="euclidean",
         sz1 = s1.shape[0]
         sz2 = s2.shape[0]
         mask = compute_mask(
-            s1, s2, GLOBAL_CONSTRAINT_CODE[global_constraint],
-            sakoe_chiba_radius, itakura_max_slope
+            s1,
+            s2,
+            GLOBAL_CONSTRAINT_CODE[global_constraint],
+            sakoe_chiba_radius,
+            itakura_max_slope,
         )
         dist_mat = pairwise_distances(s1, s2, metric=metric, **kwds)
 
-    acc_cost_mat = njit_lcss_accumulated_matrix_from_dist_matrix(
-        dist_mat, eps, mask)
+    acc_cost_mat = njit_lcss_accumulated_matrix_from_dist_matrix(dist_mat, eps, mask)
     path = _return_lcss_path_from_dist_matrix(
-        dist_mat, eps, mask, acc_cost_mat, sz1, sz2)
+        dist_mat, eps, mask, acc_cost_mat, sz1, sz2
+    )
 
     return path, float(acc_cost_mat[-1][-1]) / min([sz1, sz2])
