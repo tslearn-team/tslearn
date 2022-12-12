@@ -22,12 +22,9 @@ def select_backend(data):
         If data is a PyTorch array or data equals 'pytorch',
         backend equals PytorchBackend().
     """
-    if "numpy" in f"{type(data)}" or f"{data}".lower() == "numpy" or data is None:
-        return NumPyBackend()
-    elif "torch" in f"{type(data)}" or f"{data}".lower() == "pytorch":
+    if "torch" in f"{type(data)}" or f"{data}".lower() == "pytorch":
         return PyTorchBackend()
-    else:
-        raise NotImplementedError("Not implemented backend")
+    return NumPyBackend()
 
 
 def backend_to_string(backend):
