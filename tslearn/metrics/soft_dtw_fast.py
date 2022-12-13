@@ -22,6 +22,8 @@ def _softmin3(a, b, c, gamma, be=None):
     """
     if be is None:
         be = Backend(a)
+    elif isinstance(be, str):
+        be = Backend(be)
     a /= -gamma
     b /= -gamma
     c /= -gamma
@@ -47,6 +49,8 @@ def _soft_dtw(D, R, gamma, be=None):
     """
     if be is None:
         be = Backend(D)
+    elif isinstance(be, str):
+        be = Backend(be)
 
     m = D.shape[0]
     n = D.shape[1]
@@ -77,6 +81,8 @@ def _soft_dtw_grad(D, R, E, gamma, be=None):
     """
     if be is None:
         be = Backend(D)
+    elif isinstance(be, str):
+        be = Backend(be)
 
     m = D.shape[0] - 1
     n = D.shape[1] - 1

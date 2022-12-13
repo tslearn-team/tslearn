@@ -63,6 +63,8 @@ def _cdist_generic(
     """  # noqa: E501
     if be is None:
         be = Backend(dataset1)
+    elif isinstance(be, str):
+        be = Backend(be)
     dataset1 = to_time_series_dataset(dataset1, dtype=dtype, be=be)
 
     if dataset2 is None:

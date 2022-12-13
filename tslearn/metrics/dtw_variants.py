@@ -26,6 +26,8 @@ def _njit_local_squared_dist(x, y):
 def _local_squared_dist(x, y, be=None):
     if be is None:
         be = Backend(x)
+    elif isinstance(be, str):
+        be = Backend(be)
     dist = 0.0
     for di in range(be.shape(x)[0]):
         diff = x[di] - y[di]
@@ -91,6 +93,8 @@ def accumulated_matrix(s1, s2, mask, be=None):
     """
     if be is None:
         be = Backend(s1)
+    elif isinstance(be, str):
+        be = Backend(be)
     l1 = be.shape(s1)[0]
     l2 = be.shape(s2)[0]
     cum_sum = be.full((l1 + 1, l2 + 1), be.inf)
@@ -153,6 +157,8 @@ def _dtw(s1, s2, mask, be=None):
     """
     if be is None:
         be = Backend(s1)
+    elif isinstance(be, str):
+        be = Backend(be)
     cum_sum = njit_accumulated_matrix(s1, s2, mask)
     return be.sqrt(cum_sum[-1, -1])
 
@@ -188,6 +194,8 @@ def _njit_return_path(acc_cost_mat):
 def _return_path(acc_cost_mat, be=None):
     if be is None:
         be = Backend(acc_cost_mat)
+    elif isinstance(be, str):
+        be = Backend(be)
     sz1, sz2 = be.shape(acc_cost_mat)
     path = [(sz1 - 1, sz2 - 1)]
     while path[-1] != (0, 0):
@@ -300,6 +308,8 @@ def dtw_path(
     """
     if be is None:
         be = Backend(s1)
+    elif isinstance(be, str):
+        be = Backend(be)
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
 
@@ -604,6 +614,8 @@ def dtw(
     """
     if be is None:
         be = Backend(s1)
+    elif isinstance(be, str):
+        be = Backend(be)
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
 
@@ -920,7 +932,7 @@ def _subsequence_cost_matrix(subseq, longseq):
 
     for i in range(l1):
         for j in range(l2):
-            cum_sum[i + 1, j + 1] = _local_squared_dist(subseq[i], longseq[j])
+            cum_sum[i + 1, j + 1] = _njit_local_squared_dist(subseq[i], longseq[j])
             cum_sum[i + 1, j + 1] += min(
                 cum_sum[i, j + 1], cum_sum[i + 1, j], cum_sum[i, j]
             )
@@ -1161,6 +1173,8 @@ def sakoe_chiba_mask(sz1, sz2, radius=1, be=None):
     """
     if be is None:
         be = Backend("numpy")
+    elif isinstance(be, str):
+        be = Backend(be)
     mask = be.full((sz1, sz2), be.inf)
     if sz1 > sz2:
         width = sz1 - sz2 + radius
@@ -1301,6 +1315,8 @@ def itakura_mask(sz1, sz2, max_slope=2.0, be=None):
     """
     if be is None:
         be = Backend("numpy")
+    elif isinstance(be, str):
+        be = Backend(be)
 
     if be.is_numpy:
         mask = _njit_itakura_mask(sz1, sz2, max_slope=max_slope)
@@ -1378,6 +1394,8 @@ def compute_mask(
     """
     if be is None:
         be = Backend(s1)
+    elif isinstance(be, str):
+        be = Backend(be)
     # The output mask will be of shape (sz1, sz2)
     if isinstance(s1, int) and isinstance(s2, int):
         sz1, sz2 = s1, s2
@@ -1706,7 +1724,7 @@ def njit_lcss_accumulated_matrix(s1, s2, eps, mask):
     for i in range(1, l1 + 1):
         for j in range(1, l2 + 1):
             if numpy.isfinite(mask[i - 1, j - 1]):
-                if numpy.sqrt(_local_squared_dist(s1[i - 1], s2[j - 1])) <= eps:
+                if numpy.sqrt(_njit_local_squared_dist(s1[i - 1], s2[j - 1])) <= eps:
                     acc_cost_mat[i][j] = 1 + acc_cost_mat[i - 1][j - 1]
                 else:
                     acc_cost_mat[i][j] = max(
@@ -1861,7 +1879,7 @@ def _return_lcss_path(s1, s2, eps, mask, acc_cost_mat, sz1, sz2):
 
     while i > 0 and j > 0:
         if numpy.isfinite(mask[i - 1, j - 1]):
-            if numpy.sqrt(_local_squared_dist(s1[i - 1], s2[j - 1])) <= eps:
+            if numpy.sqrt(_njit_local_squared_dist(s1[i - 1], s2[j - 1])) <= eps:
                 path.append((i - 1, j - 1))
                 i, j = (i - 1, j - 1)
             elif acc_cost_mat[i - 1][j] > acc_cost_mat[i][j - 1]:

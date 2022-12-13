@@ -151,6 +151,8 @@ def to_time_series(ts, remove_nans=False, be=None):
     """
     if be is None:
         be = Backend(ts)
+    elif isinstance(be, str):
+        be = Backend(be)
     ts_out = be.array(ts, copy=True)
     if ts_out.ndim <= 1:
         ts_out = be.reshape(ts_out, (-1, 1))
@@ -203,6 +205,9 @@ def to_time_series_dataset(dataset, dtype=float, be=None):
     """
     if be is None:
         be = Backend(dataset)
+    elif isinstance(be, str):
+        be = Backend(be)
+
     try:
         import pandas as pd
 
@@ -388,6 +393,9 @@ def check_equal_size(dataset, be=None):
     """
     if be is None:
         be = Backend(dataset)
+    elif isinstance(be, str):
+        be = Backend(be)
+
     dataset_ = to_time_series_dataset(dataset, be=be)
     if len(dataset_) == 0:
         return True
@@ -434,6 +442,8 @@ def ts_size(ts, be=None):
     """
     if be is None:
         be = Backend(ts)
+    elif isinstance(be, str):
+        be = Backend(be)
     ts_ = to_time_series(ts, be=be)
     sz = be.shape(ts_)[0]
     while sz > 0 and be.all(be.isnan(ts_[sz - 1])):
