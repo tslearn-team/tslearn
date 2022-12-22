@@ -1,8 +1,5 @@
 """The generic backend."""
 
-from tslearn.backend.numpy_backend import NumPyBackend
-from tslearn.backend.pytorch_backend import PyTorchBackend
-
 
 def select_backend(data):
     """Select backend.
@@ -23,7 +20,9 @@ def select_backend(data):
         backend equals PytorchBackend().
     """
     if "torch" in f"{type(data)}" or f"{data}".lower() == "pytorch":
+        from tslearn.backend.pytorch_backend import PyTorchBackend
         return PyTorchBackend()
+    from tslearn.backend.numpy_backend import NumPyBackend
     return NumPyBackend()
 
 
