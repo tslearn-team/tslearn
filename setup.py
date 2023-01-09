@@ -35,7 +35,7 @@ setup(
     packages=find_packages(),
     package_data={"tslearn": [".cached_datasets/Trace.npz"]},
     install_requires=['numpy', 'scipy', 'scikit-learn', 'numba', 'joblib'],
-    extras_require={'tests': ['pytest']},
+    extras_require={'tests': ['pytest', 'torch'], 'pytorch': ['torch']},
     version=VERSION,
     url="http://tslearn.readthedocs.io/",
     project_urls={
