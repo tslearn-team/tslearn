@@ -4,3 +4,4 @@ scipy
 scikit-learn
 joblib>=0.12
 h5py
+torch
