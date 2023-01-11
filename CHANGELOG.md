@@ -12,11 +12,16 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ### Changed
 
-* The use of Cython is now replaced by Numba.
+* Change macOS-10.15 into macOS-12 in the file `azure-pipelines.yml`.
 
 ### Fixed
 
 * Fixed a bug about result of path in `lcss_path_from_metric` function.
+* Fixed incompatibilities between `NumPy`, `TensorFlow` and `scikit-learn` versions.
+
+### Removed
+
+* Cython is now replaced by Numba.
 
 ## [v0.5.2]
 
