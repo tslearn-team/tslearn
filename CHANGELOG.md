@@ -8,7 +8,9 @@ and this project adheres to
 
 Changelogs for this project are recorded in this file since v0.2.0.
 
-## [Towards v0.5.3]
+## [Towards v0.6]
+
+## [v0.5.3]
 
 ### Changed
 
