@@ -12,16 +12,25 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ### Changed
 
-* Change macOS-10.15 into macOS-12 in the file `azure-pipelines.yml`.
+* Support for  `macOS-10.15` is replaced by support for `macOS-12`
+* Support for `scikit-learn 0.23` is replaced by support for `scikit-learn 1.0`
+* Specify supported `TensorFlow` version (2.9.0)
+
+### Added
+
+* Python 3.9 support
 
 ### Fixed
 
-* Fixed a bug about result of path in `lcss_path_from_metric` function.
-* Fixed incompatibilities between `NumPy`, `TensorFlow` and `scikit-learn` versions.
+* Fixed a bug about result of path in `lcss_path_from_metric` function
+* Fixed incompatibilities between `NumPy`, `TensorFlow` and `scikit-learn` versions
+* Fixed a bug preventing tslearn installation by removing the `NumPy` version constraint (<=1.19) in the file 
+`pyproject.toml`
 
 ### Removed
 
-* Cython is now replaced by Numba.
+* Cython is now replaced by Numba
+* Supports for Python 3.5 and 3.6 are dropped
 
 ## [v0.5.2]
 
