@@ -8,11 +8,31 @@ and this project adheres to
 
 Changelogs for this project are recorded in this file since v0.2.0.
 
-## [Towards v0.5.3]
+## [Towards v0.6]
+
+## [v0.5.3]
+
+### Changed
+
+* Support for  `macOS-10.15` is replaced by support for `macOS-12`
+* Support for `scikit-learn 0.23` is replaced by support for `scikit-learn 1.0`
+* Specify supported `TensorFlow` version (2.9.0)
+
+### Added
+
+* Support for Python versions 3.9 and 3.10
 
 ### Fixed
 
-* Fixed a bug about result of path in `lcss_path_from_metric` function.
+* Fixed a bug about result of path in `lcss_path_from_metric` function
+* Fixed incompatibilities between `NumPy`, `TensorFlow` and `scikit-learn` versions
+* Fixed a bug preventing tslearn installation by removing the `NumPy` version constraint (<=1.19) in the file 
+`pyproject.toml`
+
+### Removed
+
+* Cython is now replaced by Numba
+* Support for Python versions 3.5 and 3.6 is dropped
 
 ## [v0.5.2]
 
