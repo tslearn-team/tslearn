@@ -20,7 +20,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ### Added
 
-* Python 3.9 support
+* Support for Python versions 3.9 and 3.10
 
 ### Fixed
 
@@ -32,7 +32,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 ### Removed
 
 * Cython is now replaced by Numba
-* Supports for Python 3.5 and 3.6 are dropped
+* Support for Python versions 3.5 and 3.6 is dropped
 
 ## [v0.5.2]
 
