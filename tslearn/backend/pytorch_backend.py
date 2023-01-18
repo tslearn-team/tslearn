@@ -48,8 +48,6 @@ class PyTorchBackend(BaseBackend):
         self.nan = _torch.nan
         self.reshape = _torch.reshape
         self.sqrt = _torch.sqrt
-        self.tril_indices = _torch.tril_indices
-        self.triu_indices = _torch.triu_indices
         self.vstack = _torch.vstack
         self.zeros = _torch.zeros
         self.zeros_like = _torch.zeros_like
@@ -133,6 +131,28 @@ class PyTorchBackend(BaseBackend):
     def to_numpy(x):
         return x.numpy()
 
+    @staticmethod
+    def tril(mat, k=0):
+        return _torch.tril(mat, diagonal=k)
+
+    @staticmethod
+    def tril_indices(n, k=0, m=None):
+        if m is None:
+            m = n
+        x = _torch.tril_indices(row=n, col=m, offset=k)
+        return x[0], x[1]
+
+    @staticmethod
+    def triu(mat, k=0):
+        return _torch.triu(mat, diagonal=k)
+
+    @staticmethod
+    def triu_indices(n, k=0, m=None):
+        if m is None:
+            m = n
+        x = _torch.triu_indices(row=n, col=m, offset=k)
+        return x[0], x[1]
+
 
 class PyTorchLinalg:
     def __init__(self):
@@ -161,5 +181,5 @@ class PyTorchRandom:
 
 class PyTorchTesting:
     def __init__(self):
-        self.assert_allclose = _torch.testing.assert_allclose
+        self.assert_allclose = _torch.allclose
         self.assert_equal = _torch.testing.assert_close

@@ -19,10 +19,12 @@ def select_backend(data):
         If data is a PyTorch array or data equals 'pytorch',
         backend equals PytorchBackend().
     """
-    if "torch" in f"{type(data)}" or f"{data}".lower() == "pytorch":
+    if "torch" in f"{type(data)}" or "torch" in f"{data}".lower():
         from tslearn.backend.pytorch_backend import PyTorchBackend
+
         return PyTorchBackend()
     from tslearn.backend.numpy_backend import NumPyBackend
+
     return NumPyBackend()
 
 
@@ -100,7 +102,9 @@ class Backend(object):
         self.shape = self.backend.shape
         self.sqrt = self.backend.sqrt
         self.to_numpy = self.backend.to_numpy
+        self.tril = self.backend.tril
         self.tril_indices = self.backend.tril_indices
+        self.triu = self.backend.triu
         self.triu_indices = self.backend.triu_indices
         self.vstack = self.backend.vstack
         self.zeros = self.backend.zeros

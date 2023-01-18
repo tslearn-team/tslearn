@@ -153,7 +153,7 @@ def to_time_series(ts, remove_nans=False, be=None):
         be = Backend(ts)
     elif isinstance(be, str):
         be = Backend(be)
-    ts_out = be.array(ts, copy=True)
+    ts_out = be.array(ts)
     if ts_out.ndim <= 1:
         ts_out = be.reshape(ts_out, (-1, 1))
     if not be.is_float(ts_out):
