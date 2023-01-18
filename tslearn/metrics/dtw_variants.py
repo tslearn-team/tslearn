@@ -159,7 +159,7 @@ def _dtw(s1, s2, mask, be=None):
         be = Backend(s1)
     elif isinstance(be, str):
         be = Backend(be)
-    cum_sum = njit_accumulated_matrix(s1, s2, mask)
+    cum_sum = accumulated_matrix(s1, s2, mask, be=be)
     return be.sqrt(cum_sum[-1, -1])
 
 
@@ -1441,6 +1441,7 @@ def cdist_dtw(
     itakura_max_slope=None,
     n_jobs=None,
     verbose=0,
+    be=None,
 ):
     r"""Compute cross-similarity matrix using Dynamic Time Warping (DTW)
     similarity measure.
@@ -1506,6 +1507,9 @@ def cdist_dtw(
         `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`__
         for more details.
 
+    be : Backend object or string or None
+        Backend.
+
     Returns
     -------
     cdist : numpy.ndarray
@@ -1530,6 +1534,10 @@ def cdist_dtw(
            spoken word recognition," IEEE Transactions on Acoustics, Speech and
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
     """  # noqa: E501
+    if be is None:
+        be = Backend(dataset1)
+    elif isinstance(be, str):
+        be = Backend(be)
     return _cdist_generic(
         dist_fun=dtw,
         dataset1=dataset1,
@@ -1540,6 +1548,7 @@ def cdist_dtw(
         global_constraint=global_constraint,
         sakoe_chiba_radius=sakoe_chiba_radius,
         itakura_max_slope=itakura_max_slope,
+        be=be,
     )
 
 

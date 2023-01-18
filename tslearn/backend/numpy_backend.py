@@ -49,7 +49,9 @@ class NumPyBackend(BaseBackend):
         self.reshape = _np.reshape
         self.shape = _np.shape
         self.sqrt = _np.sqrt
+        self.tril = _np.tril
         self.tril_indices = _np.tril_indices
+        self.triu = _np.triu
         self.triu_indices = _np.triu_indices
         self.vstack = _np.vstack
         self.zeros = _np.zeros
