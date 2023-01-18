@@ -77,27 +77,6 @@ def _cdist_generic(
         indices = be.triu_indices(
             len(dataset1), k=0 if compute_diagonal else 1, m=len(dataset1)
         )
-        print("\n \n \n")
-        print(indices)
-        print("\n \n \n")
-
-        print("\n \n \n")
-        print(matrix)
-        print("\n \n \n")
-
-        print("\n \n \n")
-        print(matrix[indices])
-        print("\n \n \n")
-
-        print("\n \n \n")
-        print(
-            Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
-                delayed(dist_fun)(dataset1[i], dataset1[j], *args, **kwargs)
-                for i in range(len(dataset1))
-                for j in range(i if compute_diagonal else i + 1, len(dataset1))
-            )
-        )
-        print("\n \n \n")
 
         matrix[indices] = be.array(
             Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
@@ -107,22 +86,9 @@ def _cdist_generic(
             )
         )
 
-        print("\n \n \n")
-        print(matrix[indices])
-        print("\n \n \n")
-
-        print("\n \n \n")
-        print("matrix")
-        print(matrix)
-        print("\n \n \n")
-
         indices = be.tril_indices(len(dataset1), k=-1, m=len(dataset1))
         matrix[indices] = matrix.T[indices]
 
-        print("\n \n \n")
-        print("matrix2")
-        print(matrix)
-        print("\n \n \n")
         return matrix
     else:
         dataset2 = to_time_series_dataset(dataset2, dtype=dtype, be=be)
