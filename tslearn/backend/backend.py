@@ -54,6 +54,7 @@ class Backend(object):
 
         self.linalg = self.backend.linalg
         self.random = self.backend.random
+        self.testing = self.backend.testing
 
         self.int8 = self.backend.int8
         self.int16 = self.backend.int16

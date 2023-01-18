@@ -11,6 +11,7 @@ class NumPyBackend(BaseBackend):
     def __init__(self):
         self.linalg = NumPyLinalg()
         self.random = NumPyRandom()
+        self.testing = NumPyTesting()
 
         self.int8 = _np.int8
         self.int16 = _np.int16
@@ -97,3 +98,9 @@ class NumPyRandom:
         self.rand = _np.random.rand
         self.randint = _np.random.randint
         self.randn = _np.random.randn
+
+
+class NumPyTesting:
+    def __init__(self):
+        self.assert_allclose = _np.testing.assert_allclose
+        self.assert_equal = _np.testing.assert_equal
