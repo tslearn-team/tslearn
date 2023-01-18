@@ -12,6 +12,7 @@ class PyTorchBackend(BaseBackend):
     def __init__(self):
         self.linalg = PyTorchLinalg()
         self.random = PyTorchRandom()
+        self.testing = PyTorchTesting()
 
         self.int8 = _torch.int8
         self.int16 = _torch.int16
@@ -156,3 +157,9 @@ class PyTorchRandom:
         if low >= high:
             raise ValueError("Upper bound must be higher than lower bound")
         return (high - low) * _torch.rand(*size, dtype=dtype) + low
+
+
+class PyTorchTesting:
+    def __init__(self):
+        self.assert_allclose = _torch.testing.assert_allclose
+        self.assert_equal = _torch.testing.assert_close
