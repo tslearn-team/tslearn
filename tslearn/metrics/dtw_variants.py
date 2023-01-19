@@ -1983,13 +1983,37 @@ def lcss(
 
 
 @njit()
-def _return_lcss_path(s1, s2, eps, mask, acc_cost_mat, sz1, sz2):
+def _njit_return_lcss_path(s1, s2, eps, mask, acc_cost_mat, sz1, sz2):
     i, j = (sz1, sz2)
     path = []
 
     while i > 0 and j > 0:
         if numpy.isfinite(mask[i - 1, j - 1]):
             if numpy.sqrt(_njit_local_squared_dist(s1[i - 1], s2[j - 1])) <= eps:
+                path.append((i - 1, j - 1))
+                i, j = (i - 1, j - 1)
+            elif acc_cost_mat[i - 1][j] > acc_cost_mat[i][j - 1]:
+                i = i - 1
+            else:
+                j = j - 1
+    return path[::-1]
+
+
+def _return_lcss_path(s1, s2, eps, mask, acc_cost_mat, sz1, sz2, be=None):
+    if be is None:
+        be = Backend(s1)
+    elif isinstance(be, str):
+        be = Backend(be)
+    i, j = (sz1, sz2)
+    path = []
+
+    while i > 0 and j > 0:
+        if be.isfinite(mask[i - 1, j - 1]):
+            if be.is_numpy:
+                squared_dist = _njit_local_squared_dist(s1[i - 1], s2[j - 1])
+            else:
+                squared_dist = _local_squared_dist(s1[i - 1], s2[j - 1])
+            if be.sqrt(squared_dist) <= eps:
                 path.append((i - 1, j - 1))
                 i, j = (i - 1, j - 1)
             elif acc_cost_mat[i - 1][j] > acc_cost_mat[i][j - 1]:
@@ -2023,6 +2047,7 @@ def lcss_path(
     global_constraint=None,
     sakoe_chiba_radius=None,
     itakura_max_slope=None,
+    be=None,
 ):
     r"""Compute the Longest Common Subsequence (LCSS) similarity measure
     between (possibly multidimensional) time series and return both the
@@ -2053,16 +2078,12 @@ def lcss_path(
     ----------
     s1
         A time series.
-
     s2
         Another time series.
-
     eps : float (default: 1.)
         Maximum matching distance threshold.
-
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
        Global constraint to restrict admissible paths for LCSS.
-
     sakoe_chiba_radius : int or None (default: None)
        Radius to be used for Sakoe-Chiba band global constraint.
        If None and `global_constraint` is set to "sakoe_chiba", a radius of
@@ -2072,7 +2093,6 @@ def lcss_path(
        two. In this case, if `global_constraint` corresponds to no global
        constraint, a `RuntimeWarning` is raised and no global constraint is
        used.
-
     itakura_max_slope : float or None (default: None)
        Maximum slope for the Itakura parallelogram constraint.
        If None and `global_constraint` is set to "itakura", a maximum slope
@@ -2082,6 +2102,8 @@ def lcss_path(
        two. In this case, if `global_constraint` corresponds to no global
        constraint, a `RuntimeWarning` is raised and no global constraint is
        used.
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
@@ -2115,8 +2137,12 @@ def lcss_path(
             IEEE Computer Society, USA, 673.
 
     """
-    s1 = to_time_series(s1, remove_nans=True)
-    s2 = to_time_series(s2, remove_nans=True)
+    if be is None:
+        be = Backend(s1)
+    elif isinstance(be, str):
+        be = Backend(be)
+    s1 = to_time_series(s1, remove_nans=True, be=be)
+    s2 = to_time_series(s2, remove_nans=True, be=be)
 
     mask = compute_mask(
         s1,
@@ -2124,13 +2150,17 @@ def lcss_path(
         GLOBAL_CONSTRAINT_CODE[global_constraint],
         sakoe_chiba_radius,
         itakura_max_slope,
+        be=be,
     )
 
     l1 = s1.shape[0]
     l2 = s2.shape[0]
 
-    acc_cost_mat = njit_lcss_accumulated_matrix(s1, s2, eps, mask)
-    path = _return_lcss_path(s1, s2, eps, mask, acc_cost_mat, l1, l2)
+    if be.is_numpy:
+        acc_cost_mat = njit_lcss_accumulated_matrix(s1, s2, eps, mask)
+    else:
+        acc_cost_mat = lcss_accumulated_matrix(s1, s2, eps, mask, be=be)
+    path = _return_lcss_path(s1, s2, eps, mask, acc_cost_mat, l1, l2, be=be)
 
     return path, float(acc_cost_mat[-1][-1]) / min([l1, l2])
 
