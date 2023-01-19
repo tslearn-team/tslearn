@@ -49,6 +49,7 @@ class PyTorchBackend(BaseBackend):
         self.min = _torch.min
         self.nan = _torch.nan
         self.reshape = _torch.reshape
+        self.round = _torch.round
         self.sqrt = _torch.sqrt
         self.sum = _torch.sum
         self.vstack = _torch.vstack
@@ -160,6 +161,7 @@ class PyTorchBackend(BaseBackend):
 class PyTorchLinalg:
     def __init__(self):
         self.inv = _torch.linalg.inv
+        self.norm = _torch.linalg.norm
 
 
 class PyTorchRandom:

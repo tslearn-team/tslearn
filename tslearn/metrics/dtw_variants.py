@@ -1285,7 +1285,10 @@ def _itakura_mask(sz1, sz2, max_slope=2.0, be=None):
     lower_bound[1] = (sz1 - 1) - max_slope * (sz2 - 1) + max_slope * be.arange(sz2)
     lower_bound_ = be.empty(sz2)
     for i in range(sz2):
-        lower_bound_[i] = max(round(lower_bound[0, i], 2), round(lower_bound[1, i], 2))
+        lower_bound_[i] = max(
+            be.round(lower_bound[0, i], decimals=2),
+            be.round(lower_bound[1, i], decimals=2),
+        )
     lower_bound_ = be.ceil(lower_bound_)
 
     upper_bound = be.empty((2, sz2))
@@ -1293,7 +1296,10 @@ def _itakura_mask(sz1, sz2, max_slope=2.0, be=None):
     upper_bound[1] = (sz1 - 1) - min_slope * (sz2 - 1) + min_slope * be.arange(sz2)
     upper_bound_ = be.empty(sz2)
     for i in range(sz2):
-        upper_bound_[i] = min(round(upper_bound[0, i], 2), round(upper_bound[1, i], 2))
+        upper_bound_[i] = min(
+            be.round(upper_bound[0, i], decimals=2),
+            be.round(upper_bound[1, i], decimals=2),
+        )
     upper_bound_ = be.floor(upper_bound_ + 1)
 
     mask = be.full((sz1, sz2), be.inf)

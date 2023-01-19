@@ -220,37 +220,44 @@ def test_lcss_path_from_metric():
 
 
 def test_constrained_paths():
-    n, d = 10, 3
-    rng = np.random.RandomState(0)
-    x = rng.randn(n, d)
-    y = rng.randn(n, d)
-    dtw_sakoe = tslearn.metrics.dtw(
-        x, y, global_constraint="sakoe_chiba", sakoe_chiba_radius=0
-    )
-    dtw_itak = tslearn.metrics.dtw(
-        x, y, global_constraint="itakura", itakura_max_slope=1.0
-    )
-    euc_dist = np.linalg.norm(x - y)
-    np.testing.assert_allclose(dtw_sakoe, euc_dist, atol=1e-5)
-    np.testing.assert_allclose(dtw_itak, euc_dist, atol=1e-5)
+    BACKENDS = ["numpy", "pytorch"]
+    for backend in BACKENDS:
+        be = Backend(backend)
+        n, d = 10, 3
+        rng = np.random.RandomState(0)
+        x = rng.randn(n, d)
+        y = rng.randn(n, d)
+        x, y = be.array(x), be.array(y)
+        dtw_sakoe = tslearn.metrics.dtw(
+            x, y, global_constraint="sakoe_chiba", sakoe_chiba_radius=0, be=be
+        )
+        dtw_itak = tslearn.metrics.dtw(
+            x, y, global_constraint="itakura", itakura_max_slope=1.0, be=be
+        )
+        euc_dist = be.linalg.norm(x - y)
+        np.testing.assert_allclose(dtw_sakoe, euc_dist, atol=1e-5)
+        np.testing.assert_allclose(dtw_itak, euc_dist, atol=1e-5)
 
-    z = rng.randn(3 * n, d)
-    np.testing.assert_warns(
-        RuntimeWarning,
-        tslearn.metrics.dtw,
-        x,
-        z,
-        global_constraint="itakura",
-        itakura_max_slope=2.0,
-    )
-    np.testing.assert_warns(
-        RuntimeWarning,
-        tslearn.metrics.dtw,
-        z,
-        x,
-        global_constraint="itakura",
-        itakura_max_slope=2.0,
-    )
+        z = rng.randn(3 * n, d)
+        z = be.array(z)
+        np.testing.assert_warns(
+            RuntimeWarning,
+            tslearn.metrics.dtw,
+            x,
+            z,
+            global_constraint="itakura",
+            itakura_max_slope=2.0,
+            be=be,
+        )
+        np.testing.assert_warns(
+            RuntimeWarning,
+            tslearn.metrics.dtw,
+            z,
+            x,
+            global_constraint="itakura",
+            itakura_max_slope=2.0,
+            be=be,
+        )
 
 
 def test_dtw_subseq():
