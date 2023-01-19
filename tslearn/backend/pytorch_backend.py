@@ -23,6 +23,7 @@ class PyTorchBackend(BaseBackend):
         self.complex64 = _torch.complex64
         self.complex128 = _torch.complex128
 
+        self.abs = _torch.abs
         self.any = _torch.any
         self.arange = _torch.arange
         self.argmax = _torch.argmax

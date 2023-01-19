@@ -67,6 +67,7 @@ class Backend(object):
         self.complex64 = self.backend.complex64
         self.complex128 = self.backend.complex128
 
+        self.abs = self.backend.abs
         self.all = self.backend.all
         self.any = self.backend.any
         self.arange = self.backend.arange

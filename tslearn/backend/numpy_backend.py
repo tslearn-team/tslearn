@@ -22,6 +22,7 @@ class NumPyBackend(BaseBackend):
         self.complex64 = _np.complex64
         self.complex128 = _np.complex128
 
+        self.abs = _np.abs
         self.all = _np.all
         self.any = _np.any
         self.arange = _np.arange
