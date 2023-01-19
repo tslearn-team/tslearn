@@ -80,6 +80,7 @@ class Backend(object):
         self.diag = self.backend.diag
         self.empty = self.backend.empty
         self.exp = self.backend.exp
+        self.eye = self.backend.eye
         self.floor = self.backend.floor
         self.from_numpy = self.backend.from_numpy
         self.full = self.backend.full

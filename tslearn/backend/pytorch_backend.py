@@ -34,6 +34,7 @@ class PyTorchBackend(BaseBackend):
         self.diag = _torch.diag
         self.empty = _torch.empty
         self.exp = _torch.exp
+        self.eye = _torch.eye
         self.floor = _torch.floor
         self.full = _torch.full
         self.hstack = _torch.hstack
