@@ -102,6 +102,7 @@ class Backend(object):
         self.reshape = self.backend.reshape
         self.shape = self.backend.shape
         self.sqrt = self.backend.sqrt
+        self.sum = self.backend.sum
         self.to_numpy = self.backend.to_numpy
         self.tril = self.backend.tril
         self.tril_indices = self.backend.tril_indices

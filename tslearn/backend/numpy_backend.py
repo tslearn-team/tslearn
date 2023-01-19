@@ -50,6 +50,7 @@ class NumPyBackend(BaseBackend):
         self.reshape = _np.reshape
         self.shape = _np.shape
         self.sqrt = _np.sqrt
+        self.sum = _np.sum
         self.tril = _np.tril
         self.tril_indices = _np.tril_indices
         self.triu = _np.triu
