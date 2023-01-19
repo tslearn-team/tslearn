@@ -49,6 +49,7 @@ class NumPyBackend(BaseBackend):
         self.min = _np.min
         self.nan = _np.nan
         self.reshape = _np.reshape
+        self.round = _np.round
         self.shape = _np.shape
         self.sqrt = _np.sqrt
         self.sum = _np.sum
@@ -96,6 +97,7 @@ class NumPyBackend(BaseBackend):
 class NumPyLinalg:
     def __init__(self):
         self.inv = _np.linalg.inv
+        self.norm = _np.linalg.norm
 
 
 class NumPyRandom:

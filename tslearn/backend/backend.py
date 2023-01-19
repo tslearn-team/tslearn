@@ -101,6 +101,7 @@ class Backend(object):
         self.nan = self.backend.nan
         self.ndim = self.backend.ndim
         self.reshape = self.backend.reshape
+        self.round = self.backend.round
         self.shape = self.backend.shape
         self.sqrt = self.backend.sqrt
         self.sum = self.backend.sum
