@@ -17,13 +17,13 @@ def test_dtw():
         be = Backend(backend)
         # dtw_path
         path, dist = tslearn.metrics.dtw_path([1, 2, 3], [1.0, 2.0, 2.0, 3.0], be=be)
-        be.testing.assert_equal(path, [(0, 0), (1, 1), (1, 2), (2, 3)])
-        be.testing.assert_allclose(dist, be.array([0.0]))
+        np.testing.assert_equal(path, [(0, 0), (1, 1), (1, 2), (2, 3)])
+        np.testing.assert_allclose(dist, be.array([0.0]))
 
         path, dist = tslearn.metrics.dtw_path(
             [1, 2, 3], [1.0, 2.0, 2.0, 3.0, 4.0], be=be
         )
-        be.testing.assert_allclose(dist, be.array([1.0]))
+        np.testing.assert_allclose(dist, be.array([1.0]))
 
         # dtw
         n1, n2, d = 15, 10, 3
@@ -31,17 +31,17 @@ def test_dtw():
         x = be.array(rng.randn(n1, d))
         y = be.array(rng.randn(n2, d))
 
-        be.testing.assert_allclose(
+        np.testing.assert_allclose(
             tslearn.metrics.dtw(x, y, be=be), tslearn.metrics.dtw_path(x, y, be=be)[1]
         )
 
         # cdist_dtw
         dists = tslearn.metrics.cdist_dtw([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], be=be)
-        be.testing.assert_allclose(dists, be.array([[0.0, 1.0], [1.0, 0.0]]))
+        np.testing.assert_allclose(dists, be.array([[0.0, 1.0], [1.0, 0.0]]))
         dists = tslearn.metrics.cdist_dtw(
             [[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], [[1, 2, 3], [2, 3, 4, 5]], be=be
         )
-        be.testing.assert_allclose(
+        np.testing.assert_allclose(
             dists, be.array([[0.0, 2.44949], [1.0, 1.414214]]), atol=1e-5
         )
 
@@ -77,41 +77,51 @@ def test_ctw():
 
 
 def test_ldtw():
-    n1, n2, d = 15, 10, 3
-    rng = np.random.RandomState(0)
-    x = rng.randn(n1, d)
-    y = rng.randn(n2, d)
+    BACKENDS = ["numpy", "pytorch"]
+    for backend in BACKENDS:
+        be = Backend(backend)
 
-    # LDTW >= DTW
-    assert tslearn.metrics.dtw(x, y) <= tslearn.metrics.dtw_limited_warping_length(
-        x, y, n1 + 2
-    )
+        n1, n2, d = 15, 10, 3
+        rng = np.random.RandomState(0)
+        x = be.array(rng.randn(n1, d))
+        y = be.array(rng.randn(n2, d))
 
-    # if path is too short, LDTW raises a ValueError
-    np.testing.assert_raises(
-        ValueError, tslearn.metrics.dtw_limited_warping_length, x, y, max(n1, n2) - 1
-    )
+        # LDTW >= DTW
+        np.testing.assert_allclose(
+            tslearn.metrics.dtw(x, y, be=be),
+            tslearn.metrics.dtw_limited_warping_length(x, y, n1 + 2, be=be),
+        )
 
-    # if max_length is smaller than length of optimal DTW path, LDTW > DTW
-    path, cost = tslearn.metrics.dtw_path(x, y)
-    np.testing.assert_array_less(
-        cost, tslearn.metrics.dtw_limited_warping_length(x, y, len(path) - 1)
-    )
+        # if path is too short, LDTW raises a ValueError
+        np.testing.assert_raises(
+            ValueError,
+            tslearn.metrics.dtw_limited_warping_length,
+            x,
+            y,
+            max(n1, n2) - 1,
+            be,
+        )
 
-    # if max_length is geq than length of optimal DTW path, LDTW = DTW
-    np.testing.assert_allclose(
-        cost, tslearn.metrics.dtw_limited_warping_length(x, y, len(path))
-    )
-    np.testing.assert_allclose(
-        cost, tslearn.metrics.dtw_limited_warping_length(x, y, len(path) + 1)
-    )
+        # if max_length is smaller than length of optimal DTW path, LDTW > DTW
+        path, cost = tslearn.metrics.dtw_path(x, y, be=be)
+        np.testing.assert_array_less(
+            cost, tslearn.metrics.dtw_limited_warping_length(x, y, len(path) - 1, be=be)
+        )
 
-    # test dtw_path_limited_warping_length
-    path, cost = tslearn.metrics.dtw_path_limited_warping_length(x, y, n1 + 2)
-    np.testing.assert_allclose(
-        cost, tslearn.metrics.dtw_limited_warping_length(x, y, n1 + 2)
-    )
-    assert len(path) <= n1 + 2
+        # if max_length is geq than length of optimal DTW path, LDTW = DTW
+        np.testing.assert_allclose(
+            cost, tslearn.metrics.dtw_limited_warping_length(x, y, len(path))
+        )
+        np.testing.assert_allclose(
+            cost, tslearn.metrics.dtw_limited_warping_length(x, y, len(path) + 1, be=be)
+        )
+        path, cost = tslearn.metrics.dtw_path_limited_warping_length(
+            x, y, n1 + 2, be=be
+        )
+        np.testing.assert_allclose(
+            cost, tslearn.metrics.dtw_limited_warping_length(x, y, n1 + 2, be=be)
+        )
+        assert len(path) <= n1 + 2
 
 
 def test_lcss():

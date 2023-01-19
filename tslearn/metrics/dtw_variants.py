@@ -671,20 +671,20 @@ def _max_steps(i, j, max_length, length_1, length_2):
     return min(candidate_1, candidate_2)
 
 
-def _limited_warping_length_cost(s1, s2, max_length):
+def _limited_warping_length_cost(s1, s2, max_length, be=None):
     r"""Compute accumulated scores necessary fo L-DTW.
 
     Parameters
     ----------
     s1
         A time series.
-
     s2
         Another time series.
-
     max_length : int
         Maximum allowed warping path length. Should be an integer between
         XXX and YYY.  # TODO
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
@@ -692,19 +692,23 @@ def _limited_warping_length_cost(s1, s2, max_length):
         Accumulated scores. This dict associates (i, j) pairs (keys) to
         dictionnaries with desired length as key and associated score as value.
     """
+    if be is None:
+        be = Backend(s1)
+    elif isinstance(be, str):
+        be = Backend(be)
     dict_costs = {}
     for i in range(s1.shape[0]):
         for j in range(s2.shape[0]):
             dict_costs[i, j] = {}
 
     # Init
-    dict_costs[0, 0][0] = _local_squared_dist(s1[0], s2[0])
+    dict_costs[0, 0][0] = _local_squared_dist(s1[0], s2[0], be=be)
     for i in range(1, s1.shape[0]):
         pred = dict_costs[i - 1, 0][i - 1]
-        dict_costs[i, 0][i] = pred + _local_squared_dist(s1[i], s2[0])
+        dict_costs[i, 0][i] = pred + _local_squared_dist(s1[i], s2[0], be=be)
     for j in range(1, s2.shape[0]):
         pred = dict_costs[0, j - 1][j - 1]
-        dict_costs[0, j][j] = pred + _local_squared_dist(s1[0], s2[j])
+        dict_costs[0, j][j] = pred + _local_squared_dist(s1[0], s2[j], be=be)
 
     # Main loop
     for i in range(1, s1.shape[0]):
@@ -712,16 +716,16 @@ def _limited_warping_length_cost(s1, s2, max_length):
             min_s = max(i, j)
             max_s = _max_steps(i, j, max_length - 1, s1.shape[0], s2.shape[0])
             for s in range(min_s, max_s + 1):
-                dict_costs[i, j][s] = _local_squared_dist(s1[i], s2[j])
+                dict_costs[i, j][s] = _local_squared_dist(s1[i], s2[j], be=be)
                 dict_costs[i, j][s] += min(
-                    dict_costs[i, j - 1].get(s - 1, numpy.inf),
-                    dict_costs[i - 1, j].get(s - 1, numpy.inf),
-                    dict_costs[i - 1, j - 1].get(s - 1, numpy.inf),
+                    dict_costs[i, j - 1].get(s - 1, be.inf),
+                    dict_costs[i - 1, j].get(s - 1, be.inf),
+                    dict_costs[i - 1, j - 1].get(s - 1, be.inf),
                 )
     return dict_costs
 
 
-def dtw_limited_warping_length(s1, s2, max_length):
+def dtw_limited_warping_length(s1, s2, max_length, be=None):
     r"""Compute Dynamic Time Warping (DTW) similarity measure between
     (possibly multidimensional) time series under an upper bound constraint on
     the resulting path length and return the similarity cost.
@@ -745,16 +749,16 @@ def dtw_limited_warping_length(s1, s2, max_length):
     ----------
     s1
         A time series.
-
     s2
         Another time series.
-
     max_length : int
         Maximum allowed warping path length.
         If greater than len(s1) + len(s2), then it is equivalent to
         unconstrained DTW.
         If lower than max(len(s1), len(s2)), no path can be found and a
         ValueError is raised.
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
@@ -783,8 +787,12 @@ def dtw_limited_warping_length(s1, s2, max_length):
            Dynamic time warping under limited warping path length.
            Information Sciences, vol. 393, pp. 91--107, 2017.
     """
-    s1 = to_time_series(s1, remove_nans=True)
-    s2 = to_time_series(s2, remove_nans=True)
+    if be is None:
+        be = Backend(s1)
+    elif isinstance(be, str):
+        be = Backend(be)
+    s1 = to_time_series(s1, remove_nans=True, be=be)
+    s2 = to_time_series(s2, remove_nans=True, be=be)
 
     if max_length < max(s1.shape[0], s2.shape[0]):
         raise ValueError(
@@ -792,13 +800,19 @@ def dtw_limited_warping_length(s1, s2, max_length):
             "time series.".format(max_length)
         )
 
-    accumulated_costs = _limited_warping_length_cost(s1, s2, max_length)
+    accumulated_costs = _limited_warping_length_cost(s1, s2, max_length, be=be)
     idx_pair = (s1.shape[0] - 1, s2.shape[0] - 1)
     optimal_cost = min(accumulated_costs[idx_pair].values())
-    return numpy.sqrt(optimal_cost)
+    return be.sqrt(optimal_cost)
 
 
-def _return_path_limited_warping_length(accum_costs, target_indices, optimal_length):
+def _return_path_limited_warping_length(
+    accum_costs, target_indices, optimal_length, be=None
+):
+    if be is None:
+        be = Backend(accum_costs)
+    elif isinstance(be, str):
+        be = Backend(be)
     path = [target_indices]
     cur_length = optimal_length
     while path[-1] != (0, 0):
@@ -808,14 +822,14 @@ def _return_path_limited_warping_length(accum_costs, target_indices, optimal_len
         elif j == 0:
             path.append((i - 1, 0))
         else:
-            arr = numpy.array(
+            arr = be.array(
                 [
-                    accum_costs[i - 1, j - 1].get(cur_length - 1, numpy.inf),
-                    accum_costs[i - 1, j].get(cur_length - 1, numpy.inf),
-                    accum_costs[i, j - 1].get(cur_length - 1, numpy.inf),
+                    accum_costs[i - 1, j - 1].get(cur_length - 1, be.inf),
+                    accum_costs[i - 1, j].get(cur_length - 1, be.inf),
+                    accum_costs[i, j - 1].get(cur_length - 1, be.inf),
                 ]
             )
-            argmin = numpy.argmin(arr)
+            argmin = be.argmin(arr)
             if argmin == 0:
                 path.append((i - 1, j - 1))
             elif argmin == 1:
@@ -826,7 +840,7 @@ def _return_path_limited_warping_length(accum_costs, target_indices, optimal_len
     return path[::-1]
 
 
-def dtw_path_limited_warping_length(s1, s2, max_length):
+def dtw_path_limited_warping_length(s1, s2, max_length, be=None):
     r"""Compute Dynamic Time Warping (DTW) similarity measure between
     (possibly multidimensional) time series under an upper bound constraint on
     the resulting path length and return the path as well as the similarity
@@ -851,22 +865,21 @@ def dtw_path_limited_warping_length(s1, s2, max_length):
     ----------
     s1
         A time series.
-
     s2
         Another time series.
-
     max_length : int
         Maximum allowed warping path length.
         If greater than len(s1) + len(s2), then it is equivalent to
         unconstrained DTW.
         If lower than max(len(s1), len(s2)), no path can be found and a
         ValueError is raised.
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
     list of integer pairs
         Optimal path
-
     float
         Similarity score
 
@@ -900,8 +913,13 @@ def dtw_path_limited_warping_length(s1, s2, max_length):
            Dynamic time warping under limited warping path length.
            Information Sciences, vol. 393, pp. 91--107, 2017.
     """
-    s1 = to_time_series(s1, remove_nans=True)
-    s2 = to_time_series(s2, remove_nans=True)
+    if be is None:
+        be = Backend(s1)
+    elif isinstance(be, str):
+        be = Backend(be)
+
+    s1 = to_time_series(s1, remove_nans=True, be=be)
+    s2 = to_time_series(s2, remove_nans=True, be=be)
 
     if max_length < max(s1.shape[0], s2.shape[0]):
         raise ValueError(
@@ -909,18 +927,18 @@ def dtw_path_limited_warping_length(s1, s2, max_length):
             "time series.".format(max_length)
         )
 
-    accumulated_costs = _limited_warping_length_cost(s1, s2, max_length)
+    accumulated_costs = _limited_warping_length_cost(s1, s2, max_length, be=be)
     idx_pair = (s1.shape[0] - 1, s2.shape[0] - 1)
     optimal_length = -1
-    optimal_cost = numpy.inf
+    optimal_cost = be.inf
     for k, v in accumulated_costs[idx_pair].items():
         if v < optimal_cost:
             optimal_cost = v
             optimal_length = k
     path = _return_path_limited_warping_length(
-        accumulated_costs, idx_pair, optimal_length
+        accumulated_costs, idx_pair, optimal_length, be=be
     )
-    return path, numpy.sqrt(optimal_cost)
+    return path, be.sqrt(optimal_cost)
 
 
 @njit()
