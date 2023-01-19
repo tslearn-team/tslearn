@@ -49,6 +49,7 @@ class PyTorchBackend(BaseBackend):
         self.nan = _torch.nan
         self.reshape = _torch.reshape
         self.sqrt = _torch.sqrt
+        self.sum = _torch.sum
         self.vstack = _torch.vstack
         self.zeros = _torch.zeros
         self.zeros_like = _torch.zeros_like
