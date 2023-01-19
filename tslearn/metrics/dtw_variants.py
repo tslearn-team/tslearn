@@ -2024,12 +2024,36 @@ def _return_lcss_path(s1, s2, eps, mask, acc_cost_mat, sz1, sz2, be=None):
 
 
 @njit()
-def _return_lcss_path_from_dist_matrix(dist_matrix, eps, mask, acc_cost_mat, sz1, sz2):
+def _njit_return_lcss_path_from_dist_matrix(
+    dist_matrix, eps, mask, acc_cost_mat, sz1, sz2
+):
     i, j = (sz1, sz2)
     path = []
 
     while i > 0 and j > 0:
         if numpy.isfinite(mask[i - 1, j - 1]):
+            if dist_matrix[i - 1, j - 1] <= eps:
+                path.append((i - 1, j - 1))
+                i, j = (i - 1, j - 1)
+            elif acc_cost_mat[i - 1][j] > acc_cost_mat[i][j - 1]:
+                i = i - 1
+            else:
+                j = j - 1
+    return path[::-1]
+
+
+def _return_lcss_path_from_dist_matrix(
+    dist_matrix, eps, mask, acc_cost_mat, sz1, sz2, be=None
+):
+    if be is None:
+        be = Backend(dist_matrix)
+    elif isinstance(be, str):
+        be = Backend(be)
+    i, j = (sz1, sz2)
+    path = []
+
+    while i > 0 and j > 0:
+        if be.isfinite(mask[i - 1, j - 1]):
             if dist_matrix[i - 1, j - 1] <= eps:
                 path.append((i - 1, j - 1))
                 i, j = (i - 1, j - 1)
@@ -2165,6 +2189,7 @@ def lcss_path(
     return path, float(acc_cost_mat[-1][-1]) / min([l1, l2])
 
 
+@njit()
 def njit_lcss_accumulated_matrix_from_dist_matrix(dist_matrix, eps, mask):
     """Compute the accumulated cost matrix score between two time series using
     a precomputed distance matrix.
@@ -2202,6 +2227,46 @@ def njit_lcss_accumulated_matrix_from_dist_matrix(dist_matrix, eps, mask):
     return acc_cost_mat
 
 
+def lcss_accumulated_matrix_from_dist_matrix(dist_matrix, eps, mask, be=None):
+    """Compute the accumulated cost matrix score between two time series using
+    a precomputed distance matrix.
+
+    Parameters
+    ----------
+    dist_matrix : array, shape = (sz1, sz2)
+        Array containing the pairwise distances.
+    eps : float (default: 1.)
+        Maximum matching distance threshold.
+    mask : array, shape = (sz1, sz2)
+        Mask. Unconsidered cells must have infinite values.
+    be : Backend object or string or None
+        Backend.
+
+    Returns
+    -------
+    mat : array, shape = (sz1, sz2)
+        Accumulated cost matrix.
+    """
+    if be is None:
+        be = Backend(dist_matrix)
+    elif isinstance(be, str):
+        be = Backend(be)
+    l1, l2 = dist_matrix.shape
+    acc_cost_mat = be.full((l1 + 1, l2 + 1), 0)
+
+    for i in range(1, l1 + 1):
+        for j in range(1, l2 + 1):
+            if be.isfinite(mask[i - 1, j - 1]):
+                if dist_matrix[i - 1, j - 1] <= eps:
+                    acc_cost_mat[i][j] = 1 + acc_cost_mat[i - 1][j - 1]
+                else:
+                    acc_cost_mat[i][j] = max(
+                        acc_cost_mat[i][j - 1], acc_cost_mat[i - 1][j]
+                    )
+
+    return acc_cost_mat
+
+
 def lcss_path_from_metric(
     s1,
     s2=None,
@@ -2210,6 +2275,7 @@ def lcss_path_from_metric(
     global_constraint=None,
     sakoe_chiba_radius=None,
     itakura_max_slope=None,
+    be=None,
     **kwds
 ):
     r"""Compute the Longest Common Subsequence (LCSS) similarity measure between
@@ -2233,30 +2299,22 @@ def lcss_path_from_metric(
     ----------
     s1 : array, shape = (sz1, d) if metric!="precomputed", (sz1, sz2) otherwise
         A time series or an array of pairwise distances between samples.
-
     s2 : array, shape = (sz2, d), optional (default: None)
         A second time series, only allowed if metric != "precomputed".
-
     eps : float (default: 1.)
         Maximum matching distance threshold.
-
     metric : string or callable (default: "euclidean")
         Function used to compute the pairwise distances between each points of
         `s1` and `s2`.
-
         If metric is "precomputed", `s1` is assumed to be a distance matrix.
-
         If metric is an other string, it must be one of the options compatible
         with sklearn.metrics.pairwise_distances.
-
         Alternatively, if metric is a callable function, it is called on pairs
         of rows of `s1` and `s2`. The callable should take two 1 dimensional
         arrays as input and return a value indicating the distance between
         them.
-
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
         Global constraint to restrict admissible paths for LCSS.
-
     sakoe_chiba_radius : int or None (default: None)
         Radius to be used for Sakoe-Chiba band global constraint.
         If None and `global_constraint` is set to "sakoe_chiba", a radius of
@@ -2266,7 +2324,6 @@ def lcss_path_from_metric(
         two. In this case, if `global_constraint` corresponds to no global
         constraint, a `RuntimeWarning` is raised and no global constraint is
         used.
-
     itakura_max_slope : float or None (default: None)
         Maximum slope for the Itakura parallelogram constraint.
         If None and `global_constraint` is set to "itakura", a maximum slope
@@ -2276,7 +2333,8 @@ def lcss_path_from_metric(
         two. In this case, if `global_constraint` corresponds to no global
         constraint, a `RuntimeWarning` is raised and no global constraint is
         used.
-
+    be : Backend object or string or None
+        Backend.
     **kwds
         Additional arguments to pass to sklearn pairwise_distances to compute
         the pairwise distances.
@@ -2286,7 +2344,6 @@ def lcss_path_from_metric(
     list of integer pairs
         Matching path represented as a list of index pairs. In each pair, the
         first index corresponds to s1 and the second one corresponds to s2.
-
     float
         Similarity score.
 
@@ -2346,6 +2403,10 @@ def lcss_path_from_metric(
     .. _scipy: https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html
 
     """  # noqa: E501
+    if be is None:
+        be = Backend(s1)
+    elif isinstance(be, str):
+        be = Backend(be)
     if metric == "precomputed":  # Pairwise distance given as input
         sz1, sz2 = s1.shape
         mask = compute_mask(
@@ -2354,11 +2415,12 @@ def lcss_path_from_metric(
             GLOBAL_CONSTRAINT_CODE[global_constraint],
             sakoe_chiba_radius,
             itakura_max_slope,
+            be=be,
         )
         dist_mat = s1
     else:
-        s1 = to_time_series(s1, remove_nans=True)
-        s2 = to_time_series(s2, remove_nans=True)
+        s1 = to_time_series(s1, remove_nans=True, be=be)
+        s2 = to_time_series(s2, remove_nans=True, be=be)
         sz1 = s1.shape[0]
         sz2 = s2.shape[0]
         mask = compute_mask(
@@ -2367,12 +2429,23 @@ def lcss_path_from_metric(
             GLOBAL_CONSTRAINT_CODE[global_constraint],
             sakoe_chiba_radius,
             itakura_max_slope,
+            be=be,
         )
-        dist_mat = pairwise_distances(s1, s2, metric=metric, **kwds)
+        dist_mat = be.array(pairwise_distances(s1, s2, metric=metric, **kwds))
 
-    acc_cost_mat = njit_lcss_accumulated_matrix_from_dist_matrix(dist_mat, eps, mask)
-    path = _return_lcss_path_from_dist_matrix(
-        dist_mat, eps, mask, acc_cost_mat, sz1, sz2
-    )
+    if be.is_numpy:
+        acc_cost_mat = njit_lcss_accumulated_matrix_from_dist_matrix(
+            dist_mat, eps, mask
+        )
+        path = _njit_return_lcss_path_from_dist_matrix(
+            dist_mat, eps, mask, acc_cost_mat, sz1, sz2
+        )
+    else:
+        acc_cost_mat = lcss_accumulated_matrix_from_dist_matrix(
+            dist_mat, eps, mask, be=be
+        )
+        path = _return_lcss_path_from_dist_matrix(
+            dist_mat, eps, mask, acc_cost_mat, sz1, sz2, be=be
+        )
 
     return path, float(acc_cost_mat[-1][-1]) / min([sz1, sz2])
