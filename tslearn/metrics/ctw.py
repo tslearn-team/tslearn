@@ -1,33 +1,41 @@
+import numpy as np
 from sklearn.cross_decomposition import CCA
+
+from tslearn.backend import Backend
+
+from ..utils import to_time_series
 from .dtw_variants import dtw_path
 from .utils import _cdist_generic
-from ..utils import to_time_series
-import numpy as np
 
-def _get_warp_matrices(warp_path):
+
+def _get_warp_matrices(warp_path, be):
     """
     Convert warping path sequence to matrices.
 
     Parameters
     ----------
-    warp_path = first output of the dtw_path function = list of tuple of two 
-    indices that are matched together.
+    warp_path : list of tuple of two indices that are matched together
+        First output of the dtw_path function.
+    be : Backend object or string
+        Backend.
 
     Returns
     -------
-    two 2D matrices of size m x T (m = number of step to match the two 
-    sequences
-
+    two 2D matrices of size m x T (m = number of step to match the two
+        sequences
     """
-
+    if be is None:
+        be = Backend(warp_path[0][0])
+    elif isinstance(be, str):
+        be = Backend(be)
     # number of indices for the alignment
     m = len(warp_path)
     # number of frame of each sequence
     # (for DTW, the last two indices are matched)
     nx = warp_path[-1][0] + 1
     ny = warp_path[-1][1] + 1
-    Wx = np.zeros((m, nx))
-    Wy = np.zeros((m, ny))
+    Wx = be.zeros((m, nx), dtype=be.float64)
+    Wy = be.zeros((m, ny), dtype=be.float64)
 
     for i, match in enumerate(warp_path):
         Wx[i, match[0]] = 1
@@ -36,41 +44,44 @@ def _get_warp_matrices(warp_path):
     return Wx, Wy
 
 
-def ctw_path(s1, s2, max_iter=100, n_components=None,
-             global_constraint=None, sakoe_chiba_radius=None,
-             itakura_max_slope=None, verbose=False):
+def ctw_path(
+    s1,
+    s2,
+    max_iter=100,
+    n_components=None,
+    global_constraint=None,
+    sakoe_chiba_radius=None,
+    itakura_max_slope=None,
+    verbose=False,
+    be=None,
+):
     """Compute Canonical Time Warping (CTW) similarity measure between
     (possibly multidimensional) time series and return the alignment path, the
     canonical correlation analysis (sklearn) object and the similarity.
-    
-    Canonical Time Warping is a method to align time series under rigid 
+
+    Canonical Time Warping is a method to align time series under rigid
     registration of the feature space.
     It should not be confused with Dynamic Time Warping (DTW), though CTW uses
     DTW.
 
-    It is not required that both time series share the same size, nor the same 
-    dimension (CTW will find a subspace that best aligns feature spaces). 
+    It is not required that both time series share the same size, nor the same
+    dimension (CTW will find a subspace that best aligns feature spaces).
     CTW was originally presented in [1]_.
 
     Parameters
     ----------
     s1
         A time series.
-
     s2
         Another time series.
-        
     max_iter : int (default: 100)
         Number of iterations for the CTW algorithm. Each iteration
-    
     n_components : int (default: None)
         Number of components to be used for Canonical Correlation Analysis.
-        If None, the lower minimum number of features between s1 and s2 is 
-        used. 
-
+        If None, the lower minimum number of features between s1 and s2 is
+        used.
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
         Global constraint to restrict admissible paths for DTW calls.
-
     sakoe_chiba_radius : int or None (default: None)
         Radius to be used for Sakoe-Chiba band global constraint.
         If None and `global_constraint` is set to "sakoe_chiba", a radius of
@@ -80,7 +91,6 @@ def ctw_path(s1, s2, max_iter=100, n_components=None,
         two. In this case, if `global_constraint` corresponds to no global
         constraint, a `RuntimeWarning` is raised and no global constraint is
         used.
-
     itakura_max_slope : float or None (default: None)
         Maximum slope for the Itakura parallelogram constraint.
         If None and `global_constraint` is set to "itakura", a maximum slope
@@ -90,20 +100,19 @@ def ctw_path(s1, s2, max_iter=100, n_components=None,
         two. In this case, if `global_constraint` corresponds to no global
         constraint, a `RuntimeWarning` is raised and no global constraint is
         used.
-        
     verbose : bool (default: True)
         If True, scores are printed at each iteration of the algorithm.
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
     list of integer pairs
         Matching path represented as a list of index pairs. In each pair, the
         first index corresponds to s1 and the second one corresponds to s2
-        
     sklearn.decomposition.CCA
         The Canonical Correlation Analysis object used to align time series
         at convergence.
-
     float
         Similarity score
 
@@ -116,7 +125,7 @@ def ctw_path(s1, s2, max_iter=100, n_components=None,
     <class 'sklearn.cross_decomposition...CCA'>
     >>> dist
     0.0
-    >>> path, cca, dist = ctw_path([1, 2, 3], 
+    >>> path, cca, dist = ctw_path([1, 2, 3],
     ...                            [[1., 1.], [2., 2.], [2., 2.], [3., 3.]])
     >>> dist
     0.0
@@ -127,11 +136,16 @@ def ctw_path(s1, s2, max_iter=100, n_components=None,
 
     References
     ----------
-    .. [1] F. Zhou and F. Torre, "Canonical time warping for alignment of 
+    .. [1] F. Zhou and F. Torre, "Canonical time warping for alignment of
        human behavior". NIPS 2009.
     """
-    s1 = to_time_series(s1, remove_nans=True)
-    s2 = to_time_series(s2, remove_nans=True)
+    if be is None:
+        be = Backend(s1)
+    elif isinstance(be, str):
+        be = Backend(be)
+    s1 = to_time_series(s1, remove_nans=True, be=be)
+    s2 = to_time_series(s2, remove_nans=True, be=be)
+    s1, s2 = be.array(s1, dtype=be.float64), be.array(s2, dtype=be.float64)
 
     if n_components is None:
         n_components = min(s1.shape[-1], s2.shape[-1])
@@ -141,28 +155,34 @@ def ctw_path(s1, s2, max_iter=100, n_components=None,
     # first iteration :
     # identity matrices, this relates to apply first a dtw on the
     # (possibly truncated to a fixed number of features) inputs
-    seq1_tr = s1.dot(np.eye(s1.shape[1], n_components))
-    seq2_tr = s2.dot(np.eye(s2.shape[1], n_components))
-    current_path, score_match = dtw_path(seq1_tr, seq2_tr,
-                                         global_constraint=global_constraint,
-                                         sakoe_chiba_radius=sakoe_chiba_radius,
-                                         itakura_max_slope=itakura_max_slope)
+    seq1_tr = s1 @ be.eye(s1.shape[1], n_components, dtype=be.float64)
+    seq2_tr = s2 @ be.eye(s2.shape[1], n_components, dtype=be.float64)
+    current_path, score_match = dtw_path(
+        seq1_tr,
+        seq2_tr,
+        global_constraint=global_constraint,
+        sakoe_chiba_radius=sakoe_chiba_radius,
+        itakura_max_slope=itakura_max_slope,
+        be=be,
+    )
     current_score = score_match
 
     if verbose:
         print("Iteration 0, score={}".format(current_score))
 
-    for it in range(max_iter-1):
-        Wx, Wy = _get_warp_matrices(current_path)
+    for it in range(max_iter - 1):
+        Wx, Wy = _get_warp_matrices(current_path, be=be)
 
-        cca.fit(Wx.dot(s1), Wy.dot(s2))
+        cca.fit(Wx @ s1, Wy @ s2)
         seq1_tr, seq2_tr = cca.transform(s1, s2)
 
         current_path, score_match = dtw_path(
-            seq1_tr, seq2_tr,
+            seq1_tr,
+            seq2_tr,
             global_constraint=global_constraint,
             sakoe_chiba_radius=sakoe_chiba_radius,
-            itakura_max_slope=itakura_max_slope
+            itakura_max_slope=itakura_max_slope,
+            be=be,
         )
 
         if np.array_equal(current_path, current_path):
@@ -176,40 +196,43 @@ def ctw_path(s1, s2, max_iter=100, n_components=None,
     return current_path, cca, current_score
 
 
-def ctw(s1, s2, max_iter=100, n_components=None,
-        global_constraint=None, sakoe_chiba_radius=None,
-        itakura_max_slope=None, verbose=False):
+def ctw(
+    s1,
+    s2,
+    max_iter=100,
+    n_components=None,
+    global_constraint=None,
+    sakoe_chiba_radius=None,
+    itakura_max_slope=None,
+    verbose=False,
+    be=None,
+):
     """Compute Canonical Time Warping (CTW) similarity measure between
     (possibly multidimensional) time series and return the similarity.
-    
-    Canonical Time Warping is a method to align time series under rigid 
+
+    Canonical Time Warping is a method to align time series under rigid
     registration of the feature space.
     It should not be confused with Dynamic Time Warping (DTW), though CTW uses
     DTW.
 
-    It is not required that both time series share the same size, nor the same 
-    dimension (CTW will find a subspace that best aligns feature spaces). 
+    It is not required that both time series share the same size, nor the same
+    dimension (CTW will find a subspace that best aligns feature spaces).
     CTW was originally presented in [1]_.
 
     Parameters
     ----------
     s1
         A time series.
-
     s2
         Another time series.
-        
     max_iter : int (default: 100)
         Number of iterations for the CTW algorithm. Each iteration
-    
     n_components : int (default: None)
         Number of components to be used for Canonical Correlation Analysis.
-        If None, the lower minimum number of features between seq1 and seq2 is 
-        used. 
-
+        If None, the lower minimum number of features between seq1 and seq2 is
+        used.
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
         Global constraint to restrict admissible paths for DTW calls.
-
     sakoe_chiba_radius : int or None (default: None)
         Radius to be used for Sakoe-Chiba band global constraint.
         If None and `global_constraint` is set to "sakoe_chiba", a radius of
@@ -219,7 +242,6 @@ def ctw(s1, s2, max_iter=100, n_components=None,
         two. In this case, if `global_constraint` corresponds to no global
         constraint, a `RuntimeWarning` is raised and no global constraint is
         used.
-
     itakura_max_slope : float or None (default: None)
         Maximum slope for the Itakura parallelogram constraint.
         If None and `global_constraint` is set to "itakura", a maximum slope
@@ -229,9 +251,10 @@ def ctw(s1, s2, max_iter=100, n_components=None,
         two. In this case, if `global_constraint` corresponds to no global
         constraint, a `RuntimeWarning` is raised and no global constraint is
         used.
-        
     verbose : bool (default: True)
         If True, scores are printed at each iteration of the algorithm.
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
@@ -251,51 +274,65 @@ def ctw(s1, s2, max_iter=100, n_components=None,
 
     References
     ----------
-    .. [1] F. Zhou and F. Torre, "Canonical time warping for alignment of 
+    .. [1] F. Zhou and F. Torre, "Canonical time warping for alignment of
        human behavior". NIPS 2009.
     """
-    return ctw_path(s1=s1, s2=s2, max_iter=max_iter,
-                    n_components=n_components,
-                    global_constraint=global_constraint,
-                    sakoe_chiba_radius=sakoe_chiba_radius,
-                    itakura_max_slope=itakura_max_slope, verbose=verbose)[-1]
+    if be is None:
+        be = Backend(s1)
+    elif isinstance(be, str):
+        be = Backend(be)
+    return ctw_path(
+        s1=s1,
+        s2=s2,
+        max_iter=max_iter,
+        n_components=n_components,
+        global_constraint=global_constraint,
+        sakoe_chiba_radius=sakoe_chiba_radius,
+        itakura_max_slope=itakura_max_slope,
+        verbose=verbose,
+        be=be,
+    )[-1]
 
 
-def cdist_ctw(dataset1, dataset2=None, max_iter=100, n_components=None,
-              global_constraint=None, sakoe_chiba_radius=None,
-              itakura_max_slope=None, n_jobs=None, verbose=0):
+def cdist_ctw(
+    dataset1,
+    dataset2=None,
+    max_iter=100,
+    n_components=None,
+    global_constraint=None,
+    sakoe_chiba_radius=None,
+    itakura_max_slope=None,
+    n_jobs=None,
+    verbose=0,
+    be=None,
+):
     r"""Compute cross-similarity matrix using Canonical Time Warping (CTW)
     similarity measure.
-    
-    Canonical Time Warping is a method to align time series under rigid 
+
+    Canonical Time Warping is a method to align time series under rigid
     registration of the feature space.
     It should not be confused with Dynamic Time Warping (DTW), though CTW uses
     DTW.
 
-    It is not required that both time series share the same size, nor the same 
-    dimension (CTW will find a subspace that best aligns feature spaces). 
+    It is not required that both time series share the same size, nor the same
+    dimension (CTW will find a subspace that best aligns feature spaces).
     CTW was originally presented in [1]_.
 
     Parameters
     ----------
     dataset1 : array-like
         A dataset of time series
-
     dataset2 : array-like (default: None)
         Another dataset of time series. If `None`, self-similarity of
         `dataset1` is returned.
-        
     max_iter : int (default: 100)
         Number of iterations for the CTW algorithm. Each iteration
-    
     n_components : int (default: None)
         Number of components to be used for Canonical Correlation Analysis.
-        If None, the lower minimum number of features between seq1 and seq2 is 
-        used. 
-
+        If None, the lower minimum number of features between seq1 and seq2 is
+        used.
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
         Global constraint to restrict admissible paths for DTW calls.
-
     sakoe_chiba_radius : int or None (default: None)
         Radius to be used for Sakoe-Chiba band global constraint.
         If None and `global_constraint` is set to "sakoe_chiba", a radius of
@@ -305,7 +342,6 @@ def cdist_ctw(dataset1, dataset2=None, max_iter=100, n_components=None,
         two. In this case, if `global_constraint` corresponds to no global
         constraint, a `RuntimeWarning` is raised and no global constraint is
         used.
-
     itakura_max_slope : float or None (default: None)
         Maximum slope for the Itakura parallelogram constraint.
         If None and `global_constraint` is set to "itakura", a maximum slope
@@ -315,14 +351,12 @@ def cdist_ctw(dataset1, dataset2=None, max_iter=100, n_components=None,
         two. In this case, if `global_constraint` corresponds to no global
         constraint, a `RuntimeWarning` is raised and no global constraint is
         used.
-
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors. See scikit-learns'
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`__
         for more details.
-
     verbose : int, optional (default=0)
         The verbosity level: if non zero, progress messages are printed.
         Above 50, the output is sent to stdout.
@@ -330,6 +364,8 @@ def cdist_ctw(dataset1, dataset2=None, max_iter=100, n_components=None,
         If it more than 10, all iterations are reported.
         `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`__
         for more details.
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
@@ -341,7 +377,7 @@ def cdist_ctw(dataset1, dataset2=None, max_iter=100, n_components=None,
     >>> cdist_ctw([[1, 2, 2, 3], [1., 2., 3., 4.]])
     array([[0., 1.],
            [1., 0.]])
-    >>> cdist_ctw([[1, 2, 2, 3], [1., 2., 3., 4.]], 
+    >>> cdist_ctw([[1, 2, 2, 3], [1., 2., 3., 4.]],
     ...           [[[1, 1], [2, 2], [3, 3]], [[2, 2], [3, 3], [4, 4], [5, 5]]])
     array([[0.        , 2.44948974],
            [1.        , 1.41421356]])
@@ -352,13 +388,24 @@ def cdist_ctw(dataset1, dataset2=None, max_iter=100, n_components=None,
 
     References
     ----------
-    .. [1] F. Zhou and F. Torre, "Canonical time warping for alignment of 
+    .. [1] F. Zhou and F. Torre, "Canonical time warping for alignment of
        human behavior". NIPS 2009.
     """  # noqa: E501
-    return _cdist_generic(dist_fun=ctw, dataset1=dataset1, dataset2=dataset2,
-                          n_jobs=n_jobs, verbose=verbose,
-                          compute_diagonal=False,
-                          max_iter=max_iter, n_components=n_components,
-                          global_constraint=global_constraint,
-                          sakoe_chiba_radius=sakoe_chiba_radius,
-                          itakura_max_slope=itakura_max_slope)
+    if be is None:
+        be = Backend(dataset1)
+    elif isinstance(be, str):
+        be = Backend(be)
+    return _cdist_generic(
+        dist_fun=ctw,
+        dataset1=dataset1,
+        dataset2=dataset2,
+        n_jobs=n_jobs,
+        verbose=verbose,
+        compute_diagonal=False,
+        max_iter=max_iter,
+        n_components=n_components,
+        global_constraint=global_constraint,
+        sakoe_chiba_radius=sakoe_chiba_radius,
+        itakura_max_slope=itakura_max_slope,
+        be=be,
+    )
