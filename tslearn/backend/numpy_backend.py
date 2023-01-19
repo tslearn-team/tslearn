@@ -34,6 +34,7 @@ class NumPyBackend(BaseBackend):
         self.diag = _np.diag
         self.empty = _np.empty
         self.exp = _np.exp
+        self.eye = _np.eye
         self.floor = _np.floor
         self.full = _np.full
         self.hstack = _np.hstack
