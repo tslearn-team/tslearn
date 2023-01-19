@@ -261,13 +261,21 @@ def test_constrained_paths():
 
 
 def test_dtw_subseq():
-    path, dist = tslearn.metrics.dtw_subsequence_path([2, 3], [1.0, 2.0, 2.0, 3.0, 4.0])
-    np.testing.assert_equal(path, [(0, 2), (1, 3)])
-    np.testing.assert_allclose(dist, 0.0)
+    BACKENDS = ["numpy", "pytorch"]
+    for backend in BACKENDS:
+        be = Backend(backend)
 
-    path, dist = tslearn.metrics.dtw_subsequence_path([1, 4], [1.0, 2.0, 2.0, 3.0, 4.0])
-    np.testing.assert_equal(path, [(0, 2), (1, 3)])
-    np.testing.assert_allclose(dist, np.sqrt(2.0))
+        path, dist = tslearn.metrics.dtw_subsequence_path(
+            [2, 3], [1.0, 2.0, 2.0, 3.0, 4.0], be=be
+        )
+        np.testing.assert_allclose(path, [(0, 2), (1, 3)])
+        np.testing.assert_allclose(dist, 0.0)
+
+        path, dist = tslearn.metrics.dtw_subsequence_path(
+            [1, 4], [1.0, 2.0, 2.0, 3.0, 4.0], be=be
+        )
+        np.testing.assert_allclose(path, [(0, 2), (1, 3)])
+        np.testing.assert_allclose(dist, np.sqrt(2.0))
 
 
 def test_dtw_subseq_path():
