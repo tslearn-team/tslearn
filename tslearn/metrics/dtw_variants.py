@@ -942,7 +942,7 @@ def dtw_path_limited_warping_length(s1, s2, max_length, be=None):
 
 
 @njit()
-def _subsequence_cost_matrix(subseq, longseq):
+def _njit_subsequence_cost_matrix(subseq, longseq):
     l1 = subseq.shape[0]
     l2 = longseq.shape[0]
     cum_sum = numpy.full((l1 + 1, l2 + 1), numpy.inf)
@@ -957,7 +957,26 @@ def _subsequence_cost_matrix(subseq, longseq):
     return cum_sum[1:, 1:]
 
 
-def subsequence_cost_matrix(subseq, longseq):
+def _subsequence_cost_matrix(subseq, longseq, be=None):
+    if be is None:
+        be = Backend(subseq)
+    elif isinstance(be, str):
+        be = Backend(be)
+    l1 = subseq.shape[0]
+    l2 = longseq.shape[0]
+    cum_sum = be.full((l1 + 1, l2 + 1), be.inf)
+    cum_sum[0, :] = 0.0
+
+    for i in range(l1):
+        for j in range(l2):
+            cum_sum[i + 1, j + 1] = _local_squared_dist(subseq[i], longseq[j], be=be)
+            cum_sum[i + 1, j + 1] += min(
+                cum_sum[i, j + 1], cum_sum[i + 1, j], cum_sum[i, j]
+            )
+    return cum_sum[1:, 1:]
+
+
+def subsequence_cost_matrix(subseq, longseq, be=None):
     """Compute the accumulated cost matrix score between a subsequence and
     a reference time series.
 
@@ -965,20 +984,27 @@ def subsequence_cost_matrix(subseq, longseq):
     ----------
     subseq : array, shape = (sz1, d)
         Subsequence time series.
-
     longseq : array, shape = (sz2, d)
         Reference time series
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
     mat : array, shape = (sz1, sz2)
         Accumulated cost matrix.
     """
-    return _subsequence_cost_matrix(subseq, longseq)
+    if be is None:
+        be = Backend(subseq)
+    elif isinstance(be, str):
+        be = Backend(be)
+    if be.is_numpy:
+        return _njit_subsequence_cost_matrix(subseq, longseq)
+    return _subsequence_cost_matrix(subseq, longseq, be=be)
 
 
 @njit()
-def _subsequence_path(acc_cost_mat, idx_path_end):
+def _njit_subsequence_path(acc_cost_mat, idx_path_end):
     sz1, sz2 = acc_cost_mat.shape
     path = [(sz1 - 1, idx_path_end)]
     while path[-1][0] != 0:
@@ -1005,7 +1031,38 @@ def _subsequence_path(acc_cost_mat, idx_path_end):
     return path[::-1]
 
 
-def subsequence_path(acc_cost_mat, idx_path_end):
+def _subsequence_path(acc_cost_mat, idx_path_end, be=None):
+    if be is None:
+        be = Backend(acc_cost_mat)
+    elif isinstance(be, str):
+        be = Backend(be)
+    sz1, sz2 = acc_cost_mat.shape
+    path = [(sz1 - 1, idx_path_end)]
+    while path[-1][0] != 0:
+        i, j = path[-1]
+        if i == 0:
+            path.append((0, j - 1))
+        elif j == 0:
+            path.append((i - 1, 0))
+        else:
+            arr = be.array(
+                [
+                    acc_cost_mat[i - 1][j - 1],
+                    acc_cost_mat[i - 1][j],
+                    acc_cost_mat[i][j - 1],
+                ]
+            )
+            argmin = be.argmin(arr)
+            if argmin == 0:
+                path.append((i - 1, j - 1))
+            elif argmin == 1:
+                path.append((i - 1, j))
+            else:
+                path.append((i, j - 1))
+    return path[::-1]
+
+
+def subsequence_path(acc_cost_mat, idx_path_end, be=None):
     r"""Compute the optimal path through a accumulated cost matrix given the
     endpoint of the sequence.
 
@@ -1016,6 +1073,8 @@ def subsequence_path(acc_cost_mat, idx_path_end):
         sequence.
     idx_path_end: int
         The end position of the matched subsequence in the longer sequence.
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
@@ -1042,10 +1101,16 @@ def subsequence_path(acc_cost_mat, idx_path_end):
     subsequence_cost_matrix: Calculate the required cost matrix
 
     """
-    return _subsequence_path(acc_cost_mat, idx_path_end)
+    if be is None:
+        be = Backend(acc_cost_mat)
+    elif isinstance(be, str):
+        be = Backend(be)
+    if be.is_numpy:
+        return _njit_subsequence_path(acc_cost_mat, idx_path_end)
+    return _subsequence_path(acc_cost_mat, idx_path_end, be=be)
 
 
-def dtw_subsequence_path(subseq, longseq):
+def dtw_subsequence_path(subseq, longseq, be=None):
     r"""Compute sub-sequence Dynamic Time Warping (DTW) similarity measure
     between a (possibly multidimensional) query and a long time series and
     return both the path and the similarity.
@@ -1072,6 +1137,8 @@ def dtw_subsequence_path(subseq, longseq):
         A query time series.
     longseq : array, shape = (sz2, d)
         A reference (supposed to be longer than `subseq`) time series.
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
@@ -1096,12 +1163,16 @@ def dtw_subsequence_path(subseq, longseq):
     subsequence_cost_matrix: Calculate the required cost matrix
     subsequence_path: Calculate a matching path manually
     """
-    subseq = to_time_series(subseq)
-    longseq = to_time_series(longseq)
-    acc_cost_mat = subsequence_cost_matrix(subseq=subseq, longseq=longseq)
-    global_optimal_match = numpy.argmin(acc_cost_mat[-1, :])
-    path = subsequence_path(acc_cost_mat, global_optimal_match)
-    return path, numpy.sqrt(acc_cost_mat[-1, :][global_optimal_match])
+    if be is None:
+        be = Backend(subseq)
+    elif isinstance(be, str):
+        be = Backend(be)
+    subseq = to_time_series(subseq, be=be)
+    longseq = to_time_series(longseq, be=be)
+    acc_cost_mat = subsequence_cost_matrix(subseq=subseq, longseq=longseq, be=be)
+    global_optimal_match = be.argmin(acc_cost_mat[-1, :])
+    path = subsequence_path(acc_cost_mat, global_optimal_match, be=be)
+    return path, be.sqrt(acc_cost_mat[-1, :][global_optimal_match])
 
 
 @njit()
