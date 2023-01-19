@@ -142,23 +142,32 @@ def test_lcss():
 
 
 def test_lcss_path():
-    path, sim = tslearn.metrics.lcss_path([1.0, 2.0, 3.0], [1.0, 2.0, 2.0, 3.0])
-    np.testing.assert_equal(sim, 1.0)
-    np.testing.assert_equal(path, [(0, 1), (1, 2), (2, 3)])
+    BACKENDS = ["numpy", "pytorch"]
+    for backend in BACKENDS:
+        be = Backend(backend)
+        path, sim = tslearn.metrics.lcss_path(
+            [1.0, 2.0, 3.0], [1.0, 2.0, 2.0, 3.0], be=be
+        )
+        np.testing.assert_equal(sim, 1.0)
+        np.testing.assert_equal(path, [(0, 1), (1, 2), (2, 3)])
 
-    path, sim = tslearn.metrics.lcss_path([1.0, 2.0, 3.0], [1.0, 2.0, 2.0, 4.0])
-    np.testing.assert_equal(sim, 1.0)
-    np.testing.assert_equal(path, [(0, 1), (1, 2), (2, 3)])
+        path, sim = tslearn.metrics.lcss_path(
+            [1.0, 2.0, 3.0], [1.0, 2.0, 2.0, 4.0], be=be
+        )
+        np.testing.assert_equal(sim, 1.0)
+        np.testing.assert_equal(path, [(0, 1), (1, 2), (2, 3)])
 
-    path, sim = tslearn.metrics.lcss_path([1.0, 2.0, 3.0], [-2.0, 5.0, 7.0], eps=3)
-    np.testing.assert_equal(round(sim, 2), 0.67)
-    np.testing.assert_equal(path, [(0, 0), (2, 1)])
+        path, sim = tslearn.metrics.lcss_path(
+            [1.0, 2.0, 3.0], [-2.0, 5.0, 7.0], eps=3, be=be
+        )
+        np.testing.assert_equal(round(sim, 2), 0.67)
+        np.testing.assert_equal(path, [(0, 0), (2, 1)])
 
-    path, sim = tslearn.metrics.lcss_path(
-        [1.0, 2.0, 3.0], [1.0, 2.0, 2.0, 2.0, 3.0], eps=0
-    )
-    np.testing.assert_equal(sim, 1.0)
-    np.testing.assert_equal(path, [(0, 0), (1, 3), (2, 4)])
+        path, sim = tslearn.metrics.lcss_path(
+            [1.0, 2.0, 3.0], [1.0, 2.0, 2.0, 2.0, 3.0], eps=0, be=be
+        )
+        np.testing.assert_equal(sim, 1.0)
+        np.testing.assert_equal(path, [(0, 0), (1, 3), (2, 4)])
 
 
 def test_lcss_path_from_metric():
