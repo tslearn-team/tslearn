@@ -125,17 +125,20 @@ def test_ldtw():
 
 
 def test_lcss():
-    sim = tslearn.metrics.lcss([1, 2, 3], [1.0, 2.0, 2.0, 3.0])
-    np.testing.assert_equal(sim, 1.0)
+    BACKENDS = ["numpy", "pytorch"]
+    for backend in BACKENDS:
+        be = Backend(backend)
+        sim = tslearn.metrics.lcss([1, 2, 3], [1.0, 2.0, 2.0, 3.0], be=be)
+        np.testing.assert_equal(sim, 1.0)
 
-    sim = tslearn.metrics.lcss([1, 2, 3], [1.0, 2.0, 2.0, 4.0])
-    np.testing.assert_equal(sim, 1.0)
+        sim = tslearn.metrics.lcss([1, 2, 3], [1.0, 2.0, 2.0, 4.0], be=be)
+        np.testing.assert_equal(sim, 1.0)
 
-    sim = tslearn.metrics.lcss([1, 2, 3], [-2.0, 5.0, 7.0], eps=3)
-    np.testing.assert_equal(round(sim, 2), 0.67)
+        sim = tslearn.metrics.lcss([1, 2, 3], [-2.0, 5.0, 7.0], eps=3, be=be)
+        np.testing.assert_equal(round(sim, 2), 0.67)
 
-    sim = tslearn.metrics.lcss([1, 2, 3], [1.0, 2.0, 2.0, 2.0, 3.0], eps=0)
-    np.testing.assert_equal(sim, 1.0)
+        sim = tslearn.metrics.lcss([1, 2, 3], [1.0, 2.0, 2.0, 2.0, 3.0], eps=0, be=be)
+        np.testing.assert_equal(sim, 1.0)
 
 
 def test_lcss_path():
