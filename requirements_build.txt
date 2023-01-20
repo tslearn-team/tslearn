@@ -1,6 +1,6 @@
 numpy
 numba
 scipy
-scikit-learn<0.24
+scikit-learn
 joblib>=0.12
 h5py
