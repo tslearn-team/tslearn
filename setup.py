@@ -29,7 +29,7 @@ setup(
     long_description_content_type='text/markdown',
     license='BSD-2-Clause',
     classifiers=[
-            "License :: BSD-2-Clause"
+            "License :: OSI Approved :: BSD License"
     ],
     include_dirs=[numpy.get_include()],
     packages=find_packages(),
