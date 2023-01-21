@@ -295,105 +295,110 @@ def test_dtw_subseq_path():
 
 
 def test_masks():
-    sk_mask = tslearn.metrics.sakoe_chiba_mask(4, 4, 1)
-    reference_mask = np.array(
-        [
-            [0.0, 0.0, np.inf, np.inf],
-            [0.0, 0.0, 0.0, np.inf],
-            [np.inf, 0.0, 0.0, 0.0],
-            [np.inf, np.inf, 0.0, 0.0],
-        ]
-    )
-    np.testing.assert_allclose(sk_mask, reference_mask)
+    BACKENDS = ["numpy", "pytorch"]
+    for backend in BACKENDS:
+        be = Backend(backend)
+        sk_mask = tslearn.metrics.sakoe_chiba_mask(4, 4, 1, be=be)
+        reference_mask = be.array(
+            [
+                [0.0, 0.0, be.inf, be.inf],
+                [0.0, 0.0, 0.0, be.inf],
+                [be.inf, 0.0, 0.0, 0.0],
+                [be.inf, be.inf, 0.0, 0.0],
+            ]
+        )
+        np.testing.assert_allclose(sk_mask, reference_mask)
 
-    sk_mask = tslearn.metrics.sakoe_chiba_mask(7, 3, 1)
-    reference_mask = np.array(
-        [
-            [0.0, 0.0, np.inf],
-            [0.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0],
-            [np.inf, 0.0, 0.0],
-        ]
-    )
-    np.testing.assert_allclose(sk_mask, reference_mask)
+        sk_mask = tslearn.metrics.sakoe_chiba_mask(7, 3, 1, be=be)
+        reference_mask = be.array(
+            [
+                [0.0, 0.0, be.inf],
+                [0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0],
+                [be.inf, 0.0, 0.0],
+            ]
+        )
+        np.testing.assert_allclose(sk_mask, reference_mask)
 
-    i_mask = tslearn.metrics.itakura_mask(6, 6)
-    reference_mask = np.array(
-        [
-            [0.0, np.inf, np.inf, np.inf, np.inf, np.inf],
-            [np.inf, 0.0, 0.0, np.inf, np.inf, np.inf],
-            [np.inf, 0.0, 0.0, 0.0, np.inf, np.inf],
-            [np.inf, np.inf, 0.0, 0.0, 0.0, np.inf],
-            [np.inf, np.inf, np.inf, 0.0, 0.0, np.inf],
-            [np.inf, np.inf, np.inf, np.inf, np.inf, 0.0],
-        ]
-    )
-    np.testing.assert_allclose(i_mask, reference_mask)
+        i_mask = tslearn.metrics.itakura_mask(6, 6, be=be)
+        reference_mask = be.array(
+            [
+                [0.0, be.inf, be.inf, be.inf, be.inf, be.inf],
+                [be.inf, 0.0, 0.0, be.inf, be.inf, be.inf],
+                [be.inf, 0.0, 0.0, 0.0, be.inf, be.inf],
+                [be.inf, be.inf, 0.0, 0.0, 0.0, be.inf],
+                [be.inf, be.inf, be.inf, 0.0, 0.0, be.inf],
+                [be.inf, be.inf, be.inf, be.inf, be.inf, 0.0],
+            ]
+        )
+        np.testing.assert_allclose(i_mask, reference_mask)
 
-    # Test masks for different combinations of global_constraints /
-    # sakoe_chiba_radius / itakura_max_slope
-    sz = 10
-    ts0 = np.empty((sz, 1))
-    ts1 = np.empty((sz, 1))
-    mask_no_constraint = tslearn.metrics.dtw_variants.compute_mask(
-        ts0, ts1, global_constraint=0
-    )
-    np.testing.assert_allclose(mask_no_constraint, np.zeros((sz, sz)))
+        # Test masks for different combinations of global_constraints /
+        # sakoe_chiba_radius / itakura_max_slope
+        sz = 10
+        ts0 = be.empty((sz, 1))
+        ts1 = be.empty((sz, 1))
+        mask_no_constraint = tslearn.metrics.dtw_variants.compute_mask(
+            ts0, ts1, global_constraint=0, be=be
+        )
+        np.testing.assert_allclose(mask_no_constraint, be.zeros((sz, sz)))
 
-    mask_itakura = tslearn.metrics.dtw_variants.compute_mask(
-        ts0, ts1, global_constraint=1
-    )
-    mask_itakura_bis = tslearn.metrics.dtw_variants.compute_mask(
-        ts0, ts1, itakura_max_slope=2.0
-    )
-    np.testing.assert_allclose(mask_itakura, mask_itakura_bis)
+        mask_itakura = tslearn.metrics.dtw_variants.compute_mask(
+            ts0, ts1, global_constraint=1, be=be
+        )
+        mask_itakura_bis = tslearn.metrics.dtw_variants.compute_mask(
+            ts0, ts1, itakura_max_slope=2.0, be=be
+        )
+        np.testing.assert_allclose(mask_itakura, mask_itakura_bis)
 
-    mask_sakoe = tslearn.metrics.dtw_variants.compute_mask(
-        ts0, ts1, global_constraint=2
-    )
+        mask_sakoe = tslearn.metrics.dtw_variants.compute_mask(
+            ts0, ts1, global_constraint=2, be=be
+        )
 
-    mask_sakoe_bis = tslearn.metrics.dtw_variants.compute_mask(
-        ts0, ts1, sakoe_chiba_radius=1
-    )
-    np.testing.assert_allclose(mask_sakoe, mask_sakoe_bis)
+        mask_sakoe_bis = tslearn.metrics.dtw_variants.compute_mask(
+            ts0, ts1, sakoe_chiba_radius=1, be=be
+        )
+        np.testing.assert_allclose(mask_sakoe, mask_sakoe_bis)
 
-    np.testing.assert_raises(
-        RuntimeWarning,
-        tslearn.metrics.dtw_variants.compute_mask,
-        ts0,
-        ts1,
-        sakoe_chiba_radius=1,
-        itakura_max_slope=2.0,
-    )
+        np.testing.assert_raises(
+            RuntimeWarning,
+            tslearn.metrics.dtw_variants.compute_mask,
+            ts0,
+            ts1,
+            sakoe_chiba_radius=1,
+            itakura_max_slope=2.0,
+            be=be
+        )
 
-    # Tests for estimators that can set masks through metric_params
-    n, sz, d = 15, 10, 3
-    rng = np.random.RandomState(0)
-    time_series = rng.randn(n, sz, d)
-    estimator1 = tslearn.clustering.TimeSeriesKMeans(
-        metric="dtw",
-        metric_params={"itakura_max_slope": 1.0},
-        max_iter=5,
-        random_state=0,
-    )
-    estimator2 = tslearn.clustering.TimeSeriesKMeans(
-        metric="euclidean", max_iter=5, random_state=0
-    )
-    estimator3 = tslearn.clustering.TimeSeriesKMeans(
-        metric="dtw",
-        metric_params={"sakoe_chiba_radius": 0},
-        max_iter=5,
-        random_state=0,
-    )
-    np.testing.assert_allclose(
-        estimator1.fit(time_series).labels_, estimator2.fit(time_series).labels_
-    )
-    np.testing.assert_allclose(
-        estimator1.fit(time_series).labels_, estimator3.fit(time_series).labels_
-    )
+        # Tests for estimators that can set masks through metric_params
+        n, sz, d = 15, 10, 3
+        rng = np.random.RandomState(0)
+        time_series = rng.randn(n, sz, d)
+        time_series = be.array(time_series)
+        estimator1 = tslearn.clustering.TimeSeriesKMeans(
+            metric="dtw",
+            metric_params={"itakura_max_slope": 1.0},
+            max_iter=5,
+            random_state=0,
+        )
+        estimator2 = tslearn.clustering.TimeSeriesKMeans(
+            metric="euclidean", max_iter=5, random_state=0
+        )
+        estimator3 = tslearn.clustering.TimeSeriesKMeans(
+            metric="dtw",
+            metric_params={"sakoe_chiba_radius": 0},
+            max_iter=5,
+            random_state=0,
+        )
+        np.testing.assert_allclose(
+            estimator1.fit(time_series).labels_, estimator2.fit(time_series).labels_
+        )
+        np.testing.assert_allclose(
+            estimator1.fit(time_series).labels_, estimator3.fit(time_series).labels_
+        )
 
 
 def test_gak():
