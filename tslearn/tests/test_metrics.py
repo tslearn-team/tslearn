@@ -279,16 +279,19 @@ def test_dtw_subseq():
 
 
 def test_dtw_subseq_path():
-    subseq, longseq = [1, 4], [1.0, 2.0, 2.0, 3.0, 4.0]
-    subseq = to_time_series(subseq)
-    longseq = to_time_series(longseq)
-    cost_matrix = tslearn.metrics.subsequence_cost_matrix(subseq, longseq)
+    BACKENDS = ["numpy", "pytorch"]
+    for backend in BACKENDS:
+        be = Backend(backend)
+        subseq, longseq = [1, 4], [1.0, 2.0, 2.0, 3.0, 4.0]
+        subseq = to_time_series(subseq, be=be)
+        longseq = to_time_series(longseq, be=be)
+        cost_matrix = tslearn.metrics.subsequence_cost_matrix(subseq, longseq, be=be)
 
-    path = tslearn.metrics.subsequence_path(cost_matrix, 3)
-    np.testing.assert_equal(path, [(0, 2), (1, 3)])
+        path = tslearn.metrics.subsequence_path(cost_matrix, 3, be=be)
+        np.testing.assert_equal(path, [(0, 2), (1, 3)])
 
-    path = tslearn.metrics.subsequence_path(cost_matrix, 1)
-    np.testing.assert_equal(path, [(0, 0), (1, 1)])
+        path = tslearn.metrics.subsequence_path(cost_matrix, 1, be=be)
+        np.testing.assert_equal(path, [(0, 0), (1, 1)])
 
 
 def test_masks():
