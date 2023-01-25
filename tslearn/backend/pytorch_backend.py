@@ -99,6 +99,10 @@ class PyTorchBackend(BaseBackend):
         return self.array(x, dtype=dtype)
 
     @staticmethod
+    def copy(x):
+        return x.clone()
+
+    @staticmethod
     def from_numpy(x):
         return _torch.from_numpy(x)
 
