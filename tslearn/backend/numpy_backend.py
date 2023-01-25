@@ -66,6 +66,10 @@ class NumPyBackend(BaseBackend):
         return x.astype(dtype)
 
     @staticmethod
+    def copy(x):
+        return x.copy()
+
+    @staticmethod
     def from_numpy(x):
         return x
 

@@ -75,6 +75,7 @@ class Backend(object):
         self.argmin = self.backend.argmin
         self.array = self.backend.array
         self.cast = self.backend.cast
+        self.copy = self.backend.copy
         self.ceil = self.backend.ceil
         self.dbl_max = self.backend.dbl_max
         self.diag = self.backend.diag
