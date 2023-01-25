@@ -14,11 +14,13 @@ from tslearn.utils import (
 )
 
 from .dtw_variants import dtw, dtw_path
-from .soft_dtw_fast import _jacobian_product_sq_euc, _soft_dtw, _soft_dtw_grad
-from .soft_dtw_fast_numba import (
+from .soft_dtw_fast import (
     _njit_jacobian_product_sq_euc,
+    _jacobian_product_sq_euc,
     _njit_soft_dtw,
+    _soft_dtw,
     _njit_soft_dtw_grad,
+    _soft_dtw_grad,
 )
 from .utils import _cdist_generic
 
