@@ -479,13 +479,6 @@ def test_symmetric_cdist():
 
 
 def test_lb_keogh():
-    ts1 = [1, 2, 3, 2, 1]
-    env_low, env_up = tslearn.metrics.lb_envelope(ts1, radius=1)
-    np.testing.assert_allclose(env_low, np.array([[1.0], [1.0], [2.0], [1.0], [1.0]]))
-    np.testing.assert_allclose(env_up, np.array([[2.0], [3.0], [3.0], [3.0], [2.0]]))
-
-
-def test_lb_keogh():
     BACKENDS = ["numpy", "pytorch"]
     for backend in BACKENDS:
         be = Backend(backend)
