@@ -552,19 +552,22 @@ def test_softdtw():
 
 
 def test_dtw_path_with_empty_or_nan_inputs():
-    s1 = np.zeros((3, 10))
-    s2_empty = np.zeros((0, 10))
-    with pytest.raises(ValueError) as excinfo:
-        dtw_path(s1, s2_empty)
-    assert (
-        str(excinfo.value)
-        == "One of the input time series contains only nans or has zero length."
-    )
+    BACKENDS = ["numpy", "pytorch"]
+    for backend in BACKENDS:
+        be = Backend(backend)
+        s1 = be.zeros((3, 10))
+        s2_empty = be.zeros((0, 10))
+        with pytest.raises(ValueError) as excinfo:
+            dtw_path(s1, s2_empty, be=be)
+        assert (
+            str(excinfo.value)
+            == "One of the input time series contains only nans or has zero length."
+        )
 
-    s2_nan = np.full((3, 10), np.nan)
-    with pytest.raises(ValueError) as excinfo:
-        dtw_path(s1, s2_nan)
-    assert (
-        str(excinfo.value)
-        == "One of the input time series contains only nans or has zero length."
-    )
+        s2_nan = be.full((3, 10), be.nan)
+        with pytest.raises(ValueError) as excinfo:
+            dtw_path(s1, s2_nan, be=be)
+        assert (
+            str(excinfo.value)
+            == "One of the input time series contains only nans or has zero length."
+        )
