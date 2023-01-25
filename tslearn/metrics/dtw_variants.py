@@ -1726,7 +1726,7 @@ def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
 
 
 @njit()
-def njit_lb_envelope(time_series, radius):
+def _njit_lb_envelope(time_series, radius):
     sz, d = time_series.shape
     enveloppe_up = numpy.empty((sz, d))
     enveloppe_down = numpy.empty((sz, d))
@@ -1745,7 +1745,30 @@ def njit_lb_envelope(time_series, radius):
     return enveloppe_down, enveloppe_up
 
 
-def lb_envelope(ts, radius=1):
+def _lb_envelope(time_series, radius, be=None):
+    if be is None:
+        be = Backend(time_series)
+    elif isinstance(be, str):
+        be = Backend(be)
+    sz, d = be.shape(time_series)
+    enveloppe_up = be.empty((sz, d))
+    enveloppe_down = be.empty((sz, d))
+
+    for i in range(sz):
+        min_idx = i - radius
+        max_idx = i + radius + 1
+        if min_idx < 0:
+            min_idx = 0
+        if max_idx > sz:
+            max_idx = sz
+        for di in range(d):
+            enveloppe_down[i, di] = be.min(time_series[min_idx:max_idx, di])
+            enveloppe_up[i, di] = be.max(time_series[min_idx:max_idx, di])
+
+    return enveloppe_down, enveloppe_up
+
+
+def lb_envelope(ts, radius=1, be=None):
     r"""Compute time-series envelope as required by LB_Keogh.
 
     LB_Keogh was originally presented in [1]_.
@@ -1759,6 +1782,8 @@ def lb_envelope(ts, radius=1):
         index i will be generated based on
         all observations from the time series at indices comprised between
         i-radius and i+radius).
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
@@ -1793,7 +1818,13 @@ def lb_envelope(ts, radius=1):
     .. [1] Keogh, E. Exact indexing of dynamic time warping. In International
        Conference on Very Large Data Bases, 2002. pp 406-417.
     """
-    return njit_lb_envelope(to_time_series(ts), radius=radius)
+    if be is None:
+        be = Backend(ts)
+    elif isinstance(be, str):
+        be = Backend(be)
+    if be.is_numpy:
+        return _njit_lb_envelope(to_time_series(ts), radius=radius)
+    return _lb_envelope(to_time_series(ts, be=be), radius=radius, be=be)
 
 
 @njit(nogil=True)
