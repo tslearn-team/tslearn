@@ -371,6 +371,41 @@ def njit_accumulated_matrix_from_dist_matrix(dist_matrix, mask):
     return cum_sum[1:, 1:]
 
 
+def accumulated_matrix_from_dist_matrix(dist_matrix, mask, be=None):
+    """Compute the accumulated cost matrix score between two time series using
+    a precomputed distance matrix.
+
+    Parameters
+    ----------
+    dist_matrix : array, shape = (sz1, sz2)
+        Array containing the pairwise distances.
+    mask : array, shape = (sz1, sz2)
+        Mask. Unconsidered cells must have infinite values.
+    be : Backend object or string or None
+        Backend.
+    Returns
+    -------
+    mat : array, shape = (sz1, sz2)
+        Accumulated cost matrix.
+    """
+    if be is None:
+        be = Backend(dist_matrix)
+    elif isinstance(be, str):
+        be = Backend(be)
+    l1, l2 = be.shape(dist_matrix)
+    cum_sum = be.full((l1 + 1, l2 + 1), be.inf)
+    cum_sum[0, 0] = 0.0
+
+    for i in range(l1):
+        for j in range(l2):
+            if be.isfinite(mask[i, j]):
+                cum_sum[i + 1, j + 1] = dist_matrix[i, j]
+                cum_sum[i + 1, j + 1] += min(
+                    cum_sum[i, j + 1], cum_sum[i + 1, j], cum_sum[i, j]
+                )
+    return cum_sum[1:, 1:]
+
+
 def dtw_path_from_metric(
     s1,
     s2=None,
@@ -378,6 +413,7 @@ def dtw_path_from_metric(
     global_constraint=None,
     sakoe_chiba_radius=None,
     itakura_max_slope=None,
+    be=None,
     **kwds
 ):
     r"""Compute Dynamic Time Warping (DTW) similarity measure between
@@ -440,6 +476,9 @@ def dtw_path_from_metric(
         two. In this case, if `global_constraint` corresponds to no global
         constraint, a `RuntimeWarning` is raised and no global constraint is
         used.
+
+    be : Backend object or string or None
+        Backend.
 
     **kwds
         Additional arguments to pass to sklearn pairwise_distances to compute
@@ -506,30 +545,41 @@ def dtw_path_from_metric(
     .. _scipy: https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html
 
     """  # noqa: E501
+    if be is None:
+        be = Backend(s1)
+    elif isinstance(be, str):
+        be = Backend(be)
     if metric == "precomputed":  # Pairwise distance given as input
-        sz1, sz2 = s1.shape
+        sz1, sz2 = be.shape(s1)
         mask = compute_mask(
             sz1,
             sz2,
             GLOBAL_CONSTRAINT_CODE[global_constraint],
             sakoe_chiba_radius,
             itakura_max_slope,
+            be=be,
         )
         dist_mat = s1
     else:
-        s1 = to_time_series(s1, remove_nans=True)
-        s2 = to_time_series(s2, remove_nans=True)
+        s1 = to_time_series(s1, remove_nans=True, be=be)
+        s2 = to_time_series(s2, remove_nans=True, be=be)
         mask = compute_mask(
             s1,
             s2,
             GLOBAL_CONSTRAINT_CODE[global_constraint],
             sakoe_chiba_radius,
             itakura_max_slope,
+            be=be,
         )
         dist_mat = pairwise_distances(s1, s2, metric=metric, **kwds)
 
-    acc_cost_mat = njit_accumulated_matrix_from_dist_matrix(dist_mat, mask)
-    path = _return_path(acc_cost_mat)
+    if be.is_numpy:
+        acc_cost_mat = njit_accumulated_matrix_from_dist_matrix(dist_mat, mask)
+        path = _njit_return_path(acc_cost_mat)
+    else:
+        dist_mat = be.array(dist_mat)
+        acc_cost_mat = accumulated_matrix_from_dist_matrix(dist_mat, mask, be=be)
+        path = _return_path(acc_cost_mat, be=be)
     return path, acc_cost_mat[-1, -1]
 
 
@@ -587,6 +637,9 @@ def dtw(
         two. In this case, if `global_constraint` corresponds to no global
         constraint, a `RuntimeWarning` is raised and no global constraint is
         used.
+
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
