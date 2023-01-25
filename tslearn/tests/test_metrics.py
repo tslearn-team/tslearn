@@ -493,30 +493,41 @@ def test_lb_keogh():
 
 
 def test_dtw_path_from_metric():
-    rng = np.random.RandomState(0)
-    s1, s2 = rng.rand(10, 2), rng.rand(30, 2)
+    BACKENDS = ["numpy", "pytorch"]
+    for backend in BACKENDS:
+        be = Backend(backend)
+        rng = np.random.RandomState(0)
+        s1, s2 = rng.rand(10, 2), rng.rand(30, 2)
+        s1, s2 = be.array(s1), be.array(s2)
 
-    # Use dtw_path as a reference
-    path_ref, dist_ref = tslearn.metrics.dtw_path(s1, s2)
+        # Use dtw_path as a reference
+        path_ref, dist_ref = tslearn.metrics.dtw_path(s1, s2, be=be)
 
-    # Test of using a scipy distance function
-    path, dist = tslearn.metrics.dtw_path_from_metric(s1, s2, metric="sqeuclidean")
-    np.testing.assert_equal(path, path_ref)
-    np.testing.assert_allclose(np.sqrt(dist), dist_ref)
+        # Test of using a scipy distance function
+        path, dist = tslearn.metrics.dtw_path_from_metric(
+            s1, s2, metric="sqeuclidean", be=be
+        )
+        np.testing.assert_equal(path, path_ref)
+        np.testing.assert_allclose(be.sqrt(dist), dist_ref)
 
-    # Test of defining a custom function
-    def sqeuclidean(x, y):
-        return np.sum((x - y) ** 2)
+        # Test of defining a custom function
+        def sqeuclidean(x, y):
+            return np.sum((x - y) ** 2)
 
-    path, dist = tslearn.metrics.dtw_path_from_metric(s1, s2, metric=sqeuclidean)
-    np.testing.assert_equal(path, path_ref)
-    np.testing.assert_allclose(np.sqrt(dist), dist_ref)
+        path, dist = tslearn.metrics.dtw_path_from_metric(
+            s1, s2, metric=sqeuclidean, be=be
+        )
+        np.testing.assert_equal(path, path_ref)
+        np.testing.assert_allclose(be.sqrt(dist), dist_ref)
 
-    # Test of precomputing the distance matrix
-    dist_matrix = cdist(s1, s2, metric="sqeuclidean")
-    path, dist = tslearn.metrics.dtw_path_from_metric(dist_matrix, metric="precomputed")
-    np.testing.assert_equal(path, path_ref)
-    np.testing.assert_allclose(np.sqrt(dist), dist_ref)
+        # Test of precomputing the distance matrix
+        dist_matrix = cdist(s1, s2, metric="sqeuclidean")
+        dist_matrix = be.array(dist_matrix)
+        path, dist = tslearn.metrics.dtw_path_from_metric(
+            dist_matrix, metric="precomputed", be=be
+        )
+        np.testing.assert_equal(path, path_ref)
+        np.testing.assert_allclose(be.sqrt(dist), dist_ref)
 
 
 def test_softdtw():
