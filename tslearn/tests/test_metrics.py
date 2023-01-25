@@ -453,22 +453,29 @@ def test_gak():
 
 
 def test_symmetric_cdist():
-    rng = np.random.RandomState(0)
-    dataset = rng.randn(5, 10, 2)
-    np.testing.assert_allclose(
-        tslearn.metrics.cdist_dtw(dataset, dataset), tslearn.metrics.cdist_dtw(dataset)
-    )
-    np.testing.assert_allclose(
-        tslearn.metrics.cdist_gak(dataset, dataset), tslearn.metrics.cdist_gak(dataset)
-    )
-    np.testing.assert_allclose(
-        tslearn.metrics.cdist_soft_dtw(dataset, dataset),
-        tslearn.metrics.cdist_soft_dtw(dataset),
-    )
-    np.testing.assert_allclose(
-        tslearn.metrics.cdist_soft_dtw_normalized(dataset, dataset),
-        tslearn.metrics.cdist_soft_dtw_normalized(dataset),
-    )
+    BACKENDS = ["numpy", "pytorch"]
+    for backend in BACKENDS:
+        be = Backend(backend)
+        rng = np.random.RandomState(0)
+        dataset = rng.randn(5, 10, 2)
+        dataset = be.array(dataset)
+        np.testing.assert_allclose(
+            tslearn.metrics.cdist_dtw(dataset, dataset, be=be),
+            tslearn.metrics.cdist_dtw(dataset, be=be),
+        )
+        np.testing.assert_allclose(
+            tslearn.metrics.cdist_gak(dataset, dataset, be=be),
+            tslearn.metrics.cdist_gak(dataset, be=be),
+            atol=1e-5,
+        )
+        np.testing.assert_allclose(
+            tslearn.metrics.cdist_soft_dtw(dataset, dataset, be=be),
+            tslearn.metrics.cdist_soft_dtw(dataset, be=be),
+        )
+        np.testing.assert_allclose(
+            tslearn.metrics.cdist_soft_dtw_normalized(dataset, dataset, be=be),
+            tslearn.metrics.cdist_soft_dtw_normalized(dataset, be=be),
+        )
 
 
 def test_lb_keogh():
