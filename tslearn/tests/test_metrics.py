@@ -485,6 +485,20 @@ def test_lb_keogh():
     np.testing.assert_allclose(env_up, np.array([[2.0], [3.0], [3.0], [3.0], [2.0]]))
 
 
+def test_lb_keogh():
+    BACKENDS = ["numpy", "pytorch"]
+    for backend in BACKENDS:
+        be = Backend(backend)
+        ts1 = [1, 2, 3, 2, 1]
+        env_low, env_up = tslearn.metrics.lb_envelope(ts1, radius=1, be=be)
+        np.testing.assert_allclose(
+            env_low, be.array([[1.0], [1.0], [2.0], [1.0], [1.0]])
+        )
+        np.testing.assert_allclose(
+            env_up, be.array([[2.0], [3.0], [3.0], [3.0], [2.0]])
+        )
+
+
 def test_dtw_path_from_metric():
     rng = np.random.RandomState(0)
     s1, s2 = rng.rand(10, 2), rng.rand(30, 2)
