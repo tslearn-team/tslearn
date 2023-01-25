@@ -72,6 +72,7 @@ def _gak_gram(s1, s2, sigma=1.0, be=None):
     elif isinstance(be, str):
         be = Backend(be)
     gram = -cdist(s1, s2, "sqeuclidean") / (2 * sigma**2)
+    gram = be.array(gram)
     gram -= be.log(2 - be.exp(gram))
     return be.exp(gram)
 
@@ -268,9 +269,10 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.0, n_jobs=None, verbose=0, be=Non
             delayed(unnormalized_gak)(dataset2[j], dataset2[j], sigma=sigma, be=be)
             for j in range(len(dataset2))
         )
-        diagonal_left = be.diag(1.0 / be.sqrt(diagonal_left))
-        diagonal_right = be.diag(1.0 / be.sqrt(diagonal_right))
-    return (diagonal_left.dot(unnormalized_matrix)).dot(diagonal_right)
+        diagonal_left = be.diag(1.0 / be.sqrt(be.array(diagonal_left)))
+        diagonal_right = be.diag(1.0 / be.sqrt(be.array(diagonal_right)))
+    # return (diagonal_left.dot(unnormalized_matrix)).dot(diagonal_right)
+    return diagonal_left @ unnormalized_matrix @ diagonal_right
 
 
 def sigma_gak(dataset, n_samples=100, random_state=None, be=None):
@@ -600,16 +602,20 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0, be=None):
         be = Backend(dataset1)
     elif isinstance(be, str):
         be = Backend(be)
-    dataset1 = to_time_series_dataset(dataset1, dtype=be.float64)
+    dataset1 = to_time_series_dataset(dataset1, dtype=be.float64, be=be)
+
     self_similarity = False
     if dataset2 is None:
         dataset2 = dataset1
         self_similarity = True
     else:
-        dataset2 = to_time_series_dataset(dataset2, dtype=be.float64)
+        dataset2 = to_time_series_dataset(dataset2, dtype=be.float64, be=be)
+
     dists = be.empty((dataset1.shape[0], dataset2.shape[0]))
+
     equal_size_ds1 = check_equal_size(dataset1, be=be)
     equal_size_ds2 = check_equal_size(dataset2, be=be)
+
     for i, ts1 in enumerate(dataset1):
         if equal_size_ds1:
             ts1_short = ts1
@@ -739,7 +745,7 @@ class SoftDTW:
         self.R_ = self.be.zeros((m + 2, n + 2), dtype=self.be.float64)
         self.computed = False
 
-        self.gamma = self.be.float64(gamma)
+        self.gamma = self.be.array(gamma, dtype=be.float64)
 
     def compute(self):
         """Compute soft-DTW by dynamic programming.

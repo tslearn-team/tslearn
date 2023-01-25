@@ -65,7 +65,11 @@ def _soft_dtw(D, R, gamma, be=None):
         for j in range(1, n + 1):
             # D is indexed starting from 0.
             R[i, j] = D[i - 1, j - 1] + _softmin3(
-                R[i - 1, j], R[i - 1, j - 1], R[i, j - 1], gamma, be=be
+                be.copy(R[i - 1, j]),
+                be.copy(R[i - 1, j - 1]),
+                be.copy(R[i, j - 1]),
+                gamma,
+                be=be,
             )
 
 

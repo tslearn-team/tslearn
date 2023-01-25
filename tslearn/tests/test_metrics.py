@@ -370,7 +370,7 @@ def test_masks():
             ts1,
             sakoe_chiba_radius=1,
             itakura_max_slope=2.0,
-            be=be
+            be=be,
         )
 
         # Tests for estimators that can set masks through metric_params
@@ -402,40 +402,54 @@ def test_masks():
 
 
 def test_gak():
-    # GAK
-    g = tslearn.metrics.cdist_gak([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], sigma=2.0)
-    np.testing.assert_allclose(
-        g, np.array([[1.0, 0.656297], [0.656297, 1.0]]), atol=1e-5
-    )
-    g = tslearn.metrics.cdist_gak(
-        [[1, 2, 2], [1.0, 2.0, 3.0, 4.0]],
-        [[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]],
-        sigma=2.0,
-    )
-    np.testing.assert_allclose(
-        g, np.array([[0.710595, 0.297229], [0.656297, 1.0]]), atol=1e-5
-    )
+    BACKENDS = ["numpy", "pytorch"]
+    for backend in BACKENDS:
+        be = Backend(backend)
+        # GAK
+        g = tslearn.metrics.cdist_gak(
+            [[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], sigma=2.0, be=be
+        )
+        np.testing.assert_allclose(
+            g, be.array([[1.0, 0.656297], [0.656297, 1.0]]), atol=1e-5
+        )
+        g = tslearn.metrics.cdist_gak(
+            [[1, 2, 2], [1.0, 2.0, 3.0, 4.0]],
+            [[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]],
+            sigma=2.0,
+            be=be,
+        )
+        np.testing.assert_allclose(
+            g, be.array([[0.710595, 0.297229], [0.656297, 1.0]]), atol=1e-5
+        )
 
-    # soft-DTW
-    d = tslearn.metrics.cdist_soft_dtw([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], gamma=0.01)
-    np.testing.assert_allclose(d, np.array([[-0.010986, 1.0], [1.0, 0.0]]), atol=1e-5)
-    d = tslearn.metrics.cdist_soft_dtw(
-        [[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]],
-        [[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]],
-        gamma=0.01,
-    )
-    np.testing.assert_allclose(d, np.array([[-0.010986, 1.0], [1.0, 0.0]]), atol=1e-5)
+        # soft-DTW
+        d = tslearn.metrics.cdist_soft_dtw(
+            [[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], gamma=0.01, be=be
+        )
+        np.testing.assert_allclose(
+            d, be.array([[-0.010986, 1.0], [1.0, 0.0]]), atol=1e-5
+        )
+        d = tslearn.metrics.cdist_soft_dtw(
+            [[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]],
+            [[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]],
+            gamma=0.01,
+            be=be,
+        )
+        np.testing.assert_allclose(
+            d, be.array([[-0.010986, 1.0], [1.0, 0.0]]), atol=1e-5
+        )
 
-    n, sz, d = 15, 10, 3
-    rng = np.random.RandomState(0)
-    time_series = rng.randn(n, sz, d)
-    dists = tslearn.metrics.cdist_soft_dtw_normalized(time_series)
-    np.testing.assert_equal(dists >= 0.0, True)
+        n, sz, d = 15, 10, 3
+        rng = np.random.RandomState(0)
+        time_series = rng.randn(n, sz, d)
+        time_series = be.array(time_series)
+        dists = tslearn.metrics.cdist_soft_dtw_normalized(time_series, be=be)
+        assert be.all(dists >= 0)
 
-    v1 = rng.randn(n, 1)
-    v2 = rng.randn(n, 1)
-    sqeuc = tslearn.metrics.SquaredEuclidean(v1.flat, v2.flat)
-    np.testing.assert_allclose(sqeuc.compute(), cdist(v1, v2, metric="sqeuclidean"))
+        v1 = rng.randn(n, 1)
+        v2 = rng.randn(n, 1)
+        sqeuc = tslearn.metrics.SquaredEuclidean(v1.flat, v2.flat, be=be)
+        np.testing.assert_allclose(sqeuc.compute(), cdist(v1, v2, metric="sqeuclidean"))
 
 
 def test_symmetric_cdist():
