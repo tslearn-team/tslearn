@@ -729,11 +729,11 @@ class SoftDTW:
         self.R_: array, shape = [m + 2, n + 2]
             Accumulated cost matrix (stored after calling `compute`).
         """
+        if be is None:
+            be = Backend(D)
+        elif isinstance(be, str):
+            be = Backend(be)
         self.be = be
-        if self.be is None:
-            self.be = Backend(D)
-        elif isinstance(self.be, str):
-            self.be = Backend(self.be)
         if hasattr(D, "compute"):
             self.D = D.compute()
         else:
@@ -747,7 +747,7 @@ class SoftDTW:
         self.R_ = self.be.zeros((m + 2, n + 2), dtype=self.be.float64)
         self.computed = False
 
-        self.gamma = self.be.array(gamma, dtype=be.float64)
+        self.gamma = self.be.array(gamma, dtype=self.be.float64)
 
     def compute(self):
         """Compute soft-DTW by dynamic programming.
