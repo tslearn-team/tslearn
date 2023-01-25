@@ -28,7 +28,6 @@ class PyTorchBackend(BaseBackend):
         self.arange = _torch.arange
         self.argmax = _torch.argmax
         self.argmin = _torch.argmin
-        self.array = _torch.tensor
         self.dbl_max = _torch.finfo(_torch.double).max
         self.ceil = _torch.ceil
         self.diag = _torch.diag
@@ -77,7 +76,6 @@ class PyTorchBackend(BaseBackend):
         if _torch.is_tensor(val):
             if dtype is None or val.dtype == dtype:
                 return val.clone()
-
             return self.cast(val, dtype=dtype)
 
         elif isinstance(val, _np.ndarray):
