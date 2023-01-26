@@ -1,4 +1,18 @@
-"""The PyTorch backend."""
+"""The PyTorch backend.
+
+Several backend functions are inspired from a python package about Machine Learning
+in Riemannian manifolds named geomstats [JMLR:v21:19-027], also implementing several backends.
+
+References
+----------------
+[JMLR:v21:19-027] Nina Miolane, Nicolas Guigui, Alice Le Brigant, Johan Mathe,
+Benjamin Hou, Yann Thanwerdas, Stefan Heyder, Olivier Peltre, Niklas Koep, Hadi Zaatiti,
+Hatem Hajri, Yann Cabanes, Thomas Gerald, Paul Chauchat, Christian Shewmake, Daniel Brooks,
+Bernhard Kainz, Claire Donnat, Susan Holmes and Xavier Pennec.
+Geomstats:  A Python Package for Riemannian Geometry in Machine Learning,
+Journal of Machine Learning Research, 2020, volume 21, number 223, pages 1-9,
+http://jmlr.org/papers/v21/19-027.html, https://github.com/geomstats/geomstats/
+"""
 
 import numpy as _np
 import torch as _torch
