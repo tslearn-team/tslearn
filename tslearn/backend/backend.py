@@ -1,5 +1,19 @@
 """The generic backend."""
 
+from tslearn.backend.numpy_backend import NumPyBackend
+
+try:
+    import torch
+
+    from tslearn.backend.pytorch_backend import PyTorchBackend
+except ImportError:
+
+    class PyTorchBackend:
+        def __init__(self):
+            raise ValueError(
+                "Could not use pytorch backend since torch is not installed"
+            )
+
 
 def select_backend(data):
     """Select backend.
@@ -20,11 +34,7 @@ def select_backend(data):
         backend equals PytorchBackend().
     """
     if "torch" in f"{type(data)}" or "torch" in f"{data}".lower():
-        from tslearn.backend.pytorch_backend import PyTorchBackend
-
         return PyTorchBackend()
-    from tslearn.backend.numpy_backend import NumPyBackend
-
     return NumPyBackend()
 
 
