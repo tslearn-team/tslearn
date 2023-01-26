@@ -48,6 +48,8 @@ def _softmin3(a, b, c, gamma, be=None):
     b : float64
     c : float64
     gamma : float64
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
@@ -106,6 +108,8 @@ def _soft_dtw(D, R, gamma, be=None):
     D : array-like, shape=[m, n], dtype=float64
     R : array-like, shape=[m+2, n+2], dtype=float64
     gamma : float64
+    be : Backend object or string or None
+        Backend.
     """
     if be is None:
         be = Backend(D)
@@ -174,6 +178,8 @@ def _soft_dtw_grad(D, R, E, gamma, be=None):
     R : array-like, shape=[m+2, n+2], dtype=float64
     E : array-like, shape=[m+2, n+2], dtype=float64
     gamma : float64
+    be : Backend object or string or None
+        Backend.
     """
     if be is None:
         be = Backend(D)
