@@ -15,6 +15,29 @@ except ImportError:
             )
 
 
+def instanciate_backend(*args):
+    """Select backend.
+
+    Parameter
+    ---------
+    *args : Input arguments can be Backend instance or string or array or None
+        Arguments used to define the backend instance.
+
+    Returns
+    -------
+    backend : Backend instance
+        The backend instance.
+    """
+    for arg in args:
+        if isinstance(arg, Backend):
+            return arg
+        if "numpy" in f"{type(arg)}" or "numpy" in f"{arg}".lower():
+            return Backend("numpy")
+        if "torch" in f"{type(arg)}" or "torch" in f"{arg}".lower():
+            return Backend("pytorch")
+    return Backend("numpy")
+
+
 def select_backend(data):
     """Select backend.
 

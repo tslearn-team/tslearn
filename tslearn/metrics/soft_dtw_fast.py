@@ -5,7 +5,8 @@
 
 import numpy as np
 from numba import njit, prange
-from tslearn.backend.backend import Backend
+
+from tslearn.backend.backend import instanciate_backend
 
 DBL_MAX = np.finfo("double").max
 
@@ -55,10 +56,8 @@ def _softmin3(a, b, c, gamma, be=None):
     -------
     softmin_value : float64
     """
-    if be is None:
-        be = Backend(a)
-    elif isinstance(be, str):
-        be = Backend(be)
+    be = instanciate_backend(be, a)
+
     a /= -gamma
     b /= -gamma
     c /= -gamma
@@ -111,10 +110,7 @@ def _soft_dtw(D, R, gamma, be=None):
     be : Backend object or string or None
         Backend.
     """
-    if be is None:
-        be = Backend(D)
-    elif isinstance(be, str):
-        be = Backend(be)
+    be = instanciate_backend(be, D)
 
     m = D.shape[0]
     n = D.shape[1]
@@ -181,10 +177,7 @@ def _soft_dtw_grad(D, R, E, gamma, be=None):
     be : Backend object or string or None
         Backend.
     """
-    if be is None:
-        be = Backend(D)
-    elif isinstance(be, str):
-        be = Backend(be)
+    be = instanciate_backend(be, D)
 
     m = D.shape[0] - 1
     n = D.shape[1] - 1
