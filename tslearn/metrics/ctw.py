@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.cross_decomposition import CCA
 
-from tslearn.backend import Backend
+from tslearn.backend import instanciate_backend
 
 from ..utils import to_time_series
 from .dtw_variants import dtw_path
@@ -24,10 +24,7 @@ def _get_warp_matrices(warp_path, be):
     two 2D matrices of size m x T (m = number of step to match the two
         sequences
     """
-    if be is None:
-        be = Backend(warp_path[0][0])
-    elif isinstance(be, str):
-        be = Backend(be)
+    be = instanciate_backend(be, warp_path[0][0])
     # number of indices for the alignment
     m = len(warp_path)
     # number of frame of each sequence
@@ -139,10 +136,7 @@ def ctw_path(
     .. [1] F. Zhou and F. Torre, "Canonical time warping for alignment of
        human behavior". NIPS 2009.
     """
-    if be is None:
-        be = Backend(s1)
-    elif isinstance(be, str):
-        be = Backend(be)
+    be = instanciate_backend(be, s1)
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
     s1, s2 = be.array(s1, dtype=be.float64), be.array(s2, dtype=be.float64)
@@ -277,10 +271,7 @@ def ctw(
     .. [1] F. Zhou and F. Torre, "Canonical time warping for alignment of
        human behavior". NIPS 2009.
     """
-    if be is None:
-        be = Backend(s1)
-    elif isinstance(be, str):
-        be = Backend(be)
+    be = instanciate_backend(be, s1)
     return ctw_path(
         s1=s1,
         s2=s2,
@@ -391,10 +382,7 @@ def cdist_ctw(
     .. [1] F. Zhou and F. Torre, "Canonical time warping for alignment of
        human behavior". NIPS 2009.
     """  # noqa: E501
-    if be is None:
-        be = Backend(dataset1)
-    elif isinstance(be, str):
-        be = Backend(be)
+    be = instanciate_backend(be, dataset1)
     return _cdist_generic(
         dist_fun=ctw,
         dataset1=dataset1,

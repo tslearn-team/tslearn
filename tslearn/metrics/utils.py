@@ -1,6 +1,6 @@
 from joblib import Parallel, delayed
 
-from tslearn.backend import Backend
+from tslearn.backend import instanciate_backend
 from tslearn.utils import to_time_series_dataset
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
@@ -64,10 +64,7 @@ def _cdist_generic(
     cdist : numpy.ndarray
         Cross-similarity matrix
     """  # noqa: E501
-    if be is None:
-        be = Backend(dataset1)
-    elif isinstance(be, str):
-        be = Backend(be)
+    be = instanciate_backend(be, dataset1)
     dataset1 = to_time_series_dataset(dataset1, dtype=dtype, be=be)
 
     if dataset2 is None:

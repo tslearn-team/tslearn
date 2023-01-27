@@ -5,7 +5,7 @@ from scipy.spatial.distance import cdist, pdist
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.utils import check_random_state
 
-from tslearn.backend import Backend
+from tslearn.backend import Backend, instanciate_backend
 from tslearn.utils import (
     check_equal_size,
     to_time_series,
@@ -15,11 +15,11 @@ from tslearn.utils import (
 
 from .dtw_variants import dtw, dtw_path
 from .soft_dtw_fast import (
-    _njit_jacobian_product_sq_euc,
     _jacobian_product_sq_euc,
+    _njit_jacobian_product_sq_euc,
     _njit_soft_dtw,
-    _soft_dtw,
     _njit_soft_dtw_grad,
+    _soft_dtw,
     _soft_dtw_grad,
 )
 from .utils import _cdist_generic
@@ -32,10 +32,7 @@ VARIABLE_LENGTH_METRICS = ["dtw", "gak", "softdtw", "sax"]
 
 
 def _gak(s1, s2, gram, be=None):
-    if be is None:
-        be = Backend(gram)
-    elif isinstance(be, str):
-        be = Backend(be)
+    be = instanciate_backend(be, s1)
     l1 = s1.shape[0]
     l2 = s2.shape[0]
 
@@ -69,10 +66,7 @@ def _njit_gak(s1, s2, gram):
 
 
 def _gak_gram(s1, s2, sigma=1.0, be=None):
-    if be is None:
-        be = Backend(s1)
-    elif isinstance(be, str):
-        be = Backend(be)
+    be = instanciate_backend(be, s1)
     gram = -cdist(s1, s2, "sqeuclidean") / (2 * sigma**2)
     gram = be.array(gram)
     gram -= be.log(2 - be.exp(gram))
@@ -123,10 +117,7 @@ def unnormalized_gak(s1, s2, sigma=1.0, be=None):
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """
-    if be is None:
-        be = Backend(s1)
-    elif isinstance(be, str):
-        be = Backend(be)
+    be = instanciate_backend(be, s1)
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
 
@@ -178,10 +169,7 @@ def gak(s1, s2, sigma=1.0, be=None):  # TODO: better doc (formula for the kernel
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """
-    if be is None:
-        be = Backend(s1)
-    elif isinstance(be, str):
-        be = Backend(be)
+    be = instanciate_backend(be, s1)
     denom = be.sqrt(
         unnormalized_gak(s1, s1, sigma=sigma, be=be)
         * unnormalized_gak(s2, s2, sigma=sigma, be=be)
@@ -242,10 +230,7 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.0, n_jobs=None, verbose=0, be=Non
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """  # noqa: E501
-    if be is None:
-        be = Backend(dataset1)
-    elif isinstance(be, str):
-        be = Backend(be)
+    be = instanciate_backend(be, dataset1)
 
     unnormalized_matrix = _cdist_generic(
         dist_fun=unnormalized_gak,
@@ -316,10 +301,7 @@ def sigma_gak(dataset, n_samples=100, random_state=None, be=None):
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """
-    if be is None:
-        be = Backend(dataset)
-    elif isinstance(be, str):
-        be = Backend(be)
+    be = instanciate_backend(be, dataset)
 
     random_state = check_random_state(random_state)
     dataset = to_time_series_dataset(dataset, be=be)
@@ -376,10 +358,7 @@ def gamma_soft_dtw(dataset, n_samples=100, random_state=None, be=None):
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """
-    if be is None:
-        be = Backend(dataset)
-    elif isinstance(be, str):
-        be = Backend(be)
+    be = instanciate_backend(be, dataset)
     return (
         2.0
         * sigma_gak(
@@ -446,10 +425,7 @@ def soft_dtw(ts1, ts2, gamma=1.0, be=None):
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
        Time-Series," ICML 2017.
     """
-    if be is None:
-        be = Backend(ts1)
-    elif isinstance(be, str):
-        be = Backend(be)
+    be = instanciate_backend(be, ts1)
     if gamma == 0.0:
         return dtw(ts1, ts2, be=be) ** 2
     return SoftDTW(
@@ -521,10 +497,7 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None):
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
        Time-Series," ICML 2017.
     """
-    if be is None:
-        be = Backend(ts1)
-    elif isinstance(be, str):
-        be = Backend(be)
+    be = instanciate_backend(be, ts1)
     if gamma == 0.0:
         path, dist = dtw_path(ts1, ts2, be=be)
         dist_sq = dist**2
@@ -600,10 +573,7 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0, be=None):
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
        Time-Series," ICML 2017.
     """
-    if be is None:
-        be = Backend(dataset1)
-    elif isinstance(be, str):
-        be = Backend(be)
+    be = instanciate_backend(be, dataset1)
     dataset1 = to_time_series_dataset(dataset1, dtype=be.float64, be=be)
 
     self_similarity = False
@@ -703,10 +673,7 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None):
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
        Time-Series," ICML 2017.
     """
-    if be is None:
-        be = Backend(dataset1)
-    elif isinstance(be, str):
-        be = Backend(be)
+    be = instanciate_backend(be, dataset1)
     dists = cdist_soft_dtw(dataset1, dataset2=dataset2, gamma=gamma, be=be)
     d_ii = be.diag(dists)
     dists -= 0.5 * (be.reshape(d_ii, (-1, 1)) + be.reshape(d_ii, (1, -1)))
@@ -729,10 +696,7 @@ class SoftDTW:
         self.R_: array, shape = [m + 2, n + 2]
             Accumulated cost matrix (stored after calling `compute`).
         """
-        if be is None:
-            be = Backend(D)
-        elif isinstance(be, str):
-            be = Backend(be)
+        be = instanciate_backend(be, D)
         self.be = be
         if hasattr(D, "compute"):
             self.D = D.compute()
@@ -819,11 +783,7 @@ class SquaredEuclidean:
                [1., 0., 1., 4.],
                [4., 1., 0., 1.]])
         """
-        self.be = be
-        if self.be is None:
-            self.be = Backend(X)
-        elif isinstance(self.be, str):
-            self.be = Backend(self.be)
+        self.be = instanciate_backend(be, X)
         self.X = self.be.cast(to_time_series(X), dtype=self.be.float64)
         self.Y = self.be.cast(to_time_series(Y), dtype=self.be.float64)
 
