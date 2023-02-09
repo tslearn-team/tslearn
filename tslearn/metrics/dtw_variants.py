@@ -2,7 +2,6 @@ import warnings
 
 import numpy
 from numba import njit, prange
-from sklearn.metrics.pairwise import pairwise_distances
 
 from tslearn.backend import instanciate_backend
 from tslearn.utils import to_time_series
@@ -550,7 +549,7 @@ def dtw_path_from_metric(
             itakura_max_slope,
             be=be,
         )
-        dist_mat = pairwise_distances(s1, s2, metric=metric, **kwds)
+        dist_mat = be.pairwise_distances(s1, s2, metric=metric, **kwds)
 
     if be.is_numpy:
         acc_cost_mat = njit_accumulated_matrix_from_dist_matrix(dist_mat, mask)
@@ -2498,7 +2497,7 @@ def lcss_path_from_metric(
             itakura_max_slope,
             be=be,
         )
-        dist_mat = be.array(pairwise_distances(s1, s2, metric=metric, **kwds))
+        dist_mat = be.array(be.pairwise_distances(s1, s2, metric=metric, **kwds))
 
     if be.is_numpy:
         acc_cost_mat = njit_lcss_accumulated_matrix_from_dist_matrix(

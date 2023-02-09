@@ -202,7 +202,7 @@ def test_lcss_path_from_metric():
 
             # Test of defining a custom function
             def sqeuclidean(x, y):
-                return np.sum((x - y) ** 2)
+                return be.sum((x - y) ** 2)
 
             path, sim = tslearn.metrics.lcss_path_from_metric(
                 s1, s2, metric=sqeuclidean, be=be
@@ -452,6 +452,17 @@ def test_gak():
         np.testing.assert_allclose(sqeuc.compute(), cdist(v1, v2, metric="sqeuclidean"))
 
 
+def test_gamma_soft_dtw():
+    BACKENDS = ["numpy", "pytorch"]
+    for backend in BACKENDS:
+        be = Backend(backend)
+        dataset = be.array([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]])
+        gamma = tslearn.metrics.gamma_soft_dtw(
+            dataset=dataset, n_samples=200, random_state=0, be=be
+        )
+        np.testing.assert_allclose(gamma, 8.0)
+
+
 def test_symmetric_cdist():
     BACKENDS = ["numpy", "pytorch"]
     for backend in BACKENDS:
@@ -512,7 +523,7 @@ def test_dtw_path_from_metric():
 
         # Test of defining a custom function
         def sqeuclidean(x, y):
-            return np.sum((x - y) ** 2)
+            return be.sum((x - y) ** 2)
 
         path, dist = tslearn.metrics.dtw_path_from_metric(
             s1, s2, metric=sqeuclidean, be=be
