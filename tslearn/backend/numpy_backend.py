@@ -15,6 +15,8 @@ http://jmlr.org/papers/v21/19-027.html, https://github.com/geomstats/geomstats/
 """
 
 import numpy as _np
+from scipy.spatial.distance import cdist, pdist
+from sklearn.metrics.pairwise import euclidean_distances, pairwise_distances
 
 from .base_backend import BaseBackend
 
@@ -43,6 +45,7 @@ class NumPyBackend(BaseBackend):
         self.argmax = _np.argmax
         self.argmin = _np.argmin
         self.array = _np.array
+        self.cdist = cdist
         self.ceil = _np.ceil
         self.dbl_max = _np.finfo("double").max
         self.diag = _np.diag
@@ -62,6 +65,9 @@ class NumPyBackend(BaseBackend):
         self.median = _np.median
         self.min = _np.min
         self.nan = _np.nan
+        self.pairwise_distances = pairwise_distances
+        self.pairwise_euclidean_distances = euclidean_distances
+        self.pdist = pdist
         self.reshape = _np.reshape
         self.round = _np.round
         self.shape = _np.shape

@@ -1,11 +1,9 @@
 import numpy as np
 from joblib import Parallel, delayed
 from numba import njit
-from scipy.spatial.distance import cdist, pdist
-from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.utils import check_random_state
 
-from tslearn.backend import Backend, instanciate_backend
+from tslearn.backend import instanciate_backend
 from tslearn.utils import (
     check_equal_size,
     to_time_series,
@@ -67,7 +65,7 @@ def _njit_gak(s1, s2, gram):
 
 def _gak_gram(s1, s2, sigma=1.0, be=None):
     be = instanciate_backend(be, s1)
-    gram = -cdist(s1, s2, "sqeuclidean") / (2 * sigma**2)
+    gram = -be.cdist(s1, s2, "sqeuclidean") / (2 * sigma**2)
     gram = be.array(gram)
     gram -= be.log(2 - be.exp(gram))
     return be.exp(gram)
@@ -258,7 +256,6 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.0, n_jobs=None, verbose=0, be=Non
         )
         diagonal_left = be.diag(1.0 / be.sqrt(be.array(diagonal_left)))
         diagonal_right = be.diag(1.0 / be.sqrt(be.array(diagonal_right)))
-    # return (diagonal_left.dot(unnormalized_matrix)).dot(diagonal_right)
     return diagonal_left @ unnormalized_matrix @ diagonal_right
 
 
@@ -313,7 +310,7 @@ def sigma_gak(dataset, n_samples=100, random_state=None, be=None):
     else:
         replace = False
     sample_indices = random_state.choice(n_ts * sz, size=n_samples, replace=replace)
-    dists = pdist(
+    dists = be.pdist(
         dataset[:, :sz, :].reshape((-1, d))[sample_indices],
         metric="euclidean",
     )
@@ -795,7 +792,7 @@ class SquaredEuclidean:
         D: array, shape = [m, n]
             Distance matrix.
         """
-        return euclidean_distances(self.X, self.Y, squared=True)
+        return self.be.pairwise_euclidean_distances(self.X, self.Y) ** 2
 
     def jacobian_product(self, E):
         """Compute the product between the Jacobian

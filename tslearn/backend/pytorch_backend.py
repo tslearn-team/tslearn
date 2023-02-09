@@ -61,9 +61,9 @@ class PyTorchBackend(BaseBackend):
         self.median = _torch.median
         self.min = _torch.min
         self.nan = _torch.nan
+        self.pairwise_euclidean_distances = _torch.cdist
         self.reshape = _torch.reshape
         self.round = _torch.round
-        self.sqrt = _torch.sqrt
         self.sum = _torch.sum
         self.vstack = _torch.vstack
         self.zeros = _torch.zeros
@@ -111,6 +111,16 @@ class PyTorchBackend(BaseBackend):
         return self.array(x, dtype=dtype)
 
     @staticmethod
+    def cdist(x, y, metric="euclidean", p=None):
+        if metric == "euclidean":
+            return _torch.cdist(x, y)
+        if metric == "sqeuclidean":
+            return _torch.cdist(x, y) ** 2
+        if metric == "minkowski":
+            return _torch.cdist(x, y, p=p)
+        raise ValueError(f"Metric {metric} not implemented in PyTorch backend.")
+
+    @staticmethod
     def copy(x):
         return x.clone()
 
@@ -142,10 +152,41 @@ class PyTorchBackend(BaseBackend):
     def ndim(x):
         return x.dim()
 
+    @staticmethod
+    def pairwise_distances(X, Y=None, metric="euclidean"):
+        if Y is None:
+            Y = X
+        if metric == "euclidean":
+            return _torch.cdist(X, Y)
+        if metric == "sqeuclidean":
+            return _torch.cdist(X, Y) ** 2
+        if callable(metric):
+            distance_matrix = _torch.zeros(X.shape[0], Y.shape[0])
+            for i in range(X.shape[0]):
+                for j in range(Y.shape[0]):
+                    distance_matrix[i, j] = metric(X[i, ...], Y[j, ...])
+            return distance_matrix
+        raise ValueError(f"Metric {metric} not implemented in PyTorch backend.")
+
+    @staticmethod
+    def pdist(x, metric="euclidean", p=None):
+        if metric == "euclidean":
+            return _torch.pdist(x)
+        if metric == "sqeuclidean":
+            return _torch.pdist(x) ** 2
+        if metric == "minkowski":
+            return _torch.pdist(x, p=p)
+        raise ValueError(f"Metric {metric} not implemented in PyTorch backend.")
+
     def shape(self, data):
         if not self.is_array(data):
-            val = self.array(data)
+            data = self.array(data)
         return tuple(_torch.Tensor.size(data))
+
+    def sqrt(self, x, out=None):
+        if not self.is_array(x):
+            x = self.array(x)
+        return _torch.sqrt(x, out=out)
 
     @staticmethod
     def to_numpy(x):

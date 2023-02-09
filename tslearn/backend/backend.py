@@ -108,8 +108,9 @@ class Backend(object):
         self.argmin = self.backend.argmin
         self.array = self.backend.array
         self.cast = self.backend.cast
-        self.copy = self.backend.copy
+        self.cdist = self.backend.cdist
         self.ceil = self.backend.ceil
+        self.copy = self.backend.copy
         self.dbl_max = self.backend.dbl_max
         self.diag = self.backend.diag
         self.empty = self.backend.empty
@@ -134,6 +135,9 @@ class Backend(object):
         self.min = self.backend.min
         self.nan = self.backend.nan
         self.ndim = self.backend.ndim
+        self.pairwise_distances = self.backend.pairwise_distances
+        self.pairwise_euclidean_distances = self.backend.pairwise_euclidean_distances
+        self.pdist = self.backend.pdist
         self.reshape = self.backend.reshape
         self.round = self.backend.round
         self.shape = self.backend.shape
