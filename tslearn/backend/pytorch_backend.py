@@ -225,6 +225,7 @@ class PyTorchRandom:
     def __init__(self):
         self.rand = _torch.rand
         self.randint = _torch.randint
+        self.randn = _torch.randn
 
     @staticmethod
     def normal(loc=0.0, scale=1.0, size=(1,)):
