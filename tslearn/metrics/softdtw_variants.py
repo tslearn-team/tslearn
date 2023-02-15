@@ -815,7 +815,6 @@ class SquaredEuclidean:
             _njit_jacobian_product_sq_euc(self.X, self.Y, E.astype(np.float64), G)
         else:
             _jacobian_product_sq_euc(
-                self.X, self.Y, self.be.cast(E, self.be.float64), G, be=self.be
-            )
+                self.X, self.Y, self.be.cast(E, self.be.float64), G)
 
         return G
