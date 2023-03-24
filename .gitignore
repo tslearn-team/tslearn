@@ -112,3 +112,7 @@ docs/_build/
 docs/auto_examples/
 docs/examples/misc/ks_trained.hdf5
 docs/gen_modules/*/
+
+# Local files
+private_info.md
+release.sh
