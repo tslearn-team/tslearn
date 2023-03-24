@@ -95,7 +95,7 @@ After getting the data in the right format, a model can be trained. Depending on
 [0 1 1]
 ```
 
-As can be seen, the models in tslearn follow the same API as those of the well-known scikit-learn. Moreover, they are fully compatible with it, allowing to use different scikit-learn utilities such as [hyper-parameter tuning and pipelines](https://tslearn.readthedocs.io/en/stable/auto_examples/plot_knnts_sklearn.html#sphx-glr-auto-examples-plot-knnts-sklearn-py).
+As can be seen, the models in tslearn follow the same API as those of the well-known scikit-learn. Moreover, they are fully compatible with it, allowing to use different scikit-learn utilities such as [hyper-parameter tuning and pipelines](https://tslearn.readthedocs.io/en/stable/auto_examples/neighbors/plot_knnts_sklearn.html).
 
 ### 4. More analyses
 
