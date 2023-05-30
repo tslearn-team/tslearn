@@ -178,7 +178,7 @@ def dtw_path(s1, s2, global_constraint=None, sakoe_chiba_radius=None,
     dtw : Get only the similarity score for DTW
     cdist_dtw : Cross similarity matrix between time series datasets
     dtw_path_from_metric : Compute a DTW using a user-defined distance metric
-    dtw_dist_from_metric : Compute a DTW using a user-defined distance metric (without the path)
+    dtw_from_metric : Compute a DTW using a user-defined distance metric (without the path)
 
     References
     ----------
@@ -389,9 +389,9 @@ def dtw_path_from_metric(s1, s2=None, metric="euclidean",
     return path, acc_cost_mat[-1, -1]
 
 
-def dtw_dist_from_metric(s1, s2=None, metric="euclidean",
-                         global_constraint=None, sakoe_chiba_radius=None,
-                         itakura_max_slope=None, **kwds):
+def dtw_from_metric(s1, s2=None, metric="euclidean",
+                    global_constraint=None, sakoe_chiba_radius=None,
+                    itakura_max_slope=None, **kwds):
     r"""Compute Dynamic Time Warping (DTW) similarity measure between
     (possibly multidimensional) time series using a distance metric defined by
     the user and return only the similarity.
@@ -473,21 +473,21 @@ def dtw_dist_from_metric(s1, s2=None, metric="euclidean",
     The wrapping can be done by passing a string indicating the metric to pass
     to scikit-learn pairwise_distances:
 
-    >>> dtw_dist_from_metric(s1, s2,
+    >>> dtw_from_metric(s1, s2,
     ...                      metric="sqeuclidean")  # doctest: +ELLIPSIS
     1.117...
 
     Or by defining a custom distance function:
 
     >>> sqeuclidean = lambda x, y: np.sum((x-y)**2)
-    >>> dtw_dist_from_metric(s1, s2, metric=sqeuclidean)  # doctest: +ELLIPSIS
+    >>> dtw_from_metric(s1, s2, metric=sqeuclidean)  # doctest: +ELLIPSIS
     1.117...
 
     Or by using a precomputed distance matrix as input:
 
     >>> from sklearn.metrics.pairwise import pairwise_distances
     >>> dist_matrix = pairwise_distances(s1, s2, metric="sqeuclidean")
-    >>> dtw_dist_from_metric(dist_matrix,
+    >>> dtw_from_metric(dist_matrix,
     ...                      metric="precomputed")  # doctest: +ELLIPSIS
     1.117...
 
