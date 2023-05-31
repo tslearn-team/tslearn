@@ -583,7 +583,7 @@ class LearningShapelets(ClassifierMixin, TransformerMixin,
             [X[:, :, di].reshape((n_ts, sz, 1)) for di in range(self.d_)],
             batch_size=self.batch_size, verbose=self.verbose
         )
-        return locations.astype(numpy.int)
+        return locations.astype(numpy.int_)
 
     def _check_series_length(self, X):
         """Ensures that time series in X matches the following requirements:
