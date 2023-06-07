@@ -190,7 +190,7 @@ class PyTorchBackend(BaseBackend):
 
     @staticmethod
     def to_numpy(x):
-        return x.numpy()
+        return x.detach().cpu().numpy()
 
     @staticmethod
     def tril(mat, k=0):
