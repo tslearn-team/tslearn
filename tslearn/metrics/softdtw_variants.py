@@ -678,7 +678,7 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None):
 
 
 class SoftDTW:
-    def __init__(self, D, gamma=1.0, be=None):
+    def __init__(self, D, gamma=1.0, be=None, compute_with_backend=False):
         """
         Parameters
         ----------
@@ -687,6 +687,11 @@ class SoftDTW:
             Lower is less smoothed (closer to true DTW).
         be : Backend object or string or None
             Backend.
+        compute_with_backend : bool, default=False
+            This parameter has no influence when the NumPy backend is used.
+            When using a backend different from NumPy is used:
+            If `True`, the computation is done with the corresponding backend.
+            If `False`, a conversion to the NumPy backend can be used to accelerate the computation.
 
         Attributes
         ----------
@@ -695,6 +700,7 @@ class SoftDTW:
         """
         be = instanciate_backend(be, D)
         self.be = be
+        self.compute_with_backend = compute_with_backend
         if hasattr(D, "compute"):
             self.D = D.compute()
         else:
@@ -722,6 +728,13 @@ class SoftDTW:
 
         if self.be.is_numpy:
             _njit_soft_dtw(self.D, self.R_, gamma=self.gamma)
+        elif not self.compute_with_backend:
+            _njit_soft_dtw(
+                self.be.to_numpy(self.D),
+                self.be.to_numpy(self.R_),
+                gamma=self.be.to_numpy(self.gamma),
+            )
+            self.R_ = self.be.array(self.R_)
         else:
             _soft_dtw(self.D, self.R_, gamma=self.gamma, be=self.be)
 
@@ -754,6 +767,14 @@ class SoftDTW:
 
         if self.be.is_numpy:
             _njit_soft_dtw_grad(D, self.R_, E, gamma=self.gamma)
+        elif not self.compute_with_backend:
+            _njit_soft_dtw_grad(
+                self.be.to_numpy(D),
+                self.be.to_numpy(self.R_),
+                self.be.to_numpy(E),
+                gamma=self.be.to_numpy(self.gamma),
+            )
+            self.R_ = self.be.array(self.R_)
         else:
             _soft_dtw_grad(D, self.R_, E, gamma=self.gamma, be=self.be)
 
@@ -761,7 +782,7 @@ class SoftDTW:
 
 
 class SquaredEuclidean:
-    def __init__(self, X, Y, be=None):
+    def __init__(self, X, Y, be=None, compute_with_backend=False):
         """
         Parameters
         ----------
@@ -771,6 +792,11 @@ class SquaredEuclidean:
             Second time series.
         be : Backend object or string or None
             Backend.
+        compute_with_backend : bool, default=False
+            This parameter has no influence when the NumPy backend is used.
+            When using a backend different from NumPy is used:
+            If `True`, the computation is done with the corresponding backend.
+            If `False`, a conversion to the NumPy backend can be used to accelerate the computation.
 
         Examples
         --------
@@ -781,6 +807,7 @@ class SquaredEuclidean:
                [4., 1., 0., 1.]])
         """
         self.be = instanciate_backend(be, X)
+        self.compute_with_backend = compute_with_backend
         self.X = self.be.cast(to_time_series(X), dtype=self.be.float64)
         self.Y = self.be.cast(to_time_series(Y), dtype=self.be.float64)
 
@@ -813,8 +840,17 @@ class SquaredEuclidean:
 
         if self.be.is_numpy:
             _njit_jacobian_product_sq_euc(self.X, self.Y, E.astype(np.float64), G)
+        elif not self.compute_with_backend:
+            _njit_jacobian_product_sq_euc(
+                self.be.to_numpy(self.X),
+                self.be.to_numpy(self.Y),
+                self.be.to_numpy(E).astype(np.float64),
+                self.be.to_numpy(G),
+            )
+            G = self.be.array(G)
         else:
             _jacobian_product_sq_euc(
-                self.X, self.Y, self.be.cast(E, self.be.float64), G)
+                self.X, self.Y, self.be.cast(E, self.be.float64), G
+            )
 
         return G
