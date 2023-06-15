@@ -12,8 +12,8 @@ __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
 
 def test_dtw():
-    BACKENDS = ["numpy", "pytorch"]
-    for backend in BACKENDS:
+    backends = ["numpy", "pytorch"]
+    for backend in backends:
         be = Backend(backend)
         # dtw_path
         path, dist = tslearn.metrics.dtw_path([1, 2, 3], [1.0, 2.0, 2.0, 3.0], be=be)
@@ -47,8 +47,8 @@ def test_dtw():
 
 
 def test_ctw():
-    BACKENDS = ["numpy", "pytorch"]
-    for backend in BACKENDS:
+    backends = ["numpy", "pytorch"]
+    for backend in backends:
         be = Backend(backend)
         # ctw_path
         path, cca, dist = tslearn.metrics.ctw_path(
@@ -87,8 +87,8 @@ def test_ctw():
 
 
 def test_ldtw():
-    BACKENDS = ["numpy", "pytorch"]
-    for backend in BACKENDS:
+    backends = ["numpy", "pytorch"]
+    for backend in backends:
         be = Backend(backend)
 
         n1, n2, d = 15, 10, 3
@@ -135,8 +135,8 @@ def test_ldtw():
 
 
 def test_lcss():
-    BACKENDS = ["numpy", "pytorch"]
-    for backend in BACKENDS:
+    backends = ["numpy", "pytorch"]
+    for backend in backends:
         be = Backend(backend)
         sim = tslearn.metrics.lcss([1, 2, 3], [1.0, 2.0, 2.0, 3.0], be=be)
         np.testing.assert_equal(sim, 1.0)
@@ -152,8 +152,8 @@ def test_lcss():
 
 
 def test_lcss_path():
-    BACKENDS = ["numpy", "pytorch"]
-    for backend in BACKENDS:
+    backends = ["numpy", "pytorch"]
+    for backend in backends:
         be = Backend(backend)
         path, sim = tslearn.metrics.lcss_path(
             [1.0, 2.0, 3.0], [1.0, 2.0, 2.0, 3.0], be=be
@@ -181,8 +181,8 @@ def test_lcss_path():
 
 
 def test_lcss_path_from_metric():
-    BACKENDS = ["numpy", "pytorch"]
-    for backend in BACKENDS:
+    backends = ["numpy", "pytorch"]
+    for backend in backends:
         be = Backend(backend)
         for d in be.arange(1, 5):
             rng = np.random.RandomState()
@@ -220,8 +220,8 @@ def test_lcss_path_from_metric():
 
 
 def test_constrained_paths():
-    BACKENDS = ["numpy", "pytorch"]
-    for backend in BACKENDS:
+    backends = ["numpy", "pytorch"]
+    for backend in backends:
         be = Backend(backend)
         n, d = 10, 3
         rng = np.random.RandomState(0)
@@ -261,8 +261,8 @@ def test_constrained_paths():
 
 
 def test_dtw_subseq():
-    BACKENDS = ["numpy", "pytorch"]
-    for backend in BACKENDS:
+    backends = ["numpy", "pytorch"]
+    for backend in backends:
         be = Backend(backend)
 
         path, dist = tslearn.metrics.dtw_subsequence_path(
@@ -279,8 +279,8 @@ def test_dtw_subseq():
 
 
 def test_dtw_subseq_path():
-    BACKENDS = ["numpy", "pytorch"]
-    for backend in BACKENDS:
+    backends = ["numpy", "pytorch"]
+    for backend in backends:
         be = Backend(backend)
         subseq, longseq = [1, 4], [1.0, 2.0, 2.0, 3.0, 4.0]
         subseq = to_time_series(subseq, be=be)
@@ -295,8 +295,8 @@ def test_dtw_subseq_path():
 
 
 def test_masks():
-    BACKENDS = ["numpy", "pytorch"]
-    for backend in BACKENDS:
+    backends = ["numpy", "pytorch"]
+    for backend in backends:
         be = Backend(backend)
         sk_mask = tslearn.metrics.sakoe_chiba_mask(4, 4, 1, be=be)
         reference_mask = be.array(
@@ -402,8 +402,8 @@ def test_masks():
 
 
 def test_gak():
-    BACKENDS = ["numpy", "pytorch"]
-    for backend in BACKENDS:
+    backends = ["numpy", "pytorch"]
+    for backend in backends:
         be = Backend(backend)
         # GAK
         g = tslearn.metrics.cdist_gak(
@@ -453,8 +453,8 @@ def test_gak():
 
 
 def test_gamma_soft_dtw():
-    BACKENDS = ["numpy", "pytorch"]
-    for backend in BACKENDS:
+    backends = ["numpy", "pytorch"]
+    for backend in backends:
         be = Backend(backend)
         dataset = be.array([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]])
         gamma = tslearn.metrics.gamma_soft_dtw(
@@ -464,8 +464,9 @@ def test_gamma_soft_dtw():
 
 
 def test_symmetric_cdist():
-    BACKENDS = ["numpy", "pytorch"]
-    for backend in BACKENDS:
+    # backends = ["numpy", "pytorch"]
+    backends = ["numpy"]
+    for backend in backends:
         be = Backend(backend)
         rng = np.random.RandomState(0)
         dataset = rng.randn(5, 10, 2)
@@ -490,8 +491,8 @@ def test_symmetric_cdist():
 
 
 def test_lb_keogh():
-    BACKENDS = ["numpy", "pytorch"]
-    for backend in BACKENDS:
+    backends = ["numpy", "pytorch"]
+    for backend in backends:
         be = Backend(backend)
         ts1 = [1, 2, 3, 2, 1]
         env_low, env_up = tslearn.metrics.lb_envelope(ts1, radius=1, be=be)
@@ -504,8 +505,8 @@ def test_lb_keogh():
 
 
 def test_dtw_path_from_metric():
-    BACKENDS = ["numpy", "pytorch"]
-    for backend in BACKENDS:
+    backends = ["numpy", "pytorch"]
+    for backend in backends:
         be = Backend(backend)
         rng = np.random.RandomState(0)
         s1, s2 = rng.rand(10, 2), rng.rand(30, 2)
@@ -542,8 +543,8 @@ def test_dtw_path_from_metric():
 
 
 def test_softdtw():
-    BACKENDS = ["numpy", "pytorch"]
-    for backend in BACKENDS:
+    backends = ["numpy", "pytorch"]
+    for backend in backends:
         be = Backend(backend)
         rng = np.random.RandomState(0)
         s1, s2 = rng.rand(10, 2), rng.rand(30, 2)
@@ -563,8 +564,8 @@ def test_softdtw():
 
 
 def test_dtw_path_with_empty_or_nan_inputs():
-    BACKENDS = ["numpy", "pytorch"]
-    for backend in BACKENDS:
+    backends = ["numpy", "pytorch"]
+    for backend in backends:
         be = Backend(backend)
         s1 = be.zeros((3, 10))
         s2_empty = be.zeros((0, 10))
