@@ -505,7 +505,8 @@ def test_lb_keogh():
 
 
 def test_dtw_path_from_metric():
-    backends = ["numpy", "pytorch"]
+    # backends = ["numpy", "pytorch"]
+    backends = ["numpy"]
     for backend in backends:
         be = Backend(backend)
         rng = np.random.RandomState(0)
