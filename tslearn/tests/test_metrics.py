@@ -185,7 +185,7 @@ def test_lcss_path_from_metric():
     for backend in backends:
         be = Backend(backend)
         for d in be.arange(1, 5):
-            rng = np.random.RandomState()
+            rng = np.random.RandomState(0)
             s1, s2 = rng.randn(10, d), rng.randn(30, d)
             s1, s2 = be.array(s1), be.array(s2)
 
@@ -452,25 +452,25 @@ def test_gak():
         np.testing.assert_allclose(sqeuc.compute(), cdist(v1, v2, metric="sqeuclidean"))
 
 
-# def test_gamma_soft_dtw():
-#     backends = ["numpy", "pytorch"]
-#     for backend in backends:
-#         be = Backend(backend)
-#         dataset = be.array([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]])
+def test_gamma_soft_dtw():
+    backends = ["numpy", "pytorch"]
+    for backend in backends:
+        be = Backend(backend)
+        dataset = be.array([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]])
 #         gamma = tslearn.metrics.gamma_soft_dtw(
 #             dataset=dataset, n_samples=200, random_state=0, be=be
 #         )
 #         np.testing.assert_allclose(gamma, 8.0)
 
 
-# def test_symmetric_cdist():
-#     # backends = ["numpy", "pytorch"]
-#     backends = ["numpy"]
-#     for backend in backends:
-#         be = Backend(backend)
-#         rng = np.random.RandomState(0)
-#         dataset = rng.randn(5, 10, 2)
-#         dataset = be.array(dataset)
+def test_symmetric_cdist():
+    # backends = ["numpy", "pytorch"]
+    backends = ["numpy"]
+    for backend in backends:
+        be = Backend(backend)
+        rng = np.random.RandomState(0)
+        dataset = rng.randn(5, 10, 2)
+        dataset = be.array(dataset)
 #         np.testing.assert_allclose(
 #             tslearn.metrics.cdist_dtw(dataset, dataset, be=be),
 #             tslearn.metrics.cdist_dtw(dataset, be=be),
@@ -504,15 +504,15 @@ def test_lb_keogh():
         )
 
 
-# def test_dtw_path_from_metric():
-#     # backends = ["numpy", "pytorch"]
-#     backends = ["numpy"]
-#     for backend in backends:
-#         be = Backend(backend)
-#         rng = np.random.RandomState(0)
-#         s1, s2 = rng.rand(10, 2), rng.rand(30, 2)
-#         s1, s2 = be.array(s1), be.array(s2)
-#
+def test_dtw_path_from_metric():
+    # backends = ["numpy", "pytorch"]
+    backends = ["numpy"]
+    for backend in backends:
+        be = Backend(backend)
+        rng = np.random.RandomState(0)
+        s1, s2 = rng.rand(10, 2), rng.rand(30, 2)
+        s1, s2 = be.array(s1), be.array(s2)
+
 #         # Use dtw_path as a reference
 #         path_ref, dist_ref = tslearn.metrics.dtw_path(s1, s2, be=be)
 #
@@ -543,14 +543,14 @@ def test_lb_keogh():
 #         np.testing.assert_allclose(be.sqrt(dist), dist_ref)
 
 
-# def test_softdtw():
-#     backends = ["numpy", "pytorch"]
-#     for backend in backends:
-#         be = Backend(backend)
-#         rng = np.random.RandomState(0)
-#         s1, s2 = rng.rand(10, 2), rng.rand(30, 2)
-#         s1, s2 = be.array(s1), be.array(s2)
-#
+def test_softdtw():
+    backends = ["numpy", "pytorch"]
+    for backend in backends:
+        be = Backend(backend)
+        rng = np.random.RandomState(0)
+        s1, s2 = rng.rand(10, 2), rng.rand(30, 2)
+        s1, s2 = be.array(s1), be.array(s2)
+
 #         # Use dtw_path as a reference
 #         path_ref, dist_ref = tslearn.metrics.dtw_path(s1, s2, be=be)
 #         mat_path_ref = be.zeros((10, 30))
