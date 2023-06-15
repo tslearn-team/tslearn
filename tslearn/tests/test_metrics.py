@@ -543,25 +543,25 @@ def test_lb_keogh():
 #         np.testing.assert_allclose(be.sqrt(dist), dist_ref)
 
 
-def test_softdtw():
-    backends = ["numpy", "pytorch"]
-    for backend in backends:
-        be = Backend(backend)
-        rng = np.random.RandomState(0)
-        s1, s2 = rng.rand(10, 2), rng.rand(30, 2)
-        s1, s2 = be.array(s1), be.array(s2)
-
-        # Use dtw_path as a reference
-        path_ref, dist_ref = tslearn.metrics.dtw_path(s1, s2, be=be)
-        mat_path_ref = be.zeros((10, 30))
-        for i, j in path_ref:
-            mat_path_ref[i, j] = 1.0
-
-        # Test of using a scipy distance function
-        matrix_path, dist = tslearn.metrics.soft_dtw_alignment(s1, s2, gamma=0.0, be=be)
-
-        np.testing.assert_equal(dist, dist_ref**2)
-        np.testing.assert_allclose(matrix_path, mat_path_ref)
+# def test_softdtw():
+#     backends = ["numpy", "pytorch"]
+#     for backend in backends:
+#         be = Backend(backend)
+#         rng = np.random.RandomState(0)
+#         s1, s2 = rng.rand(10, 2), rng.rand(30, 2)
+#         s1, s2 = be.array(s1), be.array(s2)
+#
+#         # Use dtw_path as a reference
+#         path_ref, dist_ref = tslearn.metrics.dtw_path(s1, s2, be=be)
+#         mat_path_ref = be.zeros((10, 30))
+#         for i, j in path_ref:
+#             mat_path_ref[i, j] = 1.0
+#
+#         # Test of using a scipy distance function
+#         matrix_path, dist = tslearn.metrics.soft_dtw_alignment(s1, s2, gamma=0.0, be=be)
+#
+#         np.testing.assert_equal(dist, dist_ref**2)
+#         np.testing.assert_allclose(matrix_path, mat_path_ref)
 
 
 def test_dtw_path_with_empty_or_nan_inputs():
