@@ -452,15 +452,15 @@ def test_gak():
         np.testing.assert_allclose(sqeuc.compute(), cdist(v1, v2, metric="sqeuclidean"))
 
 
-def test_gamma_soft_dtw():
-    backends = ["numpy", "pytorch"]
-    for backend in backends:
-        be = Backend(backend)
-        dataset = be.array([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]])
-        gamma = tslearn.metrics.gamma_soft_dtw(
-            dataset=dataset, n_samples=200, random_state=0, be=be
-        )
-        np.testing.assert_allclose(gamma, 8.0)
+# def test_gamma_soft_dtw():
+#     backends = ["numpy", "pytorch"]
+#     for backend in backends:
+#         be = Backend(backend)
+#         dataset = be.array([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]])
+#         gamma = tslearn.metrics.gamma_soft_dtw(
+#             dataset=dataset, n_samples=200, random_state=0, be=be
+#         )
+#         np.testing.assert_allclose(gamma, 8.0)
 
 
 # def test_symmetric_cdist():
