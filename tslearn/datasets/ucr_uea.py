@@ -51,7 +51,7 @@ class UCR_UEA_datasets:
 
         try:
             url_multivariate = ("https://www.timeseriesclassification.com/"
-                                "Downloads/Archives/summaryMultivariate.csv")
+                                "ClassificationDownloads/Archives/summaryMultivariate.csv")
             self._list_multivariate_filename = os.path.join(
                 self._data_dir, os.path.basename(url_multivariate)
             )
@@ -267,7 +267,7 @@ class UCR_UEA_datasets:
                 shutil.rmtree(full_path, ignore_errors=True)
             # else, actually raise the error!
 
-            url = ("https://www.timeseriesclassification.com/Downloads/%s.zip"
+            url = ("https://www.timeseriesclassification.com/ClassificationDownloads/%s.zip"
                    % dataset_name)
             success = extract_from_zip_url(url, target_dir=full_path)
             if not success:
