@@ -51,7 +51,7 @@ class UCR_UEA_datasets:
 
         try:
             url_multivariate = ("https://www.timeseriesclassification.com/"
-                                "Downloads/Archives/summaryMultivariate.csv")
+                                "ClassificationDownloads/Archives/summaryMultivariate.csv")
             self._list_multivariate_filename = os.path.join(
                 self._data_dir, os.path.basename(url_multivariate)
             )
