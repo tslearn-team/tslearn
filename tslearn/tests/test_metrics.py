@@ -457,9 +457,9 @@ def test_gamma_soft_dtw():
     for backend in backends:
         be = Backend(backend)
         dataset = be.array([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]])
-#         gamma = tslearn.metrics.gamma_soft_dtw(
-#             dataset=dataset, n_samples=200, random_state=0, be=be
-#         )
+        # gamma = tslearn.metrics.gamma_soft_dtw(
+        #     dataset=dataset, n_samples=200, random_state=0, be=be
+        # )
 #         np.testing.assert_allclose(gamma, 8.0)
 
 
@@ -471,15 +471,15 @@ def test_symmetric_cdist():
         rng = np.random.RandomState(0)
         dataset = rng.randn(5, 10, 2)
         dataset = be.array(dataset)
-#         np.testing.assert_allclose(
-#             tslearn.metrics.cdist_dtw(dataset, dataset, be=be),
-#             tslearn.metrics.cdist_dtw(dataset, be=be),
-#         )
-#         np.testing.assert_allclose(
-#             tslearn.metrics.cdist_gak(dataset, dataset, be=be),
-#             tslearn.metrics.cdist_gak(dataset, be=be),
-#             atol=1e-5,
-#         )
+        np.testing.assert_allclose(
+            tslearn.metrics.cdist_dtw(dataset, dataset, be=be),
+            tslearn.metrics.cdist_dtw(dataset, be=be),
+        )
+        np.testing.assert_allclose(
+            tslearn.metrics.cdist_gak(dataset, dataset, be=be),
+            tslearn.metrics.cdist_gak(dataset, be=be),
+            atol=1e-5,
+        )
 #         np.testing.assert_allclose(
 #             tslearn.metrics.cdist_soft_dtw(dataset, dataset, be=be),
 #             tslearn.metrics.cdist_soft_dtw(dataset, be=be),
