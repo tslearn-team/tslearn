@@ -682,6 +682,8 @@ class SoftDTW:
         """
         Parameters
         ----------
+        D : array-like, shape=[m, n], dtype=float64 or class computing distances with a method 'compute'
+            Distances. An example of class computing distance is 'SquaredEuclidean'.
         gamma: float
             Regularization parameter.
             Lower is less smoothed (closer to true DTW).
