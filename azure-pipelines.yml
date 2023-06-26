@@ -10,14 +10,14 @@ jobs:
     vmImage: 'ubuntu-latest'
   strategy:
     matrix:
-      Python37:
-        python.version: '3.7'
       Python38:
         python.version: '3.8'
       Python39:
         python.version: '3.9'
       Python310:
         python.version: '3.10'
+      Python311:
+        python.version: '3.11'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -55,8 +55,8 @@ jobs:
     vmImage: 'ubuntu-latest'
   strategy:
     matrix:
-      Python310:
-        python.version: '3.10'
+      Python311:
+        python.version: '3.11'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -102,14 +102,14 @@ jobs:
     vmImage: 'macOS-12'
   strategy:
     matrix:
-      Python37:
-        python.version: '3.7'
       Python38:
         python.version: '3.8'
       Python39:
         python.version: '3.9'
       Python310:
         python.version: '3.10'
+      Python311:
+        python.version: '3.11'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -150,9 +150,6 @@ jobs:
     vmImage: 'windows-latest'
   strategy:
     matrix:
-      Python37:
-        python_ver: '37'
-        python.version: '3.7'
       Python38:
         python_ver: '38'
         python.version: '3.8'
@@ -162,6 +159,9 @@ jobs:
       Python310:
         python_ver: '310'
         python.version: '3.10'
+      Python311:
+        python_ver: '311'
+        python.version: '3.11'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
