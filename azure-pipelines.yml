@@ -16,8 +16,6 @@ jobs:
         python.version: '3.9'
       Python310:
         python.version: '3.10'
-      Python311:
-        python.version: '3.11'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -45,7 +43,7 @@ jobs:
       set -xe
       python -m pip install pytest pytest-azurepipelines
       python -m pip install scikit-learn==1.0
-      python -m pip install tensorflow==2.12.0
+      python -m pip install tensorflow==2.9.0
       python -m pytest -v tslearn/ --doctest-modules
     displayName: 'Test'
 
@@ -55,8 +53,8 @@ jobs:
     vmImage: 'ubuntu-latest'
   strategy:
     matrix:
-      Python311:
-        python.version: '3.11'
+      Python310:
+        python.version: '3.10'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -87,7 +85,7 @@ jobs:
       python -m pip install coverage pytest-cov
       python -m pip install cesium pandas stumpy
       python -m pip install scikit-learn==1.0
-      python -m pip install tensorflow==2.12.0
+      python -m pip install tensorflow==2.9.0
       python -m pytest -v tslearn/ --doctest-modules --cov=tslearn
     displayName: 'Test'
 
@@ -108,8 +106,6 @@ jobs:
         python.version: '3.9'
       Python310:
         python.version: '3.10'
-      Python311:
-        python.version: '3.11'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -140,7 +136,7 @@ jobs:
       set -xe
       python -m pip install pytest pytest-azurepipelines
       python -m pip install scikit-learn==1.0
-      python -m pip install tensorflow==2.12.0
+      python -m pip install tensorflow==2.9.0
       python -m pytest -v tslearn/ --doctest-modules -k 'not test_all_estimators'
     displayName: 'Test'
 
@@ -159,9 +155,6 @@ jobs:
       Python310:
         python_ver: '310'
         python.version: '3.10'
-      Python311:
-        python_ver: '311'
-        python.version: '3.11'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -185,6 +178,6 @@ jobs:
   - script: |
       python -m pip install pytest pytest-azurepipelines
       python -m pip install scikit-learn==1.0
-      python -m pip install tensorflow==2.12.0
+      python -m pip install tensorflow==2.9.0
       python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/tests/test_estimators.py --ignore tslearn/utils/cast.py
     displayName: 'Test'
