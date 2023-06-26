@@ -415,6 +415,33 @@ def test_dtw_path_from_metric():
     np.testing.assert_allclose(np.sqrt(dist), dist_ref)
 
 
+def test_dtw_from_metric():
+    rng = np.random.RandomState(0)
+    s1, s2 = rng.rand(10, 2), rng.rand(30, 2)
+
+    # Use dtw_path as a reference
+    path_ref, dist_ref = tslearn.metrics.dtw_path(s1, s2)
+
+    # Test of using a scipy distance function
+    dist = tslearn.metrics.dtw_from_metric(s1, s2,
+                                                      metric="sqeuclidean")
+    np.testing.assert_allclose(np.sqrt(dist), dist_ref)
+
+    # Test of defining a custom function
+    def sqeuclidean(x, y):
+        return np.sum((x-y)**2)
+
+    dist = tslearn.metrics.dtw_from_metric(s1, s2,
+                                                      metric=sqeuclidean)
+    np.testing.assert_allclose(np.sqrt(dist), dist_ref)
+
+    # Test of precomputing the distance matrix
+    dist_matrix = cdist(s1, s2, metric="sqeuclidean")
+    dist = tslearn.metrics.dtw_from_metric(dist_matrix,
+                                                      metric="precomputed")
+    np.testing.assert_allclose(np.sqrt(dist), dist_ref)
+
+
 def test_softdtw():
     rng = np.random.RandomState(0)
     s1, s2 = rng.rand(10, 2), rng.rand(30, 2)

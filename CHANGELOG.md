@@ -10,6 +10,11 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ## [Towards v0.6]
 
+### Added
+
+* `dtw_from_metric` allows one to pick a dedicated ground metric on top
+of which the DTW algorithm can be run but only return the similarity 
+
 ## [v0.5.3]
 
 ### Changed
