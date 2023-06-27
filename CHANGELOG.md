@@ -10,6 +10,10 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ## [Towards v0.6]
 
+### Removed
+
+* Support for Python version 3.7 is dropped
+
 ## [v0.5.3]
 
 ### Changed

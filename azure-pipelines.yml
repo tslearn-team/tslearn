@@ -10,8 +10,6 @@ jobs:
     vmImage: 'ubuntu-latest'
   strategy:
     matrix:
-      Python37:
-        python.version: '3.7'
       Python38:
         python.version: '3.8'
       Python39:
@@ -102,8 +100,6 @@ jobs:
     vmImage: 'macOS-12'
   strategy:
     matrix:
-      Python37:
-        python.version: '3.7'
       Python38:
         python.version: '3.8'
       Python39:
@@ -150,9 +146,6 @@ jobs:
     vmImage: 'windows-latest'
   strategy:
     matrix:
-      Python37:
-        python_ver: '37'
-        python.version: '3.7'
       Python38:
         python_ver: '38'
         python.version: '3.8'
