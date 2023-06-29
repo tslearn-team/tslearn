@@ -98,3 +98,15 @@ similar to interacting with a ``scikit-learn`` model, except that datasets are n
 
 As seen above, one key parameter when applying machine learning methods to time series datasets is the metric to be
 used. You can learn more about it in the :ref:`dedicated section <mod-metrics>` of this documentation.
+
+Use a metric designed for time series as a loss function to train a neural network
+----------------------------------------------------------------------------------
+The soft dynamic time warping (Soft-DTW) metric can be used as a loss fonction to train ``PyTorch`` neural networks.
+
+.. code-block:: python
+
+    >>> from tslearn.metrics import SoftDTWLossPyTorch
+    >>> model = PyTorchModel(..., loss=SoftDTWLossPyTorch(gamma=0.1))  # PyTorchModel should inherit from torch.nn.Module
+    >>> model.fit(X_train)
+    >>> model.predict(X_test)
+

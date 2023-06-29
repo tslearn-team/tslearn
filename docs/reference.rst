@@ -11,6 +11,7 @@ The complete ``tslearn`` project is automatically documented for every module.
    :toctree: gen_modules/
    :template: module.rst
 
+   tslearn.backend
    tslearn.barycenters
    tslearn.clustering
    tslearn.datasets
