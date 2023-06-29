@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+import torch
 from scipy.spatial.distance import cdist
 
 import tslearn.clustering
@@ -582,3 +583,56 @@ def test_dtw_path_with_empty_or_nan_inputs():
             str(excinfo.value)
             == "One of the input time series contains only nans or has zero length."
         )
+
+
+def test_soft_dtw_loss_pytorch():
+    """Tests for the class SoftDTWLossPyTorch."""
+    batch_ts_1 = torch.zeros((5, 10, 20))
+    batch_ts_2 = torch.ones((5, 10, 20))
+    soft_dtw_loss_pytorch = tslearn.metrics.SoftDTWLossPyTorch(
+        gamma=1.0, normalize=False, dist_func=None
+    )
+    loss = soft_dtw_loss_pytorch.forward(batch_ts_1, batch_ts_2)
+    assert torch.all(loss == 200 * torch.ones((5,)))
+
+    loss = soft_dtw_loss_pytorch.forward(batch_ts_1, batch_ts_1)
+    np.testing.assert_allclose(loss, -14.1957 * torch.ones((5,)))
+
+    soft_dtw_loss_pytorch_normalized = tslearn.metrics.SoftDTWLossPyTorch(
+        gamma=1.0, normalize=True, dist_func=None
+    )
+    loss_normalized = soft_dtw_loss_pytorch_normalized.forward(batch_ts_1, batch_ts_1)
+    assert torch.all(
+        loss_normalized
+        == torch.zeros(
+            5,
+        )
+    )
+
+    def euclidean_abs_dist(x, y):
+        """Calculates the Euclidean squared distance between each element in x and y per timestep.
+
+        Parameters
+        ----------
+        x : Tensor, shape=[b, m, d]
+            Batch of time series.
+        y : Tensor, shape=[b, n, d]
+            Batch of time series.
+
+        Returns
+        -------
+        dist : Tensor, shape=[b, m, n]
+            The pairwise squared Euclidean distances.
+        """
+        m = x.size(1)
+        n = y.size(1)
+        d = x.size(2)
+        x = x.unsqueeze(2).expand(-1, m, n, d)
+        y = y.unsqueeze(1).expand(-1, m, n, d)
+        return torch.pow(x - y, 1).sum(3)
+
+    soft_dtw_loss_pytorch = tslearn.metrics.SoftDTWLossPyTorch(
+        gamma=1.0, normalize=False, dist_func=euclidean_abs_dist
+    )
+    loss = soft_dtw_loss_pytorch.forward(batch_ts_1, batch_ts_2)
+    np.testing.assert_allclose(loss, -390.79178 * torch.ones((5,)))
