@@ -43,6 +43,11 @@
             <img src="_static/img/kmeans_thumb.png">
           </div>
         </a>
+        <a href="auto_examples/autodiff/plot_soft_dtw_loss_for_pytorch_nn.html">
+          <div class="col-md-2 thumbnail">
+            <img src="_static/img/soft_dtw_loss_pytorch_thumb.png">
+          </div>
+        </a>
         <a href="auto_examples/misc/plot_sax.html">
           <div class="col-md-2 thumbnail">
             <img src="_static/img/sax_thumb.png">
