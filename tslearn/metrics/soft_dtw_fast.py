@@ -133,6 +133,36 @@ def _soft_dtw(D, R, gamma, be=None):
             )
 
 
+@njit(parallel=True)
+def _njit_soft_dtw_batch(D, R, gamma):
+    """Compute soft dynamic time warping.
+
+    Parameters
+    ----------
+    D : array-like, shape=[b, m, n], dtype=float64
+    R : array-like, shape=[b, m+2, n+2], dtype=float64
+    gamma : float64
+    """
+    for i_sample in prange(D.shape[0]):
+        _njit_soft_dtw(D[i_sample, :, :], R[i_sample, :, :], gamma)
+
+
+def _soft_dtw_batch(D, R, gamma, be=None):
+    """Compute soft dynamic time warping.
+
+    Parameters
+    ----------
+    D : array-like, shape=[b, m, n], dtype=float64
+    R : array-like, shape=[b, m+2, n+2], dtype=float64
+    gamma : float64
+    be : Backend object or string or None
+        Backend.
+    """
+    be = instanciate_backend(be, D)
+    for i_sample in range(D.shape[0]):
+        _soft_dtw(D[i_sample, :, :], R[i_sample, :, :], gamma, be=be)
+
+
 @njit(parallel=True, fastmath=True)
 def _njit_soft_dtw_grad(D, R, E, gamma):
     """Compute gradient of soft-DTW w.r.t. D.
@@ -198,6 +228,38 @@ def _soft_dtw_grad(D, R, E, gamma, be=None):
             b = be.exp((R[i, j + 1] - R[i, j] - D[i - 1, j]) / gamma)
             c = be.exp((R[i + 1, j + 1] - R[i, j] - D[i, j]) / gamma)
             E[i, j] = E[i + 1, j] * a + E[i, j + 1] * b + E[i + 1, j + 1] * c
+
+
+@njit(parallel=True)
+def _njit_soft_dtw_grad_batch(D, R, E, gamma):
+    """Compute gradient of soft-DTW w.r.t. D.
+
+    Parameters
+    ----------
+    D : array-like, shape=[b, m, n], dtype=float64
+    R : array-like, shape=[b, m+2, n+2], dtype=float64
+    E : array-like, shape=[b, m+2, n+2], dtype=float64
+    gamma : float64
+    """
+    for i_sample in prange(D.shape[0]):
+        _njit_soft_dtw_grad(D[i_sample, :, :], R[i_sample, :, :], E[i_sample, :, :], gamma)
+
+
+def _soft_dtw_grad_batch(D, R, E, gamma, be=None):
+    """Compute gradient of soft-DTW w.r.t. D.
+
+    Parameters
+    ----------
+    D : array-like, shape=[b, m, n], dtype=float64
+    R : array-like, shape=[b, m+2, n+2], dtype=float64
+    E : array-like, shape=[b, m+2, n+2], dtype=float64
+    gamma : float64
+    be : Backend object or string or None
+        Backend.
+    """
+    be = instanciate_backend(be, D)
+    for i_sample in prange(D.shape[0]):
+        _soft_dtw_grad(D[i_sample, :, :], R[i_sample, :, :], E[i_sample, :, :], gamma, be=be)
 
 
 @njit(parallel=True, fastmath=True)
