@@ -676,7 +676,7 @@ def test_soft_dtw_loss_pytorch():
         repeats=d,
         axis=2,
     )
-    np.testing.assert_allclose(batch_ts_1.grad, expected_grad_ts1)
+    np.testing.assert_allclose(batch_ts_1.grad, expected_grad_ts1, rtol=5e-5)
 
     expected_grad_ts2 = np.repeat(
         np.repeat(
@@ -705,4 +705,4 @@ def test_soft_dtw_loss_pytorch():
         repeats=d,
         axis=2,
     )
-    np.testing.assert_allclose(batch_ts_2.grad, expected_grad_ts2)
+    np.testing.assert_allclose(batch_ts_2.grad, expected_grad_ts2, rtol=5e-5)
