@@ -72,7 +72,7 @@ def _softmin3(a, b, c, gamma, be=None):
     return softmin_value
 
 
-@njit(parallel=True, fastmath=True)
+@njit(fastmath=True)
 def _njit_soft_dtw(D, R, gamma):
     """Compute soft dynamic time warping.
 
@@ -163,7 +163,7 @@ def _soft_dtw_batch(D, R, gamma, be=None):
         _soft_dtw(D[i_sample, :, :], R[i_sample, :, :], gamma, be=be)
 
 
-@njit(parallel=True, fastmath=True)
+@njit(fastmath=True)
 def _njit_soft_dtw_grad(D, R, E, gamma):
     """Compute gradient of soft-DTW w.r.t. D.
 
