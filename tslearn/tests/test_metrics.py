@@ -629,10 +629,10 @@ def test_soft_dtw_loss_pytorch():
         d = x.size(2)
         x = x.unsqueeze(2).expand(-1, m, n, d)
         y = y.unsqueeze(1).expand(-1, m, n, d)
-        return torch.pow(x - y, 1).sum(3)
+        return torch.abs(x - y).sum(3)
 
     soft_dtw_loss_pytorch = tslearn.metrics.SoftDTWLossPyTorch(
         gamma=1.0, normalize=False, dist_func=euclidean_abs_dist
     )
     loss = soft_dtw_loss_pytorch.forward(batch_ts_1, batch_ts_2)
-    np.testing.assert_allclose(loss, -390.79178 * torch.ones((5,)))
+    np.testing.assert_allclose(loss, 200 * torch.ones((5,)))
