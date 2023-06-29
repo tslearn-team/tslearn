@@ -7,6 +7,7 @@ import tslearn.clustering
 import tslearn.metrics
 from tslearn.backend.backend import Backend
 from tslearn.metrics.dtw_variants import dtw_path
+from tslearn.metrics.soft_dtw_loss_pytorch import _SoftDTWLossPyTorch
 from tslearn.utils import to_time_series
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
@@ -587,16 +588,20 @@ def test_dtw_path_with_empty_or_nan_inputs():
 
 def test_soft_dtw_loss_pytorch():
     """Tests for the class SoftDTWLossPyTorch."""
-    batch_ts_1 = torch.zeros((5, 10, 20))
-    batch_ts_2 = torch.ones((5, 10, 20))
+    b = 5
+    m = 10
+    n = 12
+    d = 8
+    batch_ts_1 = torch.zeros((b, m, d), requires_grad=True)
+    batch_ts_2 = torch.ones((b, n, d), requires_grad=True)
     soft_dtw_loss_pytorch = tslearn.metrics.SoftDTWLossPyTorch(
         gamma=1.0, normalize=False, dist_func=None
     )
     loss = soft_dtw_loss_pytorch.forward(batch_ts_1, batch_ts_2)
-    assert torch.all(loss == 200 * torch.ones((5,)))
+    np.testing.assert_allclose(loss.detach().numpy(), 91.9806137 * torch.ones((b,)))
 
     loss = soft_dtw_loss_pytorch.forward(batch_ts_1, batch_ts_1)
-    np.testing.assert_allclose(loss, -14.1957 * torch.ones((5,)))
+    np.testing.assert_allclose(loss.detach().numpy(), -14.1957006 * torch.ones((b,)))
 
     soft_dtw_loss_pytorch_normalized = tslearn.metrics.SoftDTWLossPyTorch(
         gamma=1.0, normalize=True, dist_func=None
@@ -605,7 +610,7 @@ def test_soft_dtw_loss_pytorch():
     assert torch.all(
         loss_normalized
         == torch.zeros(
-            5,
+            b,
         )
     )
 
@@ -635,4 +640,69 @@ def test_soft_dtw_loss_pytorch():
         gamma=1.0, normalize=False, dist_func=euclidean_abs_dist
     )
     loss = soft_dtw_loss_pytorch.forward(batch_ts_1, batch_ts_2)
-    np.testing.assert_allclose(loss, 200 * torch.ones((5,)))
+    np.testing.assert_allclose(loss.detach().numpy(), 91.9806137 * torch.ones((b,)))
+
+    def soft_dtw_loss_function(x, y, dist_func, gamma):
+        d_xy = dist_func(x, y)
+        return _SoftDTWLossPyTorch.apply(d_xy, gamma)
+
+    loss = soft_dtw_loss_function(
+        x=batch_ts_1, y=batch_ts_2, dist_func=euclidean_abs_dist, gamma=0.1
+    )
+    loss.mean().backward()
+
+    expected_grad_ts1 = np.repeat(
+        np.repeat(
+            np.reshape(
+                np.array(
+                    [
+                        -0.244445577,
+                        -0.244445756,
+                        -0.244445294,
+                        -0.244443387,
+                        -0.244441003,
+                        -0.244441897,
+                        -0.244444370,
+                        -0.244441718,
+                        -0.244441971,
+                        -0.200000003,
+                    ]
+                ),
+                (1, m, 1),
+            ),
+            repeats=b,
+            axis=0,
+        ),
+        repeats=d,
+        axis=2,
+    )
+    np.testing.assert_allclose(batch_ts_1.grad, expected_grad_ts1)
+
+    expected_grad_ts2 = np.repeat(
+        np.repeat(
+            np.reshape(
+                np.array(
+                    [
+                        0.2000008374,
+                        0.2000008225,
+                        0.2000010014,
+                        0.2000009865,
+                        0.1999993920,
+                        0.1999970675,
+                        0.1999994069,
+                        0.1999980807,
+                        0.1999983191,
+                        0.1999950409,
+                        0.2000000030,
+                        0.2000000030,
+                    ]
+                ),
+                (1, n, 1),
+            ),
+            repeats=b,
+            axis=0,
+        ),
+        repeats=d,
+        axis=2,
+    )
+    np.testing.assert_allclose(batch_ts_2.grad, expected_grad_ts2)
