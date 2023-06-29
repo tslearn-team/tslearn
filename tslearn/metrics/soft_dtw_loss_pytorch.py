@@ -86,6 +86,8 @@ else:
             Optional, default: False.
         dist_func : callable
             The distance function.
+            It takes two input arguments of shape (batch_size, ts_length, dim).
+            It should support PyTorch automatic differentiation.
             Optional, default: None
         """
 
