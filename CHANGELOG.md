@@ -13,7 +13,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 ### Added
 
 * Support of the `PyTorch` backend for the metrics of `tslearn`. 
-In particular, the Dynamic Time Warping of Soft-DTW metrics now support the `PyTorch` backend.
+In particular, the Dynamic Time Warping (DTW) metric and the Soft-DTW metric now support the `PyTorch` backend.
 
 ### Removed
 
