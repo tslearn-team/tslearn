@@ -4,23 +4,19 @@ Soft-DTW loss for PyTorch neural network
 ========================================
 
 This notebook is inspired by the notebook of Romain Tavenard about Alignment-based metrics in Machine Learning:
-
 https://github.com/rtavenar/notebooks-ml4ts/blob/main/03_align4ml_sol.ipynb
 
 The aim here is to use the Soft Dynamic Time Warping metric as a loss function for a PyTorch Neural Network.
 
-We will rely on a (very nice!) `torch`-compatible implementation of soft-DTW obtained from
-[github](https://github.com/Maghoumi/pytorch-softdtw-cuda)
+We will rely on a `torch`-compatible implementation of soft-DTW obtained from github:
+https://github.com/Maghoumi/pytorch-softdtw-cuda
 """
 
 # Author: Yann Cabanes
 # License: BSD 3 clause
 
 # -*- coding: utf-8 -*-
-"""
-Import the modules
-------------------
-"""
+"""Import the modules"""
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -30,10 +26,7 @@ from tslearn.metrics import SoftDTWLossPyTorch
 import torch
 from torch import nn
 
-# -*- coding: utf-8 -*-
-"""
-Load the dataset
-----------------
+"""Load the dataset
 
 Using the CachedDatasets utility from tslearn, we load the "Trace" time series dataset. 
 The dimensions of the arrays storing the time series training and testing datasets are (100, 275, 1).
@@ -48,20 +41,20 @@ X_subset = X_train[y_train < 4]
 np.random.shuffle(X_subset)
 X_subset = X_subset[:50]
 
-plt.title('Visualize a subset of the training dataset')
+plt.title('Visualize a subset of the training dataset', size=20)
 for ts in X_subset:
     plt.plot(ts[:, 0], color='k')
 
-"""
-Multi-step ahead forecasting
-----------------------------
+"""Multi-step ahead forecasting
 
 In this section, our goal will be to implement a single-hidden-layer perceptron for time series forecasting. 
 Our network will be trained to minimize normalized soft-DTW.
 The normalized soft-DTW (also coined soft-DTW divergence) between the time series x and y is defined as: 
-
-To do so, we will rely on a (very nice!) torch-compatible implementation of soft-DTW obtained from github (the corresponding file is already added to this project).
-The code below is an implementation of a generic Multi-Layer-Perceptron class in torch, and you will rely on it for your implementation of a forecasting MLP with softDTW loss.
+Soft-DTW(x, y) - (Soft-DTW(x, x) + Soft-DTW(y, y)) / 2
+We will rely on a torch-compatible implementation of soft-DTW obtained from github:
+https://github.com/Maghoumi/pytorch-softdtw-cuda
+The code below is an implementation of a generic Multi-Layer-Perceptron class in torch, 
+and we will rely on it for the implementation of a forecasting MLP with softDTW loss.
 """
 
 
@@ -104,7 +97,13 @@ class MultiLayerPerceptron(torch.nn.Module):  # No hidden layer here
             self.optimizer.step()
 
 
-"""Multilayer Perceptron model using the class above with PyTorch default loss function"""
+"""Multilayer Perceptron model using the class above with PyTorch default loss function
+
+We define an MLP class that would allow training a single-hidden-layer model using the 
+default PyTorch loss function as a criterion to be optimized.
+We train the network for 1000 epochs on a forecasting task that would consist, 
+given the first 150 elements of a time series, in predicting the next 125 ones.
+"""
 
 model = MultiLayerPerceptron(
     layers=nn.Sequential(
@@ -125,12 +124,18 @@ ts_index = 50
 y_pred = model(X_test[:, :150, 0]).detach().numpy()
 
 plt.figure()
-plt.title('Multi-step ahead forecasting using the PyTorch default loss function')
+plt.title('Multi-step ahead forecasting using\nthe PyTorch default loss function', size=20)
 plt.plot(X_test[ts_index].ravel())
 plt.plot(np.arange(150, 275), y_pred[ts_index], 'r-')
 
 
-"""Multilayer perceptron using Soft-DTW metrics as a loss function"""
+"""Multilayer perceptron using the Soft-DTW metric as a loss function
+
+We take inspiration from the code above to define an MLP class that would allow training
+a single-hidden-layer model using normalized soft-DTW as a criterion to be optimized.
+We train the network for 100 epochs on a forecasting task that would consist, given the first 150 elements
+of a time series, in predicting the next 125 ones.
+"""
 
 model = MultiLayerPerceptron(
     layers=nn.Sequential(
@@ -152,7 +157,7 @@ ts_index = 50
 y_pred = model(X_test[:, :150, 0]).detach().numpy()
 
 plt.figure()
-plt.title('Multi-step ahead forecasting using the Soft-DTW loss function')
+plt.title('Multi-step ahead forecasting\nusing the Soft-DTW loss function', size=20)
 plt.plot(X_test[ts_index].ravel())
 plt.plot(np.arange(150, 275), y_pred[ts_index], 'r-')
 plt.show()
