@@ -3,19 +3,22 @@
 Soft-DTW loss for PyTorch neural network
 ========================================
 
+The aim here is to use the Soft Dynamic Time Warping metric as a loss function of a PyTorch Neural Network for
+time series forcasting.
+
 This notebook is inspired by the notebook of Romain Tavenard about Alignment-based metrics in Machine Learning:
+
 https://github.com/rtavenar/notebooks-ml4ts/blob/main/03_align4ml_sol.ipynb
 
-The aim here is to use the Soft Dynamic Time Warping metric as a loss function for a PyTorch Neural Network.
+We will rely on a `torch`-compatible implementation of the soft-DTW loss function. The implementation of
+this `torch`-compatible soft-DTW loss function on `tslearn` has been inspired by the github repository:
 
-We will rely on a `torch`-compatible implementation of soft-DTW obtained from github:
 https://github.com/Maghoumi/pytorch-softdtw-cuda
 """
 
 # Author: Yann Cabanes
 # License: BSD 3 clause
 
-# -*- coding: utf-8 -*-
 """Import the modules"""
 
 import numpy as np
@@ -47,14 +50,17 @@ for ts in X_subset:
 
 """Multi-step ahead forecasting
 
-In this section, our goal will be to implement a single-hidden-layer perceptron for time series forecasting. 
-Our network will be trained to minimize normalized soft-DTW.
-The normalized soft-DTW (also coined soft-DTW divergence) between the time series x and y is defined as: 
-Soft-DTW(x, y) - (Soft-DTW(x, x) + Soft-DTW(y, y)) / 2
-We will rely on a torch-compatible implementation of soft-DTW obtained from github:
-https://github.com/Maghoumi/pytorch-softdtw-cuda
+In this section, our goal is to implement a single-hidden-layer perceptron for time series forecasting. 
+Our network will be trained to minimize the soft-DTW metric.
+We will rely on a `torch`-compatible implementation of the soft-DTW loss function.
 The code below is an implementation of a generic Multi-Layer-Perceptron class in torch, 
 and we will rely on it for the implementation of a forecasting MLP with softDTW loss.
+
+Note that Soft-DTW can take negative values due to the regularization parameter gamma.
+The normalized soft-DTW (also coined soft-DTW divergence) between the time series x and y is defined as: 
+Soft-DTW(x, y) - (Soft-DTW(x, x) + Soft-DTW(y, y)) / 2
+The normalized Soft-DTW is always positive.
+However, the computation time of the normalized soft-DTW equals three times the computation time of the Soft-DTW.
 """
 
 
@@ -132,7 +138,7 @@ plt.plot(np.arange(150, 275), y_pred[ts_index], 'r-')
 """Multilayer perceptron using the Soft-DTW metric as a loss function
 
 We take inspiration from the code above to define an MLP class that would allow training
-a single-hidden-layer model using normalized soft-DTW as a criterion to be optimized.
+a single-hidden-layer model using soft-DTW as a criterion to be optimized.
 We train the network for 100 epochs on a forecasting task that would consist, given the first 150 elements
 of a time series, in predicting the next 125 ones.
 """
