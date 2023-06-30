@@ -17,10 +17,8 @@ http://jmlr.org/papers/v21/19-027.html, https://github.com/geomstats/geomstats/
 import numpy as _np
 import torch as _torch
 
-from .base_backend import BaseBackend
 
-
-class PyTorchBackend(BaseBackend):
+class PyTorchBackend(object):
     """Class for the PyTorch  backend."""
 
     def __init__(self):

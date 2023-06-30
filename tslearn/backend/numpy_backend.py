@@ -18,10 +18,8 @@ import numpy as _np
 from scipy.spatial.distance import cdist, pdist
 from sklearn.metrics.pairwise import euclidean_distances, pairwise_distances
 
-from .base_backend import BaseBackend
 
-
-class NumPyBackend(BaseBackend):
+class NumPyBackend(object):
     """Class for the Numpy  backend."""
 
     def __init__(self):
