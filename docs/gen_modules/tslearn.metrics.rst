@@ -37,3 +37,5 @@ tslearn.metrics
       lb_keogh
       sigma_gak
       gamma_soft_dtw
+      SoftDTW
+      SoftDTWLossPyTorch
