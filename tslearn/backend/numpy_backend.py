@@ -23,6 +23,8 @@ class NumPyBackend(object):
     """Class for the Numpy  backend."""
 
     def __init__(self):
+        self.backend_string = "numpy"
+
         self.linalg = NumPyLinalg()
         self.random = NumPyRandom()
         self.testing = NumPyTesting()

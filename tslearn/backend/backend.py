@@ -61,12 +61,6 @@ def select_backend(data):
     return NumPyBackend()
 
 
-def backend_to_string(backend):
-    if "NumPy" in f"{backend}":
-        return "numpy"
-    return "pytorch"
-
-
 class Backend(object):
     """Class for the  backend.
 
@@ -83,7 +77,7 @@ class Backend(object):
 
     def __init__(self, data=None):
         self.backend = select_backend(data)
-        self.backend_string = backend_to_string(self.backend)
+        self.backend_string = self.backend.backend_string
         self.is_numpy = self.backend_string == "numpy"
         self.is_pytorch = self.backend_string == "pytorch"
 

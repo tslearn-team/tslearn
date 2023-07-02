@@ -22,6 +22,8 @@ class PyTorchBackend(object):
     """Class for the PyTorch  backend."""
 
     def __init__(self):
+        self.backend_string = "pytorch"
+
         self.linalg = PyTorchLinalg()
         self.random = PyTorchRandom()
         self.testing = PyTorchTesting()
