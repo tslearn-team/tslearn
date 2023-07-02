@@ -6,7 +6,7 @@
 import numpy as np
 from numba import njit, prange
 
-from tslearn.backend.backend import instanciate_backend
+from tslearn.backend.backend import instantiate_backend
 
 DBL_MAX = np.finfo("double").max
 
@@ -56,7 +56,7 @@ def _softmin3(a, b, c, gamma, be=None):
     -------
     softmin_value : float64
     """
-    be = instanciate_backend(be, a)
+    be = instantiate_backend(be, a)
 
     a /= -gamma
     b /= -gamma
@@ -110,7 +110,7 @@ def _soft_dtw(D, R, gamma, be=None):
     be : Backend object or string or None
         Backend.
     """
-    be = instanciate_backend(be, D)
+    be = instantiate_backend(be, D)
 
     m = D.shape[0]
     n = D.shape[1]
@@ -158,7 +158,7 @@ def _soft_dtw_batch(D, R, gamma, be=None):
     be : Backend object or string or None
         Backend.
     """
-    be = instanciate_backend(be, D)
+    be = instantiate_backend(be, D)
     for i_sample in range(D.shape[0]):
         _soft_dtw(D[i_sample, :, :], R[i_sample, :, :], gamma, be=be)
 
@@ -207,7 +207,7 @@ def _soft_dtw_grad(D, R, E, gamma, be=None):
     be : Backend object or string or None
         Backend.
     """
-    be = instanciate_backend(be, D)
+    be = instantiate_backend(be, D)
 
     m = D.shape[0] - 1
     n = D.shape[1] - 1
@@ -257,7 +257,7 @@ def _soft_dtw_grad_batch(D, R, E, gamma, be=None):
     be : Backend object or string or None
         Backend.
     """
-    be = instanciate_backend(be, D)
+    be = instantiate_backend(be, D)
     for i_sample in prange(D.shape[0]):
         _soft_dtw_grad(D[i_sample, :, :], R[i_sample, :, :], E[i_sample, :, :], gamma, be=be)
 

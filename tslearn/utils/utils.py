@@ -17,7 +17,7 @@ try:
     from sklearn.utils.estimator_checks import _NotAnArray as NotAnArray
 except ImportError:  # Old sklearn versions
     from sklearn.utils.estimator_checks import NotAnArray
-from tslearn.backend import instanciate_backend
+from tslearn.backend import instantiate_backend
 from tslearn.bases import TimeSeriesBaseEstimator
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
@@ -149,7 +149,7 @@ def to_time_series(ts, remove_nans=False, be=None):
     --------
     to_time_series_dataset : Transforms a dataset of time series
     """
-    be = instanciate_backend(be, ts)
+    be = instantiate_backend(be, ts)
     ts_out = be.array(ts)
     if ts_out.ndim <= 1:
         ts_out = be.reshape(ts_out, (-1, 1))
@@ -200,7 +200,7 @@ def to_time_series_dataset(dataset, dtype=float, be=None):
     --------
     to_time_series : Transforms a single time series
     """
-    be = instanciate_backend(be, dataset)
+    be = instantiate_backend(be, dataset)
 
     try:
         import pandas as pd
@@ -385,7 +385,7 @@ def check_equal_size(dataset, be=None):
     >>> check_equal_size([])
     True
     """
-    be = instanciate_backend(be, dataset)
+    be = instantiate_backend(be, dataset)
 
     dataset_ = to_time_series_dataset(dataset, be=be)
     if len(dataset_) == 0:
@@ -431,7 +431,7 @@ def ts_size(ts, be=None):
     >>> ts_size([numpy.nan, 3, numpy.inf, numpy.nan])
     3
     """
-    be = instanciate_backend(be, ts)
+    be = instantiate_backend(be, ts)
     ts_ = to_time_series(ts, be=be)
     sz = be.shape(ts_)[0]
     while sz > 0 and be.all(be.isnan(ts_[sz - 1])):

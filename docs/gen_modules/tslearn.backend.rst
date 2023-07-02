@@ -14,7 +14,7 @@ tslearn.backend
 
       Backend
       backend_to_string
-      instanciate_backend
+      instantiate_backend
       select_backend
       NumPyBackend
       PyTorchBackend

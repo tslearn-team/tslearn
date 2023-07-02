@@ -15,7 +15,7 @@ except ImportError:
             )
 
 
-def instanciate_backend(*args):
+def instantiate_backend(*args):
     """Select backend.
 
     Parameter
