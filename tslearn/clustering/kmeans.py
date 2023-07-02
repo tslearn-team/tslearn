@@ -626,10 +626,12 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
             self.cluster_centers_ = self.init.copy()
         elif isinstance(self.init, str) and self.init == "k-means++":
             if self.metric == "euclidean":
+                sample_weight = _check_sample_weight(None, X, dtype=X.dtype)
                 self.cluster_centers_ = _kmeans_plusplus(
                     X.reshape((n_ts, -1)),
                     self.n_clusters,
                     x_squared_norms=x_squared_norms,
+                    sample_weight=sample_weight,
                     random_state=rs
                 )[0].reshape((-1, sz, d))
             else:
