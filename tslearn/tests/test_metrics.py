@@ -457,6 +457,11 @@ def test_gak():
         np.testing.assert_allclose(sqeuc.compute(), cdist(v1, v2, metric="sqeuclidean"))
 
 
+@pytest.mark.skipif(
+    (sys.version_info.major, sys.version_info.minor) == (3, 9)
+    and "mac" in platform.platform().lower(),
+    reason="Test failing for MacOS with python3.9 (Segmentation fault)",
+)
 def test_gamma_soft_dtw():
     backends = ["numpy", "pytorch"]
     for backend in backends:
