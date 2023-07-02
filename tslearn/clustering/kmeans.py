@@ -1,29 +1,30 @@
+import warnings
+
+import numpy
 import sklearn
+from scipy.spatial.distance import cdist
 from sklearn.base import ClusterMixin, TransformerMixin
 from sklearn.metrics.pairwise import pairwise_kernels
-
 from sklearn.utils import check_random_state
 from sklearn.utils.extmath import stable_cumsum
 from sklearn.utils.validation import _check_sample_weight
-from scipy.spatial.distance import cdist
-import numpy
-import warnings
 
 try:
     from sklearn.cluster._kmeans import _kmeans_plusplus
-    SKLEARN_VERSION_GREATER_THAN_OR_EQUAL_TO_1_3_0 = sklearn.__version__ >= '1.3.0'
+
+    SKLEARN_VERSION_GREATER_THAN_OR_EQUAL_TO_1_3_0 = sklearn.__version__ >= "1.3.0"
 except:
     try:
         from sklearn.cluster._kmeans import _k_init
+
         warnings.warn(
-            "Scikit-learn <0.24 will be deprecated in a "
-            "future release of tslearn"
+            "Scikit-learn <0.24 will be deprecated in a " "future release of tslearn"
         )
     except:
         from sklearn.cluster.k_means_ import _k_init
+
         warnings.warn(
-            "Scikit-learn <0.24 will be deprecated in a "
-            "future release of tslearn"
+            "Scikit-learn <0.24 will be deprecated in a " "future release of tslearn"
         )
     # sklearn < 0.24: _k_init only returns centroids, not indices
     # So we need to add a second (fake) return value to make it match
@@ -31,26 +32,34 @@ except:
     def _kmeans_plusplus(*args, **kwargs):
         return _k_init(*args, **kwargs), None
 
-from tslearn.metrics import cdist_gak, cdist_dtw, cdist_soft_dtw, sigma_gak
-from tslearn.barycenters import euclidean_barycenter, \
-    dtw_barycenter_averaging, softdtw_barycenter
+
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
-from tslearn.utils import (to_time_series_dataset, to_sklearn_dataset,
-                           check_dims)
+
+from tslearn.barycenters import (
+    dtw_barycenter_averaging,
+    euclidean_barycenter,
+    softdtw_barycenter,
+)
 from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
+from tslearn.metrics import cdist_dtw, cdist_gak, cdist_soft_dtw, sigma_gak
+from tslearn.utils import check_dims, to_sklearn_dataset, to_time_series_dataset
 
-from .utils import (EmptyClusterError, _check_initial_guess,
-                    _check_no_empty_cluster, _check_full_length,
-                    TimeSeriesCentroidBasedClusteringMixin, _compute_inertia)
+from .utils import (
+    EmptyClusterError,
+    TimeSeriesCentroidBasedClusteringMixin,
+    _check_full_length,
+    _check_initial_guess,
+    _check_no_empty_cluster,
+    _compute_inertia,
+)
 
-__author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
+__author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 # Kernel k-means is derived from https://gist.github.com/mblondel/6230787 by
 # Mathieu Blondel, under BSD 3 clause license
 
 
-def _k_init_metric(X, n_clusters, cdist_metric, random_state,
-                   n_local_trials=None):
+def _k_init_metric(X, n_clusters, cdist_metric, random_state, n_local_trials=None):
     """Init n_clusters seeds according to k-means++ with a custom distance
     metric.
 
@@ -86,8 +95,7 @@ def _k_init_metric(X, n_clusters, cdist_metric, random_state,
     """
     n_samples, n_timestamps, n_features = X.shape
 
-    centers = numpy.empty((n_clusters, n_timestamps, n_features),
-                          dtype=X.dtype)
+    centers = numpy.empty((n_clusters, n_timestamps, n_features), dtype=X.dtype)
 
     # Set the number of local seeding trials if none is given
     if n_local_trials is None:
@@ -109,18 +117,17 @@ def _k_init_metric(X, n_clusters, cdist_metric, random_state,
         # Choose center candidates by sampling with probability proportional
         # to the squared distance to the closest existing center
         rand_vals = random_state.random_sample(n_local_trials) * current_pot
-        candidate_ids = numpy.searchsorted(stable_cumsum(closest_dist_sq),
-                                           rand_vals)
+        candidate_ids = numpy.searchsorted(stable_cumsum(closest_dist_sq), rand_vals)
         # XXX: numerical imprecision can result in a candidate_id out of range
-        numpy.clip(candidate_ids, None, closest_dist_sq.size - 1,
-                   out=candidate_ids)
+        numpy.clip(candidate_ids, None, closest_dist_sq.size - 1, out=candidate_ids)
 
         # Compute distances to center candidates
         distance_to_candidates = cdist_metric(X[candidate_ids], X) ** 2
 
         # update closest distances squared and potential for each candidate
-        numpy.minimum(closest_dist_sq, distance_to_candidates,
-                      out=distance_to_candidates)
+        numpy.minimum(
+            closest_dist_sq, distance_to_candidates, out=distance_to_candidates
+        )
         candidates_pot = distance_to_candidates.sum(axis=1)
 
         # Decide which candidate is the best
@@ -238,9 +245,19 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
     .. [2] Fast Global Alignment Kernels. Marco Cuturi. ICML 2011.
     """
 
-    def __init__(self, n_clusters=3, kernel="gak", max_iter=50, tol=1e-6,
-                 n_init=1, kernel_params=None, sigma=1., n_jobs=None,
-                 verbose=0, random_state=None):
+    def __init__(
+        self,
+        n_clusters=3,
+        kernel="gak",
+        max_iter=50,
+        tol=1e-6,
+        n_init=1,
+        kernel_params=None,
+        sigma=1.0,
+        n_jobs=None,
+        verbose=0,
+        random_state=None,
+    ):
         self.n_clusters = n_clusters
         self.kernel = kernel
         self.max_iter = max_iter
@@ -253,12 +270,12 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
         self.random_state = random_state
 
     def _is_fitted(self):
-        check_is_fitted(self, '_X_fit')
+        check_is_fitted(self, "_X_fit")
         return True
 
     def _get_model_params(self):
         params = super()._get_model_params()
-        params.update({'_X_fit': self._X_fit})
+        params.update({"_X_fit": self._X_fit})
         return params
 
     def _get_kernel_params(self):
@@ -276,16 +293,22 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
     def _get_kernel(self, X, Y=None):
         kernel_params = self._get_kernel_params()
         if self.kernel == "gak":
-            return cdist_gak(X, Y, n_jobs=self.n_jobs, verbose=self.verbose,
-                             **kernel_params)
+            return cdist_gak(
+                X, Y, n_jobs=self.n_jobs, verbose=self.verbose, **kernel_params
+            )
         else:
             X_sklearn = to_sklearn_dataset(X)
             if Y is not None:
                 Y_sklearn = to_sklearn_dataset(Y)
             else:
                 Y_sklearn = Y
-            return pairwise_kernels(X_sklearn, Y_sklearn, metric=self.kernel,
-                                    n_jobs=self.n_jobs, **kernel_params)
+            return pairwise_kernels(
+                X_sklearn,
+                Y_sklearn,
+                metric=self.kernel,
+                n_jobs=self.n_jobs,
+                **kernel_params
+            )
 
     def _fit_one_init(self, K, rs):
         n_samples = K.shape[0]
@@ -328,13 +351,15 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
             Weights to be given to time series in the learning process. By
             default, all time series weights are equal.
         """
-        if self.sigma != 1.:
+        if self.sigma != 1.0:
             warnings.warn(
                 "Setting `sigma` directly as a parameter for KernelKMeans "
                 "and GlobalAlignmentKernelKMeans is deprecated in version "
                 "0.4 and will be removed in 0.6. Use `kernel_params` "
                 "instead.",
-                DeprecationWarning, stacklevel=2)
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
         X = check_array(X, allow_nd=True, force_all_finite=False)
         X = check_dims(X)
@@ -344,7 +369,7 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
         max_attempts = max(self.n_init, 10)
         kernel_params = self._get_kernel_params()
         if self.kernel == "gak":
-            self.sigma_gak_ = kernel_params.get("sigma", 1.)
+            self.sigma_gak_ = kernel_params.get("sigma", 1.0)
             if self.sigma_gak_ == "auto":
                 self.sigma_gak_ = sigma_gak(X)
         else:
@@ -360,8 +385,7 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
 
         n_samples = X.shape[0]
         K = self._get_kernel(X)
-        sw = (sample_weight if sample_weight is not None
-              else numpy.ones(n_samples))
+        sw = sample_weight if sample_weight is not None else numpy.ones(n_samples)
         self.sample_weight_ = sw
         rs = check_random_state(self.random_state)
 
@@ -395,16 +419,18 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
         sw = self.sample_weight_
 
         for j in range(self.n_clusters):
-            mask = (self.labels_ == j)
+            mask = self.labels_ == j
 
             if numpy.sum(mask) == 0:
-                raise EmptyClusterError("try smaller n_cluster or better "
-                                        "kernel parameters")
+                raise EmptyClusterError(
+                    "try smaller n_cluster or better " "kernel parameters"
+                )
 
             # NB: we use a normalized kernel so k(x,x) = 1 for all x
             # (including the centroid)
-            dist[:, j] = 2 - 2 * numpy.sum(sw[mask] * K[:, mask],
-                                           axis=1) / sw[mask].sum()
+            dist[:, j] = (
+                2 - 2 * numpy.sum(sw[mask] * K[:, mask], axis=1) / sw[mask].sum()
+            )
 
     @staticmethod
     def _compute_inertia(dist_sq):
@@ -446,9 +472,8 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
             Index of the cluster each sample belongs to.
         """
         X = check_array(X, allow_nd=True, force_all_finite=False)
-        check_is_fitted(self, '_X_fit')
-        X = check_dims(X, X_fit_dims=self._X_fit.shape,
-                       check_n_features_only=True)
+        check_is_fitted(self, "_X_fit")
+        X = check_dims(X, X_fit_dims=self._X_fit.shape, check_n_features_only=True)
         K = self._get_kernel(X, self._X_fit)
         n_samples = X.shape[0]
         dist = numpy.zeros((n_samples, self.n_clusters))
@@ -456,7 +481,7 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
         return dist.argmin(axis=1)
 
     def _more_tags(self):
-        return {'allow_nan': True, 'allow_variable_length': True}
+        return {"allow_nan": True, "allow_variable_length": True}
 
 
 class GlobalAlignmentKernelKMeans(KernelKMeans):
@@ -465,14 +490,20 @@ class GlobalAlignmentKernelKMeans(KernelKMeans):
             "`GlobalAlignmentKernelKMeans` is deprecated in version "
             "0.4 and will be removed in 0.6. Use `KernelKMeans` "
             "instead.",
-            DeprecationWarning, stacklevel=2)
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__(**kwargs)
         self.kernel = "gak"
 
 
-class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
-                       TimeSeriesCentroidBasedClusteringMixin,
-                       BaseModelPackage, TimeSeriesBaseEstimator):
+class TimeSeriesKMeans(
+    TransformerMixin,
+    ClusterMixin,
+    TimeSeriesCentroidBasedClusteringMixin,
+    BaseModelPackage,
+    TimeSeriesBaseEstimator,
+):
     """K-means clustering for time-series data.
 
     Parameters
@@ -591,10 +622,21 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
     (2, 6, 1)
     """
 
-    def __init__(self, n_clusters=3, max_iter=50, tol=1e-6, n_init=1,
-                 metric="euclidean", max_iter_barycenter=100,
-                 metric_params=None, n_jobs=None, dtw_inertia=False,
-                 verbose=0, random_state=None, init='k-means++'):
+    def __init__(
+        self,
+        n_clusters=3,
+        max_iter=50,
+        tol=1e-6,
+        n_init=1,
+        metric="euclidean",
+        max_iter_barycenter=100,
+        metric_params=None,
+        n_jobs=None,
+        dtw_inertia=False,
+        verbose=0,
+        random_state=None,
+        init="k-means++",
+    ):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
         self.tol = tol
@@ -609,7 +651,7 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
         self.init = init
 
     def _is_fitted(self):
-        check_is_fitted(self, ['cluster_centers_'])
+        check_is_fitted(self, ["cluster_centers_"])
         return True
 
     def _get_metric_params(self):
@@ -624,7 +666,7 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
     def _fit_one_init(self, X, x_squared_norms, rs):
         metric_params = self._get_metric_params()
         n_ts, sz, d = X.shape
-        if hasattr(self.init, '__array__'):
+        if hasattr(self.init, "__array__"):
             self.cluster_centers_ = self.init.copy()
         elif isinstance(self.init, str) and self.init == "k-means++":
             if self.metric == "euclidean":
@@ -635,38 +677,45 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
                         self.n_clusters,
                         x_squared_norms=x_squared_norms,
                         sample_weight=sample_weight,
-                        random_state=rs
+                        random_state=rs,
                     )[0].reshape((-1, sz, d))
                 else:
                     self.cluster_centers_ = _kmeans_plusplus(
                         X.reshape((n_ts, -1)),
                         self.n_clusters,
                         x_squared_norms=x_squared_norms,
-                        random_state=rs
+                        random_state=rs,
                     )[0].reshape((-1, sz, d))
             else:
                 if self.metric == "dtw":
+
                     def metric_fun(x, y):
-                        return cdist_dtw(x, y, n_jobs=self.n_jobs,
-                                         verbose=self.verbose, **metric_params)
+                        return cdist_dtw(
+                            x,
+                            y,
+                            n_jobs=self.n_jobs,
+                            verbose=self.verbose,
+                            **metric_params
+                        )
 
                 elif self.metric == "softdtw":
+
                     def metric_fun(x, y):
                         return cdist_soft_dtw(x, y, **metric_params)
+
                 else:
                     raise ValueError(
                         "Incorrect metric: %s (should be one of 'dtw', "
                         "'softdtw', 'euclidean')" % self.metric
                     )
-                self.cluster_centers_ = _k_init_metric(X, self.n_clusters,
-                                                       cdist_metric=metric_fun,
-                                                       random_state=rs)
+                self.cluster_centers_ = _k_init_metric(
+                    X, self.n_clusters, cdist_metric=metric_fun, random_state=rs
+                )
         elif self.init == "random":
             indices = rs.choice(X.shape[0], self.n_clusters)
             self.cluster_centers_ = X[indices].copy()
         else:
-            raise ValueError("Value %r for parameter 'init'"
-                             "is invalid" % self.init)
+            raise ValueError("Value %r for parameter 'init'" "is invalid" % self.init)
         self.cluster_centers_ = _check_full_length(self.cluster_centers_)
         old_inertia = numpy.inf
 
@@ -689,17 +738,26 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
     def _transform(self, X):
         metric_params = self._get_metric_params()
         if self.metric == "euclidean":
-            return cdist(X.reshape((X.shape[0], -1)),
-                         self.cluster_centers_.reshape((self.n_clusters, -1)),
-                         metric="euclidean")
+            return cdist(
+                X.reshape((X.shape[0], -1)),
+                self.cluster_centers_.reshape((self.n_clusters, -1)),
+                metric="euclidean",
+            )
         elif self.metric == "dtw":
-            return cdist_dtw(X, self.cluster_centers_, n_jobs=self.n_jobs,
-                             verbose=self.verbose, **metric_params)
+            return cdist_dtw(
+                X,
+                self.cluster_centers_,
+                n_jobs=self.n_jobs,
+                verbose=self.verbose,
+                **metric_params
+            )
         elif self.metric == "softdtw":
             return cdist_soft_dtw(X, self.cluster_centers_, **metric_params)
         else:
-            raise ValueError("Incorrect metric: %s (should be one of 'dtw', "
-                             "'softdtw', 'euclidean')" % self.metric)
+            raise ValueError(
+                "Incorrect metric: %s (should be one of 'dtw', "
+                "'softdtw', 'euclidean')" % self.metric
+            )
 
     def _assign(self, X, update_class_attributes=True):
         dists = self._transform(X)
@@ -708,14 +766,14 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
             self.labels_ = matched_labels
             _check_no_empty_cluster(self.labels_, self.n_clusters)
             if self.dtw_inertia and self.metric != "dtw":
-                inertia_dists = cdist_dtw(X, self.cluster_centers_,
-                                          n_jobs=self.n_jobs,
-                                          verbose=self.verbose)
+                inertia_dists = cdist_dtw(
+                    X, self.cluster_centers_, n_jobs=self.n_jobs, verbose=self.verbose
+                )
             else:
                 inertia_dists = dists
-            self.inertia_ = _compute_inertia(inertia_dists,
-                                             self.labels_,
-                                             self._squared_inertia)
+            self.inertia_ = _compute_inertia(
+                inertia_dists, self.labels_, self._squared_inertia
+            )
         return matched_labels
 
     def _update_centroids(self, X):
@@ -727,16 +785,17 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
                     barycenter_size=None,
                     init_barycenter=self.cluster_centers_[k],
                     metric_params=metric_params,
-                    verbose=False)
+                    verbose=False,
+                )
             elif self.metric == "softdtw":
                 self.cluster_centers_[k] = softdtw_barycenter(
                     X=X[self.labels_ == k],
                     max_iter=self.max_iter_barycenter,
                     init=self.cluster_centers_[k],
-                    **metric_params)
+                    **metric_params
+                )
             else:
-                self.cluster_centers_[k] = euclidean_barycenter(
-                    X=X[self.labels_ == k])
+                self.cluster_centers_[k] = euclidean_barycenter(X=X[self.labels_ == k])
 
     def fit(self, X, y=None):
         """Compute k-means clustering.
@@ -750,12 +809,15 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
             Ignored
         """
 
-        X = check_array(X, allow_nd=True, force_all_finite='allow-nan')
+        X = check_array(X, allow_nd=True, force_all_finite="allow-nan")
 
-        if hasattr(self.init, '__array__'):
-            X = check_dims(X, X_fit_dims=self.init.shape,
-                           extend=True,
-                           check_n_features_only=(self.metric != "euclidean"))
+        if hasattr(self.init, "__array__"):
+            X = check_dims(
+                X,
+                X_fit_dims=self.init.shape,
+                extend=True,
+                check_n_features_only=(self.metric != "euclidean"),
+            )
 
         self.labels_ = None
         self.inertia_ = numpy.inf
@@ -770,12 +832,15 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
         X_ = to_time_series_dataset(X)
         rs = check_random_state(self.random_state)
 
-        if isinstance(self.init, str) and self.init == "k-means++" and \
-                        self.metric == "euclidean":
+        if (
+            isinstance(self.init, str)
+            and self.init == "k-means++"
+            and self.metric == "euclidean"
+        ):
             n_ts, sz, d = X_.shape
-            x_squared_norms = cdist(X_.reshape((n_ts, -1)),
-                                    numpy.zeros((1, sz * d)),
-                                    metric="sqeuclidean").reshape((1, -1))
+            x_squared_norms = cdist(
+                X_.reshape((n_ts, -1)), numpy.zeros((1, sz * d)), metric="sqeuclidean"
+            ).reshape((1, -1))
         else:
             x_squared_norms = None
         _check_initial_guess(self.init, self.n_clusters)
@@ -821,7 +886,7 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
-        X = check_array(X, allow_nd=True, force_all_finite='allow-nan')
+        X = check_array(X, allow_nd=True, force_all_finite="allow-nan")
         return self.fit(X, y).labels_
 
     def predict(self, X):
@@ -837,17 +902,20 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
-        X = check_array(X, allow_nd=True, force_all_finite='allow-nan')
-        check_is_fitted(self, 'cluster_centers_')
-        X = check_dims(X, X_fit_dims=self.cluster_centers_.shape,
-                       extend=True,
-                       check_n_features_only=(self.metric != "euclidean"))
+        X = check_array(X, allow_nd=True, force_all_finite="allow-nan")
+        check_is_fitted(self, "cluster_centers_")
+        X = check_dims(
+            X,
+            X_fit_dims=self.cluster_centers_.shape,
+            extend=True,
+            check_n_features_only=(self.metric != "euclidean"),
+        )
         return self._assign(X, update_class_attributes=False)
 
     def transform(self, X):
         """Transform X to a cluster-distance space.
 
-        In the new space, each dimension is the distance to the cluster 
+        In the new space, each dimension is the distance to the cluster
         centers.
 
         Parameters
@@ -860,12 +928,15 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
         distances : array of shape=(n_ts, n_clusters)
             Distances to cluster centers
         """
-        X = check_array(X, allow_nd=True, force_all_finite='allow-nan')
-        check_is_fitted(self, 'cluster_centers_')
-        X = check_dims(X, X_fit_dims=self.cluster_centers_.shape,
-                       extend=True,
-                       check_n_features_only=(self.metric != "euclidean"))
+        X = check_array(X, allow_nd=True, force_all_finite="allow-nan")
+        check_is_fitted(self, "cluster_centers_")
+        X = check_dims(
+            X,
+            X_fit_dims=self.cluster_centers_.shape,
+            extend=True,
+            check_n_features_only=(self.metric != "euclidean"),
+        )
         return self._transform(X)
 
     def _more_tags(self):
-        return {'allow_nan': True, 'allow_variable_length': True}
+        return {"allow_nan": True, "allow_variable_length": True}
