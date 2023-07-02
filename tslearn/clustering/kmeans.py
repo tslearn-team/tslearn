@@ -1,3 +1,4 @@
+import sklearn
 from sklearn.base import ClusterMixin, TransformerMixin
 from sklearn.metrics.pairwise import pairwise_kernels
 
@@ -10,6 +11,7 @@ import warnings
 
 try:
     from sklearn.cluster._kmeans import _kmeans_plusplus
+    SKLEARN_VERSION_GREATER_THAN_OR_EQUAL_TO_1_3_0 = sklearn.__version__ >= '1.3.0'
 except:
     try:
         from sklearn.cluster._kmeans import _k_init
@@ -165,8 +167,8 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
     kernel_params : dict or None (default: None)
         Kernel parameters to be passed to the kernel function.
         None means no kernel parameter is set.
-        For Global Alignment Kernel, the only parameter of interest is `sigma`. 
-        If set to 'auto', it is computed based on a sampling of the training 
+        For Global Alignment Kernel, the only parameter of interest is `sigma`.
+        If set to 'auto', it is computed based on a sampling of the training
         set
         (cf :ref:`tslearn.metrics.sigma_gak <fun-tslearn.metrics.sigma_gak>`).
         If no specific value is set for `sigma`, its defaults to 1.
@@ -177,8 +179,8 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
         (cf :ref:`tslearn.metrics.sigma_gak <fun-tslearn.metrics.sigma_gak>`)
 
         .. deprecated:: 0.4
-            Setting `sigma` directly as a parameter for KernelKMeans and 
-            GlobalAlignmentKernelKMeans is deprecated in version 0.4 and will 
+            Setting `sigma` directly as a parameter for KernelKMeans and
+            GlobalAlignmentKernelKMeans is deprecated in version 0.4 and will
             be removed in 0.6. Use `kernel_params` instead.
 
     n_jobs : int or None, optional (default=None)
@@ -190,7 +192,7 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
         for more details.
 
     verbose : int (default: 0)
-        If nonzero, joblib progress messages are printed.  
+        If nonzero, joblib progress messages are printed.
 
     random_state : integer or numpy.RandomState, optional
         Generator used to initialize the centers. If an integer is given, it
@@ -522,7 +524,7 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
 
     verbose : int (default: 0)
         If nonzero, print information about the inertia while learning
-        the model and joblib progress messages are printed.  
+        the model and joblib progress messages are printed.
 
     random_state : integer or numpy.RandomState, optional
         Generator used to initialize the centers. If an integer is given, it
@@ -626,12 +628,22 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
             self.cluster_centers_ = self.init.copy()
         elif isinstance(self.init, str) and self.init == "k-means++":
             if self.metric == "euclidean":
-                self.cluster_centers_ = _kmeans_plusplus(
-                    X.reshape((n_ts, -1)),
-                    self.n_clusters,
-                    x_squared_norms=x_squared_norms,
-                    random_state=rs
-                )[0].reshape((-1, sz, d))
+                if SKLEARN_VERSION_GREATER_THAN_OR_EQUAL_TO_1_3_0:
+                    sample_weight = _check_sample_weight(None, X, dtype=X.dtype)
+                    self.cluster_centers_ = _kmeans_plusplus(
+                        X.reshape((n_ts, -1)),
+                        self.n_clusters,
+                        x_squared_norms=x_squared_norms,
+                        sample_weight=sample_weight,
+                        random_state=rs
+                    )[0].reshape((-1, sz, d))
+                else:
+                    self.cluster_centers_ = _kmeans_plusplus(
+                        X.reshape((n_ts, -1)),
+                        self.n_clusters,
+                        x_squared_norms=x_squared_norms,
+                        random_state=rs
+                    )[0].reshape((-1, sz, d))
             else:
                 if self.metric == "dtw":
                     def metric_fun(x, y):
