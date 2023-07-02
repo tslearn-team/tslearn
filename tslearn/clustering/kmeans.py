@@ -1,3 +1,4 @@
+import sklearn
 from sklearn.base import ClusterMixin, TransformerMixin
 from sklearn.metrics.pairwise import pairwise_kernels
 
@@ -10,6 +11,7 @@ import warnings
 
 try:
     from sklearn.cluster._kmeans import _kmeans_plusplus
+    SKLEARN_VERSION_GREATER_THAN_OR_EQUAL_TO_1_3_0 = sklearn.__version__ >= '1.3.0'
 except:
     try:
         from sklearn.cluster._kmeans import _k_init
@@ -626,14 +628,22 @@ class TimeSeriesKMeans(TransformerMixin, ClusterMixin,
             self.cluster_centers_ = self.init.copy()
         elif isinstance(self.init, str) and self.init == "k-means++":
             if self.metric == "euclidean":
-                sample_weight = _check_sample_weight(None, X, dtype=X.dtype)
-                self.cluster_centers_ = _kmeans_plusplus(
-                    X.reshape((n_ts, -1)),
-                    self.n_clusters,
-                    x_squared_norms=x_squared_norms,
-                    sample_weight=sample_weight,
-                    random_state=rs
-                )[0].reshape((-1, sz, d))
+                if SKLEARN_VERSION_GREATER_THAN_OR_EQUAL_TO_1_3_0:
+                    sample_weight = _check_sample_weight(None, X, dtype=X.dtype)
+                    self.cluster_centers_ = _kmeans_plusplus(
+                        X.reshape((n_ts, -1)),
+                        self.n_clusters,
+                        x_squared_norms=x_squared_norms,
+                        sample_weight=sample_weight,
+                        random_state=rs
+                    )[0].reshape((-1, sz, d))
+                else:
+                    self.cluster_centers_ = _kmeans_plusplus(
+                        X.reshape((n_ts, -1)),
+                        self.n_clusters,
+                        x_squared_norms=x_squared_norms,
+                        random_state=rs
+                    )[0].reshape((-1, sz, d))
             else:
                 if self.metric == "dtw":
                     def metric_fun(x, y):
