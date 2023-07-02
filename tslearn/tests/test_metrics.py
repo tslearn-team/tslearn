@@ -1,3 +1,6 @@
+import platform
+import sys
+
 import numpy as np
 import pytest
 import torch
@@ -465,6 +468,11 @@ def test_gamma_soft_dtw():
         np.testing.assert_allclose(gamma, 8.0)
 
 
+@pytest.mark.skipif(
+    (sys.version_info.major, sys.version_info.minor) == (3, 9)
+    and "mac" in platform.platform().lower(),
+    reason="Test failing for MacOS with python3.9 (Segmentation fault)",
+)
 def test_symmetric_cdist():
     backends = ["numpy", "pytorch"]
     for backend in backends:
