@@ -4,11 +4,7 @@ Soft-DTW loss for PyTorch neural network
 ========================================
 
 The aim here is to use the Soft Dynamic Time Warping metric as a loss function of a PyTorch Neural Network for
-time series forcasting.
-
-This notebook is inspired from the notebook of Romain Tavenard about Alignment-based metrics in Machine Learning:
-
-https://github.com/rtavenar/notebooks-ml4ts/blob/main/03_align4ml_sol.ipynb
+time series forecasting.
 
 The `torch`-compatible implementation of the soft-DTW loss function is available from the
 :mod:`tslearn.metrics` module.
