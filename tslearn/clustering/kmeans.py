@@ -180,16 +180,6 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
         (cf :ref:`tslearn.metrics.sigma_gak <fun-tslearn.metrics.sigma_gak>`).
         If no specific value is set for `sigma`, its defaults to 1.
 
-    sigma : float or "auto" (default: "auto")
-        Bandwidth parameter for the Global Alignment kernel. If set to 'auto',
-        it is computed based on a sampling of the training set
-        (cf :ref:`tslearn.metrics.sigma_gak <fun-tslearn.metrics.sigma_gak>`)
-
-        .. deprecated:: 0.4
-            Setting `sigma` directly as a parameter for KernelKMeans and
-            GlobalAlignmentKernelKMeans is deprecated in version 0.4 and will
-            be removed in 0.6. Use `kernel_params` instead.
-
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel for GAK cross-similarity matrix
         computations.
@@ -253,7 +243,6 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
         tol=1e-6,
         n_init=1,
         kernel_params=None,
-        sigma=1.0,
         n_jobs=None,
         verbose=0,
         random_state=None,
@@ -264,7 +253,6 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
         self.tol = tol
         self.n_init = n_init
         self.kernel_params = kernel_params
-        self.sigma = sigma
         self.n_jobs = n_jobs
         self.verbose = verbose
         self.random_state = random_state
@@ -286,8 +274,6 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
         if self.kernel == "gak":
             if hasattr(self, "sigma_gak_"):
                 kernel_params["sigma"] = self.sigma_gak_
-            elif "sigma" not in kernel_params.keys():
-                kernel_params["sigma"] = self.sigma
         return kernel_params
 
     def _get_kernel(self, X, Y=None):
@@ -351,15 +337,6 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
             Weights to be given to time series in the learning process. By
             default, all time series weights are equal.
         """
-        if self.sigma != 1.0:
-            warnings.warn(
-                "Setting `sigma` directly as a parameter for KernelKMeans "
-                "and GlobalAlignmentKernelKMeans is deprecated in version "
-                "0.4 and will be removed in 0.6. Use `kernel_params` "
-                "instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
 
         X = check_array(X, allow_nd=True, force_all_finite=False)
         X = check_dims(X)
@@ -482,19 +459,6 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
 
     def _more_tags(self):
         return {"allow_nan": True, "allow_variable_length": True}
-
-
-class GlobalAlignmentKernelKMeans(KernelKMeans):
-    def __init__(self, **kwargs):
-        warnings.warn(
-            "`GlobalAlignmentKernelKMeans` is deprecated in version "
-            "0.4 and will be removed in 0.6. Use `KernelKMeans` "
-            "instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        super().__init__(**kwargs)
-        self.kernel = "gak"
 
 
 class TimeSeriesKMeans(

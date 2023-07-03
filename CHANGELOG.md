@@ -18,6 +18,7 @@ In particular, the Dynamic Time Warping (DTW) metric and the Soft-DTW metric now
 ### Removed
 
 * Support for Python version 3.7 is dropped
+* Elements that were deprecated in v0.4 are now removed, as announced
 
 ## [v0.5.3]
 

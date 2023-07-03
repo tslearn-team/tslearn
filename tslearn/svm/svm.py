@@ -234,18 +234,6 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
                       'it is non-trivial to access the underlying libsvm')
         return 1
 
-    @deprecated('The use of '
-                '`support_vectors_time_series_` is deprecated in '
-                'tslearn v0.4 and will be removed in v0.6. Use '
-                '`support_vectors_` property instead.')
-    def support_vectors_time_series_(self, X=None):
-        warnings.warn('The use of '
-                      '`support_vectors_time_series_` is deprecated in '
-                      'tslearn v0.4 and will be removed in v0.6. Use '
-                      '`support_vectors_` property instead.')
-        check_is_fitted(self, '_X_fit')
-        return self._X_fit[self.svm_estimator_.support_]
-
     @property
     def support_vectors_(self):
         check_is_fitted(self, '_X_fit')
@@ -508,18 +496,6 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
         warnings.warn('n_iter_ is always set to 1 for TimeSeriesSVR, since '
                       'it is non-trivial to access the underlying libsvm')
         return 1
-
-    @deprecated('The use of '
-                '`support_vectors_time_series_` is deprecated in '
-                'tslearn v0.4 and will be removed in v0.6. Use '
-                '`support_vectors_` property instead.')
-    def support_vectors_time_series_(self, X=None):
-        warnings.warn('The use of '
-                      '`support_vectors_time_series_` is deprecated in '
-                      'tslearn v0.4 and will be removed in v0.6. Use '
-                      '`support_vectors_` property instead.')
-        check_is_fitted(self, '_X_fit')
-        return self._X_fit[self.svm_estimator_.support_]
 
     @property
     def support_vectors_(self):

@@ -10,20 +10,18 @@ This notebook is inspired from the notebook of Romain Tavenard about Alignment-b
 
 https://github.com/rtavenar/notebooks-ml4ts/blob/main/03_align4ml_sol.ipynb
 
-We will rely on a `torch`-compatible implementation of the soft-DTW loss function. The implementation of
-this `torch`-compatible soft-DTW loss function on `tslearn` has been inspired by the github repository:
-
-https://github.com/Maghoumi/pytorch-softdtw-cuda
+The `torch`-compatible implementation of the soft-DTW loss function is available from the
+:mod:`tslearn.metrics` module.
 """
 
-# Author: Yann Cabanes
+# Authors: Yann Cabanes, Romain Tavenard
 # License: BSD 3 clause
+# sphinx_gallery_thumbnail_number = 2
 
 """Import the modules"""
 
 import numpy as np
 import matplotlib.pyplot as plt
-import time
 from tslearn.datasets import CachedDatasets
 from tslearn.metrics import SoftDTWLossPyTorch
 import torch
@@ -121,9 +119,9 @@ ts_index = 50
 y_pred = model(X_test[:, :150, 0]).detach().numpy()
 
 plt.figure()
-plt.title('Multi-step ahead forecasting using MSE', size=20)
+plt.title('Multi-step ahead forecasting using MSE')
 plt.plot(X_test[ts_index].ravel())
-plt.plot(np.arange(150, 275), y_pred[ts_index], 'r-')
+plt.plot(np.arange(150, 275), y_pred[ts_index], 'r-');
 
 
 ##############################################################################
@@ -149,7 +147,6 @@ model.fit(X_subset[:, :150], X_subset[:, 150:], max_epochs=100)
 y_pred = model(X_test[:, :150, 0]).detach().numpy()
 
 plt.figure()
-plt.title('Multi-step ahead forecasting using Soft-DTW loss', size=20)
+plt.title('Multi-step ahead forecasting using Soft-DTW loss')
 plt.plot(X_test[ts_index].ravel())
-plt.plot(np.arange(150, 275), y_pred[ts_index], 'r-')
-plt.show()
+plt.plot(np.arange(150, 275), y_pred[ts_index], 'r-');
