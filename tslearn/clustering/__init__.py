@@ -8,8 +8,7 @@ algorithms.
 from .kshape import KShape
 from .utils import (EmptyClusterError, silhouette_score,
                     TimeSeriesCentroidBasedClusteringMixin)
-from .kmeans import (TimeSeriesKMeans, KernelKMeans,
-                     GlobalAlignmentKernelKMeans)
+from .kmeans import (TimeSeriesKMeans, KernelKMeans)
 
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -21,6 +20,5 @@ __all__ = [
     "EmptyClusterError", "silhouette_score",
     "TimeSeriesCentroidBasedClusteringMixin",
 
-    "TimeSeriesKMeans", "KernelKMeans",
-    "GlobalAlignmentKernelKMeans"
+    "TimeSeriesKMeans", "KernelKMeans"
 ]
