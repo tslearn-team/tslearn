@@ -135,7 +135,7 @@ model = MultiLayerPerceptron(
         nn.ReLU(),
         nn.Linear(in_features=256, out_features=125)
     ),
-    loss=SoftDTWLossPyTorch(gamma=0.1, normalize=False, dist_func=None)
+    loss=SoftDTWLossPyTorch(gamma=0.1)
 )
 
 model.fit(X_subset[:, :150], X_subset[:, 150:], max_epochs=100)
