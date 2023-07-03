@@ -94,6 +94,7 @@ class MultiLayerPerceptron(torch.nn.Module):
 
 ##############################################################################
 # Using MSE as a loss function
+# ----------------------------
 # 
 # We define an MLP class that would allow training a single-hidden-layer model using 
 # mean squared error (MSE) as a loss function to be optimized.
@@ -117,7 +118,7 @@ y_pred = model(X_test[:, :150, 0]).detach().numpy()
 plt.figure()
 plt.title('Multi-step ahead forecasting using MSE')
 plt.plot(X_test[ts_index].ravel())
-plt.plot(np.arange(150, 275), y_pred[ts_index], 'r-');
+plt.plot(np.arange(150, 275), y_pred[ts_index], 'r-')
 
 
 ##############################################################################
@@ -145,4 +146,4 @@ y_pred = model(X_test[:, :150, 0]).detach().numpy()
 plt.figure()
 plt.title('Multi-step ahead forecasting using Soft-DTW loss')
 plt.plot(X_test[ts_index].ravel())
-plt.plot(np.arange(150, 275), y_pred[ts_index], 'r-');
+plt.plot(np.arange(150, 275), y_pred[ts_index], 'r-')
