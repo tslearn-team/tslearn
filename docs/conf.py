@@ -80,7 +80,7 @@ sphinx_gallery_conf = {
     'doc_module': ('tslearn',),
     'subsection_order': ["examples", "examples/metrics", "examples/neighbors",
                          "examples/clustering", "examples/classification",
-                         "examples/misc"].index,
+                         "examples/autodiff", "examples/misc"].index,
     'image_scrapers': (matplotlib_svg_scraper(),),
     # 'binder': {
     #     # Required keys

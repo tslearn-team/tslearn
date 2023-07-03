@@ -8,7 +8,7 @@ from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 
 from tslearn.neighbors import KNeighborsTimeSeries, \
     KNeighborsTimeSeriesClassifier
-from tslearn.shapelets import LearningShapelets, SerializableShapeletModel
+from tslearn.shapelets import LearningShapelets
 from tslearn.clustering import KShape, TimeSeriesKMeans, \
     KernelKMeans
 from tslearn.generators import random_walks

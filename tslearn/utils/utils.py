@@ -8,6 +8,7 @@ from sklearn.utils.validation import check_is_fitted
 
 try:
     from scipy.io import arff
+
     HAS_ARFF = True
 except:
     HAS_ARFF = False
@@ -16,9 +17,10 @@ try:
     from sklearn.utils.estimator_checks import _NotAnArray as NotAnArray
 except ImportError:  # Old sklearn versions
     from sklearn.utils.estimator_checks import NotAnArray
+from tslearn.backend import instantiate_backend
 from tslearn.bases import TimeSeriesBaseEstimator
 
-__author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
+__author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
 
 def check_dims(X, X_fit_dims=None, extend=True, check_n_features_only=False):
@@ -82,33 +84,35 @@ def check_dims(X, X_fit_dims=None, extend=True, check_n_features_only=False):
         match X_fit_dims.
     """
     if X is None:
-        raise ValueError('X is equal to None!')
+        raise ValueError("X is equal to None!")
 
     if extend and len(X.shape) == 2:
-        warnings.warn('2-Dimensional data passed. Assuming these are '
-                      '{} 1-dimensional timeseries'.format(X.shape[0]))
+        warnings.warn(
+            "2-Dimensional data passed. Assuming these are "
+            "{} 1-dimensional timeseries".format(X.shape[0])
+        )
         X = X.reshape((X.shape) + (1,))
 
     if X_fit_dims is not None:
         if check_n_features_only:
             if X_fit_dims[2] != X.shape[2]:
                 raise ValueError(
-                    'Number of features of the provided timeseries'
-                    '(last dimension) must match the one of the fitted data!'
-                    ' ({} and {} are passed shapes)'.format(X_fit_dims,
-                                                            X.shape))
+                    "Number of features of the provided timeseries"
+                    "(last dimension) must match the one of the fitted data!"
+                    " ({} and {} are passed shapes)".format(X_fit_dims, X.shape)
+                )
         else:
             if X_fit_dims[1:] != X.shape[1:]:
                 raise ValueError(
-                    'Dimensions of the provided timeseries'
-                    '(except first) must match those of the fitted data!'
-                    ' ({} and {} are passed shapes)'.format(X_fit_dims,
-                                                            X.shape))
+                    "Dimensions of the provided timeseries"
+                    "(except first) must match those of the fitted data!"
+                    " ({} and {} are passed shapes)".format(X_fit_dims, X.shape)
+                )
 
     return X
 
 
-def to_time_series(ts, remove_nans=False):
+def to_time_series(ts, remove_nans=False, be=None):
     """Transforms a time series so that it fits the format used in ``tslearn``
     models.
 
@@ -119,6 +123,8 @@ def to_time_series(ts, remove_nans=False):
     remove_nans : bool (default: False)
         Whether trailing NaNs at the end of the time series should be removed
         or not
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
@@ -143,17 +149,18 @@ def to_time_series(ts, remove_nans=False):
     --------
     to_time_series_dataset : Transforms a dataset of time series
     """
-    ts_out = numpy.array(ts, copy=True)
+    be = instantiate_backend(be, ts)
+    ts_out = be.array(ts)
     if ts_out.ndim <= 1:
-        ts_out = ts_out.reshape((-1, 1))
-    if ts_out.dtype != float:
-        ts_out = ts_out.astype(float)
+        ts_out = be.reshape(ts_out, (-1, 1))
+    if not be.is_float(ts_out):
+        ts_out = be.cast(ts_out, dtype=float)
     if remove_nans:
-        ts_out = ts_out[:ts_size(ts_out)]
+        ts_out = ts_out[: ts_size(ts_out, be=be)]
     return ts_out
 
 
-def to_time_series_dataset(dataset, dtype=float):
+def to_time_series_dataset(dataset, dtype=float, be=None):
     """Transforms a time series dataset so that it fits the format used in
     ``tslearn`` models.
 
@@ -193,27 +200,31 @@ def to_time_series_dataset(dataset, dtype=float):
     --------
     to_time_series : Transforms a single time series
     """
+    be = instantiate_backend(be, dataset)
+
     try:
         import pandas as pd
+
         if isinstance(dataset, pd.DataFrame):
-            return to_time_series_dataset(numpy.array(dataset))
+            return to_time_series_dataset(be.array(dataset), be=be)
     except ImportError:
         pass
     if isinstance(dataset, NotAnArray):  # Patch to pass sklearn tests
-        return to_time_series_dataset(numpy.array(dataset))
+        return to_time_series_dataset(be.array(dataset), be=be)
     if len(dataset) == 0:
-        return numpy.zeros((0, 0, 0))
-    if numpy.array(dataset[0]).ndim == 0:
+        return be.zeros((0, 0, 0))
+    if be.ndim(be.array(dataset[0])) == 0:
         dataset = [dataset]
     n_ts = len(dataset)
-    max_sz = max([ts_size(to_time_series(ts, remove_nans=True))
-                  for ts in dataset])
-    d = to_time_series(dataset[0]).shape[1]
-    dataset_out = numpy.zeros((n_ts, max_sz, d), dtype=dtype) + numpy.nan
+    max_sz = max(
+        [ts_size(to_time_series(ts, remove_nans=True, be=be)) for ts in dataset]
+    )
+    d = be.shape(to_time_series(dataset[0], be=be))[1]
+    dataset_out = be.zeros((n_ts, max_sz, d), dtype=dtype) + be.nan
     for i in range(n_ts):
-        ts = to_time_series(dataset[i], remove_nans=True)
-        dataset_out[i, :ts.shape[0]] = ts
-    return dataset_out.astype(dtype)
+        ts = to_time_series(dataset[i], remove_nans=True, be=be)
+        dataset_out[i, : ts.shape[0]] = ts
+    return be.cast(dataset_out, dtype=dtype)
 
 
 def time_series_to_str(ts, fmt="%.18e"):
@@ -344,16 +355,15 @@ def load_time_series_txt(fname):
     save_time_series_txt : Save time series to disk
     """
     with open(fname, "r") as f:
-        return to_time_series_dataset([
-            str_to_time_series(row)
-            for row in f.readlines()
-        ])
+        return to_time_series_dataset(
+            [str_to_time_series(row) for row in f.readlines()]
+        )
 
 
 load_timeseries_txt = load_time_series_txt
 
 
-def check_equal_size(dataset):
+def check_equal_size(dataset, be=None):
     """Check if all time series in the dataset have the same size.
 
     Parameters
@@ -375,15 +385,17 @@ def check_equal_size(dataset):
     >>> check_equal_size([])
     True
     """
-    dataset_ = to_time_series_dataset(dataset)
+    be = instantiate_backend(be, dataset)
+
+    dataset_ = to_time_series_dataset(dataset, be=be)
     if len(dataset_) == 0:
         return True
 
-    size = ts_size(dataset[0])
+    size = ts_size(dataset[0], be=be)
     return all(ts_size(ds) == size for ds in dataset_[1:])
 
 
-def ts_size(ts):
+def ts_size(ts, be=None):
     """Returns actual time series size.
 
     Final timesteps that have `NaN` values for all dimensions will be removed
@@ -394,6 +406,8 @@ def ts_size(ts):
     ----------
     ts : array-like
         A time series.
+    be : Backend object or string or None
+        Backend.
 
     Returns
     -------
@@ -417,9 +431,10 @@ def ts_size(ts):
     >>> ts_size([numpy.nan, 3, numpy.inf, numpy.nan])
     3
     """
-    ts_ = to_time_series(ts)
-    sz = ts_.shape[0]
-    while sz > 0 and numpy.all(numpy.isnan(ts_[sz - 1])):
+    be = instantiate_backend(be, ts)
+    ts_ = to_time_series(ts, be=be)
+    sz = be.shape(ts_)[0]
+    while sz > 0 and be.all(be.isnan(ts_[sz - 1])):
         sz -= 1
     return sz
 
@@ -451,8 +466,9 @@ def ts_zeros(sz, d=1):
     return numpy.zeros((sz, d))
 
 
-def check_dataset(X, force_univariate=False, force_equal_length=False,
-                  force_single_time_series=False):
+def check_dataset(
+    X, force_univariate=False, force_equal_length=False, force_single_time_series=False
+):
     """Check if X is a valid tslearn dataset, with possibly additional extra
     constraints.
 
@@ -512,16 +528,17 @@ def check_dataset(X, force_univariate=False, force_equal_length=False,
     X_ = to_time_series_dataset(X)
     if force_univariate and X_.shape[2] != 1:
         raise ValueError(
-            "Array should be univariate and is of shape: {}".format(
-                X_.shape
-            )
+            "Array should be univariate and is of shape: {}".format(X_.shape)
         )
     if force_equal_length and not check_equal_size(X_):
-        raise ValueError("All the time series in the array should be of "
-                         "equal lengths")
+        raise ValueError(
+            "All the time series in the array should be of " "equal lengths"
+        )
     if force_single_time_series and X_.shape[0] != 1:
-        raise ValueError("Array should be made of a single time series "
-                         "({} here)".format(X_.shape[0]))
+        raise ValueError(
+            "Array should be made of a single time series "
+            "({} here)".format(X_.shape[0])
+        )
     return X_
 
 
@@ -569,8 +586,10 @@ class LabelCategorizer(TransformerMixin, TimeSeriesBaseEstimator):
     ----------
     .. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
     """
-    def __init__(self, single_column_if_binary=False, forward_match=None,
-                 backward_match=None):
+
+    def __init__(
+        self, single_column_if_binary=False, forward_match=None, backward_match=None
+    ):
         self.single_column_if_binary = single_column_if_binary
         self.forward_match = forward_match
         self.backward_match = backward_match
@@ -589,7 +608,7 @@ class LabelCategorizer(TransformerMixin, TimeSeriesBaseEstimator):
         return self
 
     def transform(self, y):
-        check_is_fitted(self, ['backward_match', 'forward_match'])
+        check_is_fitted(self, ["backward_match", "forward_match"])
         y = column_or_1d(y, warn=True)
         n_classes = len(self.backward_match)
         n = len(y)
@@ -602,12 +621,12 @@ class LabelCategorizer(TransformerMixin, TimeSeriesBaseEstimator):
             return y_out
 
     def inverse_transform(self, y):
-        check_is_fitted(self, ['backward_match', 'forward_match'])
+        check_is_fitted(self, ["backward_match", "forward_match"])
         y_ = numpy.array(y)
         n, n_c = y_.shape
         if n_c == 1 and self.single_column_if_binary:
             y_ = numpy.hstack((y_, 1 - y_))
-        y_out = numpy.zeros((n, ))
+        y_out = numpy.zeros((n,))
         for i in range(n):
             y_out[i] = self.backward_match[y_[i].argmax()]
         return y_out
@@ -631,12 +650,12 @@ class LabelCategorizer(TransformerMixin, TimeSeriesBaseEstimator):
         return out
 
     def _more_tags(self):
-        return {'X_types': ['1dlabels']}
+        return {"X_types": ["1dlabels"]}
 
 
 def _load_arff_uea(dataset_path):
     """Load arff file for uni/multi variate dataset
-    
+
     Parameters
     ----------
     dataset_path: string of dataset_path
@@ -656,8 +675,10 @@ def _load_arff_uea(dataset_path):
                corrupted
     """
     if not HAS_ARFF:
-        raise ImportError("scipy 1.3.0 or newer is required to load "
-                          "time series datasets from arff format.")
+        raise ImportError(
+            "scipy 1.3.0 or newer is required to load "
+            "time series datasets from arff format."
+        )
     data, meta = arff.loadarff(dataset_path)
     names = meta.names()  # ["input", "class"] for multi-variate
 
