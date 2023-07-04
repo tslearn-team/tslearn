@@ -11,7 +11,7 @@ except ImportError:
     class PyTorchBackend:
         def __init__(self):
             raise ValueError(
-                "Could not use pytorch backend since torch is not installed"
+                "Could not use the PyTorch backend since torch is not installed"
             )
 
 
