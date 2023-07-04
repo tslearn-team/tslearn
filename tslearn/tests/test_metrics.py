@@ -3,21 +3,23 @@ import sys
 
 import numpy as np
 import pytest
-import torch
-from scipy.spatial.distance import cdist
-
 import tslearn.clustering
 import tslearn.metrics
+from scipy.spatial.distance import cdist
 from tslearn.backend.backend import Backend
 from tslearn.metrics.dtw_variants import dtw_path
-from tslearn.metrics.soft_dtw_loss_pytorch import _SoftDTWLossPyTorch
 from tslearn.utils import to_time_series
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
+try:
+    import torch
+    backends = ["numpy", "pytorch"]
+except ImportError:
+    backends = ["numpy"]
+
 
 def test_dtw():
-    backends = ["numpy", "pytorch"]
     for backend in backends:
         be = Backend(backend)
         # dtw_path
@@ -52,7 +54,6 @@ def test_dtw():
 
 
 def test_ctw():
-    backends = ["numpy", "pytorch"]
     for backend in backends:
         be = Backend(backend)
         # ctw_path
@@ -92,7 +93,6 @@ def test_ctw():
 
 
 def test_ldtw():
-    backends = ["numpy", "pytorch"]
     for backend in backends:
         be = Backend(backend)
 
@@ -140,7 +140,6 @@ def test_ldtw():
 
 
 def test_lcss():
-    backends = ["numpy", "pytorch"]
     for backend in backends:
         be = Backend(backend)
         sim = tslearn.metrics.lcss([1, 2, 3], [1.0, 2.0, 2.0, 3.0], be=be)
@@ -157,7 +156,6 @@ def test_lcss():
 
 
 def test_lcss_path():
-    backends = ["numpy", "pytorch"]
     for backend in backends:
         be = Backend(backend)
         path, sim = tslearn.metrics.lcss_path(
@@ -186,7 +184,6 @@ def test_lcss_path():
 
 
 def test_lcss_path_from_metric():
-    backends = ["numpy", "pytorch"]
     for backend in backends:
         be = Backend(backend)
         for d in be.arange(1, 5):
@@ -225,7 +222,6 @@ def test_lcss_path_from_metric():
 
 
 def test_constrained_paths():
-    backends = ["numpy", "pytorch"]
     for backend in backends:
         be = Backend(backend)
         n, d = 10, 3
@@ -266,7 +262,6 @@ def test_constrained_paths():
 
 
 def test_dtw_subseq():
-    backends = ["numpy", "pytorch"]
     for backend in backends:
         be = Backend(backend)
 
@@ -284,7 +279,6 @@ def test_dtw_subseq():
 
 
 def test_dtw_subseq_path():
-    backends = ["numpy", "pytorch"]
     for backend in backends:
         be = Backend(backend)
         subseq, longseq = [1, 4], [1.0, 2.0, 2.0, 3.0, 4.0]
@@ -300,7 +294,6 @@ def test_dtw_subseq_path():
 
 
 def test_masks():
-    backends = ["numpy", "pytorch"]
     for backend in backends:
         be = Backend(backend)
         sk_mask = tslearn.metrics.sakoe_chiba_mask(4, 4, 1, be=be)
@@ -407,7 +400,6 @@ def test_masks():
 
 
 def test_gak():
-    backends = ["numpy", "pytorch"]
     for backend in backends:
         be = Backend(backend)
         # GAK
@@ -463,7 +455,6 @@ def test_gak():
     reason="Test failing for MacOS with python3.9 (Segmentation fault)",
 )
 def test_gamma_soft_dtw():
-    backends = ["numpy", "pytorch"]
     for backend in backends:
         be = Backend(backend)
         dataset = be.array([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]])
@@ -479,7 +470,6 @@ def test_gamma_soft_dtw():
     reason="Test failing for MacOS with python3.9 (Segmentation fault)",
 )
 def test_symmetric_cdist():
-    backends = ["numpy", "pytorch"]
     for backend in backends:
         be = Backend(backend)
         rng = np.random.RandomState(0)
@@ -505,7 +495,6 @@ def test_symmetric_cdist():
 
 
 def test_lb_keogh():
-    backends = ["numpy", "pytorch"]
     for backend in backends:
         be = Backend(backend)
         ts1 = [1, 2, 3, 2, 1]
@@ -519,7 +508,6 @@ def test_lb_keogh():
 
 
 def test_dtw_path_from_metric():
-    backends = ["numpy", "pytorch"]
     for backend in backends:
         be = Backend(backend)
         rng = np.random.RandomState(0)
@@ -557,7 +545,6 @@ def test_dtw_path_from_metric():
 
 
 def test_softdtw():
-    backends = ["numpy", "pytorch"]
     for backend in backends:
         be = Backend(backend)
         rng = np.random.RandomState(0)
@@ -578,7 +565,6 @@ def test_softdtw():
 
 
 def test_dtw_path_with_empty_or_nan_inputs():
-    backends = ["numpy", "pytorch"]
     for backend in backends:
         be = Backend(backend)
         s1 = be.zeros((3, 10))
@@ -598,9 +584,14 @@ def test_dtw_path_with_empty_or_nan_inputs():
             == "One of the input time series contains only nans or has zero length."
         )
 
-
+@pytest.mark.skipif(
+    len(backends) == 1,
+    reason="Skipping test that requires pytorch backend",
+)
 def test_soft_dtw_loss_pytorch():
     """Tests for the class SoftDTWLossPyTorch."""
+    from tslearn.metrics.soft_dtw_loss_pytorch import _SoftDTWLossPyTorch
+
     b = 5
     m = 10
     n = 12
