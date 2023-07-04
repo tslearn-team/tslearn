@@ -8,7 +8,18 @@ and this project adheres to
 
 Changelogs for this project are recorded in this file since v0.2.0.
 
-## [Towards v0.6]
+
+
+## [Towards v0.6.2]
+
+## [v0.6.1]
+
+### Fixed
+
+* Fixed an import error when torch is not installed. This error appeared in tslearn v0.6.
+Torch is now an optional dependency.
+
+## [v0.6]
 
 ### Added
 
