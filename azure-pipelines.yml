@@ -14,6 +14,43 @@ jobs:
         python.version: '3.8'
       Python39:
         python.version: '3.9'
+  variables:
+    OMP_NUM_THREADS: '2'
+    NUMBA_NUM_THREADS: '2'
+    PIP_PREFER_BINARY: 'true'
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+    displayName: 'Use Python $(python.version)'
+
+  - script: |
+      set -xe
+      python --version
+      python -m pip install --upgrade pip
+      python -m pip install -r requirements.txt
+      python -m pip install torch
+    displayName: 'Install dependencies'
+
+  - script: |
+      set -xe
+      python -m pip install -e .
+    displayName: 'Install tslearn'
+
+  - script: |
+      set -xe
+      python -m pip install pytest pytest-azurepipelines
+      python -m pip install scikit-learn==1.0
+      python -m pip install tensorflow==2.9.0
+      python -m pytest -v tslearn/ --doctest-modules
+    displayName: 'Test'
+
+- job: 'linux_without_torch'
+  pool:
+    vmImage: 'ubuntu-latest'
+  strategy:
+    matrix:
       Python310:
         python.version: '3.10'
   variables:
@@ -32,6 +69,7 @@ jobs:
       python --version
       python -m pip install --upgrade pip
       python -m pip install -r requirements.txt
+      python -m pip uninstall torch
     displayName: 'Install dependencies'
 
   - script: |
@@ -72,6 +110,7 @@ jobs:
       python --version
       python -m pip install --upgrade pip
       python -m pip install -r requirements.txt
+      python -m pip install torch
     displayName: 'Install dependencies'
 
   - script: |
@@ -124,6 +163,7 @@ jobs:
       export OPENBLAS=$(brew --prefix openblas)
       python -m pip install --upgrade pip
       python -m pip install -r requirements.txt
+      python -m pip install torch
     displayName: 'Install dependencies'
   
   - script: |
@@ -169,6 +209,7 @@ jobs:
       python --version
       python -m pip install --upgrade pip
       python -m pip install -r requirements_nocast.txt
+      python -m pip install torch
     displayName: 'Install dependencies'
   
   - script: |

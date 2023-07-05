@@ -80,8 +80,11 @@ def _get_all_classes():
                               '(and tensorflow) are probably not '
                               'installed!')
                 continue
+            elif name.endswith('pytorch_backend'):
+                # pytorch is likely not installed
+                continue
             else:
-                raise
+                raise Exception('Could not import module %s' % name)
 
         all_classes.extend(inspect.getmembers(module, inspect.isclass))
     return all_classes
