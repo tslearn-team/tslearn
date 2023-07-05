@@ -4,7 +4,6 @@ scipy
 scikit-learn
 joblib>=0.12
 tensorflow>=2
-torch
 pandas
 cesium
 h5py
