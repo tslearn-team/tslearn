@@ -46,7 +46,7 @@ jobs:
       python -m pytest -v tslearn/ --doctest-modules
     displayName: 'Test'
 
-- job: 'linux-without-torch'
+- job: 'linux_without_torch'
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
