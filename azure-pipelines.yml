@@ -49,7 +49,7 @@ jobs:
     displayName: 'Test'
 
 
-- job: 'linux Python310 without torch'
+- job: 'linux'
   displayName: 'linux Python310 without torch'
   pool:
     vmImage: 'ubuntu-latest'
