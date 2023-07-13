@@ -8,9 +8,11 @@ from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.utils import check_dims
 
-stumpy_msg = ('stumpy is not installed, stumpy features will not be'
-              'supported.\n Install stumpy to use stumpy features:'
-              'https://stumpy.readthedocs.io/en/latest/')
+stumpy_msg = (
+    "stumpy is not installed, stumpy features will not be"
+    "supported.\n Install stumpy to use stumpy features:"
+    "https://stumpy.readthedocs.io/en/latest/"
+)
 
 try:
     import stumpy
@@ -19,7 +21,7 @@ except ImportError:
 else:
     STUMPY_INSTALLED = True
 
-__author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
+__author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
 
 def _series_to_segments(time_series, segment_size):
@@ -52,23 +54,23 @@ def _series_to_segments(time_series, segment_size):
            [4., 5.]])
     """
     if time_series.ndim == 3:
-        l_segments = [_series_to_segments(ts, segment_size)
-                      for ts in time_series]
+        l_segments = [_series_to_segments(ts, segment_size) for ts in time_series]
         return np.vstack(l_segments)
     elem_size = time_series.strides[0]
     segments = as_strided(
         time_series,
         strides=(elem_size, elem_size, time_series.strides[1]),
-        shape=(time_series.shape[0] - segment_size + 1,
-               segment_size, time_series.shape[1]),
-        writeable=False
+        shape=(
+            time_series.shape[0] - segment_size + 1,
+            segment_size,
+            time_series.shape[1],
+        ),
+        writeable=False,
     )
     return segments
 
 
-class MatrixProfile(TransformerMixin,
-                    BaseModelPackage,
-                    TimeSeriesBaseEstimator):
+class MatrixProfile(TransformerMixin, BaseModelPackage, TimeSeriesBaseEstimator):
     """Matrix Profile transformation.
 
     Matrix Profile was originally presented in [1]_.
@@ -118,15 +120,13 @@ class MatrixProfile(TransformerMixin,
 
     """
 
-    def __init__(
-        self, subsequence_length=1, implementation="numpy", scale=True
-    ):
+    def __init__(self, subsequence_length=1, implementation="numpy", scale=True):
         self.subsequence_length = subsequence_length
         self.scale = scale
         self.implementation = implementation
 
     def _is_fitted(self):
-        check_is_fitted(self, '_X_fit_dims')
+        check_is_fitted(self, "_X_fit_dims")
         return True
 
     def _fit(self, X, y=None):
@@ -154,9 +154,11 @@ class MatrixProfile(TransformerMixin,
         n_ts, sz, d = X.shape
 
         if d > 1:
-            raise NotImplementedError("We currently don't support using "
-                                      "multi-dimensional matrix profiles "
-                                      "from the stumpy library.")
+            raise NotImplementedError(
+                "We currently don't support using "
+                "multi-dimensional matrix profiles "
+                "from the stumpy library."
+            )
 
         output_size = sz - self.subsequence_length + 1
         X_transformed = np.empty((n_ts, output_size, 1))
@@ -167,8 +169,8 @@ class MatrixProfile(TransformerMixin,
 
             for i_ts in range(n_ts):
                 result = stumpy.stump(
-                    T_A=X[i_ts, :, 0].ravel(),
-                    m=self.subsequence_length)
+                    T_A=X[i_ts, :, 0].ravel(), m=self.subsequence_length
+                )
                 X_transformed[i_ts, :, 0] = result[:, 0].astype(np.float)
 
         elif self.implementation == "gpu_stump":
@@ -177,8 +179,8 @@ class MatrixProfile(TransformerMixin,
 
             for i_ts in range(n_ts):
                 result = stumpy.gpu_stump(
-                    T_A=X[i_ts, :, 0].ravel(),
-                    m=self.subsequence_length)
+                    T_A=X[i_ts, :, 0].ravel(), m=self.subsequence_length
+                )
                 X_transformed[i_ts, :, 0] = result[:, 0].astype(np.float)
 
         elif self.implementation == "numpy":
@@ -191,10 +193,9 @@ class MatrixProfile(TransformerMixin,
                 n_segments = segments.shape[0]
                 segments_2d = segments.reshape((-1, self.subsequence_length * d))
                 dists = squareform(pdist(segments_2d, "euclidean"))
-                band = (np.tri(n_segments, n_segments,
-                            band_width, dtype=np.bool) &
-                        ~np.tri(n_segments, n_segments,
-                                -(band_width + 1), dtype=np.bool))
+                band = np.tri(n_segments, n_segments, band_width, dtype=bool) & ~np.tri(
+                    n_segments, n_segments, -(band_width + 1), dtype=bool
+                )
                 dists[band] = np.inf
                 X_transformed[i_ts] = dists.min(axis=1, keepdims=True)
 
@@ -202,9 +203,9 @@ class MatrixProfile(TransformerMixin,
             available_implementations = ["numpy", "stump", "gpu_stump"]
             raise ValueError(
                 'This "{}" matrix profile implementation is not'
-                ' recognized. Available implementations are {}.'
-                .format(self.implementation,
-                        available_implementations)
+                " recognized. Available implementations are {}.".format(
+                    self.implementation, available_implementations
+                )
             )
 
         return X_transformed
@@ -226,8 +227,7 @@ class MatrixProfile(TransformerMixin,
         """
         self._is_fitted()
         X = check_array(X, allow_nd=True, force_all_finite=False)
-        X = check_dims(X, X_fit_dims=self._X_fit_dims,
-                       check_n_features_only=True)
+        X = check_dims(X, X_fit_dims=self._X_fit_dims, check_n_features_only=True)
         return self._transform(X, y)
 
     def fit_transform(self, X, y=None, **fit_params):
@@ -250,4 +250,4 @@ class MatrixProfile(TransformerMixin,
         return self._fit(X)._transform(X)
 
     def _more_tags(self):
-        return {'allow_nan': True, 'allow_variable_length': True}
+        return {"allow_nan": True, "allow_variable_length": True}
