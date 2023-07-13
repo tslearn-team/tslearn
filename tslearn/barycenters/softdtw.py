@@ -3,15 +3,14 @@
 import numpy
 from scipy.optimize import minimize
 
-from tslearn.utils import to_time_series_dataset, check_equal_size, \
-    to_time_series
+from tslearn.metrics import SoftDTW, SquaredEuclidean
 from tslearn.preprocessing import TimeSeriesResampler
-from tslearn.metrics import SquaredEuclidean, SoftDTW
+from tslearn.utils import check_equal_size, to_time_series, to_time_series_dataset
 
-from .utils import _set_weights
 from .euclidean import euclidean_barycenter
+from .utils import _set_weights
 
-__author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
+__author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
 
 def _softdtw_func(Z, X, weights, barycenter, gamma):
@@ -33,8 +32,9 @@ def _softdtw_func(Z, X, weights, barycenter, gamma):
     return obj, G.ravel()
 
 
-def softdtw_barycenter(X, gamma=1.0, weights=None, method="L-BFGS-B", tol=1e-3,
-                       max_iter=50, init=None):
+def softdtw_barycenter(
+    X, gamma=1.0, weights=None, method="L-BFGS-B", tol=1e-3, max_iter=50, init=None
+):
     """Compute barycenter (time series averaging) under the soft-DTW [1]
     geometry.
 
@@ -100,14 +100,22 @@ def softdtw_barycenter(X, gamma=1.0, weights=None, method="L-BFGS-B", tol=1e-3,
         barycenter = init
 
     if max_iter > 0:
-        X_ = numpy.array([to_time_series(d, remove_nans=True) for d in X_])
+        X_ = numpy.array(
+            [to_time_series(d, remove_nans=True) for d in X_], dtype=object
+        )
 
         def f(Z):
             return _softdtw_func(Z, X_, weights, barycenter, gamma)
 
         # The function works with vectors so we need to vectorize barycenter.
-        res = minimize(f, barycenter.ravel(), method=method, jac=True, tol=tol,
-                       options=dict(maxiter=max_iter, disp=False))
+        res = minimize(
+            f,
+            barycenter.ravel(),
+            method=method,
+            jac=True,
+            tol=tol,
+            options=dict(maxiter=max_iter, disp=False),
+        )
         return res.x.reshape(barycenter.shape)
     else:
         return barycenter

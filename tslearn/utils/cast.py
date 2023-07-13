@@ -5,11 +5,12 @@ from sklearn.utils import check_array
 
 try:
     from scipy.io import arff
+
     HAS_ARFF = True
 except:
     HAS_ARFF = False
 
-from .utils import check_dataset, ts_size, to_time_series_dataset
+from .utils import check_dataset, to_time_series_dataset, ts_size
 
 
 def to_sklearn_dataset(dataset, dtype=float, return_dim=False):
@@ -127,9 +128,11 @@ def from_pyts_dataset(X):
     elif X_.ndim == 3:
         return X_.transpose((0, 2, 1))
     else:
-        raise ValueError("X is not a valid input pyts array. "
-                         "Its dimensions, once cast to numpy.ndarray "
-                         "are {}".format(X_.shape))
+        raise ValueError(
+            "X is not a valid input pyts array. "
+            "Its dimensions, once cast to numpy.ndarray "
+            "are {}".format(X_.shape)
+        )
 
 
 def to_seglearn_dataset(X):
@@ -166,7 +169,7 @@ def to_seglearn_dataset(X):
     (10, 2)
     """
     X_ = check_dataset(X)
-    return numpy.array([Xi[:ts_size(Xi)] for Xi in X_])
+    return numpy.array([Xi[: ts_size(Xi)] for Xi in X_], dtype=object)
 
 
 def from_seglearn_dataset(X):
@@ -233,11 +236,11 @@ def to_stumpy_dataset(X):
 
     def transpose_or_flatten(ts):
         if ts.shape[1] == 1:
-            return ts.reshape((-1, ))
+            return ts.reshape((-1,))
         else:
             return ts.transpose()
 
-    return [transpose_or_flatten(Xi[:ts_size(Xi)]) for Xi in X_]
+    return [transpose_or_flatten(Xi[: ts_size(Xi)]) for Xi in X_]
 
 
 def from_stumpy_dataset(X):
@@ -264,11 +267,13 @@ def from_stumpy_dataset(X):
     >>> tslearn_arr.shape
     (2, 10, 3)
     """
+
     def transpose_or_expand(ts):
         if ts.ndim == 1:
             return ts.reshape((-1, 1))
         else:
             return ts.transpose()
+
     return to_time_series_dataset([transpose_or_expand(Xi) for Xi in X])
 
 
@@ -308,13 +313,14 @@ def to_sktime_dataset(X):
     try:
         import pandas as pd
     except ImportError:
-        raise ImportError("Conversion from/to sktime cannot be performed "
-                          "if pandas is not installed.")
+        raise ImportError(
+            "Conversion from/to sktime cannot be performed "
+            "if pandas is not installed."
+        )
     X_ = check_dataset(X)
     X_pd = pd.DataFrame(dtype=float)
     for dim in range(X_.shape[2]):
-        X_pd['dim_' + str(dim)] = [pd.Series(data=Xi[:ts_size(Xi), dim])
-                                   for Xi in X_]
+        X_pd["dim_" + str(dim)] = [pd.Series(data=Xi[: ts_size(Xi), dim]) for Xi in X_]
     return X_pd
 
 
@@ -363,20 +369,25 @@ def from_sktime_dataset(X):
     try:
         import pandas as pd
     except ImportError:
-        raise ImportError("Conversion from/to sktime cannot be performed "
-                          "if pandas is not installed.")
+        raise ImportError(
+            "Conversion from/to sktime cannot be performed "
+            "if pandas is not installed."
+        )
     if not isinstance(X, pd.DataFrame):
-        raise ValueError("X is not a valid input sktime array. "
-                         "A pandas DataFrame is expected.")
-    data_dimensions = [col_name
-                       for col_name in X.columns
-                       if col_name.startswith("dim_")]
+        raise ValueError(
+            "X is not a valid input sktime array. " "A pandas DataFrame is expected."
+        )
+    data_dimensions = [
+        col_name for col_name in X.columns if col_name.startswith("dim_")
+    ]
     d = len(data_dimensions)
     ordered_data_dimensions = ["dim_%d" % di for di in range(d)]
     if sorted(ordered_data_dimensions) != sorted(data_dimensions):
-        raise ValueError("X is not a valid input sktime array. "
-                         "Provided dimensions are not conitiguous."
-                         "{}".format(data_dimensions))
+        raise ValueError(
+            "X is not a valid input sktime array. "
+            "Provided dimensions are not conitiguous."
+            "{}".format(data_dimensions)
+        )
     n = X["dim_0"].shape[0]
     max_sz = -1
     for dim_name in ordered_data_dimensions:
@@ -434,11 +445,11 @@ def to_pyflux_dataset(X):
     try:
         import pandas as pd
     except ImportError:
-        raise ImportError("Conversion from/to pyflux cannot be performed "
-                          "if pandas is not installed.")
-    X_ = check_dataset(X,
-                       force_equal_length=True,
-                       force_single_time_series=True)
+        raise ImportError(
+            "Conversion from/to pyflux cannot be performed "
+            "if pandas is not installed."
+        )
+    X_ = check_dataset(X, force_equal_length=True, force_single_time_series=True)
     X_pd = pd.DataFrame(X[0], dtype=float)
     X_pd.columns = ["dim_%d" % di for di in range(X_.shape[2])]
     return X_pd
@@ -488,11 +499,14 @@ def from_pyflux_dataset(X):
     try:
         import pandas as pd
     except ImportError:
-        raise ImportError("Conversion from/to pyflux cannot be performed "
-                          "if pandas is not installed.")
+        raise ImportError(
+            "Conversion from/to pyflux cannot be performed "
+            "if pandas is not installed."
+        )
     if not isinstance(X, pd.DataFrame):
-        raise ValueError("X is not a valid input pyflux array. "
-                         "A pandas DataFrame is expected.")
+        raise ValueError(
+            "X is not a valid input pyflux array. " "A pandas DataFrame is expected."
+        )
     data_dimensions = [col_name for col_name in X.columns]
     d = len(data_dimensions)
     n = 1
@@ -543,15 +557,16 @@ def to_tsfresh_dataset(X):
     try:
         import pandas as pd
     except ImportError:
-        raise ImportError("Conversion from/to tsfresh cannot be performed "
-                          "if pandas is not installed.")
+        raise ImportError(
+            "Conversion from/to tsfresh cannot be performed "
+            "if pandas is not installed."
+        )
     X_ = check_dataset(X)
     n, sz, d = X_.shape
     dataframes = []
     for i, Xi in enumerate(X_):
-        df = pd.DataFrame(columns=["id", "time"] +
-                                  ["dim_%d" % di for di in range(d)])
-        Xi_ = Xi[:ts_size(Xi)]
+        df = pd.DataFrame(columns=["id", "time"] + ["dim_%d" % di for di in range(d)])
+        Xi_ = Xi[: ts_size(Xi)]
         sz = Xi_.shape[0]
         df["time"] = numpy.arange(sz)
         df["id"] = numpy.zeros((sz,), dtype=int) + i
@@ -609,14 +624,17 @@ def from_tsfresh_dataset(X):
     try:
         import pandas as pd
     except ImportError:
-        raise ImportError("Conversion from/to tsfresh cannot be performed "
-                          "if pandas is not installed.")
+        raise ImportError(
+            "Conversion from/to tsfresh cannot be performed "
+            "if pandas is not installed."
+        )
     if not isinstance(X, pd.DataFrame):
-        raise ValueError("X is not a valid input tsfresh array. "
-                         "A pandas DataFrame is expected.")
-    data_dimensions = [col_name
-                       for col_name in X.columns
-                       if col_name not in ["id", "time"]]
+        raise ValueError(
+            "X is not a valid input tsfresh array. " "A pandas DataFrame is expected."
+        )
+    data_dimensions = [
+        col_name for col_name in X.columns if col_name not in ["id", "time"]
+    ]
     d = len(data_dimensions)
     all_ids = set(X["id"])
     n = len(all_ids)
@@ -680,13 +698,15 @@ def to_cesium_dataset(X):
     try:
         from cesium.time_series import TimeSeries
     except ImportError:
-        raise ImportError("Conversion from/to cesium cannot be performed "
-                          "if cesium is not installed.")
+        raise ImportError(
+            "Conversion from/to cesium cannot be performed "
+            "if cesium is not installed."
+        )
 
     def transpose_or_flatten(ts):
-        ts_ = ts[:ts_size(ts)]
+        ts_ = ts[: ts_size(ts)]
         if ts.shape[1] == 1:
-            return ts_.reshape((-1, ))
+            return ts_.reshape((-1,))
         else:
             return ts_.transpose()
 
@@ -730,16 +750,20 @@ def from_cesium_dataset(X):
     try:
         from cesium.time_series import TimeSeries
     except ImportError:
-        raise ImportError("Conversion from/to cesium cannot be performed "
-                          "if cesium is not installed.")
+        raise ImportError(
+            "Conversion from/to cesium cannot be performed "
+            "if cesium is not installed."
+        )
 
     def format_to_tslearn(ts):
         try:
             ts.sort()
         except ValueError:
-            warnings.warn("Cesium dataset could not be sorted, assuming "
-                          "it is already sorted before casting to "
-                          "tslearn format.")
+            warnings.warn(
+                "Cesium dataset could not be sorted, assuming "
+                "it is already sorted before casting to "
+                "tslearn format."
+            )
         if ts.measurement.ndim == 1:
             data = ts.measurement.reshape((1, -1))
         else:
@@ -753,9 +777,10 @@ def from_cesium_dataset(X):
             tslearn_ts[:sz, di] = data[di]
         return tslearn_ts
 
-    if not isinstance(X, list) or \
-            [type(ts) for ts in X] != [TimeSeries] * len(X):
-        raise ValueError("X is not a valid input cesium array. "
-                         "A list of cesium TimeSeries is expected.")
+    if not isinstance(X, list) or [type(ts) for ts in X] != [TimeSeries] * len(X):
+        raise ValueError(
+            "X is not a valid input cesium array. "
+            "A list of cesium TimeSeries is expected."
+        )
     dataset = [format_to_tslearn(ts) for ts in X]
     return to_time_series_dataset(dataset=dataset)
