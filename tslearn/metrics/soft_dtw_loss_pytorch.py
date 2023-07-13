@@ -73,7 +73,7 @@ else:
             return grad_output.view(-1, 1, 1).expand_as(E) * E, None, None
 
     class SoftDTWLossPyTorch(torch.nn.Module):
-        r"""Define the Soft-DTW loss function in PyTorch.
+        r"""Soft-DTW loss function in PyTorch.
 
         Soft-DTW was originally presented in [1]_ and is
         discussed in more details in our
