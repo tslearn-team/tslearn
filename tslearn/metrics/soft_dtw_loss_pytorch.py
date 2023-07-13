@@ -91,7 +91,7 @@ else:
 
         .. math::
 
-            \min^\gamma \left( a_{1}, ..., a_{n} \right) =
+            \min{}^\gamma \left( a_{1}, ..., a_{n} \right) =
                 - \gamma \log \sum_{i=1}^{n} e^{- a_{i} / \gamma}
 
         In the limit case :math:`\gamma = 0`, :math:`\min^\gamma` reduces to a
@@ -103,7 +103,7 @@ else:
 
         .. math::
 
-            \text{soft-DTW}_{\gamma}(X, Y) \text{\underbrace{$\rightarrow$}_{$+ \infty$}} - \infty
+            \text{soft-DTW}_{\gamma}(X, Y) \rightarrow_{+ \infty} - \infty
 
         In [2]_, new similarity measures are defined, that rely on soft-DTW.
         In particular, soft-DTW divergence is introduced to counteract the non-positivity of soft-DTW:
@@ -120,8 +120,8 @@ else:
         ----------
         gamma : float
             Regularization parameter.
+            It should be strictly positive.
             Lower is less smoothed (closer to true DTW).
-            Should be strictly positive.
         normalize : bool
             If True, the Soft-DTW divergence is used.
             The Soft-DTW divergence is always positive.
@@ -150,15 +150,12 @@ else:
         tensor([[[  0.0000,  -0.5000],
                  [ -1.0000,  -1.5000],
                  [ -2.0000,  -2.5000]],
-
                 [[ -3.0000,  -3.5000],
                  [ -4.0000,  -4.5000],
                  [ -5.0000,  -5.5000]],
-
                 [[ -6.0000,  -6.5000],
                  [ -7.0000,  -7.5000],
                  [ -8.0000,  -8.5000]],
-
                 [[ -9.0000,  -9.5000],
                  [-10.0000, -10.5000],
                  [-11.0000, -11.5000]]])
