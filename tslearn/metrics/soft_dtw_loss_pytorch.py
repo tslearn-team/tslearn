@@ -103,7 +103,7 @@ else:
 
         .. math::
 
-            \text{soft-DTW}_{\gamma}(X, Y) \rightarrow_{+ \infty} - \infty
+            \text{soft-DTW}_{\gamma}(X, Y) \rightarrow - \infty \text{ when } \gamma \rightarrow + \infty
 
         In [2]_, new similarity measures are defined, that rely on soft-DTW.
         In particular, soft-DTW divergence is introduced to counteract the non-positivity of soft-DTW:
