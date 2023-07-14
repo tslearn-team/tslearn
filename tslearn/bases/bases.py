@@ -254,11 +254,11 @@ class BaseModelPackage:
                 if type(param) is list:
                     try:
                         arr = np.array(param)
+                        if arr.dtype == object:
+                            # Then maybe it was rather a list of arrays
+                            # This is very hacky...
+                            arr = [np.array(p) for p in param]
                     except ValueError:
-                        arr = [np.array(p) for p in param]
-                    if arr.dtype == object:
-                        # Then maybe it was rather a list of arrays
-                        # This is very hacky...
                         arr = [np.array(p) for p in param]
                     model[param_type][k] = arr
 
