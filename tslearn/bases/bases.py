@@ -252,7 +252,7 @@ class BaseModelPackage:
             for k in model[param_type].keys():
                 param = model[param_type][k]
                 if type(param) is list:
-                    arr = np.array(param, dtype=object)
+                    arr = np.array(param)
                     if arr.dtype == object:
                         # Then maybe it was rather a list of arrays
                         # This is very hacky...
