@@ -84,10 +84,11 @@ else:
         .. math::
 
             \text{soft-DTW}_{\gamma}(X, Y) =
-                \min_{\pi}{}^\gamma \sum_{(i, j) \in \pi} d^{2} \left( X_i, Y_j \right)
+                \min_{\pi}{}^\gamma \sum_{(i, j) \in \pi} d \left( X_i, Y_j \right)
 
-        where :math:`d^{2}` is a squared distance function supporting PyTorch automatic differentiation
-        and :math:`\min^\gamma` is the soft-min operator of parameter :math:`\gamma` defined as:
+        where :math:`d` is a distance function or a dissimilarity measure
+        supporting PyTorch automatic differentiation and :math:`\min^\gamma` is
+        the soft-min operator of parameter :math:`\gamma` defined as:
 
         .. math::
 
@@ -96,8 +97,7 @@ else:
 
         In the limit case :math:`\gamma = 0`, :math:`\min^\gamma` reduces to a
         hard-min operator. The soft-DTW is then defined as the square of the DTW
-        similarity measure when the squared distance function used is the square
-        Euclidean distance.
+        dissimilarity measure when :math:`d` is the squared Euclidean distance.
 
         Contrary to DTW, soft-DTW is not bounded below by zero, and we even have:
 
@@ -105,7 +105,7 @@ else:
 
             \text{soft-DTW}_{\gamma}(X, Y) \rightarrow - \infty \text{ when } \gamma \rightarrow + \infty
 
-        In [2]_, new similarity measures are defined, that rely on soft-DTW.
+        In [2]_, new dissimilarity measures are defined, that rely on soft-DTW.
         In particular, soft-DTW divergence is introduced to counteract the non-positivity of soft-DTW:
 
         .. math::
@@ -113,7 +113,7 @@ else:
                 \text{soft-DTW}_{\gamma}(X, Y)
                 - \frac{1}{2} \left( \text{soft-DTW}_{\gamma}(X, X) + \text{soft-DTW}_{\gamma}(Y, Y) \right)
 
-        This divergence has the advantage of being minimized for :math:`x = y`
+        This divergence has the advantage of being minimized for :math:`X = Y`
         and being exactly 0 in that case.
 
         Parameters
@@ -126,8 +126,8 @@ else:
             If True, the Soft-DTW divergence is used.
             The Soft-DTW divergence is always positive.
             Optional, default: False.
-        squared_dist_func : callable
-            The squared distance function.
+        dist_func : callable
+            Distance function or dissimilarity measure.
             It takes two input arguments of shape (batch_size, ts_length, dim).
             It should support PyTorch automatic differentiation.
             Optional, default: None
@@ -176,14 +176,14 @@ else:
             International Conference on Artificial Intelligence and Statistics, 2021.
         """
 
-        def __init__(self, gamma=1.0, normalize=False, squared_dist_func=None):
+        def __init__(self, gamma=1.0, normalize=False, dist_func=None):
             super(SoftDTWLossPyTorch, self).__init__()
             self.gamma = gamma
             self.normalize = normalize
-            if squared_dist_func is not None:
-                self.squared_dist_func = squared_dist_func
+            if dist_func is not None:
+                self.dist_func = dist_func
             else:
-                self.squared_dist_func = SoftDTWLossPyTorch._euclidean_squared_dist
+                self.dist_func = SoftDTWLossPyTorch._euclidean_squared_dist
 
         @staticmethod
         def _euclidean_squared_dist(x, y):
@@ -230,10 +230,10 @@ else:
             if self.normalize:
                 xxy = torch.cat([x, x, y])
                 yxy = torch.cat([y, x, y])
-                d_xxy_yxy = self.squared_dist_func(xxy, yxy)
+                d_xxy_yxy = self.dist_func(xxy, yxy)
                 loss = _SoftDTWLossPyTorch.apply(d_xxy_yxy, self.gamma)
                 loss_xy, loss_xx, loss_yy = torch.split(loss, x.shape[0])
                 return loss_xy - 1 / 2 * (loss_xx + loss_yy)
             else:
-                d_xy = self.squared_dist_func(x, y)
+                d_xy = self.dist_func(x, y)
                 return _SoftDTWLossPyTorch.apply(d_xy, self.gamma)
