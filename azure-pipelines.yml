@@ -41,8 +41,8 @@ jobs:
   - script: |
       set -xe
       python -m pip install pytest pytest-azurepipelines
-      python -m pip install scikit-learn==1.0
-      python -m pip install tensorflow==2.9.0
+      python -m pip install scikit-learn
+      python -m pip install tensorflow
       python -m pytest -v tslearn/ --doctest-modules
     displayName: 'Test'
 
@@ -80,8 +80,8 @@ jobs:
   - script: |
       set -xe
       python -m pip install pytest pytest-azurepipelines
-      python -m pip install scikit-learn==1.0
-      python -m pip install tensorflow==2.9.0
+      python -m pip install scikit-learn
+      python -m pip install tensorflow
       python -m pytest -v tslearn/ --doctest-modules
     displayName: 'Test'
 
@@ -123,8 +123,8 @@ jobs:
       python -m pip install pytest pytest-azurepipelines
       python -m pip install coverage pytest-cov
       python -m pip install cesium pandas stumpy
-      python -m pip install scikit-learn==1.0
-      python -m pip install tensorflow==2.9.0
+      python -m pip install scikit-learn
+      python -m pip install tensorflow
       python -m pytest -v tslearn/ --doctest-modules --cov=tslearn
     displayName: 'Test'
 
@@ -175,7 +175,7 @@ jobs:
   - script: |
       set -xe
       python -m pip install pytest pytest-azurepipelines
-      python -m pip install scikit-learn==1.0
+      python -m pip install scikit-learn
       python -m pip install tensorflow==2.9.0
       python -m pytest -v tslearn/ --doctest-modules -k 'not test_all_estimators'
     displayName: 'Test'
@@ -219,6 +219,6 @@ jobs:
   - script: |
       python -m pip install pytest pytest-azurepipelines
       python -m pip install scikit-learn==1.0
-      python -m pip install tensorflow==2.9.0
+      python -m pip install tensorflow
       python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/tests/test_estimators.py --ignore tslearn/utils/cast.py
     displayName: 'Test'
