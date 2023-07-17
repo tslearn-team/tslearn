@@ -169,7 +169,7 @@ class MatrixProfile(TransformerMixin,
                 result = stumpy.stump(
                     T_A=X[i_ts, :, 0].ravel(),
                     m=self.subsequence_length)
-                X_transformed[i_ts, :, 0] = result[:, 0].astype(np.float)
+                X_transformed[i_ts, :, 0] = result[:, 0].astype(float)
 
         elif self.implementation == "gpu_stump":
             if not STUMPY_INSTALLED:
@@ -179,7 +179,7 @@ class MatrixProfile(TransformerMixin,
                 result = stumpy.gpu_stump(
                     T_A=X[i_ts, :, 0].ravel(),
                     m=self.subsequence_length)
-                X_transformed[i_ts, :, 0] = result[:, 0].astype(np.float)
+                X_transformed[i_ts, :, 0] = result[:, 0].astype(float)
 
         elif self.implementation == "numpy":
             scaler = TimeSeriesScalerMeanVariance()
