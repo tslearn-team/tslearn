@@ -386,7 +386,7 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False,
                         assert decision.shape == (n_samples,)
                     else:
                         assert decision.shape == (n_samples, 1)
-                    dec_pred = (decision.ravel() > 0).astype(np.int)
+                    dec_pred = (decision.ravel() > 0).astype(int)
                     assert_array_equal(dec_pred, y_pred)
                 else:
                     assert decision.shape == (n_samples, n_classes)
