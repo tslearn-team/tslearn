@@ -38,8 +38,8 @@ def clear_tmp():
 
 
 def test_hdftools():
-    dtypes = [numpy.int, numpy.int8, numpy.int16, numpy.int32, numpy.int64,
-              numpy.float, numpy.float32, numpy.float64]
+    dtypes = [int, numpy.int8, numpy.int16, numpy.int32, numpy.int64,
+              float, numpy.float32, numpy.float64]
 
     d = {}
 

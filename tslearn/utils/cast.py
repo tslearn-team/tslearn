@@ -166,7 +166,7 @@ def to_seglearn_dataset(X):
     (10, 2)
     """
     X_ = check_dataset(X)
-    return numpy.array([Xi[:ts_size(Xi)] for Xi in X_])
+    return numpy.array([Xi[:ts_size(Xi)] for Xi in X_], dtype=object)
 
 
 def from_seglearn_dataset(X):
