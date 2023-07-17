@@ -458,7 +458,7 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
     >>> from tslearn.generators import random_walk_blobs
     >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=64, d=2, n_blobs=2)
     >>> import numpy
-    >>> y = y.astype(numpy.float) + numpy.random.randn(20) * .1
+    >>> y = y.astype(float) + numpy.random.randn(20) * .1
     >>> reg = TimeSeriesSVR(kernel="gak", gamma="auto")
     >>> reg.fit(X, y).predict(X).shape
     (20,)

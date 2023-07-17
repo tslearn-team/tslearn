@@ -18,7 +18,7 @@ def test_consistent_with_stumpy():
 
     X_tr = mp.fit_transform(X)
     X_tr_stumpy_wrap = mp_stumpy.fit_transform(X)
-    X_tr_stumpy = stumpy.stump(X_stumpy, m=10)[:, 0].astype(np.float)
+    X_tr_stumpy = stumpy.stump(X_stumpy, m=10)[:, 0].astype(float)
 
     np.testing.assert_allclose(X_tr.ravel(), X_tr_stumpy)
     np.testing.assert_allclose(X_tr, X_tr_stumpy_wrap)
