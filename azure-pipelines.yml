@@ -41,7 +41,7 @@ jobs:
   - script: |
       set -xe
       python -m pip install pytest pytest-azurepipelines
-      python -m pip install scikit-learn==1.2
+      python -m pip install scikit-learn==1.1
       python -m pip install tensorflow==2.9.0
       python -m pytest -v tslearn/ --doctest-modules
     displayName: 'Test'
@@ -80,7 +80,7 @@ jobs:
   - script: |
       set -xe
       python -m pip install pytest pytest-azurepipelines
-      python -m pip install scikit-learn==1.2
+      python -m pip install scikit-learn==1.1
       python -m pip install tensorflow==2.9.0
       python -m pytest -v tslearn/ --doctest-modules
     displayName: 'Test'
@@ -218,7 +218,7 @@ jobs:
   
   - script: |
       python -m pip install pytest pytest-azurepipelines
-      python -m pip install scikit-learn==1.0
+      python -m pip install scikit-learn==1.1
       python -m pip install tensorflow==2.9.0
       python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/tests/test_estimators.py --ignore tslearn/utils/cast.py
     displayName: 'Test'
