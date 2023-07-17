@@ -192,9 +192,9 @@ class MatrixProfile(TransformerMixin,
                 segments_2d = segments.reshape((-1, self.subsequence_length * d))
                 dists = squareform(pdist(segments_2d, "euclidean"))
                 band = (np.tri(n_segments, n_segments,
-                            band_width, dtype=np.bool) &
+                            band_width, dtype=bool) &
                         ~np.tri(n_segments, n_segments,
-                                -(band_width + 1), dtype=np.bool))
+                                -(band_width + 1), dtype=bool))
                 dists[band] = np.inf
                 X_transformed[i_ts] = dists.min(axis=1, keepdims=True)
 
