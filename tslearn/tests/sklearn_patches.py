@@ -10,9 +10,10 @@ from sklearn.base import ClusterMixin
 from sklearn.exceptions import DataConversionWarning
 
 from sklearn.datasets import make_blobs
-from sklearn.metrics.pairwise import rbf_kernel
+from sklearn.metrics.pairwise import rbf_kernel, linear_kernel, pairwise_distances
 
 from sklearn.utils import shuffle
+
 try:
     from sklearn.utils._testing import (
         set_random_state, assert_array_equal,
@@ -54,13 +55,11 @@ from sklearn.utils.estimator_checks import (
 try:
     # Most recent
     from sklearn.utils.estimator_checks import (
-        _pairwise_estimator_convert_X as pairwise_estimator_convert_X,
         _choose_check_classifiers_labels as choose_check_classifiers_labels
     )
 except ImportError:
     # Deprecated from sklearn v0.24 onwards
     from sklearn.utils.estimator_checks import (
-        pairwise_estimator_convert_X,
         choose_check_classifiers_labels
     )
 
@@ -75,7 +74,8 @@ from sklearn.utils.estimator_checks import (_yield_classifier_checks,
                                             _yield_regressor_checks,
                                             _yield_transformer_checks,
                                             _yield_clustering_checks,
-                                            _yield_outliers_checks)
+                                            _yield_outliers_checks,
+                                            _is_pairwise_metric)
 try:
     from sklearn.utils.estimator_checks import _yield_checks
 except ImportError:
@@ -101,6 +101,15 @@ def _create_small_ts_dataset():
 def _create_large_ts_dataset():
     return random_walk_blobs(n_ts_per_blob=50, n_blobs=3, random_state=1,
                              sz=20, noise_level=0.025)
+
+
+def pairwise_estimator_convert_X(X, estimator, kernel=linear_kernel):
+    if _is_pairwise_metric(estimator):
+        return pairwise_distances(X, metric="euclidean")
+    if estimator._get_tags()["pairwise"]:
+        return kernel(X, X)
+
+    return X
 
 
 def enforce_estimator_tags_y(estimator, y):
