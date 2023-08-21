@@ -10,7 +10,14 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 
 
+## [Towards v0.7]
+
 ## [Towards v0.6.2]
+
+### Fixed
+
+* Fixed an incorrect calculation of the normalization term for `cdist_soft_dtw_normalized` when `dataset2` is provided.
+* Fixed UCR/UEA datasets download link
 
 ## [v0.6.1]
 
