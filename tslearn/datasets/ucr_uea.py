@@ -50,14 +50,14 @@ class UCR_UEA_datasets:
         os.makedirs(self._data_dir, exist_ok=True)
 
         try:
-            url_multivariate = ("https://www.timeseriesclassification.com/"
-                                "ClassificationDownloads/Archives/summaryMultivariate.csv")
+            url_multivariate = ("http://www.timeseriesclassification.com/aeon-toolkit/Archives/"
+                                "summaryMultivariate.csv")
             self._list_multivariate_filename = os.path.join(
                 self._data_dir, os.path.basename(url_multivariate)
             )
             urlretrieve(url_multivariate, self._list_multivariate_filename)
-            url_baseline = ("https://www.timeseriesclassification.com/"
-                            "singleTrainTest.csv")
+            url_baseline = ("http://www.timeseriesclassification.com/aeon-toolkit/Archives/"
+                            "summaryUnivariate.csv")
             self._baseline_scores_filename = os.path.join(
                 self._data_dir, os.path.basename(url_baseline))
             urlretrieve(url_baseline, self._baseline_scores_filename)
