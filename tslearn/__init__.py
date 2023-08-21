@@ -1,7 +1,7 @@
 import os
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
-__version__ = "0.6.1"
+__version__ = "0.6.2"
 __bibtex__ = r"""@article{JMLR:v21:20-091,
   author  = {Romain Tavenard and Johann Faouzi and Gilles Vandewiele and
              Felix Divo and Guillaume Androz and Chester Holtz and
