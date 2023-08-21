@@ -50,14 +50,13 @@ class UCR_UEA_datasets:
         os.makedirs(self._data_dir, exist_ok=True)
 
         try:
-            url_multivariate = ("https://www.timeseriesclassification.com/"
-                                "ClassificationDownloads/Archives/summaryMultivariate.csv")
+            url_multivariate = ("http://www.timeseriesclassification.com/aeon-toolkit/Archives/"
+                                "summaryMultivariate.csv")
             self._list_multivariate_filename = os.path.join(
                 self._data_dir, os.path.basename(url_multivariate)
             )
             urlretrieve(url_multivariate, self._list_multivariate_filename)
-            url_baseline = ("https://www.timeseriesclassification.com/"
-                            "singleTrainTest.csv")
+            url_baseline = ("http://www.timeseriesclassification.com/singleTrainTest.csv")
             self._baseline_scores_filename = os.path.join(
                 self._data_dir, os.path.basename(url_baseline))
             urlretrieve(url_baseline, self._baseline_scores_filename)
@@ -267,7 +266,7 @@ class UCR_UEA_datasets:
                 shutil.rmtree(full_path, ignore_errors=True)
             # else, actually raise the error!
 
-            url = ("https://www.timeseriesclassification.com/ClassificationDownloads/%s.zip"
+            url = ("https://www.timeseriesclassification.com/aeon-toolkit/%s.zip"
                    % dataset_name)
             success = extract_from_zip_url(url, target_dir=full_path)
             if not success:
