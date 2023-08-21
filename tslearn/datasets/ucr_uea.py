@@ -56,8 +56,7 @@ class UCR_UEA_datasets:
                 self._data_dir, os.path.basename(url_multivariate)
             )
             urlretrieve(url_multivariate, self._list_multivariate_filename)
-            url_baseline = ("http://www.timeseriesclassification.com/aeon-toolkit/Archives/"
-                            "summaryUnivariate.csv")
+            url_baseline = ("http://www.timeseriesclassification.com/singleTrainTest.csv")
             self._baseline_scores_filename = os.path.join(
                 self._data_dir, os.path.basename(url_baseline))
             urlretrieve(url_baseline, self._baseline_scores_filename)
