@@ -658,6 +658,9 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None):
     >>> time_series = np.random.randn(10, 15, 1)
     >>> np.alltrue(cdist_soft_dtw_normalized(time_series) >= 0.)
     True
+    >>> time_series2 = np.random.randn(4, 15, 1)
+    >>> np.alltrue(cdist_soft_dtw_normalized(time_series, time_series2) >= 0.)
+    True
 
     See Also
     --------
@@ -672,8 +675,22 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None):
     """
     be = instantiate_backend(be, dataset1)
     dists = cdist_soft_dtw(dataset1, dataset2=dataset2, gamma=gamma, be=be)
-    d_ii = be.diag(dists)
-    dists -= 0.5 * (be.reshape(d_ii, (-1, 1)) + be.reshape(d_ii, (1, -1)))
+    if dataset2 is None:
+        d_ii = be.diag(dists)
+        normalizer = -0.5 * (be.reshape(d_ii, (-1, 1)) + be.reshape(d_ii, (1, -1)))
+    else:
+        self_dists1 = be.empty((dataset1.shape[0], 1))
+        for i, ts1 in enumerate(dataset1):
+            ts1_short = ts1[:ts_size(ts1)]
+            self_dists1[i, 0] = soft_dtw(ts1_short, ts1_short, gamma=gamma, be=be)
+
+        self_dists2 = be.empty((1, dataset2.shape[0]))
+        for j, ts2 in enumerate(dataset2):
+            ts2_short = ts2[:ts_size(ts2)]
+            self_dists2[0, j] = soft_dtw(ts2_short, ts2_short, gamma=gamma, be=be)
+
+        normalizer = -0.5 * (self_dists1 + self_dists2)
+    dists += normalizer
     return dists
 
 
