@@ -230,13 +230,13 @@ else:
             by, ly, dy = y.shape
             assert bx == by
             assert dx == dy
+            d_xy = self.dist_func(x, y)
+            loss_xy = _SoftDTWLossPyTorch.apply(d_xy, self.gamma)
             if self.normalize:
-                xxy = torch.cat([x, x, y])
-                yxy = torch.cat([y, x, y])
-                d_xxy_yxy = self.dist_func(xxy, yxy)
-                loss = _SoftDTWLossPyTorch.apply(d_xxy_yxy, self.gamma)
-                loss_xy, loss_xx, loss_yy = torch.split(loss, x.shape[0])
+                d_xx = self.dist_func(x, x)
+                d_yy = self.dist_func(y, y)
+                loss_xx = _SoftDTWLossPyTorch.apply(d_xx, self.gamma)
+                loss_yy = _SoftDTWLossPyTorch.apply(d_yy, self.gamma)
                 return loss_xy - 1 / 2 * (loss_xx + loss_yy)
             else:
-                d_xy = self.dist_func(x, y)
-                return _SoftDTWLossPyTorch.apply(d_xy, self.gamma)
+                return loss_xy

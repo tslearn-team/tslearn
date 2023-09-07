@@ -618,6 +618,9 @@ def test_soft_dtw_loss_pytorch():
         )
     )
 
+    loss_normalized = soft_dtw_loss_pytorch_normalized.forward(batch_ts_1, batch_ts_2)
+    np.testing.assert_allclose(loss_normalized.detach().numpy(), 107.89006805 * torch.ones((b,)))
+
     def euclidean_abs_dist(x, y):
         """Calculates the Euclidean squared distance between each element in x and y per timestep.
 
