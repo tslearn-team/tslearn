@@ -87,7 +87,7 @@ def accumulated_matrix(s1, s2, mask, be=None):
         Accumulated cost matrix.
 
     """
-    be = instantiate_backend(be, s1)
+    be = instantiate_backend(be, s1, s2)
     l1 = be.shape(s1)[0]
     l2 = be.shape(s2)[0]
     cum_sum = be.full((l1 + 1, l2 + 1), be.inf)
@@ -148,7 +148,7 @@ def _dtw(s1, s2, mask, be=None):
         Dynamic Time Warping score between both time series.
 
     """
-    be = instantiate_backend(be, s1)
+    be = instantiate_backend(be, s1, s2)
     cum_sum = accumulated_matrix(s1, s2, mask, be=be)
     return be.sqrt(cum_sum[-1, -1])
 
@@ -293,7 +293,7 @@ def dtw_path(
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
 
     """
-    be = instantiate_backend(be, s1)
+    be = instantiate_backend(be, s1, s2)
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
 
@@ -526,7 +526,7 @@ def dtw_path_from_metric(
     .. _scipy: https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html
 
     """  # noqa: E501
-    be = instantiate_backend(be, s1)
+    be = instantiate_backend(be, s1, s2)
     if metric == "precomputed":  # Pairwise distance given as input
         sz1, sz2 = be.shape(s1)
         mask = compute_mask(
@@ -643,7 +643,7 @@ def dtw(
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
 
     """
-    be = instantiate_backend(be, s1)
+    be = instantiate_backend(be, s1, s2)
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
 
@@ -720,7 +720,7 @@ def _limited_warping_length_cost(s1, s2, max_length, be=None):
         Accumulated scores. This dict associates (i, j) pairs (keys) to
         dictionnaries with desired length as key and associated score as value.
     """
-    be = instantiate_backend(be, s1)
+    be = instantiate_backend(be, s1, s2)
     dict_costs = {}
     for i in range(s1.shape[0]):
         for j in range(s2.shape[0]):
@@ -812,7 +812,7 @@ def dtw_limited_warping_length(s1, s2, max_length, be=None):
            Dynamic time warping under limited warping path length.
            Information Sciences, vol. 393, pp. 91--107, 2017.
     """
-    be = instantiate_backend(be, s1)
+    be = instantiate_backend(be, s1, s2)
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
 
@@ -932,7 +932,7 @@ def dtw_path_limited_warping_length(s1, s2, max_length, be=None):
            Dynamic time warping under limited warping path length.
            Information Sciences, vol. 393, pp. 91--107, 2017.
     """
-    be = instantiate_backend(be, s1)
+    be = instantiate_backend(be, s1, s2)
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
 
@@ -1166,7 +1166,7 @@ def dtw_subsequence_path(subseq, longseq, be=None):
     subsequence_cost_matrix: Calculate the required cost matrix
     subsequence_path: Calculate a matching path manually
     """
-    be = instantiate_backend(be, subseq)
+    be = instantiate_backend(be, subseq, longseq)
     subseq = to_time_series(subseq, be=be)
     longseq = to_time_series(longseq, be=be)
     acc_cost_mat = subsequence_cost_matrix(subseq=subseq, longseq=longseq, be=be)
@@ -1260,7 +1260,7 @@ def sakoe_chiba_mask(sz1, sz2, radius=1, be=None):
            [ 0.,  0.,  0.],
            [inf,  0.,  0.]])
     """
-    be = instantiate_backend(be, "numpy")
+    be = instantiate_backend(be)
     mask = be.full((sz1, sz2), be.inf)
     if sz1 > sz2:
         width = sz1 - sz2 + radius
@@ -1344,6 +1344,7 @@ def _itakura_mask(sz1, sz2, max_slope=2.0, be=None):
     mask : array, shape = (sz1, sz2)
         Itakura mask.
     """
+    be = instantiate_backend(be)
     min_slope = 1 / float(max_slope)
     max_slope *= float(sz1) / float(sz2)
     min_slope *= float(sz1) / float(sz2)
@@ -1481,7 +1482,7 @@ def compute_mask(
     mask : array
         Constraint region.
     """
-    be = instantiate_backend(be, s1)
+    be = instantiate_backend(be, s1, s2)
     # The output mask will be of shape (sz1, sz2)
     if isinstance(s1, int) and isinstance(s2, int):
         sz1, sz2 = s1, s2
@@ -1620,7 +1621,7 @@ def cdist_dtw(
            spoken word recognition," IEEE Transactions on Acoustics, Speech and
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
     """  # noqa: E501
-    be = instantiate_backend(be, dataset1)
+    be = instantiate_backend(be, dataset1, dataset2)
     return _cdist_generic(
         dist_fun=dtw,
         dataset1=dataset1,
@@ -1873,7 +1874,7 @@ def lcss_accumulated_matrix(s1, s2, eps, mask, be=None):
     lcss_score : float
         Longest Common Subsequence similarity score between both time series.
     """
-    be = instantiate_backend(be, s1)
+    be = instantiate_backend(be, s1, s2)
     l1 = s1.shape[0]
     l2 = s2.shape[0]
     acc_cost_mat = be.full((l1 + 1, l2 + 1), 0)
@@ -1946,7 +1947,7 @@ def _lcss(s1, s2, eps, mask, be=None):
     lcss_score : float
         Longest Common Subsquence score between both time series.
     """
-    be = instantiate_backend(be, s1)
+    be = instantiate_backend(be, s1, s2)
     l1 = s1.shape[0]
     l2 = s2.shape[0]
     acc_cost_mat = lcss_accumulated_matrix(s1, s2, eps, mask, be=be)
@@ -2046,7 +2047,7 @@ def lcss(
             IEEE Computer Society, USA, 673.
 
     """
-    be = instantiate_backend(be, s1)
+    be = instantiate_backend(be, s1, s2)
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
 
@@ -2081,7 +2082,7 @@ def _njit_return_lcss_path(s1, s2, eps, mask, acc_cost_mat, sz1, sz2):
 
 
 def _return_lcss_path(s1, s2, eps, mask, acc_cost_mat, sz1, sz2, be=None):
-    be = instantiate_backend(be, s1)
+    be = instantiate_backend(be, s1, s2, acc_cost_mat)
     i, j = (sz1, sz2)
     path = []
 
@@ -2123,7 +2124,7 @@ def _njit_return_lcss_path_from_dist_matrix(
 def _return_lcss_path_from_dist_matrix(
     dist_matrix, eps, mask, acc_cost_mat, sz1, sz2, be=None
 ):
-    be = instantiate_backend(be, dist_matrix)
+    be = instantiate_backend(be, dist_matrix, acc_cost_mat)
     i, j = (sz1, sz2)
     path = []
 
@@ -2236,7 +2237,7 @@ def lcss_path(
             IEEE Computer Society, USA, 673.
 
     """
-    be = instantiate_backend(be, s1)
+    be = instantiate_backend(be, s1, s2)
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
 
@@ -2472,7 +2473,7 @@ def lcss_path_from_metric(
     .. _scipy: https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html
 
     """  # noqa: E501
-    be = instantiate_backend(be, s1)
+    be = instantiate_backend(be, s1, s2)
     if metric == "precomputed":  # Pairwise distance given as input
         sz1, sz2 = s1.shape
         mask = compute_mask(
