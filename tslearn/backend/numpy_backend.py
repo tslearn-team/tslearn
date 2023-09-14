@@ -82,6 +82,10 @@ class NumPyBackend(object):
         self.zeros_like = _np.zeros_like
 
     @staticmethod
+    def belongs_to_backend(x):
+        return "numpy" in f"{type(x)}".lower()
+
+    @staticmethod
     def cast(x, dtype):
         return x.astype(dtype)
 
