@@ -528,6 +528,7 @@ def dtw_path_from_metric(
     """  # noqa: E501
     be = instantiate_backend(be, s1, s2)
     if metric == "precomputed":  # Pairwise distance given as input
+        s1 = be.array(s1)
         sz1, sz2 = be.shape(s1)
         mask = compute_mask(
             sz1,
@@ -1006,7 +1007,9 @@ def subsequence_cost_matrix(subseq, longseq, be=None):
     mat : array, shape = (sz1, sz2)
         Accumulated cost matrix.
     """
-    be = instantiate_backend(be, subseq)
+    be = instantiate_backend(be, subseq, longseq)
+    subseq = be.array(subseq)
+    longseq = be.array(longseq)
     if be.is_numpy:
         return _njit_subsequence_cost_matrix(subseq, longseq)
     return _subsequence_cost_matrix(subseq, longseq, be=be)
@@ -1805,6 +1808,7 @@ def lb_envelope(ts, radius=1, be=None):
        Conference on Very Large Data Bases, 2002. pp 406-417.
     """
     be = instantiate_backend(be, ts)
+    ts = be.array(ts)
     if be.is_numpy:
         return _njit_lb_envelope(to_time_series(ts), radius=radius)
     return _lb_envelope(to_time_series(ts, be=be), radius=radius, be=be)
@@ -1951,7 +1955,6 @@ def _lcss(s1, s2, eps, mask, be=None):
     l1 = s1.shape[0]
     l2 = s2.shape[0]
     acc_cost_mat = lcss_accumulated_matrix(s1, s2, eps, mask, be=be)
-
     return float(acc_cost_mat[-1][-1]) / min([l1, l2])
 
 
