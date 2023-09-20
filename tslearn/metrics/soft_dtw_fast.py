@@ -56,7 +56,11 @@ def _softmin3(a, b, c, gamma, be=None):
     -------
     softmin_value : float64
     """
-    be = instantiate_backend(be, a)
+    be = instantiate_backend(be, a, b, c, gamma)
+    a = be.array(a, dtype=be.float64)
+    b = be.array(b, dtype=be.float64)
+    c = be.array(c, dtype=be.float64)
+    gamma = be.array(gamma, dtype=be.float64)
 
     a /= -gamma
     b /= -gamma

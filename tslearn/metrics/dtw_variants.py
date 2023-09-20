@@ -23,7 +23,9 @@ def _njit_local_squared_dist(x, y):
 
 
 def _local_squared_dist(x, y, be=None):
-    be = instantiate_backend(be, x)
+    be = instantiate_backend(be, x, y)
+    x = be.array(x)
+    y = be.array(y)
     dist = 0.0
     for di in range(be.shape(x)[0]):
         diff = x[di] - y[di]
@@ -88,6 +90,8 @@ def accumulated_matrix(s1, s2, mask, be=None):
 
     """
     be = instantiate_backend(be, s1, s2)
+    s1 = be.array(s1)
+    s2 = be.array(s2)
     l1 = be.shape(s1)[0]
     l2 = be.shape(s2)[0]
     cum_sum = be.full((l1 + 1, l2 + 1), be.inf)
@@ -375,6 +379,7 @@ def accumulated_matrix_from_dist_matrix(dist_matrix, mask, be=None):
         Accumulated cost matrix.
     """
     be = instantiate_backend(be, dist_matrix)
+    dist_matrix = be.array(dist_matrix)
     l1, l2 = be.shape(dist_matrix)
     cum_sum = be.full((l1 + 1, l2 + 1), be.inf)
     cum_sum[0, 0] = 0.0
