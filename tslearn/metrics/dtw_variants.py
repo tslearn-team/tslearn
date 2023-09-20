@@ -149,6 +149,8 @@ def _dtw(s1, s2, mask, be=None):
 
     """
     be = instantiate_backend(be, s1, s2)
+    s1 = be.array(s1)
+    s2 = be.array(s2)
     cum_sum = accumulated_matrix(s1, s2, mask, be=be)
     return be.sqrt(cum_sum[-1, -1])
 
