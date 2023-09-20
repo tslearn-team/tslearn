@@ -93,7 +93,7 @@ class Backend(object):
 
 
 def cast(data, array_type="numpy"):
-    """Cast the data.
+    """Cast data to list or specific backend.
 
     Parameters
     ----------
@@ -110,6 +110,8 @@ def cast(data, array_type="numpy"):
     """
     data_type_string = f"{type(data)}".lower()
     array_type = array_type.lower()
+    if array_type == "pytorch":
+        array_type = "torch"
     if array_type in data_type_string:
         return data
     if array_type == "list":
