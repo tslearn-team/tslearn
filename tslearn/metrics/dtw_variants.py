@@ -722,6 +722,8 @@ def _limited_warping_length_cost(s1, s2, max_length, be=None):
         dictionnaries with desired length as key and associated score as value.
     """
     be = instantiate_backend(be, s1, s2)
+    s1 = be.array(s1)
+    s2 = be.array(s2)
     dict_costs = {}
     for i in range(s1.shape[0]):
         for j in range(s2.shape[0]):
@@ -974,7 +976,9 @@ def _njit_subsequence_cost_matrix(subseq, longseq):
 
 
 def _subsequence_cost_matrix(subseq, longseq, be=None):
-    be = instantiate_backend(be, subseq)
+    be = instantiate_backend(be, subseq, longseq)
+    subseq = be.array(subseq)
+    longseq = be.array(longseq)
     l1 = subseq.shape[0]
     l2 = longseq.shape[0]
     cum_sum = be.full((l1 + 1, l2 + 1), be.inf)
@@ -1045,6 +1049,7 @@ def _njit_subsequence_path(acc_cost_mat, idx_path_end):
 
 def _subsequence_path(acc_cost_mat, idx_path_end, be=None):
     be = instantiate_backend(be, acc_cost_mat)
+    acc_cost_mat = be.array(acc_cost_mat)
     sz1, sz2 = acc_cost_mat.shape
     path = [(sz1 - 1, idx_path_end)]
     while path[-1][0] != 0:
@@ -1111,6 +1116,7 @@ def subsequence_path(acc_cost_mat, idx_path_end, be=None):
 
     """
     be = instantiate_backend(be, acc_cost_mat)
+    acc_cost_mat = be.array(acc_cost_mat)
     if be.is_numpy:
         return _njit_subsequence_path(acc_cost_mat, idx_path_end)
     return _subsequence_path(acc_cost_mat, idx_path_end, be=be)
@@ -1409,7 +1415,7 @@ def itakura_mask(sz1, sz2, max_slope=2.0, be=None):
            [inf, inf, inf,  0.,  0., inf],
            [inf, inf, inf, inf, inf,  0.]])
     """
-    be = instantiate_backend(be, "numpy")
+    be = instantiate_backend(be)
 
     if be.is_numpy:
         mask = _njit_itakura_mask(sz1, sz2, max_slope=max_slope)
@@ -1490,6 +1496,8 @@ def compute_mask(
     if isinstance(s1, int) and isinstance(s2, int):
         sz1, sz2 = s1, s2
     else:
+        s1 = be.array(s1)
+        s2 = be.array(s2)
         sz1 = be.shape(s1)[0]
         sz2 = be.shape(s2)[0]
     if (
@@ -1739,6 +1747,7 @@ def _njit_lb_envelope(time_series, radius):
 
 def _lb_envelope(time_series, radius, be=None):
     be = instantiate_backend(be, time_series)
+    time_series = be.array(time_series)
     sz, d = be.shape(time_series)
     enveloppe_up = be.empty((sz, d))
     enveloppe_down = be.empty((sz, d))
@@ -1879,8 +1888,10 @@ def lcss_accumulated_matrix(s1, s2, eps, mask, be=None):
         Longest Common Subsequence similarity score between both time series.
     """
     be = instantiate_backend(be, s1, s2)
-    l1 = s1.shape[0]
-    l2 = s2.shape[0]
+    s1 = be.array(s1)
+    s2 = be.array(s2)
+    l1 = be.shape(s1)[0]
+    l2 = be.shape(s2)[0]
     acc_cost_mat = be.full((l1 + 1, l2 + 1), 0)
 
     for i in range(1, l1 + 1):
@@ -1952,8 +1963,10 @@ def _lcss(s1, s2, eps, mask, be=None):
         Longest Common Subsquence score between both time series.
     """
     be = instantiate_backend(be, s1, s2)
-    l1 = s1.shape[0]
-    l2 = s2.shape[0]
+    s1 = be.array(s1)
+    s2 = be.array(s2)
+    l1 = be.shape(s1)[0]
+    l2 = be.shape(s2)[0]
     acc_cost_mat = lcss_accumulated_matrix(s1, s2, eps, mask, be=be)
     return float(acc_cost_mat[-1][-1]) / min([l1, l2])
 
@@ -2086,6 +2099,9 @@ def _njit_return_lcss_path(s1, s2, eps, mask, acc_cost_mat, sz1, sz2):
 
 def _return_lcss_path(s1, s2, eps, mask, acc_cost_mat, sz1, sz2, be=None):
     be = instantiate_backend(be, s1, s2, acc_cost_mat)
+    s1 = be.array(s1)
+    s2 = be.array(s2)
+    acc_cost_mat = be.array(acc_cost_mat)
     i, j = (sz1, sz2)
     path = []
 
@@ -2128,6 +2144,8 @@ def _return_lcss_path_from_dist_matrix(
     dist_matrix, eps, mask, acc_cost_mat, sz1, sz2, be=None
 ):
     be = instantiate_backend(be, dist_matrix, acc_cost_mat)
+    dist_matrix = be.array(dist_matrix)
+    acc_cost_mat = be.array(acc_cost_mat)
     i, j = (sz1, sz2)
     path = []
 
@@ -2324,7 +2342,8 @@ def lcss_accumulated_matrix_from_dist_matrix(dist_matrix, eps, mask, be=None):
         Accumulated cost matrix.
     """
     be = instantiate_backend(be, dist_matrix)
-    l1, l2 = dist_matrix.shape
+    dist_matrix = be.array(dist_matrix)
+    l1, l2 = be.shape(dist_matrix)
     acc_cost_mat = be.full((l1 + 1, l2 + 1), 0)
 
     for i in range(1, l1 + 1):
@@ -2478,7 +2497,8 @@ def lcss_path_from_metric(
     """  # noqa: E501
     be = instantiate_backend(be, s1, s2)
     if metric == "precomputed":  # Pairwise distance given as input
-        sz1, sz2 = s1.shape
+        s1 = be.array(s1)
+        sz1, sz2 = be.shape(s1)
         mask = compute_mask(
             sz1,
             sz2,
@@ -2491,8 +2511,8 @@ def lcss_path_from_metric(
     else:
         s1 = to_time_series(s1, remove_nans=True, be=be)
         s2 = to_time_series(s2, remove_nans=True, be=be)
-        sz1 = s1.shape[0]
-        sz2 = s2.shape[0]
+        sz1 = be.shape(s1)[0]
+        sz2 = be.shape(s2)[0]
         mask = compute_mask(
             s1,
             s2,

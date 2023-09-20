@@ -136,7 +136,7 @@ def ctw_path(
     .. [1] F. Zhou and F. Torre, "Canonical time warping for alignment of
        human behavior". NIPS 2009.
     """
-    be = instantiate_backend(be, s1)
+    be = instantiate_backend(be, s1, s2)
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
     s1, s2 = be.array(s1, dtype=be.float64), be.array(s2, dtype=be.float64)
@@ -271,7 +271,9 @@ def ctw(
     .. [1] F. Zhou and F. Torre, "Canonical time warping for alignment of
        human behavior". NIPS 2009.
     """
-    be = instantiate_backend(be, s1)
+    be = instantiate_backend(be, s1, s2)
+    s1 = be.array(s1)
+    s2 = be.array(s2)
     return ctw_path(
         s1=s1,
         s2=s2,
@@ -382,7 +384,7 @@ def cdist_ctw(
     .. [1] F. Zhou and F. Torre, "Canonical time warping for alignment of
        human behavior". NIPS 2009.
     """  # noqa: E501
-    be = instantiate_backend(be, dataset1)
+    be = instantiate_backend(be, dataset1, dataset2)
     return _cdist_generic(
         dist_fun=ctw,
         dataset1=dataset1,

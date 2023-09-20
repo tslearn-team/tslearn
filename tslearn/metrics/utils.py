@@ -64,7 +64,7 @@ def _cdist_generic(
     cdist : numpy.ndarray
         Cross-similarity matrix
     """  # noqa: E501
-    be = instantiate_backend(be, dataset1)
+    be = instantiate_backend(be, dataset1, dataset2)
     dataset1 = to_time_series_dataset(dataset1, dtype=dtype, be=be)
 
     if dataset2 is None:
