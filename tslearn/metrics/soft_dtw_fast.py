@@ -114,9 +114,10 @@ def _soft_dtw(D, R, gamma, be=None):
     be : Backend object or string or None
         Backend.
     """
-    be = instantiate_backend(be, D, R)
-    D = be.array(D)
-    R = be.array(R)
+    be = instantiate_backend(be, D, R, gamma)
+    D = be.array(D, dtype=be.float64)
+    R = be.array(R, dtype=be.float64)
+    gamma = be.array(gamma, dtype=be.float64)
 
     m, n = be.shape(D)
 
