@@ -370,7 +370,7 @@ def gamma_soft_dtw(dataset, n_samples=100, random_state=None, be=None):
     )
 
 
-def soft_dtw(ts1, ts2, gamma=1.0, be=None):
+def soft_dtw(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False):
     r"""Compute Soft-DTW metric between two time series.
 
     Soft-DTW was originally presented in [1]_ and is
@@ -401,6 +401,11 @@ def soft_dtw(ts1, ts2, gamma=1.0, be=None):
         Gamma parameter for Soft-DTW
     be : Backend object or string or None
         Backend.
+    compute_with_backend : bool, default=False
+        This parameter has no influence when the NumPy backend is used.
+        When using a backend different from NumPy is used:
+        If `True`, the computation is done with the corresponding backend.
+        If `False`, a conversion to the NumPy backend can be used to accelerate the computation.
 
     Returns
     -------
@@ -436,10 +441,11 @@ def soft_dtw(ts1, ts2, gamma=1.0, be=None):
         SquaredEuclidean(ts1[: ts_size(ts1)], ts2[: ts_size(ts2)], be=be),
         gamma=gamma,
         be=be,
+        compute_with_backend=compute_with_backend,
     ).compute()
 
 
-def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None):
+def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False):
     r"""Compute Soft-DTW metric between two time series and return both the
     similarity measure and the alignment matrix.
 
@@ -471,6 +477,11 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None):
         Gamma parameter for Soft-DTW
     be : Backend object or string or None
         Backend.
+    compute_with_backend : bool, default=False
+        This parameter has no influence when the NumPy backend is used.
+        When using a backend different from NumPy is used:
+        If `True`, the computation is done with the corresponding backend.
+        If `False`, a conversion to the NumPy backend can be used to accelerate the computation.
 
     Returns
     -------
@@ -515,6 +526,7 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None):
             SquaredEuclidean(ts1[: ts_size(ts1)], ts2[: ts_size(ts2)], be=be),
             gamma=gamma,
             be=be,
+            compute_with_backend=compute_with_backend,
         )
         dist_sq = sdtw.compute()
         a = sdtw.grad()
