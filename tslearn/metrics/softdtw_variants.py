@@ -370,7 +370,7 @@ def gamma_soft_dtw(dataset, n_samples=100, random_state=None, be=None):
     )
 
 
-def soft_dtw(ts1, ts2, gamma=1.0, be=None):
+def soft_dtw(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False):
     r"""Compute Soft-DTW metric between two time series.
 
     Soft-DTW was originally presented in [1]_ and is
@@ -401,6 +401,11 @@ def soft_dtw(ts1, ts2, gamma=1.0, be=None):
         Gamma parameter for Soft-DTW
     be : Backend object or string or None
         Backend.
+    compute_with_backend : bool, default=False
+        This parameter has no influence when the NumPy backend is used.
+        When using a backend different from NumPy is used:
+        If `True`, the computation is done with the corresponding backend.
+        If `False`, a conversion to the NumPy backend can be used to accelerate the computation.
 
     Returns
     -------
@@ -436,10 +441,11 @@ def soft_dtw(ts1, ts2, gamma=1.0, be=None):
         SquaredEuclidean(ts1[: ts_size(ts1)], ts2[: ts_size(ts2)], be=be),
         gamma=gamma,
         be=be,
+        compute_with_backend=compute_with_backend,
     ).compute()
 
 
-def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None):
+def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False):
     r"""Compute Soft-DTW metric between two time series and return both the
     similarity measure and the alignment matrix.
 
@@ -471,6 +477,11 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None):
         Gamma parameter for Soft-DTW
     be : Backend object or string or None
         Backend.
+    compute_with_backend : bool, default=False
+        This parameter has no influence when the NumPy backend is used.
+        When using a backend different from NumPy is used:
+        If `True`, the computation is done with the corresponding backend.
+        If `False`, a conversion to the NumPy backend can be used to accelerate the computation.
 
     Returns
     -------
@@ -515,13 +526,14 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None):
             SquaredEuclidean(ts1[: ts_size(ts1)], ts2[: ts_size(ts2)], be=be),
             gamma=gamma,
             be=be,
+            compute_with_backend=compute_with_backend,
         )
         dist_sq = sdtw.compute()
         a = sdtw.grad()
     return a, dist_sq
 
 
-def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0, be=None):
+def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0, be=None, compute_with_backend=False):
     r"""Compute cross-similarity matrix using Soft-DTW metric.
 
     Soft-DTW was originally presented in [1]_ and is
@@ -552,6 +564,11 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0, be=None):
         Gamma parameter for Soft-DTW
     be : Backend object or string or None
         Backend.
+    compute_with_backend : bool, default=False
+        This parameter has no influence when the NumPy backend is used.
+        When using a backend different from NumPy is used:
+        If `True`, the computation is done with the corresponding backend.
+        If `False`, a conversion to the NumPy backend can be used to accelerate the computation.
 
     Returns
     -------
@@ -607,12 +624,14 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0, be=None):
             if self_similarity and j < i:
                 dists[i, j] = dists[j, i]
             else:
-                dists[i, j] = soft_dtw(ts1_short, ts2_short, gamma=gamma, be=be)
+                dists[i, j] = soft_dtw(
+                    ts1_short, ts2_short, gamma=gamma, be=be, compute_with_backend=compute_with_backend
+                )
 
     return dists
 
 
-def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None):
+def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None, compute_with_backend=False):
     r"""Compute cross-similarity matrix using a normalized version of the
     Soft-DTW metric.
 
@@ -656,6 +675,11 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None):
         Gamma parameter for Soft-DTW
     be : Backend object or string or None
         Backend.
+    compute_with_backend : bool, default=False
+        This parameter has no influence when the NumPy backend is used.
+        When using a backend different from NumPy is used:
+        If `True`, the computation is done with the corresponding backend.
+        If `False`, a conversion to the NumPy backend can be used to accelerate the computation.
 
     Returns
     -------
@@ -686,7 +710,9 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None):
     dataset1 = be.array(dataset1)
     if dataset2 is not None:
         dataset2 = be.array(dataset2)
-    dists = cdist_soft_dtw(dataset1, dataset2=dataset2, gamma=gamma, be=be)
+    dists = cdist_soft_dtw(
+        dataset1, dataset2=dataset2, gamma=gamma, be=be, compute_with_backend=compute_with_backend
+    )
     if dataset2 is None:
         d_ii = be.diag(dists)
         normalizer = -0.5 * (be.reshape(d_ii, (-1, 1)) + be.reshape(d_ii, (1, -1)))
@@ -694,12 +720,16 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None):
         self_dists1 = be.empty((dataset1.shape[0], 1))
         for i, ts1 in enumerate(dataset1):
             ts1_short = ts1[:ts_size(ts1)]
-            self_dists1[i, 0] = soft_dtw(ts1_short, ts1_short, gamma=gamma, be=be)
+            self_dists1[i, 0] = soft_dtw(
+                ts1_short, ts1_short, gamma=gamma, be=be, compute_with_backend=compute_with_backend
+            )
 
         self_dists2 = be.empty((1, dataset2.shape[0]))
         for j, ts2 in enumerate(dataset2):
             ts2_short = ts2[:ts_size(ts2)]
-            self_dists2[0, j] = soft_dtw(ts2_short, ts2_short, gamma=gamma, be=be)
+            self_dists2[0, j] = soft_dtw(
+                ts2_short, ts2_short, gamma=gamma, be=be, compute_with_backend=compute_with_backend
+            )
 
         normalizer = -0.5 * (self_dists1 + self_dists2)
     dists += normalizer

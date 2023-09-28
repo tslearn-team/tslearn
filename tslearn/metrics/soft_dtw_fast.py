@@ -115,9 +115,6 @@ def _soft_dtw(D, R, gamma, be=None):
         Backend.
     """
     be = instantiate_backend(be, D, R, gamma)
-    D = be.array(D, dtype=be.float64)
-    R = be.array(R, dtype=be.float64)
-    gamma = be.array(gamma, dtype=be.float64)
 
     m, n = be.shape(D)
 
@@ -165,8 +162,6 @@ def _soft_dtw_batch(D, R, gamma, be=None):
         Backend.
     """
     be = instantiate_backend(be, D, R)
-    D = be.array(D)
-    R = be.array(R)
     for i_sample in range(D.shape[0]):
         _soft_dtw(D[i_sample, :, :], R[i_sample, :, :], gamma, be=be)
 
@@ -216,9 +211,6 @@ def _soft_dtw_grad(D, R, E, gamma, be=None):
         Backend.
     """
     be = instantiate_backend(be, D, R, E)
-    D = be.array(D)
-    R = be.array(R)
-    E = be.array(E)
 
     m = D.shape[0] - 1
     n = D.shape[1] - 1
@@ -269,9 +261,6 @@ def _soft_dtw_grad_batch(D, R, E, gamma, be=None):
         Backend.
     """
     be = instantiate_backend(be, D, R, E)
-    D = be.array(D)
-    R = be.array(R)
-    E = be.array(E)
     for i_sample in prange(D.shape[0]):
         _soft_dtw_grad(D[i_sample, :, :], R[i_sample, :, :], E[i_sample, :, :], gamma, be=be)
 

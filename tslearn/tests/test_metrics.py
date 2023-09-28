@@ -639,6 +639,13 @@ def test_softdtw():
             np.testing.assert_equal(dist, dist_ref**2)
             np.testing.assert_allclose(matrix_path, mat_path_ref)
 
+            ts1 = cast([[0.0]], array_type)
+            ts2 = cast([[1.0]], array_type)
+            sim = tslearn.metrics.soft_dtw(
+                ts1=ts1, ts2=ts2, gamma=1.0, be=be, compute_with_backend=True
+            )
+            assert sim == 1.0
+
 
 def test_dtw_path_with_empty_or_nan_inputs():
     for be in backends:
