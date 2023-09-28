@@ -30,9 +30,12 @@ VARIABLE_LENGTH_METRICS = ["dtw", "gak", "softdtw", "sax"]
 
 
 def _gak(s1, s2, gram, be=None):
-    be = instantiate_backend(be, s1)
-    l1 = s1.shape[0]
-    l2 = s2.shape[0]
+    be = instantiate_backend(be, s1, s2, gram)
+    s1 = be.array(s1)
+    s2 = be.array(s2)
+    gram = be.array(gram)
+    l1 = be.shape(s1)[0]
+    l2 = be.shape(s2)[0]
 
     cum_sum = be.zeros((l1 + 1, l2 + 1))
     cum_sum[0, 0] = 1.0
@@ -115,7 +118,7 @@ def unnormalized_gak(s1, s2, sigma=1.0, be=None):
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """
-    be = instantiate_backend(be, s1)
+    be = instantiate_backend(be, s1, s2)
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
 
@@ -167,7 +170,9 @@ def gak(s1, s2, sigma=1.0, be=None):  # TODO: better doc (formula for the kernel
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """
-    be = instantiate_backend(be, s1)
+    be = instantiate_backend(be, s1, s2)
+    s1 = be.array(s1)
+    s2 = be.array(s2)
     denom = be.sqrt(
         unnormalized_gak(s1, s1, sigma=sigma, be=be)
         * unnormalized_gak(s2, s2, sigma=sigma, be=be)
@@ -228,7 +233,7 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.0, n_jobs=None, verbose=0, be=Non
     ----------
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """  # noqa: E501
-    be = instantiate_backend(be, dataset1)
+    be = instantiate_backend(be, dataset1, dataset2)
 
     unnormalized_matrix = _cdist_generic(
         dist_fun=unnormalized_gak,
@@ -422,7 +427,9 @@ def soft_dtw(ts1, ts2, gamma=1.0, be=None):
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
        Time-Series," ICML 2017.
     """
-    be = instantiate_backend(be, ts1)
+    be = instantiate_backend(be, ts1, ts2)
+    ts1 = be.array(ts1)
+    ts2 = be.array(ts2)
     if gamma == 0.0:
         return dtw(ts1, ts2, be=be) ** 2
     return SoftDTW(
@@ -494,7 +501,9 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None):
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
        Time-Series," ICML 2017.
     """
-    be = instantiate_backend(be, ts1)
+    be = instantiate_backend(be, ts1, ts2)
+    ts1 = be.array(ts1)
+    ts2 = be.array(ts2)
     if gamma == 0.0:
         path, dist = dtw_path(ts1, ts2, be=be)
         dist_sq = dist**2
@@ -570,15 +579,15 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0, be=None):
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
        Time-Series," ICML 2017.
     """
-    be = instantiate_backend(be, dataset1)
+    be = instantiate_backend(be, dataset1, dataset2)
     dataset1 = to_time_series_dataset(dataset1, dtype=be.float64, be=be)
 
-    self_similarity = False
     if dataset2 is None:
         dataset2 = dataset1
         self_similarity = True
     else:
         dataset2 = to_time_series_dataset(dataset2, dtype=be.float64, be=be)
+        self_similarity = False
 
     dists = be.empty((dataset1.shape[0], dataset2.shape[0]))
 
@@ -673,7 +682,10 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None):
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
        Time-Series," ICML 2017.
     """
-    be = instantiate_backend(be, dataset1)
+    be = instantiate_backend(be, dataset1, dataset2)
+    dataset1 = be.array(dataset1)
+    if dataset2 is not None:
+        dataset2 = be.array(dataset2)
     dists = cdist_soft_dtw(dataset1, dataset2=dataset2, gamma=gamma, be=be)
     if dataset2 is None:
         d_ii = be.diag(dists)
@@ -825,10 +837,10 @@ class SquaredEuclidean:
                [1., 0., 1., 4.],
                [4., 1., 0., 1.]])
         """
-        self.be = instantiate_backend(be, X)
+        self.be = instantiate_backend(be, X, Y)
         self.compute_with_backend = compute_with_backend
-        self.X = self.be.cast(to_time_series(X), dtype=self.be.float64)
-        self.Y = self.be.cast(to_time_series(Y), dtype=self.be.float64)
+        self.X = self.be.cast(to_time_series(X, be=be), dtype=self.be.float64)
+        self.Y = self.be.cast(to_time_series(Y, be=be), dtype=self.be.float64)
 
     def compute(self):
         """Compute distance matrix.

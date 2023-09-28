@@ -121,6 +121,10 @@ else:
 
             return _torch.tensor(val, dtype=dtype)
 
+        @staticmethod
+        def belongs_to_backend(x):
+            return "torch" in f"{type(x)}".lower()
+
         def cast(self, x, dtype):
             if _torch.is_tensor(x):
                 return x.to(dtype=dtype)

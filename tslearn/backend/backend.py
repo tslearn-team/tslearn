@@ -90,3 +90,31 @@ class Backend(object):
 
     def set_backend(self, data=None):
         self.backend = select_backend(data)
+
+
+def cast(data, array_type="numpy"):
+    """Cast data to list or specific backend.
+
+    Parameters
+    ----------
+    data: array-like,
+        The input data should be a list or numpy array or torch array.
+        The data to cast.
+    array_type: string
+        The type to cast the data. It can be "numpy", "pytorch" or "list".
+
+    Returns
+    --------
+    data_cast: array-like
+        Data cast to array_type.
+    """
+    data_type_string = f"{type(data)}".lower()
+    array_type = array_type.lower()
+    if array_type == "pytorch":
+        array_type = "torch"
+    if array_type in data_type_string:
+        return data
+    if array_type == "list":
+        return data.tolist()
+    be = Backend(array_type)
+    return be.array(data)
