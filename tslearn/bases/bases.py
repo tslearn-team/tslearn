@@ -204,8 +204,9 @@ class BaseModelPackage:
         model = cls._byte2string(model)
 
         for k in model['hyper_params'].keys():
-            if model['hyper_params'][k] == 'None':
-                model['hyper_params'][k] = None
+            if isinstance(model['hyper_params'][k], str):
+                if model['hyper_params'][k] == 'None':
+                    model['hyper_params'][k] = None
 
         return cls._organize_model(cls, model)
 
