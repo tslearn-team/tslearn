@@ -2013,10 +2013,10 @@ def lcss(
 
     Parameters
     ----------
-    s1
-        A time series.
-    s2
-        Another time series.
+    s1 : array-like, shape=(sz1, d) or (sz1,)
+        A time series. If shape is (sz1,), the time series is assumed to be univariate.
+    s2 : array-like, shape=(sz2, d) or (sz2,)
+        Another time series. If shape is (sz2,), the time series is assumed to be univariate.
     eps : float (default: 1.)
         Maximum matching distance threshold.
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
