@@ -118,8 +118,9 @@ def to_time_series(ts, remove_nans=False, be=None):
 
     Parameters
     ----------
-    ts : array-like
+    ts : array-like, shape=(sz, d) or (sz,)
         The time series to be transformed.
+        If shape is (sz,), the time series is assumed to be univariate.
     remove_nans : bool (default: False)
         Whether trailing NaNs at the end of the time series should be removed
         or not
@@ -128,7 +129,7 @@ def to_time_series(ts, remove_nans=False, be=None):
 
     Returns
     -------
-    numpy.ndarray of shape (sz, d)
+    ts_out : array-like, shape=(sz, d)
         The transformed time series. This is always guaraneteed to be a new
         time series and never just a view into the old one.
 
@@ -166,7 +167,7 @@ def to_time_series_dataset(dataset, dtype=float, be=None):
 
     Parameters
     ----------
-    dataset : array-like
+    dataset : array-like, shape=(n_ts, sz, d) or (n_ts, sz) or (sz,)
         The dataset of time series to be transformed. A single time series will
         be automatically wrapped into a dataset with a single entry.
     dtype : data type (default: float)
@@ -174,7 +175,7 @@ def to_time_series_dataset(dataset, dtype=float, be=None):
 
     Returns
     -------
-    numpy.ndarray of shape (n_ts, sz, d)
+    dataset_out : array-like, shape=(n_ts, sz, d)
         The transformed dataset of time series.
 
     Examples

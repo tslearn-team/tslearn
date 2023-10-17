@@ -1725,15 +1725,15 @@ def cdist_dtw(
 
     Parameters
     ----------
-    dataset1 : array-like, shape=(n_ts1, sz1, d) or (sz1, d) or (sz1,)
+    dataset1 : array-like, shape=(n_ts1, sz1, d) or (n_ts1, sz1) or (sz1,)
         A dataset of time series.
-        If shape is (sz1, d), the dataset is composed of a unique time series.
+        If shape is (n_ts1, sz1), the dataset is composed of univariate time series.
         If shape is (sz1,), the dataset is a composed of a unique univariate time series.
 
-    dataset2 : array-like (default: None), shape=(n_ts2, sz2, d) or (sz2, d) or (sz2,)
+    dataset2 : None or array-like, shape=(n_ts2, sz2, d) or (n_ts2, sz2) or (sz2,) (default: None)
         Another dataset of time series. If `None`, self-similarity of
         `dataset1` is returned.
-        If shape is (sz2, d), the dataset is composed of a unique time series.
+        If shape is (n_ts2, sz2), the dataset is composed of univariate time series.
         If shape is (sz2,), the dataset is a composed of a unique univariate time series.
 
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
