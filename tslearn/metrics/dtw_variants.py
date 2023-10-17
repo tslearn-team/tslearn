@@ -164,7 +164,7 @@ def _njit_return_path(acc_cost_mat):
     Parameters
     ----------
     acc_cost_mat : array-like, shape = (sz1, sz2)
-        The accumulated cost matrix.
+        Accumulated cost matrix.
 
     Returns
     -------
@@ -204,7 +204,7 @@ def _return_path(acc_cost_mat, be=None):
     Parameters
     ----------
     acc_cost_mat : array-like, shape = (sz1, sz2)
-        The accumulated cost matrix.
+        Accumulated cost matrix.
     be : Backend object or string or None
         Backend.
 
@@ -1118,8 +1118,7 @@ def _njit_subsequence_path(acc_cost_mat, idx_path_end):
     Parameters
     ----------
     acc_cost_mat: array, shape = (sz1, sz2)
-        The accumulated cost matrix comparing subsequence from a longer
-        sequence.
+        Accumulated cost matrix comparing subsequence from a longer sequence.
     idx_path_end: int
         The end position of the matched subsequence in the longer sequence.
 
@@ -1164,8 +1163,7 @@ def _subsequence_path(acc_cost_mat, idx_path_end, be=None):
     Parameters
     ----------
     acc_cost_mat: array, shape = (sz1, sz2)
-        The accumulated cost matrix comparing subsequence from a longer
-        sequence.
+        Accumulated cost matrix comparing subsequence from a longer sequence.
     idx_path_end: int
         The end position of the matched subsequence in the longer sequence.
     be : Backend object or string or None
@@ -1214,8 +1212,7 @@ def subsequence_path(acc_cost_mat, idx_path_end, be=None):
     Parameters
     ----------
     acc_cost_mat: array, shape = (sz1, sz2)
-        The accumulated cost matrix comparing subsequence from a longer
-        sequence.
+        Accumulated cost matrix comparing subsequence from a longer sequence.
     idx_path_end: int
         The end position of the matched subsequence in the longer sequence.
     be : Backend object or string or None
