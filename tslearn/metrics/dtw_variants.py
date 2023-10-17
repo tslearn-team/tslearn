@@ -15,6 +15,20 @@ GLOBAL_CONSTRAINT_CODE = {None: 0, "": 0, "itakura": 1, "sakoe_chiba": 2}
 
 @njit()
 def _njit_local_squared_dist(x, y):
+    """Compute the squared distance between two vectors.
+
+    Parameters
+    ----------
+    x : array-like, shape=(d,)
+        A vector.
+    y : array-like, shape=(d,)
+        Another vector.
+
+    Returns
+    -------
+    dist : float
+        Squared distance between x and y.
+    """
     dist = 0.0
     for di in range(x.shape[0]):
         diff = x[di] - y[di]
@@ -23,6 +37,22 @@ def _njit_local_squared_dist(x, y):
 
 
 def _local_squared_dist(x, y, be=None):
+    """Compute the squared distance between two vectors.
+
+    Parameters
+    ----------
+    x : array-like, shape=(d,)
+        A vector.
+    y : array-like, shape=(d,)
+        Another vector.
+    be : Backend object or string or None
+        Backend.
+
+    Returns
+    -------
+    dist : float
+        Squared distance between x and y.
+    """
     be = instantiate_backend(be, x, y)
     x = be.array(x)
     y = be.array(y)
@@ -39,11 +69,11 @@ def njit_accumulated_matrix(s1, s2, mask):
 
     Parameters
     ----------
-    s1 : array, shape = (sz1,)
+    s1 : array, shape = (sz1, d)
         First time series.
 
-    s2 : array, shape = (sz2,)
-        Second time series
+    s2 : array, shape = (sz2, d)
+        Second time series.
 
     mask : array, shape = (sz1, sz2)
         Mask. Unconsidered cells must have infinite values.
@@ -52,7 +82,6 @@ def njit_accumulated_matrix(s1, s2, mask):
     -------
     mat : array, shape = (sz1, sz2)
         Accumulated cost matrix.
-
     """
     l1 = s1.shape[0]
     l2 = s2.shape[0]
@@ -74,10 +103,10 @@ def accumulated_matrix(s1, s2, mask, be=None):
 
     Parameters
     ----------
-    s1 : array, shape = (sz1,)
+    s1 : array, shape = (sz1, d)
         First time series.
-    s2 : array, shape = (sz2,)
-        Second time series
+    s2 : array, shape = (sz2, d)
+        Second time series.
     mask : array, shape = (sz1, sz2)
         Mask. Unconsidered cells must have infinite values.
     be : Backend object or string or None
@@ -87,7 +116,6 @@ def accumulated_matrix(s1, s2, mask, be=None):
     -------
     mat : array, shape = (sz1, sz2)
         Accumulated cost matrix.
-
     """
     be = instantiate_backend(be, s1, s2)
     s1 = be.array(s1)
@@ -113,11 +141,11 @@ def _njit_dtw(s1, s2, mask):
 
     Parameters
     ----------
-    s1 : array, shape = (sz1,)
+    s1 : array, shape = (sz1, d)
         First time series.
 
-    s2 : array, shape = (sz2,)
-        Second time series
+    s2 : array, shape = (sz2, d)
+        Second time series.
 
     mask : array, shape = (sz1, sz2)
         Mask. Unconsidered cells must have infinite values.
@@ -137,10 +165,10 @@ def _dtw(s1, s2, mask, be=None):
 
     Parameters
     ----------
-    s1 : array, shape = (sz1,)
+    s1 : array, shape = (sz1, d)
         First time series.
-    s2 : array, shape = (sz2,)
-        Second time series
+    s2 : array, shape = (sz2, d)
+        Second time series.
     mask : array, shape = (sz1, sz2)
         Mask. Unconsidered cells must have infinite values.
     be : Backend object or string or None
@@ -161,6 +189,20 @@ def _dtw(s1, s2, mask, be=None):
 
 @njit()
 def _njit_return_path(acc_cost_mat):
+    """Return path from accumulated cost matrix.
+
+    Parameters
+    ----------
+    acc_cost_mat : array-like, shape=(sz1, sz2)
+        Accumulated cost matrix.
+
+    Returns
+    -------
+    path : list of integer pairs
+        Matching path represented as a list of index pairs. In each pair, the
+        first index corresponds to a first time series s1 and the second one
+        corresponds to a second time series s2.
+    """
     sz1, sz2 = acc_cost_mat.shape
     path = [(sz1 - 1, sz2 - 1)]
     while path[-1] != (0, 0):
@@ -188,6 +230,22 @@ def _njit_return_path(acc_cost_mat):
 
 
 def _return_path(acc_cost_mat, be=None):
+    """Return path from accumulated cost matrix.
+
+    Parameters
+    ----------
+    acc_cost_mat : array-like, shape=(sz1, sz2)
+        Accumulated cost matrix.
+    be : Backend object or string or None
+        Backend.
+
+    Returns
+    -------
+    path : list of integer pairs
+        Matching path represented as a list of index pairs. In each pair, the
+        first index corresponds to a first time series s1 and the second one
+        corresponds to a second time series s2.
+    """
     be = instantiate_backend(be, acc_cost_mat)
     sz1, sz2 = be.shape(acc_cost_mat)
     path = [(sz1 - 1, sz2 - 1)]
@@ -240,10 +298,10 @@ def dtw_path(
 
     Parameters
     ----------
-    s1
-        A time series.
-    s2
-        Another time series.
+    s1 : array-like, shape=(sz1, d) or (sz1,)
+        A time series. If shape is (sz1,), the time series is assumed to be univariate.
+    s2 : array-like, shape=(sz2, d) or (sz2,)
+        Another time series. If shape is (sz2,), the time series is assumed to be univariate.
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
         Global constraint to restrict admissible paths for DTW.
     sakoe_chiba_radius : int or None (default: None)
@@ -271,7 +329,7 @@ def dtw_path(
     -------
     list of integer pairs
         Matching path represented as a list of index pairs. In each pair, the
-        first index corresponds to s1 and the second one corresponds to s2
+        first index corresponds to s1 and the second one corresponds to s2.
 
     float
         Similarity score
@@ -373,6 +431,7 @@ def accumulated_matrix_from_dist_matrix(dist_matrix, mask, be=None):
         Mask. Unconsidered cells must have infinite values.
     be : Backend object or string or None
         Backend.
+
     Returns
     -------
     mat : array, shape = (sz1, sz2)
@@ -422,11 +481,13 @@ def dtw_path_from_metric(
 
     Parameters
     ----------
-    s1 : array, shape = (sz1, d) if metric!="precomputed", (sz1, sz2) otherwise
+    s1 : array, shape = (sz1, d) or (sz1,) if metric!="precomputed", (sz1, sz2) otherwise
         A time series or an array of pairwise distances between samples.
+        If shape is (sz1,), the time series is assumed to be univariate.
 
-    s2 : array, shape = (sz2, d), optional (default: None)
+    s2 : array, shape = (sz2, d) or (sz2,), optional (default: None)
         A second time series, only allowed if metric != "precomputed".
+        If shape is (sz2,), the time series is assumed to be univariate.
 
     metric : string or callable (default: "euclidean")
         Function used to compute the pairwise distances between each points of
@@ -595,11 +656,11 @@ def dtw(
 
     Parameters
     ----------
-    s1
-        A time series.
+    s1 : array-like, shape=(sz1, d) or (sz1,)
+        A time series. If shape is (sz1,), the time series is assumed to be univariate.
 
-    s2
-        Another time series.
+    s2 : array-like, shape=(sz2, d) or (sz2,)
+        Another time series. If shape is (sz2,), the time series is assumed to be univariate.
 
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
         Global constraint to restrict admissible paths for DTW.
@@ -712,9 +773,9 @@ def _limited_warping_length_cost(s1, s2, max_length, be=None):
 
     Parameters
     ----------
-    s1
+    s1 : array-like, shape=(sz1, d)
         A time series.
-    s2
+    s2 : array-like, shape=(sz2, d)
         Another time series.
     max_length : int
         Maximum allowed warping path length. Should be an integer between
@@ -724,9 +785,9 @@ def _limited_warping_length_cost(s1, s2, max_length, be=None):
 
     Returns
     -------
-    dict
+    dict_costs : dict
         Accumulated scores. This dict associates (i, j) pairs (keys) to
-        dictionnaries with desired length as key and associated score as value.
+        dictionaries with desired length as key and associated score as value.
     """
     be = instantiate_backend(be, s1, s2)
     s1 = be.array(s1)
@@ -782,10 +843,10 @@ def dtw_limited_warping_length(s1, s2, max_length, be=None):
 
     Parameters
     ----------
-    s1
-        A time series.
-    s2
-        Another time series.
+    s1 : array-like, shape=(sz1, d) or (sz1,)
+        A time series. If shape is (sz1,), the time series is assumed to be univariate.
+    s2 : array-like, shape=(sz2, d) or (sz2,)
+        Another time series. If shape is (sz2,), the time series is assumed to be univariate.
     max_length : int
         Maximum allowed warping path length.
         If greater than len(s1) + len(s2), then it is equivalent to
@@ -841,7 +902,29 @@ def dtw_limited_warping_length(s1, s2, max_length, be=None):
 def _return_path_limited_warping_length(
     accum_costs, target_indices, optimal_length, be=None
 ):
-    be = instantiate_backend(be, accum_costs)
+    """Return the optimal path under an upper bound constraint on
+    the path length.
+
+    Parameters
+    ----------
+    accum_costs : dict
+        Accumulated scores. This dict associates (i, j) pairs (keys) to
+        dictionaries with desired length as key and associated score as value.
+    target_indices : tuple (a pair of integers)
+        Target indices.
+    optimal_length : int
+        Optimal length.
+    be : Backend object or string or None
+        Backend.
+
+    Returns
+    -------
+    path : list of integer pairs
+        Matching path represented as a list of index pairs. In each pair, the
+        first index corresponds to a first time series s1 and the second one
+        corresponds to a second time series s2.
+    """
+    be = instantiate_backend(be)
     path = [target_indices]
     cur_length = optimal_length
     while path[-1] != (0, 0):
@@ -892,10 +975,10 @@ def dtw_path_limited_warping_length(s1, s2, max_length, be=None):
 
     Parameters
     ----------
-    s1
-        A time series.
-    s2
-        Another time series.
+    s1 : array-like, shape=(sz1, d) or (sz1,)
+        A time series. If shape is (sz1,), the time series is assumed to be univariate.
+    s2 : array-like, shape=(sz2, d) or (sz2,)
+        Another time series. If shape is (sz2,), the time series is assumed to be univariate.
     max_length : int
         Maximum allowed warping path length.
         If greater than len(s1) + len(s2), then it is equivalent to
@@ -968,6 +1051,21 @@ def dtw_path_limited_warping_length(s1, s2, max_length, be=None):
 
 @njit()
 def _njit_subsequence_cost_matrix(subseq, longseq):
+    """Compute the accumulated cost matrix score between a subsequence and
+    a reference time series.
+
+    Parameters
+    ----------
+    subseq : array-like, shape = (sz1, d)
+        Subsequence time series.
+    longseq : array-like, shape = (sz2, d)
+        Reference time series.
+
+    Returns
+    -------
+    mat : array, shape = (sz1, sz2)
+        Accumulated cost matrix.
+    """
     l1 = subseq.shape[0]
     l2 = longseq.shape[0]
     cum_sum = numpy.full((l1 + 1, l2 + 1), numpy.inf)
@@ -983,6 +1081,23 @@ def _njit_subsequence_cost_matrix(subseq, longseq):
 
 
 def _subsequence_cost_matrix(subseq, longseq, be=None):
+    """Compute the accumulated cost matrix score between a subsequence and
+    a reference time series.
+
+    Parameters
+    ----------
+    subseq : array-like, shape = (sz1, d)
+        Subsequence time series.
+    longseq : array-like, shape = (sz2, d)
+        Reference time series.
+    be : Backend object or string or None
+        Backend.
+
+    Returns
+    -------
+    mat : array, shape = (sz1, sz2)
+        Accumulated cost matrix.
+    """
     be = instantiate_backend(be, subseq, longseq)
     subseq = be.array(subseq)
     longseq = be.array(longseq)
@@ -1006,10 +1121,10 @@ def subsequence_cost_matrix(subseq, longseq, be=None):
 
     Parameters
     ----------
-    subseq : array, shape = (sz1, d)
-        Subsequence time series.
-    longseq : array, shape = (sz2, d)
-        Reference time series
+    subseq : array-like, shape = (sz1, d) or (sz1,)
+        Subsequence time series. If shape is (sz1,), the time series is assumed to be univariate.
+    longseq : array-like, shape = (sz2, d) or (sz2,)
+        Reference time series. If shape is (sz2,), the time series is assumed to be univariate.
     be : Backend object or string or None
         Backend.
 
@@ -1021,6 +1136,8 @@ def subsequence_cost_matrix(subseq, longseq, be=None):
     be = instantiate_backend(be, subseq, longseq)
     subseq = be.array(subseq)
     longseq = be.array(longseq)
+    subseq = to_time_series(subseq, remove_nans=True, be=be)
+    longseq = to_time_series(longseq, remove_nans=True, be=be)
     if be.is_numpy:
         return _njit_subsequence_cost_matrix(subseq, longseq)
     return _subsequence_cost_matrix(subseq, longseq, be=be)
@@ -1028,6 +1145,24 @@ def subsequence_cost_matrix(subseq, longseq, be=None):
 
 @njit()
 def _njit_subsequence_path(acc_cost_mat, idx_path_end):
+    r"""Compute the optimal path through an accumulated cost matrix given the
+    endpoint of the sequence.
+
+    Parameters
+    ----------
+    acc_cost_mat: array, shape = (sz1, sz2)
+        Accumulated cost matrix comparing subsequence from a longer sequence.
+    idx_path_end: int
+        The end position of the matched subsequence in the longer sequence.
+
+    Returns
+    -------
+    path: list of tuples of integer pairs
+        Matching path represented as a list of index pairs. In each pair, the
+        first index corresponds to `subseq` and the second one corresponds to
+        `longseq`. The startpoint of the Path is :math:`P_0 = (0, ?)` and it
+        ends at :math:`P_L = (len(subseq)-1, idx\_path\_end)`
+    """
     sz1, sz2 = acc_cost_mat.shape
     path = [(sz1 - 1, idx_path_end)]
     while path[-1][0] != 0:
@@ -1055,6 +1190,26 @@ def _njit_subsequence_path(acc_cost_mat, idx_path_end):
 
 
 def _subsequence_path(acc_cost_mat, idx_path_end, be=None):
+    r"""Compute the optimal path through an accumulated cost matrix given the
+    endpoint of the sequence.
+
+    Parameters
+    ----------
+    acc_cost_mat: array, shape = (sz1, sz2)
+        Accumulated cost matrix comparing subsequence from a longer sequence.
+    idx_path_end: int
+        The end position of the matched subsequence in the longer sequence.
+    be : Backend object or string or None
+        Backend.
+
+    Returns
+    -------
+    path: list of tuples of integer pairs
+        Matching path represented as a list of index pairs. In each pair, the
+        first index corresponds to `subseq` and the second one corresponds to
+        `longseq`. The startpoint of the Path is :math:`P_0 = (0, ?)` and it
+        ends at :math:`P_L = (len(subseq)-1, idx\_path\_end)`
+    """
     be = instantiate_backend(be, acc_cost_mat)
     acc_cost_mat = be.array(acc_cost_mat)
     sz1, sz2 = acc_cost_mat.shape
@@ -1084,14 +1239,13 @@ def _subsequence_path(acc_cost_mat, idx_path_end, be=None):
 
 
 def subsequence_path(acc_cost_mat, idx_path_end, be=None):
-    r"""Compute the optimal path through a accumulated cost matrix given the
+    r"""Compute the optimal path through an accumulated cost matrix given the
     endpoint of the sequence.
 
     Parameters
     ----------
     acc_cost_mat: array, shape = (sz1, sz2)
-        The accumulated cost matrix comparing subsequence from a longer
-        sequence.
+        Accumulated cost matrix comparing subsequence from a longer sequence.
     idx_path_end: int
         The end position of the matched subsequence in the longer sequence.
     be : Backend object or string or None
@@ -1152,10 +1306,12 @@ def dtw_subsequence_path(subseq, longseq, be=None):
 
     Parameters
     ----------
-    subseq : array, shape = (sz1, d)
+    subseq : array, shape = (sz1, d) or (sz1,)
         A query time series.
-    longseq : array, shape = (sz2, d)
+        If shape is (sz1,), the time series is assumed to be univariate.
+    longseq : array, shape = (sz2, d) or (sz2,)
         A reference (supposed to be longer than `subseq`) time series.
+        If shape is (sz2,), the time series is assumed to be univariate.
     be : Backend object or string or None
         Backend.
 
@@ -1463,10 +1619,12 @@ def compute_mask(
 
     Parameters
     ----------
-    s1 : array
+    s1 : array-like, shape=(sz1, d) or (sz1,)
         A time series or integer.
-    s2: array
+        If shape is (sz1,), the time series is assumed to be univariate.
+    s2: array-like, shape=(sz2, d) or (sz2,)
         Another time series or integer.
+        If shape is (sz2,), the time series is assumed to be univariate.
     global_constraint : {0, 1, 2} (default: 0)
         Global constraint to restrict admissible paths for DTW:
         - "itakura" if 1
@@ -1495,7 +1653,7 @@ def compute_mask(
 
     Returns
     -------
-    mask : array
+    mask : array-like, shape=(sz1, sz2)
         Constraint region.
     """
     be = instantiate_backend(be, s1, s2)
@@ -1567,12 +1725,16 @@ def cdist_dtw(
 
     Parameters
     ----------
-    dataset1 : array-like
-        A dataset of time series
+    dataset1 : array-like, shape=(n_ts1, sz1, d) or (sz1, d) or (sz1,)
+        A dataset of time series.
+        If shape is (sz1, d), the dataset is composed of a unique time series.
+        If shape is (sz1,), the dataset is a composed of a unique univariate time series.
 
-    dataset2 : array-like (default: None)
+    dataset2 : array-like (default: None), shape=(n_ts2, sz2, d) or (sz2, d) or (sz2,)
         Another dataset of time series. If `None`, self-similarity of
         `dataset1` is returned.
+        If shape is (sz2, d), the dataset is composed of a unique time series.
+        If shape is (sz2,), the dataset is a composed of a unique univariate time series.
 
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
         Global constraint to restrict admissible paths for DTW.
@@ -1617,8 +1779,8 @@ def cdist_dtw(
 
     Returns
     -------
-    cdist : numpy.ndarray
-        Cross-similarity matrix
+    cdist : array-like, shape=(n_ts1, n_ts2)
+        Cross-similarity matrix.
 
     Examples
     --------
@@ -1661,10 +1823,10 @@ def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
 
     Parameters
     ----------
-    ts_query : array-like
-        Query time-series to compare to the envelope of the candidate.
-    ts_candidate : array-like or None (default: None)
-        Candidate time-series. None means the envelope is provided via
+    ts_query : array-like, shape=(sz1, 1) or (sz1,)
+        Univariate query time-series to compare to the envelope of the candidate.
+    ts_candidate : None or array-like, shape=(sz2, 1) or (sz2,) (default: None)
+        Univariate candidate time-series. None means the envelope is provided via
         `envelope_candidate` parameter and hence does not
         need to be computed again.
     radius : int (default: 1)
@@ -1717,12 +1879,12 @@ def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
         ts_candidate = to_time_series(ts_candidate)
         assert (
             ts_candidate.shape[1] == 1
-        ), "LB_Keogh is available only for monodimensional time series"
+        ), "LB_Keogh is available only for univariate time series"
         envelope_down, envelope_up = lb_envelope(ts_candidate, radius)
     ts_query = to_time_series(ts_query)
     assert (
         ts_query.shape[1] == 1
-    ), "LB_Keogh is available only for monodimensional time series"
+    ), "LB_Keogh is available only for univariate time series"
     indices_up = ts_query[:, 0] > envelope_up[:, 0]
     indices_down = ts_query[:, 0] < envelope_down[:, 0]
     return numpy.sqrt(
@@ -1734,9 +1896,27 @@ def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
 
 @njit()
 def _njit_lb_envelope(time_series, radius):
+    """Compute time-series envelope as required by LB_Keogh.
+
+    Parameters
+    ----------
+    time_series : array-like, shape=(sz, d)
+        Time-series for which the envelope should be computed.
+    radius : int
+        Radius to be used for the envelope generation (the envelope at time
+        index i will be generated based on all observations from the time series
+        at indices comprised between i-radius and i+radius).
+
+    Returns
+    -------
+    envelope_down : array-like, shape=(sz, d)
+        Lower-side of the envelope.
+    envelope_up : array-like, shape=(sz, d)
+        Upper-side of the envelope.
+    """
     sz, d = time_series.shape
-    enveloppe_up = numpy.empty((sz, d))
-    enveloppe_down = numpy.empty((sz, d))
+    envelope_up = numpy.empty((sz, d))
+    envelope_down = numpy.empty((sz, d))
 
     for i in prange(sz):
         min_idx = i - radius
@@ -1746,18 +1926,38 @@ def _njit_lb_envelope(time_series, radius):
         if max_idx > sz:
             max_idx = sz
         for di in prange(d):
-            enveloppe_down[i, di] = numpy.min(time_series[min_idx:max_idx, di])
-            enveloppe_up[i, di] = numpy.max(time_series[min_idx:max_idx, di])
+            envelope_down[i, di] = numpy.min(time_series[min_idx:max_idx, di])
+            envelope_up[i, di] = numpy.max(time_series[min_idx:max_idx, di])
 
-    return enveloppe_down, enveloppe_up
+    return envelope_down, envelope_up
 
 
 def _lb_envelope(time_series, radius, be=None):
+    """Compute time-series envelope as required by LB_Keogh.
+
+    Parameters
+    ----------
+    time_series : array-like, shape=(sz, d)
+        Time-series for which the envelope should be computed.
+    radius : int
+        Radius to be used for the envelope generation (the envelope at time
+        index i will be generated based on all observations from the time series
+        at indices comprised between i-radius and i+radius).
+    be : Backend object or string or None
+        Backend.
+
+    Returns
+    -------
+    envelope_down : array-like, shape=(sz, d)
+        Lower-side of the envelope.
+    envelope_up : array-like, shape=(sz, d)
+        Upper-side of the envelope.
+    """
     be = instantiate_backend(be, time_series)
     time_series = be.array(time_series)
     sz, d = be.shape(time_series)
-    enveloppe_up = be.empty((sz, d))
-    enveloppe_down = be.empty((sz, d))
+    envelope_up = be.empty((sz, d))
+    envelope_down = be.empty((sz, d))
 
     for i in range(sz):
         min_idx = i - radius
@@ -1767,10 +1967,10 @@ def _lb_envelope(time_series, radius, be=None):
         if max_idx > sz:
             max_idx = sz
         for di in range(d):
-            enveloppe_down[i, di] = be.min(time_series[min_idx:max_idx, di])
-            enveloppe_up[i, di] = be.max(time_series[min_idx:max_idx, di])
+            envelope_down[i, di] = be.min(time_series[min_idx:max_idx, di])
+            envelope_up[i, di] = be.max(time_series[min_idx:max_idx, di])
 
-    return enveloppe_down, enveloppe_up
+    return envelope_down, envelope_up
 
 
 def lb_envelope(ts, radius=1, be=None):
@@ -1780,21 +1980,21 @@ def lb_envelope(ts, radius=1, be=None):
 
     Parameters
     ----------
-    ts : array-like
+    ts : array-like, shape=(sz, d) or (sz,)
         Time-series for which the envelope should be computed.
+        If shape is (sz,), the time series is assumed to be univariate.
     radius : int (default: 1)
         Radius to be used for the envelope generation (the envelope at time
-        index i will be generated based on
-        all observations from the time series at indices comprised between
-        i-radius and i+radius).
+        index i will be generated based on all observations from the time series
+        at indices comprised between i-radius and i+radius).
     be : Backend object or string or None
         Backend.
 
     Returns
     -------
-    array-like
+    envelope_down : array-like, shape=(sz, d)
         Lower-side of the envelope.
-    array-like
+    envelope_up : array-like, shape=(sz, d)
         Upper-side of the envelope.
 
     Examples
@@ -1825,9 +2025,10 @@ def lb_envelope(ts, radius=1, be=None):
     """
     be = instantiate_backend(be, ts)
     ts = be.array(ts)
+    ts = to_time_series(ts, be=be)
     if be.is_numpy:
-        return _njit_lb_envelope(to_time_series(ts), radius=radius)
-    return _lb_envelope(to_time_series(ts, be=be), radius=radius, be=be)
+        return _njit_lb_envelope(ts, radius=radius)
+    return _lb_envelope(ts, radius=radius, be=be)
 
 
 @njit(nogil=True)
@@ -1837,10 +2038,10 @@ def njit_lcss_accumulated_matrix(s1, s2, eps, mask):
 
     Parameters
     ----------
-    s1 : array, shape = (sz1,)
+    s1 : array, shape = (sz1, d)
         First time series.
 
-    s2 : array, shape = (sz2,)
+    s2 : array, shape = (sz2, d)
         Second time series.
 
     eps : float
@@ -1851,9 +2052,8 @@ def njit_lcss_accumulated_matrix(s1, s2, eps, mask):
 
     Returns
     -------
-    lcss_score : float
-        Longest Common Subsequence similarity score between both time series.
-
+    acc_cost_mat : array-like, shape=(sz1 + 1, sz2 + 1)
+        Accumulated cost matrix.
     """
     l1 = s1.shape[0]
     l2 = s2.shape[0]
@@ -1878,10 +2078,10 @@ def lcss_accumulated_matrix(s1, s2, eps, mask, be=None):
 
     Parameters
     ----------
-    s1 : array, shape = (sz1,)
-        First time series.
-    s2 : array, shape = (sz2,)
-        Second time series.
+    s1 : array-like, shape=(sz1, d) or (sz1,)
+        First time series. If shape is (sz1,), the time series is assumed to be univariate.
+    s2 : array-like, shape=(sz2, d) or (sz2,)
+        Second time series. If shape is (sz2,), the time series is assumed to be univariate.
     eps : float
         Matching threshold.
     mask : array, shape = (sz1, sz2)
@@ -1891,12 +2091,14 @@ def lcss_accumulated_matrix(s1, s2, eps, mask, be=None):
 
     Returns
     -------
-    lcss_score : float
-        Longest Common Subsequence similarity score between both time series.
+    acc_cost_mat : array-like, shape=(sz1 + 1, sz2 + 1)
+        Accumulated cost matrix.
     """
     be = instantiate_backend(be, s1, s2)
     s1 = be.array(s1)
     s2 = be.array(s2)
+    s1 = to_time_series(s1, remove_nans=True, be=be)
+    s2 = to_time_series(s2, remove_nans=True, be=be)
     l1 = be.shape(s1)[0]
     l2 = be.shape(s2)[0]
     acc_cost_mat = be.full((l1 + 1, l2 + 1), 0)
@@ -1924,11 +2126,11 @@ def _njit_lcss(s1, s2, eps, mask):
 
     Parameters
     ----------
-    s1 : array, shape = (sz1,)
+    s1 : array, shape = (sz1, d)
         First time series.
 
-    s2 : array, shape = (sz2,)
-        Second time series
+    s2 : array, shape = (sz2, d)
+        Second time series.
 
     eps : float (default: 1.)
         Maximum matching distance threshold.
@@ -1953,10 +2155,10 @@ def _lcss(s1, s2, eps, mask, be=None):
 
     Parameters
     ----------
-    s1 : array, shape = (sz1,)
-        First time series.
-    s2 : array, shape = (sz2,)
-        Second time series
+    s1 : array-like, shape=(sz1, d) or (sz1,)
+        First time series. If shape is (sz1,), the time series is assumed to be univariate.
+    s2 : array-like, shape=(sz2, d) or (sz2,)
+        Second time series. If shape is (sz2,), the time series is assumed to be univariate.
     eps : float (default: 1.)
         Maximum matching distance threshold.
     mask : array, shape = (sz1, sz2)
@@ -2013,10 +2215,10 @@ def lcss(
 
     Parameters
     ----------
-    s1
-        A time series.
-    s2
-        Another time series.
+    s1 : array-like, shape=(sz1, d) or (sz1,)
+        A time series. If shape is (sz1,), the time series is assumed to be univariate.
+    s2 : array-like, shape=(sz2, d) or (sz2,)
+        Another time series. If shape is (sz2,), the time series is assumed to be univariate.
     eps : float (default: 1.)
         Maximum matching distance threshold.
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
@@ -2089,6 +2291,31 @@ def lcss(
 
 @njit()
 def _njit_return_lcss_path(s1, s2, eps, mask, acc_cost_mat, sz1, sz2):
+    """Return the Longest Common Subsequence (LCSS) path.
+
+    Parameters
+    ----------
+    s1 : array-like, shape=(sz1, d)
+        A time series.
+    s2 : array-like, shape=(sz2, d)
+        Another time series.
+    eps : float
+        Maximum matching distance threshold.
+    mask : array-like, shape=(sz1, sz2)
+        Mask. Unconsidered cells must have infinite values.
+    acc_cost_mat : array-like, shape=(sz1 + 1, sz2 + 1)
+        Accumulated cost matrix.
+    sz1 : int
+        Length of the first time series.
+    sz2 : int
+        Length of the second time series.
+
+    Returns
+    -------
+    path : list of integer pairs
+        Matching path represented as a list of index pairs. In each pair, the
+        first index corresponds to s1 and the second one corresponds to s2.
+    """
     i, j = (sz1, sz2)
     path = []
 
@@ -2105,6 +2332,33 @@ def _njit_return_lcss_path(s1, s2, eps, mask, acc_cost_mat, sz1, sz2):
 
 
 def _return_lcss_path(s1, s2, eps, mask, acc_cost_mat, sz1, sz2, be=None):
+    """Return the Longest Common Subsequence (LCSS) path.
+
+    Parameters
+    ----------
+    s1 : array-like, shape=(sz1, d)
+        A time series.
+    s2 : array-like, shape=(sz2, d)
+        Another time series.
+    eps : float
+        Maximum matching distance threshold.
+    mask : array-like, shape=(sz1, sz2)
+        Mask. Unconsidered cells must have infinite values.
+    acc_cost_mat : array-like, shape=(sz1 + 1, sz2 + 1)
+        Accumulated cost matrix.
+    sz1 : int
+        Length of the first time series.
+    sz2 : int
+        Length of the second time series.
+    be : Backend object or string or None
+        Backend.
+
+    Returns
+    -------
+    path : list of integer pairs
+        Matching path represented as a list of index pairs. In each pair, the
+        first index corresponds to s1 and the second one corresponds to s2.
+    """
     be = instantiate_backend(be, s1, s2, acc_cost_mat)
     s1 = be.array(s1)
     s2 = be.array(s2)
@@ -2132,6 +2386,31 @@ def _return_lcss_path(s1, s2, eps, mask, acc_cost_mat, sz1, sz2, be=None):
 def _njit_return_lcss_path_from_dist_matrix(
     dist_matrix, eps, mask, acc_cost_mat, sz1, sz2
 ):
+    """Return the Longest Common Subsequence (LCSS) path from the distance matrix.
+
+    Parameters
+    ----------
+    dist_matrix : array-like, shape=(sz1, sz2)
+        Matrix of the pairwise distances between the values
+        of a time series s1 and the values of a time series s2.
+    eps : float
+        Maximum matching distance threshold.
+    mask : array-like, shape=(sz1, sz2)
+        Mask. Unconsidered cells must have infinite values.
+    acc_cost_mat : array-like, shape=(sz1 + 1, sz2 + 1)
+        Accumulated cost matrix.
+    sz1 : int
+        Length of the first time series.
+    sz2 : int
+        Length of the second time series.
+
+    Returns
+    -------
+    path : list of integer pairs
+        Matching path represented as a list of index pairs. In each pair, the
+        first index corresponds to a first time series s1 and the second one
+        corresponds to a second time series s2.
+    """
     i, j = (sz1, sz2)
     path = []
 
@@ -2150,6 +2429,33 @@ def _njit_return_lcss_path_from_dist_matrix(
 def _return_lcss_path_from_dist_matrix(
     dist_matrix, eps, mask, acc_cost_mat, sz1, sz2, be=None
 ):
+    """Return the Longest Common Subsequence (LCSS) path from the distance matrix.
+
+    Parameters
+    ----------
+    dist_matrix : array-like, shape=(sz1, sz2)
+        Matrix of the pairwise distances between the values
+        of a time series s1 and the values of a time series s2.
+    eps : float
+        Maximum matching distance threshold.
+    mask : array-like, shape=(sz1, sz2)
+        Mask. Unconsidered cells must have infinite values.
+    acc_cost_mat : array-like, shape=(sz1 + 1, sz2 + 1)
+        Accumulated cost matrix.
+    sz1 : int
+        Length of the first time series.
+    sz2 : int
+        Length of the second time series.
+    be : Backend object or string or None
+        Backend.
+
+    Returns
+    -------
+    path : list of integer pairs
+        Matching path represented as a list of index pairs. In each pair, the
+        first index corresponds to a first time series s1 and the second one
+        corresponds to a second time series s2.
+    """
     be = instantiate_backend(be, dist_matrix, acc_cost_mat)
     dist_matrix = be.array(dist_matrix)
     acc_cost_mat = be.array(acc_cost_mat)
@@ -2204,10 +2510,10 @@ def lcss_path(
 
     Parameters
     ----------
-    s1
-        A time series.
-    s2
-        Another time series.
+    s1 : array-like, shape=(sz1, d) or (sz1,)
+        A time series. If shape is (sz1,), the time series is assumed to be univariate.
+    s2 : array-like, shape=(sz2, d) or (sz2,)
+        Another time series. If shape is (sz2,), the time series is assumed to be univariate.
     eps : float (default: 1.)
         Maximum matching distance threshold.
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
@@ -2308,9 +2614,8 @@ def njit_lcss_accumulated_matrix_from_dist_matrix(dist_matrix, eps, mask):
 
     Returns
     -------
-    mat : array, shape = (sz1, sz2)
+    acc_cost_mat : array, shape = (sz1 + 1, sz2 + 1)
         Accumulated cost matrix.
-
     """
     l1, l2 = dist_matrix.shape
     acc_cost_mat = numpy.full((l1 + 1, l2 + 1), 0)
@@ -2334,18 +2639,18 @@ def lcss_accumulated_matrix_from_dist_matrix(dist_matrix, eps, mask, be=None):
 
     Parameters
     ----------
-    dist_matrix : array, shape = (sz1, sz2)
+    dist_matrix : array-like, shape=(sz1, sz2)
         Array containing the pairwise distances.
     eps : float (default: 1.)
         Maximum matching distance threshold.
-    mask : array, shape = (sz1, sz2)
+    mask : array-like, shape=(sz1, sz2)
         Mask. Unconsidered cells must have infinite values.
     be : Backend object or string or None
         Backend.
 
     Returns
     -------
-    mat : array, shape = (sz1, sz2)
+    acc_cost_mat : array-like, shape=(sz1 + 1, sz2 + 1)
         Accumulated cost matrix.
     """
     be = instantiate_backend(be, dist_matrix)
@@ -2396,10 +2701,12 @@ def lcss_path_from_metric(
 
     Parameters
     ----------
-    s1 : array, shape = (sz1, d) if metric!="precomputed", (sz1, sz2) otherwise
+    s1 : array-like, shape=(sz1, d) or (sz1,) if metric!="precomputed", (sz1, sz2) otherwise
         A time series or an array of pairwise distances between samples.
-    s2 : array, shape = (sz2, d), optional (default: None)
+        If shape is (sz1,), the time series is assumed to be univariate.
+    s2 : array-like, shape = (sz2, d) or (sz2,), optional (default: None)
         A second time series, only allowed if metric != "precomputed".
+        If shape is (sz2,), the time series is assumed to be univariate.
     eps : float (default: 1.)
         Maximum matching distance threshold.
     metric : string or callable (default: "euclidean")
