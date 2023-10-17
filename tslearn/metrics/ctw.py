@@ -9,20 +9,21 @@ from .utils import _cdist_generic
 
 
 def _get_warp_matrices(warp_path, be):
-    """
-    Convert warping path sequence to matrices.
+    """Convert warping path sequence to matrices.
 
     Parameters
     ----------
-    warp_path : list of tuple of two indices that are matched together
+    warp_path : list of tuple of two indices that are matched together, length = m
         First output of the dtw_path function.
     be : Backend object or string
         Backend.
 
     Returns
     -------
-    two 2D matrices of size m x T (m = number of step to match the two
-        sequences
+    Wx : array-like, shape=(m, nx)
+        Matrix. The number of steps to match the two sequences is equal to m.
+    Wy : array-like, shape=(m, ny)
+        Matrix.
     """
     be = instantiate_backend(be, warp_path[0][0])
     # number of indices for the alignment
@@ -67,10 +68,10 @@ def ctw_path(
 
     Parameters
     ----------
-    s1
-        A time series.
-    s2
-        Another time series.
+    s1 : array-like, shape=(sz1, d) or (sz1,)
+        A time series. If shape is (sz1,), the time series is assumed to be univariate.
+    s2 : array-like, shape=(sz2, d) or (sz2,)
+        Another time series. If shape is (sz2,), the time series is assumed to be univariate.
     max_iter : int (default: 100)
         Number of iterations for the CTW algorithm. Each iteration
     n_components : int (default: None)
@@ -215,10 +216,10 @@ def ctw(
 
     Parameters
     ----------
-    s1
-        A time series.
-    s2
-        Another time series.
+    s1 : array-like, shape=(sz1, d) or (sz1,)
+        A time series. If shape is (sz1,), the time series is assumed to be univariate.
+    s2 : array-like, shape=(sz2, d) or (sz2,)
+        Another time series. If shape is (sz2,), the time series is assumed to be univariate.
     max_iter : int (default: 100)
         Number of iterations for the CTW algorithm. Each iteration
     n_components : int (default: None)
@@ -313,11 +314,15 @@ def cdist_ctw(
 
     Parameters
     ----------
-    dataset1 : array-like
-        A dataset of time series
-    dataset2 : array-like (default: None)
-        Another dataset of time series. If `None`, self-similarity of
-        `dataset1` is returned.
+    dataset1 : array-like, shape=(n_ts1, sz1, d) or (n_ts1, sz1) or (sz1,)
+        A dataset of time series.
+        If shape is (n_ts1, sz1), the dataset is composed of univariate time series.
+        If shape is (sz1,), the dataset is a composed of a unique univariate time series.
+    dataset2 : None or array-like, shape=(n_ts2, sz2, d) or (n_ts2, sz2) or (sz2,) (default: None)
+        Another dataset of time series. 
+        If `None`, self-similarity of `dataset1` is returned.
+        If shape is (n_ts2, sz2), the dataset is composed of univariate time series.
+        If shape is (sz2,), the dataset is a composed of a unique univariate time series.
     max_iter : int (default: 100)
         Number of iterations for the CTW algorithm. Each iteration
     n_components : int (default: None)
@@ -362,8 +367,8 @@ def cdist_ctw(
 
     Returns
     -------
-    cdist : numpy.ndarray
-        Cross-similarity matrix
+    cdist : array-like, shape=(n_ts1, n_ts2)
+        Cross-similarity matrix.
 
     Examples
     --------

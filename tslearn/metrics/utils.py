@@ -24,14 +24,18 @@ def _cdist_generic(
     Parameters
     ----------
     dist_fun : function
-        Similarity function to be used
+        Similarity function to be used.
 
-    dataset1 : array-like
-        A dataset of time series
+    dataset1 : array-like, shape=(n_ts1, sz1, d) or (n_ts1, sz1) or (sz1,)
+        A dataset of time series.
+        If shape is (n_ts1, sz1), the dataset is composed of univariate time series.
+        If shape is (sz1,), the dataset is a composed of a unique univariate time series.
 
-    dataset2 : array-like (default: None)
-        Another dataset of time series. If `None`, self-similarity of
-        `dataset1` is returned.
+    dataset2 : None or array-like, shape=(n_ts2, sz2, d) or (n_ts2, sz2) or (sz2,) (default: None)
+        Another dataset of time series. 
+        If `None`, self-similarity of `dataset1` is returned.
+        If shape is (n_ts2, sz2), the dataset is composed of univariate time series.
+        If shape is (sz2,), the dataset is a composed of a unique univariate time series.
 
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel.
@@ -61,8 +65,8 @@ def _cdist_generic(
 
     Returns
     -------
-    cdist : numpy.ndarray
-        Cross-similarity matrix
+    cdist : array-like, shape=(n_ts1, n_ts2)
+        Cross-similarity matrix.
     """  # noqa: E501
     be = instantiate_backend(be, dataset1, dataset2)
     dataset1 = to_time_series_dataset(dataset1, dtype=dtype, be=be)
