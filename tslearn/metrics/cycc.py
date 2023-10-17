@@ -12,14 +12,14 @@ def normalized_cc(s1, s2, norm1=-1.0, norm2=-1.0):
 
     Parameters
     ----------
-    s1 : array-like, shape=[sz, d], dtype=float64
-    s2 : array-like, shape=[sz, d], dtype=float64
+    s1 : array-like, shape=(sz, d), dtype=float64
+    s2 : array-like, shape=(sz, d), dtype=float64
     norm1 : float64, default=-1.0
     norm2 : float64, default=-1.0
 
     Returns
     -------
-    norm_cc : array-like, shape=[2 * sz - 1], dtype=float64
+    norm_cc : array-like, shape=(2 * sz - 1), dtype=float64
     """
     assert s1.shape[1] == s2.shape[1]
     sz = s1.shape[0]
@@ -54,15 +54,15 @@ def cdist_normalized_cc(dataset1, dataset2, norms1, norms2, self_similarity):
 
     Parameters
     ----------
-    dataset1 : array-like, shape=[n_ts1, sz, d], dtype=float64
-    dataset2 : array-like, shape=[n_ts2, sz, d], dtype=float64
-    norms1 : array-like, shape=[n_ts1], dtype=float64
-    norms2 : array-like, shape=[n_ts2], dtype=float64
+    dataset1 : array-like, shape=(n_ts1, sz, d), dtype=float64
+    dataset2 : array-like, shape=(n_ts2, sz, d), dtype=float64
+    norms1 : array-like, shape=(n_ts1,), dtype=float64
+    norms2 : array-like, shape=(n_ts2,), dtype=float64
     self_similarity : bool
 
     Returns
     -------
-    dists : array-like, shape=[n_ts1, n_ts2], dtype=float64
+    dists : array-like, shape=(n_ts1, n_ts2), dtype=float64
     """
     n_ts1, sz, d = dataset1.shape
     n_ts2 = dataset2.shape[0]
@@ -97,17 +97,17 @@ def y_shifted_sbd_vec(ref_ts, dataset, norm_ref, norms_dataset):
 
     Parameters
     ----------
-    ref_ts : array-like, shape=[sz, d], dtype=float64
+    ref_ts : array-like, shape=(sz, d), dtype=float64
         Time series of reference.
-    dataset : array-like, shape=[n_ts, sz, d], dtype=float64
+    dataset : array-like, shape=(n_ts, sz, d), dtype=float64
         Time series dataset.
     norm_ref : float64
-    norms_dataset : array-like, shape=[n_ts], dtype=float64
+    norms_dataset : array-like, shape=(n_ts,), dtype=float64
         Norms of the time series dataset.
 
     Returns
     -------
-    dataset_shifted : array-like, shape=[n_ts, sz, d], dtype=float64
+    dataset_shifted : array-like, shape=(n_ts, sz, d), dtype=float64
     """
     n_ts = dataset.shape[0]
     sz = dataset.shape[1]
