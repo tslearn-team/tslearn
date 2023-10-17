@@ -2050,7 +2050,7 @@ def lcss_accumulated_matrix(s1, s2, eps, mask, be=None):
     ----------
     s1 : array-like, shape=(sz1, d) or (sz1,)
         First time series. If shape is (sz1,), the time series is assumed to be univariate.
-    s1 : array-like, shape=(sz2, d) or (sz2,)
+    s2 : array-like, shape=(sz2, d) or (sz2,)
         Second time series. If shape is (sz2,), the time series is assumed to be univariate.
     eps : float
         Matching threshold.
