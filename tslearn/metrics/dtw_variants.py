@@ -15,6 +15,20 @@ GLOBAL_CONSTRAINT_CODE = {None: 0, "": 0, "itakura": 1, "sakoe_chiba": 2}
 
 @njit()
 def _njit_local_squared_dist(x, y):
+    """Compute the squared distance between two vectors.
+
+    Parameters
+    ----------
+    x : array-like, shape=(d,)
+        A vector.
+    y : array-like, shape=(d,)
+        Another vector.
+
+    Returns
+    -------
+    dist : float
+        Squared distance between x and y.
+    """
     dist = 0.0
     for di in range(x.shape[0]):
         diff = x[di] - y[di]
@@ -23,6 +37,22 @@ def _njit_local_squared_dist(x, y):
 
 
 def _local_squared_dist(x, y, be=None):
+    """Compute the squared distance between two vectors.
+
+    Parameters
+    ----------
+    x : array-like, shape=(d,)
+        A vector.
+    y : array-like, shape=(d,)
+        Another vector.
+    be : Backend object or string or None
+        Backend.
+
+    Returns
+    -------
+    dist : float
+        Squared distance between x and y.
+    """
     be = instantiate_backend(be, x, y)
     x = be.array(x)
     y = be.array(y)
@@ -1623,7 +1653,7 @@ def compute_mask(
 
     Returns
     -------
-    mask : array
+    mask : array-like, shape=(sz1, sz2)
         Constraint region.
     """
     be = instantiate_backend(be, s1, s2)
