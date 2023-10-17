@@ -163,14 +163,15 @@ def _njit_return_path(acc_cost_mat):
 
     Parameters
     ----------
-    acc_cost_mat : array-like, shape = (sz1, sz2)
+    acc_cost_mat : array-like, shape=(sz1, sz2)
         Accumulated cost matrix.
 
     Returns
     -------
     path : list of integer pairs
         Matching path represented as a list of index pairs. In each pair, the
-        first index corresponds to s1 and the second one corresponds to s2.
+        first index corresponds to a first time series s1 and the second one
+        corresponds to a second time series s2.
     """
     sz1, sz2 = acc_cost_mat.shape
     path = [(sz1 - 1, sz2 - 1)]
@@ -203,7 +204,7 @@ def _return_path(acc_cost_mat, be=None):
 
     Parameters
     ----------
-    acc_cost_mat : array-like, shape = (sz1, sz2)
+    acc_cost_mat : array-like, shape=(sz1, sz2)
         Accumulated cost matrix.
     be : Backend object or string or None
         Backend.
@@ -212,7 +213,8 @@ def _return_path(acc_cost_mat, be=None):
     -------
     path : list of integer pairs
         Matching path represented as a list of index pairs. In each pair, the
-        first index corresponds to s1 and the second one corresponds to s2.
+        first index corresponds to a first time series s1 and the second one
+        corresponds to a second time series s2.
     """
     be = instantiate_backend(be, acc_cost_mat)
     sz1, sz2 = be.shape(acc_cost_mat)
@@ -878,7 +880,7 @@ def _return_path_limited_warping_length(
     accum_costs : dict
         Accumulated scores. This dict associates (i, j) pairs (keys) to
         dictionaries with desired length as key and associated score as value.
-    target_indices : tuple (pair of integers)
+    target_indices : tuple (a pair of integers)
         Target indices.
     optimal_length : int
         Optimal length.
@@ -889,7 +891,8 @@ def _return_path_limited_warping_length(
     -------
     path : list of integer pairs
         Matching path represented as a list of index pairs. In each pair, the
-        first index corresponds to s1 and the second one corresponds to s2.
+        first index corresponds to a first time series s1 and the second one
+        corresponds to a second time series s2.
     """
     be = instantiate_backend(be)
     path = [target_indices]
@@ -2375,7 +2378,8 @@ def _njit_return_lcss_path_from_dist_matrix(
     -------
     path : list of integer pairs
         Matching path represented as a list of index pairs. In each pair, the
-        first index corresponds to s1 and the second one corresponds to s2.
+        first index corresponds to a first time series s1 and the second one
+        corresponds to a second time series s2.
     """
     i, j = (sz1, sz2)
     path = []
@@ -2419,7 +2423,8 @@ def _return_lcss_path_from_dist_matrix(
     -------
     path : list of integer pairs
         Matching path represented as a list of index pairs. In each pair, the
-        first index corresponds to s1 and the second one corresponds to s2.
+        first index corresponds to a first time series s1 and the second one
+        corresponds to a second time series s2.
     """
     be = instantiate_backend(be, dist_matrix, acc_cost_mat)
     dist_matrix = be.array(dist_matrix)
