@@ -1749,8 +1749,8 @@ def cdist_dtw(
 
     Returns
     -------
-    cdist : numpy.ndarray
-        Cross-similarity matrix
+    cdist : array-like, shape=(n_ts1, n_ts2)
+        Cross-similarity matrix.
 
     Examples
     --------
