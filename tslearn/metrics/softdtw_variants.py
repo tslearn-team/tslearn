@@ -29,18 +29,12 @@ TSLEARN_VALID_METRICS = ["dtw", "gak", "softdtw", "sax"]
 VARIABLE_LENGTH_METRICS = ["dtw", "gak", "softdtw", "sax"]
 
 
-def _gak(s1, s2, gram, be=None):
+def _gak(gram, be=None):
     """Compute Global Alignment Kernel (GAK) between (possibly
     multidimensional) time series and return it.
 
     Parameters
     ----------
-    s1 : array-like, shape=(sz1, d) or (sz1,)
-        A time series.
-        If shape is (sz1,), the time series is assumed to be univariate.
-    s2 : array-like, shape=(sz2, d) or (sz2,)
-        Another time series.
-        If shape is (sz2,), the time series is assumed to be univariate.
     gram : array-like, shape=(sz1, sz2)
         Gram matrix.
     be : Backend object or string or None
@@ -51,12 +45,9 @@ def _gak(s1, s2, gram, be=None):
     float
         Kernel value
     """
-    be = instantiate_backend(be, s1, s2, gram)
-    s1 = be.array(s1)
-    s2 = be.array(s2)
+    be = instantiate_backend(be, gram)
     gram = be.array(gram)
-    l1 = be.shape(s1)[0]
-    l2 = be.shape(s2)[0]
+    l1, l2 = be.shape(gram)
 
     cum_sum = be.zeros((l1 + 1, l2 + 1))
     cum_sum[0, 0] = 1.0
@@ -71,18 +62,12 @@ def _gak(s1, s2, gram, be=None):
 
 
 @njit(nogil=True)
-def _njit_gak(s1, s2, gram):
+def _njit_gak(gram):
     """Compute Global Alignment Kernel (GAK) between (possibly
     multidimensional) time series and return it.
 
     Parameters
     ----------
-    s1 : array-like, shape=(sz1, d) or (sz1,)
-        A time series.
-        If shape is (sz1,), the time series is assumed to be univariate.
-    s2 : array-like, shape=(sz2, d) or (sz2,)
-        Another time series.
-        If shape is (sz2,), the time series is assumed to be univariate.
     gram : array-like, shape=(sz1, sz2)
         Gram matrix.
 
@@ -91,8 +76,7 @@ def _njit_gak(s1, s2, gram):
     float
         Kernel value
     """
-    l1 = s1.shape[0]
-    l2 = s2.shape[0]
+    l1, l2 = gram.shape
 
     cum_sum = np.zeros((l1 + 1, l2 + 1))
     cum_sum[0, 0] = 1.0
@@ -186,8 +170,8 @@ def unnormalized_gak(s1, s2, sigma=1.0, be=None):
     gram = _gak_gram(s1, s2, sigma=sigma, be=be)
 
     if be.is_numpy:
-        return _njit_gak(s1, s2, gram)
-    return _gak(s1, s2, gram, be=be)
+        return _njit_gak(gram)
+    return _gak(gram, be=be)
 
 
 def gak(s1, s2, sigma=1.0, be=None):  # TODO: better doc (formula for the kernel)
