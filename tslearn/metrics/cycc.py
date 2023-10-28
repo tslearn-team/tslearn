@@ -13,7 +13,9 @@ def normalized_cc(s1, s2, norm1=-1.0, norm2=-1.0):
     Parameters
     ----------
     s1 : array-like, shape=(sz, d), dtype=float64
+        A time series.
     s2 : array-like, shape=(sz, d), dtype=float64
+        Another time series.
     norm1 : float64, default=-1.0
     norm2 : float64, default=-1.0
 
@@ -55,7 +57,9 @@ def cdist_normalized_cc(dataset1, dataset2, norms1, norms2, self_similarity):
     Parameters
     ----------
     dataset1 : array-like, shape=(n_ts1, sz, d), dtype=float64
+        A dataset of time series.
     dataset2 : array-like, shape=(n_ts2, sz, d), dtype=float64
+        Another dataset of time series.
     norms1 : array-like, shape=(n_ts1,), dtype=float64
     norms2 : array-like, shape=(n_ts2,), dtype=float64
     self_similarity : bool
@@ -108,6 +112,7 @@ def y_shifted_sbd_vec(ref_ts, dataset, norm_ref, norms_dataset):
     Returns
     -------
     dataset_shifted : array-like, shape=(n_ts, sz, d), dtype=float64
+        Shifted dataset.
     """
     n_ts = dataset.shape[0]
     sz = dataset.shape[1]

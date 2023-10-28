@@ -16,6 +16,7 @@ def inv_transform_paa(dataset_paa, original_size):
     dataset_paa : array-like, shape=(n_ts, sz, d), dtype=float64
         A dataset of PAA series.
     original_size : int32
+        Length of the original time series.
 
     Returns
     -------
@@ -44,7 +45,9 @@ def cydist_sax(sax1, sax2, breakpoints, original_size):
     sax2 : array-like, shape=(sz, d), dtype=float64 (Linux and MacOS) or float32 (Windows)
         SAX representation of another time series.
     breakpoints : array-like, ndim=1, dtype=float64
+        The breakpoints used to assign the alphabet symbols.
     original_size : int64 (Linux and MacOS) or int32 (Windows)
+        Length of the original time series.
 
     Returns
     -------
@@ -81,6 +84,7 @@ def inv_transform_sax(dataset_sax, breakpoints_middle_, original_size):
         A dataset of SAX series.
     breakpoints_middle_ : array-like, ndim=1, dtype=float64
     original_size : int64 (Linux and MacOS) or int32 (Windows)
+        Length of the original time series.
 
     Returns
     -------
@@ -142,10 +146,12 @@ def cydist_1d_sax(
     breakpoints_avg_middle_ : array-like, ndim=1, dtype=float64
     breakpoints_slope_middle_ : array-like, ndim=1, dtype=float64
     original_size : int64 (Linux and MacOS) or int32 (Windows)
+        Length of the original time series.
 
     Returns
     -------
     dist_1d_sax : float64
+        1d-SAX distance.
 
     Notes
     -----
@@ -192,6 +198,7 @@ def inv_transform_1d_sax(
     breakpoints_avg_middle_ : array-like, ndim=1, dtype=float64
     breakpoints_slope_middle_ : array-like, ndim=1, dtype=float64
     original_size : int64 (Linux and MacOS) or int32 (Windows)
+        Length of the original time series.
 
     Returns
     -------
