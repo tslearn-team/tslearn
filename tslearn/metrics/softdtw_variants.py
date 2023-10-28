@@ -398,7 +398,7 @@ def soft_dtw(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False):
     ts2
         Another time series
     gamma : float (default 1.)
-        Gamma parameter for Soft-DTW
+        Gamma parameter for Soft-DTW.
     be : Backend object or string or None
         Backend.
     compute_with_backend : bool, default=False
@@ -474,7 +474,7 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False)
     ts2
         Another time series
     gamma : float (default 1.)
-        Gamma parameter for Soft-DTW
+        Gamma parameter for Soft-DTW.
     be : Backend object or string or None
         Backend.
     compute_with_backend : bool, default=False
