@@ -296,12 +296,12 @@ def _njit_jacobian_product_sq_euc(X, Y, E, G):
 
     Parameters
     ----------
-    X: array, shape=(m, d), dtype=float64
+    X: array-like, shape=(m, d), dtype=float64
         First time series.
-    Y: array, shape=(n, d), dtype=float64
+    Y: array-like, shape=(n, d), dtype=float64
         Second time series.
-    E: array, shape=(m, n), dtype=float64
-    G: array, shape=(m, d), dtype=float64
+    E: array-like, shape=(m, n), dtype=float64
+    G: array-like, shape=(m, d), dtype=float64
         Product with Jacobian.
         ([m x d, m x n] * [m x n] = [m x d]).
     """
@@ -321,12 +321,12 @@ def _jacobian_product_sq_euc(X, Y, E, G):
 
     Parameters
     ----------
-    X: array, shape=(m, d), dtype=float64
+    X: array-like, shape=(m, d), dtype=float64
         First time series.
-    Y: array, shape=(n, d), dtype=float64
+    Y: array-like, shape=(n, d), dtype=float64
         Second time series.
-    E: array, shape=(m, n), dtype=float64
-    G: array, shape=(m, d), dtype=float64
+    E: array-like, shape=(m, n), dtype=float64
+    G: array-like, shape=(m, d), dtype=float64
         Product with Jacobian.
         ([m x d, m x n] * [m x n] = [m x d]).
     """

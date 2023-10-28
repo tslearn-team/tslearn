@@ -16,7 +16,7 @@ def cdist_sax(dataset1, breakpoints_avg, size_fitted, dataset2=None,
     dataset1 : array-like, shape=(n_ts1, sz1, d) or (n_ts1, sz1) or (sz1,)
         A dataset of time series.
         If shape is (n_ts1, sz1), the dataset is composed of univariate time series.
-        If shape is (sz1,), the dataset is a composed of a unique univariate time series.
+        If shape is (sz1,), the dataset is composed of a unique univariate time series.
 
     breakpoints_avg : array-like, ndim=1
         The breakpoints used to assign the alphabet symbols.
@@ -29,7 +29,7 @@ def cdist_sax(dataset1, breakpoints_avg, size_fitted, dataset2=None,
         Another dataset of time series. 
         If `None`, self-similarity of `dataset1` is returned.
         If shape is (n_ts2, sz2), the dataset is composed of univariate time series.
-        If shape is (sz2,), the dataset is a composed of a unique univariate time series.
+        If shape is (sz2,), the dataset is composed of a unique univariate time series.
 
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel.
