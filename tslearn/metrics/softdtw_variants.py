@@ -47,18 +47,18 @@ def _gak(gram, be=None):
     """
     be = instantiate_backend(be, gram)
     gram = be.array(gram)
-    l1, l2 = be.shape(gram)
+    sz1, sz2 = be.shape(gram)
 
-    cum_sum = be.zeros((l1 + 1, l2 + 1))
+    cum_sum = be.zeros((sz1 + 1, sz2 + 1))
     cum_sum[0, 0] = 1.0
 
-    for i in range(l1):
-        for j in range(l2):
+    for i in range(sz1):
+        for j in range(sz2):
             cum_sum[i + 1, j + 1] = (
                 cum_sum[i, j + 1] + cum_sum[i + 1, j] + cum_sum[i, j]
             ) * gram[i, j]
 
-    return cum_sum[l1, l2]
+    return cum_sum[sz1, sz2]
 
 
 @njit(nogil=True)
@@ -76,18 +76,18 @@ def _njit_gak(gram):
     float
         Kernel value
     """
-    l1, l2 = gram.shape
+    sz1, sz2 = gram.shape
 
-    cum_sum = np.zeros((l1 + 1, l2 + 1))
+    cum_sum = np.zeros((sz1 + 1, sz2 + 1))
     cum_sum[0, 0] = 1.0
 
-    for i in range(l1):
-        for j in range(l2):
+    for i in range(sz1):
+        for j in range(sz2):
             cum_sum[i + 1, j + 1] = (
                 cum_sum[i, j + 1] + cum_sum[i + 1, j] + cum_sum[i, j]
             ) * gram[i, j]
 
-    return cum_sum[l1, l2]
+    return cum_sum[sz1, sz2]
 
 
 def _gak_gram(s1, s2, sigma=1.0, be=None):
