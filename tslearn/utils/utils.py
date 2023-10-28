@@ -475,7 +475,7 @@ def check_dataset(
 
     Parameters
     ----------
-    X: array, shape = (n_ts, sz, d)
+    X: array-like, shape=(n_ts, sz, d)
         Time series dataset.
     force_univariate: bool (default: False)
         If True, only univariate datasets are considered valid.
@@ -487,7 +487,7 @@ def check_dataset(
 
     Returns
     -------
-    array, shape = (n_ts, sz, d)
+    array-like, shape=(n_ts, sz, d)
         Formatted dataset, if it is valid
 
     Raises

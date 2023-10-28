@@ -69,18 +69,16 @@ def njit_accumulated_matrix(s1, s2, mask):
 
     Parameters
     ----------
-    s1 : array, shape = (sz1, d)
+    s1 : array-like, shape=(sz1, d)
         First time series.
-
-    s2 : array, shape = (sz2, d)
+    s2 : array-like, shape=(sz2, d)
         Second time series.
-
-    mask : array, shape = (sz1, sz2)
+    mask : array-like, shape=(sz1, sz2)
         Mask. Unconsidered cells must have infinite values.
 
     Returns
     -------
-    mat : array, shape = (sz1, sz2)
+    mat : array-like, shape=(sz1, sz2)
         Accumulated cost matrix.
     """
     l1 = s1.shape[0]
@@ -103,18 +101,18 @@ def accumulated_matrix(s1, s2, mask, be=None):
 
     Parameters
     ----------
-    s1 : array, shape = (sz1, d)
+    s1 : array-like, shape=(sz1, d)
         First time series.
-    s2 : array, shape = (sz2, d)
+    s2 : array-like, shape=(sz2, d)
         Second time series.
-    mask : array, shape = (sz1, sz2)
+    mask : array-like, shape=(sz1, sz2)
         Mask. Unconsidered cells must have infinite values.
     be : Backend object or string or None
         Backend.
 
     Returns
     -------
-    mat : array, shape = (sz1, sz2)
+    mat : array-like, shape=(sz1, sz2)
         Accumulated cost matrix.
     """
     be = instantiate_backend(be, s1, s2)
@@ -141,13 +139,11 @@ def _njit_dtw(s1, s2, mask):
 
     Parameters
     ----------
-    s1 : array, shape = (sz1, d)
+    s1 : array-like, shape=(sz1, d)
         First time series.
-
-    s2 : array, shape = (sz2, d)
+    s2 : array-like, shape=(sz2, d)
         Second time series.
-
-    mask : array, shape = (sz1, sz2)
+    mask : array-like, shape=(sz1, sz2)
         Mask. Unconsidered cells must have infinite values.
 
     Returns
@@ -165,11 +161,11 @@ def _dtw(s1, s2, mask, be=None):
 
     Parameters
     ----------
-    s1 : array, shape = (sz1, d)
+    s1 : array-like, shape=(sz1, d)
         First time series.
-    s2 : array, shape = (sz2, d)
+    s2 : array-like, shape=(sz2, d)
         Second time series.
-    mask : array, shape = (sz1, sz2)
+    mask : array-like, shape=(sz1, sz2)
         Mask. Unconsidered cells must have infinite values.
     be : Backend object or string or None
         Backend.
@@ -393,17 +389,15 @@ def njit_accumulated_matrix_from_dist_matrix(dist_matrix, mask):
 
     Parameters
     ----------
-    dist_matrix : array, shape = (sz1, sz2)
+    dist_matrix : array-like, shape=(sz1, sz2)
         Array containing the pairwise distances.
-
-    mask : array, shape = (sz1, sz2)
+    mask : array-like, shape=(sz1, sz2)
         Mask. Unconsidered cells must have infinite values.
 
     Returns
     -------
-    mat : array, shape = (sz1, sz2)
+    mat : array-like, shape=(sz1, sz2)
         Accumulated cost matrix.
-
     """
     l1, l2 = dist_matrix.shape
     cum_sum = numpy.full((l1 + 1, l2 + 1), numpy.inf)
@@ -425,16 +419,16 @@ def accumulated_matrix_from_dist_matrix(dist_matrix, mask, be=None):
 
     Parameters
     ----------
-    dist_matrix : array, shape = (sz1, sz2)
+    dist_matrix : array-like, shape=(sz1, sz2)
         Array containing the pairwise distances.
-    mask : array, shape = (sz1, sz2)
+    mask : array-like, shape=(sz1, sz2)
         Mask. Unconsidered cells must have infinite values.
     be : Backend object or string or None
         Backend.
 
     Returns
     -------
-    mat : array, shape = (sz1, sz2)
+    mat : array-like, shape=(sz1, sz2)
         Accumulated cost matrix.
     """
     be = instantiate_backend(be, dist_matrix)
@@ -481,11 +475,11 @@ def dtw_path_from_metric(
 
     Parameters
     ----------
-    s1 : array, shape = (sz1, d) or (sz1,) if metric!="precomputed", (sz1, sz2) otherwise
+    s1 : array-like, shape=(sz1, d) or (sz1,) if metric!="precomputed", (sz1, sz2) otherwise
         A time series or an array of pairwise distances between samples.
         If shape is (sz1,), the time series is assumed to be univariate.
 
-    s2 : array, shape = (sz2, d) or (sz2,), optional (default: None)
+    s2 : array-like, shape=(sz2, d) or (sz2,), optional (default: None)
         A second time series, only allowed if metric != "precomputed".
         If shape is (sz2,), the time series is assumed to be univariate.
 
@@ -1056,14 +1050,14 @@ def _njit_subsequence_cost_matrix(subseq, longseq):
 
     Parameters
     ----------
-    subseq : array-like, shape = (sz1, d)
+    subseq : array-like, shape=(sz1, d)
         Subsequence time series.
-    longseq : array-like, shape = (sz2, d)
+    longseq : array-like, shape=(sz2, d)
         Reference time series.
 
     Returns
     -------
-    mat : array, shape = (sz1, sz2)
+    mat : array-like, shape=(sz1, sz2)
         Accumulated cost matrix.
     """
     l1 = subseq.shape[0]
@@ -1086,16 +1080,16 @@ def _subsequence_cost_matrix(subseq, longseq, be=None):
 
     Parameters
     ----------
-    subseq : array-like, shape = (sz1, d)
+    subseq : array-like, shape=(sz1, d)
         Subsequence time series.
-    longseq : array-like, shape = (sz2, d)
+    longseq : array-like, shape=(sz2, d)
         Reference time series.
     be : Backend object or string or None
         Backend.
 
     Returns
     -------
-    mat : array, shape = (sz1, sz2)
+    mat : array-like, shape=(sz1, sz2)
         Accumulated cost matrix.
     """
     be = instantiate_backend(be, subseq, longseq)
@@ -1121,16 +1115,16 @@ def subsequence_cost_matrix(subseq, longseq, be=None):
 
     Parameters
     ----------
-    subseq : array-like, shape = (sz1, d) or (sz1,)
+    subseq : array-like, shape=(sz1, d) or (sz1,)
         Subsequence time series. If shape is (sz1,), the time series is assumed to be univariate.
-    longseq : array-like, shape = (sz2, d) or (sz2,)
+    longseq : array-like, shape=(sz2, d) or (sz2,)
         Reference time series. If shape is (sz2,), the time series is assumed to be univariate.
     be : Backend object or string or None
         Backend.
 
     Returns
     -------
-    mat : array, shape = (sz1, sz2)
+    mat : array-like, shape=(sz1, sz2)
         Accumulated cost matrix.
     """
     be = instantiate_backend(be, subseq, longseq)
@@ -1150,7 +1144,7 @@ def _njit_subsequence_path(acc_cost_mat, idx_path_end):
 
     Parameters
     ----------
-    acc_cost_mat: array, shape = (sz1, sz2)
+    acc_cost_mat: array-like, shape=(sz1, sz2)
         Accumulated cost matrix comparing subsequence from a longer sequence.
     idx_path_end: int
         The end position of the matched subsequence in the longer sequence.
@@ -1195,7 +1189,7 @@ def _subsequence_path(acc_cost_mat, idx_path_end, be=None):
 
     Parameters
     ----------
-    acc_cost_mat: array, shape = (sz1, sz2)
+    acc_cost_mat: array-like, shape=(sz1, sz2)
         Accumulated cost matrix comparing subsequence from a longer sequence.
     idx_path_end: int
         The end position of the matched subsequence in the longer sequence.
@@ -1244,7 +1238,7 @@ def subsequence_path(acc_cost_mat, idx_path_end, be=None):
 
     Parameters
     ----------
-    acc_cost_mat: array, shape = (sz1, sz2)
+    acc_cost_mat: array-like, shape=(sz1, sz2)
         Accumulated cost matrix comparing subsequence from a longer sequence.
     idx_path_end: int
         The end position of the matched subsequence in the longer sequence.
@@ -1306,10 +1300,10 @@ def dtw_subsequence_path(subseq, longseq, be=None):
 
     Parameters
     ----------
-    subseq : array, shape = (sz1, d) or (sz1,)
+    subseq : array-like, shape=(sz1, d) or (sz1,)
         A query time series.
         If shape is (sz1,), the time series is assumed to be univariate.
-    longseq : array, shape = (sz2, d) or (sz2,)
+    longseq : array-like, shape=(sz2, d) or (sz2,)
         A reference (supposed to be longer than `subseq`) time series.
         If shape is (sz2,), the time series is assumed to be univariate.
     be : Backend object or string or None
@@ -1362,7 +1356,7 @@ def njit_sakoe_chiba_mask(sz1, sz2, radius=1):
 
     Returns
     -------
-    mask : array, shape = (sz1, sz2)
+    mask : array-like, shape=(sz1, sz2)
         Sakoe-Chiba mask.
 
     Examples
@@ -1413,7 +1407,7 @@ def sakoe_chiba_mask(sz1, sz2, radius=1, be=None):
 
     Returns
     -------
-    mask : array, shape = (sz1, sz2)
+    mask : array-like, shape=(sz1, sz2)
         Sakoe-Chiba mask.
 
     Examples
@@ -1467,7 +1461,7 @@ def _njit_itakura_mask(sz1, sz2, max_slope=2.0):
 
     Returns
     -------
-    mask : array, shape = (sz1, sz2)
+    mask : array-like, shape=(sz1, sz2)
         Itakura mask.
     """
     min_slope = 1 / float(max_slope)
@@ -1513,7 +1507,7 @@ def _itakura_mask(sz1, sz2, max_slope=2.0, be=None):
 
     Returns
     -------
-    mask : array, shape = (sz1, sz2)
+    mask : array-like, shape=(sz1, sz2)
         Itakura mask.
     """
     be = instantiate_backend(be)
@@ -1565,7 +1559,7 @@ def itakura_mask(sz1, sz2, max_slope=2.0, be=None):
 
     Returns
     -------
-    mask : array, shape = (sz1, sz2)
+    mask : array-like, shape=(sz1, sz2)
         Itakura mask.
 
     Examples
@@ -1622,7 +1616,7 @@ def compute_mask(
     s1 : array-like, shape=(sz1, d) or (sz1,)
         A time series or integer.
         If shape is (sz1,), the time series is assumed to be univariate.
-    s2: array-like, shape=(sz2, d) or (sz2,)
+    s2 : array-like, shape=(sz2, d) or (sz2,)
         Another time series or integer.
         If shape is (sz2,), the time series is assumed to be univariate.
     global_constraint : {0, 1, 2} (default: 0)
@@ -1728,13 +1722,13 @@ def cdist_dtw(
     dataset1 : array-like, shape=(n_ts1, sz1, d) or (n_ts1, sz1) or (sz1,)
         A dataset of time series.
         If shape is (n_ts1, sz1), the dataset is composed of univariate time series.
-        If shape is (sz1,), the dataset is a composed of a unique univariate time series.
+        If shape is (sz1,), the dataset is composed of a unique univariate time series.
 
     dataset2 : None or array-like, shape=(n_ts2, sz2, d) or (n_ts2, sz2) or (sz2,) (default: None)
         Another dataset of time series. If `None`, self-similarity of
         `dataset1` is returned.
         If shape is (n_ts2, sz2), the dataset is composed of univariate time series.
-        If shape is (sz2,), the dataset is a composed of a unique univariate time series.
+        If shape is (sz2,), the dataset is composed of a unique univariate time series.
 
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
         Global constraint to restrict admissible paths for DTW.
@@ -2038,18 +2032,15 @@ def njit_lcss_accumulated_matrix(s1, s2, eps, mask):
 
     Parameters
     ----------
-    s1 : array, shape = (sz1, d)
+    s1 : array-like, shape=(sz1, d)
         First time series.
-
-    s2 : array, shape = (sz2, d)
+    s2 : array-like, shape=(sz2, d)
         Second time series.
-
     eps : float
         Matching threshold.
-
-    mask : array, shape = (sz1, sz2)
+    mask : array-like, shape=(sz1, sz2)
         Mask. Unconsidered cells must have infinite values.
-
+        
     Returns
     -------
     acc_cost_mat : array-like, shape=(sz1 + 1, sz2 + 1)
@@ -2084,7 +2075,7 @@ def lcss_accumulated_matrix(s1, s2, eps, mask, be=None):
         Second time series. If shape is (sz2,), the time series is assumed to be univariate.
     eps : float
         Matching threshold.
-    mask : array, shape = (sz1, sz2)
+    mask : array-like, shape=(sz1, sz2)
         Mask. Unconsidered cells must have infinite values.
     be : Backend object or string or None
         Backend.
@@ -2126,16 +2117,13 @@ def _njit_lcss(s1, s2, eps, mask):
 
     Parameters
     ----------
-    s1 : array, shape = (sz1, d)
+    s1 : array-like, shape=(sz1, d)
         First time series.
-
-    s2 : array, shape = (sz2, d)
+    s2 : array-like, shape=(sz2, d)
         Second time series.
-
     eps : float (default: 1.)
         Maximum matching distance threshold.
-
-    mask : array, shape = (sz1, sz2)
+    mask : array-like, shape=(sz1, sz2)
         Mask. Unconsidered cells must have infinite values.
 
     Returns
@@ -2161,7 +2149,7 @@ def _lcss(s1, s2, eps, mask, be=None):
         Second time series. If shape is (sz2,), the time series is assumed to be univariate.
     eps : float (default: 1.)
         Maximum matching distance threshold.
-    mask : array, shape = (sz1, sz2)
+    mask : array-like, shape=(sz1, sz2)
         Mask. Unconsidered cells must have infinite values.
     be : Backend object or string or None
         Backend.
@@ -2603,18 +2591,16 @@ def njit_lcss_accumulated_matrix_from_dist_matrix(dist_matrix, eps, mask):
 
     Parameters
     ----------
-    dist_matrix : array, shape = (sz1, sz2)
+    dist_matrix : array-like, shape=(sz1, sz2)
         Array containing the pairwise distances.
-
     eps : float (default: 1.)
         Maximum matching distance threshold.
-
-    mask : array, shape = (sz1, sz2)
+    mask : array-like, shape=(sz1, sz2)
         Mask. Unconsidered cells must have infinite values.
 
     Returns
     -------
-    acc_cost_mat : array, shape = (sz1 + 1, sz2 + 1)
+    acc_cost_mat : array-like, shape=(sz1 + 1, sz2 + 1)
         Accumulated cost matrix.
     """
     l1, l2 = dist_matrix.shape
@@ -2704,7 +2690,7 @@ def lcss_path_from_metric(
     s1 : array-like, shape=(sz1, d) or (sz1,) if metric!="precomputed", (sz1, sz2) otherwise
         A time series or an array of pairwise distances between samples.
         If shape is (sz1,), the time series is assumed to be univariate.
-    s2 : array-like, shape = (sz2, d) or (sz2,), optional (default: None)
+    s2 : array-like, shape=(sz2, d) or (sz2,), optional (default: None)
         A second time series, only allowed if metric != "precomputed".
         If shape is (sz2,), the time series is assumed to be univariate.
     eps : float (default: 1.)

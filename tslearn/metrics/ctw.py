@@ -317,12 +317,12 @@ def cdist_ctw(
     dataset1 : array-like, shape=(n_ts1, sz1, d) or (n_ts1, sz1) or (sz1,)
         A dataset of time series.
         If shape is (n_ts1, sz1), the dataset is composed of univariate time series.
-        If shape is (sz1,), the dataset is a composed of a unique univariate time series.
+        If shape is (sz1,), the dataset is composed of a unique univariate time series.
     dataset2 : None or array-like, shape=(n_ts2, sz2, d) or (n_ts2, sz2) or (sz2,) (default: None)
         Another dataset of time series. 
         If `None`, self-similarity of `dataset1` is returned.
         If shape is (n_ts2, sz2), the dataset is composed of univariate time series.
-        If shape is (sz2,), the dataset is a composed of a unique univariate time series.
+        If shape is (sz2,), the dataset is composed of a unique univariate time series.
     max_iter : int (default: 100)
         Number of iterations for the CTW algorithm. Each iteration
     n_components : int (default: None)
