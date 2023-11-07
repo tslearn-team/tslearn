@@ -170,6 +170,10 @@ def test_lcss():
             sim = tslearn.metrics.lcss([1, 2, 3], [1.0, 2.0, 2.0, 2.0, 3.0], eps=0, be=be)
             np.testing.assert_equal(sim, 1.0)
 
+            sim = tslearn.metrics.lcss(
+                [[1, 1], [2, 2], [3, 3]], [[1.0, 1.0], [2.0, 2.0], [2.0, 2.0], [2.0, 2.0], [3.0, 3.0]], eps=0, be=be)
+            np.testing.assert_equal(sim, 1.0)
+
 
 def test_lcss_path():
     for be in backends:

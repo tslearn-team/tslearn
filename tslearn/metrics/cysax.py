@@ -13,13 +13,14 @@ def inv_transform_paa(dataset_paa, original_size):
 
     Parameters
     ----------
-    dataset_paa : array-like, shape=[n_ts, sz, d], dtype=float64
+    dataset_paa : array-like, shape=(n_ts, sz, d), dtype=float64
         A dataset of PAA series.
     original_size : int32
+        Length of the original time series.
 
     Returns
     -------
-    dataset_out : array-like, shape=[n_ts, original_size, d], dtype=float64
+    dataset_out : array-like, shape=(n_ts, original_size, d), dtype=float64
         A dataset of time series corresponding to the provided
         representation.
     """
@@ -39,12 +40,14 @@ def cydist_sax(sax1, sax2, breakpoints, original_size):
 
     Parameters
     ----------
-    sax1 : array-like, shape=[sz, d], dtype=float64 (Linux and MacOS) or float32 (Windows)
+    sax1 : array-like, shape=(sz, d), dtype=float64 (Linux and MacOS) or float32 (Windows)
         SAX representation of a time series.
-    sax2 : array-like, shape=[sz, d], dtype=float64 (Linux and MacOS) or float32 (Windows)
+    sax2 : array-like, shape=(sz, d), dtype=float64 (Linux and MacOS) or float32 (Windows)
         SAX representation of another time series.
     breakpoints : array-like, ndim=1, dtype=float64
+        The breakpoints used to assign the alphabet symbols.
     original_size : int64 (Linux and MacOS) or int32 (Windows)
+        Length of the original time series.
 
     Returns
     -------
@@ -77,14 +80,15 @@ def inv_transform_sax(dataset_sax, breakpoints_middle_, original_size):
 
     Parameters
     ----------
-    dataset_sax : array-like, shape=[n_ts, sz, d], dtype=float64 (Linux and MacOS) or float32 (Windows)
+    dataset_sax : array-like, shape=(n_ts, sz, d), dtype=float64 (Linux and MacOS) or float32 (Windows)
         A dataset of SAX series.
     breakpoints_middle_ : array-like, ndim=1, dtype=float64
     original_size : int64 (Linux and MacOS) or int32 (Windows)
+        Length of the original time series.
 
     Returns
     -------
-    dataset_out : array-like, shape=[n_ts, original_size, d], dtype=float64
+    dataset_out : array-like, shape=(n_ts, original_size, d), dtype=float64
     """
     n_ts, sz, d = dataset_sax.shape
     seg_sz = original_size // sz
@@ -105,12 +109,12 @@ def cyslopes(dataset, t0):
 
     Parameters
     ----------
-    dataset : array-like, shape=[n_ts, sz, d], dtype=float64
+    dataset : array-like, shape=(n_ts, sz, d), dtype=float64
     t0 : int32
 
     Returns
     -------
-    dataset_out : array-like, shape=[n_ts, d], dtype=float64
+    dataset_out : array-like, shape=(n_ts, d), dtype=float64
     """
     n_ts, sz, d = dataset.shape
     dataset_out = np.empty((n_ts, d))
@@ -135,17 +139,19 @@ def cydist_1d_sax(
 
     Parameters
     ----------
-    sax1 : array-like, shape=[sz, 2 * d], dtype=float64 (Linux and MacOS) or float32 (Windows)
+    sax1 : array-like, shape=(sz, 2 * d), dtype=float64 (Linux and MacOS) or float32 (Windows)
         1d-SAX representation of a time series.
-    sax2 : array-like, shape=[sz, 2 * d], dtype=float64 (Linux and MacOS) or float32 (Windows)
+    sax2 : array-like, shape=(sz, 2 * d), dtype=float64 (Linux and MacOS) or float32 (Windows)
         1d-SAX representation of another time series.
     breakpoints_avg_middle_ : array-like, ndim=1, dtype=float64
     breakpoints_slope_middle_ : array-like, ndim=1, dtype=float64
     original_size : int64 (Linux and MacOS) or int32 (Windows)
+        Length of the original time series.
 
     Returns
     -------
     dist_1d_sax : float64
+        1d-SAX distance.
 
     Notes
     -----
@@ -187,15 +193,16 @@ def inv_transform_1d_sax(
 
     Parameters
     ----------
-    dataset_sax : array-like, shape=[n_ts, sz, 2 * d], dtype=float64 (Linux and MacOS) or float32 (Windows)
+    dataset_sax : array-like, shape=(n_ts, sz, 2 * d), dtype=float64 (Linux and MacOS) or float32 (Windows)
         A dataset of SAX series.
     breakpoints_avg_middle_ : array-like, ndim=1, dtype=float64
     breakpoints_slope_middle_ : array-like, ndim=1, dtype=float64
     original_size : int64 (Linux and MacOS) or int32 (Windows)
+        Length of the original time series.
 
     Returns
     -------
-    dataset_out : array-like, shape=[n_ts, original_size, d], dtype=float64
+    dataset_out : array-like, shape=(n_ts, original_size, d), dtype=float64
         A dataset of time series corresponding to the provided
             representation.
     """

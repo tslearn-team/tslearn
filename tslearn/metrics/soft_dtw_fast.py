@@ -13,18 +13,26 @@ DBL_MAX = np.finfo("double").max
 
 @njit(fastmath=True)
 def _njit_softmin3(a, b, c, gamma):
-    """Compute softmin of 3 input variables with parameter gamma.
+    r"""Compute softmin of 3 input variables with parameter gamma.
+
+    In the limit case :math:`\gamma = 0`, the softmin operator reduces to
+    a hard-min operator.
 
     Parameters
     ----------
     a : float64
+        First input variable.
     b : float64
+        Second input variable.
     c : float64
+        Third input variable.
     gamma : float64
+        Regularization parameter.
 
     Returns
     -------
     softmin_value : float64
+        Softmin value.
     """
     a /= -gamma
     b /= -gamma
@@ -41,20 +49,28 @@ def _njit_softmin3(a, b, c, gamma):
 
 
 def _softmin3(a, b, c, gamma, be=None):
-    """Compute softmin of 3 input variables with parameter gamma.
+    r"""Compute softmin of 3 input variables with parameter gamma.
+
+    In the limit case :math:`\gamma = 0`, the softmin operator reduces to
+    a hard-min operator.
 
     Parameters
     ----------
     a : float64
+        First input variable.
     b : float64
+        Second input variable.
     c : float64
+        Third input variable.
     gamma : float64
+        Regularization parameter.
     be : Backend object or string or None
         Backend.
 
     Returns
     -------
     softmin_value : float64
+        Softmin value.
     """
     be = instantiate_backend(be, a, b, c, gamma)
     a = be.array(a, dtype=be.float64)
@@ -82,9 +98,10 @@ def _njit_soft_dtw(D, R, gamma):
 
     Parameters
     ----------
-    D : array-like, shape=[m, n], dtype=float64
-    R : array-like, shape=[m+2, n+2], dtype=float64
+    D : array-like, shape=(m, n), dtype=float64
+    R : array-like, shape=(m+2, n+2), dtype=float64
     gamma : float64
+        Regularization parameter.
     """
     m = D.shape[0]
     n = D.shape[1]
@@ -108,9 +125,10 @@ def _soft_dtw(D, R, gamma, be=None):
 
     Parameters
     ----------
-    D : array-like, shape=[m, n], dtype=float64
-    R : array-like, shape=[m+2, n+2], dtype=float64
+    D : array-like, shape=(m, n), dtype=float64
+    R : array-like, shape=(m+2, n+2), dtype=float64
     gamma : float64
+        Regularization parameter.
     be : Backend object or string or None
         Backend.
     """
@@ -142,9 +160,10 @@ def _njit_soft_dtw_batch(D, R, gamma):
 
     Parameters
     ----------
-    D : array-like, shape=[b, m, n], dtype=float64
-    R : array-like, shape=[b, m+2, n+2], dtype=float64
+    D : array-like, shape=(b, m, n), dtype=float64
+    R : array-like, shape=(b, m+2, n+2), dtype=float64
     gamma : float64
+        Regularization parameter.
     """
     for i_sample in prange(D.shape[0]):
         _njit_soft_dtw(D[i_sample, :, :], R[i_sample, :, :], gamma)
@@ -155,9 +174,10 @@ def _soft_dtw_batch(D, R, gamma, be=None):
 
     Parameters
     ----------
-    D : array-like, shape=[b, m, n], dtype=float64
-    R : array-like, shape=[b, m+2, n+2], dtype=float64
+    D : array-like, shape=(b, m, n), dtype=float64
+    R : array-like, shape=(b, m+2, n+2), dtype=float64
     gamma : float64
+        Regularization parameter.
     be : Backend object or string or None
         Backend.
     """
@@ -172,10 +192,11 @@ def _njit_soft_dtw_grad(D, R, E, gamma):
 
     Parameters
     ----------
-    D : array-like, shape=[m, n], dtype=float64
-    R : array-like, shape=[m+2, n+2], dtype=float64
-    E : array-like, shape=[m+2, n+2], dtype=float64
+    D : array-like, shape=(m, n), dtype=float64
+    R : array-like, shape=(m+2, n+2), dtype=float64
+    E : array-like, shape=(m+2, n+2), dtype=float64
     gamma : float64
+        Regularization parameter.
     """
     m = D.shape[0] - 1
     n = D.shape[1] - 1
@@ -203,10 +224,11 @@ def _soft_dtw_grad(D, R, E, gamma, be=None):
 
     Parameters
     ----------
-    D : array-like, shape=[m, n], dtype=float64
-    R : array-like, shape=[m+2, n+2], dtype=float64
-    E : array-like, shape=[m+2, n+2], dtype=float64
+    D : array-like, shape=(m, n), dtype=float64
+    R : array-like, shape=(m+2, n+2), dtype=float64
+    E : array-like, shape=(m+2, n+2), dtype=float64
     gamma : float64
+        Regularization parameter.
     be : Backend object or string or None
         Backend.
     """
@@ -239,10 +261,11 @@ def _njit_soft_dtw_grad_batch(D, R, E, gamma):
 
     Parameters
     ----------
-    D : array-like, shape=[b, m, n], dtype=float64
-    R : array-like, shape=[b, m+2, n+2], dtype=float64
-    E : array-like, shape=[b, m+2, n+2], dtype=float64
+    D : array-like, shape=(b, m, n), dtype=float64
+    R : array-like, shape=(b, m+2, n+2), dtype=float64
+    E : array-like, shape=(b, m+2, n+2), dtype=float64
     gamma : float64
+        Regularization parameter.
     """
     for i_sample in prange(D.shape[0]):
         _njit_soft_dtw_grad(D[i_sample, :, :], R[i_sample, :, :], E[i_sample, :, :], gamma)
@@ -253,10 +276,11 @@ def _soft_dtw_grad_batch(D, R, E, gamma, be=None):
 
     Parameters
     ----------
-    D : array-like, shape=[b, m, n], dtype=float64
-    R : array-like, shape=[b, m+2, n+2], dtype=float64
-    E : array-like, shape=[b, m+2, n+2], dtype=float64
+    D : array-like, shape=(b, m, n), dtype=float64
+    R : array-like, shape=(b, m+2, n+2), dtype=float64
+    E : array-like, shape=(b, m+2, n+2), dtype=float64
     gamma : float64
+        Regularization parameter.
     be : Backend object or string or None
         Backend.
     """
@@ -272,13 +296,13 @@ def _njit_jacobian_product_sq_euc(X, Y, E, G):
 
     Parameters
     ----------
-    X: array, shape = [m, d], dtype=float64
+    X: array-like, shape=(m, d), dtype=float64
         First time series.
-    Y: array, shape = [n, d], dtype=float64
+    Y: array-like, shape=(n, d), dtype=float64
         Second time series.
-    E: array, shape = [m, n], dtype=float64
-    G: array, shape = [m, d], dtype=float64
-        Product with Jacobian
+    E: array-like, shape=(m, n), dtype=float64
+    G: array-like, shape=(m, d), dtype=float64
+        Product with Jacobian.
         ([m x d, m x n] * [m x n] = [m x d]).
     """
     m = X.shape[0]
@@ -297,13 +321,13 @@ def _jacobian_product_sq_euc(X, Y, E, G):
 
     Parameters
     ----------
-    X: array, shape = [m, d], dtype=float64
+    X: array-like, shape=(m, d), dtype=float64
         First time series.
-    Y: array, shape = [n, d], dtype=float64
+    Y: array-like, shape=(n, d), dtype=float64
         Second time series.
-    E: array, shape = [m, n], dtype=float64
-    G: array, shape = [m, d], dtype=float64
-        Product with Jacobian
+    E: array-like, shape=(m, n), dtype=float64
+    G: array-like, shape=(m, d), dtype=float64
+        Product with Jacobian.
         ([m x d, m x n] * [m x n] = [m x d]).
     """
     m = X.shape[0]

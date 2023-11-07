@@ -29,44 +29,87 @@ TSLEARN_VALID_METRICS = ["dtw", "gak", "softdtw", "sax"]
 VARIABLE_LENGTH_METRICS = ["dtw", "gak", "softdtw", "sax"]
 
 
-def _gak(s1, s2, gram, be=None):
-    be = instantiate_backend(be, s1, s2, gram)
-    s1 = be.array(s1)
-    s2 = be.array(s2)
-    gram = be.array(gram)
-    l1 = be.shape(s1)[0]
-    l2 = be.shape(s2)[0]
+def _gak(gram, be=None):
+    """Compute Global Alignment Kernel (GAK) between (possibly
+    multidimensional) time series and return it.
 
-    cum_sum = be.zeros((l1 + 1, l2 + 1))
+    Parameters
+    ----------
+    gram : array-like, shape=(sz1, sz2)
+        Gram matrix.
+    be : Backend object or string or None
+        Backend.
+
+    Returns
+    -------
+    float
+        Kernel value
+    """
+    be = instantiate_backend(be, gram)
+    gram = be.array(gram)
+    sz1, sz2 = be.shape(gram)
+
+    cum_sum = be.zeros((sz1 + 1, sz2 + 1))
     cum_sum[0, 0] = 1.0
 
-    for i in range(l1):
-        for j in range(l2):
+    for i in range(sz1):
+        for j in range(sz2):
             cum_sum[i + 1, j + 1] = (
                 cum_sum[i, j + 1] + cum_sum[i + 1, j] + cum_sum[i, j]
             ) * gram[i, j]
 
-    return cum_sum[l1, l2]
+    return cum_sum[sz1, sz2]
 
 
 @njit(nogil=True)
-def _njit_gak(s1, s2, gram):
-    l1 = s1.shape[0]
-    l2 = s2.shape[0]
+def _njit_gak(gram):
+    """Compute Global Alignment Kernel (GAK) between (possibly
+    multidimensional) time series and return it.
 
-    cum_sum = np.zeros((l1 + 1, l2 + 1))
+    Parameters
+    ----------
+    gram : array-like, shape=(sz1, sz2)
+        Gram matrix.
+
+    Returns
+    -------
+    float
+        Kernel value
+    """
+    sz1, sz2 = gram.shape
+
+    cum_sum = np.zeros((sz1 + 1, sz2 + 1))
     cum_sum[0, 0] = 1.0
 
-    for i in range(l1):
-        for j in range(l2):
+    for i in range(sz1):
+        for j in range(sz2):
             cum_sum[i + 1, j + 1] = (
                 cum_sum[i, j + 1] + cum_sum[i + 1, j] + cum_sum[i, j]
             ) * gram[i, j]
 
-    return cum_sum[l1, l2]
+    return cum_sum[sz1, sz2]
 
 
 def _gak_gram(s1, s2, sigma=1.0, be=None):
+    """Compute Global Alignment Kernel (GAK) Gram matrix between (possibly
+    multidimensional) time series and return it.
+
+    Parameters
+    ----------
+    s1 : array-like, shape=(sz1, d)
+        A time series.
+    s2 : array-like, shape=(sz2, d)
+        Another time series.
+    sigma : float (default 1.)
+        Bandwidth of the internal gaussian kernel used for GAK.
+    be : Backend object or string or None
+        Backend.
+
+    Returns
+    -------
+    gram : array-like, shape=(sz1, sz2)
+        Gram matrix.
+    """
     be = instantiate_backend(be, s1)
     gram = -be.cdist(s1, s2, "sqeuclidean") / (2 * sigma**2)
     gram = be.array(gram)
@@ -85,12 +128,14 @@ def unnormalized_gak(s1, s2, sigma=1.0, be=None):
 
     Parameters
     ----------
-    s1
-        A time series
-    s2
-        Another time series
+    s1 : array-like, shape=(sz1, d) or (sz1,)
+        A time series.
+        If shape is (sz1,), the time series is assumed to be univariate.
+    s2 : array-like, shape=(sz2, d) or (sz2,)
+        Another time series.
+        If shape is (sz2,), the time series is assumed to be univariate.
     sigma : float (default 1.)
-        Bandwidth of the internal gaussian kernel used for GAK
+        Bandwidth of the internal gaussian kernel used for GAK.
     be : Backend object or string or None
         Backend.
 
@@ -125,8 +170,8 @@ def unnormalized_gak(s1, s2, sigma=1.0, be=None):
     gram = _gak_gram(s1, s2, sigma=sigma, be=be)
 
     if be.is_numpy:
-        return _njit_gak(s1, s2, gram)
-    return _gak(s1, s2, gram, be=be)
+        return _njit_gak(gram)
+    return _gak(gram, be=be)
 
 
 def gak(s1, s2, sigma=1.0, be=None):  # TODO: better doc (formula for the kernel)
@@ -141,12 +186,14 @@ def gak(s1, s2, sigma=1.0, be=None):  # TODO: better doc (formula for the kernel
 
     Parameters
     ----------
-    s1
-        A time series
-    s2
-        Another time series
+    s1 : array-like, shape=(sz1, d) or (sz1,)
+        A time series.
+        If shape is (sz1,), the time series is assumed to be univariate.
+    s2 : array-like, shape=(sz2, d) or (sz2,)
+        Another time series.
+        If shape is (sz2,), the time series is assumed to be univariate.
     sigma : float (default 1.)
-        Bandwidth of the internal gaussian kernel used for GAK
+        Bandwidth of the internal gaussian kernel used for GAK.
     be : Backend object or string or None
         Backend.
 
@@ -187,10 +234,15 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.0, n_jobs=None, verbose=0, be=Non
 
     Parameters
     ----------
-    dataset1
-        A dataset of time series
-    dataset2
-        Another dataset of time series
+    dataset1 : array-like, shape=(n_ts1, sz1, d) or (n_ts1, sz1) or (sz1,)
+        A dataset of time series.
+        If shape is (n_ts1, sz1), the dataset is composed of univariate time series.
+        If shape is (sz1,), the dataset is composed of a unique univariate time series.
+    dataset2 : None or array-like, shape=(n_ts2, sz2, d) or (n_ts2, sz2) or (sz2,) (default: None)
+        Another dataset of time series. 
+        If `None`, self-similarity of `dataset1` is returned.
+        If shape is (n_ts2, sz2), the dataset is composed of univariate time series.
+        If shape is (sz2,), the dataset is composed of a unique univariate time series.
     sigma : float (default 1.)
         Bandwidth of the internal gaussian kernel used for GAK
     n_jobs : int or None, optional (default=None)
@@ -211,8 +263,8 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.0, n_jobs=None, verbose=0, be=Non
 
     Returns
     -------
-    numpy.ndarray
-        Cross-similarity matrix
+    array-like, shape=(n_ts1, n_ts2)
+        Cross-similarity matrix.
 
     Examples
     --------
@@ -271,10 +323,12 @@ def sigma_gak(dataset, n_samples=100, random_state=None, be=None):
 
     Parameters
     ----------
-    dataset
-        A dataset of time series
+    dataset : array-like, shape=(n_ts, sz, d) or (n_ts, sz1) or (sz,)
+        A dataset of time series.
+        If shape is (n_ts, sz), the dataset is composed of univariate time series.
+        If shape is (sz,), the dataset is composed of a unique univariate time series.
     n_samples : int (default: 100)
-        Number of samples on which median distance should be estimated
+        Number of samples on which median distance should be estimated.
     random_state : integer or numpy.RandomState or None (default: None)
         The generator used to draw the samples. If an integer is given, it
         fixes the seed. Defaults to the global numpy random number generator.
@@ -284,7 +338,7 @@ def sigma_gak(dataset, n_samples=100, random_state=None, be=None):
     Returns
     -------
     float
-        Suggested bandwidth (:math:`\sigma`) for the Global Alignment kernel
+        Suggested bandwidth (:math:`\sigma`) for the Global Alignment kernel.
 
     Examples
     --------
@@ -329,10 +383,12 @@ def gamma_soft_dtw(dataset, n_samples=100, random_state=None, be=None):
 
     Parameters
     ----------
-    dataset
-        A dataset of time series
+    dataset : array-like, shape=(n_ts, sz, d) or (n_ts, sz1) or (sz,)
+        A dataset of time series.
+        If shape is (n_ts, sz), the dataset is composed of univariate time series.
+        If shape is (sz,), the dataset is composed of a unique univariate time series.
     n_samples : int (default: 100)
-        Number of samples on which median distance should be estimated
+        Number of samples on which median distance should be estimated.
     random_state : integer or numpy.RandomState or None (default: None)
         The generator used to draw the samples. If an integer is given, it
         fixes the seed. Defaults to the global numpy random number generator.
@@ -342,7 +398,7 @@ def gamma_soft_dtw(dataset, n_samples=100, random_state=None, be=None):
     Returns
     -------
     float
-        Suggested :math:`\gamma` parameter for the Soft-DTW
+        Suggested :math:`\gamma` parameter for the Soft-DTW.
 
     Examples
     --------
@@ -393,12 +449,14 @@ def soft_dtw(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False):
 
     Parameters
     ----------
-    ts1
-        A time series
-    ts2
-        Another time series
+    ts1 : array-like, shape=(sz1, d) or (sz1,)
+        A time series.
+        If shape is (sz1,), the time series is assumed to be univariate.
+    ts2 : array-like, shape=(sz2, d) or (sz2,)
+        Another time series.
+        If shape is (sz2,), the time series is assumed to be univariate.
     gamma : float (default 1.)
-        Gamma parameter for Soft-DTW
+        Gamma parameter for Soft-DTW.
     be : Backend object or string or None
         Backend.
     compute_with_backend : bool, default=False
@@ -469,12 +527,14 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False)
 
     Parameters
     ----------
-    ts1
-        A time series
-    ts2
-        Another time series
+    ts1 : array-like, shape=(sz1, d) or (sz1,)
+        A time series.
+        If shape is (sz1,), the time series is assumed to be univariate.
+    ts2 : array-like, shape=(sz2, d) or (sz2,)
+        Another time series.
+        If shape is (sz2,), the time series is assumed to be univariate.
     gamma : float (default 1.)
-        Gamma parameter for Soft-DTW
+        Gamma parameter for Soft-DTW.
     be : Backend object or string or None
         Backend.
     compute_with_backend : bool, default=False
@@ -485,7 +545,7 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False)
 
     Returns
     -------
-    numpy.ndarray
+    array-like, shape=(sz1, sz2)
         Soft-alignment matrix
     float
         Similarity
@@ -556,12 +616,17 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0, be=None, compute_with_bac
 
     Parameters
     ----------
-    dataset1
-        A dataset of time series
-    dataset2
-        Another dataset of time series
+    dataset1 : array-like, shape=(n_ts1, sz1, d) or (n_ts1, sz1) or (sz1,)
+        A dataset of time series.
+        If shape is (n_ts1, sz1), the dataset is composed of univariate time series.
+        If shape is (sz1,), the dataset is composed of a unique univariate time series.
+    dataset2 : None or array-like, shape=(n_ts2, sz2, d) or (n_ts2, sz2) or (sz2,) (default: None)
+        Another dataset of time series. If `None`, self-similarity of
+        `dataset1` is returned.
+        If shape is (n_ts2, sz2), the dataset is composed of univariate time series.
+        If shape is (sz2,), the dataset is composed of a unique univariate time series.
     gamma : float (default 1.)
-        Gamma parameter for Soft-DTW
+        Gamma parameter for Soft-DTW.
     be : Backend object or string or None
         Backend.
     compute_with_backend : bool, default=False
@@ -572,8 +637,8 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0, be=None, compute_with_bac
 
     Returns
     -------
-    numpy.ndarray
-        Cross-similarity matrix
+    array-like, shape=(n_ts1, n_ts2)
+        Cross-similarity matrix.
 
     Examples
     --------
@@ -667,12 +732,17 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None, compu
 
     Parameters
     ----------
-    dataset1
-        A dataset of time series
-    dataset2
-        Another dataset of time series
+    dataset1 : array-like, shape=(n_ts1, sz1, d) or (n_ts1, sz1) or (sz1,)
+        A dataset of time series.
+        If shape is (n_ts1, sz1), the dataset is composed of univariate time series.
+        If shape is (sz1,), the dataset is composed of a unique univariate time series.
+    dataset2 : None or array-like, shape=(n_ts2, sz2, d) or (n_ts2, sz2) or (sz2,) (default: None)
+        Another dataset of time series. If `None`, self-similarity of
+        `dataset1` is returned.
+        If shape is (n_ts2, sz2), the dataset is composed of univariate time series.
+        If shape is (sz2,), the dataset is composed of a unique univariate time series.
     gamma : float (default 1.)
-        Gamma parameter for Soft-DTW
+        Gamma parameter for Soft-DTW.
     be : Backend object or string or None
         Backend.
     compute_with_backend : bool, default=False
@@ -683,8 +753,8 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None, compu
 
     Returns
     -------
-    numpy.ndarray
-        Cross-similarity matrix
+    array-like, shape=(n_ts1, n_ts2)
+        Cross-similarity matrix.
 
     Examples
     --------
@@ -707,9 +777,9 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None, compu
        Time-Series," ICML 2017.
     """
     be = instantiate_backend(be, dataset1, dataset2)
-    dataset1 = be.array(dataset1)
+    dataset1 = to_time_series_dataset(dataset1, be=be)
     if dataset2 is not None:
-        dataset2 = be.array(dataset2)
+        dataset2 = to_time_series_dataset(dataset2, be=be)
     dists = cdist_soft_dtw(
         dataset1, dataset2=dataset2, gamma=gamma, be=be, compute_with_backend=compute_with_backend
     )
@@ -738,10 +808,11 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None, compu
 
 class SoftDTW:
     def __init__(self, D, gamma=1.0, be=None, compute_with_backend=False):
-        """
+        """Soft Dynamic Time Warping.
+
         Parameters
         ----------
-        D : array-like, shape=[m, n], dtype=float64 or class computing distances with a method 'compute'
+        D : array-like, shape=(m, n), dtype=float64 or class computing distances with a method 'compute'
             Distances. An example of class computing distance is 'SquaredEuclidean'.
         gamma: float
             Regularization parameter.
@@ -756,7 +827,7 @@ class SoftDTW:
 
         Attributes
         ----------
-        self.R_: array, shape = [m + 2, n + 2]
+        self.R_: array-like, shape =(m + 2, n + 2)
             Accumulated cost matrix (stored after calling `compute`).
         """
         be = instantiate_backend(be, D)
@@ -808,7 +879,7 @@ class SoftDTW:
 
         Returns
         -------
-        grad: array, shape = [m, n]
+        grad: array-like, shape=(m, n)
             Gradient w.r.t. D.
         """
         if not self.computed:
@@ -844,12 +915,13 @@ class SoftDTW:
 
 class SquaredEuclidean:
     def __init__(self, X, Y, be=None, compute_with_backend=False):
-        """
+        """Squared Euclidean distance.
+
         Parameters
         ----------
-        X: array, shape = [m, d]
+        X: array-like, shape=(m, d)
             First time series.
-        Y: array, shape = [n, d]
+        Y: array-like, shape=(n, d)
             Second time series.
         be : Backend object or string or None
             Backend.
@@ -877,7 +949,7 @@ class SquaredEuclidean:
 
         Returns
         -------
-        D: array, shape = [m, n]
+        D: array-like, shape=(m, n)
             Distance matrix.
         """
         return self.be.pairwise_euclidean_distances(self.X, self.Y) ** 2
@@ -888,13 +960,13 @@ class SquaredEuclidean:
 
         Parameters
         ----------
-        E: array, shape = [m, n]
+        E: array-like, shape=(m, n)
             Second time series.
 
         Returns
         -------
-        G: array, shape = [m, d]
-            Product with Jacobian
+        G: array-like, shape=(m, d)
+            Product with Jacobian.
             ([m x d, m x n] * [m x n] = [m x d]).
         """
         G = self.be.zeros_like(self.X, dtype=self.be.float64)
