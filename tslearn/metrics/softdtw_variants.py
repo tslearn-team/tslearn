@@ -481,6 +481,29 @@ def soft_dtw(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False):
     ...          gamma=0.01)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     0.089...
 
+    The PyTorch backend can be used to compute gradients:
+    >>> ts1 = torch.tensor([[1.0], [2.0], [3.0]], requires_grad=True)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    >>> ts2 = torch.tensor([[3.0], [4.0], [-3.0]])  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    >>> sim = soft_dtw(ts1, ts2, gamma=1.0, be="pytorch", compute_with_backend=True)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    >>> print(sim)
+    tensor(41.1876, dtype=torch.float64, grad_fn=<SelectBackward0>)
+    >>> sim.backward()
+    >>> print(ts1.grad)
+    tensor([[-4.0001],
+            [-2.2852],
+            [10.1643]])
+
+    >>> ts1_2d = torch.tensor([[1.0, 1.0], [2.0, 2.0], [3.0, 3.0]], requires_grad=True)
+    >>> ts2_2d = torch.tensor([[3.0, 3.0], [4.0, 4.0], [-3.0, -3.0]])
+    >>> sim = soft_dtw(ts1_2d, ts2_2d, gamma=1.0, be="pytorch", compute_with_backend=True)
+    >>> print(sim)
+    tensor(83.2951, dtype=torch.float64, grad_fn=<SelectBackward0>)
+    >>> sim.backward()
+    >>> print(ts1_2d.grad)
+    tensor([[-4.0000, -4.0000],
+            [-2.0261, -2.0261],
+            [10.0206, 10.0206]])
+
     See Also
     --------
     cdist_soft_dtw : Cross similarity matrix between time series datasets
@@ -562,6 +585,29 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False)
            [3.40...e-01, 8.17...e-01, 8.87...e-02, 3.94...e-05],
            [5.05...e-02, 7.09...e-01, 5.30...e-01, 6.98...e-03],
            [1.37...e-04, 1.31...e-01, 7.30...e-01, 1.00...e+00]])
+
+    The PyTorch backend can be used to compute gradients:
+    >>> ts1 = torch.tensor([[1.0], [2.0], [3.0]], requires_grad=True)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    >>> ts2 = torch.tensor([[3.0], [4.0], [-3.0]])  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    >>> path, sim = soft_dtw_alignment(ts1, ts2, gamma=1.0, be="pytorch", compute_with_backend=True)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    >>> print(sim)
+    tensor(41.1876, dtype=torch.float64, grad_fn=<AsStridedBackward0>)
+    >>> sim.backward()
+    >>> print(ts1.grad)
+    tensor([[-4.0001],
+            [-2.2852],
+            [10.1643]])
+
+    >>> ts1_2d = torch.tensor([[1.0, 1.0], [2.0, 2.0], [3.0, 3.0]], requires_grad=True)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    >>> ts2_2d = torch.tensor([[3.0, 3.0], [4.0, 4.0], [-3.0, -3.0]])  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    >>> path, sim = soft_dtw_alignment(ts1_2d, ts2_2d, gamma=1.0, be="pytorch", compute_with_backend=True)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    >>> print(sim)
+    tensor(83.2951, dtype=torch.float64, grad_fn=<AsStridedBackward0>)
+    >>> sim.backward()
+    >>> print(ts1_2d.grad)
+    tensor([[-4.0000, -4.0000],
+            [-2.0261, -2.0261],
+            [10.0206, 10.0206]])
 
     See Also
     --------
@@ -649,6 +695,24 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0, be=None, compute_with_bac
     ...                [[1, 2, 2, 3], [1., 2., 3., 4.]], gamma=.01)
     array([[-0.01098612,  1.        ],
            [ 1.        ,  0.        ]])
+
+    The PyTorch backend can be used to compute gradients:
+    >>> dataset1 = torch.tensor([[[1.0], [2.0], [3.0]], [[1.0], [2.0], [3.0]]], requires_grad=True)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    >>> dataset2 = torch.tensor([[[3.0], [4.0], [-3.0]], [[3.0], [4.0], [-3.0]]])  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    >>> sim_mat = cdist_soft_dtw(dataset1, dataset2, gamma=1.0, be="pytorch", compute_with_backend=True)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    >>> print(sim_mat)
+    tensor([[41.1876, 41.1876],
+            [41.1876, 41.1876]], grad_fn=<CopySlices>)
+    >>> sim = sim_mat[0, 0]
+    >>> sim.backward()
+    >>> print(dataset1.grad)
+    tensor([[[-4.0001],
+             [-2.2852],
+             [10.1643]],
+    <BLANKLINE>
+            [[ 0.0000],
+             [ 0.0000],
+             [ 0.0000]]])
 
     See Also
     --------
@@ -764,6 +828,24 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None, compu
     >>> time_series2 = np.random.randn(4, 15, 1)
     >>> np.alltrue(cdist_soft_dtw_normalized(time_series, time_series2) >= 0.)
     True
+
+    The PyTorch backend can be used to compute gradients:
+    >>> dataset1 = torch.tensor([[[1.0], [2.0], [3.0]], [[1.0], [2.0], [3.0]]], requires_grad=True)
+    >>> dataset2 = torch.tensor([[[3.0], [4.0], [-3.0]], [[3.0], [4.0], [-3.0]]])
+    >>> sim_mat = cdist_soft_dtw_normalized(dataset1, dataset2, gamma=1.0, be="pytorch", compute_with_backend=True)
+    >>> print(sim_mat)
+    tensor([[42.0586, 42.0586],
+            [42.0586, 42.0586]], grad_fn=<AddBackward0>)
+    >>> sim = sim_mat[0, 0]
+    >>> sim.backward()
+    >>> print(dataset1.grad)
+    tensor([[[-3.5249],
+             [-2.2852],
+             [ 9.6891]],
+    <BLANKLINE>
+            [[ 0.0000],
+             [ 0.0000],
+             [ 0.0000]]])
 
     See Also
     --------

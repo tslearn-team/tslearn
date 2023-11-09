@@ -694,6 +694,29 @@ def dtw(
     >>> dtw([1, 2, 3], [1., 2., 2., 3., 4.])
     1.0
 
+    The PyTorch backend can be used to compute gradients:
+    >>> s1 = torch.tensor([[1.0], [2.0], [3.0]], requires_grad=True)
+    >>> s2 = torch.tensor([[3.0], [4.0], [-3.0]])
+    >>> sim = dtw(s1, s2, be="pytorch")
+    >>> print(sim)
+    tensor(6.4807, grad_fn=<SqrtBackward0>)
+    >>> sim.backward()
+    >>> print(s1.grad)
+    tensor([[-0.3086],
+            [-0.1543],
+            [ 0.7715]])
+
+    >>> s1_2d = torch.tensor([[1.0, 1.0], [2.0, 2.0], [3.0, 3.0]], requires_grad=True)
+    >>> s2_2d = torch.tensor([[3.0, 3.0], [4.0, 4.0], [-3.0, -3.0]])
+    >>> sim = dtw(s1_2d, s2_2d, be="pytorch")
+    >>> print(sim)
+    tensor(9.1652, grad_fn=<SqrtBackward0>)
+    >>> sim.backward()
+    >>> print(s1_2d.grad)
+    tensor([[-0.2182, -0.2182],
+            [-0.1091, -0.1091],
+            [ 0.5455,  0.5455]])
+
     See Also
     --------
     dtw_path : Get both the matching path and the similarity score for DTW
