@@ -485,6 +485,7 @@ def soft_dtw(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False):
     >>> try:
     ...     import torch
     ... except ModuleNotFoundError:
+    ...     import pytest
     ...     pytest.skip('This doctest does not work if Torch is not installed.')
     >>> ts1 = torch.tensor([[1.0], [2.0], [3.0]], requires_grad=True)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     >>> ts2 = torch.tensor([[3.0], [4.0], [-3.0]])  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
@@ -594,6 +595,7 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False)
     >>> try:
     ...     import torch
     ... except ModuleNotFoundError:
+    ...     import pytest
     ...     pytest.skip('This doctest does not work if Torch is not installed.')
     >>> ts1 = torch.tensor([[1.0], [2.0], [3.0]], requires_grad=True)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     >>> ts2 = torch.tensor([[3.0], [4.0], [-3.0]])  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
@@ -708,6 +710,7 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0, be=None, compute_with_bac
     >>> try:
     ...     import torch
     ... except ModuleNotFoundError:
+    ...     import pytest
     ...     pytest.skip('This doctest does not work if Torch is not installed.')
     >>> dataset1 = torch.tensor([[[1.0], [2.0], [3.0]], [[1.0], [2.0], [3.0]]], requires_grad=True)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     >>> dataset2 = torch.tensor([[[3.0], [4.0], [-3.0]], [[3.0], [4.0], [-3.0]]])  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
@@ -845,6 +848,7 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None, compu
     >>> try:
     ...     import torch
     ... except ModuleNotFoundError:
+    ...     import pytest
     ...     pytest.skip('This doctest does not work if Torch is not installed.')
     >>> dataset1 = torch.tensor([[[1.0], [2.0], [3.0]], [[1.0], [2.0], [3.0]]], requires_grad=True)
     >>> dataset2 = torch.tensor([[[3.0], [4.0], [-3.0]], [[3.0], [4.0], [-3.0]]])

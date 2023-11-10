@@ -698,6 +698,7 @@ def dtw(
     >>> try:
     ...     import torch
     ... except ModuleNotFoundError:
+    ...     import pytest
     ...     pytest.skip('This doctest does not work if Torch is not installed.')
     >>> s1 = torch.tensor([[1.0], [2.0], [3.0]], requires_grad=True)
     >>> s2 = torch.tensor([[3.0], [4.0], [-3.0]])
