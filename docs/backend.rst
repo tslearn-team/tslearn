@@ -7,6 +7,7 @@ Backend selection
 -----------------
 
 A backend can be initialized passing four different kind of input arguments to the function instantiate_backend:
+
 * Input is a Backend instance
 * Input is a string corresponding to "numpy" or "pytorch".
 * Input is a backend object.
@@ -19,18 +20,18 @@ Examples
 
 .. code-block:: python
 
-    from tslearn.backend import instantiate_backend
-    be = instantiate_backend("pytorch")
-    print(be.backend_string)
-    >>> "pytorch"
+    >>> from tslearn.backend import instantiate_backend
+    >>> be = instantiate_backend("pytorch")
+    >>> print(be.backend_string)
+    "pytorch"
 
 .. code-block:: python
 
-    from tslearn.backend import Backend
+    >>> from tslearn.backend import Backend
     
 .. code-block:: python
 
-    from tslearn.backend import Backend
+    >>> from tslearn.backend import Backend
 
 Create backend objects
 ----------------------
@@ -42,10 +43,10 @@ Examples
 
 .. code-block:: python
 
-    from tslearn.backend import Backend
-    be = instantiate_backend("pytorch")
-    print(be.array([0]))
-    >>> Torch.Tensor([0])
+    >>> from tslearn.backend import Backend
+    >>> be = instantiate_backend("pytorch")
+    >>> print(be.array([0]))
+    Torch.Tensor([0])
 
 Define metric functions backend
 -------------------------------
@@ -58,7 +59,7 @@ Examples
 
 .. code-block:: python
 
-    from tslearn.backend import Backend
+    >>> from tslearn.backend import Backend
 
 Automatic differentiation
 ----------
@@ -70,13 +71,13 @@ Examples
 
 .. code-block:: python
 
-    from tslearn.backend import Backend
+    >>> from tslearn.backend import Backend
 
 .. code-block:: python
 
-    from tslearn.backend import Backend
+    >>> from tslearn.backend import Backend
 
 .. code-block:: python
 
-    from tslearn.backend import Backend
+    >>> from tslearn.backend import Backend
 
