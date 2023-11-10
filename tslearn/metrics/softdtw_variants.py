@@ -482,7 +482,10 @@ def soft_dtw(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False):
     0.089...
 
     The PyTorch backend can be used to compute gradients:
-    >>> import torch
+    >>> try:
+    ...     import torch
+    ... except ModuleNotFoundError:
+    ...     pytest.skip('This doctest does not work if Torch is not installed.')
     >>> ts1 = torch.tensor([[1.0], [2.0], [3.0]], requires_grad=True)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     >>> ts2 = torch.tensor([[3.0], [4.0], [-3.0]])  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     >>> sim = soft_dtw(ts1, ts2, gamma=1.0, be="pytorch", compute_with_backend=True)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
@@ -579,16 +582,19 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False)
     >>> a, dist = soft_dtw_alignment([1, 2, 2, 3],
     ...                              [1., 2., 3., 4.],
     ...                              gamma=1.)  # doctest: +ELLIPSIS
-    >>> dist
+    >>> print(dist)
     -0.89...
-    >>> a  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    >>> print(a)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     array([[1.00...e+00, 1.88...e-01, 2.83...e-04, 4.19...e-11],
            [3.40...e-01, 8.17...e-01, 8.87...e-02, 3.94...e-05],
            [5.05...e-02, 7.09...e-01, 5.30...e-01, 6.98...e-03],
            [1.37...e-04, 1.31...e-01, 7.30...e-01, 1.00...e+00]])
 
     The PyTorch backend can be used to compute gradients:
-    >>> import torch
+    >>> try:
+    ...     import torch
+    ... except ModuleNotFoundError:
+    ...     pytest.skip('This doctest does not work if Torch is not installed.')
     >>> ts1 = torch.tensor([[1.0], [2.0], [3.0]], requires_grad=True)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     >>> ts2 = torch.tensor([[3.0], [4.0], [-3.0]])  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     >>> path, sim = soft_dtw_alignment(ts1, ts2, gamma=1.0, be="pytorch", compute_with_backend=True)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
@@ -699,7 +705,10 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0, be=None, compute_with_bac
            [ 1.        ,  0.        ]])
 
     The PyTorch backend can be used to compute gradients:
-    >>> import torch
+    >>> try:
+    ...     import torch
+    ... except ModuleNotFoundError:
+    ...     pytest.skip('This doctest does not work if Torch is not installed.')
     >>> dataset1 = torch.tensor([[[1.0], [2.0], [3.0]], [[1.0], [2.0], [3.0]]], requires_grad=True)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     >>> dataset2 = torch.tensor([[[3.0], [4.0], [-3.0]], [[3.0], [4.0], [-3.0]]])  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     >>> sim_mat = cdist_soft_dtw(dataset1, dataset2, gamma=1.0, be="pytorch", compute_with_backend=True)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
@@ -833,7 +842,10 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None, compu
     True
 
     The PyTorch backend can be used to compute gradients:
-    >>> import torch
+    >>> try:
+    ...     import torch
+    ... except ModuleNotFoundError:
+    ...     pytest.skip('This doctest does not work if Torch is not installed.')
     >>> dataset1 = torch.tensor([[[1.0], [2.0], [3.0]], [[1.0], [2.0], [3.0]]], requires_grad=True)
     >>> dataset2 = torch.tensor([[[3.0], [4.0], [-3.0]], [[3.0], [4.0], [-3.0]]])
     >>> sim_mat = cdist_soft_dtw_normalized(dataset1, dataset2, gamma=1.0, be="pytorch", compute_with_backend=True)

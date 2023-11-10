@@ -695,7 +695,10 @@ def dtw(
     1.0
 
     The PyTorch backend can be used to compute gradients:
-    >>> import torch
+    >>> try:
+    ...     import torch
+    ... except ModuleNotFoundError:
+    ...     pytest.skip('This doctest does not work if Torch is not installed.')
     >>> s1 = torch.tensor([[1.0], [2.0], [3.0]], requires_grad=True)
     >>> s2 = torch.tensor([[3.0], [4.0], [-3.0]])
     >>> sim = dtw(s1, s2, be="pytorch")
