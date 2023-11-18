@@ -482,11 +482,7 @@ def soft_dtw(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False):
     0.089...
 
     The PyTorch backend can be used to compute gradients:
-    >>> try:
-    ...     import torch
-    ... except ModuleNotFoundError:
-    ...     import pytest
-    ...     pytest.skip('This doctest does not work if Torch is not installed.')
+    >>> import torch
     >>> ts1 = torch.tensor([[1.0], [2.0], [3.0]], requires_grad=True)
     >>> ts2 = torch.tensor([[3.0], [4.0], [-3.0]])
     >>> sim = soft_dtw(ts1, ts2, gamma=1.0, be="pytorch", compute_with_backend=True)
@@ -592,11 +588,7 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False)
            [1.37...e-04, 1.31...e-01, 7.30...e-01, 1.00...e+00]])
 
     The PyTorch backend can be used to compute gradients:
-    >>> try:
-    ...     import torch
-    ... except ModuleNotFoundError:
-    ...     import pytest
-    ...     pytest.skip('This doctest does not work if Torch is not installed.')
+    >>> import torch
     >>> ts1 = torch.tensor([[1.0], [2.0], [3.0]], requires_grad=True)
     >>> ts2 = torch.tensor([[3.0], [4.0], [-3.0]])
     >>> path, sim = soft_dtw_alignment(ts1, ts2, gamma=1.0, be="pytorch", compute_with_backend=True)
@@ -707,11 +699,7 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0, be=None, compute_with_bac
            [ 1.        ,  0.        ]])
 
     The PyTorch backend can be used to compute gradients:
-    >>> try:
-    ...     import torch
-    ... except ModuleNotFoundError:
-    ...     import pytest
-    ...     pytest.skip('This doctest does not work if Torch is not installed.')
+    >>> import torch
     >>> dataset1 = torch.tensor([[[1.0], [2.0], [3.0]], [[1.0], [2.0], [3.0]]], requires_grad=True)
     >>> dataset2 = torch.tensor([[[3.0], [4.0], [-3.0]], [[3.0], [4.0], [-3.0]]])
     >>> sim_mat = cdist_soft_dtw(dataset1, dataset2, gamma=1.0, be="pytorch", compute_with_backend=True)
@@ -845,11 +833,7 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None, compu
     True
 
     The PyTorch backend can be used to compute gradients:
-    >>> try:
-    ...     import torch
-    ... except ModuleNotFoundError:
-    ...     import pytest
-    ...     pytest.skip('This doctest does not work if Torch is not installed.')
+    >>> import torch
     >>> dataset1 = torch.tensor([[[1.0], [2.0], [3.0]], [[1.0], [2.0], [3.0]]], requires_grad=True)
     >>> dataset2 = torch.tensor([[[3.0], [4.0], [-3.0]], [[3.0], [4.0], [-3.0]]])
     >>> sim_mat = cdist_soft_dtw_normalized(dataset1, dataset2, gamma=1.0, be="pytorch", compute_with_backend=True)

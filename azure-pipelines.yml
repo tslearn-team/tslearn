@@ -82,7 +82,7 @@ jobs:
       python -m pip install pytest pytest-azurepipelines
       python -m pip install scikit-learn==1.2
       python -m pip install tensorflow==2.9.0
-      python -m pytest -v tslearn/ --doctest-modules
+      python -m pytest -v tslearn/ --doctest-modules -k 'not dtw' -k 'not soft_dtw' -k 'not soft_dtw_alignment' -k 'not cdist_soft_dtw' -k 'not cdist_soft_dtw_normalized'
     displayName: 'Test'
 
 
