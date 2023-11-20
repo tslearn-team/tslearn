@@ -11,7 +11,7 @@ Backend selection
 
 A backend can be instantiated using the function ``instantiate_backend``.
 To specify which backend should be instantiated (`NumPy` or `PyTorch`),
-this function accepts four different kind of input arguments:
+this function accepts four different kind of input parameters:
 
 * a string equal to ``"numpy"`` or ``"pytorch"``.
 * a `NumPy` array or a `Torch` tensor.
@@ -82,7 +82,7 @@ If the input is anything else, the ``NumPyBackend`` is instantiated.
     >>> print(be.backend_string)
     "numpy"
 
-The function ``instantiate_backend`` accepts any number of input arguments, including zero.
+The function ``instantiate_backend`` accepts any number of input parameters, including zero.
 To select which backend should be instantiated (`NumPy` or `PyTorch`),
 a for loop is performed on the inputs until a backend is selected.
 
@@ -130,7 +130,7 @@ Use backend functions.
 Choose the backend used by metric functions
 -------------------------------------------
 
-`tslearn`'s metric functions have an optional input argument "``be``" to specify the
+`tslearn`'s metric functions have an optional input parameter "``be``" to specify the
 backend to use to compute the metric.
 
 Examples
@@ -146,7 +146,7 @@ Examples
     >>> print(sim)
     sim tensor(6.4807, grad_fn=<SqrtBackward0>)
 
-By default, ``be=None``.
+By default, the optional input parameter ``be`` is equal to ``None``.
 Note that the first line of the function ``dtw`` is:
 
 .. code-block:: python
