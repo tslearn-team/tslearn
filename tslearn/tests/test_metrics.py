@@ -14,8 +14,8 @@ __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
 try:
     import torch
-    backends = [Backend("numpy"), Backend("pytorch"), None]
-    array_types = ["numpy", "pytorch", "list"]
+    backends = [Backend("numpy"), Backend("pytorch"), Backend("autograd"), None]
+    array_types = ["numpy", "pytorch", "autograd", "list"]
 except ImportError:
     backends = [Backend("numpy")]
     array_types = ["numpy", "list"]
