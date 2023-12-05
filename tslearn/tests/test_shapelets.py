@@ -58,6 +58,7 @@ def test_shapelets():
                             random_state=0)
     clf.fit(time_series, y)
     assert clf.shapelets_.shape == (6,)
+    assert clf.shapelets_as_time_series_.shape == (6, 3, 2)
 
 
 def test_shapelet_lengths():
