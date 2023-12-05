@@ -10,5 +10,6 @@ look at our :doc:`API Reference <reference>`.
     installation
     gettingstarted
     variablelength
+    backend
     integration_other_software
     contributing

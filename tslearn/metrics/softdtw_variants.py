@@ -481,6 +481,31 @@ def soft_dtw(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False):
     ...          gamma=0.01)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     0.089...
 
+    The PyTorch backend can be used to compute gradients:
+    
+    >>> import torch
+    >>> ts1 = torch.tensor([[1.0], [2.0], [3.0]], requires_grad=True)
+    >>> ts2 = torch.tensor([[3.0], [4.0], [-3.0]])
+    >>> sim = soft_dtw(ts1, ts2, gamma=1.0, be="pytorch", compute_with_backend=True)
+    >>> print(sim)
+    tensor(41.1876, dtype=torch.float64, grad_fn=<SelectBackward0>)
+    >>> sim.backward()
+    >>> print(ts1.grad)
+    tensor([[-4.0001],
+            [-2.2852],
+            [10.1643]])
+
+    >>> ts1_2d = torch.tensor([[1.0, 1.0], [2.0, 2.0], [3.0, 3.0]], requires_grad=True)
+    >>> ts2_2d = torch.tensor([[3.0, 3.0], [4.0, 4.0], [-3.0, -3.0]])
+    >>> sim = soft_dtw(ts1_2d, ts2_2d, gamma=1.0, be="pytorch", compute_with_backend=True)
+    >>> print(sim)
+    tensor(83.2951, dtype=torch.float64, grad_fn=<SelectBackward0>)
+    >>> sim.backward()
+    >>> print(ts1_2d.grad)
+    tensor([[-4.0000, -4.0000],
+            [-2.0261, -2.0261],
+            [10.0206, 10.0206]])
+
     See Also
     --------
     cdist_soft_dtw : Cross similarity matrix between time series datasets
@@ -489,7 +514,7 @@ def soft_dtw(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False):
     ----------
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
        Time-Series," ICML 2017.
-    """
+    """  # noqa: E501
     be = instantiate_backend(be, ts1, ts2)
     ts1 = be.array(ts1)
     ts2 = be.array(ts2)
@@ -563,6 +588,31 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False)
            [5.05...e-02, 7.09...e-01, 5.30...e-01, 6.98...e-03],
            [1.37...e-04, 1.31...e-01, 7.30...e-01, 1.00...e+00]])
 
+    The PyTorch backend can be used to compute gradients:
+    
+    >>> import torch
+    >>> ts1 = torch.tensor([[1.0], [2.0], [3.0]], requires_grad=True)
+    >>> ts2 = torch.tensor([[3.0], [4.0], [-3.0]])
+    >>> path, sim = soft_dtw_alignment(ts1, ts2, gamma=1.0, be="pytorch", compute_with_backend=True)
+    >>> print(sim)
+    tensor(41.1876, dtype=torch.float64, grad_fn=<AsStridedBackward0>)
+    >>> sim.backward()
+    >>> print(ts1.grad)
+    tensor([[-4.0001],
+            [-2.2852],
+            [10.1643]])
+
+    >>> ts1_2d = torch.tensor([[1.0, 1.0], [2.0, 2.0], [3.0, 3.0]], requires_grad=True)
+    >>> ts2_2d = torch.tensor([[3.0, 3.0], [4.0, 4.0], [-3.0, -3.0]])
+    >>> path, sim = soft_dtw_alignment(ts1_2d, ts2_2d, gamma=1.0, be="pytorch", compute_with_backend=True)
+    >>> print(sim)
+    tensor(83.2951, dtype=torch.float64, grad_fn=<AsStridedBackward0>)
+    >>> sim.backward()
+    >>> print(ts1_2d.grad)
+    tensor([[-4.0000, -4.0000],
+            [-2.0261, -2.0261],
+            [10.0206, 10.0206]])
+
     See Also
     --------
     soft_dtw : Returns soft-DTW score alone
@@ -571,7 +621,7 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False)
     ----------
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
        Time-Series," ICML 2017.
-    """
+    """  # noqa: E501
     be = instantiate_backend(be, ts1, ts2)
     ts1 = be.array(ts1)
     ts2 = be.array(ts2)
@@ -650,6 +700,26 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0, be=None, compute_with_bac
     array([[-0.01098612,  1.        ],
            [ 1.        ,  0.        ]])
 
+    The PyTorch backend can be used to compute gradients:
+    
+    >>> import torch
+    >>> dataset1 = torch.tensor([[[1.0], [2.0], [3.0]], [[1.0], [2.0], [3.0]]], requires_grad=True)
+    >>> dataset2 = torch.tensor([[[3.0], [4.0], [-3.0]], [[3.0], [4.0], [-3.0]]])
+    >>> sim_mat = cdist_soft_dtw(dataset1, dataset2, gamma=1.0, be="pytorch", compute_with_backend=True)
+    >>> print(sim_mat)
+    tensor([[41.1876, 41.1876],
+            [41.1876, 41.1876]], grad_fn=<CopySlices>)
+    >>> sim = sim_mat[0, 0]
+    >>> sim.backward()
+    >>> print(dataset1.grad)
+    tensor([[[-4.0001],
+             [-2.2852],
+             [10.1643]],
+    <BLANKLINE>
+            [[ 0.0000],
+             [ 0.0000],
+             [ 0.0000]]])
+
     See Also
     --------
     soft_dtw : Compute Soft-DTW
@@ -660,7 +730,7 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0, be=None, compute_with_bac
     ----------
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
        Time-Series," ICML 2017.
-    """
+    """  # noqa: E501
     be = instantiate_backend(be, dataset1, dataset2)
     dataset1 = to_time_series_dataset(dataset1, dtype=be.float64, be=be)
 
@@ -765,6 +835,26 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None, compu
     >>> np.alltrue(cdist_soft_dtw_normalized(time_series, time_series2) >= 0.)
     True
 
+    The PyTorch backend can be used to compute gradients:
+    
+    >>> import torch
+    >>> dataset1 = torch.tensor([[[1.0], [2.0], [3.0]], [[1.0], [2.0], [3.0]]], requires_grad=True)
+    >>> dataset2 = torch.tensor([[[3.0], [4.0], [-3.0]], [[3.0], [4.0], [-3.0]]])
+    >>> sim_mat = cdist_soft_dtw_normalized(dataset1, dataset2, gamma=1.0, be="pytorch", compute_with_backend=True)
+    >>> print(sim_mat)
+    tensor([[42.0586, 42.0586],
+            [42.0586, 42.0586]], grad_fn=<AddBackward0>)
+    >>> sim = sim_mat[0, 0]
+    >>> sim.backward()
+    >>> print(dataset1.grad)
+    tensor([[[-3.5249],
+             [-2.2852],
+             [ 9.6891]],
+    <BLANKLINE>
+            [[ 0.0000],
+             [ 0.0000],
+             [ 0.0000]]])
+
     See Also
     --------
     soft_dtw : Compute Soft-DTW
@@ -775,7 +865,7 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None, compu
     ----------
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
        Time-Series," ICML 2017.
-    """
+    """  # noqa: E501
     be = instantiate_backend(be, dataset1, dataset2)
     dataset1 = to_time_series_dataset(dataset1, be=be)
     if dataset2 is not None:
