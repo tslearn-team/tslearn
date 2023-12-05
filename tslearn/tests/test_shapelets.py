@@ -53,6 +53,14 @@ def test_shapelets():
     np.testing.assert_allclose(preds_before,
                                clf.predict_proba(time_series))
 
+    clf = LearningShapelets(max_iter=1,
+                            verbose=0,
+                            random_state=0)
+    clf.fit(time_series, y)
+    assert clf.shapelets_.shape == (6,)
+    assert clf.shapelets_as_time_series_.shape == (6, 3, 2)
+
+
 def test_shapelet_lengths():
     pytest.importorskip('tensorflow')
     from tslearn.shapelets import LearningShapelets
@@ -86,6 +94,7 @@ def test_shapelet_lengths():
     tr = clf.transform(time_series)
     np.testing.assert_allclose(tr,
                                np.array([[0.], [8. / 3]]))
+
 
 def test_series_lengths():
     pytest.importorskip('tensorflow')
