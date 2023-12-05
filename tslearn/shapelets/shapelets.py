@@ -362,11 +362,15 @@ class LearningShapelets(ClassifierMixin, TransformerMixin,
 
     @property
     def shapelets_(self):
-        total_n_shp = sum(self.n_shapelets_per_size.values())
+        if self.n_shapelets_per_size is None:
+            n_shapelets_per_size = self.n_shapelets_per_size_
+        else:
+            n_shapelets_per_size = self.n_shapelets_per_size
+        total_n_shp = sum(n_shapelets_per_size.values())
         shapelets = numpy.empty((total_n_shp, ), dtype=object)
         idx = 0
-        for i, shp_sz in enumerate(sorted(self.n_shapelets_per_size.keys())):
-            n_shp = self.n_shapelets_per_size[shp_sz]
+        for i, shp_sz in enumerate(sorted(n_shapelets_per_size.keys())):
+            n_shp = n_shapelets_per_size[shp_sz]
             for idx_shp in range(idx, idx + n_shp):
                 shapelets[idx_shp] = numpy.zeros((shp_sz, self.d_))
             for di in range(self.d_):
