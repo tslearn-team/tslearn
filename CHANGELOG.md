@@ -12,6 +12,25 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ## [Towards v0.7]
 
+## [v0.6.3]
+
+### Changed
+
+* The structure of the class `Backend` has been simplified.
+
+### Added
+
+* Option `compute_with_backend` in functions `soft_dtw`, `soft_dtw_alignment`,
+`cdist_soft_dtw` and `cdist_soft_dtw_normalized`.
+`PyTorch` automatic differentiation can now be used when these functions are using the `PyTorch` backend.
+
+### Fixed
+
+* Fixed error in `LearningShapelets` when input parameter `n_shapelets_per_size` equals `None`.
+* Fixed bug related to `SoftDTWLossPytorch` with option `normalize=True` when used on inputs of different lengths.
+* Fixed error in function `from_hdf5` for array inputs.
+* Fixed `readthedocs` test failing by replacing `build.image` (deprecated) with `build.os`.
+
 ## [v0.6.2]
 
 ### Fixed
