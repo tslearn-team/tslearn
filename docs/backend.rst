@@ -1,3 +1,5 @@
+.. _backend:
+
 Backend selection and use
 =========================
 
