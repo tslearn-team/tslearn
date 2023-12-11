@@ -463,7 +463,7 @@ def soft_dtw(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False):
         If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
         the PyTorch backend is used.
         If `be` is `None`, the backend is determined by the input arrays.
-        See [:ref:`dedicated user-guide page <dtw>`] for more information.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
     compute_with_backend : bool, default=False
         This parameter has no influence when the NumPy backend is used.
         When a backend different from NumPy is used (cf parameter `be`):
