@@ -65,7 +65,12 @@ def _softmin3(a, b, c, gamma, be=None):
     gamma : float64
         Regularization parameter.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -130,7 +135,12 @@ def _soft_dtw(D, R, gamma, be=None):
     gamma : float64
         Regularization parameter.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
     """
     be = instantiate_backend(be, D, R, gamma)
 
@@ -179,7 +189,12 @@ def _soft_dtw_batch(D, R, gamma, be=None):
     gamma : float64
         Regularization parameter.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
     """
     be = instantiate_backend(be, D, R)
     for i_sample in range(D.shape[0]):
@@ -230,7 +245,12 @@ def _soft_dtw_grad(D, R, E, gamma, be=None):
     gamma : float64
         Regularization parameter.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
     """
     be = instantiate_backend(be, D, R, E)
 
@@ -282,7 +302,12 @@ def _soft_dtw_grad_batch(D, R, E, gamma, be=None):
     gamma : float64
         Regularization parameter.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
     """
     be = instantiate_backend(be, D, R, E)
     for i_sample in prange(D.shape[0]):

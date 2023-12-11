@@ -53,7 +53,12 @@ def _cdist_generic(
         for more details.
 
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     compute_diagonal : bool (default: True)
         Whether diagonal terms should be computed or assumed to be 0 in the

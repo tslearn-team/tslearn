@@ -101,7 +101,12 @@ def ctw_path(
     verbose : bool (default: True)
         If True, scores are printed at each iteration of the algorithm.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -249,7 +254,12 @@ def ctw(
     verbose : bool (default: True)
         If True, scores are printed at each iteration of the algorithm.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -363,7 +373,12 @@ def cdist_ctw(
         `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`__
         for more details.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
