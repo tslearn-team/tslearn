@@ -461,7 +461,7 @@ def soft_dtw(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False):
         Backend.
     compute_with_backend : bool, default=False
         This parameter has no influence when the NumPy backend is used.
-        When using a backend different from NumPy is used:
+        When a backend different from NumPy is used:
         If `True`, the computation is done with the corresponding backend.
         If `False`, a conversion to the NumPy backend can be used to accelerate the computation.
 
@@ -564,7 +564,7 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False)
         Backend.
     compute_with_backend : bool, default=False
         This parameter has no influence when the NumPy backend is used.
-        When using a backend different from NumPy is used:
+        When a backend different from NumPy is used:
         If `True`, the computation is done with the corresponding backend.
         If `False`, a conversion to the NumPy backend can be used to accelerate the computation.
 
@@ -681,7 +681,7 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0, be=None, compute_with_bac
         Backend.
     compute_with_backend : bool, default=False
         This parameter has no influence when the NumPy backend is used.
-        When using a backend different from NumPy is used:
+        When a backend different from NumPy is used:
         If `True`, the computation is done with the corresponding backend.
         If `False`, a conversion to the NumPy backend can be used to accelerate the computation.
 
@@ -817,7 +817,7 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None, compu
         Backend.
     compute_with_backend : bool, default=False
         This parameter has no influence when the NumPy backend is used.
-        When using a backend different from NumPy is used:
+        When a backend different from NumPy is used:
         If `True`, the computation is done with the corresponding backend.
         If `False`, a conversion to the NumPy backend can be used to accelerate the computation.
 
@@ -911,7 +911,7 @@ class SoftDTW:
             Backend.
         compute_with_backend : bool, default=False
             This parameter has no influence when the NumPy backend is used.
-            When using a backend different from NumPy is used:
+            When a backend different from NumPy is used:
             If `True`, the computation is done with the corresponding backend.
             If `False`, a conversion to the NumPy backend can be used to accelerate the computation.
 
@@ -1017,7 +1017,7 @@ class SquaredEuclidean:
             Backend.
         compute_with_backend : bool, default=False
             This parameter has no influence when the NumPy backend is used.
-            When using a backend different from NumPy is used:
+            When a backend different from NumPy is used:
             If `True`, the computation is done with the corresponding backend.
             If `False`, a conversion to the NumPy backend can be used to accelerate the computation.
 
