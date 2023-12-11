@@ -46,7 +46,12 @@ def _local_squared_dist(x, y, be=None):
     y : array-like, shape=(d,)
         Another vector.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -108,7 +113,12 @@ def accumulated_matrix(s1, s2, mask, be=None):
     mask : array-like, shape=(sz1, sz2)
         Mask. Unconsidered cells must have infinite values.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -168,7 +178,12 @@ def _dtw(s1, s2, mask, be=None):
     mask : array-like, shape=(sz1, sz2)
         Mask. Unconsidered cells must have infinite values.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -233,7 +248,12 @@ def _return_path(acc_cost_mat, be=None):
     acc_cost_mat : array-like, shape=(sz1, sz2)
         Accumulated cost matrix.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -319,7 +339,12 @@ def dtw_path(
         constraint, a `RuntimeWarning` is raised and no global constraint is
         used.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -424,7 +449,12 @@ def accumulated_matrix_from_dist_matrix(dist_matrix, mask, be=None):
     mask : array-like, shape=(sz1, sz2)
         Mask. Unconsidered cells must have infinite values.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -521,7 +551,12 @@ def dtw_path_from_metric(
         used.
 
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     **kwds
         Additional arguments to pass to sklearn pairwise_distances to compute
@@ -680,7 +715,12 @@ def dtw(
         used.
 
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -800,7 +840,12 @@ def _limited_warping_length_cost(s1, s2, max_length, be=None):
         Maximum allowed warping path length. Should be an integer between
         XXX and YYY.  # TODO
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -873,7 +918,12 @@ def dtw_limited_warping_length(s1, s2, max_length, be=None):
         If lower than max(len(s1), len(s2)), no path can be found and a
         ValueError is raised.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -934,7 +984,12 @@ def _return_path_limited_warping_length(
     optimal_length : int
         Optimal length.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -1005,7 +1060,12 @@ def dtw_path_limited_warping_length(s1, s2, max_length, be=None):
         If lower than max(len(s1), len(s2)), no path can be found and a
         ValueError is raised.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -1110,7 +1170,12 @@ def _subsequence_cost_matrix(subseq, longseq, be=None):
     longseq : array-like, shape=(sz2, d)
         Reference time series.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -1145,7 +1210,12 @@ def subsequence_cost_matrix(subseq, longseq, be=None):
     longseq : array-like, shape=(sz2, d) or (sz2,)
         Reference time series. If shape is (sz2,), the time series is assumed to be univariate.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -1219,7 +1289,12 @@ def _subsequence_path(acc_cost_mat, idx_path_end, be=None):
     idx_path_end: int
         The end position of the matched subsequence in the longer sequence.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -1268,7 +1343,12 @@ def subsequence_path(acc_cost_mat, idx_path_end, be=None):
     idx_path_end: int
         The end position of the matched subsequence in the longer sequence.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -1332,7 +1412,12 @@ def dtw_subsequence_path(subseq, longseq, be=None):
         A reference (supposed to be longer than `subseq`) time series.
         If shape is (sz2,), the time series is assumed to be univariate.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -1428,7 +1513,12 @@ def sakoe_chiba_mask(sz1, sz2, radius=1, be=None):
     radius : int
         The radius of the band.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -1528,7 +1618,12 @@ def _itakura_mask(sz1, sz2, max_slope=2.0, be=None):
     max_slope : float (default = 2)
         The maximum slope of the parallelogram.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -1580,7 +1675,12 @@ def itakura_mask(sz1, sz2, max_slope=2.0, be=None):
     max_slope : float (default = 2)
         The maximum slope of the parallelogram.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -1668,7 +1768,12 @@ def compute_mask(
         constraint, a `RuntimeWarning` is raised and no global constraint is
         used.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -1794,7 +1899,12 @@ def cdist_dtw(
         for more details.
 
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -1963,7 +2073,12 @@ def _lb_envelope(time_series, radius, be=None):
         index i will be generated based on all observations from the time series
         at indices comprised between i-radius and i+radius).
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -2007,7 +2122,12 @@ def lb_envelope(ts, radius=1, be=None):
         index i will be generated based on all observations from the time series
         at indices comprised between i-radius and i+radius).
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -2103,7 +2223,12 @@ def lcss_accumulated_matrix(s1, s2, eps, mask, be=None):
     mask : array-like, shape=(sz1, sz2)
         Mask. Unconsidered cells must have infinite values.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -2177,7 +2302,12 @@ def _lcss(s1, s2, eps, mask, be=None):
     mask : array-like, shape=(sz1, sz2)
         Mask. Unconsidered cells must have infinite values.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -2255,7 +2385,12 @@ def lcss(
         constraint, a `RuntimeWarning` is raised and no global constraint is
         used.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -2364,7 +2499,12 @@ def _return_lcss_path(s1, s2, eps, mask, acc_cost_mat, sz1, sz2, be=None):
     sz2 : int
         Length of the second time series.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -2460,7 +2600,12 @@ def _return_lcss_path_from_dist_matrix(
     sz2 : int
         Length of the second time series.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -2550,7 +2695,12 @@ def lcss_path(
        constraint, a `RuntimeWarning` is raised and no global constraint is
        used.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -2657,7 +2807,12 @@ def lcss_accumulated_matrix_from_dist_matrix(dist_matrix, eps, mask, be=None):
     mask : array-like, shape=(sz1, sz2)
         Mask. Unconsidered cells must have infinite values.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -2751,7 +2906,12 @@ def lcss_path_from_metric(
         constraint, a `RuntimeWarning` is raised and no global constraint is
         used.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
     **kwds
         Additional arguments to pass to sklearn pairwise_distances to compute
         the pairwise distances.

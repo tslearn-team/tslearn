@@ -38,7 +38,12 @@ def _gak(gram, be=None):
     gram : array-like, shape=(sz1, sz2)
         Gram matrix.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -103,7 +108,12 @@ def _gak_gram(s1, s2, sigma=1.0, be=None):
     sigma : float (default 1.)
         Bandwidth of the internal gaussian kernel used for GAK.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -137,7 +147,12 @@ def unnormalized_gak(s1, s2, sigma=1.0, be=None):
     sigma : float (default 1.)
         Bandwidth of the internal gaussian kernel used for GAK.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -195,7 +210,12 @@ def gak(s1, s2, sigma=1.0, be=None):  # TODO: better doc (formula for the kernel
     sigma : float (default 1.)
         Bandwidth of the internal gaussian kernel used for GAK.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -259,7 +279,12 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.0, n_jobs=None, verbose=0, be=Non
         `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`__
         for more details.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -333,7 +358,12 @@ def sigma_gak(dataset, n_samples=100, random_state=None, be=None):
         The generator used to draw the samples. If an integer is given, it
         fixes the seed. Defaults to the global numpy random number generator.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -393,7 +423,12 @@ def gamma_soft_dtw(dataset, n_samples=100, random_state=None, be=None):
         The generator used to draw the samples. If an integer is given, it
         fixes the seed. Defaults to the global numpy random number generator.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -566,7 +601,12 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False)
     gamma : float (default 1.)
         Gamma parameter for Soft-DTW.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
     compute_with_backend : bool, default=False
         This parameter has no influence when the NumPy backend is used.
         When a backend different from NumPy is used (cf parameter `be`):
@@ -683,7 +723,12 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0, be=None, compute_with_bac
     gamma : float (default 1.)
         Gamma parameter for Soft-DTW.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
     compute_with_backend : bool, default=False
         This parameter has no influence when the NumPy backend is used.
         When a backend different from NumPy is used (cf parameter `be`):
@@ -819,7 +864,12 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None, compu
     gamma : float (default 1.)
         Gamma parameter for Soft-DTW.
     be : Backend object or string or None
-        Backend.
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
     compute_with_backend : bool, default=False
         This parameter has no influence when the NumPy backend is used.
         When a backend different from NumPy is used (cf parameter `be`):
