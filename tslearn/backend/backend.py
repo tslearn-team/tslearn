@@ -31,9 +31,10 @@ def instantiate_backend(*args):
     for arg in args:
         if isinstance(arg, Backend):
             return arg
-        if "numpy" in f"{type(arg)}" or "numpy" in f"{arg}".lower():
+        arg_string = (str(type(arg)) + str(arg)).lower()
+        if "numpy" in arg_string:
             return Backend("numpy")
-        if "torch" in f"{type(arg)}" or "torch" in f"{arg}".lower():
+        if "torch" in arg_string:
             return Backend("pytorch")
     return Backend("numpy")
 
@@ -56,7 +57,8 @@ def select_backend(data):
         If data is a PyTorch array or data equals 'pytorch',
         backend equals PytorchBackend().
     """
-    if "torch" in f"{type(data)}" or "torch" in f"{data}".lower():
+    arg_string = (str(type(data)) + str(data)).lower()
+    if "torch" in arg_string:
         return PyTorchBackend()
     return NumPyBackend()
 
@@ -108,7 +110,7 @@ def cast(data, array_type="numpy"):
     data_cast: array-like
         Data cast to array_type.
     """
-    data_type_string = f"{type(data)}".lower()
+    data_type_string = str(type(data)).lower()
     array_type = array_type.lower()
     if array_type == "pytorch":
         array_type = "torch"
