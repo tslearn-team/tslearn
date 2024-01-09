@@ -83,7 +83,7 @@ class NumPyBackend(object):
 
     @staticmethod
     def belongs_to_backend(x):
-        return "numpy" in f"{type(x)}".lower()
+        return "numpy" in str(type(x)).lower()
 
     @staticmethod
     def cast(x, dtype):

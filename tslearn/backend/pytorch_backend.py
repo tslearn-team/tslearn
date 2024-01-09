@@ -123,7 +123,7 @@ else:
 
         @staticmethod
         def belongs_to_backend(x):
-            return "torch" in f"{type(x)}".lower()
+            return "torch" in str(type(x)).lower()
 
         def cast(self, x, dtype):
             if _torch.is_tensor(x):
