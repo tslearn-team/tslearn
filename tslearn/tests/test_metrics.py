@@ -19,15 +19,17 @@ try:
     import jax
     backends += [Backend("jax")]
     array_types += ["jax"]
+    HAS_JAX = True
 except ImportError:
-    pass
+    HAS_JAX = False
 
 try:
     import torch
     backends += [Backend("pytorch")]
     array_types += ["pytorch"]
+    HAS_TORCH = True
 except ImportError:
-    pass
+    HAS_TORCH = False
 
 
 def test_dtw():
@@ -682,7 +684,7 @@ def test_dtw_path_with_empty_or_nan_inputs():
 
 
 @pytest.mark.skipif(
-    len(backends) == 1,
+    not HAS_TORCH,
     reason="Skipping test that requires pytorch backend",
 )
 def test_soft_dtw_loss_pytorch():
