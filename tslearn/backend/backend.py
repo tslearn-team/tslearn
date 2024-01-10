@@ -71,11 +71,10 @@ def select_backend(data):
         backend equals PytorchBackend().
     """
     arg_str = (str(type(data)) + str(data)).lower()
-    backends_str = ["numpy", "jax", "torch"]
-    backends_instances = [NumPyBackend(), JAXBackend(), PyTorchBackend()]
-    for i_backend, backend_str in enumerate(backends_str):
-        if backend_str in arg_str:
-            return backends_instances[i_backend]
+    if "jax" in arg_str:
+        return JAXBackend()
+    if "torch" in arg_str:
+        return PyTorchBackend()
     return NumPyBackend()
 
 
