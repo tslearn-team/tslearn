@@ -12,13 +12,21 @@ from tslearn.utils import to_time_series
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
+backends = [Backend("numpy"), None]
+array_types = ["numpy", "list"]
+try:
+    import jax
+    backends += [Backend("jax")]
+    array_types += ["jax"]
+except ImportError:
+    pass
+
 try:
     import torch
-    backends = [Backend("numpy"), Backend("pytorch"), None]
-    array_types = ["numpy", "pytorch", "list"]
+    backends += [Backend("pytorch")]
+    array_types += ["pytorch"]
 except ImportError:
-    backends = [Backend("numpy")]
-    array_types = ["numpy", "list"]
+    pass
 
 
 def test_dtw():
