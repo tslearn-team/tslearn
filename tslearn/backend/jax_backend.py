@@ -5,6 +5,7 @@ from scipy.spatial.distance import cdist, pdist
 from sklearn.metrics.pairwise import euclidean_distances, pairwise_distances
 
 try:
+    import jax as _jax
     import jax.numpy as _jnp
 
     HAS_JAX = True
@@ -123,19 +124,50 @@ else:
         def to_numpy(x):
             return x
 
-
     class JAXLinalg:
         def __init__(self):
             self.inv = _jnp.linalg.inv
             self.norm = _jnp.linalg.norm
 
-
     class JAXRandom:
         def __init__(self):
-            self.rand = _jnp.random.rand
-            self.randint = _jnp.random.randint
-            self.randn = _jnp.random.randn
+            self.key = _jax.random.PRNGKey(0)
 
+        def rand(self, *args, dtype=float, key=None):
+            if key is None:
+                self.key = _jax.random.split(self.key, num=1)[0, :]
+                key = self.key
+            return _jax.random.uniform(
+                key=key, shape=args, dtype=dtype, minval=0.0, maxval=1.0
+            )
+
+        def randint(self, low, high=None, size=(), dtype=int, key=None):
+            if key is None:
+                self.key = _jax.random.split(self.key, num=1)[0, :]
+                key = self.key
+            if high is None:
+                minval = 0
+                maxval = low
+            else:
+                minval = low
+                maxval = high
+            return _jax.random.randint(
+                key=key, shape=size, minval=minval, maxval=maxval, dtype=dtype
+            )
+
+        def randn(self, *args, dtype=float, key=None):
+            if key is None:
+                self.key = _jax.random.split(self.key, num=1)[0, :]
+                key = self.key
+            return _jax.random.normal(key=key, shape=args, dtype=dtype)
+
+        def uniform(self, low=0.0, high=1.0, size=(), dtype=float, key=None):
+            if key is None:
+                self.key = _jax.random.split(self.key, num=1)[0, :]
+                key = self.key
+            return _jax.random.uniform(
+                key=key, shape=size, dtype=dtype, minval=low, maxval=high
+            )
 
     class JAXTesting:
         def __init__(self):
