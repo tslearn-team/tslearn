@@ -14,6 +14,7 @@ __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
 backends = [Backend("numpy"), None]
 array_types = ["numpy", "list"]
+
 try:
     import jax
     backends += [Backend("jax")]
