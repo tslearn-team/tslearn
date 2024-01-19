@@ -8,9 +8,9 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 def test_shapelets():
-    pytest.importorskip('tensorflow')
+    pytest.importorskip('keras')
     from tslearn.shapelets import LearningShapelets
-    import tensorflow as tf
+    import keras
 
     n, sz, d = 15, 10, 2
     rng = np.random.RandomState(0)
@@ -27,7 +27,7 @@ def test_shapelets():
     clf = LearningShapelets(n_shapelets_per_size={2: 5},
                             max_iter=1,
                             verbose=0,
-                            optimizer=tf.optimizers.Adam(.1),
+                            optimizer=keras.optimizers.Adam(.1),
                             random_state=0)
     cross_validate(clf, time_series, y, cv=2)
 
@@ -62,7 +62,7 @@ def test_shapelets():
 
 
 def test_shapelet_lengths():
-    pytest.importorskip('tensorflow')
+    pytest.importorskip('keras')
     from tslearn.shapelets import LearningShapelets
 
     # Test variable-length
@@ -97,7 +97,7 @@ def test_shapelet_lengths():
 
 
 def test_series_lengths():
-    pytest.importorskip('tensorflow')
+    pytest.importorskip('keras')
     from tslearn.shapelets import LearningShapelets
 
     # Test long shapelets

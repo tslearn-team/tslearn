@@ -29,7 +29,7 @@ import matplotlib.pyplot as plt
 from tslearn.datasets import CachedDatasets
 from tslearn.preprocessing import TimeSeriesScalerMinMax
 from tslearn.shapelets import LearningShapelets
-from tensorflow.keras.optimizers import Adam
+from keras.optimizers import Adam
 
 # Set a seed to ensure determinism
 numpy.random.seed(42)

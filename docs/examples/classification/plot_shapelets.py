@@ -16,7 +16,7 @@ http://fs.ismll.de/publicspace/LearningShapelets/.
 
 import numpy
 from sklearn.metrics import accuracy_score
-import tensorflow as tf
+import keras
 import matplotlib.pyplot as plt
 
 from tslearn.datasets import CachedDatasets
@@ -49,7 +49,7 @@ shapelet_sizes = grabocka_params_to_shapelet_size_dict(n_ts=n_ts,
 # Define the model using parameters provided by the authors (except that we
 # use fewer iterations here)
 shp_clf = LearningShapelets(n_shapelets_per_size=shapelet_sizes,
-                            optimizer=tf.optimizers.Adam(.01),
+                            optimizer=keras.optimizers.Adam(.01),
                             batch_size=16,
                             weight_regularizer=.01,
                             max_iter=200,
