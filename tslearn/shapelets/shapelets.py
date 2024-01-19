@@ -55,7 +55,10 @@ class GlobalMinPooling1D(Layer):
 
     def call(self, inputs):
         steps_axis = 1 if self.data_format == "channels_last" else 2
-        return ops.min(inputs, axis=steps_axis, keepdims=self.keepdims)
+        inputs_without_nans = ops.where(ops.isfinite(inputs), 
+                                        inputs, 
+                                        ops.zeros_like(inputs) + ops.max(inputs[ops.isfinite(inputs)]))
+        return ops.min(inputs_without_nans, axis=steps_axis, keepdims=self.keepdims)
 
 
 class GlobalArgminPooling1D(Layer):
@@ -65,6 +68,13 @@ class GlobalArgminPooling1D(Layer):
     # Output shape
         2D tensor with shape:
         `(batch_size, features)`
+        
+    Examples
+    --------
+    >>> x = numpy.array([5.0, numpy.nan, 6.8, numpy.nan, numpy.inf])
+    >>> x = x.reshape([1, 5, 1])
+    >>> GlobalArgminPooling1D()(x).numpy()
+    array([[0.]], dtype=float32)
     """
 
     def __init__(self, **kwargs):
@@ -75,7 +85,10 @@ class GlobalArgminPooling1D(Layer):
         return input_shape[0], input_shape[2]
 
     def call(self, inputs, **kwargs):
-        return ops.cast(ops.argmin(inputs, axis=1), dtype=float)
+        inputs_without_nans = ops.where(ops.isfinite(inputs), 
+                                        inputs, 
+                                        ops.zeros_like(inputs) + ops.max(inputs[ops.isfinite(inputs)]))
+        return ops.cast(ops.argmin(inputs_without_nans, axis=1), dtype=float)
 
 
 def _kmeans_init_shapelets(X, n_shapelets, shp_len, n_draw=10000):
@@ -570,7 +583,7 @@ class LearningShapelets(ClassifierMixin, TransformerMixin,
         >>> X[0, 4:7, 0] = numpy.array([1, 2, 3])
         >>> y = [1, 0, 0]
         >>> # Data is all zeros except a motif 1-2-3 in the first time series
-        >>> clf = LearningShapelets(n_shapelets_per_size={3: 1}, max_iter=0,
+        >>> clf = LearningShapelets(n_shapelets_per_size={3: 1}, max_iter=1,
         ...                     verbose=0)
         >>> _ = clf.fit(X, y)
         >>> weights_shapelet = [
@@ -783,7 +796,7 @@ class LearningShapelets(ClassifierMixin, TransformerMixin,
         --------
         >>> from tslearn.generators import random_walk_blobs
         >>> X, y = random_walk_blobs(n_ts_per_blob=100, sz=256, d=1, n_blobs=3)
-        >>> clf = LearningShapelets(n_shapelets_per_size={10: 5}, max_iter=0,
+        >>> clf = LearningShapelets(n_shapelets_per_size={10: 5}, max_iter=1,
         ...                     verbose=0)
         >>> clf.fit(X, y).get_weights("classification")[0].shape
         (5, 3)
@@ -819,7 +832,7 @@ class LearningShapelets(ClassifierMixin, TransformerMixin,
         --------
         >>> from tslearn.generators import random_walk_blobs
         >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=16, d=1, n_blobs=3)
-        >>> clf = LearningShapelets(n_shapelets_per_size={3: 1}, max_iter=0,
+        >>> clf = LearningShapelets(n_shapelets_per_size={3: 1}, max_iter=1,
         ...                     verbose=0)
         >>> _ = clf.fit(X, y)
         >>> weights_shapelet = [
