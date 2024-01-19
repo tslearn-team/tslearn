@@ -14,11 +14,6 @@ More information on the method can be found at:
 http://fs.ismll.de/publicspace/LearningShapelets/.
 """
 
-# %%
-# .. warning::
-#     When using tensorflow 2.11 to 2.15 (highly probable with python3.8) use
-#     ` from tensorflow.keras.optimizers.legacy import Adam`
-
 # Author: Gilles Vandewiele
 # License: BSD 3 clause
 

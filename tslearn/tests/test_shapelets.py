@@ -27,7 +27,7 @@ def test_shapelets():
     clf = LearningShapelets(n_shapelets_per_size={2: 5},
                             max_iter=1,
                             verbose=0,
-                            optimizer=keras.optimizers.Adam(.1),
+                            optimizer=keras.optimizers.Adam(learning_rate=.1),
                             random_state=0)
     cross_validate(clf, time_series, y, cv=2)
 

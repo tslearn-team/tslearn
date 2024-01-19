@@ -49,7 +49,7 @@ shapelet_sizes = grabocka_params_to_shapelet_size_dict(n_ts=n_ts,
 # Define the model using parameters provided by the authors (except that we
 # use fewer iterations here)
 shp_clf = LearningShapelets(n_shapelets_per_size=shapelet_sizes,
-                            optimizer=keras.optimizers.Adam(.01),
+                            optimizer=keras.optimizers.Adam(learning_rate=.01),
                             batch_size=16,
                             weight_regularizer=.01,
                             max_iter=200,
