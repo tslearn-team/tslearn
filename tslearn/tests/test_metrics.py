@@ -38,14 +38,14 @@ def test_dtw():
             backend = instantiate_backend(be, array_type)
             # dtw_path
             path, dist = tslearn.metrics.dtw_path(cast([1, 2, 3], array_type), cast([1.0, 2.0, 2.0, 3.0], array_type), be=be)
-            np.testing.assert_equal(path, [(0, 0), (1, 1), (1, 2), (2, 3)])
-            np.testing.assert_allclose(dist, [0.0])
+            backend.testing.assert_equal(path, [(0, 0), (1, 1), (1, 2), (2, 3)])
+            backend.testing.assert_allclose(dist, 0.0)
             assert backend.belongs_to_backend(dist)
 
             path, dist = tslearn.metrics.dtw_path(
                 cast([1, 2, 3], array_type), cast([1.0, 2.0, 2.0, 3.0, 4.0], array_type), be=be
             )
-            np.testing.assert_allclose(dist, [1.0])
+            backend.testing.assert_allclose(dist, 1.0)
             assert backend.belongs_to_backend(dist)
 
             # dtw
@@ -54,19 +54,19 @@ def test_dtw():
             x = cast(rng.randn(n1, d), array_type)
             y = cast(rng.randn(n2, d), array_type)
 
-            np.testing.assert_allclose(
+            backend.testing.assert_allclose(
                 tslearn.metrics.dtw(x, y, be=be), tslearn.metrics.dtw_path(x, y, be=be)[1]
             )
 
             # cdist_dtw
             dists = tslearn.metrics.cdist_dtw(cast([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], array_type), be=be)
-            np.testing.assert_allclose(dists, cast([[0.0, 1.0], [1.0, 0.0]], array_type))
+            backend.testing.assert_allclose(dists, [[0.0, 1.0], [1.0, 0.0]])
             dists = tslearn.metrics.cdist_dtw(
                 cast([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], array_type),
                 [[1, 2, 3], [2, 3, 4, 5]],  # The second dataset can not be cast to array because of its shape
                 be=be
             )
-            np.testing.assert_allclose(dists, [[0.0, 2.44949], [1.0, 1.414214]], atol=1e-5)
+            backend.testing.assert_allclose(dists, [[0.0, 2.44949], [1.0, 1.414214]], atol=1e-5)
             assert backend.belongs_to_backend(dists)
 
 
@@ -78,14 +78,14 @@ def test_ctw():
             path, cca, dist = tslearn.metrics.ctw_path(
                 cast([1, 2, 3], array_type), cast([1.0, 2.0, 2.0, 3.0], array_type), be=be
             )
-            np.testing.assert_equal(path, [(0, 0), (1, 1), (1, 2), (2, 3)])
-            np.testing.assert_allclose(dist, 0.0)
+            backend.testing.assert_equal(path, [(0, 0), (1, 1), (1, 2), (2, 3)])
+            backend.testing.assert_allclose(dist, 0.0)
             assert backend.belongs_to_backend(dist)
 
             path, cca, dist = tslearn.metrics.ctw_path(
                 cast([1, 2, 3], array_type), cast([1.0, 2.0, 2.0, 3.0, 4.0], array_type), be=be
             )
-            np.testing.assert_allclose(dist, 1.0)
+            backend.testing.assert_allclose(dist, 1.0)
             assert backend.belongs_to_backend(dist)
 
             # dtw
@@ -93,23 +93,23 @@ def test_ctw():
             rng = np.random.RandomState(0)
             x = cast(rng.randn(n1, d1), array_type)
             y = cast(rng.randn(n2, d2), array_type)
-            np.testing.assert_allclose(
+            backend.testing.assert_allclose(
                 tslearn.metrics.ctw(x, y, be=be), tslearn.metrics.ctw(y, x, be=be)
             )
-            np.testing.assert_allclose(
+            backend.testing.assert_allclose(
                 tslearn.metrics.ctw(x, y, be=be), tslearn.metrics.ctw_path(x, y, be=be)[-1]
             )
 
             # cdist_dtw
             dists = tslearn.metrics.cdist_ctw(cast([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], array_type), be=be)
-            np.testing.assert_allclose(dists, [[0.0, 1.0], [1.0, 0.0]])
+            backend.testing.assert_allclose(dists, [[0.0, 1.0], [1.0, 0.0]])
             assert backend.belongs_to_backend(dist)
 
             dists = tslearn.metrics.cdist_ctw(
                 cast([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], array_type),
                 [[1, 2, 3], [2, 3, 4, 5]], be=be  # The second dataset can not be cast to array because of its shape
             )
-            np.testing.assert_allclose(
+            backend.testing.assert_allclose(
                 dists, [[0.0, 2.44949], [1.0, 1.414214]], atol=1e-5
             )
             assert backend.belongs_to_backend(dists)
@@ -118,6 +118,7 @@ def test_ctw():
 def test_ldtw():
     for be in backends:
         for array_type in array_types:
+            backend = instantiate_backend(be, array_type)
             n1, n2, d = 15, 10, 3
             rng = np.random.RandomState(0)
             x = cast(rng.randn(n1, d), array_type)
@@ -126,11 +127,10 @@ def test_ldtw():
             ldtw_n1_plus_2 = tslearn.metrics.dtw_limited_warping_length(x, y, n1 + 2, be=be)
 
             # LDTW >= DTW
-            np.testing.assert_allclose(
+            backend.testing.assert_allclose(
                 tslearn.metrics.dtw(x, y, be=be),
                 ldtw_n1_plus_2,
             )
-            backend = instantiate_backend(be, array_type)
             assert backend.belongs_to_backend(ldtw_n1_plus_2)
 
             # if path is too short, LDTW raises a ValueError
@@ -150,16 +150,16 @@ def test_ldtw():
             )
 
             # if max_length is geq than length of optimal DTW path, LDTW = DTW
-            np.testing.assert_allclose(
-                cost, tslearn.metrics.dtw_limited_warping_length(x, y, len(path))
+            backend.testing.assert_allclose(
+                cost, tslearn.metrics.dtw_limited_warping_length(x, y, len(path), be=be)
             )
-            np.testing.assert_allclose(
+            backend.testing.assert_allclose(
                 cost, tslearn.metrics.dtw_limited_warping_length(x, y, len(path) + 1, be=be)
             )
             path, cost = tslearn.metrics.dtw_path_limited_warping_length(
                 x, y, n1 + 2, be=be
             )
-            np.testing.assert_allclose(
+            backend.testing.assert_allclose(
                 cost, ldtw_n1_plus_2
             )
             assert len(path) <= n1 + 2
@@ -168,57 +168,60 @@ def test_ldtw():
 def test_lcss():
     for be in backends:
         for array_type in array_types:
+            backend = instantiate_backend(be, array_type)
             sim = tslearn.metrics.lcss(cast([1, 2, 3], array_type), cast([1.0, 2.0, 2.0, 3.0], array_type), be=be)
-            np.testing.assert_equal(sim, 1.0)
+            backend.testing.assert_equal(sim, 1.0)
             assert isinstance(sim, float)
 
             sim = tslearn.metrics.lcss([1, 2, 3], [1.0, 2.0, 2.0, 4.0], be=be)
-            np.testing.assert_equal(sim, 1.0)
+            backend.testing.assert_equal(sim, 1.0)
 
             sim = tslearn.metrics.lcss([1, 2, 3], [-2.0, 5.0, 7.0], eps=3, be=be)
-            np.testing.assert_equal(round(sim, 2), 0.67)
+            backend.testing.assert_equal(round(sim, 2), 0.67)
 
             sim = tslearn.metrics.lcss([1, 2, 3], [1.0, 2.0, 2.0, 2.0, 3.0], eps=0, be=be)
-            np.testing.assert_equal(sim, 1.0)
+            backend.testing.assert_equal(sim, 1.0)
 
             sim = tslearn.metrics.lcss(
                 [[1, 1], [2, 2], [3, 3]], [[1.0, 1.0], [2.0, 2.0], [2.0, 2.0], [2.0, 2.0], [3.0, 3.0]], eps=0, be=be)
-            np.testing.assert_equal(sim, 1.0)
+            backend.testing.assert_equal(sim, 1.0)
 
 
 def test_lcss_path():
     for be in backends:
         for array_type in array_types:
+            backend = instantiate_backend(be, array_type)
             path, sim = tslearn.metrics.lcss_path(
                 cast([1.0, 2.0, 3.0], array_type), cast([1.0, 2.0, 2.0, 3.0], array_type), be=be
             )
-            np.testing.assert_equal(sim, 1.0)
+            backend.testing.assert_equal(sim, 1.0)
             assert isinstance(sim, float)
-            np.testing.assert_equal(path, [(0, 1), (1, 2), (2, 3)])
+            backend.testing.assert_equal(path, [(0, 1), (1, 2), (2, 3)])
             assert isinstance(path, list)
 
             path, sim = tslearn.metrics.lcss_path(
                 cast([1.0, 2.0, 3.0], array_type), cast([1.0, 2.0, 2.0, 4.0], array_type), be=be
             )
-            np.testing.assert_equal(sim, 1.0)
-            np.testing.assert_equal(path, [(0, 1), (1, 2), (2, 3)])
+            backend.testing.assert_equal(sim, 1.0)
+            backend.testing.assert_equal(path, [(0, 1), (1, 2), (2, 3)])
 
             path, sim = tslearn.metrics.lcss_path(
                 cast([1.0, 2.0, 3.0], array_type), cast([-2.0, 5.0, 7.0], array_type), eps=3, be=be
             )
-            np.testing.assert_equal(round(sim, 2), 0.67)
-            np.testing.assert_equal(path, [(0, 0), (2, 1)])
+            backend.testing.assert_equal(round(sim, 2), 0.67)
+            backend.testing.assert_equal(path, [(0, 0), (2, 1)])
 
             path, sim = tslearn.metrics.lcss_path(
                 cast([1.0, 2.0, 3.0], array_type), cast([1.0, 2.0, 2.0, 2.0, 3.0], array_type), eps=0, be=be
             )
-            np.testing.assert_equal(sim, 1.0)
-            np.testing.assert_equal(path, [(0, 0), (1, 3), (2, 4)])
+            backend.testing.assert_equal(sim, 1.0)
+            backend.testing.assert_equal(path, [(0, 0), (1, 3), (2, 4)])
 
 
 def test_lcss_path_from_metric():
     for be in backends:
         for array_type in array_types:
+            backend = instantiate_backend(be, array_type)
             for d in np.arange(1, 5):
                 rng = np.random.RandomState(0)
                 s1 = cast(rng.randn(10, d), array_type)
@@ -232,9 +235,9 @@ def test_lcss_path_from_metric():
                     s1, s2, metric="sqeuclidean", be=be
                 )
 
-                np.testing.assert_equal(path, path_ref)
+                backend.testing.assert_equal(path, path_ref)
                 assert isinstance(path, list)
-                np.testing.assert_equal(sim, sim_ref)
+                backend.testing.assert_equal(sim, sim_ref)
                 assert isinstance(sim, float)
 
                 # Test of defining a custom function
@@ -244,35 +247,40 @@ def test_lcss_path_from_metric():
                 path, sim = tslearn.metrics.lcss_path_from_metric(
                     s1, s2, metric=sqeuclidean, be=be
                 )
-                np.testing.assert_equal(path, path_ref)
-                np.testing.assert_equal(sim, sim_ref)
+                backend.testing.assert_equal(path, path_ref)
+                backend.testing.assert_equal(sim, sim_ref)
 
                 # Test of precomputing the distance matrix
-                dist_matrix = cdist(s1, s2, metric="sqeuclidean")
+                dist_matrix = backend.cdist(
+                    cast(s1, array_type=backend.backend_string),
+                    cast(s2, array_type=backend.backend_string),
+                    metric="sqeuclidean")
                 path, sim = tslearn.metrics.lcss_path_from_metric(
                     dist_matrix, metric="precomputed", be=be
                 )
-                np.testing.assert_equal(path, path_ref)
-                np.testing.assert_equal(sim, sim_ref)
+                backend.testing.assert_equal(path, path_ref)
+                backend.testing.assert_equal(sim, sim_ref)
 
 
 def test_constrained_paths():
     for be in backends:
         for array_type in array_types:
+            backend = instantiate_backend(be, array_type)
             n, d = 10, 3
             rng = np.random.RandomState(0)
-            x = cast(rng.randn(n, d), array_type)
-            y = cast(rng.randn(n, d), array_type)
+            x_np = rng.randn(n, d)
+            y_np = rng.randn(n, d)
+            x = cast(x_np, array_type)
+            y = cast(y_np, array_type)
             dtw_sakoe = tslearn.metrics.dtw(
                 x, y, global_constraint="sakoe_chiba", sakoe_chiba_radius=0, be=be
             )
             dtw_itak = tslearn.metrics.dtw(
                 x, y, global_constraint="itakura", itakura_max_slope=1.0, be=be
             )
-            backend = instantiate_backend(be, array_type)
-            euc_dist = backend.linalg.norm(backend.array(x) - backend.array(y))
-            np.testing.assert_allclose(dtw_sakoe, euc_dist, atol=1e-5)
-            np.testing.assert_allclose(dtw_itak, euc_dist, atol=1e-5)
+            euc_dist = backend.linalg.norm(cast(x_np, backend.backend_string) - cast(y_np, backend.backend_string))
+            backend.testing.assert_allclose(dtw_sakoe, euc_dist, atol=1e-5)
+            backend.testing.assert_allclose(dtw_itak, euc_dist, atol=1e-5)
             backend = instantiate_backend(be, array_type)
             assert backend.is_float(dtw_sakoe)
             assert backend.is_float(dtw_itak)
@@ -301,19 +309,20 @@ def test_constrained_paths():
 def test_dtw_subseq():
     for be in backends:
         for array_type in array_types:
+            backend = instantiate_backend(be, array_type)
             path, dist = tslearn.metrics.dtw_subsequence_path(
                 cast([2, 3], array_type), cast([1.0, 2.0, 2.0, 3.0, 4.0], array_type), be=be
             )
-            np.testing.assert_allclose(path, [(0, 2), (1, 3)])
-            np.testing.assert_allclose(dist, 0.0)
+            backend.testing.assert_allclose(path, [(0, 2), (1, 3)])
+            backend.testing.assert_allclose(dist, 0.0)
             backend = instantiate_backend(be, array_type)
             backend.belongs_to_backend(dist)
 
             path, dist = tslearn.metrics.dtw_subsequence_path(
                 cast([1, 4], array_type), cast([1.0, 2.0, 2.0, 3.0, 4.0], array_type), be=be
             )
-            np.testing.assert_allclose(path, [(0, 2), (1, 3)])
-            np.testing.assert_allclose(dist, np.sqrt(2.0))
+            backend.testing.assert_allclose(path, [(0, 2), (1, 3)])
+            backend.testing.assert_allclose(dist, np.sqrt(2.0))
             assert backend.belongs_to_backend(dist)
 
 
@@ -330,11 +339,11 @@ def test_dtw_subseq_path():
             assert backend.belongs_to_backend(cost_matrix)
 
             path = tslearn.metrics.subsequence_path(cost_matrix, 3, be=be)
-            np.testing.assert_equal(path, [(0, 2), (1, 3)])
+            backend.testing.assert_equal(path, [(0, 2), (1, 3)])
             assert isinstance(path, list)
 
             path = tslearn.metrics.subsequence_path(cost_matrix, 1, be=be)
-            np.testing.assert_equal(path, [(0, 0), (1, 1)])
+            backend.testing.assert_equal(path, [(0, 0), (1, 1)])
             assert isinstance(path, list)
 
 
@@ -351,7 +360,7 @@ def test_masks():
                     [np.inf, np.inf, 0.0, 0.0],
                 ]
             )
-            np.testing.assert_allclose(sk_mask, reference_mask)
+            backend.testing.assert_allclose(sk_mask, reference_mask)
             assert backend.belongs_to_backend(sk_mask)
 
             sk_mask = tslearn.metrics.sakoe_chiba_mask(7, 3, 1, be=be)
@@ -366,7 +375,7 @@ def test_masks():
                     [np.inf, 0.0, 0.0],
                 ]
             )
-            np.testing.assert_allclose(sk_mask, reference_mask)
+            backend.testing.assert_allclose(sk_mask, reference_mask)
             assert backend.belongs_to_backend(sk_mask)
 
             i_mask = tslearn.metrics.itakura_mask(6, 6, be=be)
@@ -380,7 +389,7 @@ def test_masks():
                     [np.inf, np.inf, np.inf, np.inf, np.inf, 0.0],
                 ]
             )
-            np.testing.assert_allclose(i_mask, reference_mask)
+            backend.testing.assert_allclose(i_mask, reference_mask)
             assert backend.belongs_to_backend(i_mask)
 
             # Test masks for different combinations of global_constraints /
@@ -391,8 +400,8 @@ def test_masks():
             mask_no_constraint = tslearn.metrics.dtw_variants.compute_mask(
                 ts0, ts1, global_constraint=0, be=be
             )
-            np.testing.assert_allclose(mask_no_constraint, np.zeros((sz, sz)))
             backend = instantiate_backend(be, array_type)
+            backend.testing.assert_allclose(mask_no_constraint, backend.zeros((sz, sz)))
             assert backend.belongs_to_backend(mask_no_constraint)
 
             mask_itakura = tslearn.metrics.dtw_variants.compute_mask(
@@ -401,7 +410,7 @@ def test_masks():
             mask_itakura_bis = tslearn.metrics.dtw_variants.compute_mask(
                 ts0, ts1, itakura_max_slope=2.0, be=be
             )
-            np.testing.assert_allclose(mask_itakura, mask_itakura_bis)
+            backend.testing.assert_allclose(mask_itakura, mask_itakura_bis)
             assert backend.belongs_to_backend(mask_itakura)
 
             mask_sakoe = tslearn.metrics.dtw_variants.compute_mask(
@@ -411,7 +420,7 @@ def test_masks():
             mask_sakoe_bis = tslearn.metrics.dtw_variants.compute_mask(
                 ts0, ts1, sakoe_chiba_radius=1, be=be
             )
-            np.testing.assert_allclose(mask_sakoe, mask_sakoe_bis)
+            backend.testing.assert_allclose(mask_sakoe, mask_sakoe_bis)
             assert backend.belongs_to_backend(mask_sakoe)
 
             np.testing.assert_raises(
@@ -444,12 +453,8 @@ def test_masks():
                 max_iter=5,
                 random_state=0,
             )
-            np.testing.assert_allclose(
-                estimator1.fit(time_series).labels_, estimator2.fit(time_series).labels_
-            )
-            np.testing.assert_allclose(
-                estimator1.fit(time_series).labels_, estimator3.fit(time_series).labels_
-            )
+            backend.testing.assert_allclose(estimator1.fit(time_series).labels_, estimator2.fit(time_series).labels_)
+            backend.testing.assert_allclose(estimator1.fit(time_series).labels_, estimator3.fit(time_series).labels_)
 
 
 def test_gak():
@@ -460,8 +465,8 @@ def test_gak():
             g = tslearn.metrics.cdist_gak(
                 cast([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], array_type), sigma=2.0, be=be
             )
-            np.testing.assert_allclose(
-                g, np.array([[1.0, 0.656297], [0.656297, 1.0]]), atol=1e-5
+            backend.testing.assert_allclose(
+                g, backend.array([[1.0, 0.656297], [0.656297, 1.0]]), atol=1e-5
             )
             assert backend.belongs_to_backend(g)
             g = tslearn.metrics.cdist_gak(
@@ -470,8 +475,8 @@ def test_gak():
                 sigma=2.0,
                 be=be,
             )
-            np.testing.assert_allclose(
-                g, np.array([[0.710595, 0.297229], [0.656297, 1.0]]), atol=1e-5
+            backend.testing.assert_allclose(
+                g, backend.array([[0.710595, 0.297229], [0.656297, 1.0]]), atol=1e-5
             )
             assert backend.belongs_to_backend(g)
 
@@ -479,8 +484,8 @@ def test_gak():
             d = tslearn.metrics.cdist_soft_dtw(
                 cast([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], array_type), gamma=0.01, be=be
             )
-            np.testing.assert_allclose(
-                d, np.array([[-0.010986, 1.0], [1.0, 0.0]]), atol=1e-5
+            backend.testing.assert_allclose(
+                d, backend.array([[-0.010986, 1.0], [1.0, 0.0]]), atol=1e-5
             )
             assert backend.belongs_to_backend(d)
 
@@ -490,8 +495,8 @@ def test_gak():
                 gamma=0.01,
                 be=be,
             )
-            np.testing.assert_allclose(
-                d, np.array([[-0.010986, 1.0], [1.0, 0.0]]), atol=1e-5
+            backend.testing.assert_allclose(
+                d, backend.array([[-0.010986, 1.0], [1.0, 0.0]]), atol=1e-5
             )
             assert backend.belongs_to_backend(d)
 
@@ -510,7 +515,7 @@ def test_gak():
                 cast(np.array(v2.flat), array_type), be=be)
             c_dist = cdist(v1, v2, metric="sqeuclidean")
             sqeuc_compute = sqeuc.compute()
-            np.testing.assert_allclose(sqeuc_compute, c_dist, atol=1e-5)
+            backend.testing.assert_allclose(sqeuc_compute, c_dist, atol=1e-5)
             assert backend.belongs_to_backend(sqeuc_compute)
 
 
@@ -522,12 +527,12 @@ def test_gak():
 def test_gamma_soft_dtw():
     for be in backends:
         for array_type in array_types:
+            backend = instantiate_backend(be, array_type)
             dataset = cast([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], array_type)
             gamma = tslearn.metrics.gamma_soft_dtw(
                 dataset=dataset, n_samples=200, random_state=0, be=be
             )
-            np.testing.assert_allclose(gamma, 8.0)
-            backend = instantiate_backend(be, array_type)
+            backend.testing.assert_allclose(gamma, 8.0)
             assert backend.belongs_to_backend(gamma)
 
 
@@ -544,26 +549,26 @@ def test_symmetric_cdist():
             dataset = rng.randn(5, 10, 2)
             dataset = cast(dataset, array_type)
             c_dist_dtw = tslearn.metrics.cdist_dtw(dataset, be=be)
-            np.testing.assert_allclose(
+            backend.testing.assert_allclose(
                 c_dist_dtw,
                 tslearn.metrics.cdist_dtw(dataset, dataset, be=be),
             )
             assert backend.belongs_to_backend(c_dist_dtw)
             c_dist_gak = tslearn.metrics.cdist_gak(dataset, be=be)
-            np.testing.assert_allclose(
+            backend.testing.assert_allclose(
                 c_dist_gak,
                 tslearn.metrics.cdist_gak(dataset, dataset, be=be),
                 atol=1e-5,
             )
             assert backend.belongs_to_backend(c_dist_gak)
             c_dist_soft_dtw = tslearn.metrics.cdist_soft_dtw(dataset, be=be)
-            np.testing.assert_allclose(
+            backend.testing.assert_allclose(
                 c_dist_soft_dtw,
                 tslearn.metrics.cdist_soft_dtw(dataset, dataset, be=be),
             )
             assert backend.belongs_to_backend(c_dist_soft_dtw)
             c_dist_soft_dtw_normalized = tslearn.metrics.cdist_soft_dtw_normalized(dataset, be=be)
-            np.testing.assert_allclose(
+            backend.testing.assert_allclose(
                 c_dist_soft_dtw_normalized,
                 tslearn.metrics.cdist_soft_dtw_normalized(dataset, dataset, be=be),
             )
@@ -573,15 +578,15 @@ def test_symmetric_cdist():
 def test_lb_keogh():
     for be in backends:
         for array_type in array_types:
+            backend = instantiate_backend(be, array_type)
             ts1 = cast([1, 2, 3, 2, 1], array_type)
             env_low, env_up = tslearn.metrics.lb_envelope(ts1, radius=1, be=be)
-            np.testing.assert_allclose(
+            backend.testing.assert_allclose(
                 env_low, np.array([[1.0], [1.0], [2.0], [1.0], [1.0]])
             )
-            np.testing.assert_allclose(
+            backend.testing.assert_allclose(
                 env_up, np.array([[2.0], [3.0], [3.0], [3.0], [2.0]])
             )
-            backend = instantiate_backend(be, array_type)
             assert backend.belongs_to_backend(env_low)
             assert backend.belongs_to_backend(env_up)
 
@@ -601,9 +606,9 @@ def test_dtw_path_from_metric():
             path, dist = tslearn.metrics.dtw_path_from_metric(
                 s1, s2, metric="sqeuclidean", be=be
             )
-            np.testing.assert_equal(path, path_ref)
+            backend.testing.assert_equal(path, path_ref)
             assert isinstance(path, list)
-            np.testing.assert_allclose(backend.sqrt(dist), dist_ref)
+            backend.testing.assert_allclose(backend.sqrt(dist), dist_ref)
             assert backend.belongs_to_backend(dist)
 
             # Test of defining a custom function
@@ -613,26 +618,30 @@ def test_dtw_path_from_metric():
             path, dist = tslearn.metrics.dtw_path_from_metric(
                 s1, s2, metric=sqeuclidean, be=be
             )
-            np.testing.assert_equal(path, path_ref)
+            backend.testing.assert_equal(path, path_ref)
             assert isinstance(path, list)
-            np.testing.assert_allclose(backend.sqrt(dist), dist_ref)
+            backend.testing.assert_allclose(backend.sqrt(dist), dist_ref)
             assert backend.belongs_to_backend(dist)
 
             # Test of precomputing the distance matrix
-            dist_matrix = cdist(s1, s2, metric="sqeuclidean")
+            dist_matrix = backend.cdist(
+                cast(s1, array_type=backend.backend_string),
+                cast(s2, array_type=backend.backend_string),
+                metric="sqeuclidean")
             dist_matrix = cast(dist_matrix, array_type)
             path, dist = tslearn.metrics.dtw_path_from_metric(
                 dist_matrix, metric="precomputed", be=be
             )
-            np.testing.assert_equal(path, path_ref)
+            backend.testing.assert_equal(path, path_ref)
             assert isinstance(path, list)
-            np.testing.assert_allclose(backend.sqrt(dist), dist_ref)
+            backend.testing.assert_allclose(backend.sqrt(dist), dist_ref)
             assert backend.belongs_to_backend(dist)
 
 
 def test_softdtw():
     for be in backends:
         for array_type in array_types:
+            backend = instantiate_backend(be, array_type)
             rng = np.random.RandomState(0)
             s1 = cast(rng.rand(10, 2), array_type)
             s2 = cast(rng.rand(30, 2), array_type)
@@ -640,7 +649,6 @@ def test_softdtw():
             # Use dtw_path as a reference
             path_ref, dist_ref = tslearn.metrics.dtw_path(s1, s2, be=be)
             assert isinstance(path_ref, list)
-            backend = instantiate_backend(be, array_type)
             assert backend.belongs_to_backend(dist_ref)
             mat_path_ref = np.zeros((10, 30))
             for i, j in path_ref:
@@ -651,8 +659,8 @@ def test_softdtw():
             assert backend.belongs_to_backend(matrix_path)
             assert backend.belongs_to_backend(dist)
 
-            np.testing.assert_equal(dist, dist_ref**2)
-            np.testing.assert_allclose(matrix_path, mat_path_ref)
+            backend.testing.assert_allclose(dist, dist_ref**2, atol=1e-6)
+            backend.testing.assert_allclose(matrix_path, mat_path_ref)
 
             ts1 = cast([[0.0]], array_type)
             ts2 = cast([[1.0]], array_type)

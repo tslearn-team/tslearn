@@ -3,7 +3,7 @@ from joblib import Parallel, delayed
 from numba import njit
 from sklearn.utils import check_random_state
 
-from tslearn.backend import instantiate_backend
+from tslearn.backend import cast, instantiate_backend
 from tslearn.utils import (
     check_equal_size,
     to_time_series,
@@ -51,7 +51,7 @@ def _gak(gram, be=None):
         Kernel value
     """
     be = instantiate_backend(be, gram)
-    gram = be.array(gram)
+    gram = cast(gram, array_type=be.backend_string)
     sz1, sz2 = be.shape(gram)
 
     cum_sum = be.zeros((sz1 + 1, sz2 + 1))
@@ -181,9 +181,7 @@ def unnormalized_gak(s1, s2, sigma=1.0, be=None):
     be = instantiate_backend(be, s1, s2)
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
-
     gram = _gak_gram(s1, s2, sigma=sigma, be=be)
-
     if be.is_numpy:
         return _njit_gak(gram)
     return _gak(gram, be=be)
@@ -238,8 +236,8 @@ def gak(s1, s2, sigma=1.0, be=None):  # TODO: better doc (formula for the kernel
     .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
     """
     be = instantiate_backend(be, s1, s2)
-    s1 = be.array(s1)
-    s2 = be.array(s2)
+    s1 = cast(s1, array_type=be.backend_string)
+    s2 = cast(s2, array_type=be.backend_string)
     denom = be.sqrt(
         unnormalized_gak(s1, s1, sigma=sigma, be=be)
         * unnormalized_gak(s2, s2, sigma=sigma, be=be)
@@ -556,8 +554,8 @@ def soft_dtw(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False):
        Time-Series," ICML 2017.
     """  # noqa: E501
     be = instantiate_backend(be, ts1, ts2)
-    ts1 = be.array(ts1)
-    ts2 = be.array(ts2)
+    ts1 = cast(ts1, array_type=be.backend_string)
+    ts2 = cast(ts2, array_type=be.backend_string)
     if gamma == 0.0:
         return dtw(ts1, ts2, be=be) ** 2
     return SoftDTW(
@@ -668,8 +666,8 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False)
        Time-Series," ICML 2017.
     """  # noqa: E501
     be = instantiate_backend(be, ts1, ts2)
-    ts1 = be.array(ts1)
-    ts2 = be.array(ts2)
+    ts1 = cast(ts1, array_type=be.backend_string)
+    ts2 = cast(ts2, array_type=be.backend_string)
     if gamma == 0.0:
         path, dist = dtw_path(ts1, ts2, be=be)
         dist_sq = dist**2
@@ -1004,16 +1002,15 @@ class SoftDTW:
         m, n = self.be.shape(self.D)
 
         if self.be.is_numpy:
-            _njit_soft_dtw(self.D, self.R_, gamma=self.gamma)
+            self.R_ = _njit_soft_dtw(self.D, gamma=self.gamma)
         elif not self.compute_with_backend:
-            _njit_soft_dtw(
+            self.R_ = _njit_soft_dtw(
                 self.be.to_numpy(self.D),
-                self.be.to_numpy(self.R_),
                 gamma=self.be.to_numpy(self.gamma),
             )
             self.R_ = self.be.array(self.R_)
         else:
-            _soft_dtw(self.D, self.R_, gamma=self.gamma, be=self.be)
+            self.R_ = _soft_dtw(self.D, gamma=self.gamma, be=self.be)
 
         self.computed = True
 
@@ -1037,23 +1034,17 @@ class SoftDTW:
         D = self.be.vstack((self.D, self.be.zeros(n)))
         D = self.be.hstack((D, self.be.zeros((m + 1, 1))))
 
-        # Allocate memory.
-        # We need +2 because we use indices starting from 1
-        # and to deal with edge cases in the recursion.
-        E = self.be.zeros((m + 2, n + 2), dtype=self.be.float64)
-
         if self.be.is_numpy:
-            _njit_soft_dtw_grad(D, self.R_, E, gamma=self.gamma)
+            E = _njit_soft_dtw_grad(D, self.R_, gamma=self.gamma)
         elif not self.compute_with_backend:
-            _njit_soft_dtw_grad(
+            E = _njit_soft_dtw_grad(
                 self.be.to_numpy(D),
                 self.be.to_numpy(self.R_),
-                self.be.to_numpy(E),
                 gamma=self.be.to_numpy(self.gamma),
             )
             self.R_ = self.be.array(self.R_)
         else:
-            _soft_dtw_grad(D, self.R_, E, gamma=self.gamma, be=self.be)
+            E = _soft_dtw_grad(D, self.R_, gamma=self.gamma, be=self.be)
 
         return E[1:-1, 1:-1]
 
@@ -1086,8 +1077,8 @@ class SquaredEuclidean:
         """
         self.be = instantiate_backend(be, X, Y)
         self.compute_with_backend = compute_with_backend
-        self.X = self.be.cast(to_time_series(X, be=be), dtype=self.be.float64)
-        self.Y = self.be.cast(to_time_series(Y, be=be), dtype=self.be.float64)
+        self.X = self.be.cast(to_time_series(X, be=self.be), dtype=self.be.float64)
+        self.Y = self.be.cast(to_time_series(Y, be=self.be), dtype=self.be.float64)
 
     def compute(self):
         """Compute distance matrix.
@@ -1114,21 +1105,18 @@ class SquaredEuclidean:
             Product with Jacobian.
             ([m x d, m x n] * [m x n] = [m x d]).
         """
-        G = self.be.zeros_like(self.X, dtype=self.be.float64)
-
         if self.be.is_numpy:
-            _njit_jacobian_product_sq_euc(self.X, self.Y, E.astype(np.float64), G)
+            G = _njit_jacobian_product_sq_euc(self.X, self.Y, E.astype(np.float64))
         elif not self.compute_with_backend:
-            _njit_jacobian_product_sq_euc(
+            G = _njit_jacobian_product_sq_euc(
                 self.be.to_numpy(self.X),
                 self.be.to_numpy(self.Y),
                 self.be.to_numpy(E).astype(np.float64),
-                self.be.to_numpy(G),
             )
             G = self.be.array(G)
         else:
-            _jacobian_product_sq_euc(
-                self.X, self.Y, self.be.cast(E, self.be.float64), G
+            G = _jacobian_product_sq_euc(
+                self.X, self.Y, self.be.cast(E, self.be.float64), be=self.be,
             )
 
         return G

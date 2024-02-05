@@ -137,4 +137,8 @@ def cast(data, array_type="numpy"):
     if array_type == "list":
         return data.tolist()
     be = Backend(array_type)
+    backends_str = ["numpy", "jax", "torch"]
+    for backend_str in backends_str:
+        if backend_str in data_type_str:
+            data = data.tolist()
     return be.array(data)

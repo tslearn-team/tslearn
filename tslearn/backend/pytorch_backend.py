@@ -131,13 +131,19 @@ else:
             return self.array(x, dtype=dtype)
 
         @staticmethod
-        def cdist(x, y, metric="euclidean", p=None):
+        def cdist(x, y, metric="euclidean", p=2):
             if metric == "euclidean":
                 return _torch.cdist(x, y)
             if metric == "sqeuclidean":
                 return _torch.cdist(x, y) ** 2
             if metric == "minkowski":
                 return _torch.cdist(x, y, p=p)
+            if callable(metric):
+                distance_matrix = _torch.zeros(x.shape[0], y.shape[0])
+                for i in range(x.shape[0]):
+                    for j in range(y.shape[0]):
+                        distance_matrix[i, j] = metric(x[i, ...], y[j, ...])
+                return distance_matrix
             raise ValueError(f"Metric {metric} not implemented in PyTorch backend.")
 
         @staticmethod
@@ -189,13 +195,20 @@ else:
             raise ValueError(f"Metric {metric} not implemented in PyTorch backend.")
 
         @staticmethod
-        def pdist(x, metric="euclidean", p=None):
+        def pdist(x, metric="euclidean", p=2):
             if metric == "euclidean":
                 return _torch.pdist(x)
             if metric == "sqeuclidean":
                 return _torch.pdist(x) ** 2
             if metric == "minkowski":
                 return _torch.pdist(x, p=p)
+            if callable(metric):
+                n = x.shape[0]
+                distances = _torch.zeros((n * (n - 1)) // 2)
+                for i in range(n):
+                    for j in range(i + 1, n):
+                        distances[n * i + j - ((i + 2) * (i + 1)) // 2] = metric(x[i, ...], x[j, ...])
+                return distances
             raise ValueError(f"Metric {metric} not implemented in PyTorch backend.")
 
         def shape(self, data):
@@ -261,5 +274,5 @@ else:
 
     class PyTorchTesting:
         def __init__(self):
-            self.assert_allclose = _torch.allclose
-            self.assert_equal = _torch.testing.assert_close
+            self.assert_allclose = _np.testing.assert_allclose
+            self.assert_equal = _np.testing.assert_equal
