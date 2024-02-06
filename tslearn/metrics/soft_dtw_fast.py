@@ -246,6 +246,11 @@ def _njit_soft_dtw_grad(D, R, gamma):
     """
     m, n = D.shape
 
+    # Add an extra row and an extra column to D.
+    # Needed to deal with edge cases in the recursion.
+    D = np.vstack((D, np.zeros((1, n))))
+    D = np.hstack((D, np.zeros((m + 1, 1))))
+
     # Initialization.
     D[:m - 1, n - 1] = 0
     D[m - 1, :n - 1] = 0
@@ -292,6 +297,11 @@ def _soft_dtw_grad(D, R, gamma, be=None):
     be = instantiate_backend(be, D, R)
 
     m, n = D.shape
+
+    # Add an extra row and an extra column to D.
+    # Needed to deal with edge cases in the recursion.
+    D = be.vstack((D, be.zeros((1, n))))
+    D = be.hstack((D, be.zeros((m + 1, 1))))
 
     # Initialization.
     D[:m - 1, n - 1] = 0

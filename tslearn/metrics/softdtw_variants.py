@@ -970,11 +970,10 @@ class SoftDTW:
 
         Attributes
         ----------
-        self.R_: array-like, shape =(m + 2, n + 2)
+        self.R_: array-like, shape=(m + 2, n + 2)
             Accumulated cost matrix (stored after calling `compute`).
         """
-        be = instantiate_backend(be, D)
-        self.be = be
+        self.be = instantiate_backend(be, D)
         self.compute_with_backend = compute_with_backend
         if hasattr(D, "compute"):
             self.D = D.compute()
@@ -1027,24 +1026,17 @@ class SoftDTW:
         if not self.computed:
             raise ValueError("Needs to call compute() first.")
 
-        m, n = self.be.shape(self.D)
-
-        # Add an extra row and an extra column to D.
-        # Needed to deal with edge cases in the recursion.
-        D = self.be.vstack((self.D, self.be.zeros(n)))
-        D = self.be.hstack((D, self.be.zeros((m + 1, 1))))
-
         if self.be.is_numpy:
-            E = _njit_soft_dtw_grad(D, self.R_, gamma=self.gamma)
+            E = _njit_soft_dtw_grad(self.D, self.R_, gamma=self.gamma)
         elif not self.compute_with_backend:
             E = _njit_soft_dtw_grad(
-                self.be.to_numpy(D),
+                self.be.to_numpy(self.D),
                 self.be.to_numpy(self.R_),
                 gamma=self.be.to_numpy(self.gamma),
             )
             self.R_ = self.be.array(self.R_)
         else:
-            E = _soft_dtw_grad(D, self.R_, gamma=self.gamma, be=self.be)
+            E = _soft_dtw_grad(self.D, self.R_, gamma=self.gamma, be=self.be)
 
         return E[1:-1, 1:-1]
 
