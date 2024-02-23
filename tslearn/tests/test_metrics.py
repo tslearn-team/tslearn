@@ -31,6 +31,10 @@ try:
 except ImportError:
     HAS_TORCH = False
 
+def test_backends_installation():
+    assert HAS_TORCH
+    assert HAS_JAX
+
 
 def test_dtw():
     for be in backends:
