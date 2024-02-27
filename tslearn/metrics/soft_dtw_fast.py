@@ -252,15 +252,12 @@ def _njit_soft_dtw_grad(D, R, gamma):
     D = np.hstack((D, np.zeros((m + 1, 1))))
 
     # Initialization.
-    D[:m, n] = 0
-    D[m, :n] = 0
     R[1 : m + 1, n + 1] = - DBL_MAX
     R[m + 1, 1 : n + 1] = - DBL_MAX
+    R[m + 1, n + 1] = R[m, n]
 
     E = np.zeros((m + 2, n + 2), dtype=np.float64)
     E[m + 1, n + 1] = 1
-    R[m + 1, n + 1] = R[m, n]
-    D[m, n] = 0
 
     for j in range(n, 0, -1):  # ranges from n to 1
         for i in range(m, 0, -1):  # ranges from m to 1
@@ -304,15 +301,12 @@ def _soft_dtw_grad(D, R, gamma, be=None):
     D = be.hstack((D, be.zeros((m + 1, 1))))
 
     # Initialization.
-    D[:m, n] = 0
-    D[m, :n] = 0
     R[1 : m + 1, n + 1] = - be.dbl_max
     R[m + 1, 1 : n + 1] = - be.dbl_max
+    R[m + 1, n + 1] = R[m, n]
 
     E = be.zeros((m + 2, n + 2), dtype=be.float64)
     E[m + 1, n + 1] = 1
-    R[m + 1, n + 1] = R[m, n]
-    D[m, n] = 0
 
     for j in range(n, 0, -1):  # ranges from n to 1
         for i in range(m, 0, -1):  # ranges from m to 1
