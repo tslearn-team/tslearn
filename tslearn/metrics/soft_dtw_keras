@@ -75,6 +75,7 @@ else:
         return -gamma * (K.log(tmp) + max_val)
     
     
+    @tf.custom_gradient
     def soft_dtw(D, gamma):
         """Compute soft dynamic time warping.
     
@@ -96,7 +97,7 @@ else:
         dbl_max = K.constant(DBL_MAX)[None, None, None]
     
         R[0, 0] = K.constant(0)[None, None, None]
-        
+    
         # DP recursion.
         for i in range(1, m + 1):
             for j in range(1, n + 1):
@@ -108,7 +109,52 @@ else:
                     gamma=gamma
                 )
         
-        return R[-2, -2]
+        def grad(upstream):
+            D_ = np.zeros((m, n), dtype=object)
+            R_ = np.zeros((m + 2, n + 2), dtype=object)
+            E_ = np.zeros((m + 2, n + 2), dtype=object)
+            
+            for i in range(m):
+                for j in range(n):
+                    D_[i, j] = D[:, i, j]
+    
+            
+            for i in range(m+2):
+                for j in range(n+2):
+                    R_[i, j] = R[i, j]
+            
+            m_ = m - 1
+            n_ = n - 1
+    
+            # Initialization.
+            D_[:m_, n_] = 0
+            D_[m_, :n_] = 0
+            for i in range(1, m_ + 1):
+                R_[i, n_ + 1] = -dbl_max
+            for i in range(1, n_ + 1):
+                R_[m_ + 1, i] = -dbl_max
+    
+            E_[m_ + 1, n_ + 1] = 1
+            R_[m_ + 1, n_ + 1] = R[m_, n_]
+            D_[m_, n_] = 0
+    
+            for j in range(n_, 0, -1):  # ranges from n to 1
+                for i in range(m_, 0, -1):  # ranges from m to 1
+                    a = K.exp((R_[i + 1, j] - R_[i, j] - D_[i, j - 1]) / gamma)
+                    b = K.exp((R_[i, j + 1] - R_[i, j] - D_[i - 1, j]) / gamma)
+                    c = K.exp((R_[i + 1, j + 1] - R_[i, j] - D_[i, j]) / gamma)
+                    E_[i, j] = E_[i + 1, j] * a + E_[i, j + 1] * b + E_[i + 1, j + 1] * c
+    
+            ll = list(E_[1 : m + 1, 1 : n + 1].flatten())
+            for i in range(len(ll)):
+                if isinstance(ll[i], int):
+                    ll[i] = K.constant(ll[i])[None, None, None]
+    
+            E_T = layers.Reshape((m, n), name="dtw_grad_reshape")(inputs=layers.Concatenate()(inputs=ll))
+    
+            return upstream[:, None, None] * E_T, None
+        
+        return R[-2, -2], grad
     
     class SoftDTWLossTF(tf.keras.losses.Loss):
         def __init__(self, gamma=1.0, normalize=False, dist_func=None):
