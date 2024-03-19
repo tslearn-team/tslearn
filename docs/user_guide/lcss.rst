@@ -21,10 +21,6 @@ shapes `(n, d)` and `(m, d)` and LCSS can be computed using the following code:
     path, lcss_score = lcss_path(x, y)
 
 
-This is the algorithm at stake when invoking
-:class:`tslearn.clustering.TimeSeriesKMeans` with
-``metric="lcss"``.
-
 Problem
 --------------------
 
