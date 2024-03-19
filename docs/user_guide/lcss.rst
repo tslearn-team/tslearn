@@ -43,6 +43,9 @@ is the matching threshold.
 Here, a path can be seen as the parts of the time series where the Euclidean
 distance between them does not exceed a given threshold, i.e., they are close/similar.
 
+To retrieve a meaningful similarity value from the length of the longest common subsequence,
+the percentage of that value regarding the length of the shortest time series is returned.
+
 Algorithmic solution
 --------------------
 
@@ -89,12 +92,12 @@ Properties
 
 The Longest Common Subsequence holds the following properties:
 
-* :math:`\forall x, y, LCSS(x, y) \geq 0`
+* :math:`\forall x, y, LCSS(x, y) \in \left[0, 1\right]`
 * :math:`\forall x, y, LCSS(x, y) = LCSS(y, x)`
-* :math:`\forall x, LCSS(x, x) = 0`
+* :math:`\forall x, LCSS(x, x) = 1`
 
-However, mathematically speaking, LCSS is not a valid measure since it does
-not satisfy the triangular inequality.
+The values returned by LCSS range from 0 to 1,
+the value 1 being taken when the two time series completely match.
 
 Additional constraints
 ----------------------
