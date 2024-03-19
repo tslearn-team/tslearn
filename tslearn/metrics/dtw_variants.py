@@ -2668,8 +2668,11 @@ def lcss_path(
     LCSS is computed by matching indexes that are met up until the eps
     threshold, so it leaves some points unmatched and focuses on the
     similar parts of two sequences. The matching can occur even if the
-    time indexes are different, which can be regulated through the sakoe
-    chiba radius parameter that defines how far it can go.
+    time indexes are different. One can set additional constraints to
+    the set of acceptable paths: the Sakoe-Chiba band which is parametrized
+    by a radius or the Itakura parallelogram which is parametrized by a
+    maximum slope. Both these constraints consists in forcing paths to lie
+    close to the diagonal.
 
     To retrieve a meaningful similarity value from the length of the
     longest common subsequence, the percentage of that value regarding
