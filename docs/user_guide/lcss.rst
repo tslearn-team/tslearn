@@ -24,17 +24,15 @@ shapes `(n, d)` and `(m, d)` and LCSS can be computed using the following code:
 Problem
 --------------------
 
-The similarity :math:`S` between :math:`x` and :math:`y`, given a positive real number :math:`\epsilon` and
-an integer :math:`\delta`, is formulated as follows:
+The similarity :math:`S` between :math:`x` and :math:`y`,
+given a positive real number :math:`\epsilon`, is formulated as follows:
 
 .. math::
 
-    S(x, y, \epsilon, \delta) = \frac{LCSS_{(\epsilon, \delta) (x, y)}}{\min(n, m)}
+    S(x, y, \epsilon) = \frac{LCSS_{\epsilon} (x, y)}{\min(n, m)}
 
 
-The constant :math:`\delta` controls how far in time we can go in order to match a given
-point from one time-series to a point in another time-series. The constant :math:`\epsilon`
-is the matching threshold.
+The constant :math:`\epsilon` is the matching threshold.
 
 Here, a path can be seen as the parts of the time series where the Euclidean
 distance between them does not exceed a given threshold, i.e., they are close/similar.
@@ -61,7 +59,7 @@ simplicity):
        # Main loop
        for i = 1..n
             for j = 1..m
-                if dist(x_i, x_j) <= epsilon and abs(j - i) <= delta:
+                if dist(x_i, x_j) <= epsilon:
                     C[i, j] = C[i-1, j-1] + 1
                 else:
                     C[i, j] = max(C[i, j-1], C[i-1, j])
@@ -120,6 +118,10 @@ The corresponding code would be:
     from tslearn.metrics import lcss
     cost = lcss(x, y, global_constraint="sakoe_chiba", sakoe_chiba_radius=3)
 
+
+The Sakoe-Chiba band corresponds to the constant :math:`\delta` mentioned in [1]_,
+it controls how far in time we can go in order to match a given
+point from one time-series to a point in another time-series.
 
 Second, the Itakura parallelogram sets a maximum slope :math:`s` for alignment
 paths, which leads to a parallelogram-shaped constraint:
