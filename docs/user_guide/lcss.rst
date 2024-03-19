@@ -28,8 +28,8 @@ This is the algorithm at stake when invoking
 Problem
 --------------------
 
-The similarity S between :math:`x` and :math:`y`, given an integer :math:`\epsilon` and
-a real number :math:`\delta`, is formulated as follows:
+The similarity :math:`S` between :math:`x` and :math:`y`, given a positive real number :math:`\epsilon` and
+an integer :math:`\delta`, is formulated as follows:
 
 .. math::
 
