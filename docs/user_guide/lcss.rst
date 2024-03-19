@@ -119,7 +119,7 @@ The corresponding code would be:
     cost = lcss(x, y, global_constraint="sakoe_chiba", sakoe_chiba_radius=3)
 
 
-The Sakoe-Chiba band corresponds to the constant :math:`\delta` mentioned in [1]_,
+The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [1]_,
 it controls how far in time we can go in order to match a given
 point from one time-series to a point in another time-series.
 
