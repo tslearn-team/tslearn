@@ -121,7 +121,7 @@ The corresponding code would be:
 
 The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [1]_,
 it controls how far in time we can go in order to match a given
-point from one time-series to a point in another time-series.
+point from one time series to a point in another time series.
 
 Second, the Itakura parallelogram sets a maximum slope :math:`s` for alignment
 paths, which leads to a parallelogram-shaped constraint:

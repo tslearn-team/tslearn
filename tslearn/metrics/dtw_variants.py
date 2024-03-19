@@ -324,7 +324,7 @@ def dtw_path(
         Radius to be used for Sakoe-Chiba band global constraint.
         The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [1]_,
         it controls how far in time we can go in order to match a given
-        point from one time-series to a point in another time-series.
+        point from one time series to a point in another time series.
         If None and `global_constraint` is set to "sakoe_chiba", a radius of
         1 is used.
         If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
@@ -537,7 +537,7 @@ def dtw_path_from_metric(
         Radius to be used for Sakoe-Chiba band global constraint.
         The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [1]_,
         it controls how far in time we can go in order to match a given
-        point from one time-series to a point in another time-series.
+        point from one time series to a point in another time series.
         If None and `global_constraint` is set to "sakoe_chiba", a radius of
         1 is used.
         If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
@@ -704,7 +704,7 @@ def dtw(
         Radius to be used for Sakoe-Chiba band global constraint.
         The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [1]_,
         it controls how far in time we can go in order to match a given
-        point from one time-series to a point in another time-series.
+        point from one time series to a point in another time series.
         If None and `global_constraint` is set to "sakoe_chiba", a radius of
         1 is used.
         If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
@@ -1762,7 +1762,7 @@ def compute_mask(
         Radius to be used for Sakoe-Chiba band global constraint.
         The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [1]_,
         it controls how far in time we can go in order to match a given
-        point from one time-series to a point in another time-series.
+        point from one time series to a point in another time series.
         If None and `global_constraint` is set to 2 (sakoe-chiba), a radius of
         1 is used.
         If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
@@ -1879,7 +1879,7 @@ def cdist_dtw(
         Radius to be used for Sakoe-Chiba band global constraint.
         The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [1]_,
         it controls how far in time we can go in order to match a given
-        point from one time-series to a point in another time-series.
+        point from one time series to a point in another time series.
         If None and `global_constraint` is set to "sakoe_chiba", a radius of
         1 is used.
         If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
@@ -1968,9 +1968,9 @@ def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
     Parameters
     ----------
     ts_query : array-like, shape=(sz1, 1) or (sz1,)
-        Univariate query time-series to compare to the envelope of the candidate.
+        Univariate query time series to compare to the envelope of the candidate.
     ts_candidate : None or array-like, shape=(sz2, 1) or (sz2,) (default: None)
-        Univariate candidate time-series. None means the envelope is provided via
+        Univariate candidate time series. None means the envelope is provided via
         `envelope_candidate` parameter and hence does not
         need to be computed again.
     radius : int (default: 1)
@@ -2040,12 +2040,12 @@ def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
 
 @njit()
 def _njit_lb_envelope(time_series, radius):
-    """Compute time-series envelope as required by LB_Keogh.
+    """Compute time series envelope as required by LB_Keogh.
 
     Parameters
     ----------
     time_series : array-like, shape=(sz, d)
-        Time-series for which the envelope should be computed.
+        Time series for which the envelope should be computed.
     radius : int
         Radius to be used for the envelope generation (the envelope at time
         index i will be generated based on all observations from the time series
@@ -2077,12 +2077,12 @@ def _njit_lb_envelope(time_series, radius):
 
 
 def _lb_envelope(time_series, radius, be=None):
-    """Compute time-series envelope as required by LB_Keogh.
+    """Compute time series envelope as required by LB_Keogh.
 
     Parameters
     ----------
     time_series : array-like, shape=(sz, d)
-        Time-series for which the envelope should be computed.
+        Time series for which the envelope should be computed.
     radius : int
         Radius to be used for the envelope generation (the envelope at time
         index i will be generated based on all observations from the time series
@@ -2123,14 +2123,14 @@ def _lb_envelope(time_series, radius, be=None):
 
 
 def lb_envelope(ts, radius=1, be=None):
-    r"""Compute time-series envelope as required by LB_Keogh.
+    r"""Compute time series envelope as required by LB_Keogh.
 
     LB_Keogh was originally presented in [1]_.
 
     Parameters
     ----------
     ts : array-like, shape=(sz, d) or (sz,)
-        Time-series for which the envelope should be computed.
+        Time series for which the envelope should be computed.
         If shape is (sz,), the time series is assumed to be univariate.
     radius : int (default: 1)
         Radius to be used for the envelope generation (the envelope at time
@@ -2387,7 +2387,7 @@ def lcss(
         Radius to be used for Sakoe-Chiba band global constraint.
         The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [1]_,
         it controls how far in time we can go in order to match a given
-        point from one time-series to a point in another time-series.
+        point from one time series to a point in another time series.
         If None and `global_constraint` is set to "sakoe_chiba", a radius of
         1 is used.
         If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
@@ -2700,7 +2700,7 @@ def lcss_path(
         Radius to be used for Sakoe-Chiba band global constraint.
         The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [1]_,
         it controls how far in time we can go in order to match a given
-        point from one time-series to a point in another time-series.
+        point from one time series to a point in another time series.
         If None and `global_constraint` is set to "sakoe_chiba", a radius of
         1 is used.
         If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
@@ -2875,7 +2875,7 @@ def lcss_path_from_metric(
     (possibly multidimensional) time series using a distance metric defined by
     the user and return both the path and the similarity.
 
-    Having the length of the longest commom subsequence between two time-series,
+    Having the length of the longest commom subsequence between two time series,
     the similarity is computed as the percentage of that value regarding the
     length of the shortest time series.
 
@@ -2914,7 +2914,7 @@ def lcss_path_from_metric(
         Radius to be used for Sakoe-Chiba band global constraint.
         The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [1]_,
         it controls how far in time we can go in order to match a given
-        point from one time-series to a point in another time-series.
+        point from one time series to a point in another time series.
         If None and `global_constraint` is set to "sakoe_chiba", a radius of
         1 is used.
         If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
