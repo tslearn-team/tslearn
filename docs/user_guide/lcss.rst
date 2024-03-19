@@ -67,7 +67,7 @@ simplicity):
                 else:
                     C[i, j] = max(C[i, j-1], C[i-1, j])
 
-       return C[n, m]
+       return C[n, m] / min(n, m)
 
 
 Using a different ground metric
