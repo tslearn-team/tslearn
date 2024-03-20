@@ -135,7 +135,7 @@ If you use `tslearn` in a scientific publication, we would appreciate citations:
   volume  = {21},
   number  = {118},
   pages   = {1-6},
-  url     = {http://jmlr.org/papers/v21/20-091.html}
+  url     = {https://www.jmlr.org/papers/v21/20-091.html}
 }
 ```
 
