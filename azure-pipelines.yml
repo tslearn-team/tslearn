@@ -10,8 +10,8 @@ jobs:
     vmImage: 'ubuntu-latest'
   strategy:
     matrix:
-      Python38:
-        python.version: '3.8'
+      # Python38:
+      #   python.version: '3.8'
       Python39:
         python.version: '3.9'
   variables:
@@ -42,8 +42,7 @@ jobs:
       set -xe
       python -m pip install pytest pytest-azurepipelines
       python -m pip install scikit-learn==1.2
-      python -m pip install tensorflow==2.9.0
-      python -m pytest -v tslearn/ --doctest-modules
+      export KERAS_BACKEND="torch" && python -m pytest -v tslearn/ --doctest-modules
     displayName: 'Test'
 
 - job: 'linux_without_torch'
@@ -80,9 +79,7 @@ jobs:
   - script: |
       set -xe
       python -m pip install pytest pytest-azurepipelines
-      python -m pip install scikit-learn==1.2
-      python -m pip install tensorflow==2.9.0
-      python -m pytest -v tslearn/ --doctest-modules -k 'not tslearn.metrics.softdtw_variants.soft_dtw and not tslearn.metrics.softdtw_variants.cdist_soft_dtw and not tslearn.metrics.dtw_variants.dtw or tslearn.metrics.dtw_variants.dtw_'
+      python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/shapelets/ -k 'not tslearn.metrics.softdtw_variants.soft_dtw and not tslearn.metrics.softdtw_variants.cdist_soft_dtw and not tslearn.metrics.dtw_variants.dtw or tslearn.metrics.dtw_variants.dtw_'
     displayName: 'Test'
 
 
@@ -124,8 +121,7 @@ jobs:
       python -m pip install coverage pytest-cov
       python -m pip install cesium pandas stumpy
       python -m pip install scikit-learn==1.2
-      python -m pip install tensorflow==2.9.0
-      python -m pytest -v tslearn/ --doctest-modules --cov=tslearn
+      export KERAS_BACKEND="torch" && python -m pytest -v tslearn/ --doctest-modules --cov=tslearn
     displayName: 'Test'
 
   # Upload coverage to codecov.io
@@ -139,8 +135,8 @@ jobs:
     vmImage: 'macOS-12'
   strategy:
     matrix:
-      Python38:
-        python.version: '3.8'
+      # Python38:
+      #   python.version: '3.8'
       Python39:
         python.version: '3.9'
       Python310:
@@ -176,8 +172,7 @@ jobs:
       set -xe
       python -m pip install pytest pytest-azurepipelines
       python -m pip install scikit-learn==1.2
-      python -m pip install tensorflow==2.9.0
-      python -m pytest -v tslearn/ --doctest-modules -k 'not test_all_estimators'
+      export KERAS_BACKEND="torch" && python -m pytest -v tslearn/ --doctest-modules -k 'not test_all_estimators'
     displayName: 'Test'
 
 
@@ -186,9 +181,9 @@ jobs:
     vmImage: 'windows-latest'
   strategy:
     matrix:
-      Python38:
-        python_ver: '38'
-        python.version: '3.8'
+      # Python38:
+      #   python_ver: '38'
+      #   python.version: '3.8'
       Python39:
         python_ver: '39'
         python.version: '3.9'
@@ -219,6 +214,5 @@ jobs:
   - script: |
       python -m pip install pytest pytest-azurepipelines
       python -m pip install scikit-learn==1.2
-      python -m pip install tensorflow==2.9.0
-      python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/tests/test_estimators.py --ignore tslearn/utils/cast.py
+      set KERAS_BACKEND=torch && python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/tests/test_estimators.py --ignore tslearn/utils/cast.py
     displayName: 'Test'
