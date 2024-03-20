@@ -17,7 +17,7 @@ try:
     from sklearn.utils.estimator_checks import _NotAnArray as NotAnArray
 except ImportError:  # Old sklearn versions
     from sklearn.utils.estimator_checks import NotAnArray
-from tslearn.backend import instantiate_backend
+from tslearn.backend import cast, instantiate_backend
 from tslearn.bases import TimeSeriesBaseEstimator
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
@@ -156,7 +156,7 @@ def to_time_series(ts, remove_nans=False, be=None):
     to_time_series_dataset : Transforms a dataset of time series
     """
     be = instantiate_backend(be, ts)
-    ts_out = be.array(ts)
+    ts_out = cast(ts, array_type=be.backend_string)
     if ts_out.ndim <= 1:
         ts_out = be.reshape(ts_out, (-1, 1))
     if not be.is_float(ts_out):
@@ -219,7 +219,7 @@ def to_time_series_dataset(dataset, dtype=float, be=None):
         return to_time_series_dataset(be.array(dataset), be=be)
     if len(dataset) == 0:
         return be.zeros((0, 0, 0))
-    if be.ndim(be.array(dataset[0])) == 0:
+    if be.ndim(cast(dataset[0], array_type=be.backend_string)) == 0:
         dataset = [dataset]
     n_ts = len(dataset)
     max_sz = max(
