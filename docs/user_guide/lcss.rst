@@ -21,27 +21,24 @@ shapes `(n, d)` and `(m, d)` and LCSS can be computed using the following code:
     path, lcss_score = lcss_path(x, y)
 
 
-This is the algorithm at stake when invoking
-:class:`tslearn.clustering.TimeSeriesKMeans` with
-``metric="lcss"``.
-
 Problem
 --------------------
 
-The similarity S between :math:`x` and :math:`y`, given an integer :math `\epsilon` and
-a real number :math `\delta`, is formulated as follows:
+The similarity :math:`S` between :math:`x` and :math:`y`,
+given a positive real number :math:`\epsilon`, is formulated as follows:
 
 .. math::
 
-    S(x, y, \epsilon, \delta) = \frac{LCSS_{(\epsilon, \delta) (x, y)}}{\min(n, m)}
+    S(x, y, \epsilon) = \frac{LCSS_{\epsilon} (x, y)}{\min(n, m)}
 
 
-The constant :math:`\delta` controls how far in time we can go in order to match a given
-point from one time-series to a point in another time-series. The constant :math:`\epsilon`
-is the matching threshold.
+The constant :math:`\epsilon` is the matching threshold.
 
 Here, a path can be seen as the parts of the time series where the Euclidean
 distance between them does not exceed a given threshold, i.e., they are close/similar.
+
+To retrieve a meaningful similarity value from the length of the longest common subsequence,
+the percentage of that value regarding the length of the shortest time series is returned.
 
 Algorithmic solution
 --------------------
@@ -62,12 +59,12 @@ simplicity):
        # Main loop
        for i = 1..n
             for j = 1..m
-                if dist(x_i, x_j) <= epsilon and abs(j - i) <= delta:
+                if dist(x_i, x_j) <= epsilon:
                     C[i, j] = C[i-1, j-1] + 1
                 else:
                     C[i, j] = max(C[i, j-1], C[i-1, j])
 
-       return C[n, m]
+       return C[n, m] / min(n, m)
 
 
 Using a different ground metric
@@ -89,12 +86,12 @@ Properties
 
 The Longest Common Subsequence holds the following properties:
 
-* :math:`\forall x, y, LCSS(x, y) \geq 0`
+* :math:`\forall x, y, LCSS(x, y) \in \left[0, 1\right]`
 * :math:`\forall x, y, LCSS(x, y) = LCSS(y, x)`
-* :math:`\forall x, LCSS(x, x) = 0`
+* :math:`\forall x, LCSS(x, x) = 1`
 
-However, mathematically speaking, LCSS is not a valid measure since it does
-not satisfy the triangular inequality.
+The values returned by LCSS range from 0 to 1,
+the value 1 being taken when the two time series completely match.
 
 Additional constraints
 ----------------------
@@ -121,6 +118,10 @@ The corresponding code would be:
     from tslearn.metrics import lcss
     cost = lcss(x, y, global_constraint="sakoe_chiba", sakoe_chiba_radius=3)
 
+
+The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [1]_,
+it controls how far in time we can go in order to match a given
+point from one time series to a point in another time series.
 
 Second, the Itakura parallelogram sets a maximum slope :math:`s` for alignment
 paths, which leads to a parallelogram-shaped constraint:
