@@ -54,7 +54,7 @@ def _gak(gram, be=None):
     gram = be.array(gram)
     sz1, sz2 = be.shape(gram)
 
-    cum_sum = be.zeros((sz1 + 1, sz2 + 1))
+    cum_sum = be.zeros((sz1 + 1, sz2 + 1), dtype=gram.dtype)
     cum_sum[0, 0] = 1.0
 
     for i in range(sz1):
