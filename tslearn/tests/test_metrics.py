@@ -446,6 +446,11 @@ def test_gak():
         for array_type in array_types:
             backend = instantiate_backend(be, array_type)
             # GAK
+            gak_zeros = tslearn.metrics.gak(
+                s1=backend.zeros(405, dtype=backend.float64),
+                s2=backend.zeros(405, dtype=backend.float64),
+                sigma=1.0)
+            np.testing.assert_allclose(gak_zeros, desired=1, atol=1e-8)
             g = tslearn.metrics.cdist_gak(
                 cast([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], array_type), sigma=2.0, be=be
             )
