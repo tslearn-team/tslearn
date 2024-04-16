@@ -89,7 +89,8 @@ def _cdist_generic(
                 delayed(dist_fun)(dataset1[i], dataset1[j], *args, **kwargs)
                 for i in range(len(dataset1))
                 for j in range(i if compute_diagonal else i + 1, len(dataset1))
-            )
+            ),
+            dtype=matrix.dtype
         )
 
         indices = be.tril_indices(len(dataset1), k=-1, m=len(dataset1))
