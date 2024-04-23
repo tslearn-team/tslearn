@@ -70,7 +70,7 @@ Note that the function ``gak`` is normalized in ``tslearn``: it corresponds to t
 
     \text{gak}(\mathbf{x}, \mathbf{y}) = \frac{k(\mathbf{x}, \mathbf{y})}{\sqrt{k(\mathbf{x}, \mathbf{x})k(\mathbf{y}, \mathbf{y})}}
 
-to ensure that :math:`\text{gak}(\mathbf{x}, \mathbf{x})=1` for all :math:`\mathbf{x}`
+This normalization ensures that :math:`\text{gak}(\mathbf{x}, \mathbf{x})=1` for all :math:`\mathbf{x}`
 and :math:`\text{gak}(\mathbf{x}, \mathbf{y}) \in [0, 1]` for all :math:`\mathbf{x}, \mathbf{y}`.
 
 It is advised in [1]_ to set the bandwidth :math:`\sigma` as a multiple of a
