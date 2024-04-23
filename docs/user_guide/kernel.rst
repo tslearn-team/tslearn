@@ -52,7 +52,7 @@ Global Alignment Kernel
 The Global Alignment Kernel (GAK) is a kernel that operates on time
 series.
 
-It is defined, for a given bandwidth :math:`\sigma`, as:
+The unnormalized GAK is defined, for a given bandwidth :math:`\sigma`, as:
 
 .. math::
 
@@ -63,6 +63,15 @@ It is defined, for a given bandwidth :math:`\sigma`, as:
 
 where :math:`\mathcal{A}(\mathbf{x}, \mathbf{y})` is the set of all possible
 alignments between series :math:`\mathbf{x}` and :math:`\mathbf{y}`.
+
+Note that the function ``gak`` is normalized in ``tslearn``: it corresponds to the quotient
+
+.. math::
+
+    \text{gak}(\mathbf{x}, \mathbf{y}) = \frac{k(\mathbf{x}, \mathbf{y})}{\sqrt{k(\mathbf{x}, \mathbf{x})k(\mathbf{y}, \mathbf{y})}}
+
+to ensure that :math:`\text{gak}(\mathbf{x}, \mathbf{x})=1` for all :math:`\mathbf{x}`
+and :math:`\text{gak}(\mathbf{x}, \mathbf{y}) \in [0, 1]` for all :math:`\mathbf{x}, \mathbf{y}`.
 
 It is advised in [1]_ to set the bandwidth :math:`\sigma` as a multiple of a
 simple estimate of the median distance of different points observed in
@@ -81,7 +90,7 @@ This estimate is made available in ``tslearn`` through
 Note however that, on long time series, this estimate can lead to numerical
 overflows, which smaller values can avoid.
 
-Finally, GAK is related to :ref:`softDTW <dtw-softdtw>` [3]_ through the
+Finally, the unnormalized GAK is related to :ref:`softDTW <dtw-softdtw>` [3]_ through the
 following formula:
 
 .. math::
