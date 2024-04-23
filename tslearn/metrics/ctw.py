@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.cross_decomposition import CCA
 
-from tslearn.backend import instantiate_backend
+from tslearn.backend import cast, instantiate_backend
 
 from ..utils import to_time_series
 from .dtw_variants import dtw_path
@@ -283,8 +283,10 @@ def ctw(
        human behavior". NIPS 2009.
     """
     be = instantiate_backend(be, s1, s2)
-    s1 = be.array(s1)
-    s2 = be.array(s2)
+    # s1 = be.array(s1)
+    # s2 = be.array(s2)
+    s1 = cast(s1, array_type=be.backend_string)
+    s2 = cast(s2, array_type=be.backend_string)
     return ctw_path(
         s1=s1,
         s2=s2,

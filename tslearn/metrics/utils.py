@@ -75,7 +75,6 @@ def _cdist_generic(
     """  # noqa: E501
     be = instantiate_backend(be, dataset1, dataset2)
     dataset1 = to_time_series_dataset(dataset1, dtype=dtype, be=be)
-
     if dataset2 is None:
         # Inspired from code by @GillesVandewiele:
         # https://github.com/rtavenar/tslearn/pull/128#discussion_r314978479
@@ -83,7 +82,6 @@ def _cdist_generic(
         indices = be.triu_indices(
             len(dataset1), k=0 if compute_diagonal else 1, m=len(dataset1)
         )
-
         matrix[indices] = be.array(
             Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
                 delayed(dist_fun)(dataset1[i], dataset1[j], *args, **kwargs)
@@ -91,10 +89,8 @@ def _cdist_generic(
                 for j in range(i if compute_diagonal else i + 1, len(dataset1))
             )
         )
-
         indices = be.tril_indices(len(dataset1), k=-1, m=len(dataset1))
         matrix[indices] = matrix.T[indices]
-
         return matrix
     else:
         dataset2 = to_time_series_dataset(dataset2, dtype=dtype, be=be)

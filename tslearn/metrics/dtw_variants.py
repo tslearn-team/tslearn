@@ -3,7 +3,7 @@ import warnings
 import numpy
 from numba import njit, prange
 
-from tslearn.backend import instantiate_backend
+from tslearn.backend import cast, instantiate_backend
 from tslearn.utils import to_time_series
 
 from .utils import _cdist_generic
@@ -631,7 +631,7 @@ def dtw_path_from_metric(
     """  # noqa: E501
     be = instantiate_backend(be, s1, s2)
     if metric == "precomputed":  # Pairwise distance given as input
-        s1 = be.array(s1)
+        s1 = cast(s1, array_type=be.backend_string)
         sz1, sz2 = be.shape(s1)
         mask = compute_mask(
             sz1,
@@ -1232,8 +1232,8 @@ def subsequence_cost_matrix(subseq, longseq, be=None):
         Accumulated cost matrix.
     """
     be = instantiate_backend(be, subseq, longseq)
-    subseq = be.array(subseq)
-    longseq = be.array(longseq)
+    subseq = cast(subseq, array_type=be.backend_string)
+    longseq = cast(longseq, array_type=be.backend_string)
     subseq = to_time_series(subseq, remove_nans=True, be=be)
     longseq = to_time_series(longseq, remove_nans=True, be=be)
     if be.is_numpy:
@@ -1797,8 +1797,8 @@ def compute_mask(
     if isinstance(s1, int) and isinstance(s2, int):
         sz1, sz2 = s1, s2
     else:
-        s1 = be.array(s1)
-        s2 = be.array(s2)
+        s1 = cast(s1, array_type=be.backend_string)
+        s2 = cast(s2, array_type=be.backend_string)
         sz1 = be.shape(s1)[0]
         sz2 = be.shape(s2)[0]
     if (
@@ -2178,7 +2178,7 @@ def lb_envelope(ts, radius=1, be=None):
        Conference on Very Large Data Bases, 2002. pp 406-417.
     """
     be = instantiate_backend(be, ts)
-    ts = be.array(ts)
+    ts = cast(ts, array_type=be.backend_string)
     ts = to_time_series(ts, be=be)
     if be.is_numpy:
         return _njit_lb_envelope(ts, radius=radius)
@@ -2267,10 +2267,10 @@ def lcss_accumulated_matrix(s1, s2, eps, mask, be=None):
                 else:
                     squared_dist = _local_squared_dist(s1[i - 1], s2[j - 1], be=be)
                 if be.sqrt(squared_dist) <= eps:
-                    acc_cost_mat[i][j] = 1 + acc_cost_mat[i - 1][j - 1]
+                    acc_cost_mat[i, j] = 1 + acc_cost_mat[i - 1, j - 1]
                 else:
-                    acc_cost_mat[i][j] = max(
-                        acc_cost_mat[i][j - 1], acc_cost_mat[i - 1][j]
+                    acc_cost_mat[i, j] = max(
+                        acc_cost_mat[i, j - 1], acc_cost_mat[i - 1, j]
                     )
 
     return acc_cost_mat
@@ -2854,10 +2854,10 @@ def lcss_accumulated_matrix_from_dist_matrix(dist_matrix, eps, mask, be=None):
         for j in range(1, l2 + 1):
             if be.isfinite(mask[i - 1, j - 1]):
                 if dist_matrix[i - 1, j - 1] <= eps:
-                    acc_cost_mat[i][j] = 1 + acc_cost_mat[i - 1][j - 1]
+                    acc_cost_mat[i, j] = 1 + acc_cost_mat[i - 1, j - 1]
                 else:
-                    acc_cost_mat[i][j] = max(
-                        acc_cost_mat[i][j - 1], acc_cost_mat[i - 1][j]
+                    acc_cost_mat[i, j] = max(
+                        acc_cost_mat[i, j - 1], acc_cost_mat[i - 1, j]
                     )
 
     return acc_cost_mat
