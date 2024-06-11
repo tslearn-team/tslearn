@@ -130,7 +130,7 @@ class UCR_UEA_datasets:
         with open(self._baseline_scores_filename, "r") as f:
             d_out = dict()
             for perfs_dict in csv.DictReader(f, delimiter=";"):
-                dataset_name = perfs_dict['']
+                dataset_name = perfs_dict[""]
                 if list_datasets is None or dataset_name in list_datasets:
                     d_out[dataset_name] = {}
                     for m in perfs_dict.keys():
