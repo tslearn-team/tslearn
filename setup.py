@@ -33,7 +33,7 @@ setup(
     ],
     include_dirs=[numpy.get_include()],
     packages=find_packages(),
-    package_data={"tslearn": [".cached_datasets/Trace.npz"]},
+    package_data={"tslearn": [".cached_datasets/Trace.npz", ".cached_datasets/singleTrainTest.csv"]},
     install_requires=['numpy', 'scipy', 'scikit-learn', 'numba', 'joblib'],
     extras_require={'tests': ['pytest', 'torch'], 'pytorch': ['torch']},
     version=VERSION,
