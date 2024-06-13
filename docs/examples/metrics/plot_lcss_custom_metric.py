@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Longest Commom Subsequence with a custom distance metric
-=============================================
+Longest Common Subsequence with a custom distance metric
+========================================================
 .. currentmodule:: tslearn.metrics
 
 This example illustrates how to use the LCSS computation of the
