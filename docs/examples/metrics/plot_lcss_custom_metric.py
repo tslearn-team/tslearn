@@ -5,7 +5,7 @@ Longest Common Subsequence with a custom distance metric
 .. currentmodule:: tslearn.metrics
 
 This example illustrates how to use the LCSS computation of the
-alignment path [1]_ on an user-defined distance matrix using
+alignment path [1]_ on a user-defined distance matrix using
 :func:`dtw_path_from_metric`.
 
 The example is the LCSS of two angular time series using the length of the arc on the

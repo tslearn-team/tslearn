@@ -5,7 +5,7 @@ DTW computation with a custom distance metric
 .. currentmodule:: tslearn.metrics
 
 This example illustrates how to use the DTW computation of the optimal
-alignment path [1]_ on an user-defined distance matrix using
+alignment path [1]_ on a user-defined distance matrix using
 :func:`dtw_path_from_metric`.
 
 Left is the DTW of two angular time series using the length of the arc on the
