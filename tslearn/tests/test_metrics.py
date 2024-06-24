@@ -7,7 +7,7 @@ import tslearn.clustering
 import tslearn.metrics
 from scipy.spatial.distance import cdist
 from tslearn.backend.backend import Backend, cast, instantiate_backend
-from tslearn.metrics.dtw_variants import dtw_path
+from tslearn.metrics import dtw_path, frechet_pair
 from tslearn.utils import to_time_series
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
@@ -19,7 +19,6 @@ try:
 except ImportError:
     backends = [Backend("numpy")]
     array_types = ["numpy", "list"]
-
 
 def test_dtw():
     for be in backends:
@@ -34,7 +33,7 @@ def test_dtw():
             path, dist = tslearn.metrics.dtw_path(
                 cast([1, 2, 3], array_type), cast([1.0, 2.0, 2.0, 3.0, 4.0], array_type), be=be
             )
-            np.testing.assert_allclose(dist, [1.0])
+            np.testing.assert_allclose(dist, 1.0)
             assert backend.belongs_to_backend(dist)
 
             # dtw
@@ -58,6 +57,27 @@ def test_dtw():
             np.testing.assert_allclose(dists, [[0.0, 2.44949], [1.0, 1.414214]], atol=1e-5)
             assert backend.belongs_to_backend(dists)
 
+            print(f"DTW test with format {array_type} for backend {None if not be else ('numpy' if be.is_numpy else 'pytorch?')} passed successfully")
+
+def test_frechet():
+    for be in backends:
+        for array_type in array_types:
+            backend = instantiate_backend(be, array_type)
+            # frechet_pair
+            pair, dist = frechet_pair(cast([1, 2, 3, 4, 5, 6], array_type), cast([1, 4, 5, 6, 7, 8, 9], array_type), be=be)
+            np.testing.assert_equal(pair, (5, 6))
+            np.testing.assert_allclose(dist, [3.0])
+            assert backend.belongs_to_backend(dist)
+
+            # frechet
+            n1, n2, d = 15, 10, 3
+            rng = np.random.RandomState(0)
+            x = cast(rng.randn(n1, d), array_type)
+            y = cast(rng.randn(n2, d), array_type)
+
+            np.testing.assert_allclose(
+                tslearn.metrics.frechet(x, y, be=be), tslearn.metrics.frechet_pair(x, y, be=be)[1]
+            )
 
 def test_ctw():
     for be in backends:
