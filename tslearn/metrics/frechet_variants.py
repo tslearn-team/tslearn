@@ -143,7 +143,7 @@ def _frechet(s1, s2, mask, be=None):
 
 
 @njit()
-def _njit_return_pair(acc_cost_mat):
+def _njit_return_pathpair(acc_cost_mat):
     """Return max pair from the best path from accumulated cost matrix.
 
     Parameters
@@ -158,8 +158,9 @@ def _njit_return_pair(acc_cost_mat):
     """
     sz1, sz2 = acc_cost_mat.shape
     i, j = (sz1 - 1, sz2 - 1)
-    while (i, j) != (0, 0) and acc_cost_mat[i, j] == acc_cost_mat[-1, -1]:
-        ret = (i, j)
+    path = [(i, j)]
+    pair = (i, j)
+    while (i, j) != (0, 0):
         if i == 0:
             j -= 1
         elif j == 0:
@@ -179,11 +180,14 @@ def _njit_return_pair(acc_cost_mat):
                 i = i - 1
             else:
                 j = j - 1
-    return ret
+        if acc_cost_mat[i, j] == acc_cost_mat[-1, -1]:
+            pair = (i, j)
+        path.append((i, j))
+    return path[::-1], pair
 
 
-def _return_pair(acc_cost_mat, be=None):
-    """Return max pair from the best path from accumulated cost matrix.
+def _return_pathpair(acc_cost_mat, be=None):
+    """Return most separated pair from the optimal path from accumulated cost matrix.
 
     Parameters
     ----------
@@ -199,14 +203,15 @@ def _return_pair(acc_cost_mat, be=None):
 
     Returns
     -------
-    max_pair : integer pair
-        Pair of indices corresponding to the pair of point from which the frechet similarity comes from.
+    pair : integer pair
+        Pair of indices corresponding to the pair of point from which the frechet similarity value comes from.
     """
     be = instantiate_backend(be, acc_cost_mat)
     sz1, sz2 = be.shape(acc_cost_mat)
     i, j = (sz1 - 1, sz2 - 1)
-    while (i, j) != (0, 0) and acc_cost_mat[i, j] == acc_cost_mat[-1, -1]:
-        ret = (i, j)
+    path = [(i, j)]
+    pair = (i, j)
+    while (i, j) != (0, 0):
         if i == 0:
             j -= 1
         elif j == 0:
@@ -226,7 +231,11 @@ def _return_pair(acc_cost_mat, be=None):
                 i = i - 1
             else:
                 j = j - 1
-    return ret
+        if acc_cost_mat[i, j] == acc_cost_mat[-1, -1]:
+            pair = (i, j)
+        path.append((i, j))
+    return path[::-1], pair
+
 
 def frechet(
     s1,
@@ -239,18 +248,16 @@ def frechet(
     r"""Compute Frechet similarity measure between
     (possibly multidimensional) time series and return it.
 
-    Frechet is computed as the inf distance between aligned time series,
-    i.e., if :math:`\pi` is the optimal alignment path:
+    Frechet is computed as the infimum distance between optimally aligned time series,
+    i.e., if :math:`\Pi` is the set of all the alignment paths (sequences of consecutive pairs of indices):
 
     .. math::
 
-        Frechet(X, Y) = \max{(i, j) \in \pi} \|X_{i} - Y_{j}\|
-
-    Note that this formula is still valid for the multivariate case.
+        \text{Frechet}(X, Y) = \min_{\pi \in \Pi} \max_{(i, j) \in \pi} \|X_{i} - Y_{j}\|
 
     It is not required that both time series share the same size, but they must
-    be the same dimension. The paths explored are the same as in the DTW distance,
-    that was originally presented in [1]_ and is discussed in more details in our :ref:`dedicated user-guide page <dtw>`.
+    be the same dimensionality to compute the norm. The paths explored are the same as in the DTW distance,
+    that was originally presented in [1]_ and is discussed in more detail in our :ref:`dedicated user-guide page <dtw>`.
 
     Parameters
     ----------
@@ -305,35 +312,12 @@ def frechet(
     0.0
     >>> frechet([1, 2, 3], [1., 2., 2., 3., 4.])
     1.0
-
-    The PyTorch backend can be used to compute gradients:
-    
-    >>> import torch
-    >>> s1 = torch.tensor([[1.0], [2.0], [3.0]], requires_grad=True)
-    >>> s2 = torch.tensor([[3.0], [4.0], [-3.0]])
-    >>> sim = frechet(s1, s2, be="pytorch")
-    >>> print(sim)
-    tensor(6.4807, grad_fn=<SqrtBackward0>)
-    >>> sim.backward()
-    >>> print(s1.grad)
-    tensor([[-0.3086],
-            [-0.1543],
-            [ 0.7715]])
-
-    >>> s1_2d = torch.tensor([[1.0, 1.0], [2.0, 2.0], [3.0, 3.0]], requires_grad=True)
-    >>> s2_2d = torch.tensor([[3.0, 3.0], [4.0, 4.0], [-3.0, -3.0]])
-    >>> sim = frechet(s1_2d, s2_2d, be="pytorch")
-    >>> print(sim)
-    tensor(9.1652, grad_fn=<SqrtBackward0>)
-    >>> sim.backward()
-    >>> print(s1_2d.grad)
-    tensor([[-0.2182, -0.2182],
-            [-0.1091, -0.1091],
-            [ 0.5455,  0.5455]])
+    >>> frechet([1, 2, 3, 2, 1, 2, 3, 2, 1, 2, 3], [1., 2., 3., 4.])
+    1.0
 
     See Also
     --------
-    frechet_pair : Get both the max pair and the similarity score for frechet
+    frechet_path_pair : Get the optimal path, pair and the similarity score for frechet
 
     References
     ----------
@@ -341,7 +325,7 @@ def frechet(
            spoken word recognition," IEEE Transactions on Acoustics, Speech and
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
 
-    """  # noqa: E501
+    """
     be = instantiate_backend(be, s1, s2)
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
@@ -367,7 +351,7 @@ def frechet(
     return _frechet(s1, s2, mask=mask, be=be)
 
 
-def frechet_pair(
+def frechet_path_pair(
     s1,
     s2,
     global_constraint=None,
@@ -375,15 +359,15 @@ def frechet_pair(
     itakura_max_slope=None,
     be=None,
 ):
-    r"""Compute Frechet similarity measure between (possibly multidimensional) time series and return both the path and the
-    similarity.
+    r"""Compute Frechet similarity measure between (possibly multidimensional) time series and return
+    an optimal alignement path, the most separated pair of points in the path, and the similarity.
 
-    Frechet is computed as the max distance between each couple of the aligned time series,
-    i.e., if :math:`\pis` are all the possible alignment paths and `d` is a distance between two elements:
+    Frechet is computed as the max distance between each couple of the optimally aligned time series,
+    i.e., if :math:`\Pi` are all the possible alignment paths and `d` is a distance between two points:
 
     .. math::
 
-        `Frechet(X, Y) = \min_{\pi \in \pis }{\max_{(i, j) \in \pi} d(X_{i} - Y_{j})^2}`
+        \text{Frechet}(X, Y) = \min_{\pi \in \Pi }{\max_{(i, j) \in \pi} d(X_{i}, Y_{j})}
 
     It is not required that both time series share the same size, but they must
     be the same dimension. The paths explored are the same as in the dtw distance,
@@ -428,21 +412,31 @@ def frechet_pair(
 
     Returns
     -------
-    max_pair : integer pair
-        Pair of indices corresponding to the pair of point from which the frechet similarity comes from.
+    path : list of integer pair
+        An optimal alignement path
+
+    pair : integer pair
+        Pair of indices corresponding to the first most separated pair of points on the returned optimal path.
 
     float
         Similarity score
 
     Examples
     --------
-    >>> path, dist = frechet_pair([1, 2, 3], [1., 2., 2., 3.])
+    >>> path, pair, dist = frechet_path_pair([1, 2, 3], [1., 2., 2., 3.])
     >>> path
     [(0, 0), (1, 1), (1, 2), (2, 3)]
+    >>> pair
+    (0, 0)
     >>> dist
     0.0
-    >>> frechet_path([1, 2, 3], [1., 2., 2., 3., 4.])[1]
-    1.0
+    >>> path, pair, dist = frechet_path_pair([1, 2, 3, 4], [1., 2., 5., 2., 3., 4.])
+    >>> path
+    [(0, 0), (1, 1), (2, 2), (2, 3), (2, 4), (3, 5)]
+    >>> pair
+    (2, 2)
+    >>> dist
+    2.0
 
     See Also
     --------
@@ -477,9 +471,8 @@ def frechet_pair(
     )
     if be.is_numpy:
         acc_cost_mat = _njit_accumulated_matrix(s1, s2, mask=mask)
-        pair = _njit_return_pair(acc_cost_mat)
+        path, pair = _njit_return_pathpair(acc_cost_mat)
     else:
         acc_cost_mat = _accumulated_matrix(s1, s2, mask=mask, be=be)
-        pair = _return_pair(acc_cost_mat, be=be)
-    return pair, acc_cost_mat[-1, -1]
-
+        path, pair = _return_pathpair(acc_cost_mat, be=be)
+    return path, pair, acc_cost_mat[-1, -1]

@@ -14,7 +14,7 @@ from .dtw_variants import (dtw, dtw_limited_warping_length,
                            lb_envelope, lb_keogh,
                            sakoe_chiba_mask, itakura_mask,
                            lcss, lcss_path, lcss_path_from_metric)
-from .frechet_variants import (frechet, frechet_pair, )
+from .frechet_variants import (frechet, frechet_path_pair, )
 from .ctw import ctw_path, ctw, cdist_ctw
 from .sax import cdist_sax
 from .softdtw_variants import (cdist_soft_dtw, cdist_gak,
@@ -38,7 +38,7 @@ __all__ = [
     "subsequence_cost_matrix",
     "dtw_path", "dtw_path_from_metric",
     "dtw_subsequence_path", "cdist_dtw",
-    "frechet", "frechet_pair",
+    "frechet", "frechet_path",
     "GLOBAL_CONSTRAINT_CODE",
     "lb_envelope", "lb_keogh",
     "sakoe_chiba_mask", "itakura_mask",

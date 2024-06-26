@@ -7,7 +7,7 @@ import tslearn.clustering
 import tslearn.metrics
 from scipy.spatial.distance import cdist
 from tslearn.backend.backend import Backend, cast, instantiate_backend
-from tslearn.metrics import dtw_path, frechet_pair
+from tslearn.metrics import dtw_path, frechet_path_pair
 from tslearn.utils import to_time_series
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
@@ -64,7 +64,8 @@ def test_frechet():
         for array_type in array_types:
             backend = instantiate_backend(be, array_type)
             # frechet_pair
-            pair, dist = frechet_pair(cast([1, 2, 3, 4, 5, 6], array_type), cast([1, 4, 5, 6, 7, 8, 9], array_type), be=be)
+            path, pair, dist = frechet_path_pair(cast([1, 2, 3, 4, 5, 6], array_type), cast([1, 4, 5, 6, 7, 8, 9], array_type), be=be)
+            np.testing.assert_equal(path, [(0, 0), (1, 0), (2, 1), (3, 2), (4, 3), (5, 4), (5, 5), (5, 6)])
             np.testing.assert_equal(pair, (5, 6))
             np.testing.assert_allclose(dist, [3.0])
             assert backend.belongs_to_backend(dist)
@@ -72,12 +73,13 @@ def test_frechet():
             # frechet
             n1, n2, d = 15, 10, 3
             rng = np.random.RandomState(0)
-            x = cast(rng.randn(n1, d), array_type)
-            y = cast(rng.randn(n2, d), array_type)
+            for i in range(3):
+                x = cast(rng.randn(n1, d), array_type)
+                y = cast(rng.randn(n2, d), array_type)
 
-            np.testing.assert_allclose(
-                tslearn.metrics.frechet(x, y, be=be), tslearn.metrics.frechet_pair(x, y, be=be)[1]
-            )
+                np.testing.assert_allclose(
+                    tslearn.metrics.frechet(x, y, be=be), tslearn.metrics.frechet_path_pair(x, y, be=be)[2]
+                )
 
 def test_ctw():
     for be in backends:
