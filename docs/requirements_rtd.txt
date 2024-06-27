@@ -12,6 +12,6 @@ tensorflow>=2
 Pygments
 numba
 sphinx_bootstrap_theme
-numpydoc
+numpydoc==1.6.0
 matplotlib
 torch
