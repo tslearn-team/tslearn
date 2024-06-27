@@ -13,5 +13,5 @@ Pygments
 numba
 sphinx_bootstrap_theme
 numpydoc
-matplotlib==3.8.0
+matplotlib==3.7.0
 torch
