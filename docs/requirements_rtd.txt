@@ -7,7 +7,7 @@ sphinx>=1.6.1
 ipykernel
 nbsphinx
 sphinx-gallery
-pillow==10.2.0
+pillow
 tensorflow>=2
 Pygments
 numba
