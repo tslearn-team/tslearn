@@ -3,7 +3,7 @@ numpy
 scipy
 scikit-learn
 numba
-sphinx==7.2.6
+sphinx>=1.6.1
 ipykernel
 nbsphinx
 sphinx-gallery
