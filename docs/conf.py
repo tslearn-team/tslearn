@@ -86,7 +86,7 @@ sphinx_gallery_conf = {
     'subsection_order': ["examples", "examples/metrics", "examples/neighbors",
                          "examples/clustering", "examples/classification",
                          "examples/autodiff", "examples/misc"].index,
-    'image_scrapers': (matplotlib_svg_scraper,),
+    'image_scrapers': ('matplotlib',),
     # 'binder': {
     #     # Required keys
     #     'org': 'rtavenar',
