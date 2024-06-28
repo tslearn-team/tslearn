@@ -13,7 +13,7 @@ The Matrix Profile, :math:`MP`, is a new time series that can be calculated base
 
 
 Implementation
----------------
+--------------
 
 The Matrix Profile implementation provided in ``tslearn`` uses numpy or wraps around STUMPY [2]_. Three different versions are available:
 

@@ -56,16 +56,23 @@ class UCR_UEA_datasets:
                 self._data_dir, os.path.basename(url_multivariate)
             )
             urlretrieve(url_multivariate, self._list_multivariate_filename)
-            url_baseline = ("http://www.timeseriesclassification.com/singleTrainTest.csv")
-            self._baseline_scores_filename = os.path.join(
-                self._data_dir, os.path.basename(url_baseline))
-            urlretrieve(url_baseline, self._baseline_scores_filename)
+
+            url_univariate = ("http://www.timeseriesclassification.com/aeon-toolkit/Archives/"
+                            "summaryUnivariate.csv")
+            self._list_univariate_filename = os.path.join(
+                self._data_dir, os.path.basename(url_univariate))
+            urlretrieve(url_univariate, self._list_univariate_filename)
 
             # fix typos in that CSV to match with the name in the download link
-            in_file_string_replace(self._baseline_scores_filename,
+            in_file_string_replace(self._list_univariate_filename,
                                    "CinCECGtorso", "CinCECGTorso")
-            in_file_string_replace(self._baseline_scores_filename,
+            in_file_string_replace(self._list_univariate_filename,
                                    "StarlightCurves", "StarLightCurves")
+
+            self._baseline_scores_filename = os.path.join(
+                os.path.dirname(__file__),
+                "../.cached_datasets/singleTrainTest.csv")
+
         except Exception:
             self._baseline_scores_filename = None
 
@@ -117,9 +124,12 @@ class UCR_UEA_datasets:
         >>> len(all_dict_acc)
         85
         """
+        warnings.warn("The method baseline_accuracy will soon be deprecated because "
+                      "the data provider no longer maintains this information.",
+                      category=DeprecationWarning, stacklevel=2)
         with open(self._baseline_scores_filename, "r") as f:
             d_out = dict()
-            for perfs_dict in csv.DictReader(f, delimiter=","):
+            for perfs_dict in csv.DictReader(f, delimiter=";"):
                 dataset_name = perfs_dict[""]
                 if list_datasets is None or dataset_name in list_datasets:
                     d_out[dataset_name] = {}
@@ -138,17 +148,17 @@ class UCR_UEA_datasets:
         --------
         >>> l = UCR_UEA_datasets().list_univariate_datasets()
         >>> len(l)
-        85
+        128
 
         Returns
         -------
         list of str:
             A list of the names of all univariate datasets.
         """
-        with open(self._baseline_scores_filename, "r") as f:
+        with open(self._list_univariate_filename, "r") as f:
             return [
-                perfs_dict[""]  # get the dataset name
-                for perfs_dict in csv.DictReader(f, delimiter=",")
+                infos_dict["problem"]  # get the dataset name
+                for infos_dict in csv.DictReader(f, delimiter=",")
             ]
 
     def list_multivariate_datasets(self):
