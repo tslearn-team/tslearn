@@ -63,13 +63,15 @@ intersphinx_mapping = {
 
 from sphinx_gallery.scrapers import matplotlib_scraper
 
-class matplotlib_svg_scraper(object):
+class MatplotlibSVGScraper(object):
 
     def __repr__(self):
         return self.__class__.__name__
 
     def __call__(self, *args, **kwargs):
         return matplotlib_scraper(*args, format='svg', **kwargs)
+
+matplotlib_svg_scraper = MatplotlibSVGScraper()
 
 sphinx_gallery_conf = {
     'examples_dirs': ['./examples'],
@@ -81,7 +83,7 @@ sphinx_gallery_conf = {
     'subsection_order': ["examples", "examples/metrics", "examples/neighbors",
                          "examples/clustering", "examples/classification",
                          "examples/autodiff", "examples/misc"].index,
-    'image_scrapers': (matplotlib_svg_scraper(),),
+    'image_scrapers': ("matplotlib_svg_scraper",),
     # 'binder': {
     #     # Required keys
     #     'org': 'rtavenar',
