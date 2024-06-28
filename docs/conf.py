@@ -35,8 +35,6 @@ rtd_version = os.environ.get('READTHEDOCS_VERSION', 'local')
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 
-# Where our helpers live
-
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
@@ -63,18 +61,6 @@ intersphinx_mapping = {
     'matplotlib': ('https://matplotlib.org/', None),
     'sklearn': ('https://scikit-learn.org/stable', None)
 }
-
-from sphinx_gallery.scrapers import matplotlib_scraper
-
-class MatplotlibSVGScraper(object):
-
-    def __repr__(self):
-        return self.__class__.__name__
-
-    def __call__(self, *args, **kwargs):
-        return matplotlib_scraper(*args, format='svg', **kwargs)
-
-matplotlib_svg_scraper = MatplotlibSVGScraper()
 
 sphinx_gallery_conf = {
     'examples_dirs': ['./examples'],
