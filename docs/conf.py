@@ -36,7 +36,6 @@ rtd_version = os.environ.get('READTHEDOCS_VERSION', 'local')
 # ones.
 
 # Where our helpers live
-util_root = "tslearn.docs.utils"
 
 extensions = [
     'sphinx.ext.autodoc',
@@ -65,6 +64,18 @@ intersphinx_mapping = {
     'sklearn': ('https://scikit-learn.org/stable', None)
 }
 
+from sphinx_gallery.scrapers import matplotlib_scraper
+
+class MatplotlibSVGScraper(object):
+
+    def __repr__(self):
+        return self.__class__.__name__
+
+    def __call__(self, *args, **kwargs):
+        return matplotlib_scraper(*args, format='svg', **kwargs)
+
+matplotlib_svg_scraper = MatplotlibSVGScraper()
+
 sphinx_gallery_conf = {
     'examples_dirs': ['./examples'],
     'gallery_dirs': ['./auto_examples'],
@@ -75,7 +86,7 @@ sphinx_gallery_conf = {
     'subsection_order': ["examples", "examples/metrics", "examples/neighbors",
                          "examples/clustering", "examples/classification",
                          "examples/autodiff", "examples/misc"].index,
-    'image_scrapers': (f"{util_root}.matplotlib_svg_scraper",),
+    'image_scrapers': (matplotlib_svg_scraper,),
     # 'binder': {
     #     # Required keys
     #     'org': 'rtavenar',
