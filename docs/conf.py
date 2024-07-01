@@ -61,6 +61,16 @@ intersphinx_mapping = {
     'sklearn': ('https://scikit-learn.org/stable', None)
 }
 
+from sphinx_gallery.scrapers import matplotlib_scraper
+
+class matplotlib_svg_scraper(object):
+
+    def __repr__(self):
+        return self.__class__.__name__
+
+    def __call__(self, *args, **kwargs):
+        return matplotlib_scraper(*args, format='svg', **kwargs)
+
 sphinx_gallery_conf = {
     'examples_dirs': ['./examples'],
     'gallery_dirs': ['./auto_examples'],
@@ -71,7 +81,7 @@ sphinx_gallery_conf = {
     'subsection_order': ["examples", "examples/metrics", "examples/neighbors",
                          "examples/clustering", "examples/classification",
                          "examples/autodiff", "examples/misc"].index,
-    'image_scrapers': ('matplotlib',),
+    'image_scrapers': (matplotlib_svg_scraper(),),
     # 'binder': {
     #     # Required keys
     #     'org': 'rtavenar',
