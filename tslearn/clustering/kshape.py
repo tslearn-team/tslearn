@@ -204,7 +204,10 @@ class KShape(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
         """
         X = check_array(X, allow_nd=True)
 
-        max_attempts = max(self.n_init, 10)
+        if hasattr(self.init, '__array__'):
+            max_attempts = 1
+        else:
+            max_attempts = max(self.n_init, 10)
 
         self.labels_ = None
         self.inertia_ = numpy.inf
@@ -289,4 +292,3 @@ class KShape(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
         dists = self._cross_dists(X_)
         return dists.argmin(axis=1)
-        
