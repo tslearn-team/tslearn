@@ -8,7 +8,7 @@ ipykernel
 nbsphinx
 sphinx-gallery==0.15.0
 pillow
-tensorflow>=2
+keras>=3
 Pygments
 numba
 sphinx_bootstrap_theme

@@ -3,7 +3,7 @@ numba
 scipy
 scikit-learn
 joblib>=0.12
-tensorflow>=2
+keras>=3
 pandas
 cesium
 h5py
