@@ -39,7 +39,7 @@ class KVisibility(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
         stops.
 
     n_init : int (default: 1)
-        Number of time the k-Shape algorithm will be run with different
+        Number of time the kmeans algorithm will be run with different
         centroid seeds. The final results will be the
         best output of n_init consecutive runs in terms of inertia.
 
@@ -81,11 +81,8 @@ class KVisibility(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
     --------
     >>> from tslearn.generators import random_walks
     >>> X = random_walks(n_ts=50, sz=32, d=1)
-    >>> X = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X)
-    >>> ks = KShape(n_clusters=3, n_init=1, random_state=0).fit(X)
-    >>> ks.cluster_centers_.shape
-    (3, 32, 1)
-
+    >>> kv = KVisibility(n_clusters=3, n_init=1, random_state=0).fit_predict(X)
+    
     References
     ----------
     .. [1] J. Paparrizos & L. Gravano. k-Shape: Efficient and Accurate

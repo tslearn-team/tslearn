@@ -7,3 +7,5 @@ tensorflow>=2
 pandas
 cesium
 h5py
+ts2vg
+networkx
