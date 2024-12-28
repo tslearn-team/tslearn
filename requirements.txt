@@ -1,10 +1,10 @@
+pandas
 numpy<2.0.0
 numba
 scipy
 scikit-learn
 joblib>=0.12
 tensorflow>=2
-pandas
 cesium
 h5py
 ts2vg
