@@ -15,7 +15,7 @@ from ts2vg import NaturalVG, HorizontalVG
 import networkx as nx
 from sklearn.cluster import KMeans
 
-__author__ = "Sergio Iglesias_Perez seigpe[at]gmail.com"
+__author__ = "Sergio Iglesias-Perez seigpe[at]gmail.com"
 
 
 class KVisibility(
@@ -80,6 +80,8 @@ class KVisibility(
     >>> from tslearn.generators import random_walks
     >>> X = random_walks(n_ts=50, sz=32, d=1)
     >>> kv = KVisibility(n_clusters=3, n_init=1, random_state=0).fit_predict(X)
+    >>> kv
+
 
     References
     ----------
