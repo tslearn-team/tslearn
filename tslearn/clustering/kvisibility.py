@@ -2,8 +2,8 @@ from sklearn.base import ClusterMixin
 
 from sklearn.utils import check_random_state
 import numpy
-
-
+import pandas as pd
+import numpy as np
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
@@ -14,6 +14,10 @@ from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
 from .utils import (TimeSeriesCentroidBasedClusteringMixin,
                     _check_no_empty_cluster, _compute_inertia,
                     _check_initial_guess, EmptyClusterError)
+
+from ts2vg import NaturalVG, HorizontalVG
+import networkx as nx
+from sklearn.cluster import KMeans
 
 __author__ = 'Sergio Iglesias_Perez seigpe[at]gmail.com'
 
@@ -52,8 +56,10 @@ class KVisibility(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
         fixes the seed. Defaults to the global
         numpy random number generator.
 
-    init : {'random' or ndarray} (default: 'random')
+    init : {'k-means++', 'random' or ndarray} (default: 'k-means++')
         Method for initialization.
+        'k-means++': selects initial cluster centers for k-mean clustering in 
+        a smart way to speed up convergence. See section Notes in k_init for more details.
         'random': choose k observations (rows) at random from data for the
         initial centroids.
         If an ndarray is passed, it should be of shape (n_clusters, ts_size, d)
@@ -61,17 +67,8 @@ class KVisibility(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
 
     Attributes
     ----------
-    cluster_centers_ : numpy.ndarray of shape (sz, d).
-        Centroids
-
     labels_ : numpy.ndarray of integers with shape (n_ts, ).
         Labels of each point
-
-    inertia_ : float
-        Sum of distances of samples to their closest cluster center.
-
-    n_iter_ : int
-        The number of iterations performed during fit.
 
     Notes
     -----
@@ -85,8 +82,8 @@ class KVisibility(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
     
     References
     ----------
-    .. [1] J. Paparrizos & L. Gravano. k-Shape: Efficient and Accurate
-       Clustering of Time Series. SIGMOD 2015. pp. 1855-1870.
+    .. [1] Iglesias-Perez, Sergio & Partida, Alberto & Criado, Regino: The advantages of k-visibility: A comparative analysis of several time series clustering algorithms,
+        AIMS Mathematics 2024, Volume 9, Issue 12: 35551-35569
     """
 
     def __init__(self, n_clusters=3, max_iter=100, tol=1e-6, n_init=1,
@@ -117,7 +114,12 @@ class KVisibility(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
         ts_attr = []
 
 
-        for ts in series:
+        X_ts = []
+        print(X.shape)
+
+        for i in range(len(X)):
+            X_ts.append(X[i].reshape(1,X[1].shape[0])[0])
+        for ts in X_ts:
             # ts for each time series
             g = HorizontalVG()
             g.build(ts)
@@ -157,9 +159,9 @@ class KVisibility(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
 
         self.kmeans = None
         
-        self.ts_features =  self._ts_to_graph(X)
+        self.ts_features = self._ts_to_graph(X)
 
-        kmeans = KMeans(init="k-means++", n_clusters=num_cluster, n_init=4)
+        kmeans = KMeans(init="k-means++", n_clusters=self.n_clusters, n_init=4)
         kmeans.fit(self.ts_features)
         self.kmeans = kmeans
         return self
@@ -185,9 +187,9 @@ class KVisibility(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
             Index of the cluster each sample belongs to.
         """
         
-        self.ts_features =  self._ts_to_graph(X)
+        self.ts_features = self._ts_to_graph(X)
 
-        kmeans = KMeans(init="k-means++", n_clusters=num_cluster, n_init=4)
+        kmeans = KMeans(init="k-means++", n_clusters=self.n_clusters, n_init=4)
         kmeans.fit(self.ts_features)
         self.kmeans = kmeans
         return self.kmeans.predict(self.ts_features)
@@ -209,6 +211,5 @@ class KVisibility(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
         check_is_fitted(self,
                         ['cluster_centers_', 'norms_', 'norms_centroids_'])
 
-        
-        self.ts_features =  self._ts_to_graph(X)
+        self.ts_features = self._ts_to_graph(X)
         return self.kmeans.predict(self.ts_features)

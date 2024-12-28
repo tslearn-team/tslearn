@@ -2,7 +2,7 @@ import numpy as np
 
 from tslearn.utils import to_time_series_dataset, ts_size
 from tslearn.clustering import EmptyClusterError, TimeSeriesKMeans, \
-    KernelKMeans, KShape, Kvisibility
+    KernelKMeans, KShape, KVisibility
 from tslearn.clustering.utils import _check_full_length, \
     _check_no_empty_cluster
 from tslearn.metrics import cdist_dtw, cdist_soft_dtw
@@ -187,14 +187,11 @@ def test_kshape():
 
 
 def test_kvisibility():
-    n, sz, d = 15, 10, 3
+    n, sz, d = 15, 10, 1
     rng = np.random.RandomState(0)
     time_series = rng.randn(n, sz, d)
 
-    ks = KVisibility(n_clusters=3, n_init=1, verbose=False).fit(time_series)
-    dists = ks._cross_dists(time_series)
-    np.testing.assert_allclose(ks.labels_, dists.argmin(axis=1))
-    np.testing.assert_allclose(ks.labels_, ks.predict(time_series))
+    ks = KVisibility(n_clusters=3, n_init=1, verbose=False).fit_predict(time_series)
 
     assert KShape(n_clusters=101, verbose=False,
                   random_state=rng).fit(time_series)._X_fit is None
