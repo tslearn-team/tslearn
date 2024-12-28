@@ -1,29 +1,29 @@
 from sklearn.base import ClusterMixin
 
-from sklearn.utils import check_random_state
 import numpy
 import pandas as pd
 import numpy as np
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
-from tslearn.preprocessing import TimeSeriesScalerMeanVariance
-from tslearn.utils import to_time_series_dataset, check_dims
-from tslearn.metrics import cdist_normalized_cc, y_shifted_sbd_vec
 from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
 
-from .utils import (TimeSeriesCentroidBasedClusteringMixin,
-                    _check_no_empty_cluster, _compute_inertia,
-                    _check_initial_guess, EmptyClusterError)
+from .utils import (
+    TimeSeriesCentroidBasedClusteringMixin,
+)
 
 from ts2vg import NaturalVG, HorizontalVG
 import networkx as nx
 from sklearn.cluster import KMeans
 
-__author__ = 'Sergio Iglesias_Perez seigpe[at]gmail.com'
+__author__ = "Sergio Iglesias_Perez seigpe[at]gmail.com"
 
 
-class KVisibility(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
-             BaseModelPackage, TimeSeriesBaseEstimator):
+class KVisibility(
+    ClusterMixin,
+    TimeSeriesCentroidBasedClusteringMixin,
+    BaseModelPackage,
+    TimeSeriesBaseEstimator,
+):
     """KVisibility clustering for time series.
 
     KVisibility was originally presented in [1]_.
@@ -58,8 +58,9 @@ class KVisibility(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
 
     init : {'k-means++', 'random' or ndarray} (default: 'k-means++')
         Method for initialization.
-        'k-means++': selects initial cluster centers for k-mean clustering in 
-        a smart way to speed up convergence. See section Notes in k_init for more details.
+        'k-means++': selects initial cluster centers for k-mean clustering in
+        a smart way to speed up convergence.
+        See section Notes in k_init for more details.
         'random': choose k observations (rows) at random from data for the
         initial centroids.
         If an ndarray is passed, it should be of shape (n_clusters, ts_size, d)
@@ -79,15 +80,25 @@ class KVisibility(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
     >>> from tslearn.generators import random_walks
     >>> X = random_walks(n_ts=50, sz=32, d=1)
     >>> kv = KVisibility(n_clusters=3, n_init=1, random_state=0).fit_predict(X)
-    
+
     References
     ----------
-    .. [1] Iglesias-Perez, Sergio & Partida, Alberto & Criado, Regino: The advantages of k-visibility: A comparative analysis of several time series clustering algorithms,
+    .. [1] Iglesias-Perez, Sergio & Partida, Alberto & Criado, Regino:
+        The advantages of k-visibility: A comparative analysis of several
+        time series clustering algorithms,
         AIMS Mathematics 2024, Volume 9, Issue 12: 35551-35569
     """
 
-    def __init__(self, n_clusters=3, max_iter=100, tol=1e-6, n_init=1,
-                 verbose=False, random_state=None, init='random'):
+    def __init__(
+        self,
+        n_clusters=3,
+        max_iter=100,
+        tol=1e-6,
+        n_init=1,
+        verbose=False,
+        random_state=None,
+        init="random",
+    ):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
         self.tol = tol
@@ -105,20 +116,17 @@ class KVisibility(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
         bool
         """
 
-        check_is_fitted(self,
-                        ['_kmeans'])
+        check_is_fitted(self, ["_kmeans"])
         return True
 
     def _ts_to_graph(self, X):
-        ts_clustering = []
         ts_attr = []
-
 
         X_ts = []
         print(X.shape)
 
         for i in range(len(X)):
-            X_ts.append(X[i].reshape(1,X[1].shape[0])[0])
+            X_ts.append(X[i].reshape(1, X[1].shape[0])[0])
         for ts in X_ts:
             # ts for each time series
             g = HorizontalVG()
@@ -128,7 +136,7 @@ class KVisibility(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
             density_h = nx.density(nx_g)
             max_grade_h = max(nx_g.degree, key=lambda x: x[1])[1]
 
-            ################# Natural VG
+            # Natural VG
             gn = NaturalVG()
             gn.build(ts)
             nx_gn = gn.as_networkx()
@@ -136,11 +144,15 @@ class KVisibility(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
             max_grade_n = max(nx_gn.degree, key=lambda x: x[1])[1]
 
             ts_attr.append([density_h, max_grade_h, density_n, max_grade_n])
-        df = pd.DataFrame(ts_attr, columns=['density_h','max_degree_h','density_n','max_degree_n'])
-        from sklearn.cluster import KMeans
-        ts_features = np.array(df[['density_h','max_degree_h','density_n','max_degree_n']])
-        return ts_features
+        df = pd.DataFrame(
+            ts_attr, columns=["density_h", "max_degree_h",
+                              "density_n", "max_degree_n"]
+        )
 
+        ts_features = np.array(
+            df[["density_h", "max_degree_h", "density_n", "max_degree_n"]]
+        )
+        return ts_features
 
     def fit(self, X, y=None):
         """Compute k-Shape clustering.
@@ -155,10 +167,8 @@ class KVisibility(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
         """
         X = check_array(X, allow_nd=True)
 
-        max_attempts = max(self.n_init, 10)
-
         self._kmeans = None
-        
+
         self.ts_features = self._ts_to_graph(X)
 
         kmeans = KMeans(init="k-means++", n_clusters=self.n_clusters, n_init=4)
@@ -186,7 +196,7 @@ class KVisibility(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
-        
+
         self.ts_features = self._ts_to_graph(X)
 
         kmeans = KMeans(init="k-means++", n_clusters=self.n_clusters, n_init=4)
@@ -208,8 +218,7 @@ class KVisibility(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
             Index of the cluster each sample belongs to.
         """
         X = check_array(X, allow_nd=True)
-        check_is_fitted(self,
-                        ['_kmeans'])
+        check_is_fitted(self, ["_kmeans"])
 
         self.ts_features = self._ts_to_graph(X)
         return self._kmeans.predict(self.ts_features)
