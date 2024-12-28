@@ -106,7 +106,7 @@ class KVisibility(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
         """
 
         check_is_fitted(self,
-                        ['cluster_centers_', 'norms_', 'norms_centroids_'])
+                        ['_kmeans'])
         return True
 
     def _ts_to_graph(self, X):
@@ -157,13 +157,13 @@ class KVisibility(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
 
         max_attempts = max(self.n_init, 10)
 
-        self.kmeans = None
+        self._kmeans = None
         
         self.ts_features = self._ts_to_graph(X)
 
         kmeans = KMeans(init="k-means++", n_clusters=self.n_clusters, n_init=4)
         kmeans.fit(self.ts_features)
-        self.kmeans = kmeans
+        self._kmeans = kmeans
         return self
 
     def fit_predict(self, X, y=None):
@@ -191,8 +191,8 @@ class KVisibility(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
 
         kmeans = KMeans(init="k-means++", n_clusters=self.n_clusters, n_init=4)
         kmeans.fit(self.ts_features)
-        self.kmeans = kmeans
-        return self.kmeans.predict(self.ts_features)
+        self._kmeans = kmeans
+        return self._kmeans.predict(self.ts_features)
 
     def predict(self, X):
         """Predict the closest cluster each time series in X belongs to.
@@ -209,7 +209,7 @@ class KVisibility(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
         """
         X = check_array(X, allow_nd=True)
         check_is_fitted(self,
-                        ['cluster_centers_', 'norms_', 'norms_centroids_'])
+                        ['_kmeans'])
 
         self.ts_features = self._ts_to_graph(X)
-        return self.kmeans.predict(self.ts_features)
+        return self._kmeans.predict(self.ts_features)
