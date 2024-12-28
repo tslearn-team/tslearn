@@ -1,4 +1,5 @@
 numpy<2.0.0
+pandas
 numba
 scipy
 scikit-learn
