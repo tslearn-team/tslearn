@@ -80,8 +80,7 @@ class KVisibility(
     >>> from tslearn.generators import random_walks
     >>> X = random_walks(n_ts=50, sz=32, d=1)
     >>> kv = KVisibility(n_clusters=3, n_init=1, random_state=0).fit_predict(X)
-    >>> kv
-
+    (50, 32, 1)
 
     References
     ----------
