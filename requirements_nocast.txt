@@ -6,3 +6,5 @@ joblib>=0.12
 tensorflow>=2
 h5py
 pandas
+ts2vg
+networkx
