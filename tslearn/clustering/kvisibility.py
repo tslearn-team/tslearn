@@ -87,7 +87,7 @@ class KVisibility(
     .. [1] Iglesias-Perez, Sergio & Partida, Alberto & Criado, Regino:
         The advantages of k-visibility: A comparative analysis of several
         time series clustering algorithms,
-        AIMS Mathematics 2024, Volume 9, Issue 12: 35551-35569
+        AIMS Mathematics 2024, Volume 9,Issue 12: 35551-35569
     """
 
     def __init__(
