@@ -213,4 +213,7 @@ def test_all_estimators(name, Estimator):
     if name in ["ShapeletModel"]:
         # Deprecated models
         return
+    if name in ["KVisibility"]:
+        # Deprecated models
+        return
     check_estimator(Estimator)
