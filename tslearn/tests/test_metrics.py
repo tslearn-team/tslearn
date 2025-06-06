@@ -423,15 +423,20 @@ def test_masks():
                 metric_params={"itakura_max_slope": 1.0},
                 max_iter=5,
                 random_state=0,
+                init="random"
             )
             estimator2 = tslearn.clustering.TimeSeriesKMeans(
-                metric="euclidean", max_iter=5, random_state=0
+                metric="euclidean",
+                max_iter=5,
+                random_state=0,
+                init="random"
             )
             estimator3 = tslearn.clustering.TimeSeriesKMeans(
                 metric="dtw",
                 metric_params={"sakoe_chiba_radius": 0},
                 max_iter=5,
                 random_state=0,
+                init="random"
             )
             np.testing.assert_allclose(
                 estimator1.fit(time_series).labels_, estimator2.fit(time_series).labels_
