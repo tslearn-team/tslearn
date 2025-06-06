@@ -467,7 +467,9 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             '_d': self._d,
             'classes_': self.classes_,
             '_y': self._y,
-            'outputs_2d_': self.outputs_2d_
+            'outputs_2d_': self.outputs_2d_,
+            '_fit_X': self._fit_X,
+            '_fit_method': self._fit_method
         }
 
     def fit(self, X, y):
