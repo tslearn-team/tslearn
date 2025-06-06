@@ -577,4 +577,6 @@ class NonMyopicEarlyClassifier(ClassifierMixin, TimeSeriesBaseEstimator):
         # Because some of the data validation checks rely on datasets that are
         # too small to pass here (only 1 item in one of the clusters, hence no
         # stratified split possible)
-        return {"no_validation": True}
+        more_tags = super()._more_tags()
+        more_tags.update({"no_validation": True})
+        return more_tags

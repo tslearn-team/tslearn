@@ -14,6 +14,8 @@ jobs:
         python.version: '3.8'
       Python39:
         python.version: '3.9'
+      Python310:
+        python.version: '3.10'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -40,9 +42,8 @@ jobs:
 
   - script: |
       set -xe
-      python -m pip install pytest pytest-azurepipelines
-      python -m pip install scikit-learn==1.2
-      python -m pip install tensorflow==2.9.0
+      python -m pip install -r requirements_test.txt
+      python -m pip install pytest-azurepipelines
       python -m pytest -v tslearn/ --doctest-modules
     displayName: 'Test'
 
@@ -79,9 +80,8 @@ jobs:
 
   - script: |
       set -xe
-      python -m pip install pytest pytest-azurepipelines
-      python -m pip install scikit-learn==1.2
-      python -m pip install tensorflow==2.9.0
+      python -m pip install -r requirements_test.txt
+      python -m pip install pytest-azurepipelines
       python -m pytest -v tslearn/ --doctest-modules -k 'not tslearn.metrics.softdtw_variants.soft_dtw and not tslearn.metrics.softdtw_variants.cdist_soft_dtw and not tslearn.metrics.dtw_variants.dtw or tslearn.metrics.dtw_variants.dtw_'
     displayName: 'Test'
 
@@ -174,9 +174,8 @@ jobs:
   
   - script: |
       set -xe
-      python -m pip install pytest pytest-azurepipelines
-      python -m pip install scikit-learn==1.2
-      python -m pip install tensorflow==2.9.0
+      python -m pip install -r requirements_test.txt
+      python -m pip install pytest-azurepipelines
       python -m pytest -v tslearn/ --doctest-modules -k 'not test_all_estimators'
     displayName: 'Test'
 
@@ -217,8 +216,7 @@ jobs:
     displayName: 'Install tslearn'
   
   - script: |
-      python -m pip install pytest pytest-azurepipelines
-      python -m pip install scikit-learn==1.2
-      python -m pip install tensorflow==2.9.0
+      python -m pip install -r requirements_test.txt
+      python -m pip install pytest-azurepipelines
       python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/tests/test_estimators.py --ignore tslearn/utils/cast.py
     displayName: 'Test'

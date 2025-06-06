@@ -1,0 +1,11 @@
+scikit-learn<1.7.0
+numpy
+scipy
+numba
+joblib>=0.12
+tensorflow>=2
+h5py
+pandas
+cesium
+stumpy
+pytest
