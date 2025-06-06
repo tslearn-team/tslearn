@@ -173,7 +173,7 @@ jobs:
   
   - script: |
       set -xe
-      python -m pip install -r requirements_test.txt
+      python -m pip install -r requirements_tests.txt
       python -m pip install pytest-azurepipelines
       python -m pytest -v tslearn/ --doctest-modules -k 'not test_all_estimators'
     displayName: 'Test'
