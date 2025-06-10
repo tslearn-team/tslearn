@@ -193,7 +193,7 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
     >>> sv[0].shape  # doctest: +ELLIPSIS
     (..., 64, 2)
     >>> sv_sum = sum([sv_i.shape[0] for sv_i in sv])
-    >>> sv_sum == clf.svm_estimator_.n_support_.sum()
+    >>> bool(sv_sum == clf.svm_estimator_.n_support_.sum())
     True
     >>> clf.decision_function(X).shape
     (20,)
