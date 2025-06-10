@@ -122,10 +122,9 @@ jobs:
 
   - script: |
       set -xe
-      python -m pip install pytest pytest-azurepipelines
+      python -m pip install -r requirements_tests.txt
+      python -m pip install pytest-azurepipelines
       python -m pip install coverage pytest-cov
-      python -m pip install cesium pandas stumpy
-      python -m pip install tensorflow==2.9.0
       python -m pytest -v tslearn/ --doctest-modules --cov=tslearn
     displayName: 'Test'
 
@@ -218,7 +217,6 @@ jobs:
     displayName: 'Install tslearn'
   
   - script: |
-      
       python -m pip install -r requirements_tests.txt
       python -m pip install pytest-azurepipelines
       pip list
