@@ -6,6 +6,7 @@ joblib>=0.12
 tensorflow>=2
 h5py
 pandas
-cesium
+cesium >= 0.12.2; python_version >= '3.9'
+cesium; python_version < '3.9'
 stumpy
 pytest
