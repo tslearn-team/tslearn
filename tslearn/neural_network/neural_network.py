@@ -1,5 +1,6 @@
 from sklearn.neural_network import MLPClassifier, MLPRegressor
-from sklearn.utils import check_array
+
+from tslearn.utils import check_array
 
 from ..bases import TimeSeriesBaseEstimator
 

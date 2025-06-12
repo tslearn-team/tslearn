@@ -1,12 +1,10 @@
 from sklearn.svm import SVC, SVR
 from sklearn.base import ClassifierMixin, RegressorMixin
-from sklearn.utils import deprecated
-from sklearn.utils import check_array, check_X_y
 from sklearn.utils.validation import check_is_fitted
 import numpy
 
 from ..metrics import cdist_gak, gamma_soft_dtw, VARIABLE_LENGTH_METRICS
-from ..utils import to_time_series_dataset, check_dims, to_sklearn_dataset
+from ..utils import to_time_series_dataset, check_array, check_dims, check_X_y, to_sklearn_dataset
 from ..bases import TimeSeriesBaseEstimator
 
 import warnings

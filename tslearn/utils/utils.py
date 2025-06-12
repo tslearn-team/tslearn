@@ -1,3 +1,4 @@
+import inspect
 import warnings
 from io import StringIO
 
@@ -5,6 +6,8 @@ import numpy
 from sklearn.base import TransformerMixin
 from sklearn.utils import column_or_1d
 from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import check_array as sk_check_array
+from sklearn.utils.validation import check_X_y as sk_check_X_y
 
 try:
     from scipy.io import arff
@@ -21,6 +24,21 @@ from tslearn.backend import instantiate_backend
 from tslearn.bases import TimeSeriesBaseEstimator
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
+
+
+def fix_force_all_finite_warning(func):
+    """ Make sure to use sklearn >=1.6 ensure_finite_attribute if available
+        rather than deprecated force_all_attribute """
+    def wrapper(*args, **kwargs):
+        if ('force_all_finite' in kwargs and
+                inspect.signature(sk_check_array).parameters.get('ensure_all_finite')):
+            kwargs['ensure_all_finite'] = kwargs.pop('force_all_finite')
+        return func(*args, **kwargs)
+    return wrapper
+
+
+check_array = fix_force_all_finite_warning(sk_check_array)
+check_X_y = fix_force_all_finite_warning(sk_check_X_y)
 
 
 def check_dims(X, X_fit_dims=None, extend=True, check_n_features_only=False):

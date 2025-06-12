@@ -1,5 +1,6 @@
 from tempfile import gettempdir
 from os.path import join
+import warnings
 
 import numpy as np
 import pickle
@@ -114,3 +115,15 @@ def test_conversions_cesium():
             tslearn.utils.to_cesium_dataset(tslearn_dataset)
         )
     )
+
+
+def test_check_array():
+    with warnings.catch_warnings(category=FutureWarning):
+        warnings.simplefilter("error")
+        tslearn.utils.check_array([[0]], force_all_finite=False)
+
+
+def test_check_X_y():
+    with warnings.catch_warnings(category=FutureWarning):
+        warnings.simplefilter("error")
+        tslearn.utils.check_X_y([[0]], [0], force_all_finite=False)

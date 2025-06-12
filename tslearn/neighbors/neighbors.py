@@ -2,7 +2,6 @@ import numpy
 from sklearn import neighbors
 from sklearn.neighbors import (KNeighborsClassifier, NearestNeighbors,
                                KNeighborsRegressor)
-from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 from scipy.spatial.distance import cdist as scipy_cdist
 
@@ -10,7 +9,7 @@ from tslearn.metrics import cdist_dtw, cdist_ctw, cdist_soft_dtw, \
     cdist_sax, TSLEARN_VALID_METRICS
 from tslearn.piecewise import SymbolicAggregateApproximation
 from tslearn.utils import (to_time_series_dataset, to_sklearn_dataset,
-                           check_dims)
+                           check_array, check_dims)
 from tslearn.bases import BaseModelPackage
 
 neighbors.VALID_METRICS['brute'].extend(['dtw', 'softdtw', 'sax', 'ctw'])

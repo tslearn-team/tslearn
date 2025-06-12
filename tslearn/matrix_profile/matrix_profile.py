@@ -2,11 +2,11 @@ import numpy as np
 from numpy.lib.stride_tricks import as_strided
 from scipy.spatial.distance import pdist, squareform
 from sklearn.base import TransformerMixin
-from sklearn.utils.validation import check_array, check_is_fitted
+from sklearn.utils.validation import check_is_fitted
 
 from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
-from tslearn.utils import check_dims
+from tslearn.utils import check_array, check_dims
 
 stumpy_msg = ('stumpy is not installed, stumpy features will not be'
               'supported.\n Install stumpy to use stumpy features:'

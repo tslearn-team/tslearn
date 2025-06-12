@@ -3,11 +3,9 @@ from sklearn.base import ClusterMixin
 from sklearn.utils import check_random_state
 import numpy
 
-
-from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
-from tslearn.utils import to_time_series_dataset, check_dims
+from tslearn.utils import to_time_series_dataset, check_dims, check_array
 from tslearn.metrics import cdist_normalized_cc, y_shifted_sbd_vec
 from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
 
