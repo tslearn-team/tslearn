@@ -30,7 +30,13 @@ try:
     from sklearn.utils.estimator_checks import _maybe_skip
 except ImportError:
     # sklearn version >= 1.6
-    _maybe_skip = lambda estimator, check: check
+    from sklearn.utils.estimator_checks import _maybe_mark
+    def _maybe_skip(estimator, check):
+        return sklearn.utils.estimator_checks._maybe_mark(estimator,
+                                                          check,
+                                                          estimator._get_tags().get('_xfail_checks'),
+                                                          "skip")[1]
+
 
 from tslearn.tests.sklearn_patches import (
                              check_clustering,
