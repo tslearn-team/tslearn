@@ -458,7 +458,13 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
         return dist.argmin(axis=1)
 
     def _more_tags(self):
-        return {"allow_nan": True, "allow_variable_length": True}
+        sample_weight_failure_msg = "Currently not supported due to clusters initialization"
+        return {"allow_nan": True,
+                "allow_variable_length": True,
+                "_xfail_checks": {
+                    "check_sample_weight_equivalence_on_dense_data": sample_weight_failure_msg,
+                    "check_sample_weight_equivalence_on_sparse_data": sample_weight_failure_msg
+                }}
 
 
 class TimeSeriesKMeans(
