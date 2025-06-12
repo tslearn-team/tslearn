@@ -355,12 +355,13 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
         return self.svm_estimator_.predict_proba(sklearn_X)
 
     def _more_tags(self):
+        sample_weight_failure_msg = "zero sample_weight is not equivalent to removing samples"
         return {'non_deterministic': True, 'allow_nan': True,
                 'allow_variable_length': True,
                 "_xfail_checks": {
-                    "check_sample_weights_invariance": (
-                            "zero sample_weight is not equivalent to removing samples"
-                        ),
+                    "check_sample_weights_invariance": sample_weight_failure_msg,
+                    "check_sample_weight_equivalence_on_dense_data": sample_weight_failure_msg,
+                    "check_sample_weight_equivalence_on_sparse_data":sample_weight_failure_msg
                 }}
 
 
@@ -546,10 +547,11 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
         return self.svm_estimator_.predict(sklearn_X)
 
     def _more_tags(self):
+        sample_weight_failure_msg = "zero sample_weight is not equivalent to removing samples"
         return {'non_deterministic': True, 'allow_nan': True,
                 'allow_variable_length': True,
                 "_xfail_checks": {
-                    "check_sample_weights_invariance": (
-                        "zero sample_weight is not equivalent to removing samples"
-                    ),
+                    "check_sample_weights_invariance": sample_weight_failure_msg,
+                    "check_sample_weight_equivalence_on_dense_data": sample_weight_failure_msg,
+                    "check_sample_weight_equivalence_on_sparse_data":sample_weight_failure_msg
                 }}
