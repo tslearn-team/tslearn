@@ -118,12 +118,12 @@ def test_conversions_cesium():
 
 
 def test_check_array():
-    with warnings.catch_warnings(category=FutureWarning):
-        warnings.simplefilter("error")
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", category=FutureWarning)
         tslearn.utils.check_array([[0]], force_all_finite=False)
 
 
 def test_check_X_y():
-    with warnings.catch_warnings(category=FutureWarning):
-        warnings.simplefilter("error")
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", category=FutureWarning)
         tslearn.utils.check_X_y([[0]], [0], force_all_finite=False)
