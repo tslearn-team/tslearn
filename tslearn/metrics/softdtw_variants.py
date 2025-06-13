@@ -224,9 +224,9 @@ def gak(s1, s2, sigma=1.0, be=None):  # TODO: better doc (formula for the kernel
 
     Examples
     --------
-    >>> gak([1, 2, 3], [1., 2., 2., 3.], sigma=2.)  # doctest: +ELLIPSIS
+    >>> float(gak([1, 2, 3], [1., 2., 2., 3.], sigma=2.))  # doctest: +ELLIPSIS
     0.839...
-    >>> gak([1, 2, 3], [1., 2., 2., 3., 4.])  # doctest: +ELLIPSIS
+    >>> float(gak([1, 2, 3], [1., 2., 2., 3., 4.]))  # doctest: +ELLIPSIS
     0.273...
 
     See Also
@@ -373,9 +373,9 @@ def sigma_gak(dataset, n_samples=100, random_state=None, be=None):
     Examples
     --------
     >>> dataset = [[1, 2, 2, 3], [1., 2., 3., 4.]]
-    >>> sigma_gak(dataset=dataset,
-    ...           n_samples=200,
-    ...           random_state=0)  # doctest: +ELLIPSIS
+    >>> float(sigma_gak(dataset=dataset,
+    ...                 n_samples=200,
+    ...                 random_state=0))  # doctest: +ELLIPSIS
     2.0...
 
     See Also
@@ -438,9 +438,9 @@ def gamma_soft_dtw(dataset, n_samples=100, random_state=None, be=None):
     Examples
     --------
     >>> dataset = [[1, 2, 2, 3], [1., 2., 3., 4.]]
-    >>> gamma_soft_dtw(dataset=dataset,
-    ...                n_samples=200,
-    ...                random_state=0)  # doctest: +ELLIPSIS
+    >>> float(gamma_soft_dtw(dataset=dataset,
+    ...                      n_samples=200,
+    ...                      random_state=0))  # doctest: +ELLIPSIS
     8.0...
 
     See Also
@@ -512,13 +512,13 @@ def soft_dtw(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False):
 
     Examples
     --------
-    >>> soft_dtw([1, 2, 2, 3],
-    ...          [1., 2., 3., 4.],
-    ...          gamma=1.)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    >>> float(soft_dtw([1, 2, 2, 3],
+    ...                [1., 2., 3., 4.],
+    ...                gamma=1.))  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     -0.89...
-    >>> soft_dtw([1, 2, 3, 3],
-    ...          [1., 2., 2.1, 3.2],
-    ...          gamma=0.01)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    >>> float(soft_dtw([1, 2, 3, 3],
+    ...                [1., 2., 2.1, 3.2],
+    ...                 gamma=0.01))  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     0.089...
 
     The PyTorch backend can be used to compute gradients:
@@ -625,7 +625,7 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False)
     >>> a, dist = soft_dtw_alignment([1, 2, 2, 3],
     ...                              [1., 2., 3., 4.],
     ...                              gamma=1.)  # doctest: +ELLIPSIS
-    >>> dist
+    >>> float(dist)
     -0.89...
     >>> a  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     array([[1.00...e+00, 1.88...e-01, 2.83...e-04, 4.19...e-11],
@@ -884,10 +884,10 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None, compu
     Examples
     --------
     >>> time_series = np.random.randn(10, 15, 1)
-    >>> np.alltrue(cdist_soft_dtw_normalized(time_series) >= 0.)
+    >>> bool(np.all(cdist_soft_dtw_normalized(time_series) >= 0.))
     True
     >>> time_series2 = np.random.randn(4, 15, 1)
-    >>> np.alltrue(cdist_soft_dtw_normalized(time_series, time_series2) >= 0.)
+    >>> bool(np.all(cdist_soft_dtw_normalized(time_series, time_series2) >= 0.))
     True
 
     The PyTorch backend can be used to compute gradients:

@@ -363,9 +363,9 @@ def dtw_path(
     >>> path, dist = dtw_path([1, 2, 3], [1., 2., 2., 3.])
     >>> path
     [(0, 0), (1, 1), (1, 2), (2, 3)]
-    >>> dist
+    >>> float(dist)
     0.0
-    >>> dtw_path([1, 2, 3], [1., 2., 2., 3., 4.])[1]
+    >>> float(dtw_path([1, 2, 3], [1., 2., 2., 3., 4.])[1])
     1.0
 
     See Also
@@ -588,22 +588,25 @@ def dtw_path_from_metric(
     The wrapping can be done by passing a string indicating the metric to pass
     to scikit-learn pairwise_distances:
 
-    >>> dtw_path_from_metric(s1, s2,
-    ...                      metric="sqeuclidean")  # doctest: +ELLIPSIS
+    >>> x, y = dtw_path_from_metric(s1, s2,
+    ...                             metric="sqeuclidean")  # doctest: +ELLIPSIS
+    >>> x, float(y)
     ([(0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.117...)
 
     Or by defining a custom distance function:
 
     >>> sqeuclidean = lambda x, y: np.sum((x-y)**2)
-    >>> dtw_path_from_metric(s1, s2, metric=sqeuclidean)  # doctest: +ELLIPSIS
+    >>> x, y = dtw_path_from_metric(s1, s2, metric=sqeuclidean)  # doctest: +ELLIPSIS
+    >>> x, float(y)
     ([(0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.117...)
 
     Or by using a precomputed distance matrix as input:
 
     >>> from sklearn.metrics.pairwise import pairwise_distances
     >>> dist_matrix = pairwise_distances(s1, s2, metric="sqeuclidean")
-    >>> dtw_path_from_metric(dist_matrix,
-    ...                      metric="precomputed")  # doctest: +ELLIPSIS
+    >>> x, y = dtw_path_from_metric(dist_matrix,
+    ...                             metric="precomputed")  # doctest: +ELLIPSIS
+    >>> x, float(y)
     ([(0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.117...)
 
     Notes
@@ -941,9 +944,9 @@ def dtw_limited_warping_length(s1, s2, max_length, be=None):
 
     Examples
     --------
-    >>> dtw_limited_warping_length([1, 2, 3], [1., 2., 2., 3.], 5)
+    >>> float(dtw_limited_warping_length([1, 2, 3], [1., 2., 2., 3.], 5))
     0.0
-    >>> dtw_limited_warping_length([1, 2, 3], [1., 2., 2., 3., 4.], 5)
+    >>> float(dtw_limited_warping_length([1, 2, 3], [1., 2., 2., 3., 4.], 5))
     1.0
 
     See Also
@@ -1087,13 +1090,13 @@ def dtw_path_limited_warping_length(s1, s2, max_length, be=None):
     --------
     >>> path, cost = dtw_path_limited_warping_length([1, 2, 3],
     ...                                              [1., 2., 2., 3.], 5)
-    >>> cost
+    >>> float(cost)
     0.0
     >>> path
     [(0, 0), (1, 1), (1, 2), (2, 3)]
     >>> path, cost = dtw_path_limited_warping_length([1, 2, 3],
     ...                                              [1., 2., 2., 3., 4.], 5)
-    >>> cost
+    >>> float(cost)
     1.0
     >>> path
     [(0, 0), (1, 1), (1, 2), (2, 3), (2, 4)]
@@ -1442,7 +1445,7 @@ def dtw_subsequence_path(subseq, longseq, be=None):
     >>> path, dist = dtw_subsequence_path([2., 3.], [1., 2., 2., 3., 4.])
     >>> path
     [(0, 2), (1, 3)]
-    >>> dist
+    >>> float(dist)
     0.0
 
     See Also
@@ -2000,12 +2003,12 @@ def lb_keogh(ts_query, ts_candidate=None, radius=1, envelope_candidate=None):
     >>> ts1 = [1, 2, 3, 2, 1]
     >>> ts2 = [0, 0, 0, 0, 0]
     >>> env_low, env_up = lb_envelope(ts1, radius=1)
-    >>> lb_keogh(ts_query=ts2,
-    ...          envelope_candidate=(env_low, env_up))  # doctest: +ELLIPSIS
+    >>> float(lb_keogh(ts_query=ts2,
+    ...                envelope_candidate=(env_low, env_up)))  # doctest: +ELLIPSIS
     2.8284...
-    >>> lb_keogh(ts_query=ts2,
-    ...          ts_candidate=ts1,
-    ...          radius=1)  # doctest: +ELLIPSIS
+    >>> float(lb_keogh(ts_query=ts2,
+    ...                ts_candidate=ts1,
+    ...                radius=1))  # doctest: +ELLIPSIS
     2.8284...
 
     See also

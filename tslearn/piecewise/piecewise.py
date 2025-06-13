@@ -87,9 +87,9 @@ class PiecewiseAggregateApproximation(TransformerMixin,
            [[ 2.1 ],
             [-2.  ],
             [ 0.  ]]])
-    >>> paa.distance_paa(paa_data[0], paa_data[1])  # doctest: +ELLIPSIS
+    >>> float(paa.distance_paa(paa_data[0], paa_data[1]))  # doctest: +ELLIPSIS
     3.15039...
-    >>> paa.distance(data[0], data[1])  # doctest: +ELLIPSIS
+    >>> float(paa.distance(data[0], data[1]))  # doctest: +ELLIPSIS
     3.15039...
     >>> paa.inverse_transform(paa_data)
     array([[[ 0.5 ],

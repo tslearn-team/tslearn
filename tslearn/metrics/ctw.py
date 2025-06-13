@@ -126,11 +126,11 @@ def ctw_path(
     [(0, 0), (1, 1), (1, 2), (2, 3)]
     >>> type(cca)  # doctest: +ELLIPSIS
     <class 'sklearn.cross_decomposition...CCA'>
-    >>> dist
+    >>> float(dist)
     0.0
     >>> path, cca, dist = ctw_path([1, 2, 3],
     ...                            [[1., 1.], [2., 2.], [2., 2.], [3., 3.]])
-    >>> dist
+    >>> float(dist)
     0.0
 
     See Also
@@ -268,9 +268,9 @@ def ctw(
 
     Examples
     --------
-    >>> ctw([1, 2, 3], [1., 2., 2., 3.])
+    >>> float(ctw([1, 2, 3], [1., 2., 2., 3.]))
     0.0
-    >>> ctw([1, 2, 3], [[1., 1.], [2., 2.], [2., 2.], [3., 3.]])
+    >>> float(ctw([1, 2, 3], [[1., 1.], [2., 2.], [2., 2.], [3., 3.]]))
     0.0
 
     See Also

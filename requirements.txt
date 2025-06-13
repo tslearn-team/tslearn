@@ -1,9 +1,8 @@
+scikit-learn<1.7
 numpy
-numba
 scipy
-scikit-learn
+numba
 joblib>=0.12
-tensorflow>=2
-pandas
-cesium
+tensorflow==2.9.0; python_version == '3.8'
+tensorflow>=2; python_version != '3.8'
 h5py

@@ -15,10 +15,13 @@ from sklearn.metrics.pairwise import rbf_kernel, linear_kernel, pairwise_distanc
 from sklearn.utils import shuffle
 
 try:
+    # sklearn >= 0.24
     from sklearn.utils._testing import (
-        set_random_state, assert_array_equal,
-        assert_raises, assert_array_almost_equal,
-        assert_allclose, assert_raises_regex, assert_allclose_dense_sparse
+        set_random_state,
+        assert_array_equal,
+        assert_array_almost_equal,
+        assert_allclose,
+        assert_allclose_dense_sparse
     )
 
     from unittest import TestCase
@@ -26,6 +29,9 @@ try:
     assert_equal = _dummy.assertEqual
     assert_greater = _dummy.assertGreater
     assert_greater_equal = _dummy.assertGreaterEqual
+    assert_raises = _dummy.assertRaises
+    assert_raises_regex = _dummy.assertRaisesRegex
+
 except:
     from sklearn.utils.testing import (
         set_random_state, assert_equal, assert_greater, assert_array_equal,
@@ -452,7 +458,7 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False,
 
 
 @ignore_warnings
-def check_estimators_pickle(name, estimator_orig):
+def check_estimators_pickle(*args, **kwargs):
     warnings.warn('Pickling is currently NOT tested!')
     pass
 

@@ -22,9 +22,22 @@ except ImportError:
 from sklearn.exceptions import SkipTestWarning
 from sklearn.utils.estimator_checks import (
     check_no_attributes_set_in_init,
-    check_parameters_default_constructible,
-    _maybe_skip
+    check_parameters_default_constructible
 )
+
+try:
+    # sklearn version < 1.6
+    from sklearn.utils.estimator_checks import _maybe_skip
+except ImportError:
+    # sklearn version >= 1.6
+    from sklearn.utils.estimator_checks import _maybe_mark
+    def _maybe_skip(estimator, check):
+        return sklearn.utils.estimator_checks._maybe_mark(estimator,
+                                                          check,
+                                                          estimator._get_tags().get('_xfail_checks'),
+                                                          "skip")[1]
+
+
 from tslearn.tests.sklearn_patches import (
                              check_clustering,
                              check_non_transf_est_n_iter,
