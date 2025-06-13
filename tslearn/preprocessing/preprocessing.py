@@ -198,8 +198,9 @@ class TimeSeriesScalerMinMax(TransformerMixin, TimeSeriesBaseEstimator):
         return X_
 
     def _more_tags(self):
-        return {'allow_nan': True}
-
+        more_tags = super()._more_tags()
+        more_tags.update({'allow_nan': True})
+        return more_tags
 
 class TimeSeriesScalerMeanVariance(TransformerMixin, TimeSeriesBaseEstimator):
     """Scaler for time series. Scales time series so that their mean (resp.
@@ -295,4 +296,6 @@ class TimeSeriesScalerMeanVariance(TransformerMixin, TimeSeriesBaseEstimator):
         return X_
 
     def _more_tags(self):
-        return {'allow_nan': True}
+        more_tags = super()._more_tags()
+        more_tags.update({'allow_nan': True})
+        return more_tags

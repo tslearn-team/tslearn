@@ -289,4 +289,9 @@ class KShape(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
         dists = self._cross_dists(X_)
         return dists.argmin(axis=1)
-        
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        tags.input_tags.sparse = False
+        return tags

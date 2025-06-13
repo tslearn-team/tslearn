@@ -104,6 +104,11 @@ class TimeSeriesMLPClassifier(MLPClassifier, TimeSeriesBaseEstimator):
         X_ = X_.reshape((X_.shape[0], -1))
         return super(TimeSeriesMLPClassifier, self).predict_proba(X_)
 
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.sparse = False
+        return tags
+
 
 class TimeSeriesMLPRegressor(MLPRegressor, TimeSeriesBaseEstimator):
     """A Multi-Layer Perceptron regressor for time series.
@@ -166,3 +171,8 @@ class TimeSeriesMLPRegressor(MLPRegressor, TimeSeriesBaseEstimator):
         X_ = check_array(X, force_all_finite=True, allow_nd=True)
         X_ = X_.reshape((X_.shape[0], -1))
         return super(TimeSeriesMLPRegressor, self).predict(X_)
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.sparse = False
+        return tags

@@ -168,6 +168,20 @@ class KNeighborsTimeSeriesMixin():
         else:
             return ind
 
+    def _get_tags(self):
+        # sklearn < 1.6 super()._get_tags() returns dict based on _more_tags
+        # sklearn >= 1.6 super()._get_tags() returns dict based on __sklearn_tags__
+        tags = super()._get_tags()
+
+        # Make sure update tags based on _more_tags for sklearn > 1.6
+        tags.update(self._more_tags())
+        return tags
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        tags.input_tags.sparse = False
+        return tags
 
 class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
                            BaseModelPackage):
@@ -453,7 +467,9 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             '_d': self._d,
             'classes_': self.classes_,
             '_y': self._y,
-            'outputs_2d_': self.outputs_2d_
+            'outputs_2d_': self.outputs_2d_,
+            '_fit_X': self._fit_X,
+            '_fit_method': self._fit_method
         }
 
     def fit(self, X, y):
