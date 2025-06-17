@@ -44,8 +44,7 @@ __all__ = [
     "save_time_series_txt", "save_timeseries_txt",
     "load_time_series_txt", "load_timeseries_txt",
     "ts_size", "ts_zeros", "check_dataset",
-    "LabelCategorizer", "_load_txt_uea", "_load_arff_uea"
-    
+    "LabelCategorizer", "_load_txt_uea", "_load_arff_uea",
     "to_sklearn_dataset",
     "from_cesium_dataset", "to_cesium_dataset",
     "from_pyflux_dataset", "to_pyflux_dataset",
