@@ -4,10 +4,9 @@ from sklearn.model_selection import train_test_split
 import numpy as np
 from scipy.sparse import coo_matrix
 
-from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 
-from ..utils import to_time_series_dataset, check_dims
+from ..utils import to_time_series_dataset, check_array, check_dims
 from ..neighbors import KNeighborsTimeSeriesClassifier
 from ..clustering import TimeSeriesKMeans
 from ..bases import TimeSeriesBaseEstimator

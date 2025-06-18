@@ -1,12 +1,11 @@
 import numpy
 from sklearn.base import TransformerMixin
-from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 from scipy.interpolate import interp1d
 import warnings
 
 from tslearn.utils import (to_time_series_dataset, check_equal_size, ts_size,
-                           check_dims)
+                           check_array,check_dims)
 from tslearn.bases import TimeSeriesBaseEstimator
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'

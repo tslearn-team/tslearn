@@ -3,6 +3,8 @@ The :mod:`tslearn.utils` module includes various utilities.
 """
 
 from .utils import (
+    check_array,
+    check_X_y,
     check_dims,
     check_equal_size,
     to_time_series,
@@ -37,6 +39,7 @@ from .cast import (
 
 
 __all__ = [
+    "check_array", "check_X_y",
     "check_dims", "check_equal_size",
     "to_time_series", "to_time_series_dataset",
     "time_series_to_str", "timeseries_to_str",

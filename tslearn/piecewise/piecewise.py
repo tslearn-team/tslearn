@@ -1,13 +1,13 @@
 import numpy
 from scipy.stats import norm
 from sklearn.base import TransformerMixin
-from sklearn.utils.validation import check_is_fitted, check_array
+from sklearn.utils.validation import check_is_fitted
 
 from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
 from tslearn.metrics.cysax import (cydist_sax, cyslopes, cydist_1d_sax,
                                    inv_transform_1d_sax, inv_transform_sax,
                                    inv_transform_paa)
-from tslearn.utils import ts_size, check_dims
+from tslearn.utils import ts_size, check_dims, check_array
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 

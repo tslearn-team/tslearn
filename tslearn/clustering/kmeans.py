@@ -33,7 +33,6 @@ except:
         return _k_init(*args, **kwargs), None
 
 
-from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 
 from tslearn.barycenters import (
@@ -43,7 +42,7 @@ from tslearn.barycenters import (
 )
 from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
 from tslearn.metrics import cdist_dtw, cdist_gak, cdist_soft_dtw, sigma_gak
-from tslearn.utils import check_dims, to_sklearn_dataset, to_time_series_dataset
+from tslearn.utils import check_array, check_dims, to_sklearn_dataset, to_time_series_dataset
 
 from .utils import (
     EmptyClusterError,

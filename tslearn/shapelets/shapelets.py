@@ -6,7 +6,6 @@ from tensorflow.keras.metrics import (categorical_accuracy,
                                       binary_accuracy, binary_crossentropy)
 from tensorflow.keras.utils import to_categorical
 from sklearn.base import ClassifierMixin, TransformerMixin
-from sklearn.utils import check_array, check_X_y
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.multiclass import unique_labels
 from tensorflow.keras.regularizers import l2
@@ -17,7 +16,7 @@ import tensorflow as tf
 
 import warnings
 
-from ..utils import to_time_series_dataset, check_dims, ts_size
+from ..utils import to_time_series_dataset, check_array, check_dims, check_X_y, ts_size
 from ..bases import BaseModelPackage, TimeSeriesBaseEstimator
 from ..clustering import TimeSeriesKMeans
 from ..preprocessing import TimeSeriesScalerMinMax

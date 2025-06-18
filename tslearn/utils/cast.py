@@ -1,7 +1,6 @@
 import warnings
 
 import numpy
-from sklearn.utils import check_array
 
 try:
     from scipy.io import arff
@@ -9,7 +8,7 @@ try:
 except:
     HAS_ARFF = False
 
-from .utils import check_dataset, ts_size, to_time_series_dataset
+from .utils import check_array, check_dataset, ts_size, to_time_series_dataset
 
 
 def to_sklearn_dataset(dataset, dtype=float, return_dim=False):
