@@ -5,7 +5,7 @@
 
 jobs:
 
-- job: 'tests-linux'
+- job: 'tests_linux'
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
@@ -47,7 +47,7 @@ jobs:
       python -m pytest -v tslearn/
     displayName: 'Test'
 
-- job: 'doctests-linux'
+- job: 'doctests_linux'
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
@@ -89,7 +89,7 @@ jobs:
       python -m pytest -v tslearn/ --doctest-modules --ignore=tslearn/tests
     displayName: 'Doctest'
 
-- job: 'tests-macOS'
+- job: 'tests_macOS'
   pool:
     vmImage: 'macos-latest'
   strategy:
@@ -134,7 +134,7 @@ jobs:
       python -m pytest -v tslearn/
     displayName: 'Test'
 
-- job: 'doctests-macOS'
+- job: 'doctests_macOS'
   pool:
     vmImage: 'macos-latest'
   strategy:
@@ -179,7 +179,7 @@ jobs:
       python -m pytest -v tslearn/ --doctest-modules --ignore=tslearn/tests
     displayName: 'Doctest'
 
-- job: 'tests-windows'
+- job: 'tests_windows'
   pool:
     vmImage: 'windows-latest'
   strategy:
@@ -218,7 +218,7 @@ jobs:
       python -m pytest -v tslearn/
     displayName: 'Test'
 
-- job: 'doctests-windows'
+- job: 'doctests_windows'
   pool:
     vmImage: 'windows-latest'
   strategy:
@@ -257,7 +257,7 @@ jobs:
       python -m pytest -v tslearn/ --doctest-modules --ignore=tslearn/tests
     displayName: 'Doctest'
 
-- job: 'tests-without_torch'
+- job: 'tests_without_torch'
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
@@ -289,7 +289,7 @@ jobs:
       python -m pytest -v tslearn/
     displayName: 'Test'
 
-- job: 'doctests-without_torch'
+- job: 'doctests_without_torch'
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
