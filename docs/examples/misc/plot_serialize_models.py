@@ -46,6 +46,8 @@ Load a model from disk::
 """
 
 # Example using KShape
+import os
+import tempfile
 
 import numpy
 import matplotlib.pyplot as plt
@@ -71,11 +73,14 @@ ks = KShape(n_clusters=3, verbose=True, random_state=seed)
 # Train
 ks.fit(X_train)
 
-# Save model
-ks.to_hdf5('./ks_trained.hdf5')
+with tempfile.TemporaryDirectory() as tmpdir:
+    # Save model
+    filename = os.path.join(tmpdir, "ks_trained.hdf5")
+    if not os.path.isfile(filename):
+        ks.to_hdf5(filename)
 
-# Load model
-trained_ks = KShape.from_hdf5('./ks_trained.hdf5')
+    # Load model
+    trained_ks = KShape.from_hdf5(filename)
 
 # Use loaded model to make predictions
 y_pred = trained_ks.predict(X_train)
