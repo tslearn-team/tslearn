@@ -37,7 +37,7 @@ jobs:
       set -xe
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -e '.[tests, pytorch]'
+      python -m pip install -e '.[tests,pytorch]'
     displayName: 'Install tslearn and dependencies for tests, torch included'
 
   - script: |
@@ -79,7 +79,7 @@ jobs:
       set -xe
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -e '.[tests, pytorch]'
+      python -m pip install -e '.[tests,pytorch]'
     displayName: 'Install tslearn and dependencies for tests, torch included'
 
   - script: |
@@ -124,7 +124,7 @@ jobs:
       brew install openblas  # required due to https://github.com/numpy/numpy/issues/15947
       export OPENBLAS=$(brew --prefix openblas)
       python -m pip install --upgrade pip
-      python -m pip install -e '.[tests, pytorch]'
+      python -m pip install -e '.[tests,pytorch]'
     displayName: 'Install tslearn and dependencies for tests, torch included'
 
   - script: |
@@ -169,7 +169,7 @@ jobs:
       brew install openblas  # required due to https://github.com/numpy/numpy/issues/15947
       export OPENBLAS=$(brew --prefix openblas)
       python -m pip install --upgrade pip
-      python -m pip install -e '.[tests, pytorch]'
+      python -m pip install -e '.[tests,pytorch]'
     displayName: 'Install tslearn and dependencies for tests, torch included'
 
   - script: |
@@ -209,7 +209,7 @@ jobs:
   - script: |
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -e '.[tests, pytorch]'
+      python -m pip install -e '.[tests,pytorch]'
     displayName: 'Install tslearn and dependencies for tests, torch included'
   
   - script: |
@@ -248,7 +248,7 @@ jobs:
   - script: |
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -e '.[tests, pytorch]'
+      python -m pip install -e '.[tests,pytorch]'
     displayName: 'Install tslearn and dependencies for tests, torch included'
 
   - script: |
@@ -344,7 +344,7 @@ jobs:
       set -xe
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -e '.[tests, pytorch]'
+      python -m pip install -e '.[tests,pytorch]'
     displayName: 'Install tslearn and dependencies for tests, torch included'
 
   - script: |
