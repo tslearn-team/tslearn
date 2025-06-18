@@ -218,7 +218,7 @@ jobs:
       python -m pytest -v tslearn/
     displayName: 'Test'
 
-- job: 'tests-windows'
+- job: 'doctests-windows'
   pool:
     vmImage: 'windows-latest'
   strategy:
