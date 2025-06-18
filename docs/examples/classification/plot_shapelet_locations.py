@@ -51,7 +51,7 @@ shapelet_sizes = {20: 1}
 # Define the model and fit it using the training data
 shp_clf = LearningShapelets(n_shapelets_per_size=shapelet_sizes,
                             weight_regularizer=0.001,
-                            optimizer=Adam(lr=0.01),
+                            optimizer=Adam(0.01),
                             max_iter=250,
                             verbose=0,
                             scale=False,
