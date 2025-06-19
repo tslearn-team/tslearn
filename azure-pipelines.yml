@@ -20,8 +20,6 @@ jobs:
         python.version: '3.11'
       Python312:
         python.version: '3.12'
-      Python313:
-        python.version: '3.13'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -62,8 +60,6 @@ jobs:
         python.version: '3.11'
       Python312:
         python.version: '3.12'
-      Python313:
-        python.version: '3.13'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -104,8 +100,6 @@ jobs:
         python.version: '3.11'
       Python312:
         python.version: '3.12'
-      Python313:
-        python.version: '3.13'
 
   variables:
     OMP_NUM_THREADS: '2'
@@ -149,8 +143,6 @@ jobs:
         python.version: '3.11'
       Python312:
         python.version: '3.12'
-      Python313:
-        python.version: '3.13'
 
   variables:
     OMP_NUM_THREADS: '2'
@@ -194,8 +186,6 @@ jobs:
         python.version: '3.11'
       Python312:
         python.version: '3.12'
-      Python313:
-        python.version: '3.13'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -233,8 +223,6 @@ jobs:
         python.version: '3.11'
       Python312:
         python.version: '3.12'
-      Python313:
-        python.version: '3.13'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
