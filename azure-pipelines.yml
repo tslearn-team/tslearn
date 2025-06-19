@@ -209,7 +209,7 @@ jobs:
   - script: |
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -e '.[tests,pytorch]'
+      python -m pip install -e ".[tests,pytorch]"
     displayName: 'Install tslearn and dependencies for tests, torch included'
   
   - script: |
@@ -248,7 +248,7 @@ jobs:
   - script: |
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -e '.[tests,pytorch]'
+      python -m pip install -e ".[tests,pytorch]"
     displayName: 'Install tslearn and dependencies for tests, torch included'
 
   - script: |
