@@ -42,7 +42,7 @@ jobs:
       set -xe
       python -m pip install pytest-azurepipelines
       pip list
-      python -m pytest -v tslearn/
+      python -m pytest -v tslearn/ -k "not test_all_estimators"
     displayName: 'Test'
 
 - job: 'doctests_linux'
@@ -82,7 +82,7 @@ jobs:
       set -xe
       python -m pip install pytest-azurepipelines
       pip list
-      python -m pytest -v tslearn/ --doctest-modules --ignore=tslearn/tests
+      python -m pytest -v tslearn/ --doctest-modules -k "not test_ or test_all_estimators"
     displayName: 'Doctest'
 
 - job: 'tests_macOS'
@@ -125,7 +125,7 @@ jobs:
       set -xe
       python -m pip install pytest-azurepipelines
       pip list
-      python -m pytest -v tslearn/
+      python -m pytest -v tslearn/ -k "not test_all_estimators"
     displayName: 'Test'
 
 - job: 'doctests_macOS'
@@ -168,7 +168,7 @@ jobs:
       set -xe
       python -m pip install pytest-azurepipelines
       pip list
-      python -m pytest -v tslearn/ --doctest-modules --ignore=tslearn/tests
+      python -m pytest -v tslearn/ --doctest-modules -k "not test_ or test_all_estimators"
     displayName: 'Doctest'
 
 - job: 'tests_windows'
@@ -205,7 +205,7 @@ jobs:
   - script: |
       python -m pip install pytest-azurepipelines
       pip list
-      python -m pytest -v tslearn/
+      python -m pytest -v tslearn/ -k "not test_all_estimators"
     displayName: 'Test'
 
 - job: 'doctests_windows'
@@ -242,7 +242,7 @@ jobs:
   - script: |
       python -m pip install pytest-azurepipelines
       pip list
-      python -m pytest -v tslearn/ --doctest-modules --ignore=tslearn/tests
+      python -m pytest -v tslearn/ --doctest-modules -k "not test_ or test_all_estimators"
     displayName: 'Doctest'
 
 - job: 'tests_without_torch'
@@ -274,7 +274,7 @@ jobs:
       set -xe
       python -m pip install pytest-azurepipelines
       pip list
-      python -m pytest -v tslearn/
+      python -m pytest -v tslearn/ -k "not test_all_estimators"
     displayName: 'Test'
 
 - job: 'doctests_without_torch'
@@ -306,7 +306,7 @@ jobs:
       set -xe
       python -m pip install pytest-azurepipelines
       pip list
-      python -m pytest -v tslearn/ --doctest-modules --ignore=tslearn/tests -k 'not tslearn.metrics.softdtw_variants.soft_dtw and not tslearn.metrics.softdtw_variants.cdist_soft_dtw and not tslearn.metrics.dtw_variants.dtw or tslearn.metrics.dtw_variants.dtw_'
+      python -m pytest -v tslearn/ --doctest-modules -k 'not test_ and not tslearn.metrics.softdtw_variants.soft_dtw and not tslearn.metrics.softdtw_variants.cdist_soft_dtw and not tslearn.metrics.dtw_variants.dtw or tslearn.metrics.dtw_variants.dtw_ or test_all_estimators'
     displayName: 'Doctest'
 
 - job: 'codecov'  # must be a separate job to only disable Numbas's JIT here
