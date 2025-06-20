@@ -57,7 +57,7 @@ from tslearn.tests.sklearn_patches import (
                              check_pipeline_consistency,
                              yield_all_checks,
                              _create_large_ts_dataset)
-from tslearn.shapelets import LearningShapelets
+
 import warnings
 import pytest
 
