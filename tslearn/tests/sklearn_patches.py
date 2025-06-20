@@ -273,8 +273,6 @@ def check_classifiers_classes(name, classifier_orig):
     # Case of shapelet models
     if name in ['LearningShapelets', 'TimeSeriesMLPClassifier']:
         X_multiclass, y_multiclass = _create_large_ts_dataset()
-        classifier_orig = clone(classifier_orig)
-        classifier_orig.max_iter = 1000
     else:
         X_multiclass, y_multiclass = _create_small_ts_dataset()
 
@@ -321,8 +319,6 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False,
     # Case of shapelet models
     if name in ['LearningShapelets', 'TimeSeriesMLPClassifier']:
         X_m, y_m = _create_large_ts_dataset()
-        classifier_orig = clone(classifier_orig)
-        classifier_orig.max_iter = 1000
     else:
         X_m, y_m = _create_small_ts_dataset()
     X_m = X_m.astype(X_dtype)
