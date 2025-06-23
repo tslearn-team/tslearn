@@ -30,20 +30,33 @@ setup(
     package_data={"tslearn": [".cached_datasets/singleTrainTest.csv", ".cached_datasets/Trace.npz"]},
     install_requires=[
         "scikit-learn<1.7",
-        "numpy",
-        "scipy",
-        "numba",
-        "joblib>=0.12",
-        "h5py",
-        "tensorflow==2.9.0; python_version == '3.8'",
-        "tensorflow>=2; python_version != '3.8'"
+        "numpy<2.3",
+        "scipy<1.17",
+        "numba<0.62",
+        "joblib>=0.12,<1.6"
     ],
-    extras_require={'tests': ["pytest",
-                              "matplotlib",
-                              "cesium >= 0.12.2; python_version >= '3.9' and 'darwin' not in sys_platform",
-                              "cesium; python_version < '3.9' or 'darwin' in sys_platform",
-                              "pandas"],
-                    'pytorch': ['torch']},
+    extras_require={
+        "pytorch": ['torch'],
+        "tests": [
+            "pytest",
+            "torch",
+            "h5py",
+            "tensorflow==2.9.0; python_version == '3.8'",
+            "tensorflow>=2; python_version != '3.8' and python_version < '3.13'",
+        ],
+        "all": [
+            "torch",
+            "h5py",
+            "tensorflow==2.9.0; python_version == '3.8'",
+            "tensorflow>=2; python_version != '3.8' and python_version < '3.13'",
+            "cesium >= 0.12.2; python_version >= '3.9' and 'darwin' not in sys_platform",
+            "cesium; python_version < '3.9' or 'darwin' in sys_platform",
+            "stumpy < 1.14",
+            "pandas",
+            "pytest",
+            "matplotlib"
+        ]
+    },
     version=get_version(),
     url="http://tslearn.readthedocs.io/",
     project_urls={
