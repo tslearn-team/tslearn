@@ -342,10 +342,12 @@ jobs:
       python -m pip install pytest-azurepipelines
       python -m pip install coverage pytest-cov
       pip list
-      python -m pytest -v tslearn/ --cov=tslearn
+      python -m pytest -v tslearn/ --cov=tslearn --doctest-modules
     displayName: 'Test'
 
   # Upload coverage to codecov.io
   - script: |
-      bash <(curl -s https://codecov.io/bash) -v
+      set -xe
+      pip install codecov-cli
+      codecovcli --verbose upload-process --disable-search -f coverage.xml
     displayName: 'Upload coverage to codecov.io'
