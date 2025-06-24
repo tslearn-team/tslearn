@@ -28,5 +28,5 @@ formats: all
 python:
   install:
   - requirements: docs/requirements_rtd.txt
-  - method: setuptools
+  - method: pip
     path: .
