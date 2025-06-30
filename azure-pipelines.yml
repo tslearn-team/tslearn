@@ -267,7 +267,7 @@ jobs:
       set -xe
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -e '.[tests][all_features]'
+      python -m pip install -e '.[tests,all_features]'
       python -m pip uninstall -y torch
     displayName: 'Install tslearn and dependencies for tests, torch removed'
 
