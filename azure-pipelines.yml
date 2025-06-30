@@ -35,7 +35,7 @@ jobs:
       set -xe
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -e '.[all]'
+      python -m pip install -e '.[tests][all_features]'
     displayName: 'Install tslearn and dependencies for tests'
 
   - script: |
@@ -75,7 +75,7 @@ jobs:
       set -xe
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -e '.[test][all_features]'
+      python -m pip install -e '.[tests][all_features]'
     displayName: 'Install tslearn and dependencies for tests'
 
   - script: |
@@ -118,7 +118,7 @@ jobs:
       brew install openblas  # required due to https://github.com/numpy/numpy/issues/15947
       export OPENBLAS=$(brew --prefix openblas)
       python -m pip install --upgrade pip
-      python -m pip install -e '.[test][all_features]'
+      python -m pip install -e '.[tests][all_features]'
     displayName: 'Install tslearn and dependencies for tests'
 
   - script: |
@@ -161,7 +161,7 @@ jobs:
       brew install openblas  # required due to https://github.com/numpy/numpy/issues/15947
       export OPENBLAS=$(brew --prefix openblas)
       python -m pip install --upgrade pip
-      python -m pip install -e '.[test][all_features]'
+      python -m pip install -e '.[tests][all_features]'
     displayName: 'Install tslearn and dependencies for tests'
 
   - script: |
@@ -199,7 +199,7 @@ jobs:
   - script: |
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -e ".[test][all_features]"
+      python -m pip install -e ".[tests][all_features]"
     displayName: 'Install tslearn and dependencies for tests'
 
   - script: |
@@ -236,7 +236,7 @@ jobs:
   - script: |
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -e ".[test][all_features]"
+      python -m pip install -e ".[tests][all_features]"
     displayName: 'Install tslearn and dependencies for tests'
 
   - script: |
@@ -267,7 +267,7 @@ jobs:
       set -xe
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -e '.[test][all_features]'
+      python -m pip install -e '.[tests][all_features]'
       python -m pip uninstall -y torch
     displayName: 'Install tslearn and dependencies for tests, torch removed'
 
@@ -300,7 +300,7 @@ jobs:
       set -xe
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -e '.[test][all_features]'
+      python -m pip install -e '.[tests][all_features]'
       python -m pip uninstall -y torch
     displayName: 'Install tslearn and dependencies for tests, torch removed'
 
@@ -334,7 +334,7 @@ jobs:
       set -xe
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -e '.[test][all_features]'
+      python -m pip install -e '.[tests][all_features]'
     displayName: 'Install tslearn and dependencies for tests, torch included'
 
   - script: |
