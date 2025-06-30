@@ -5,22 +5,24 @@ on:
     types:
       - published
 jobs:
-  build_wheels:
-    name: ubuntu-latest
+  build_sdist_and_wheel:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
+
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: 3.10
 
-    - name: Build wheel
+    - name: Build sdist and wheels
       run: |
-        pip wheel -w wheelhouse/ .
+        python -m pip install build
+        python -m build --wheel --sdist --outdir wheelhouse
 
-    - uses: actions/upload-artifact@v2
+    - name: Upload
+      uses: actions/upload-artifact@v4
       with:
         name: wheels
-        path: ./wheelhouse
+        path: wheelhouse/*
