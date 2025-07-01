@@ -1,3 +1,5 @@
+.. _integration_other_software:
+
 Integration with other Python packages
 --------------------------------------
 

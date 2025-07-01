@@ -15,6 +15,11 @@ More information on the method can be found at:
 http://fs.ismll.de/publicspace/LearningShapelets/.
 """
 
+# %%
+# .. warning::
+#     When using tensorflow 2.11 to 2.15 (highly probable with python3.8) use
+#     ` from tensorflow.keras.optimizers.legacy import Adam`
+
 # Author: Romain Tavenard
 # License: BSD 3 clause
 
@@ -23,8 +28,8 @@ import matplotlib.pyplot as plt
 
 from tslearn.datasets import CachedDatasets
 from tslearn.preprocessing import TimeSeriesScalerMinMax
-from tslearn.shapelets import LearningShapelets, \
-    grabocka_params_to_shapelet_size_dict
+from tslearn.shapelets import LearningShapelets
+
 from tensorflow.keras.optimizers import Adam
 
 # Set a seed to ensure determinism
