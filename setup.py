@@ -49,7 +49,8 @@ setup(
             "h5py",
             "tensorflow==2.9.0; python_version == '3.8'",
             "tensorflow>=2; python_version != '3.8' and python_version < '3.13'",
-            "cesium",
+            "cesium >= 0.12.2; python_version >= '3.9' and 'darwin' not in sys_platform",
+            "cesium; python_version < '3.9' or 'darwin' in sys_platform",
             "stumpy",
             "pandas",
         ]
