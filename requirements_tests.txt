@@ -10,5 +10,4 @@ pandas
 cesium >= 0.12.2; python_version >= '3.9' and 'darwin' not in sys_platform
 cesium; python_version < '3.9' or 'darwin' in sys_platform
 stumpy
-matplotlib
 pytest

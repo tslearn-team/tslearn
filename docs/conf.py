@@ -26,6 +26,9 @@ if not on_rtd:
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 rtd_version = os.environ.get('READTHEDOCS_VERSION', 'local')
 
+# Insert extensions
+sys.path.append(os.path.join(os.path.dirname(__file__), '_ext'))
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -35,6 +38,7 @@ rtd_version = os.environ.get('READTHEDOCS_VERSION', 'local')
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'rst_templates',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.doctest',
@@ -359,6 +363,20 @@ texinfo_documents = [
    u'Romain Tavenard', 'tslearn', 'One line description of project.',
    'Miscellaneous'),
 ]
+
+
+def get_dependencies():
+    """ Retrieve required dependencies """
+    # Should be changed when dropping python 3.8 for doc generation
+    import distutils.core
+    from packaging.requirements import Requirement
+    setup_ = distutils.core.run_setup("../setup.py")
+    return [Requirement(requirement) for requirement in setup_.install_requires]
+
+
+rst_templates= {
+    "dependencies.rst": {"dependencies": get_dependencies()}
+}
 
 # Documents to append as an appendix to all manuals.
 #texinfo_appendices = []

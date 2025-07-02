@@ -29,10 +29,10 @@ setup(
     packages=find_packages(),
     package_data={"tslearn": [".cached_datasets/singleTrainTest.csv", ".cached_datasets/Trace.npz"]},
     install_requires=[
-        "scikit-learn<1.7",
-        "numpy<2.3",
-        "scipy<1.17",
-        "numba<0.62",
+        "scikit-learn>=1.3.2,<1.7",
+        "numpy>=1.24.3,<2.3",
+        "scipy>=1.10.1,<1.17",
+        "numba>=0.58.1,<0.62",
         "joblib>=0.12,<1.6"
     ],
     extras_require={
@@ -43,18 +43,16 @@ setup(
             "h5py",
             "tensorflow==2.9.0; python_version == '3.8'",
             "tensorflow>=2; python_version != '3.8' and python_version < '3.13'",
+            "stumpy"
         ],
-        "all": [
+        "all_features": [
             "torch",
             "h5py",
             "tensorflow==2.9.0; python_version == '3.8'",
             "tensorflow>=2; python_version != '3.8' and python_version < '3.13'",
             "cesium >= 0.12.2; python_version >= '3.9' and 'darwin' not in sys_platform",
             "cesium; python_version < '3.9' or 'darwin' in sys_platform",
-            "stumpy < 1.14",
             "pandas",
-            "pytest",
-            "matplotlib"
         ]
     },
     version=get_version(),
