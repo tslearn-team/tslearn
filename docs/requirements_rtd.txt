@@ -8,7 +8,7 @@ torch
 sphinx>=1.6.1
 ipykernel
 nbsphinx
-sphinx-gallery==0.15.0
+sphinx-gallery
 pillow
 Pygments
 sphinx_bootstrap_theme
