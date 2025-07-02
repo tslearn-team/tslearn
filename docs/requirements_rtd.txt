@@ -4,7 +4,7 @@ scipy
 numba
 tensorflow==2.9.0; python_version == '3.8'
 tensorflow>=2; python_version != '3.8'
-torch==2.1.2
+torch==2.7.1
 sphinx>=1.6.1
 ipykernel
 nbsphinx
