@@ -80,7 +80,6 @@ sphinx_gallery_conf = {
                                        '_static/img/logo.png'),
     'backreferences_dir': 'gen_modules/backreferences',
     'doc_module': ('tslearn',),
-    'parallel': 4,
     'subsection_order': ["examples/metrics", "examples/neighbors",
                          "examples/clustering", "examples/classification",
                          "examples/autodiff", "examples/misc"].index,
