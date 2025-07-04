@@ -5,8 +5,6 @@ tslearn.shapelets
 
 .. automodule:: tslearn.shapelets
 
-   
-   
    .. rubric:: Functions
 
    .. autosummary::
@@ -14,10 +12,7 @@ tslearn.shapelets
       :template: function.rst
    
       grabocka_params_to_shapelet_size_dict
-   
 
-   
-   
    .. rubric:: Classes
 
    .. autosummary::

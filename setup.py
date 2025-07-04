@@ -45,6 +45,16 @@ setup(
             "tensorflow>=2; python_version != '3.8' and python_version < '3.13'",
             "stumpy"
         ],
+        "docs": [
+            "sphinx",
+            "sphinx_bootstrap_theme",
+            "sphinx-gallery",
+            "numpydoc",
+            "nbsphinx",
+            "matplotlib",
+            "ipykernel",
+            "pypandoc"
+        ],
         "all_features": [
             "torch",
             "h5py",

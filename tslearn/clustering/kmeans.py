@@ -184,7 +184,7 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
         computations.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors. See scikit-learns'
-        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`_
         for more details.
 
     verbose : int (default: 0)
@@ -516,7 +516,7 @@ class TimeSeriesKMeans(
         parallelization.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors. See scikit-learns'
-        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`_
         for more details.
 
     dtw_inertia: bool (default: False)
@@ -535,7 +535,7 @@ class TimeSeriesKMeans(
         Method for initialization:
         'k-means++' : use k-means++ heuristic. See `scikit-learn's k_init_
         <https://github.com/scikit-learn/scikit-learn/blob/master/sklearn/\
-        cluster/k_means_.py>`_ for more.
+        cluster/_kmeans.py>`_ for more.
         'random': choose k observations (rows) at random from data for the
         initial centroids.
         If an ndarray is passed, it should be of shape (n_clusters, ts_size, d)

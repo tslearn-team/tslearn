@@ -4,11 +4,7 @@ tslearn.preprocessing
 =====================
 
 .. automodule:: tslearn.preprocessing
-   
-   
 
-   
-   
    .. rubric:: Classes
 
    .. autosummary::

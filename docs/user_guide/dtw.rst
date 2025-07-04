@@ -55,9 +55,7 @@ values.
     :width: 30%
     :align: center
 
-Code to produce such visualization is available in our `Gallery of examples`_.
-
-.. _Gallery of examples: auto_examples/metrics/plot_dtw.html
+Code to produce such visualization is available in our :ref:`gallery of examples <sphx_glr_auto_examples_metrics_plot_dtw.py>`.
 
 Algorithmic solution
 --------------------

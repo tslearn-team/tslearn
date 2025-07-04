@@ -27,7 +27,7 @@ image.
        and Signal Processing, 26(1), 43-49 (1978).
 
 .. [2] Definition of the length of an arc on `Wikipedia
-       <https://en.wikipedia.org/wiki/Arc_(geometry)#Length_of_an_arc_of_a_circle>`_.
+       <https://en.wikipedia.org/wiki/Curve#Length_of_a_curve>`_.
 
 .. [3] See Hammig distance in `Scipy's documentation
        <https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.hamming.html>`_.

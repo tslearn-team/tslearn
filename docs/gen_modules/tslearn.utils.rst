@@ -5,8 +5,6 @@ tslearn.utils
 
 .. automodule:: tslearn.utils
 
-   
-   
    .. rubric:: Generic functions
 
    .. autosummary::

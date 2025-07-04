@@ -4,11 +4,7 @@ tslearn.neighbors
 =================
 
 .. automodule:: tslearn.neighbors
-   
-   
 
-   
-   
    .. rubric:: Classes
 
    .. autosummary::

@@ -23,7 +23,7 @@ occurred within the pre-defined threshold, is represented in white on the image.
     Conference on Data Engineering (ICDE '02). IEEE Computer Society, USA, 673.
 
 .. [2] Definition of the length of an arc on `Wikipedia
-       <https://en.wikipedia.org/wiki/Arc_(geometry)#Length_of_an_arc_of_a_circle>`_.
+       <https://en.wikipedia.org/wiki/Curve#Length_of_a_curve>`_.
 
 """
 
