@@ -610,7 +610,7 @@ def dtw_path_from_metric(
     ([(0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.117...)
 
     Notes
-    --------
+    -----
     By using a squared euclidean distance metric as shown above, the output
     path is the same as the one obtained by using dtw_path but the similarity
     score is the sum of squared distances instead of the euclidean distance.
@@ -1746,7 +1746,7 @@ def compute_mask(
     itakura_max_slope=None,
     be=None,
 ):
-    """Compute the mask (region constraint).
+    r"""Compute the mask (region constraint).
 
     Parameters
     ----------
@@ -1905,7 +1905,7 @@ def cdist_dtw(
         The number of jobs to run in parallel.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors. See scikit-learns'
-        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`__
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`__
         for more details.
 
     verbose : int, optional (default=0)
@@ -2372,8 +2372,8 @@ def lcss(
     presented in [1]_ and is discussed in more details in our
     :ref:`dedicated user-guide page <lcss>`.
 
-    Note
-    ----
+    Notes
+    -----
     Contrary to Dynamic Time Warping and variants, an LCSS path does not need to be contiguous.
 
     Parameters
@@ -2688,8 +2688,8 @@ def lcss_path(
     presented in [1]_ and is discussed in more details in our
     :ref:`dedicated user-guide page <lcss>`.
 
-    Note
-    ----
+    Notes
+    -----
     Contrary to Dynamic Time Warping and variants, an LCSS path does not need to be contiguous.
 
     Parameters
@@ -2986,7 +2986,7 @@ def lcss_path_from_metric(
     ([(0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.0)
 
     Notes
-    --------
+    -----
     By using a squared euclidean distance metric as shown above, the output
     path and similarity is the same as the one obtained by using lcss_path
     (which uses the euclidean distance) simply because with the sum of squared

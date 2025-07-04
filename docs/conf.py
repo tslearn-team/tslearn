@@ -12,11 +12,12 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
 import os
-import warnings
-import sphinx_bootstrap_theme
 import subprocess
+import sys
+import warnings
+
+import sphinx_bootstrap_theme
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -26,8 +27,8 @@ if not on_rtd:
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 rtd_version = os.environ.get('READTHEDOCS_VERSION', 'local')
 
-# Insert extensions
-sys.path.append(os.path.join(os.path.dirname(__file__), '_ext'))
+import tslearn
+
 
 # -- General configuration ------------------------------------------------
 
@@ -38,7 +39,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '_ext'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'rst_templates',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.doctest',
@@ -60,49 +60,38 @@ intersphinx_mapping = {
     'python': ('https://docs.python.org/{.major}'.format(
         sys.version_info), None),
     'numpy': ('https://numpy.org/doc/stable', None),
-    'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
-    'matplotlib': ('https://matplotlib.org/', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy', None),
+    'matplotlib': ('https://matplotlib.org/stable', None),
     'sklearn': ('https://scikit-learn.org/stable', None)
 }
 
 from sphinx_gallery.scrapers import matplotlib_scraper
 
-class matplotlib_svg_scraper(object):
-
-    def __repr__(self):
-        return self.__class__.__name__
-
-    def __call__(self, *args, **kwargs):
-        return matplotlib_scraper(*args, format='svg', **kwargs)
+def matplotlib_svg_scraper(*args, **kwargs):
+    """ SVG scrapper """
+    kwargs.pop("format", None)
+    return matplotlib_scraper(*args, format='svg', **kwargs)
 
 sphinx_gallery_conf = {
     'examples_dirs': ['./examples'],
     'gallery_dirs': ['./auto_examples'],
-    'reference_url':  {'tslearn': None},
-    'default_thumb_file': '_static/img/logo.png',
+    'reference_url': {'tslearn': None},
+    'default_thumb_file': os.path.join(os.path.dirname(__file__),
+                                       '_static/img/logo.png'),
     'backreferences_dir': 'gen_modules/backreferences',
     'doc_module': ('tslearn',),
-    'subsection_order': ["examples", "examples/metrics", "examples/neighbors",
+    'parallel': 4,
+    'subsection_order': ["examples/metrics", "examples/neighbors",
                          "examples/clustering", "examples/classification",
                          "examples/autodiff", "examples/misc"].index,
-    'image_scrapers': (matplotlib_svg_scraper(),),
-    # 'binder': {
-    #     # Required keys
-    #     'org': 'rtavenar',
-    #     'repo': 'tslearn',
-    #     'branch': 'master',
-    #     'binderhub_url': 'https://mybinder.org',
-    #     'dependencies': '../../requirements.txt',
-    #     # Optional keys
-    #     'use_jupyter_lab': True
-    # }
+    'image_scrapers': (matplotlib_svg_scraper,),
 }
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
 # The suffix of source filenames.
-source_suffix = '.rst'
+source_suffix = {'.rst': 'restructuredtext'}
 
 # The encoding of source files.
 #source_encoding = 'utf-8'
@@ -112,13 +101,11 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'tslearn'
-copyright = u'2017, Romain Tavenard'
+copyright = u'2025, Romain Tavenard'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
-#
-import tslearn
 version = tslearn.__version__
 # The full version, including alpha/beta/rc tags.
 release = tslearn.__version__
@@ -135,7 +122,13 @@ release = tslearn.__version__
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build', '**.ipynb_checkpoints']
+exclude_patterns = [
+    "_build",
+    "**sg_execution_times**",
+    "examples/**/*.py",
+    "auto_examples/**/*.ipynb",
+    "auto_examples/**/*.py"
+]
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -191,6 +184,9 @@ html_theme_options = {
     # Tab name for the current pages TOC. (Default: "Page")
     'navbar_pagenav_name': "Current Page",
 
+    # Remove search sidebar
+    'nosidebar': True,
+
     # Global TOC depth for "site" navbar tab. (Default: 1)
     # Switching to -1 shows all levels.
     'globaltoc_depth': -1,
@@ -213,11 +209,6 @@ html_theme_options = {
     # - Bootstrap 3: https://bootswatch.com/3
     'bootswatch_theme': "lumen"
 }
-
-def setup(app):
-    html_css_files = ["custom.css"]
-    if rtd_version != 'stable':
-        html_js_files = ["custom.js"]
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -364,20 +355,6 @@ texinfo_documents = [
    'Miscellaneous'),
 ]
 
-
-def get_dependencies():
-    """ Retrieve required dependencies """
-    # Should be changed when dropping python 3.8 for doc generation
-    import distutils.core
-    from packaging.requirements import Requirement
-    setup_ = distutils.core.run_setup("../setup.py")
-    return [Requirement(requirement) for requirement in setup_.install_requires]
-
-
-rst_templates= {
-    "dependencies.rst": {"dependencies": get_dependencies()}
-}
-
 # Documents to append as an appendix to all manuals.
 #texinfo_appendices = []
 
@@ -430,3 +407,53 @@ def linkcode_resolve(domain, info):
 warnings.filterwarnings("ignore", category=UserWarning,
                         message='Matplotlib is currently using agg, which is a'
                                 ' non-GUI backend, so cannot show the figure.')
+
+
+def get_dependencies():
+    """ Retrieve required dependencies """
+    import distutils.core
+    from packaging.requirements import Requirement
+    setup_ = distutils.core.run_setup("../setup.py", stop_after='run')
+    return [Requirement(requirement) for requirement in setup_.install_requires]
+
+rst_templates= {
+    "dependencies.rst": {"dependencies": get_dependencies()}
+}
+
+def setup(app):
+    """ Setup our app """
+    # Ensure pandoc is installed
+    import pypandoc
+    pypandoc.ensure_pandoc_installed(
+        targetfolder=os.path.join(sys.exec_prefix, "bin"),
+        delete_installer=True,
+    )
+
+    # Deals with dynamic rst templates
+    import jinja2
+    config_value = 'rst_templates'
+    def render_on_include_read(app_, relative_path, _, content):
+        """
+        Render our page as a jinja template with dedicated context
+        on include-read event.
+        """
+        templates = getattr(app_.config, config_value, {})
+        if str(relative_path) in templates:
+            content[0] = jinja2.Template(content[0]).render(
+                **templates[str(relative_path)]
+            )
+    def render_on_source_read(app_, doc_name, source):
+        """
+        Render our page as a jinja template with dedicated context
+        on source-read event.
+        """
+        templates = getattr(app_.config, config_value, {})
+        if doc_name + '.rst' in templates:
+            rendered = jinja2.Template(source[0]).render(
+                **templates[doc_name + '.rst']
+            )
+            source[0] = rendered
+    app.add_config_value(config_value, {}, True, dict)
+    app.connect("source-read", render_on_source_read)
+    app.connect("include-read", render_on_include_read)
+

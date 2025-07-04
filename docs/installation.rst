@@ -4,7 +4,7 @@ Installation
 Using conda
 -----------
 
-The easiest way to install ``tslearn`` is probably via ``conda``:
+The easiest way to install ``tslearn`` is probably via ``conda`` (preferably in a dedicated environment):
 
 .. code-block:: bash
 
@@ -37,7 +37,7 @@ A note on requirements
 
 .. include:: ./dependencies.rst
 
-Those should automatically be pulled on a standard ``tslearn` installation.
+Those should automatically be pulled on a standard ``tslearn`` installation.
 
 If you plan to use the :mod:`tslearn.shapelets` module from
 ``tslearn``, ``tensorflow`` (v2) should also be installed.
