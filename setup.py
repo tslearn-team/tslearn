@@ -41,7 +41,7 @@ setup(
             "pytest",
             "torch",
             "h5py",
-            "tensorflow",
+            "tensorflow; python_version < '3.13'",
             "stumpy"
         ],
         "docs": [
@@ -57,10 +57,10 @@ setup(
         "all_features": [
             "torch",
             "h5py",
-            "tensorflow",
-            "cesium >= 0.12.2; python_version >= '3.9' and 'darwin' not in sys_platform",
-            "cesium; python_version < '3.9' or 'darwin' in sys_platform",
-            "pandas",
+            "tensorflow;  python_version < '3.13'",
+            "cesium >= 0.12.2; 'darwin' not in sys_platform",
+            "cesium; 'darwin' in sys_platform",
+            "pandas"
         ]
     },
     version=get_version(),
