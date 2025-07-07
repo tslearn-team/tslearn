@@ -4,11 +4,7 @@ tslearn.piecewise
 =================
 
 .. automodule:: tslearn.piecewise
-   
-   
 
-   
-   
    .. rubric:: Classes
 
    .. autosummary::

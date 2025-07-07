@@ -106,7 +106,7 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
         parallelization.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors. See scikit-learns'
-        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`_
         for more details.
 
     verbose : int (default: 0)

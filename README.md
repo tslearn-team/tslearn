@@ -11,7 +11,7 @@
 <!-- The badges -->
 <p align="center">
     <a href="https://badge.fury.io/py/tslearn">
-        <img alt="PyPI" src="https://badge.fury.io/py/tslearn.svg">
+        <img alt="PyPI" src="https://badge.fury.io/py/tslearn.svg?cache-control=no-cache">
     </a>
     <a href="http://tslearn.readthedocs.io/en/stable/?badge=stable">
         <img alt="Documentation" src="https://readthedocs.org/projects/tslearn/badge/?version=stable">

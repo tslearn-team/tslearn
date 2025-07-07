@@ -4,11 +4,7 @@ tslearn.clustering
 ==================
 
 .. automodule:: tslearn.clustering
-   
-   
 
-   
-   
    .. rubric:: Classes
 
    .. autosummary::

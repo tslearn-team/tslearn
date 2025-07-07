@@ -42,7 +42,7 @@ class NonMyopicEarlyClassifier(ClassifierMixin, TimeSeriesBaseEstimator):
         Random state of the base estimator
 
     Attributes
-    --------------------
+    ----------
 
     classifiers_ : list
         A list containing all the classifiers trained for the model, that is,

@@ -129,7 +129,7 @@ and vice versa.
 sktime
 ^^^^^^
 
-`sktime <https://alan-turing-institute.github.io/sktime/>`_ is a ``scikit-learn``
+`sktime <https://www.sktime.net/>`_ is a ``scikit-learn``
 compatible Python toolbox for learning with time series.
 :func:`tslearn.utils.to_sktime_dataset` and :func:`tslearn.utils.from_sktime_dataset`
 allow users to convert a data set from ``tslearn`` format to ``sktime`` format

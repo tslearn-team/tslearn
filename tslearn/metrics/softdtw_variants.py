@@ -269,7 +269,7 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.0, n_jobs=None, verbose=0, be=Non
         The number of jobs to run in parallel.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors. See scikit-learns'
-        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`__
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`__
         for more details.
     verbose : int, optional (default=0)
         The verbosity level: if non zero, progress messages are printed.

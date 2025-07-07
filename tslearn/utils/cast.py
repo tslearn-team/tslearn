@@ -282,8 +282,7 @@ def to_sktime_dataset(X):
     Returns
     -------
     Pandas data-frame
-        sktime-formatted dataset (cf.
-        `link <https://alan-turing-institute.github.io/sktime/examples/loading_data.html>`_)
+        sktime-formatted dataset
 
     Examples
     --------
@@ -323,8 +322,7 @@ def from_sktime_dataset(X):
     Parameters
     ----------
     X: pandas data-frame
-        sktime-formatted dataset (cf.
-        `link <https://alan-turing-institute.github.io/sktime/examples/loading_data.html>`_)
+        sktime-formatted dataset
 
     Returns
     -------
@@ -522,7 +520,7 @@ def to_tsfresh_dataset(X):
     -------
     Pandas data-frame
         tsfresh-formatted dataset ("flat" data frame, as described
-        `there <https://tsfresh.readthedocs.io/en/latest/text/data_formats.html#input-option-1-flat-dataframe>`_)
+        `there <https://tsfresh.readthedocs.io/en/latest/text/data_formats.html#input-option-1-flat-dataframe-or-wide-dataframe>`_)
 
     Examples
     --------
@@ -567,7 +565,7 @@ def from_tsfresh_dataset(X):
     ----------
     X: pandas data-frame
         tsfresh-formatted dataset ("flat" data frame, as described
-        `there <https://tsfresh.readthedocs.io/en/latest/text/data_formats.html#input-option-1-flat-dataframe>`_)
+        `there <https://tsfresh.readthedocs.io/en/latest/text/data_formats.html#input-option-1-flat-dataframe-or-wide-dataframe>`_)
 
     Returns
     -------
