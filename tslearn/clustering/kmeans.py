@@ -1,38 +1,13 @@
-import warnings
-
 import numpy
-import sklearn
+
 from scipy.spatial.distance import cdist
+
 from sklearn.base import ClusterMixin, TransformerMixin
+from sklearn.cluster._kmeans import _kmeans_plusplus
 from sklearn.metrics.pairwise import pairwise_kernels
 from sklearn.utils import check_random_state
 from sklearn.utils.extmath import stable_cumsum
 from sklearn.utils.validation import _check_sample_weight
-
-try:
-    from sklearn.cluster._kmeans import _kmeans_plusplus
-
-    SKLEARN_VERSION_GREATER_THAN_OR_EQUAL_TO_1_3_0 = sklearn.__version__ >= "1.3.0"
-except:
-    try:
-        from sklearn.cluster._kmeans import _k_init
-
-        warnings.warn(
-            "Scikit-learn <0.24 will be deprecated in a " "future release of tslearn"
-        )
-    except:
-        from sklearn.cluster.k_means_ import _k_init
-
-        warnings.warn(
-            "Scikit-learn <0.24 will be deprecated in a " "future release of tslearn"
-        )
-    # sklearn < 0.24: _k_init only returns centroids, not indices
-    # So we need to add a second (fake) return value to make it match
-    # _kmeans_plusplus' signature
-    def _kmeans_plusplus(*args, **kwargs):
-        return _k_init(*args, **kwargs), None
-
-
 from sklearn.utils.validation import check_is_fitted
 
 from tslearn.barycenters import (
@@ -639,22 +614,14 @@ class TimeSeriesKMeans(
             self.cluster_centers_ = self.init.copy()
         elif isinstance(self.init, str) and self.init == "k-means++":
             if self.metric == "euclidean":
-                if SKLEARN_VERSION_GREATER_THAN_OR_EQUAL_TO_1_3_0:
-                    sample_weight = _check_sample_weight(None, X, dtype=X.dtype)
-                    self.cluster_centers_ = _kmeans_plusplus(
-                        X.reshape((n_ts, -1)),
-                        self.n_clusters,
-                        x_squared_norms=x_squared_norms,
-                        sample_weight=sample_weight,
-                        random_state=rs,
-                    )[0].reshape((-1, sz, d))
-                else:
-                    self.cluster_centers_ = _kmeans_plusplus(
-                        X.reshape((n_ts, -1)),
-                        self.n_clusters,
-                        x_squared_norms=x_squared_norms,
-                        random_state=rs,
-                    )[0].reshape((-1, sz, d))
+                sample_weight = _check_sample_weight(None, X, dtype=X.dtype)
+                self.cluster_centers_ = _kmeans_plusplus(
+                    X.reshape((n_ts, -1)),
+                    self.n_clusters,
+                    x_squared_norms=x_squared_norms,
+                    sample_weight=sample_weight,
+                    random_state=rs,
+                )[0].reshape((-1, sz, d))
             else:
                 if self.metric == "dtw":
 
