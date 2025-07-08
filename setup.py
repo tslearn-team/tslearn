@@ -58,8 +58,8 @@ setup(
             "torch",
             "h5py",
             "tensorflow;  python_version < '3.13'",
-            "cesium >= 0.12.2; 'darwin' not in sys_platform",
-            "cesium; 'darwin' in sys_platform",
+            "cesium; 'darwin' not in sys_platform",
+            "cesium==0.12.1; 'darwin' in sys_platform",
             "pandas"
         ]
     },
