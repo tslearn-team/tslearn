@@ -4,11 +4,7 @@ tslearn.datasets
 ================
 
 .. automodule:: tslearn.datasets
-   
-   
 
-   
-   
    .. rubric:: Classes
 
    .. autosummary::

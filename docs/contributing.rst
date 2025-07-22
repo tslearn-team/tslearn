@@ -56,7 +56,7 @@ GitHub, clone, and develop on a branch. Steps:
    to create a pull request from your fork. This will send an email to the committers.
 
 (If any of the above seems like magic to you, please look up the
-`Git documentation <https://git-scm.com/documentation>`_ on the web, or ask a friend or another contributor for help.)
+`Git documentation <https://git-scm.com/doc>`_ on the web, or ask a friend or another contributor for help.)
 
 Pull Request Checklist
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -116,18 +116,17 @@ Here is a description of useful tools to check your code locally:
 - To run the tests locally and get code coverage, use the
   `pytest <https://docs.pytest.org/en/latest/>`_ and `pytest-cov <https://pytest-cov.readthedocs.io/en/latest/>`_ Python packages::
 
-     $ pip install pytest pytest-cov
+     $ pip install -e .[tests,all_features]
      $ pytest --cov tslearn
 
 - To build the documentation locally, install the following packages and run
   the ``make html`` command in the ``tslearn/docs`` folder::
 
-     $ pip install sphinx==1.8.5 sphinx-gallery sphinx-bootstrap-theme nbsphinx
-     $ pip install numpydoc matplotlib
-     $ cd tslearn/docs
+     $ pip install -e .[docs,all_features]
+     $ cd docs
      $ make html
 
-  The documentation will be generated in the ``_build/html``. You can double
+  The documentation will be generated in the ``_build/html`` directory. You can double
   click on ``index.html`` to open the index page, which will look like
   the first page that you see on the online documentation. Then you can move to
   the pages that you modified and have a look at your changes.

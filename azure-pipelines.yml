@@ -5,17 +5,19 @@
 
 jobs:
 
-- job: 'linux'
+- job: 'tests_linux'
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
     matrix:
-      Python38:
-        python.version: '3.8'
       Python39:
         python.version: '3.9'
       Python310:
         python.version: '3.10'
+      Python311:
+        python.version: '3.11'
+      Python312:
+        python.version: '3.12'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -31,24 +33,207 @@ jobs:
       set -xe
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -r requirements.txt
-      python -m pip install torch
-    displayName: 'Install dependencies'
+      python -m pip install -e '.[tests,all_features]'
+    displayName: 'Install tslearn and dependencies for tests'
 
   - script: |
       set -xe
-      python -m pip install -e .
-    displayName: 'Install tslearn'
-
-  - script: |
-      set -xe
-      python -m pip install -r requirements_tests.txt
       python -m pip install pytest-azurepipelines
       pip list
-      python -m pytest -v tslearn/ --doctest-modules
+      python -m pytest -v tslearn/ -k "not test_all_estimators"
     displayName: 'Test'
 
-- job: 'linux_without_torch'
+- job: 'doctests_linux'
+  pool:
+    vmImage: 'ubuntu-latest'
+  strategy:
+    matrix:
+      Python39:
+        python.version: '3.9'
+      Python310:
+        python.version: '3.10'
+      Python311:
+        python.version: '3.11'
+      Python312:
+        python.version: '3.12'
+  variables:
+    OMP_NUM_THREADS: '2'
+    NUMBA_NUM_THREADS: '2'
+    PIP_PREFER_BINARY: 'true'
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+    displayName: 'Use Python $(python.version)'
+
+  - script: |
+      set -xe
+      python --version
+      python -m pip install --upgrade pip
+      python -m pip install -e '.[tests,all_features]'
+    displayName: 'Install tslearn and dependencies for tests'
+
+  - script: |
+      set -xe
+      python -m pip install pytest-azurepipelines
+      pip list
+      python -m pytest -v tslearn/ --doctest-modules -k "not test_ or test_all_estimators"
+    displayName: 'Doctest'
+
+- job: 'tests_macOS'
+  pool:
+    vmImage: 'macos-latest'
+  strategy:
+    matrix:
+      Python39:
+        python.version: '3.9'
+      Python310:
+        python.version: '3.10'
+      Python311:
+        python.version: '3.11'
+      Python312:
+        python.version: '3.12'
+
+  variables:
+    OMP_NUM_THREADS: '2'
+    NUMBA_NUM_THREADS: '2'
+    PIP_PREFER_BINARY: 'true'
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+    displayName: 'Use Python $(python.version)'
+
+  - script: |
+      set -xe
+      python --version
+      brew install openblas  # required due to https://github.com/numpy/numpy/issues/15947
+      export OPENBLAS=$(brew --prefix openblas)
+      python -m pip install --upgrade pip
+      python -m pip install -e '.[tests,all_features]'
+    displayName: 'Install tslearn and dependencies for tests'
+
+  - script: |
+      set -xe
+      python -m pip install pytest-azurepipelines
+      pip list
+      python -m pytest -v tslearn/ -k "not test_all_estimators"
+    displayName: 'Test'
+
+- job: 'doctests_macOS'
+  pool:
+    vmImage: 'macos-latest'
+  strategy:
+    matrix:
+      Python39:
+        python.version: '3.9'
+      Python310:
+        python.version: '3.10'
+      Python311:
+        python.version: '3.11'
+      Python312:
+        python.version: '3.12'
+
+  variables:
+    OMP_NUM_THREADS: '2'
+    NUMBA_NUM_THREADS: '2'
+    PIP_PREFER_BINARY: 'true'
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+    displayName: 'Use Python $(python.version)'
+
+  - script: |
+      set -xe
+      python --version
+      brew install openblas  # required due to https://github.com/numpy/numpy/issues/15947
+      export OPENBLAS=$(brew --prefix openblas)
+      python -m pip install --upgrade pip
+      python -m pip install -e '.[tests,all_features]'
+    displayName: 'Install tslearn and dependencies for tests'
+
+  - script: |
+      set -xe
+      python -m pip install pytest-azurepipelines
+      pip list
+      python -m pytest -v tslearn/ --doctest-modules -k "not test_ or test_all_estimators"
+    displayName: 'Doctest'
+
+- job: 'tests_windows'
+  pool:
+    vmImage: 'windows-latest'
+  strategy:
+    matrix:
+      Python39:
+        python.version: '3.9'
+      Python310:
+        python.version: '3.10'
+      Python311:
+        python.version: '3.11'
+      Python312:
+        python.version: '3.12'
+  variables:
+    OMP_NUM_THREADS: '2'
+    NUMBA_NUM_THREADS: '2'
+    PIP_PREFER_BINARY: 'true'
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+
+  - script: |
+      python --version
+      python -m pip install --upgrade pip
+      python -m pip install -e ".[tests,all_features]"
+    displayName: 'Install tslearn and dependencies for tests'
+
+  - script: |
+      python -m pip install pytest-azurepipelines
+      pip list
+      python -m pytest -v tslearn/ -k "not test_all_estimators"
+    displayName: 'Test'
+
+- job: 'doctests_windows'
+  pool:
+    vmImage: 'windows-latest'
+  strategy:
+    matrix:
+      Python39:
+        python.version: '3.9'
+      Python310:
+        python.version: '3.10'
+      Python311:
+        python.version: '3.11'
+      Python312:
+        python.version: '3.12'
+  variables:
+    OMP_NUM_THREADS: '2'
+    NUMBA_NUM_THREADS: '2'
+    PIP_PREFER_BINARY: 'true'
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+
+  - script: |
+      python --version
+      python -m pip install --upgrade pip
+      python -m pip install -e ".[tests,all_features]"
+    displayName: 'Install tslearn and dependencies for tests'
+
+  - script: |
+      python -m pip install pytest-azurepipelines
+      pip list
+      python -m pytest -v tslearn/ --doctest-modules -k "not test_ or test_all_estimators"
+    displayName: 'Doctest'
+
+- job: 'tests_without_torch'
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
@@ -70,23 +255,49 @@ jobs:
       set -xe
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -r requirements.txt
-      python -m pip uninstall torch
-    displayName: 'Install dependencies'
+      python -m pip install -e '.[tests,all_features]'
+      python -m pip uninstall -y torch
+    displayName: 'Install tslearn and dependencies for tests, torch removed'
 
   - script: |
       set -xe
-      python -m pip install -e .
-    displayName: 'Install tslearn'
-
-  - script: |
-      set -xe
-      python -m pip install -r requirements_tests.txt
       python -m pip install pytest-azurepipelines
       pip list
-      python -m pytest -v tslearn/ --doctest-modules -k 'not tslearn.metrics.softdtw_variants.soft_dtw and not tslearn.metrics.softdtw_variants.cdist_soft_dtw and not tslearn.metrics.dtw_variants.dtw or tslearn.metrics.dtw_variants.dtw_'
+      python -m pytest -v tslearn/ -k "not test_all_estimators"
     displayName: 'Test'
 
+- job: 'doctests_without_torch'
+  pool:
+    vmImage: 'ubuntu-latest'
+  strategy:
+    matrix:
+      Python310:
+        python.version: '3.10'
+  variables:
+    OMP_NUM_THREADS: '2'
+    NUMBA_NUM_THREADS: '2'
+    PIP_PREFER_BINARY: 'true'
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+    displayName: 'Use Python $(python.version)'
+
+  - script: |
+      set -xe
+      python --version
+      python -m pip install --upgrade pip
+      python -m pip install -e '.[tests,all_features]'
+      python -m pip uninstall -y torch
+    displayName: 'Install tslearn and dependencies for tests, torch removed'
+
+  - script: |
+      set -xe
+      python -m pip install pytest-azurepipelines
+      pip list
+      python -m pytest -v tslearn/ --doctest-modules -k 'not test_ and not tslearn.metrics.softdtw_variants.soft_dtw and not tslearn.metrics.softdtw_variants.cdist_soft_dtw and not tslearn.metrics.dtw_variants.dtw or tslearn.metrics.dtw_variants.dtw_ or test_all_estimators'
+    displayName: 'Doctest'
 
 - job: 'codecov'  # must be a separate job to only disable Numbas's JIT here
   pool:
@@ -111,114 +322,22 @@ jobs:
       set -xe
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -r requirements.txt
-      python -m pip install torch
-    displayName: 'Install dependencies'
+      python -m pip install -e '.[tests,all_features]'
+    displayName: 'Install tslearn and dependencies for tests, torch included'
 
   - script: |
       set -xe
-      python -m pip install -e .
-    displayName: 'Install tslearn'
-
-  - script: |
-      set -xe
-      python -m pip install -r requirements_tests.txt
       python -m pip install pytest-azurepipelines
       python -m pip install coverage pytest-cov
-      python -m pytest -v tslearn/ --doctest-modules --cov=tslearn
+      pip list
+      python -m pytest -v tslearn/ --cov=tslearn
     displayName: 'Test'
 
   # Upload coverage to codecov.io
   - script: |
-      bash <(curl -s https://codecov.io/bash) -v
+      set -xe
+      pip install codecov-cli
+      codecovcli --verbose upload-process --disable-search -f coverage.xml
+    env:
+      CODECOV_TOKEN: $(CODECOV_TOKEN_SECRET)
     displayName: 'Upload coverage to codecov.io'
-
-
-- job: 'macOS'
-  pool:
-    vmImage: 'macos-latest'
-  strategy:
-    matrix:
-      Python38:
-        python.version: '3.8'
-      Python39:
-        python.version: '3.9'
-      Python310:
-        python.version: '3.10'
-  variables:
-    OMP_NUM_THREADS: '2'
-    NUMBA_NUM_THREADS: '2'
-    PIP_PREFER_BINARY: 'true'
-
-  steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '$(python.version)'
-    displayName: 'Use Python $(python.version)'
-  
-  - script: |
-      set -xe
-      python --version
-      brew install openblas  # required due to https://github.com/numpy/numpy/issues/15947
-      export OPENBLAS=$(brew --prefix openblas)
-      python -m pip install --upgrade pip
-      python -m pip install -r requirements.txt
-      python -m pip install torch
-    displayName: 'Install dependencies'
-  
-  - script: |
-      set -xe
-      export OPENBLAS=$(brew --prefix openblas)
-      python -m pip install -e .
-    displayName: 'Install tslearn'
-  
-  - script: |
-      set -xe
-      python -m pip install -r requirements_tests.txt
-      python -m pip install pytest-azurepipelines
-      pip list
-      python -m pytest -v tslearn/ --doctest-modules -k 'not test_all_estimators'
-    displayName: 'Test'
-
-
-- job: 'windows'
-  pool:
-    vmImage: 'windows-latest'
-  strategy:
-    matrix:
-      Python38:
-        python_ver: '38'
-        python.version: '3.8'
-      Python39:
-        python_ver: '39'
-        python.version: '3.9'
-      Python310:
-        python_ver: '310'
-        python.version: '3.10'
-  variables:
-    OMP_NUM_THREADS: '2'
-    NUMBA_NUM_THREADS: '2'
-    PIP_PREFER_BINARY: 'true'
-
-  steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '$(python.version)'
-  
-  - script: |
-      python --version
-      python -m pip install --upgrade pip
-      python -m pip install -r requirements.txt
-      python -m pip install torch
-    displayName: 'Install dependencies'
-  
-  - script: |
-      python -m pip install -e .
-    displayName: 'Install tslearn'
-  
-  - script: |
-      python -m pip install -r requirements_tests.txt
-      python -m pip install pytest-azurepipelines
-      pip list
-      python -m pytest -v tslearn/ --doctest-modules --ignore tslearn/tests/test_estimators.py --ignore tslearn/utils/cast.py
-    displayName: 'Test'

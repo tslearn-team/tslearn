@@ -4,8 +4,7 @@ tslearn.matrix_profile
 ======================
 
 .. automodule:: tslearn.matrix_profile
-   
-   
+
    .. rubric:: Classes
 
    .. autosummary::

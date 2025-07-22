@@ -5,8 +5,6 @@ tslearn.metrics
 
 .. automodule:: tslearn.metrics
 
-
-
    .. rubric:: Functions
 
    .. autosummary::

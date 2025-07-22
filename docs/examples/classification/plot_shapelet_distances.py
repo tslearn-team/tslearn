@@ -14,6 +14,11 @@ More information on the method can be found at:
 http://fs.ismll.de/publicspace/LearningShapelets/.
 """
 
+# %%
+# .. warning::
+#     When using tensorflow 2.11 to 2.15 (highly probable with python3.8) use
+#     ` from tensorflow.keras.optimizers.legacy import Adam`
+
 # Author: Gilles Vandewiele
 # License: BSD 3 clause
 
@@ -70,10 +75,10 @@ fig_ax4 = fig.add_subplot(gs[:, 4:])
 
 # Plot our two shapelets on the left side
 fig_ax1.plot(shp_clf.shapelets_[0])
-fig_ax1.set_title('Shapelet $\mathbf{s}_1$')
+fig_ax1.set_title('Shapelet $\\mathbf{s}_1$')
 
 fig_ax2.plot(shp_clf.shapelets_[1])
-fig_ax2.set_title('Shapelet $\mathbf{s}_2$')
+fig_ax2.set_title('Shapelet $\\mathbf{s}_2$')
 
 # Create the time series of each class
 for i, subfig in enumerate([fig_ax3a, fig_ax3b, fig_ax3c, fig_ax3d]):
@@ -105,8 +110,8 @@ Z = numpy.array(Z).reshape(xx.shape)
 cs = fig_ax4.contourf(xx, yy, Z / 3, cmap=viridis, alpha=0.25)
 
 fig_ax4.legend()
-fig_ax4.set_xlabel('$d(\mathbf{x}, \mathbf{s}_1)$')
-fig_ax4.set_ylabel('$d(\mathbf{x}, \mathbf{s}_2)$')
+fig_ax4.set_xlabel('$d(\\mathbf{x}, \\mathbf{s}_1)$')
+fig_ax4.set_ylabel('$d(\\mathbf{x}, \\mathbf{s}_2)$')
 fig_ax4.set_xlim((xmin, xmax))
 fig_ax4.set_ylim((ymin, ymax))
 fig_ax4.set_title('Distance transformed time series')
