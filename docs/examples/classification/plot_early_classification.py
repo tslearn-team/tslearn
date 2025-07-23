@@ -18,6 +18,8 @@ series as a non myopic sequential decision making problem. ECML/PKDD 2015
 # License: BSD 3 clause
 # sphinx_gallery_thumbnail_number = 2
 
+import os
+
 import numpy
 import matplotlib.pyplot as plt
 
@@ -42,7 +44,12 @@ def plot_partial(time_series, t, y_true=0, y_pred=0, color="k"):
 # ------------------------------
 
 numpy.random.seed(0)
-X_train, y_train, X_test, y_test = UCR_UEA_datasets().load_dataset("ECG200")
+loader = UCR_UEA_datasets()
+current_path = __file__ if "__file__" in locals() else os.getcwd()
+loader._data_dir = os.path.join(
+    os.path.dirname(os.path.realpath(current_path)), '..', "datasets"
+)
+X_train, y_train, X_test, y_test = loader.load_dataset("ECG200")
 
 # Scale time series
 X_train = TimeSeriesScalerMeanVariance().fit_transform(X_train)
