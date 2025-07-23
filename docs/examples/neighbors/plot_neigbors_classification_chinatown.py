@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Nearest Neighbors Classification
-================================
+Nearest Neighbors Classification (Chinatown dataset)
+====================================================
 
 This example demonstrates the use of k-nearest neighbors based classifiers for time series
 :class:`~tslearn.neighbors.KNeighborsTimeSeriesClassifier` and examines the impact 
-of different distance metrics as model parameters on the `GunPoint` time series dataset .
+of different distance metrics as model parameters on the `Chinatown` time series dataset .
 
 We compare the predictive performance of classifiers [1] fitted with three different 
 metrics: Dynamic Time Warping (DTW )[2], Euclidean distance and Symbolic Aggregate 
@@ -29,30 +29,38 @@ import warnings
 warnings.filterwarnings("ignore")
 # sphinx_gallery_end_ignore
 
-# Authors: Anna Bobasheva, Romain Tavenard
+# Authors: Romain Tavenard, Anna Bobasheva
 # License: BSD 3 clause
 
 ##############################################################################
 # Load the dataset
 # ----------------
 #
-# In this example we use the `GunPoint dataset from the UCR/UEA archive
-# <https://www.timeseriesclassification.com/description.php?Dataset=GunPoint>`_ .
+# In this example we use the `Chinatown dataset from the UCR/UEA archive
+# <https://www.timeseriesclassification.com/description.php?Dataset=Chinatown>`_ .
 #
-# The dataset contains hand movement trajectories (x coordinates) 
-# for two different actions performed by actors: drawing a gun from a hip holster and 
-# pointing with a finger at a target. 
+# The dataset consists of pedestrian counts recorded at the Chinatown location in 
+# Melbourne, Australia. Each time series represents the number of pedestrians 
+# detected during a day, weekday or weekend. 
 #
 # The dataset is scaled to the [0, 1] range to ensure that time series
 # are on a comparable scale before applying distance-based classification.
 from tslearn.datasets import UCR_UEA_datasets
 from tslearn.preprocessing import TimeSeriesScalerMinMax
 
-X_train, y_train, X_test, y_test = UCR_UEA_datasets().load_dataset("GunPoint")
-X_train = TimeSeriesScalerMinMax().fit_transform(X_train)
-X_test = TimeSeriesScalerMinMax().fit_transform(X_test)
-y_train = y_train - 1  # Convert to binary classes (0 and 1)
-y_test = y_test - 1
+loader = UCR_UEA_datasets()
+# sphinx_gallery_start_ignore
+if "__file__" not in locals():
+    # runs by sphinx-gallery
+    import os
+    loader._data_dir = os.path.join(
+        os.path.dirname(os.path.realpath(os.getcwd())), '..', "datasets"
+    )
+# sphinx_gallery_end_ignore
+X_train, y_train, X_test, y_test = loader.load_dataset("Chinatown")
+
+scaler = TimeSeriesScalerMinMax() 
+X_train, X_test = scaler.fit_transform(X_train), scaler.fit_transform(X_test)
 
 ##############################################################################
 # Nearest neighbor classification
@@ -150,7 +158,7 @@ plt.show()
 # ----------
 #
 # We observe that DTW distance generally outperforms both Euclidean and SAX metrics across most k values.
-# This confirms that accounting for temporal distortion is beneficial for the `GunPoint`
+# This confirms that accounting for temporal distortion is beneficial for the `Chinatown`
 # dataset where the same action may be performed at different speeds.
 #
 # The clear performance difference highlights why choosing an appropriate distance metric

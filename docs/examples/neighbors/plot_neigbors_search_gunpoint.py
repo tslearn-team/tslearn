@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-=====================================
-Unsupervised Nearest Neighbors Search
-=====================================
+========================================================
+Unsupervised Nearest Neighbors Search (GunPoint dataset)
+========================================================
 
 This example illustrates how to perform unsupervised k-nearest neighbors [1] search using 
 :class:`~tslearn.neighbors.KNeighborsTimeSeries` to identify similar time series 
@@ -22,7 +22,7 @@ import warnings
 warnings.filterwarnings("ignore")
 # sphinx_gallery_end_ignore
 
-# Author: Romain Tavenard
+# Authors: Romain Tavenard, Anna Bobasheva
 # License: BSD 3 clause
 
 ##############################################################################
@@ -41,11 +41,22 @@ warnings.filterwarnings("ignore")
 from tslearn.datasets import UCR_UEA_datasets
 from tslearn.preprocessing import TimeSeriesScalerMinMax
 
-X_train, y_train, X_test, y_test = UCR_UEA_datasets().load_dataset("GunPoint")
-X_train = TimeSeriesScalerMinMax().fit_transform(X_train)
-X_test = TimeSeriesScalerMinMax().fit_transform(X_test)
-y_train = y_train - 1  # Convert to binary classes (0 and 1)
-y_test = y_test - 1
+loader = UCR_UEA_datasets()
+# sphinx_gallery_start_ignore
+if "__file__" not in locals():
+    # runs by sphinx-gallery
+    import os
+    loader._data_dir = os.path.join(
+        os.path.dirname(os.path.realpath(os.getcwd())), '..', "datasets"
+    )
+# sphinx_gallery_end_ignore
+X_train, y_train, X_test, y_test = loader.load_dataset("GunPoint")
+
+scaler = TimeSeriesScalerMinMax() 
+X_train, X_test = scaler.fit_transform(X_train), scaler.fit_transform(X_test)
+
+# Convert class labels to zero-based indexing (0 and 1) for convenience
+y_train, y_test = y_train - 1, y_test - 1 
 labels = ["Gun", "Point"]
 
 ##############################################################################
@@ -70,7 +81,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 ind_0 = np.argmin(np.sum(y_train[ind], axis=1)) # Find test sample with class 0 neighbors only
-ind_1 = np.argmax(np.sum(y_train[ind], axis=1)) # Find test sample with class 0 neighbors only
+ind_1 = np.argmax(np.sum(y_train[ind], axis=1)) # Find test sample with class 1 neighbors only
 
 plt.figure(figsize=(10, 6))
 for i, idx in enumerate([ind_0, ind_1]):
