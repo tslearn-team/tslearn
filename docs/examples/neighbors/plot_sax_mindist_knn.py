@@ -18,7 +18,6 @@ The comparison is based on test accuracy using several benchmark datasets.
 # Author: Gilles Vandewiele
 # License: BSD 3 clause
 
-import os
 import time
 import warnings
 
