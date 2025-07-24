@@ -36,7 +36,7 @@ jobs:
       python -m pip install pytest-azurepipelines
       python -m pip install coverage pytest-cov
       pip list
-      python -m pytest -v tslearn/ -k "dataset" --cov=tslearn
+      python -m pytest -v tslearn/ -k "test_dtw" --cov=tslearn
     displayName: 'Test'
 
   # Upload coverage to codecov.io
