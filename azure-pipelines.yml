@@ -43,6 +43,7 @@ jobs:
   - script: |
       set -xe
       pip install codecov-cli
+      printenv
       codecovcli --verbose upload-process --disable-search -f coverage.xml
     env:
       CODECOV_TOKEN: $(CODECOV_TOKEN_SECRET)
