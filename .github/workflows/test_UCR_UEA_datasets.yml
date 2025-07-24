@@ -19,5 +19,5 @@ jobs:
       run: python3 -m pip install .[tests]
       shell: bash
     - name: test da
-      run: python3 -m pytest-v tslearn -k "dataset" --doctest-modules
+      run: python3 -m pytest -v tslearn -k "dataset" --doctest-modules
       shell: bash
