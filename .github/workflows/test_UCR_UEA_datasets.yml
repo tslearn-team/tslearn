@@ -1,0 +1,23 @@
+name: Test UCR UEA datasets
+on:
+  schedule:
+    - cron:  '30 1 * * *'
+
+jobs:
+  test_ucr_uea_datasets:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install and test env
+        run: python3 -m pip install .[tests]
+        shell: bash
+    - name: test da
+        run: python3 -m pytest -k "dataset" tslearn
+        shell: bash
