@@ -16,8 +16,8 @@ jobs:
         python-version: '3.10'
 
     - name: Install and test env
-        run: python3 -m pip install .[tests]
-        shell: bash
+      run: python3 -m pip install .[tests]
+      shell: bash
     - name: test da
-        run: python3 -m pytest -k "dataset" tslearn
-        shell: bash
+      run: python3 -m pytest -k "dataset" tslearn
+      shell: bash
