@@ -18,7 +18,6 @@ The comparison is based on test accuracy using several benchmark datasets.
 # Author: Gilles Vandewiele
 # License: BSD 3 clause
 
-import os
 import time
 import warnings
 
@@ -68,10 +67,14 @@ numpy.random.seed(0)
 
 # Defining dataset and the number of segments
 data_loader = UCR_UEA_datasets()
-current_path = __file__ if "__file__" in locals() else os.getcwd()
-data_loader._data_dir = os.path.join(
-    os.path.dirname(os.path.realpath(current_path)), '..', "datasets"
-)
+# sphinx_gallery_start_ignore
+if "__file__" not in locals():
+    # runs by sphinx-gallery
+    import os
+    data_loader._data_dir = os.path.join(
+        os.path.dirname(os.path.realpath(os.getcwd())), '..', "datasets"
+    )
+# sphinx_gallery_end_ignore
 datasets = [
     ('SyntheticControl', 16),
     ('GunPoint', 64),
