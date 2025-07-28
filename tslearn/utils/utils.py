@@ -41,6 +41,29 @@ check_array = fix_force_all_finite_warning(sk_check_array)
 check_X_y = fix_force_all_finite_warning(sk_check_X_y)
 
 
+def check_variable_length_input(X):
+    """Input validation on a variable length dataset.
+
+    Parameters
+    ----------
+    X : object
+        Input object to check / convert.
+
+    Returns
+    -------
+        array_converted : object
+        The converted and validated array.
+    """
+    if getattr(X, "shape", None) is None:
+        # Check each time series when X can be of variable length before
+        # to_time_series_dataset processing
+        for ts in X:
+            check_array([ts], allow_nd=True, force_all_finite=False)
+    else:
+        X = check_array(X, allow_nd=True, force_all_finite=False)
+    return to_time_series_dataset(X)
+
+
 def check_dims(X, X_fit_dims=None, extend=True, check_n_features_only=False):
     """Reshapes X to a 3-dimensional array of X.shape[0] univariate
     timeseries of length X.shape[1] if X is 2-dimensional and extend
@@ -579,7 +602,7 @@ class LabelCategorizer(TransformerMixin, TimeSeriesBaseEstimator):
     single_column_if_binary : boolean (optional, default: False)
         If true, generate a single column for binary classification case.
         Otherwise, will generate 2.
-        If there are more than 2 labels, thie option will not change anything.
+        If there are more than 2 labels, this option will not change anything.
     forward_match : dict
         A dictionary that maps each element that occurs in the label vector
         on a index {y_i : i} with i in [0, C - 1], C the total number of
