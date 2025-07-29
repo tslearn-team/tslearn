@@ -18,20 +18,17 @@ The comparison is based on test accuracy using several benchmark datasets.
 # Author: Gilles Vandewiele
 # License: BSD 3 clause
 
-import warnings
 import time
+import warnings
 
 import numpy
-import matplotlib.pyplot as plt
-from scipy.stats import norm
+
+from sklearn.base import clone
+from sklearn.metrics import accuracy_score
 
 from tslearn.datasets import UCR_UEA_datasets
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.neighbors import KNeighborsTimeSeriesClassifier
-
-from sklearn.base import clone
-from sklearn.metrics import pairwise_distances, accuracy_score
-from sklearn.neighbors import KNeighborsClassifier
 
 
 warnings.filterwarnings('ignore')
@@ -70,6 +67,14 @@ numpy.random.seed(0)
 
 # Defining dataset and the number of segments
 data_loader = UCR_UEA_datasets()
+# sphinx_gallery_start_ignore
+if "__file__" not in locals():
+    # runs by sphinx-gallery
+    import os
+    data_loader._data_dir = os.path.join(
+        os.path.dirname(os.path.realpath(os.getcwd())), '..', "datasets"
+    )
+# sphinx_gallery_end_ignore
 datasets = [
     ('SyntheticControl', 16),
     ('GunPoint', 64),

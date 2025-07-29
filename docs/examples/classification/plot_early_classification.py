@@ -42,7 +42,16 @@ def plot_partial(time_series, t, y_true=0, y_pred=0, color="k"):
 # ------------------------------
 
 numpy.random.seed(0)
-X_train, y_train, X_test, y_test = UCR_UEA_datasets().load_dataset("ECG200")
+loader = UCR_UEA_datasets()
+# sphinx_gallery_start_ignore
+if "__file__" not in locals():
+    # runs by sphinx-gallery
+    import os
+    loader._data_dir = os.path.join(
+        os.path.dirname(os.path.realpath(os.getcwd())), '..', "datasets"
+    )
+# sphinx_gallery_end_ignore
+X_train, y_train, X_test, y_test = loader.load_dataset("ECG200")
 
 # Scale time series
 X_train = TimeSeriesScalerMeanVariance().fit_transform(X_train)

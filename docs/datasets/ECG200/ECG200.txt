@@ -1,0 +1,6 @@
+This dataset was formatted by R. Olszewski as part of his thesis
+“Generalized feature extraction for structural	pattern recognition
+in time-series data,” at Carnegie Mellon University, 2001. Each
+series traces the electrical activity recorded during one
+heartbeat. The two classes are a normal heartbeat and a Myocardial
+Infarction. 	
