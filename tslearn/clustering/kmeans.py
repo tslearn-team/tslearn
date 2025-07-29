@@ -1,39 +1,13 @@
-import warnings
-
 import numpy
-import sklearn
+
 from scipy.spatial.distance import cdist
+
 from sklearn.base import ClusterMixin, TransformerMixin
+from sklearn.cluster._kmeans import _kmeans_plusplus
 from sklearn.metrics.pairwise import pairwise_kernels
 from sklearn.utils import check_random_state
 from sklearn.utils.extmath import stable_cumsum
 from sklearn.utils.validation import _check_sample_weight
-
-try:
-    from sklearn.cluster._kmeans import _kmeans_plusplus
-
-    SKLEARN_VERSION_GREATER_THAN_OR_EQUAL_TO_1_3_0 = sklearn.__version__ >= "1.3.0"
-except:
-    try:
-        from sklearn.cluster._kmeans import _k_init
-
-        warnings.warn(
-            "Scikit-learn <0.24 will be deprecated in a " "future release of tslearn"
-        )
-    except:
-        from sklearn.cluster.k_means_ import _k_init
-
-        warnings.warn(
-            "Scikit-learn <0.24 will be deprecated in a " "future release of tslearn"
-        )
-    # sklearn < 0.24: _k_init only returns centroids, not indices
-    # So we need to add a second (fake) return value to make it match
-    # _kmeans_plusplus' signature
-    def _kmeans_plusplus(*args, **kwargs):
-        return _k_init(*args, **kwargs), None
-
-
-from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 
 from tslearn.barycenters import (
@@ -43,7 +17,7 @@ from tslearn.barycenters import (
 )
 from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
 from tslearn.metrics import cdist_dtw, cdist_gak, cdist_soft_dtw, sigma_gak
-from tslearn.utils import check_dims, to_sklearn_dataset, to_time_series_dataset
+from tslearn.utils import check_array, check_dims, to_sklearn_dataset, to_time_series_dataset
 
 from .utils import (
     EmptyClusterError,
@@ -185,7 +159,7 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
         computations.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors. See scikit-learns'
-        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`_
         for more details.
 
     verbose : int (default: 0)
@@ -458,7 +432,13 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
         return dist.argmin(axis=1)
 
     def _more_tags(self):
-        return {"allow_nan": True, "allow_variable_length": True}
+        sample_weight_failure_msg = "Currently not supported due to clusters initialization"
+        return {"allow_nan": True,
+                "allow_variable_length": True,
+                "_xfail_checks": {
+                    "check_sample_weight_equivalence_on_dense_data": sample_weight_failure_msg,
+                    "check_sample_weight_equivalence_on_sparse_data": sample_weight_failure_msg
+                }}
 
 
 class TimeSeriesKMeans(
@@ -511,7 +491,7 @@ class TimeSeriesKMeans(
         parallelization.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors. See scikit-learns'
-        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`_
         for more details.
 
     dtw_inertia: bool (default: False)
@@ -530,7 +510,7 @@ class TimeSeriesKMeans(
         Method for initialization:
         'k-means++' : use k-means++ heuristic. See `scikit-learn's k_init_
         <https://github.com/scikit-learn/scikit-learn/blob/master/sklearn/\
-        cluster/k_means_.py>`_ for more.
+        cluster/_kmeans.py>`_ for more.
         'random': choose k observations (rows) at random from data for the
         initial centroids.
         If an ndarray is passed, it should be of shape (n_clusters, ts_size, d)
@@ -634,22 +614,14 @@ class TimeSeriesKMeans(
             self.cluster_centers_ = self.init.copy()
         elif isinstance(self.init, str) and self.init == "k-means++":
             if self.metric == "euclidean":
-                if SKLEARN_VERSION_GREATER_THAN_OR_EQUAL_TO_1_3_0:
-                    sample_weight = _check_sample_weight(None, X, dtype=X.dtype)
-                    self.cluster_centers_ = _kmeans_plusplus(
-                        X.reshape((n_ts, -1)),
-                        self.n_clusters,
-                        x_squared_norms=x_squared_norms,
-                        sample_weight=sample_weight,
-                        random_state=rs,
-                    )[0].reshape((-1, sz, d))
-                else:
-                    self.cluster_centers_ = _kmeans_plusplus(
-                        X.reshape((n_ts, -1)),
-                        self.n_clusters,
-                        x_squared_norms=x_squared_norms,
-                        random_state=rs,
-                    )[0].reshape((-1, sz, d))
+                sample_weight = _check_sample_weight(None, X, dtype=X.dtype)
+                self.cluster_centers_ = _kmeans_plusplus(
+                    X.reshape((n_ts, -1)),
+                    self.n_clusters,
+                    x_squared_norms=x_squared_norms,
+                    sample_weight=sample_weight,
+                    random_state=rs,
+                )[0].reshape((-1, sz, d))
             else:
                 if self.metric == "dtw":
 

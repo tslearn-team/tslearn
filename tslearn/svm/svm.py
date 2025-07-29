@@ -1,12 +1,10 @@
 from sklearn.svm import SVC, SVR
 from sklearn.base import ClassifierMixin, RegressorMixin
-from sklearn.utils import deprecated
-from sklearn.utils import check_array, check_X_y
 from sklearn.utils.validation import check_is_fitted
 import numpy
 
 from ..metrics import cdist_gak, gamma_soft_dtw, VARIABLE_LENGTH_METRICS
-from ..utils import to_time_series_dataset, check_dims, to_sklearn_dataset
+from ..utils import to_time_series_dataset, check_array, check_dims, check_X_y, to_sklearn_dataset
 from ..bases import TimeSeriesBaseEstimator
 
 import warnings
@@ -126,7 +124,7 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
         computations.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors. See scikit-learns'
-        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`_
         for more details.
 
     verbose : int, default: 0
@@ -193,7 +191,7 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
     >>> sv[0].shape  # doctest: +ELLIPSIS
     (..., 64, 2)
     >>> sv_sum = sum([sv_i.shape[0] for sv_i in sv])
-    >>> sv_sum == clf.svm_estimator_.n_support_.sum()
+    >>> bool(sv_sum == clf.svm_estimator_.n_support_.sum())
     True
     >>> clf.decision_function(X).shape
     (20,)
@@ -355,12 +353,13 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
         return self.svm_estimator_.predict_proba(sklearn_X)
 
     def _more_tags(self):
+        sample_weight_failure_msg = "zero sample_weight is not equivalent to removing samples"
         return {'non_deterministic': True, 'allow_nan': True,
                 'allow_variable_length': True,
                 "_xfail_checks": {
-                    "check_sample_weights_invariance": (
-                            "zero sample_weight is not equivalent to removing samples"
-                        ),
+                    "check_sample_weights_invariance": sample_weight_failure_msg,
+                    "check_sample_weight_equivalence_on_dense_data": sample_weight_failure_msg,
+                    "check_sample_weight_equivalence_on_sparse_data":sample_weight_failure_msg
                 }}
 
 
@@ -416,7 +415,7 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
         computations.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors. See scikit-learns'
-        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`_
         for more details.
 
     verbose : int, default: 0
@@ -546,10 +545,11 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
         return self.svm_estimator_.predict(sklearn_X)
 
     def _more_tags(self):
+        sample_weight_failure_msg = "zero sample_weight is not equivalent to removing samples"
         return {'non_deterministic': True, 'allow_nan': True,
                 'allow_variable_length': True,
                 "_xfail_checks": {
-                    "check_sample_weights_invariance": (
-                        "zero sample_weight is not equivalent to removing samples"
-                    ),
+                    "check_sample_weights_invariance": sample_weight_failure_msg,
+                    "check_sample_weight_equivalence_on_dense_data": sample_weight_failure_msg,
+                    "check_sample_weight_equivalence_on_sparse_data":sample_weight_failure_msg
                 }}

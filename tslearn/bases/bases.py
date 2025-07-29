@@ -18,14 +18,25 @@ else:
     from tslearn import hdftools
     HDF5_INSTALLED = True
 
+ALLOW_VARIABLE_LENGTH = 'allow_variable_length'
 _DEFAULT_TAGS = {
-    'allow_variable_length': False,
+    ALLOW_VARIABLE_LENGTH: False,
 }
 
 
 class TimeSeriesBaseEstimator(BaseEstimator):
+
+    def _get_tags(self):
+        # sklearn < 1.6 super()._get_tags() returns dict based on _more_tags
+        # sklearn >= 1.6 super()._get_tags() returns dict based on __sklearn_tags__
+        tags = super()._get_tags()
+
+        # Make sure update tags based on _more_tags for sklearn > 1.6
+        tags.update(self._more_tags())
+        return tags
+
     def _more_tags(self):
-        return _DEFAULT_TAGS
+        return _DEFAULT_TAGS.copy()
 
 
 class BaseModelPackage:

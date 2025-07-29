@@ -4,10 +4,9 @@ from sklearn.model_selection import train_test_split
 import numpy as np
 from scipy.sparse import coo_matrix
 
-from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 
-from ..utils import to_time_series_dataset, check_dims
+from ..utils import to_time_series_dataset, check_array, check_dims
 from ..neighbors import KNeighborsTimeSeriesClassifier
 from ..clustering import TimeSeriesKMeans
 from ..bases import TimeSeriesBaseEstimator
@@ -43,7 +42,7 @@ class NonMyopicEarlyClassifier(ClassifierMixin, TimeSeriesBaseEstimator):
         Random state of the base estimator
 
     Attributes
-    --------------------
+    ----------
 
     classifiers_ : list
         A list containing all the classifiers trained for the model, that is,
@@ -566,7 +565,7 @@ class NonMyopicEarlyClassifier(ClassifierMixin, TimeSeriesBaseEstimator):
         array([0, 0, 0, 1, 1, 1, 0, 0])
         >>> pred_times
         array([4, 4, 4, 4, 4, 4, 1, 1])
-        >>> model.early_classification_cost(dataset, y)
+        >>> float(model.early_classification_cost(dataset, y))
         0.325
         """
         y_pred, pred_times = self.predict_class_and_earliness(X)
@@ -577,4 +576,6 @@ class NonMyopicEarlyClassifier(ClassifierMixin, TimeSeriesBaseEstimator):
         # Because some of the data validation checks rely on datasets that are
         # too small to pass here (only 1 item in one of the clusters, hence no
         # stratified split possible)
-        return {"no_validation": True}
+        more_tags = super()._more_tags()
+        more_tags.update({"no_validation": True})
+        return more_tags

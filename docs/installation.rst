@@ -4,7 +4,7 @@ Installation
 Using conda
 -----------
 
-The easiest way to install ``tslearn`` is probably via ``conda``:
+The easiest way to install ``tslearn`` is probably via ``conda`` (preferably in a dedicated environment):
 
 .. code-block:: bash
 
@@ -13,15 +13,11 @@ The easiest way to install ``tslearn`` is probably via ``conda``:
 Using PyPI
 ----------
 
-Using ``pip`` should also work fine:
+Using ``pip`` should also work fine (preferably in a dedicated virtual environment):
 
 .. code-block:: bash
 
     python -m pip install tslearn
-
-In this case, you should have ``numpy``, ``cython`` and C++ build tools
-available at build time.
-
 
 Using latest github-hosted version
 ----------------------------------
@@ -33,31 +29,25 @@ repository hosted at github:
 
     python -m pip install https://github.com/tslearn-team/tslearn/archive/main.zip
 
-In this case, you should have ``numpy``, ``cython`` and C++ build tools
-available at build time.
-
-
-It seems on some platforms ``Cython`` dependency does not install properly.
-If you experiment such an issue, try installing it with the following command:
-
-.. code-block:: bash
-
-    python -m pip install cython
-
-
-before you start installing ``tslearn``.
-If it still does not work, we suggest you switch to `conda` installation.
-
-Other requirements
-------------------
+A note on requirements
+----------------------
 
 ``tslearn`` builds on (and hence depends on) ``scikit-learn``, ``numpy`` and
-``scipy`` libraries.
+``scipy`` libraries. It also depends on the ``numba`` and ``joblib`` libraries.
+
+.. include:: ./dependencies.rst
+
+Those should automatically be pulled on a standard ``tslearn`` installation.
 
 If you plan to use the :mod:`tslearn.shapelets` module from
 ``tslearn``, ``tensorflow`` (v2) should also be installed.
 ``h5py`` is required for reading or writing models using the hdf5 file format.
-In order to load multivariate datasets from the UCR/UEA archive using the
-:class:`tslearn.datasets.UCR_UEA_datasets` class,
-installed ``scipy`` version should be greater than 1.3.0.
+The ``cesium`` and ``pandas`` libraries may also be required if you plan on
+:ref:`integrating with some other python packages <integration_other_software>`.
+
+You can use the `[all_features]` extra to enjoy all the features provided in the ``tslearn`` package:
+
+.. code-block:: bash
+
+    python -m pip install tslearn[all_features]
 

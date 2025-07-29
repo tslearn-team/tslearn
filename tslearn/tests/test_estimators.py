@@ -3,6 +3,8 @@ The :mod:`tslearn.testing_utils` module includes various utilities that can
 be used for testing.
 """
 
+import os
+
 import tslearn
 import pkgutil
 import inspect
@@ -22,9 +24,24 @@ except ImportError:
 from sklearn.exceptions import SkipTestWarning
 from sklearn.utils.estimator_checks import (
     check_no_attributes_set_in_init,
-    check_parameters_default_constructible,
-    _maybe_skip
+    check_parameters_default_constructible
 )
+
+try:
+    # sklearn version < 1.6
+    from sklearn.utils.estimator_checks import _maybe_skip
+except ImportError:
+    # sklearn version >= 1.6
+    from sklearn.utils.estimator_checks import _maybe_mark
+    def _maybe_skip(estimator, check):
+        return sklearn.utils.estimator_checks._maybe_mark(estimator,
+                                                          check,
+                                                          estimator._get_tags().get('_xfail_checks'),
+                                                          "skip")[1]
+
+
+from tslearn.neural_network import TimeSeriesMLPClassifier
+from tslearn.shapelets import LearningShapelets
 from tslearn.tests.sklearn_patches import (
                              check_clustering,
                              check_non_transf_est_n_iter,
@@ -40,7 +57,7 @@ from tslearn.tests.sklearn_patches import (
                              check_pipeline_consistency,
                              yield_all_checks,
                              _create_large_ts_dataset)
-from tslearn.shapelets import LearningShapelets
+
 import warnings
 import pytest
 
@@ -179,16 +196,6 @@ def check_estimator(Estimator):
         estimator = Estimator
         name = type(estimator).__name__
 
-    if hasattr(estimator, 'max_iter'):
-        if isinstance(estimator, LearningShapelets):
-            estimator.set_params(max_iter=100)
-        else:
-            estimator.set_params(max_iter=10)
-    if hasattr(estimator, 'total_lengths'):
-        estimator.set_params(total_lengths=1)
-    if hasattr(estimator, 'probability'):
-        estimator.set_params(probability=True)
-
     def checks_generator():
         for check in checks._yield_all_checks(name, estimator):
             check = _maybe_skip(estimator, check)
@@ -196,11 +203,41 @@ def check_estimator(Estimator):
 
     for estimator, check in checks_generator():
         try:
+            _configure(estimator, check)
             check(estimator)
         except SkipTest as exception:
             # the only SkipTest thrown currently results from not
             # being able to import pandas.
             warnings.warn(str(exception), SkipTestWarning)
+
+
+def _configure(estimator, check):
+    """ Configure estimator for a given check depending on the platform """
+    if hasattr(estimator, 'total_lengths'):
+        estimator.set_params(total_lengths=1)
+
+    if hasattr(estimator, 'probability'):
+        estimator.set_params(probability=True)
+
+    if (isinstance(estimator, (LearningShapelets,
+                               TimeSeriesMLPClassifier)) and
+        check.func.__name__ in ['check_classifiers_classes',
+                                'check_classifiers_train']):
+        estimator.set_params(max_iter=1000)
+    elif isinstance(estimator, LearningShapelets):
+        estimator.set_params(max_iter=100)
+    elif hasattr(estimator, 'max_iter'):
+        estimator.set_params(max_iter=10)
+
+    if os.environ.get("SYSTEM_PHASENAME", "") == "codecov":
+        # Tweak to ensure fast execution of code coverage job on azure pipelines
+        from tslearn.shapelets.shapelets import _kmeans_init_shapelets
+        _kmeans_init_shapelets.__defaults__ = (1,)
+        if isinstance(estimator, (LearningShapelets, TimeSeriesMLPClassifier)):
+            estimator._more_tags = lambda *args, **kwargs: {'poor_score': True,
+                                                            'allow_nan': True,
+                                                            'allow_variable_length': True}
+            estimator.set_params(max_iter=1)
 
 
 @pytest.mark.parametrize('name, Estimator', get_estimators('all'))

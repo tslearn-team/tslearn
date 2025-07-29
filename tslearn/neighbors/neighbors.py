@@ -2,7 +2,6 @@ import numpy
 from sklearn import neighbors
 from sklearn.neighbors import (KNeighborsClassifier, NearestNeighbors,
                                KNeighborsRegressor)
-from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 from scipy.spatial.distance import cdist as scipy_cdist
 
@@ -10,7 +9,7 @@ from tslearn.metrics import cdist_dtw, cdist_ctw, cdist_soft_dtw, \
     cdist_sax, TSLEARN_VALID_METRICS
 from tslearn.piecewise import SymbolicAggregateApproximation
 from tslearn.utils import (to_time_series_dataset, to_sklearn_dataset,
-                           check_dims)
+                           check_array, check_dims)
 from tslearn.bases import BaseModelPackage
 
 neighbors.VALID_METRICS['brute'].extend(['dtw', 'softdtw', 'sax', 'ctw'])
@@ -168,6 +167,20 @@ class KNeighborsTimeSeriesMixin():
         else:
             return ind
 
+    def _get_tags(self):
+        # sklearn < 1.6 super()._get_tags() returns dict based on _more_tags
+        # sklearn >= 1.6 super()._get_tags() returns dict based on __sklearn_tags__
+        tags = super()._get_tags()
+
+        # Make sure update tags based on _more_tags for sklearn > 1.6
+        tags.update(self._more_tags())
+        return tags
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        tags.input_tags.sparse = False
+        return tags
 
 class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
                            BaseModelPackage):
@@ -202,7 +215,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
         parallelization.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors. See scikit-learns'
-        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`__
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`__
         for more details.
 
     Notes
@@ -388,7 +401,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         parallelization.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors. See scikit-learns'
-        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`__
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`__
         for more details.
 
     verbose : int, optional (default=0)
@@ -453,7 +466,9 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             '_d': self._d,
             'classes_': self.classes_,
             '_y': self._y,
-            'outputs_2d_': self.outputs_2d_
+            'outputs_2d_': self.outputs_2d_,
+            '_fit_X': self._fit_X,
+            '_fit_method': self._fit_method
         }
 
     def fit(self, X, y):
@@ -599,7 +614,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         parallelization.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors. See scikit-learns'
-        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`__
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`__
         for more details.
 
     verbose : int, optional (default=0)

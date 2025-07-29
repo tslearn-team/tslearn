@@ -198,7 +198,7 @@ class UCR_UEA_datasets:
         Returns
         -------
         list of str:
-            A list of names of all (univariate and multivariate) dataset namas.
+            A list of names of all (univariate and multivariate) dataset names.
         """
         return (self.list_univariate_datasets()
                 + self.list_multivariate_datasets())

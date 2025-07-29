@@ -3,11 +3,9 @@ from sklearn.base import ClusterMixin
 from sklearn.utils import check_random_state
 import numpy
 
-
-from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
-from tslearn.utils import to_time_series_dataset, check_dims
+from tslearn.utils import to_time_series_dataset, check_dims, check_array
 from tslearn.metrics import cdist_normalized_cc, y_shifted_sbd_vec
 from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
 
@@ -292,3 +290,9 @@ class KShape(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
         dists = self._cross_dists(X_)
         return dists.argmin(axis=1)
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        tags.input_tags.sparse = False
+        return tags

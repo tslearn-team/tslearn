@@ -3,6 +3,8 @@ The :mod:`tslearn.utils` module includes various utilities.
 """
 
 from .utils import (
+    check_array,
+    check_X_y,
     check_dims,
     check_equal_size,
     to_time_series,
@@ -37,6 +39,7 @@ from .cast import (
 
 
 __all__ = [
+    "check_array", "check_X_y",
     "check_dims", "check_equal_size",
     "to_time_series", "to_time_series_dataset",
     "time_series_to_str", "timeseries_to_str",
@@ -44,8 +47,7 @@ __all__ = [
     "save_time_series_txt", "save_timeseries_txt",
     "load_time_series_txt", "load_timeseries_txt",
     "ts_size", "ts_zeros", "check_dataset",
-    "LabelCategorizer", "_load_txt_uea", "_load_arff_uea"
-    
+    "LabelCategorizer", "_load_txt_uea", "_load_arff_uea",
     "to_sklearn_dataset",
     "from_cesium_dataset", "to_cesium_dataset",
     "from_pyflux_dataset", "to_pyflux_dataset",

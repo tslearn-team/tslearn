@@ -82,7 +82,7 @@ plt.title("DBA (subgradient descent approach)")
 plot_helper(dtw_barycenter_averaging_subgradient(X, max_iter=50, tol=1e-3))
 
 plt.subplot(4, 1, 4, sharex=ax1)
-plt.title("Soft-DTW barycenter ($\gamma$=1.0)")
+plt.title("Soft-DTW barycenter ($\\gamma$=1.0)")
 plot_helper(softdtw_barycenter(X, gamma=1., max_iter=50, tol=1e-3))
 
 # clip the axes for better readability

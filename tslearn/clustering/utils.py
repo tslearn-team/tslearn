@@ -52,7 +52,7 @@ def _compute_inertia(distances, assignments, squared=True):
     --------
     >>> dists = numpy.array([[1., 2., 0.5], [0., 3., 1.]])
     >>> assign = numpy.array([2, 0])
-    >>> _compute_inertia(dists, assign)
+    >>> float(_compute_inertia(dists, assign))
     0.125
     """
     n_ts = distances.shape[0]
@@ -106,7 +106,7 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
         parallelization.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors. See scikit-learns'
-        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`_
         for more details.
 
     verbose : int (default: 0)
@@ -145,20 +145,20 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
     >>> numpy.random.seed(0)
     >>> X = random_walks(n_ts=20, sz=16, d=1)
     >>> labels = numpy.random.randint(2, size=20)
-    >>> silhouette_score(X, labels, metric="dtw")  # doctest: +ELLIPSIS
+    >>> float(silhouette_score(X, labels, metric="dtw")) # doctest: +ELLIPSIS
     0.13383800...
-    >>> silhouette_score(X, labels, metric="euclidean")  # doctest: +ELLIPSIS
+    >>> float(silhouette_score(X, labels, metric="euclidean"))  # doctest: +ELLIPSIS
     0.09126917...
-    >>> silhouette_score(X, labels, metric="softdtw")  # doctest: +ELLIPSIS
+    >>> float(silhouette_score(X, labels, metric="softdtw"))  # doctest: +ELLIPSIS
     0.17953934...
-    >>> silhouette_score(X, labels, metric="softdtw",
-    ...                  metric_params={"gamma": 2.}) \
+    >>> float(silhouette_score(X, labels, metric="softdtw",
+    ...                        metric_params={"gamma": 2.})) \
     # doctest: +ELLIPSIS
     0.17591060...
-    >>> silhouette_score(cdist_dtw(X), labels,
-    ...                  metric="precomputed")  # doctest: +ELLIPSIS
+    >>> float(silhouette_score(cdist_dtw(X), labels,
+    ...                        metric="precomputed"))  # doctest: +ELLIPSIS
     0.13383800...
-    >>> silhouette_score(X, labels, metric=dtw)  # doctest: +ELLIPSIS
+    >>> float(silhouette_score(X, labels, metric=dtw))  # doctest: +ELLIPSIS
     0.13383800...
     """
     sklearn_metric = "precomputed"

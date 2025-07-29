@@ -35,7 +35,7 @@ def cdist_sax(dataset1, breakpoints_avg, size_fitted, dataset2=None,
         The number of jobs to run in parallel.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors. See scikit-learns'
-        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`__
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`__
         for more details.
 
     verbose : int, optional (default=0)

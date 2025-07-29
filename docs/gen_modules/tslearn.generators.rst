@@ -5,8 +5,6 @@ tslearn.generators
 
 .. automodule:: tslearn.generators
 
-   
-   
    .. rubric:: Functions
 
    .. autosummary::
