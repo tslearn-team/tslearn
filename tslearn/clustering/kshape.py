@@ -39,7 +39,8 @@ class KShape(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
     n_init : int (default: 1)
         Number of time the k-Shape algorithm will be run with different
         centroid seeds. The final results will be the
-        best output of n_init consecutive runs in terms of inertia.
+        best output of n_init consecutive runs in terms of inertia. Ignored if 
+        initialization is not random.
 
     verbose : bool (default: False)
         Whether or not to print information about the inertia while learning
