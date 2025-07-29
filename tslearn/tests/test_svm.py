@@ -1,9 +1,14 @@
 import numpy as np
 
+import pytest
+
+from sklearn.exceptions import NotFittedError
+
 from tslearn.metrics import cdist_gak
 from tslearn.svm import TimeSeriesSVC, TimeSeriesSVR
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
+
 
 
 def test_gamma_value_svm():
@@ -22,3 +27,22 @@ def test_gamma_value_svm():
         cdist_mat = cdist_gak(time_series, sigma=np.sqrt(gamma / 2.))
 
         np.testing.assert_allclose(sklearn_X, cdist_mat)
+
+def test_attributes():
+    n, sz, d = 5, 10, 3
+    rng = np.random.RandomState(0)
+    time_series = rng.randn(n, sz, d)
+    labels = rng.randint(low=0, high=2, size=n)
+
+    for ModelClass in [TimeSeriesSVC, TimeSeriesSVR]:
+        linear_model = ModelClass(kernel="linear")
+
+        for attr in ['coef_', 'support_', 'support_vectors_',
+                     'dual_coef_', 'coef_', 'intercept_']:
+            with pytest.raises(NotFittedError):
+                getattr(linear_model, attr)
+
+        linear_model.fit(time_series, labels)
+        for attr in ['coef_', 'support_', 'support_vectors_',
+                     'dual_coef_', 'coef_', 'intercept_']:
+            assert hasattr(linear_model, attr)
