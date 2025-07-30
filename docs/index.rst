@@ -20,8 +20,11 @@
 
     </style>
 
-``tslearn``'s documentation
-===========================
+|logo| ``tslearn``'s documentation
+==================================
+
+.. |logo| image:: _static/tslearn_logo.svg
+   :height: 50px
 
 .. raw:: html
 
