@@ -1,12 +1,15 @@
 import math
+
 import numpy as np
+
+import pytest
 
 from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from tslearn.preprocessing import (TimeSeriesScalerMeanVariance,
                                    TimeSeriesScalerMinMax,
                                    TimeSeriesImputer)
-from tslearn.tests.sklearn_patches import assert_raises
-from tslearn.utils import to_time_series_dataset
+
+from tslearn.utils import to_time_series_dataset, to_time_series
 
 
 def test_single_value_ts_no_nan():
@@ -29,7 +32,7 @@ def test_scaler_allow_variable_length():
         assert ALLOW_VARIABLE_LENGTH in tags
         assert not tags[ALLOW_VARIABLE_LENGTH]
 
-        with assert_raises(ValueError):
+        with pytest.raises(ValueError):
             estimator.fit_transform(variable_length_dataset)
 
 
@@ -350,3 +353,14 @@ def test_imputer():
         [[value], [2], [value], [9], [6], [math.nan], [math.nan]],
     ])
     np.testing.assert_array_equal(transformed, expected)
+
+    imputer.set_params(method=lambda x: to_time_series([1, 2, 3]))
+    transformed = imputer.fit_transform([[1, math.nan, 3]])
+    expected = np.array([
+        [[1.], [2.], [3.]]
+    ])
+    np.testing.assert_array_equal(transformed, expected)
+
+    imputer.set_params(method="unknown")
+    with pytest.raises(ValueError):
+        imputer.fit_transform([[1, math.nan, 3]])
