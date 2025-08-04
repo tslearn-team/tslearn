@@ -77,6 +77,22 @@ def test_ctw():
             np.testing.assert_allclose(dist, 1.0)
             assert backend.belongs_to_backend(dist)
 
+            x = [[1, 1],  [3, 4], [126, 126]]
+            y = [[1, 1.], [3., 3], [4., 4], [2., 2], [0, 0], [127, 127]]
+            dist_0 = tslearn.metrics.ctw_path(
+                cast(x, array_type),
+                cast(y, array_type),
+                max_iter=2,
+                be=be
+            )[2]
+            dist_1 = tslearn.metrics.ctw_path(
+                cast(x, array_type),
+                cast(y, array_type),
+                max_iter=3,
+                be=be
+            )[2]
+            assert dist_0 >= dist_1
+
             # dtw
             n1, n2, d1, d2 = 15, 10, 3, 1
             rng = np.random.RandomState(0)
