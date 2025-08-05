@@ -3,16 +3,18 @@
 Aligning discovered shapelets with timeseries
 =============================================
 
-This example illustrates the use of the "Learning Shapelets" method in order
-to learn a collection of shapelets that linearly separates the timeseries.
+This example illustrates the use of the "Learning Shapelets" method, presented
+in [1]_ , in order to learn a collection of shapelets that linearly separates
+the timeseries.
 In this example, we will extract a single shapelet in order to distinguish
 between two classes of the "Trace" dataset. Afterwards, we show how our time
 series can be transformed to distances by aligning the shapelets along each of
 the time series. This alignment is performed by shifting the smaller shapelet
 across the longer time series and taking the minimal pointwise distance.
 
-More information on the method can be found at:
-http://fs.ismll.de/publicspace/LearningShapelets/.
+References
+----------
+.. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
 """
 
 # Author: Romain Tavenard

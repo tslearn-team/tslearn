@@ -3,12 +3,13 @@
 Learning Shapelets
 ==================
 
-This example illustrates how the "Learning Shapelets" method can quickly
-find a set of shapelets that results in excellent predictive performance
-when used for a shapelet transform.
+This example illustrates how the "Learning Shapelets" method, presented in
+[1]_, can quicklyfind a set of shapelets that results in excellent predictive
+performance when used for a shapelet transform.
 
-More information on the method can be found at:
-http://fs.ismll.de/publicspace/LearningShapelets/.
+References
+----------
+.. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
 """
 
 # Author: Romain Tavenard
