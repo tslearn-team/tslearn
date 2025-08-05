@@ -42,7 +42,7 @@ setup(
             "pytest",
             "torch",
             "h5py",
-            "tensorflow; python_version < '3.13'",
+            "keras",
             "stumpy"
         ],
         "docs": [
@@ -58,7 +58,7 @@ setup(
         "all_features": [
             "torch",
             "h5py",
-            "tensorflow;  python_version < '3.13'",
+            "keras",
             "cesium>=0.12.2; 'darwin' not in sys_platform",
             "cesium==0.12.1; 'darwin' in sys_platform",
             "pandas"

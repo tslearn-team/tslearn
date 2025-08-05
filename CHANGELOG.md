@@ -19,15 +19,15 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 * `per_timeseries` and `per_feature` options for min-max and mean-variance scalers ([#536](https://github.com/tslearn-team/tslearn/issues/536))
 
+### Changed
+
+* The `shapelets` module now depends on Keras3+ (should be keras-backend-blind) and not anymore on TF
+
 ## [v0.6.4]
 
 ### Changed
 
 * Support for `scikit-learn` up to 1.6
-
-### Changed
-
-* The `shapelets` module now depends on Keras3+ (should be keras-backend-blind) and not anymore on TF
 
 ## [v0.6.3]
 
