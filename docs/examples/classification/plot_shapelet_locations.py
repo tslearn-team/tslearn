@@ -18,6 +18,11 @@ http://fs.ismll.de/publicspace/LearningShapelets/.
 # Author: Romain Tavenard
 # License: BSD 3 clause
 
+import os
+
+# Should be set before importing keras through
+os.environ["KERAS_BACKEND"] = "torch"
+
 import numpy
 import matplotlib.pyplot as plt
 
@@ -25,7 +30,7 @@ from tslearn.datasets import CachedDatasets
 from tslearn.preprocessing import TimeSeriesScalerMinMax
 from tslearn.shapelets import LearningShapelets
 
-from tensorflow.keras.optimizers import Adam
+from keras.optimizers import Adam
 
 # Set a seed to ensure determinism
 numpy.random.seed(42)

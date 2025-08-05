@@ -14,6 +14,11 @@ http://fs.ismll.de/publicspace/LearningShapelets/.
 # Author: Romain Tavenard
 # License: BSD 3 clause
 
+import os
+
+# Should be set before importing keras
+os.environ["KERAS_BACKEND"] = "torch"
+
 import numpy
 from sklearn.metrics import accuracy_score
 import keras

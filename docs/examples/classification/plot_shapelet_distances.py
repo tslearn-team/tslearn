@@ -17,6 +17,11 @@ http://fs.ismll.de/publicspace/LearningShapelets/.
 # Author: Gilles Vandewiele
 # License: BSD 3 clause
 
+import os
+
+# Should be set before importing keras
+os.environ["KERAS_BACKEND"] = "torch"
+
 import numpy
 from matplotlib import cm
 import matplotlib.pyplot as plt
