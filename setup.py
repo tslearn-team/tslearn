@@ -57,7 +57,7 @@ setup(
             "pypandoc"
         ],
         "all_features": [
-            "torch==2.7.1",
+            "torch",
             "h5py",
             "keras",
             "cesium",
