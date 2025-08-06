@@ -32,6 +32,7 @@ setup(
     install_requires=[
         "scikit-learn>=1.4,<1.7",
         "numpy>=1.24.3,<2.3",
+        "numpy<2; 'darwin' in sys_platform and 'x86_64' in platform_machine",
         "scipy>=1.10.1,<1.17",
         "numba>=0.58.1,<0.62",
         "joblib>=1.2,<1.6"
