@@ -55,9 +55,9 @@ class GlobalMinPooling1D(Layer):
 
     def call(self, inputs):
         steps_axis = 1 if self.data_format == "channels_last" else 2
-        inputs_without_nans = ops.where(ops.isfinite(inputs), 
-                                        inputs, 
-                                        ops.zeros_like(inputs) + ops.max(inputs[ops.isfinite(inputs)]))
+        inputs_without_nans = ops.where(ops.isfinite(inputs),
+                                        inputs,
+                                        ops.zeros_like(inputs) + numpy.inf)
         return ops.min(inputs_without_nans, axis=steps_axis, keepdims=self.keepdims)
 
 

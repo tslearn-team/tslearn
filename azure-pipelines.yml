@@ -104,7 +104,6 @@ jobs:
     KERAS_BACKEND: 'torch'
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
-    PIP_PREFER_BINARY: 'true'
 
   steps:
   - task: UsePythonVersion@0
