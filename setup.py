@@ -41,6 +41,9 @@ setup(
         "tests": [
             "pytest",
             "torch",
+            # Torch drop support of macOS intel after version 2.2.2
+            # with does not support numpy2.
+            "numpy<2; 'darwin' in sys_platform and 'x86_64' in platform_machine",
             "h5py",
             "keras",
             "stumpy"
@@ -57,10 +60,12 @@ setup(
         ],
         "all_features": [
             "torch",
+            # Torch drop support of macOS intel after version 2.2.2
+            # with does not support numpy2.
+            "numpy<2; 'darwin' in sys_platform and 'x86_64' in platform_machine",
             "h5py",
             "keras",
-            "cesium>=0.12.2; 'darwin' not in sys_platform",
-            "cesium==0.12.1; 'darwin' in sys_platform",
+            "cesium",
             "pandas"
         ]
     },
