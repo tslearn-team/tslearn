@@ -38,7 +38,7 @@ jobs:
       python --version
       python -m pip install --upgrade pip
       python -m pip install .[tests,all_features]
-    displayName: 'Install tslearn and dependencies for tests'
+    displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
       set -xe
@@ -77,7 +77,7 @@ jobs:
       python --version
       python -m pip install --upgrade pip
       python -m pip install .[tests,all_features]
-    displayName: 'Install tslearn and dependencies for tests'
+    displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
       set -xe
@@ -97,8 +97,6 @@ jobs:
         python.version: '3.11'
       Python312:
         python.version: '3.12'
-      Python313:
-        python.version: '3.13'
   variables:
     KERAS_BACKEND: 'torch'
     OMP_NUM_THREADS: '2'
@@ -118,7 +116,7 @@ jobs:
       export OPENBLAS=$(brew --prefix openblas)
       python -m pip install --upgrade pip
       python -m pip install .[tests,all_features]
-    displayName: 'Install tslearn and dependencies for tests'
+    displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
       set -xe
@@ -138,8 +136,6 @@ jobs:
         python.version: '3.11'
       Python312:
         python.version: '3.12'
-      Python313:
-        python.version: '3.13'
   variables:
     KERAS_BACKEND: 'torch'
     OMP_NUM_THREADS: '2'
@@ -159,7 +155,7 @@ jobs:
       export OPENBLAS=$(brew --prefix openblas)
       python -m pip install --upgrade pip
       python -m pip install .[tests,all_features]
-    displayName: 'Install tslearn and dependencies for tests'
+    displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
       set -xe
@@ -196,7 +192,7 @@ jobs:
       python --version
       python -m pip install --upgrade pip
       python -m pip install .[tests,all_features]
-    displayName: 'Install tslearn and dependencies for tests'
+    displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
       python -m pip install pytest-azurepipelines
@@ -232,7 +228,7 @@ jobs:
       python --version
       python -m pip install --upgrade pip
       python -m pip install .[tests,all_features]
-    displayName: 'Install tslearn and dependencies for tests'
+    displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
       python -m pip install pytest-azurepipelines
@@ -263,7 +259,7 @@ jobs:
       python --version
       python -m pip install --upgrade pip
       python -m pip install .[tests]
-    displayName: 'Install tslearn and dependencies for tests, torch removed'
+    displayName: 'Install tslearn and dependencies for tests'
 
   - script: |
       set -xe
@@ -295,7 +291,7 @@ jobs:
       python --version
       python -m pip install --upgrade pip
       python -m pip install .[tests]
-    displayName: 'Install tslearn and dependencies for tests, torch removed'
+    displayName: 'Install tslearn and dependencies for tests'
 
   - script: |
       set -xe
@@ -329,7 +325,7 @@ jobs:
       python --version
       python -m pip install --upgrade pip
       python -m pip install .[tests,all_features]
-    displayName: 'Install tslearn and dependencies for tests, torch included'
+    displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
       set -xe
