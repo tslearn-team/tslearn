@@ -94,7 +94,7 @@ def _get_all_classes():
                 # keras is likely not installed
                 warnings.warn('Skipped common tests for shapelets '
                               'as it could not be imported. keras '
-                              '(and tensorflow) are probably not '
+                              'is probably not '
                               'installed!')
                 continue
             elif name.endswith('pytorch_backend'):
