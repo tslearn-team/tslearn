@@ -274,6 +274,7 @@ def test_serialize_1dsax():
 
 
 def test_serialize_shapelets():
+    pytest.importorskip('keras')
     def get_model_weights(model):
         return model.model_.get_weights()
 

@@ -1,26 +1,52 @@
-import keras
-from keras.models import Model, model_from_json
-from keras.layers import (InputSpec, Dense, Conv1D, Layer, Input,
-                                    concatenate, add)
-from keras.metrics import (categorical_accuracy,
-                                    categorical_crossentropy,
-                                    binary_accuracy, binary_crossentropy)
-from keras.utils import to_categorical
-from keras.regularizers import l2
-from keras.initializers import Initializer
-import keras.ops as ops
+import warnings
+
+try:
+    import keras
+    from keras.src.backend.common.symbolic_scope import in_symbolic_scope
+    from keras.models import Model, model_from_json
+    from keras.layers import (
+        InputSpec,
+        Dense,
+        Conv1D,
+        Layer,
+        Input,
+        concatenate,
+        add
+    )
+    from keras.metrics import (
+        categorical_accuracy,
+        categorical_crossentropy,
+        binary_accuracy,
+        binary_crossentropy
+    )
+    from keras.utils import to_categorical
+    from keras.regularizers import l2
+    from keras.initializers import Initializer
+    import keras.ops as ops
+    HAS_SHAPELETS = True
+except ModuleNotFoundError:
+    warnings.warn(
+        "Keras backend is not installed or configured",
+        ImportWarning
+    )
+    HAS_SHAPELETS = False
+
+import numpy
 
 from sklearn.base import ClassifierMixin, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.multiclass import unique_labels
-import numpy
 
-import warnings
-
-from ..utils import to_time_series_dataset, check_array, check_dims, check_X_y, ts_size
 from ..bases import BaseModelPackage, TimeSeriesBaseEstimator
 from ..clustering import TimeSeriesKMeans
 from ..preprocessing import TimeSeriesScalerMinMax
+from ..utils import (
+    to_time_series_dataset,
+    check_array,
+    check_dims,
+    check_X_y,
+    ts_size
+)
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -41,25 +67,15 @@ class GlobalMinPooling1D(Layer):
     array([[5.]], dtype=float32)
     """
 
-    def __init__(self, data_format=None, keepdims=False, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-
-        self.data_format = (
-            "channels_last" if data_format is None else data_format
-        )
-        self.keepdims = keepdims
         self.input_spec = InputSpec(ndim=3)
 
     def compute_output_shape(self, input_shape):
         return input_shape[0], input_shape[2]
 
     def call(self, inputs):
-        steps_axis = 1 if self.data_format == "channels_last" else 2
-        inputs_without_nans = ops.where(ops.isfinite(inputs),
-                                        inputs,
-                                        ops.zeros_like(inputs) + numpy.inf)
-        return ops.min(inputs_without_nans, axis=steps_axis, keepdims=self.keepdims)
-
+        return ops.min(inputs, axis=1)
 
 class GlobalArgminPooling1D(Layer):
     """Global argmin pooling operation for temporal data.
@@ -85,10 +101,7 @@ class GlobalArgminPooling1D(Layer):
         return input_shape[0], input_shape[2]
 
     def call(self, inputs, **kwargs):
-        inputs_without_nans = ops.where(ops.isfinite(inputs), 
-                                        inputs, 
-                                        ops.zeros_like(inputs) + ops.max(inputs[ops.isfinite(inputs)]))
-        return ops.cast(ops.argmin(inputs_without_nans, axis=1), dtype=float)
+        return ops.cast(ops.argmin(inputs, axis=1), dtype=float)
 
 
 def _kmeans_init_shapelets(X, n_shapelets, shp_len, n_draw=10000):
@@ -155,6 +168,19 @@ class LocalSquaredDistanceLayer(Layer):
         super().build(input_shape)
 
     def call(self, x, **kwargs):
+        # Only perform the following when actually
+        # computing the distance
+        if not in_symbolic_scope():
+            # Patches with missing data are replaced
+            # with (first) valid patch to allow gradient descend.
+            # This won't impact the downstream computation
+            # that is min based.
+            mask = ops.isfinite(ops.sum(x, axis=-1, keepdims=True))
+            mask = ops.repeat(mask, ops.shape(x)[-1], axis=-1)
+            substitution_index = ops.nonzero(mask)[:2, 0]
+            substitution_elem = x[substitution_index[0], substitution_index[1]]
+            x = ops.where(~mask, substitution_elem, x)
+
         # (x - y)^2 = x^2 + y^2 - 2 * x * y
         x_sq = ops.expand_dims(ops.sum(x ** 2, axis=2), axis=-1)
         y_sq = ops.reshape(ops.sum(self.kernel ** 2, axis=1),

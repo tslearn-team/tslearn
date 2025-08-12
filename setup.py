@@ -41,8 +41,8 @@ setup(
         "tests": [
             "pytest",
             "torch",
-            # Torch drop support of macOS intel after version 2.2.2
-            # with does not support numpy2.
+            # Torch dropped support of macOS intel after version 2.2.2
+            # which does not support numpy2.
             "numpy<2; 'darwin' in sys_platform and 'x86_64' in platform_machine",
             "h5py",
             "keras",
@@ -60,8 +60,8 @@ setup(
         ],
         "all_features": [
             "torch",
-            # Torch drop support of macOS intel after version 2.2.2
-            # with does not support numpy2.
+            # Torch dropped support of macOS intel after version 2.2.2
+            # which does not support numpy2.
             "numpy<2; 'darwin' in sys_platform and 'x86_64' in platform_machine",
             "h5py",
             "keras",
