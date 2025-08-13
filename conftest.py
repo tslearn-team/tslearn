@@ -40,13 +40,12 @@ def pytest_collection_modifyitems(config, items):
                 item.add_marker(skip_marker)
 
     # Skip related doctests if UCR UEA datasets cannot be fetched
-    ucr_uea_datasets = True
     try:
         datasets = UCR_UEA_datasets()
-        datasets.cache_all()
         ucr_uea_datasets = bool(datasets.list_datasets())
     except Exception as exc:
-        warnings.warn("Error caching UCR UEA datasets: {}".format(exc))
+        ucr_uea_datasets = False
+        warnings.warn("Error listing UCR UEA datasets: {}".format(exc))
 
     if not ucr_uea_datasets:
         warnings.warn("Skipping doctests requiring UCR UEA dataset download")
@@ -57,5 +56,7 @@ def pytest_collection_modifyitems(config, items):
                 "tslearn.datasets.ucr_uea.UCR_UEA_datasets.list_multivariate_datasets",
                 "tslearn.datasets.ucr_uea.UCR_UEA_datasets.list_univariate_datasets",
                 "tslearn.datasets.ucr_uea.UCR_UEA_datasets.load_dataset",
+                "tslearn.datasets.ucr_uea.UCR_UEA_datasets.baseline_accuracy",
+                "tslearn.datasets.ucr_uea.UCR_UEA_datasets.list_cached_datasets"
             ]:
                 item.add_marker(skip_marker)

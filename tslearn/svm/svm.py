@@ -13,6 +13,27 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 class TimeSeriesSVMMixin:
+
+    @property
+    def support_(self):
+        check_is_fitted(self, ['svm_estimator_', '_X_fit'])
+        return getattr(self, "svm_estimator_").support_
+
+    @property
+    def dual_coef_(self):
+        check_is_fitted(self, ['svm_estimator_', '_X_fit'])
+        return getattr(self, "svm_estimator_").dual_coef_
+
+    @property
+    def coef_(self):
+        check_is_fitted(self, ['svm_estimator_', '_X_fit'])
+        return getattr(self, "svm_estimator_").coef_
+
+    @property
+    def intercept_(self):
+        check_is_fitted(self, ['svm_estimator_', '_X_fit'])
+        return getattr(self, "svm_estimator_").intercept_
+
     def _preprocess_sklearn(self, X, y=None, fit_time=False):
         force_all_finite = self.kernel not in VARIABLE_LENGTH_METRICS
         if y is None:
@@ -445,9 +466,6 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
 
     intercept_ : array, shape = [1]
         Constants in decision function.
-
-    sample_weight : array-like, shape = [n_samples]
-        Individual weights for each sample
 
     svm_estimator_ : sklearn.svm.SVR
         The underlying sklearn estimator

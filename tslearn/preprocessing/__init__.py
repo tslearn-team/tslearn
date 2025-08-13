@@ -6,11 +6,13 @@ resamplers.
 from .preprocessing import (
     TimeSeriesScalerMeanVariance,
     TimeSeriesScalerMinMax,
-    TimeSeriesResampler
+    TimeSeriesResampler,
+    TimeSeriesImputer
 )
 
 __all__ = [
     "TimeSeriesResampler",
     "TimeSeriesScalerMinMax",
-    "TimeSeriesScalerMeanVariance"
+    "TimeSeriesScalerMeanVariance",
+    "TimeSeriesImputer"
 ]

@@ -1,10 +1,15 @@
+import math
+
 import numpy as np
+
+import pytest
 
 from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from tslearn.preprocessing import (TimeSeriesScalerMeanVariance,
-                                   TimeSeriesScalerMinMax)
-from tslearn.tests.sklearn_patches import assert_raises
-from tslearn.utils import to_time_series_dataset
+                                   TimeSeriesScalerMinMax,
+                                   TimeSeriesImputer)
+
+from tslearn.utils import to_time_series_dataset, to_time_series
 
 
 def test_single_value_ts_no_nan():
@@ -27,7 +32,7 @@ def test_scaler_allow_variable_length():
         assert ALLOW_VARIABLE_LENGTH in tags
         assert not tags[ALLOW_VARIABLE_LENGTH]
 
-        with assert_raises(ValueError):
+        with pytest.raises(ValueError):
             estimator.fit_transform(variable_length_dataset)
 
 
@@ -205,3 +210,157 @@ def test_mean_variance_scaler_modes():
         ]),
         decimal=2
     )
+
+
+def test_imputer():
+    multivariate_dataset = [
+        [[1, 2], [2, 3], [2, math.nan]],
+        [[3, 4], [math.nan, 5]],
+    ]
+    univariate_dataset = [
+        [1, math.nan, 3],
+        [1, 2, math.nan, 9]
+    ]
+
+    # Test default params and equivalent mean method
+    imputer = TimeSeriesImputer()
+    transformed = imputer.fit_transform(multivariate_dataset)
+    expected = np.array([
+        [[1, 2], [2, 3], [2, 2.5]],
+        [[3, 4], [3, 5], [np.nan, np.nan]],
+    ])
+    np.testing.assert_array_equal(transformed, expected)
+    transformed = TimeSeriesImputer(method="mean").fit_transform(multivariate_dataset)
+    np.testing.assert_array_equal(transformed, expected)
+    transformed = imputer.fit_transform(univariate_dataset)
+    expected = np.array([
+        [[1], [2], [3], [np.nan]],
+        [[1], [2], [4], [9]],
+    ])
+    np.testing.assert_array_equal(transformed, expected)
+    transformed = TimeSeriesImputer(method="mean").fit_transform(univariate_dataset)
+    np.testing.assert_array_equal(transformed, expected)
+
+    # Test median method
+    imputer.set_params(method="median")
+    transformed = imputer.fit_transform(multivariate_dataset)
+    expected = np.array([
+        [[1, 2], [2, 3], [2, 2.5]],
+        [[3, 4], [3, 5], [np.nan, np.nan]],
+    ])
+    np.testing.assert_array_equal(transformed, expected)
+    transformed = imputer.fit_transform(univariate_dataset)
+    expected = np.array([
+        [[1], [2], [3], [np.nan]],
+        [[1], [2], [2], [9]],
+    ])
+    np.testing.assert_array_equal(transformed, expected)
+
+    # Test ffill method
+    multivariate_dataset = [
+        [[1, math.nan], [2, 3], [2, math.nan]],
+        [[3, 4], [math.nan, 5]],
+    ]
+    univariate_dataset = [
+        [1, math.nan, math.nan, 3, 6, math.nan, 9],
+        [1, 2, math.nan, 9],
+        [math.nan, 2, math.nan, 9, 6, math.nan],
+    ]
+    imputer.set_params(method="ffill")
+    transformed = imputer.fit_transform(multivariate_dataset)
+    expected = np.array([
+        [[1, math.nan], [2, 3], [2, 3]],
+        [[3, 4], [3, 5], [np.nan, np.nan]],
+    ])
+    np.testing.assert_array_equal(transformed, expected)
+    transformed = imputer.fit_transform(univariate_dataset)
+    expected = np.array([
+        [[1], [1], [1], [3], [6], [6], [9] ],
+        [[1], [2], [2], [9], [math.nan], [math.nan], [math.nan] ],
+        [[math.nan], [2], [2], [9], [6], [6], [math.nan]],
+    ])
+    np.testing.assert_array_equal(transformed, expected)
+
+    # Test bfill method
+    imputer.set_params(method="bfill")
+    transformed = imputer.fit_transform(multivariate_dataset)
+    expected = np.array([
+        [[1, 3], [2, 3], [2, np.nan]],
+        [[3, 4], [np.nan, 5], [np.nan, np.nan]],
+    ])
+    np.testing.assert_array_equal(transformed, expected)
+    transformed = imputer.fit_transform(univariate_dataset)
+    expected = np.array([
+        [[1], [3], [3], [3], [6], [9], [9]],
+        [[1], [2], [9], [9], [np.nan], [np.nan], [np.nan]],
+        [[2], [2], [9], [9], [6], [math.nan], [math.nan]],
+    ])
+    np.testing.assert_array_equal(transformed, expected)
+
+    # Constant:
+    # with default value: no changes except for NaN padding
+    # with value : non padded nans filled with value
+    imputer.set_params(method="constant")
+    transformed = imputer.fit_transform(multivariate_dataset)
+    expected = np.array([
+        [[1, math.nan], [2, 3], [2, math.nan]],
+        [[3, 4], [math.nan, 5], [math.nan, math.nan]],
+    ])
+    np.testing.assert_array_equal(transformed, expected)
+    transformed = imputer.fit_transform(univariate_dataset)
+    expected = np.array([
+        [[1], [math.nan], [math.nan], [3], [6], [math.nan], [9]],
+        [[1], [2], [math.nan], [9], [math.nan], [math.nan], [math.nan]],
+        [[math.nan], [2], [math.nan], [9], [6], [math.nan], [math.nan]],
+    ])
+    np.testing.assert_array_equal(transformed, expected)
+    value=42.42
+    imputer.set_params(value=value)
+    transformed = imputer.fit_transform(multivariate_dataset)
+    expected = np.array([
+        [[1, value], [2, 3], [2, value]],
+        [[3, 4], [value, 5], [math.nan, math.nan]],
+    ])
+    np.testing.assert_array_equal(transformed, expected)
+    transformed = imputer.fit_transform(univariate_dataset)
+    expected = np.array([
+        [[1], [value], [value], [3], [6], [value], [9]],
+        [[1], [2], [value], [9], [math.nan], [math.nan], [math.nan]],
+        [[value], [2], [value], [9], [6], [value], [math.nan]],
+    ])
+    np.testing.assert_array_equal(transformed, expected)
+
+    multivariate_dataset = [
+        [[1, math.nan], [2, 3], [2, math.nan]],
+        [[3, 4], [math.nan, 5], [math.nan, math.nan]],
+    ]
+    univariate_dataset = [
+        [1, math.nan, math.nan, 3, 6, math.nan, 9],
+        [1, 2, math.nan, 9],
+        [math.nan, 2, math.nan, 9, 6, math.nan],
+    ]
+    imputer.set_params(keep_trailing_nans=True)
+    transformed = imputer.fit_transform(multivariate_dataset)
+    expected = np.array([
+        [[1, value], [2, 3], [2, value]],
+        [[3, 4], [value, 5], [math.nan, math.nan]],
+    ])
+    np.testing.assert_array_equal(transformed, expected)
+    transformed = imputer.fit_transform(univariate_dataset)
+    expected = np.array([
+        [[1], [value], [value], [3], [6], [value], [9]],
+        [[1], [2], [value], [9], [math.nan], [math.nan], [math.nan]],
+        [[value], [2], [value], [9], [6], [math.nan], [math.nan]],
+    ])
+    np.testing.assert_array_equal(transformed, expected)
+
+    imputer.set_params(method=lambda x: to_time_series([1, 2, 3]))
+    transformed = imputer.fit_transform([[1, math.nan, 3]])
+    expected = np.array([
+        [[1.], [2.], [3.]]
+    ])
+    np.testing.assert_array_equal(transformed, expected)
+
+    imputer.set_params(method="unknown")
+    with pytest.raises(ValueError):
+        imputer.fit_transform([[1, math.nan, 3]])

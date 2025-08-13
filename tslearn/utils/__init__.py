@@ -22,7 +22,8 @@ from .utils import (
     check_dataset,
     LabelCategorizer,
     _load_txt_uea,
-    _load_arff_uea
+    _load_arff_uea,
+    check_variable_length_input
 )
 
 from .cast import (
@@ -55,5 +56,6 @@ __all__ = [
     "from_seglearn_dataset", "to_seglearn_dataset",
     "from_sktime_dataset", "to_sktime_dataset",
     "from_stumpy_dataset", "to_stumpy_dataset",
-    "from_tsfresh_dataset", "to_tsfresh_dataset"
+    "from_tsfresh_dataset", "to_tsfresh_dataset",
+    "check_variable_length_input"
 ]
