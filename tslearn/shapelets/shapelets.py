@@ -75,7 +75,12 @@ class GlobalMinPooling1D(Layer):
         return input_shape[0], input_shape[2]
 
     def call(self, inputs):
-        return ops.min(inputs, axis=1)
+        inputs_without_nans = ops.where(
+            ops.isfinite(inputs),
+            inputs,
+            ops.zeros_like(inputs) + numpy.inf
+        )
+        return ops.min(inputs_without_nans, axis=1)
 
 class GlobalArgminPooling1D(Layer):
     """Global argmin pooling operation for temporal data.
@@ -101,7 +106,12 @@ class GlobalArgminPooling1D(Layer):
         return input_shape[0], input_shape[2]
 
     def call(self, inputs, **kwargs):
-        return ops.cast(ops.argmin(inputs, axis=1), dtype=float)
+        inputs_without_nans = ops.where(
+            ops.isfinite(inputs),
+            inputs,
+            ops.zeros_like(inputs) + numpy.inf
+        )
+        return ops.cast(ops.argmin(inputs_without_nans, axis=1), dtype=float)
 
 
 def _kmeans_init_shapelets(X, n_shapelets, shp_len, n_draw=10000):
@@ -171,15 +181,17 @@ class LocalSquaredDistanceLayer(Layer):
         # Only perform the following when actually
         # computing the distance
         if not in_symbolic_scope():
-            # Patches with missing data are replaced
-            # with (first) valid patch to allow gradient descend.
-            # This won't impact the downstream computation
-            # that is min based.
-            mask = ops.isfinite(ops.sum(x, axis=-1, keepdims=True))
-            mask = ops.repeat(mask, ops.shape(x)[-1], axis=-1)
-            substitution_index = ops.nonzero(mask)[:2, 0]
-            substitution_elem = x[substitution_index[0], substitution_index[1]]
-            x = ops.where(~mask, substitution_elem, x)
+
+            for ts_index, ts_patches in enumerate(x):
+                # Patches with missing data are replaced
+                # with (first) valid patch to allow gradient descend.
+                # This won't impact the min based downstream computation.
+                if ops.count_nonzero(ops.isnan(ts_patches)):
+                    mask = ops.isfinite(ops.sum(ts_patches, axis=-1))
+                    _ = ops.nonzero(mask)
+                    substitution_indexes = ops.nonzero(mask)[0]
+                    substitution_elements = ts_patches[substitution_indexes]
+                    ts_patches[~mask] = substitution_elements[0]
 
         # (x - y)^2 = x^2 + y^2 - 2 * x * y
         x_sq = ops.expand_dims(ops.sum(x ** 2, axis=2), axis=-1)
