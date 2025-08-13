@@ -1,25 +1,52 @@
-from tensorflow.keras.models import Model, model_from_json
-from tensorflow.keras.layers import (InputSpec, Dense, Conv1D, Layer, Input,
-                                     concatenate, add)
-from tensorflow.keras.metrics import (categorical_accuracy,
-                                      categorical_crossentropy,
-                                      binary_accuracy, binary_crossentropy)
-from tensorflow.keras.utils import to_categorical
+import warnings
+
+try:
+    import keras
+    from keras.src.backend.common.symbolic_scope import in_symbolic_scope
+    from keras.models import Model, model_from_json
+    from keras.layers import (
+        InputSpec,
+        Dense,
+        Conv1D,
+        Layer,
+        Input,
+        concatenate,
+        add
+    )
+    from keras.metrics import (
+        categorical_accuracy,
+        categorical_crossentropy,
+        binary_accuracy,
+        binary_crossentropy
+    )
+    from keras.utils import to_categorical
+    from keras.regularizers import l2
+    from keras.initializers import Initializer
+    import keras.ops as ops
+    HAS_SHAPELETS = True
+except ModuleNotFoundError:
+    warnings.warn(
+        "Keras backend is not installed or configured",
+        ImportWarning
+    )
+    HAS_SHAPELETS = False
+
+import numpy
+
 from sklearn.base import ClassifierMixin, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.multiclass import unique_labels
-from tensorflow.keras.regularizers import l2
-from tensorflow.keras.initializers import Initializer
-import tensorflow.keras.backend as K
-import numpy
-import tensorflow as tf
 
-import warnings
-
-from ..utils import to_time_series_dataset, check_array, check_dims, check_X_y, ts_size
 from ..bases import BaseModelPackage, TimeSeriesBaseEstimator
 from ..clustering import TimeSeriesKMeans
 from ..preprocessing import TimeSeriesScalerMinMax
+from ..utils import (
+    to_time_series_dataset,
+    check_array,
+    check_dims,
+    check_X_y,
+    ts_size
+)
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -34,8 +61,8 @@ class GlobalMinPooling1D(Layer):
         
     Examples
     --------
-    >>> x = tf.constant([5.0, numpy.nan, 6.8, numpy.nan, numpy.inf])
-    >>> x = tf.reshape(x, [1, 5, 1])
+    >>> x = numpy.array([5.0, numpy.nan, 6.8, numpy.nan, numpy.inf])
+    >>> x = x.reshape([1, 5, 1])
     >>> GlobalMinPooling1D()(x).numpy()
     array([[5.]], dtype=float32)
     """
@@ -47,20 +74,28 @@ class GlobalMinPooling1D(Layer):
     def compute_output_shape(self, input_shape):
         return input_shape[0], input_shape[2]
 
-    def call(self, inputs, **kwargs):
-        inputs_without_nans = tf.where(tf.math.is_finite(inputs),
-                                       inputs,
-                                       tf.zeros_like(inputs) + numpy.inf)
-        return tf.reduce_min(inputs_without_nans, axis=1)
-
+    def call(self, inputs):
+        inputs_without_nans = ops.where(
+            ops.isfinite(inputs),
+            inputs,
+            ops.zeros_like(inputs) + numpy.inf
+        )
+        return ops.min(inputs_without_nans, axis=1)
 
 class GlobalArgminPooling1D(Layer):
-    """Global min pooling operation for temporal data.
+    """Global argmin pooling operation for temporal data.
     # Input shape
         3D tensor with shape: `(batch_size, steps, features)`.
     # Output shape
         2D tensor with shape:
         `(batch_size, features)`
+        
+    Examples
+    --------
+    >>> x = numpy.array([5.0, numpy.nan, 6.8, numpy.nan, numpy.inf])
+    >>> x = x.reshape([1, 5, 1])
+    >>> GlobalArgminPooling1D()(x).numpy()
+    array([[0.]], dtype=float32)
     """
 
     def __init__(self, **kwargs):
@@ -71,7 +106,12 @@ class GlobalArgminPooling1D(Layer):
         return input_shape[0], input_shape[2]
 
     def call(self, inputs, **kwargs):
-        return K.cast(K.argmin(inputs, axis=1), dtype=K.floatx())
+        inputs_without_nans = ops.where(
+            ops.isfinite(inputs),
+            inputs,
+            ops.zeros_like(inputs) + numpy.inf
+        )
+        return ops.cast(ops.argmin(inputs_without_nans, axis=1), dtype=float)
 
 
 def _kmeans_init_shapelets(X, n_shapelets, shp_len, n_draw=10000):
@@ -105,7 +145,7 @@ class KMeansShapeletInitializer(Initializer):
         shapelets = _kmeans_init_shapelets(self.X_,
                                            n_shapelets,
                                            shp_len)[:, :, 0]
-        return tf.convert_to_tensor(shapelets, dtype=K.floatx())
+        return ops.convert_to_tensor(shapelets, dtype=float)
 
     def get_config(self):
         return {'data': self.X_}
@@ -138,12 +178,27 @@ class LocalSquaredDistanceLayer(Layer):
         super().build(input_shape)
 
     def call(self, x, **kwargs):
+        # Only perform the following when actually
+        # computing the distance
+        if not in_symbolic_scope():
+
+            for ts_index, ts_patches in enumerate(x):
+                # Patches with missing data are replaced
+                # with (first) valid patch to allow gradient descend.
+                # This won't impact the min based downstream computation.
+                if ops.count_nonzero(ops.isnan(ts_patches)):
+                    mask = ops.isfinite(ops.sum(ts_patches, axis=-1))
+                    _ = ops.nonzero(mask)
+                    substitution_indexes = ops.nonzero(mask)[0]
+                    substitution_elements = ts_patches[substitution_indexes]
+                    ts_patches[~mask] = substitution_elements[0]
+
         # (x - y)^2 = x^2 + y^2 - 2 * x * y
-        x_sq = K.expand_dims(K.sum(x ** 2, axis=2), axis=-1)
-        y_sq = K.reshape(K.sum(self.kernel ** 2, axis=1),
+        x_sq = ops.expand_dims(ops.sum(x ** 2, axis=2), axis=-1)
+        y_sq = ops.reshape(ops.sum(self.kernel ** 2, axis=1),
                          (1, 1, self.n_shapelets))
-        xy = K.dot(x, K.transpose(self.kernel))
-        return (x_sq + y_sq - 2 * xy) / K.int_shape(self.kernel)[1]
+        xy = ops.dot(x, ops.transpose(self.kernel))
+        return (x_sq + y_sq - 2 * xy) / ops.shape(self.kernel)[1]
 
     def compute_output_shape(self, input_shape):
         return input_shape[0], input_shape[1], self.n_shapelets
@@ -425,7 +480,7 @@ class LearningShapelets(ClassifierMixin, TransformerMixin,
         self._check_series_length(X)
 
         if self.random_state is not None:
-            tf.keras.utils.set_random_seed(seed=self.random_state)
+            keras.utils.set_random_seed(seed=self.random_state)
 
         n_ts, sz, d = X.shape
         self._X_fit_dims = X.shape
@@ -566,7 +621,7 @@ class LearningShapelets(ClassifierMixin, TransformerMixin,
         >>> X[0, 4:7, 0] = numpy.array([1, 2, 3])
         >>> y = [1, 0, 0]
         >>> # Data is all zeros except a motif 1-2-3 in the first time series
-        >>> clf = LearningShapelets(n_shapelets_per_size={3: 1}, max_iter=0,
+        >>> clf = LearningShapelets(n_shapelets_per_size={3: 1}, max_iter=1,
         ...                     verbose=0)
         >>> _ = clf.fit(X, y)
         >>> weights_shapelet = [
@@ -779,7 +834,7 @@ class LearningShapelets(ClassifierMixin, TransformerMixin,
         --------
         >>> from tslearn.generators import random_walk_blobs
         >>> X, y = random_walk_blobs(n_ts_per_blob=100, sz=256, d=1, n_blobs=3)
-        >>> clf = LearningShapelets(n_shapelets_per_size={10: 5}, max_iter=0,
+        >>> clf = LearningShapelets(n_shapelets_per_size={10: 5}, max_iter=1,
         ...                     verbose=0)
         >>> clf.fit(X, y).get_weights("classification")[0].shape
         (5, 3)
@@ -815,7 +870,7 @@ class LearningShapelets(ClassifierMixin, TransformerMixin,
         --------
         >>> from tslearn.generators import random_walk_blobs
         >>> X, y = random_walk_blobs(n_ts_per_blob=10, sz=16, d=1, n_blobs=3)
-        >>> clf = LearningShapelets(n_shapelets_per_size={3: 1}, max_iter=0,
+        >>> clf = LearningShapelets(n_shapelets_per_size={3: 1}, max_iter=1,
         ...                     verbose=0)
         >>> _ = clf.fit(X, y)
         >>> weights_shapelet = [

@@ -3,20 +3,26 @@
 Learning Shapelets
 ==================
 
-This example illustrates how the "Learning Shapelets" method can quickly
-find a set of shapelets that results in excellent predictive performance
-when used for a shapelet transform.
+This example illustrates how the "Learning Shapelets" method, presented in
+[1]_, can quicklyfind a set of shapelets that results in excellent predictive
+performance when used for a shapelet transform.
 
-More information on the method can be found at:
-http://fs.ismll.de/publicspace/LearningShapelets/.
+References
+----------
+.. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
 """
 
 # Author: Romain Tavenard
 # License: BSD 3 clause
 
+import os
+
+# Should be set before importing keras
+os.environ["KERAS_BACKEND"] = "torch"
+
 import numpy
 from sklearn.metrics import accuracy_score
-import tensorflow as tf
+import keras
 import matplotlib.pyplot as plt
 
 from tslearn.datasets import CachedDatasets
@@ -49,7 +55,7 @@ shapelet_sizes = grabocka_params_to_shapelet_size_dict(n_ts=n_ts,
 # Define the model using parameters provided by the authors (except that we
 # use fewer iterations here)
 shp_clf = LearningShapelets(n_shapelets_per_size=shapelet_sizes,
-                            optimizer=tf.optimizers.Adam(.01),
+                            optimizer=keras.optimizers.Adam(learning_rate=.01),
                             batch_size=16,
                             weight_regularizer=.01,
                             max_iter=200,
