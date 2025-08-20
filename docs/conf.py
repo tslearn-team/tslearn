@@ -387,6 +387,10 @@ def linkcode_resolve(domain, info):
             obj = getattr(obj, part)
         import inspect
         import os
+        if hasattr(obj, "__wrapped__"):
+            obj = obj.__wrapped__
+        if not obj.__module__.startswith('tslearn'):
+            raise RuntimeError('Not a tslearn module')
         fn = inspect.getsourcefile(obj)
         fn = os.path.relpath(fn, start=os.path.dirname(tslearn.__file__))
         source, lineno = inspect.getsourcelines(obj)
@@ -396,6 +400,8 @@ def linkcode_resolve(domain, info):
         return None
     try:
         filename = 'tslearn/%s#L%d-L%d' % find_source()
+    except RuntimeError:
+        return None
     except Exception:
         filename = info['module'].replace('.', '/') + '.py'
     revision = _get_git_revision()
