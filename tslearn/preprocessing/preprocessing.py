@@ -382,21 +382,20 @@ class TimeSeriesImputer(TransformerMixin, TimeSeriesBaseEstimator):
 
     Parameters
     ----------
-    method : {'mean', 'median', 'ffill', 'bfill', 'constant'} or
-             Callable (default: 'mean')
+    method : {'mean', 'median', 'ffill', 'bfill', 'constant', Callable}(default: 'mean')
         The method used to compute missing values.
         When using a Callable, the function should take an array-like
-         representing a timeseries with missing values as input parameter and
-         should return the transformed timeseries.
+        representing a timeseries with missing values as input parameter and
+        should return the transformed timeseries.
     value: float (default: nan)
         The value to replace missing values with. Only used when method is
         "constant".
-    keep_trailing_nans: bool (default: True)
+    keep_trailing_nans: bool (default: False)
         Whether the trailing nans should be considered as padding for variable
-        length time series and kept unprocessed. When set to false, trailing nans
-         will be imputed, which can be usefull when feeding the imputer with
-        ref:`to_time_series_dataset <fun-tslearn.utils.to_time_series_dataset>`
-         results.
+        length time series and kept unprocessed. When set to True, trailing nans
+        will not be imputed, which can be usefull when feeding the imputer with
+        :ref:`to_time_series_dataset <fun-tslearn.utils.to_time_series_dataset>`
+        results.
 
     Notes
     -----
