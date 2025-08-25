@@ -41,7 +41,11 @@ except ImportError:
 
 
 from tslearn.neural_network import TimeSeriesMLPClassifier
-from tslearn.shapelets import LearningShapelets
+try:
+    from tslearn.shapelets import LearningShapelets
+except ImportError:
+    # Mock Learning shapelets, the class won't be tested anyway
+    LearningShapelets = type("LearningShapelets", (), {})
 from tslearn.tests.sklearn_patches import (
                              check_clustering,
                              check_non_transf_est_n_iter,
@@ -94,7 +98,7 @@ def _get_all_classes():
                 # keras is likely not installed
                 warnings.warn('Skipped common tests for shapelets '
                               'as it could not be imported. keras '
-                              '(and tensorflow) are probably not '
+                              'is probably not '
                               'installed!')
                 continue
             elif name.endswith('pytorch_backend'):
@@ -247,7 +251,4 @@ def test_all_estimators(name, Estimator):
                  Estimator().get_tags()["allow_nan"])
     if allow_nan:
         checks.ALLOW_NAN.append(name)
-    if name in ["ShapeletModel"]:
-        # Deprecated models
-        return
     check_estimator(Estimator)
