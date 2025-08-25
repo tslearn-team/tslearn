@@ -20,9 +20,9 @@ import os
 # Should be set before importing keras
 os.environ["KERAS_BACKEND"] = "torch"
 
+from keras.optimizers import Adam
 import numpy
 from sklearn.metrics import accuracy_score
-import keras
 import matplotlib.pyplot as plt
 
 from tslearn.datasets import CachedDatasets
@@ -30,9 +30,6 @@ from tslearn.preprocessing import TimeSeriesScalerMinMax
 from tslearn.shapelets import LearningShapelets, \
     grabocka_params_to_shapelet_size_dict
 from tslearn.utils import ts_size
-
-# Set seed for determinism
-numpy.random.seed(0)
 
 # Load the Trace dataset
 X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")
@@ -55,11 +52,11 @@ shapelet_sizes = grabocka_params_to_shapelet_size_dict(n_ts=n_ts,
 # Define the model using parameters provided by the authors (except that we
 # use fewer iterations here)
 shp_clf = LearningShapelets(n_shapelets_per_size=shapelet_sizes,
-                            optimizer=keras.optimizers.Adam(learning_rate=.01),
+                            optimizer=Adam(0.01),
                             batch_size=16,
-                            weight_regularizer=.01,
+                            weight_regularizer=0.01,
                             max_iter=200,
-                            random_state=42,
+                            random_state=0,
                             verbose=0)
 shp_clf.fit(X_train, y_train)
 

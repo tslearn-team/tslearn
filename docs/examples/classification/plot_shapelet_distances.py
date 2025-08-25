@@ -24,6 +24,7 @@ import os
 # Should be set before importing keras
 os.environ["KERAS_BACKEND"] = "torch"
 
+from keras.optimizers import Adam
 import numpy
 from matplotlib import cm
 import matplotlib.pyplot as plt
@@ -31,10 +32,6 @@ import matplotlib.pyplot as plt
 from tslearn.datasets import CachedDatasets
 from tslearn.preprocessing import TimeSeriesScalerMinMax
 from tslearn.shapelets import LearningShapelets
-from keras.optimizers import Adam
-
-# Set a seed to ensure determinism
-numpy.random.seed(42)
 
 # Load the Trace dataset
 X_train, y_train, _, _ = CachedDatasets().load_dataset("Trace")
@@ -56,7 +53,7 @@ shp_clf = LearningShapelets(n_shapelets_per_size=shapelet_sizes,
                             max_iter=300,
                             verbose=0,
                             scale=False,
-                            random_state=42)
+                            random_state=0)
 shp_clf.fit(X_train, y_train)
 
 # We will plot our distances in a 2D space
