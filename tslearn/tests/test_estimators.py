@@ -2,7 +2,7 @@
 The :mod:`tslearn.testing_utils` module includes various utilities that can
 be used for testing.
 """
-
+import contextlib
 import os
 
 import tslearn
@@ -41,11 +41,10 @@ except ImportError:
 
 
 from tslearn.neural_network import TimeSeriesMLPClassifier
-try:
+# Mock Learning shapelets, the class won't be tested anyway
+LearningShapelets = type("LearningShapelets", (), {})
+with contextlib.suppress(ImportError):
     from tslearn.shapelets import LearningShapelets
-except ImportError:
-    # Mock Learning shapelets, the class won't be tested anyway
-    LearningShapelets = type("LearningShapelets", (), {})
 from tslearn.tests.sklearn_patches import (
                              check_clustering,
                              check_non_transf_est_n_iter,
