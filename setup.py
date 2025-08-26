@@ -40,12 +40,7 @@ setup(
         "pytorch": ['torch'],
         "tests": [
             "pytest",
-            "torch",
-            # Torch dropped support of macOS intel after version 2.2.2
-            # which does not support numpy2.
-            "numpy<2; 'darwin' in sys_platform and 'x86_64' in platform_machine",
             "h5py",
-            "keras",
             "stumpy"
         ],
         "docs": [

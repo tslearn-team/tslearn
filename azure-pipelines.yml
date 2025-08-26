@@ -303,6 +303,7 @@ jobs:
         python.version: '3.10'
   variables:
     OMP_NUM_THREADS: '2'
+    NUMBA_DISABLE_JIT: '1'
     NUMBA_NUM_THREADS: '2'
     PIP_PREFER_BINARY: 'true'
 
@@ -324,7 +325,7 @@ jobs:
       python -m pip install pytest-azurepipelines
       python -m pip install coverage pytest-cov
       pip list
-      python -m pytest -v tslearn/ --cov=tslearn --doctest-modules
+      python -m pytest -v tslearn/ --cov=tslearn
     displayName: 'Test'
 
   # Upload coverage to codecov.io
