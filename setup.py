@@ -60,7 +60,7 @@ setup(
             "h5py",
             "keras",
             "cesium",
-            "pandas"
+            "pandas",
             "stumpy",
         ]
     },
