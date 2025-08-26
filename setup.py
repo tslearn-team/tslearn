@@ -34,7 +34,7 @@ setup(
         "numpy>=1.24.3,<2.3",
         "scipy>=1.10.1,<1.17",
         "numba>=0.58.1,<0.62",
-        "joblib>=1.2,<1.6"
+        "joblib>=1.2,<1.6",
     ],
     extras_require={
         "pytorch": ['torch'],
@@ -43,7 +43,6 @@ setup(
             "torch",
             "h5py",
             "tensorflow; python_version < '3.13'",
-            "stumpy"
         ],
         "docs": [
             "sphinx",
@@ -53,7 +52,7 @@ setup(
             "nbsphinx",
             "matplotlib",
             "ipykernel",
-            "pypandoc"
+            "pypandoc",
         ],
         "all_features": [
             "torch",
@@ -61,7 +60,8 @@ setup(
             "tensorflow;  python_version < '3.13'",
             "cesium>=0.12.2; 'darwin' not in sys_platform",
             "cesium==0.12.1; 'darwin' in sys_platform",
-            "pandas"
+            "pandas",
+            "stumpy",
         ]
     },
     version=get_version(),
