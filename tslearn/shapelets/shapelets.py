@@ -928,7 +928,8 @@ class LearningShapelets(ClassifierMixin, TransformerMixin,
                 model_params.pop("model_"),
                 custom_objects={
                     "LocalSquaredDistanceLayer": LocalSquaredDistanceLayer,
-                    "GlobalMinPooling1D": GlobalMinPooling1D
+                    "GlobalMinPooling1D": GlobalMinPooling1D,
+                    "PatchingLayer": PatchingLayer,
                 }
             )
             inst.set_weights(model_params.pop("model_weights_"))
