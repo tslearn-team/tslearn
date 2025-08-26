@@ -55,5 +55,5 @@ jobs:
       scannermode: 'cli'
     displayName: 'Upload coverage to codecov.io'
   - task: SonarQubeAnalyze@7
-  inputs:
-    jdkversion: 'JAVA_HOME_17_X64'
+    inputs:
+      jdkversion: 'JAVA_HOME_17_X64'
