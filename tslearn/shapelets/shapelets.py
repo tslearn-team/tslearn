@@ -4,6 +4,10 @@ import warnings
 # Should be set before importing keras
 os.environ["KERAS_BACKEND"] = "torch"
 
+import keras.backend
+if keras.backend.backend() != 'torch':
+    raise RuntimeError("Keras with Pytorch backend required.")
+
 from keras.layers import (
     InputSpec,
     Dense,
@@ -64,7 +68,7 @@ class GlobalMinPooling1D(Layer):
         3D tensor with shape: `(batch_size, steps, features)`.
     # Output shape
         2D tensor with shape:
-        `(batch_size, features)`
+        `(batch_size, features)`.
 
     Examples
     --------
@@ -91,7 +95,7 @@ class GlobalArgminPooling1D(Layer):
         3D tensor with shape: `(batch_size, steps, features)`.
     # Output shape
         2D tensor with shape:
-        `(batch_size, features)`
+        `(batch_size, features)`.
 
     Examples
     --------
@@ -113,8 +117,13 @@ class GlobalArgminPooling1D(Layer):
 
 
 class PatchingLayer(Layer):
-    """
-    Format data for processing.
+    """Format data for processing with patches matching shapelets length
+    and nans removal.
+    # Input shape
+        3D tensor with shape: `(batch_size, steps, features)`.
+    # Output shape
+        4D tensor with shape:
+         `(batch_size, steps - shapelet_size, shapelet_length, features)`.
     """
 
     def __init__(self, shapelet_length, **kwargs):
@@ -138,6 +147,7 @@ class PatchingLayer(Layer):
             (n_ts, sz - self.shapelet_length + 1, self.shapelet_length, d)
         )
 
+        # This is pytorch specific
         for index, patches in enumerate(inputs):
             patches = ops.nan_to_num(patches, nan=numpy.inf)
             _ = ops.sum(patches, axis=(-1, -2))
@@ -158,10 +168,11 @@ class LocalSquaredDistanceLayer(Layer):
     shapelets
 
     # Input shape
-        3D tensor with shape: `(batch_size, steps, features)`.
+        4D tensor with shape:
+        `(batch_size, steps - shapelet_size, shapelet_length, features)`.
     # Output shape
         3D tensor with shape:
-        `(batch_size, steps, n_shapelets)`
+        `(batch_size, steps, n_shapelets)`.
     """
 
     def __init__(self, nb_shapelets, init=None, **kwargs):

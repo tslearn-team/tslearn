@@ -40,8 +40,12 @@ A note on requirements
 Those should automatically be pulled on a standard ``tslearn`` installation.
 
 If you plan to use the :mod:`tslearn.shapelets` module from
-``tslearn``, ``tensorflow`` (v2) should also be installed.
+``tslearn``, ``keras`` (v3+) and ``pytorch`` should also be installed.
+``pytorch`` can also be used as a computational backend for some metrics.
+See :doc:`the backend section <backend>` for more information.
+
 ``h5py`` is required for reading or writing models using the hdf5 file format.
+
 The ``cesium`` and ``pandas`` libraries may also be required if you plan on
 :ref:`integrating with some other python packages <integration_other_software>`.
 
@@ -50,4 +54,3 @@ You can use the `[all_features]` extra to enjoy all the features provided in the
 .. code-block:: bash
 
     python -m pip install tslearn[all_features]
-

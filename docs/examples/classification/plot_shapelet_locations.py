@@ -58,7 +58,7 @@ shp_clf = LearningShapelets(n_shapelets_per_size=shapelet_sizes,
                             max_iter=250,
                             verbose=0,
                             scale=False,
-                            random_state=0)
+                            random_state=42)
 shp_clf.fit(X_train, y_train)
 
 # Get the number of extracted shapelets, the (minimal) distances from
