@@ -34,14 +34,13 @@ setup(
         "numpy>=1.24.3,<2.3",
         "scipy>=1.10.1,<1.17",
         "numba>=0.58.1,<0.62",
-        "joblib>=1.2,<1.6"
+        "joblib>=1.2,<1.6",
     ],
     extras_require={
         "pytorch": ['torch'],
         "tests": [
             "pytest",
             "h5py",
-            "stumpy"
         ],
         "docs": [
             "sphinx",
@@ -51,7 +50,7 @@ setup(
             "nbsphinx",
             "matplotlib",
             "ipykernel",
-            "pypandoc"
+            "pypandoc",
         ],
         "all_features": [
             "torch",
@@ -62,6 +61,7 @@ setup(
             "keras",
             "cesium",
             "pandas"
+            "stumpy",
         ]
     },
     version=get_version(),
