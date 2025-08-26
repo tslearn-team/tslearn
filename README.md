@@ -1,6 +1,6 @@
 <!-- Our logo and description -->
 <div align="center">
-  <p><a href="https://tslearn.readthedocs.io"><kbd><image src="https://raw.githubusercontent.com/tslearn-team/tslearn/main/docs/_static/tslearn_logo.jpg?cache-control=no-cache" width="20%" alt="tslearn logo" /><kbd></a></p>
+  <p><a href="https://tslearn.readthedocs.io"><image src="https://raw.githubusercontent.com/tslearn-team/tslearn/main/docs/_static/tslearn_logo.jpg?cache-control=no-cache" width="20%" alt="tslearn logo"/></a></p>
   <h1>The machine learning toolkit for time series analysis in Python</h1>
 </div>
 
