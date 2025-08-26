@@ -273,7 +273,7 @@ def test_serialize_1dsax():
 
 
 def test_serialize_shapelets():
-    shapelets = pytest.importorskip('LearningShapelets')
+    shapelets = pytest.importorskip('tslearn.shapelets')
     def get_model_weights(model):
         return model.model_.get_weights()
 
