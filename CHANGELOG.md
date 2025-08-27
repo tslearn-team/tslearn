@@ -12,6 +12,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 ## [Towards v0.7.0]
 
 ### Changed
+
 * Explicit exception when using Global Alignment Kernel with sigma close to zero ([#440](https://github.com/tslearn-team/tslearn/issues/440))
 
 ### Removed
