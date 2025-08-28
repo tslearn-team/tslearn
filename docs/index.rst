@@ -23,7 +23,7 @@
 |logo| ``tslearn``'s documentation
 ==================================
 
-.. |logo| image:: _static/tslearn_logo.svg
+.. |logo| image:: _static/tslearn_logo_white_background.png
    :height: 50px
 
 .. raw:: html
