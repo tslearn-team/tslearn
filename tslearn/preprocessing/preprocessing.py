@@ -375,7 +375,7 @@ class TimeSeriesScalerMeanVariance(TransformerMixin, TimeSeriesBaseEstimator):
 class TimeSeriesImputer(TransformerMixin, TimeSeriesBaseEstimator):
     """Missing value imputer for time series.
 
-    Missing values (nans) are replaced according to the choosen imputation
+    Missing values (nans) are replaced according to the chosen imputation
     method. There might be cases where the computation of missing values is
     impossible, in which case they are left unchanged
     (ex: mean of all nans, ffill for the first value... ).
@@ -386,7 +386,7 @@ class TimeSeriesImputer(TransformerMixin, TimeSeriesBaseEstimator):
     series datasets formatted with
     :ref:`to_time_series_dataset <fun-tslearn.utils.to_time_series_dataset>`,
     where time series are padded with 'empty' samples to match the length of the
-    longuest time serie. This option aims at preserving the variable lenght
+    longest time serie. This option aims at preserving the variable length
     nature of the input dataset.
 
     Time series are processed sequentially by the :func:`~transform` and
