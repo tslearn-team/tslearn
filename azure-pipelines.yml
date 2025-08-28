@@ -51,7 +51,7 @@ jobs:
 
   - task: SonarQubePrepare@7
     inputs:
-      SonarQube: 'https://sonarqube.inria.fr/sonarqube'
+      SonarQube: 'sonarqube_inria'
       scannermode: 'cli'
     displayName: 'Prepare analysis'
   - task: SonarQubeAnalyze@7
