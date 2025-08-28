@@ -8,7 +8,6 @@ from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 
 from tslearn.neighbors import KNeighborsTimeSeries, \
     KNeighborsTimeSeriesClassifier
-from tslearn.shapelets import LearningShapelets
 from tslearn.clustering import KShape, TimeSeriesKMeans, \
     KernelKMeans
 from tslearn.generators import random_walks
@@ -274,6 +273,7 @@ def test_serialize_1dsax():
 
 
 def test_serialize_shapelets():
+    shapelets = pytest.importorskip('tslearn.shapelets')
     def get_model_weights(model):
         return model.model_.get_weights()
 
@@ -284,7 +284,7 @@ def test_serialize_shapelets():
     for y in [rng.randint(low=0, high=3, size=n),
               rng.choice(["one", "two", "three"], size=n)]:
 
-        shp = LearningShapelets(max_iter=1)
+        shp = shapelets.LearningShapelets(max_iter=1)
         _check_not_fitted(shp)
         shp.fit(X, y)
         _check_params_predict(shp, X, ['predict'],
