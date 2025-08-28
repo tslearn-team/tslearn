@@ -25,8 +25,23 @@ def test_gamma_value_svm():
                                                      fit_time=True)
 
         cdist_mat = cdist_gak(time_series, sigma=np.sqrt(gamma / 2.))
-
         np.testing.assert_allclose(sklearn_X, cdist_mat)
+
+    # Invalid gamma 0 for gak kernel
+    for cls in [TimeSeriesSVC, TimeSeriesSVR]:
+        estimator = cls(kernel="gak", gamma=0)
+        with pytest.raises(RuntimeError):
+            estimator.fit(time_series, labels)
+
+    # Invalid computed gamma for gak kernel
+    X = ([np.ones(3), np.ones(3)])
+    y = [0, 1]
+
+    for cls in [TimeSeriesSVC, TimeSeriesSVR]:
+        estimator = cls(kernel="gak")
+        with pytest.raises(RuntimeError):
+            estimator.fit(X, y)
+
 
 def test_attributes():
     n, sz, d = 5, 10, 3
@@ -46,25 +61,3 @@ def test_attributes():
         for attr in ['coef_', 'support_', 'support_vectors_',
                      'dual_coef_', 'coef_', 'intercept_']:
             assert hasattr(linear_model, attr)
-
-
-def test_invalid_gamma_value():
-    # Gamma computed with same time series is 0
-    X = ([np.ones(3), np.ones(3)])
-    y = [0, 1]
-
-    for cls in [TimeSeriesSVC, TimeSeriesSVR]:
-        estimator = cls(kernel="gak")
-        with pytest.raises(RuntimeError):
-            estimator.fit(X, y)
-
-    # Explicit gamma set to 0
-    n, sz, d = 5, 10, 3
-    rng = np.random.RandomState(0)
-    time_series = rng.randn(n, sz, d)
-    labels = rng.randint(low=0, high=2, size=n)
-
-    for cls in [TimeSeriesSVC, TimeSeriesSVR]:
-        estimator = cls(kernel="gak", gamma=0)
-        with pytest.raises(RuntimeError):
-            estimator.fit(time_series, labels)

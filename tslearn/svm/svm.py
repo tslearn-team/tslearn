@@ -67,23 +67,17 @@ class TimeSeriesSVMMixin:
         if self.kernel in VARIABLE_LENGTH_METRICS:
             assert self.kernel == "gak"
             self.estimator_kernel_ = "precomputed"
-            try:
-                if fit_time:
-                    sklearn_X = cdist_gak(X,
-                                          sigma=numpy.sqrt(self.gamma_ / 2.),
-                                          n_jobs=self.n_jobs,
-                                          verbose=self.verbose)
-                else:
-                    sklearn_X = cdist_gak(X,
-                                          self._X_fit,
-                                          sigma=numpy.sqrt(self.gamma_ / 2.),
-                                          n_jobs=self.n_jobs,
-                                          verbose=self.verbose)
-            except ZeroDivisionError:
-                raise RuntimeError(
-                    "The{} `gamma` parameter is close to 0 and "
-                    "cannot be used with gak kernel."
-                .format(" auto computed" if self.gamma == "auto" else ""))
+            if fit_time:
+                sklearn_X = cdist_gak(X,
+                                      sigma=numpy.sqrt(self.gamma_ / 2.),
+                                      n_jobs=self.n_jobs,
+                                      verbose=self.verbose)
+            else:
+                sklearn_X = cdist_gak(X,
+                                      self._X_fit,
+                                      sigma=numpy.sqrt(self.gamma_ / 2.),
+                                      n_jobs=self.n_jobs,
+                                      verbose=self.verbose)
 
         else:
             self.estimator_kernel_ = self.kernel
@@ -297,7 +291,13 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
             Per-sample weights. Rescale C per sample. Higher weights force the 
             classifier to put more emphasis on these points.
         """
-        sklearn_X, y = self._preprocess_sklearn(X, y, fit_time=True)
+        try:
+            sklearn_X, y = self._preprocess_sklearn(X, y, fit_time=True)
+        except ZeroDivisionError:
+            raise RuntimeError(
+                "The{} `gamma` parameter is close to 0 and "
+                "cannot be used with gak kernel."
+                .format(" auto computed" if self.gamma == "auto" else ""))
 
         self.svm_estimator_ = SVC(
             C=self.C, kernel=self.estimator_kernel_, degree=self.degree,
@@ -557,7 +557,13 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
             Per-sample weights. Rescale C per sample. Higher weights force the 
             classifier to put more emphasis on these points.
         """
-        sklearn_X, y = self._preprocess_sklearn(X, y, fit_time=True)
+        try:
+            sklearn_X, y = self._preprocess_sklearn(X, y, fit_time=True)
+        except ZeroDivisionError:
+            raise RuntimeError(
+                "The{} `gamma` parameter is close to 0 and "
+                "cannot be used with gak kernel."
+                .format(" auto computed" if self.gamma == "auto" else ""))
 
         self.svm_estimator_ = SVR(
             C=self.C, kernel=self.estimator_kernel_, degree=self.degree,
