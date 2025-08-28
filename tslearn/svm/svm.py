@@ -1,3 +1,7 @@
+"""
+The :mod:`tslearn.svm.svm` module contains Support Vector Classifier (SVC) and
+Support Vector Regressor (SVR) models for time series.
+"""
 from sklearn.svm import SVC, SVR
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.utils.validation import check_is_fitted
@@ -13,7 +17,7 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 class TimeSeriesSVMMixin:
-
+    """Time series mixin for SVM based estimators."""
     @property
     def support_(self):
         check_is_fitted(self, ['svm_estimator_', '_X_fit'])
@@ -66,7 +70,7 @@ class TimeSeriesSVMMixin:
             if fit_time:
                 sklearn_X = cdist_gak(X,
                                       sigma=numpy.sqrt(self.gamma_ / 2.),
-                                      n_jobs=self.n_jobs, 
+                                      n_jobs=self.n_jobs,
                                       verbose=self.verbose)
             else:
                 sklearn_X = cdist_gak(X,
@@ -74,6 +78,7 @@ class TimeSeriesSVMMixin:
                                       sigma=numpy.sqrt(self.gamma_ / 2.),
                                       n_jobs=self.n_jobs,
                                       verbose=self.verbose)
+
         else:
             self.estimator_kernel_ = self.kernel
             sklearn_X = to_sklearn_dataset(X)
@@ -106,10 +111,16 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
 
     gamma : float, optional (default='auto')
         Kernel coefficient for 'gak', 'rbf', 'poly' and 'sigmoid'.
+        For 'gak' kernel, a `RuntimeError` is raised at fit time when value is
+        close to 0 and therefore not compatible with 'gak' kernel.
+
         If gamma is 'auto' then:
 
         - for 'gak' kernel, it is computed based on a sampling of the training
-          set (cf :ref:`tslearn.metrics.gamma_soft_dtw <fun-tslearn.metrics.gamma_soft_dtw>`)
+          set (cf :ref:`tslearn.metrics.gamma_soft_dtw <fun-tslearn.metrics.gamma_soft_dtw>`).
+          A `RuntimeError` is raised at fit time when computed value is
+          close to 0 and therefore not compatible with 'gak' kernel.
+
         - for other kernels (eg. 'rbf'), 1/n_features will be used.
 
     coef0 : float, optional (default=0.0)
@@ -176,7 +187,7 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
 
     n_support_ : array-like, dtype=int32, shape = [n_class]
         Number of support vectors for each class.
-        
+
     support_vectors_ : list of arrays of shape [n_SV, sz, d]
         List of support vectors in tslearn dataset format, one array per class
 
@@ -272,15 +283,21 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset.
-            
+
         y : array-like of shape=(n_ts, )
             Time series labels.
-            
+
         sample_weight : array-like of shape (n_samples,), default=None
             Per-sample weights. Rescale C per sample. Higher weights force the 
             classifier to put more emphasis on these points.
         """
-        sklearn_X, y = self._preprocess_sklearn(X, y, fit_time=True)
+        try:
+            sklearn_X, y = self._preprocess_sklearn(X, y, fit_time=True)
+        except ZeroDivisionError:
+            raise RuntimeError(
+                "The{} `gamma` parameter is close to 0 and "
+                "cannot be used with gak kernel."
+                .format(" auto computed" if self.gamma == "auto" else ""))
 
         self.svm_estimator_ = SVC(
             C=self.C, kernel=self.estimator_kernel_, degree=self.degree,
@@ -315,12 +332,12 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
 
     def decision_function(self, X):
         """Evaluates the decision function for the samples in X.
-        
+
         Parameters
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset.
-        
+
         Returns
         -------
         ndarray of shape (n_samples, n_classes * (n_classes-1) / 2)
@@ -333,7 +350,7 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
 
     def predict_log_proba(self, X):
         """Predict class log-probabilities for a given set of time series.
-        
+
         Note that probability estimates are not guaranteed to match predict 
         output.
         See our :ref:`dedicated user guide section <kernels-ml>`
@@ -406,10 +423,16 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
 
     gamma : float, optional (default='auto')
         Kernel coefficient for 'gak', 'rbf', 'poly' and 'sigmoid'.
+        For 'gak' kernel, a `RuntimeError` is raised at fit time when value is
+        close to 0 and therefore not compatible with 'gak' kernel.
+
         If gamma is 'auto' then:
 
         - for 'gak' kernel, it is computed based on a sampling of the training
-          set (cf :ref:`tslearn.metrics.gamma_soft_dtw <fun-tslearn.metrics.gamma_soft_dtw>`)
+          set (cf :ref:`tslearn.metrics.gamma_soft_dtw <fun-tslearn.metrics.gamma_soft_dtw>`).
+          A `RuntimeError` is raised at fit time when computed value is
+          close to 0 and therefore not compatible with 'gak' kernel.
+
         - for other kernels (eg. 'rbf'), 1/n_features will be used.
 
     coef0 : float, optional (default=0.0)
@@ -451,7 +474,7 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
     ----------
     support_ : array-like, shape = [n_SV]
         Indices of support vectors.
-        
+
     support_vectors_ : array of shape [n_SV, sz, d]
         Support vectors in tslearn dataset format
 
@@ -526,15 +549,21 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
         ----------
         X : array-like of shape=(n_ts, sz, d)
             Time series dataset.
-            
+
         y : array-like of shape=(n_ts, )
             Time series labels.
-            
+
         sample_weight : array-like of shape (n_samples,), default=None
             Per-sample weights. Rescale C per sample. Higher weights force the 
             classifier to put more emphasis on these points.
         """
-        sklearn_X, y = self._preprocess_sklearn(X, y, fit_time=True)
+        try:
+            sklearn_X, y = self._preprocess_sklearn(X, y, fit_time=True)
+        except ZeroDivisionError:
+            raise RuntimeError(
+                "The{} `gamma` parameter is close to 0 and "
+                "cannot be used with gak kernel."
+                .format(" auto computed" if self.gamma == "auto" else ""))
 
         self.svm_estimator_ = SVR(
             C=self.C, kernel=self.estimator_kernel_, degree=self.degree,

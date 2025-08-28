@@ -1,3 +1,6 @@
+"""Soft-DTW toolbox"""
+import math
+
 import numpy as np
 from joblib import Parallel, delayed
 from numba import njit
@@ -98,6 +101,7 @@ def _njit_gak(gram):
 def _gak_gram(s1, s2, sigma=1.0, be=None):
     """Compute Global Alignment Kernel (GAK) Gram matrix between (possibly
     multidimensional) time series and return it.
+    Raises ZeroDivisionError when sigma is close to zero.
 
     Parameters
     ----------
@@ -120,6 +124,8 @@ def _gak_gram(s1, s2, sigma=1.0, be=None):
     gram : array-like, shape=(sz1, sz2)
         Gram matrix.
     """
+    if math.isclose(sigma, 0.0):
+        raise ZeroDivisionError()
     be = instantiate_backend(be, s1)
     gram = -be.cdist(s1, s2, "sqeuclidean") / (2 * sigma**2)
     gram = be.array(gram)
@@ -259,7 +265,7 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.0, n_jobs=None, verbose=0, be=Non
         If shape is (n_ts1, sz1), the dataset is composed of univariate time series.
         If shape is (sz1,), the dataset is composed of a unique univariate time series.
     dataset2 : None or array-like, shape=(n_ts2, sz2, d) or (n_ts2, sz2) or (sz2,) (default: None)
-        Another dataset of time series. 
+        Another dataset of time series.
         If `None`, self-similarity of `dataset1` is returned.
         If shape is (n_ts2, sz2), the dataset is composed of univariate time series.
         If shape is (sz2,), the dataset is composed of a unique univariate time series.
@@ -522,7 +528,7 @@ def soft_dtw(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False):
     0.089...
 
     The PyTorch backend can be used to compute gradients:
-    
+
     >>> import torch
     >>> ts1 = torch.tensor([[1.0], [2.0], [3.0]], requires_grad=True)
     >>> ts2 = torch.tensor([[3.0], [4.0], [-3.0]])
@@ -558,7 +564,7 @@ def soft_dtw(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False):
     be = instantiate_backend(be, ts1, ts2)
     ts1 = be.array(ts1)
     ts2 = be.array(ts2)
-    if gamma == 0.0:
+    if math.isclose(gamma, 0.0):
         return dtw(ts1, ts2, be=be) ** 2
     return SoftDTW(
         SquaredEuclidean(ts1[: ts_size(ts1)], ts2[: ts_size(ts2)], be=be),
@@ -634,7 +640,7 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False)
            [1.37...e-04, 1.31...e-01, 7.30...e-01, 1.00...e+00]])
 
     The PyTorch backend can be used to compute gradients:
-    
+
     >>> import torch
     >>> ts1 = torch.tensor([[1.0], [2.0], [3.0]], requires_grad=True)
     >>> ts2 = torch.tensor([[3.0], [4.0], [-3.0]])
@@ -670,7 +676,7 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False)
     be = instantiate_backend(be, ts1, ts2)
     ts1 = be.array(ts1)
     ts2 = be.array(ts2)
-    if gamma == 0.0:
+    if math.isclose(gamma, 0.0):
         path, dist = dtw_path(ts1, ts2, be=be)
         dist_sq = dist**2
         a = be.zeros((ts_size(ts1), ts_size(ts2)))
@@ -751,7 +757,7 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0, be=None, compute_with_bac
            [ 1.        ,  0.        ]])
 
     The PyTorch backend can be used to compute gradients:
-    
+
     >>> import torch
     >>> dataset1 = torch.tensor([[[1.0], [2.0], [3.0]], [[1.0], [2.0], [3.0]]], requires_grad=True)
     >>> dataset2 = torch.tensor([[[3.0], [4.0], [-3.0]], [[3.0], [4.0], [-3.0]]])
@@ -891,7 +897,7 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None, compu
     True
 
     The PyTorch backend can be used to compute gradients:
-    
+
     >>> import torch
     >>> dataset1 = torch.tensor([[[1.0], [2.0], [3.0]], [[1.0], [2.0], [3.0]]], requires_grad=True)
     >>> dataset2 = torch.tensor([[[3.0], [4.0], [-3.0]], [[3.0], [4.0], [-3.0]]])
@@ -952,6 +958,7 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None, compu
 
 
 class SoftDTW:
+    """Soft Dynamic Time Warping"""
     def __init__(self, D, gamma=1.0, be=None, compute_with_backend=False):
         """Soft Dynamic Time Warping.
 
@@ -1059,6 +1066,7 @@ class SoftDTW:
 
 
 class SquaredEuclidean:
+    """Squared Euclidean distance."""
     def __init__(self, X, Y, be=None, compute_with_backend=False):
         """Squared Euclidean distance.
 
