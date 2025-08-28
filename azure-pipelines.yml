@@ -53,7 +53,9 @@ jobs:
     inputs:
       SonarQube: 'https://sonarqube.inria.fr/sonarqube'
       scannermode: 'cli'
-    displayName: 'Upload coverage to codecov.io'
+    displayName: 'Prepare analysis'
   - task: SonarQubeAnalyze@7
     inputs:
       jdkversion: 'JAVA_HOME_17_X64'
+    displayName: 'Run analysis'
+  - 
