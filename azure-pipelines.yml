@@ -55,8 +55,8 @@ jobs:
       scannermode: 'cli'
     displayName: 'Prepare analysis'
   - task: SonarQubeAnalyze@7
-    inputs:
-      jdkversion: 'JAVA_HOME_17_X64'
+    #inputs:
+    #  jdkversion: 'JAVA_HOME_17_X64'
     displayName: 'Run analysis'
     #env:
     #  SONAR_TOKEN: $(SONARQUBE_TOKEN_SECRET)
