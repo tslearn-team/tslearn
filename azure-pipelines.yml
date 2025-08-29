@@ -58,5 +58,5 @@ jobs:
     inputs:
       jdkversion: 'JAVA_HOME_17_X64'
     displayName: 'Run analysis'
-    env:
-      SONAR_TOKEN: $(SONARQUBE_TOKEN_SECRET)
+    #env:
+    #  SONAR_TOKEN: $(SONARQUBE_TOKEN_SECRET)
