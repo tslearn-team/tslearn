@@ -392,7 +392,8 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
 
     def _more_tags(self):
         sample_weight_failure_msg = "zero sample_weight is not equivalent to removing samples"
-        return {'non_deterministic': True, 'allow_nan': True,
+        return {'non_deterministic': True,
+                'allow_nan': False,
                 'allow_variable_length': True,
                 "_xfail_checks": {
                     "check_sample_weights_invariance": sample_weight_failure_msg,
@@ -593,7 +594,8 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
 
     def _more_tags(self):
         sample_weight_failure_msg = "zero sample_weight is not equivalent to removing samples"
-        return {'non_deterministic': True, 'allow_nan': True,
+        return {'non_deterministic': True,
+                'allow_nan': False,
                 'allow_variable_length': True,
                 "_xfail_checks": {
                     "check_sample_weights_invariance": sample_weight_failure_msg,
