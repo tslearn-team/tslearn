@@ -288,7 +288,7 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
             Time series labels.
 
         sample_weight : array-like of shape (n_samples,), default=None
-            Per-sample weights. Rescale C per sample. Higher weights force the 
+            Per-sample weights. Rescale C per sample. Higher weights force the
             classifier to put more emphasis on these points.
         """
         try:
@@ -351,7 +351,7 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
     def predict_log_proba(self, X):
         """Predict class log-probabilities for a given set of time series.
 
-        Note that probability estimates are not guaranteed to match predict 
+        Note that probability estimates are not guaranteed to match predict
         output.
         See our :ref:`dedicated user guide section <kernels-ml>`
         for more details.
@@ -371,8 +371,8 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
 
     def predict_proba(self, X):
         """Predict class probability for a given set of time series.
-        
-        Note that probability estimates are not guaranteed to match predict 
+
+        Note that probability estimates are not guaranteed to match predict
         output.
         See our :ref:`dedicated user guide section <kernels-ml>`
         for more details.
@@ -555,7 +555,7 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
             Time series labels.
 
         sample_weight : array-like of shape (n_samples,), default=None
-            Per-sample weights. Rescale C per sample. Higher weights force the 
+            Per-sample weights. Rescale C per sample. Higher weights force the
             classifier to put more emphasis on these points.
         """
         try:
