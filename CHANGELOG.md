@@ -24,6 +24,11 @@ Changelogs for this project are recorded in this file since v0.2.0.
 * `per_timeseries` and `per_feature` options for min-max and mean-variance scalers ([#536](https://github.com/tslearn-team/tslearn/issues/536))
 * `TimeSeriesImputer`class: missing value imputer for time series ([#564](https://github.com/tslearn-team/tslearn/issues/564))
 
+### Changed
+
+* The `shapelets` module now depends on Keras3+ and Pytorch and not anymore on TF
+* Fixed `LearningShapelets` with variable length timeseries 
+
 ## [v0.6.4]
 
 ### Changed
