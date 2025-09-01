@@ -1,3 +1,4 @@
+"""Clustering related toolbox."""
 from sklearn.metrics.cluster import silhouette_score as sklearn_silhouette
 from scipy.spatial.distance import cdist
 import numpy
@@ -7,7 +8,6 @@ from tslearn.preprocessing import TimeSeriesResampler
 from tslearn.utils import to_time_series_dataset, to_time_series
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
-
 
 
 class EmptyClusterError(Exception):
@@ -111,7 +111,7 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
 
     verbose : int (default: 0)
         If nonzero, print information about the inertia while learning
-        the model and joblib progress messages are printed.  
+        the model and joblib progress messages are printed.
 
     random_state : int, RandomState instance or None, optional (default: None)
         The generator used to randomly select a subset of samples.  If int,
