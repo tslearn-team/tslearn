@@ -398,15 +398,21 @@ def sigma_gak(dataset, n_samples=100, random_state=None, be=None):
     random_state = check_random_state(random_state)
     dataset = to_time_series_dataset(dataset, be=be)
     n_ts, sz, d = be.shape(dataset)
-    if not check_equal_size(dataset, be=be):
-        sz = be.min([ts_size(ts) for ts in dataset])
-    if n_ts * sz < n_samples:
-        replace = True
-    else:
-        replace = False
-    sample_indices = random_state.choice(n_ts * sz, size=n_samples, replace=replace)
+
+    # Remove points with nans from dataset
+    dataset = dataset.reshape((-1, d))
+    mask = be.isfinite(be.sum(dataset, axis=-1))
+    dataset = dataset[mask]
+
+    nb_valid_samples = be.shape(dataset)[0]
+    replace = nb_valid_samples < n_samples
+    sample_indices = random_state.choice(
+        nb_valid_samples,
+        size=n_samples,
+        replace=replace
+    )
     dists = be.pdist(
-        dataset[:, :sz, :].reshape((-1, d))[sample_indices],
+        dataset[sample_indices],
         metric="euclidean",
     )
     return be.median(dists) * be.sqrt(sz)
