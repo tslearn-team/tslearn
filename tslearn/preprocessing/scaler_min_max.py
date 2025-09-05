@@ -133,7 +133,7 @@ class TimeSeriesScalerMinMax(TransformerMixin, TimeSeriesBaseEstimator):
         X_ = nomin / range_t + self.value_range[0]
         return X_
 
-    def _more_tags(self):
+    def _more_tags(self) -> dict:
         more_tags = super()._more_tags()
         more_tags.update({'allow_nan': True})
         return more_tags

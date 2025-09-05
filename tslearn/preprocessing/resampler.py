@@ -212,7 +212,7 @@ class TimeSeriesResampler(TransformerMixin, TimeSeriesBaseEstimator):
 
         return resampler(X_)
 
-    def _more_tags(self):
+    def _more_tags(self) -> dict:
         more_tags = super()._more_tags()
         more_tags.update({'allow_nan': True, ALLOW_VARIABLE_LENGTH: True})
         return more_tags

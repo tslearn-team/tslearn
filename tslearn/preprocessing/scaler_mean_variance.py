@@ -127,7 +127,7 @@ class TimeSeriesScalerMeanVariance(TransformerMixin, TimeSeriesBaseEstimator):
         X_ = (X_ - mean_t) * self.std / std_t + self.mu
         return X_
 
-    def _more_tags(self):
+    def _more_tags(self) -> dict:
         more_tags = super()._more_tags()
         more_tags.update({'allow_nan': True})
         return more_tags
