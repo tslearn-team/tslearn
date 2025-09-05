@@ -14,6 +14,11 @@ from tslearn.preprocessing import (
 from tslearn.utils import to_time_series_dataset, to_time_series
 
 
+def test_resampler_invalid_method():
+    with pytest.raises(ValueError):
+        TimeSeriesResampler(method="invalid").fit_transform([1, 2, 3])
+
+
 def test_resampler_uniform():
 
     # Test downsampling
@@ -80,6 +85,12 @@ def test_resampler_linear():
 
 
 def test_resampler_mean():
+
+    # Test downsampling target_size = 1
+    X = to_time_series_dataset([1, 2, 3, 4, 5, 6, 7])
+    resampled = TimeSeriesResampler(sz=1, method="linear").fit_transform(X)
+    expected = np.array([[[4.]]])
+    assert_array_equal(resampled, expected)
 
     # Test downsampling with integer size / target_size
     X = to_time_series_dataset([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
@@ -276,6 +287,10 @@ def test_min_max_scaler_modes():
             [[0.5], [0.75], [1]],
         ])
     )
+
+def test_min_max_scaler_invalid_range():
+    with pytest.raises(ValueError):
+        TimeSeriesScalerMinMax((1,0)).fit_transform([1, 2, 3])
 
 
 def test_mean_variance_scaler_modes():

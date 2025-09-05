@@ -1,5 +1,6 @@
 """Resampler for time series preprocessing"""
 import math
+import typing
 
 import numpy
 
@@ -70,7 +71,10 @@ class TimeSeriesResampler(TransformerMixin, TimeSeriesBaseEstimator):
             [10.5],
             [13.5]]])
     """
-    def __init__(self, sz: int=-1, method: str='linear', window_size: int|None=None):
+    def __init__(self,
+                 sz: typing.Optional[int]=-1,
+                 method: typing.Optional[str]='linear',
+                 window_size: typing.Optional[typing.Union[int, None]]=None):
         self.sz = sz
         self.method = method
         self.window_size = window_size
