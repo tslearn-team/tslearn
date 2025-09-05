@@ -5,8 +5,8 @@ resampler and imputer.
 
 from .imputer import TimeSeriesImputer
 from .resampler import TimeSeriesResampler
-from .scaler_mean_variance import TimeSeriesScalerMeanVariance
-from .scaler_min_max import TimeSeriesScalerMinMax
+from .scaler import TimeSeriesScalerMeanVariance, TimeSeriesScalerMinMax
+
 
 __all__ = [
     "TimeSeriesResampler",

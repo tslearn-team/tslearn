@@ -74,16 +74,16 @@ class TimeSeriesResampler(TransformerMixin, TimeSeriesBaseEstimator):
     def __init__(self,
                  sz: typing.Optional[int]=-1,
                  method: typing.Optional[str]='linear',
-                 window_size: typing.Optional[typing.Union[int, None]]=None):
+                 window_size: typing.Optional[typing.Union[int, None]]=None) -> None:
         self.sz = sz
         self.method = method
         self.window_size = window_size
 
     @property
-    def _resampler(self):
+    def _resampler(self) -> typing.Union[typing.Callable, None]:
         return getattr(self, "_{}_resample".format(self.method), None)
 
-    def _get_resampling_size(self, X):
+    def _get_resampling_size(self, X) -> int:
         return self.sz if self.sz > 0 else X.shape[1]
 
     def fit(self, X, y=None, **kwargs):
@@ -143,8 +143,8 @@ class TimeSeriesResampler(TransformerMixin, TimeSeriesBaseEstimator):
 
     def _window_resample_generic(self, X, method):
         target_size = self._get_resampling_size(X)
-        if target_size ==1:
-            return method(X, axis=0, keepdims=True)
+        if target_size == 1:
+            return method(X, axis=1, keepdims=True)
 
         n_ts, sz, d = X.shape
         equal_size = check_equal_size(X)
@@ -158,7 +158,7 @@ class TimeSeriesResampler(TransformerMixin, TimeSeriesBaseEstimator):
                 self._window_resample(X[i], X_out[i], method)
         return X_out
 
-    def _window_resample(self, timeseries, output, method):
+    def _window_resample(self, timeseries, output, method) -> None:
         original_size = ts_size(timeseries)
         target_size = self._get_resampling_size(timeseries)
         window_size = self.window_size or max(target_size / original_size, original_size / target_size)
@@ -212,7 +212,7 @@ class TimeSeriesResampler(TransformerMixin, TimeSeriesBaseEstimator):
 
         return resampler(X_)
 
-    def _more_tags(self) -> dict:
+    def _more_tags(self) -> dict[str, typing.Any]:
         more_tags = super()._more_tags()
         more_tags.update({'allow_nan': True, ALLOW_VARIABLE_LENGTH: True})
         return more_tags

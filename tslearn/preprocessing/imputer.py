@@ -1,5 +1,5 @@
 """Imputer for time series preprocessing"""
-from typing import Callable, Optional, Union
+import typing
 
 import numpy
 
@@ -99,16 +99,16 @@ class TimeSeriesImputer(TransformerMixin, TimeSeriesBaseEstimator):
             [ 6.]]])
     """
     def __init__(self,
-                 method: Union[str, Callable]="mean",
-                 value:  Optional[float]=numpy.nan,
-                 keep_trailing_nans: bool = False):
+                 method: typing.Union[str, typing.Callable]="mean",
+                 value: typing.Optional[float]=numpy.nan,
+                 keep_trailing_nans: bool = False) -> None:
         self.method = method
         self.value = value
         self.keep_trailing_nans = keep_trailing_nans
         super().__init__()
 
     @property
-    def _imputer(self):
+    def _imputer(self) -> typing.Union[typing.Callable, None]:
         if callable(self.method):
             return self.method
 
@@ -238,7 +238,7 @@ class TimeSeriesImputer(TransformerMixin, TimeSeriesBaseEstimator):
             X_[ts_index, :stop_index] = imputer(ts[:stop_index])
         return to_time_series_dataset(X_)
 
-    def _more_tags(self) -> dict:
+    def _more_tags(self) -> dict[str, typing.Any]:
         more_tags = super()._more_tags()
         more_tags.update({'allow_nan': True, ALLOW_VARIABLE_LENGTH: True})
         return more_tags
