@@ -1,14 +1,173 @@
 import numpy as np
+from numpy.testing import assert_array_equal
 
 import pytest
 
 from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
-from tslearn.preprocessing import (TimeSeriesScalerMeanVariance,
-                                   TimeSeriesScalerMinMax,
-                                   TimeSeriesImputer)
+from tslearn.preprocessing import (
+    TimeSeriesScalerMeanVariance,
+    TimeSeriesScalerMinMax,
+    TimeSeriesImputer,
+    TimeSeriesResampler
+)
 
 from tslearn.utils import to_time_series_dataset, to_time_series
 
+
+def test_resampler_uniform():
+
+    # Test downsampling
+    X = to_time_series_dataset([1, 2, 3, 4, 5, 6, 7])
+    resampled = TimeSeriesResampler(sz=3, method="uniform").fit_transform(X)
+    expected = np.array([[[1.], [4.], [7.]]])
+    assert_array_equal(resampled, expected)
+
+    # Test downsampling variable length dataset
+    X = to_time_series_dataset([[1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5]])
+    resampled = TimeSeriesResampler(sz=3, method="uniform").fit_transform(X)
+    expected = np.array([
+        [[1.], [4.], [7.]],
+        [[1.], [3.], [5.]]]
+    )
+    assert_array_equal(resampled, expected)
+
+    # Test downsampling multivariate
+    X = to_time_series_dataset([[[1, 2], [3, 4], [5, 6], [7, 8] , [1, 2], [3, 4]]])
+    resampled = TimeSeriesResampler(sz=3, method="uniform").fit_transform(X)
+    expected = np.array([[[1., 2.], [5., 6.], [3., 4.]]])
+    assert_array_equal(resampled, expected)
+
+    # Test upsampling
+    X = to_time_series_dataset([1, 2, 3, 4, 5])
+    resampled = TimeSeriesResampler(sz=7, method="uniform").fit_transform(X)
+    expected = np.array([[[1.], [2.], [2.], [3.], [4.], [4.], [5.]]])
+    assert_array_equal(resampled, expected)
+
+def test_resampler_linear():
+
+    # Test downsampling target_size = 1
+    X = to_time_series_dataset([1, 2, 3, 4, 5, 6, 7])
+    resampled = TimeSeriesResampler(sz=1, method="linear").fit_transform(X)
+    expected = np.array([[[4.]]])
+    assert_array_equal(resampled, expected)
+
+    # Test downsampling
+    X = to_time_series_dataset([1, 2, 3, 4, 5, 6, 7])
+    resampled = TimeSeriesResampler(sz=3, method="linear").fit_transform(X)
+    expected = np.array([[[1.], [4.], [7.]]])
+    assert_array_equal(resampled, expected)
+
+    # Test downsampling variable length dataset
+    X = to_time_series_dataset([[1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5]])
+    resampled = TimeSeriesResampler(sz=3, method="linear").fit_transform(X)
+    expected = np.array([
+        [[1.], [4.], [7.]],
+        [[1.], [3.], [5.]]]
+    )
+    assert_array_equal(resampled, expected)
+
+    # Test downsampling multivariate
+    X = to_time_series_dataset([[[1, 2], [3, 4], [5, 6], [7, 8] , [1, 2], [3, 4]]])
+    resampled = TimeSeriesResampler(sz=3, method="linear").fit_transform(X)
+    expected = np.array([[[1., 2.], [6., 7.], [3., 4.]]])
+    np.testing.assert_array_almost_equal(resampled, expected)
+
+    # Test upsampling
+    X = to_time_series_dataset([1, 2, 3, 4, 5])
+    resampled = TimeSeriesResampler(sz=7, method="linear").fit_transform(X)
+    expected = np.array([[[1.], [5/3], [7/3], [3.], [11/3], [13/3], [5.]]])
+    np.testing.assert_array_almost_equal(resampled, expected)
+
+
+def test_resampler_mean():
+
+    # Test downsampling with integer size / target_size
+    X = to_time_series_dataset([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    resampled = TimeSeriesResampler(sz=5, method="mean").fit_transform(X)
+    expected = np.array([[[1.5], [3.5], [5.5], [7.5], [9.5]]])
+    assert_array_equal(resampled, expected)
+
+    # Test downsampling with float size / target_size
+    X = to_time_series_dataset([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    resampled = TimeSeriesResampler(sz=7, method="mean").fit_transform(X)
+    expected = np.array([[[1], [2.5], [4.], [5.5], [7.], [8.5], [10]]])
+    assert_array_equal(resampled, expected)
+
+    # Test downsampling variable length dataset
+    X = to_time_series_dataset([[1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6]])
+    resampled = TimeSeriesResampler(sz=3, method="mean").fit_transform(X)
+    expected = np.array([
+        [[1.5], [4.], [6.5]],
+        [[1.5], [3.5], [5.5]]]
+    )
+    assert_array_equal(resampled, expected)
+
+    # Test downsampling multivariate
+    X = to_time_series_dataset([[[1, 4], [3, 2], [5, 1], [7, 2], [1, 8], [3, 4]]])
+    resampled = TimeSeriesResampler(sz=3, method="mean").fit_transform(X)
+    expected = np.array([[[2., 3.], [6., 1.5], [2., 6.]]])
+    np.testing.assert_array_almost_equal(resampled, expected)
+
+    # Test downsampling multivariate with nans
+    X = to_time_series_dataset([[[1, 4], [3, 2], [np.nan, 1], [7, 2], [1, 8], [3, 4], [7, 9]]])
+    resampled = TimeSeriesResampler(sz=3, method="mean").fit_transform(X)
+    expected = np.array([[[2, 3], [4., 11/3], [5, 6.5]]])
+    np.testing.assert_array_almost_equal(resampled, expected)
+
+    # Test downsampling multivariate with window and nans
+    X = to_time_series_dataset([[[1, 4], [3, 2], [np.nan, 1], [7, 2], [1, 8], [3, 4], [7, 9]]])
+    resampled = TimeSeriesResampler(sz=3, method="mean", window_size=4).fit_transform(X)
+    expected = np.array([[[2, 7/3], [3.5, 17/5], [11/3, 7]]])
+    np.testing.assert_array_almost_equal(resampled, expected)
+
+    # Test upsampling
+    X = to_time_series_dataset([1, 2, 3, 4, 5])
+    resampled = TimeSeriesResampler(sz=7, method="mean").fit_transform(X)
+    expected = np.array([[[1.], [1.5], [2.5], [3], [3.5], [4.5], [5.]]])
+    np.testing.assert_array_almost_equal(resampled, expected)
+
+    # Test upsampling multivariate
+    X = to_time_series_dataset([[[1, 4], [3, 2], [5, 1], [7, 2], [1, 8], [3, 4]]])
+    resampled = TimeSeriesResampler(sz=10, method="mean").fit_transform(X)
+    expected = np.array([[
+        [1, 4], [2., 3.], [3., 2.], [4, 1.5], [6., 1.5], [6, 1.5], [4, 5], [1, 8], [2, 6], [3., 4.]]]
+    )
+    np.testing.assert_array_almost_equal(resampled, expected)
+
+    # Test upsampling with window
+    X = to_time_series_dataset([1, 2, 3, 4, 5])
+    resampled = TimeSeriesResampler(sz=7, method="mean", window_size=3).fit_transform(X)
+    expected = np.array([[[1.5], [2], [2], [3], [4], [4], [4.5]]])
+    np.testing.assert_array_almost_equal(resampled, expected)
+
+
+def test_resampler_max():
+
+    # Test downsampling with integer size / target_size
+    X = to_time_series_dataset([1, 2, 3, 4, 5, 6])
+    resampled = TimeSeriesResampler(sz=3, method="max").fit_transform(X)
+    expected = np.array([
+        [[2], [4], [6]]
+    ])
+    np.testing.assert_array_equal(resampled, expected)
+
+    # Test downsampling with non integer size / target_size
+    X = to_time_series_dataset([1, 2, 3, 4, 5, 6, 7])
+    resampled = TimeSeriesResampler(sz=3, method="max").fit_transform(X)
+    expected = np.array([
+        [[2.], [5], [7]]
+    ])
+    np.testing.assert_array_equal(resampled, expected)
+
+    # Test variable length
+    X = to_time_series_dataset([[1, 2, 3, 4, 5, 6], [6, 8, 10, 12], [4, 5, 6, 7, 8, 9, 10, 11, 12]])
+    resampled = TimeSeriesResampler(sz=6, method="max").fit_transform(X)
+    expected = np.array([
+        [[1.], [2.], [3.], [4.], [5.], [6.]],
+        [[6], [8], [8], [10], [12], [12]],
+        [[4.], [6.], [7.], [9.], [11.], [12.]]
+    ])
+    np.testing.assert_array_equal(resampled, expected)
 
 def test_single_value_ts_no_nan():
     X = to_time_series_dataset([[1, 1, 1, 1]])
