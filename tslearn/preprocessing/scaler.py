@@ -16,12 +16,12 @@ from tslearn.utils import (
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
-class TimeSeriesScalerBase(TransformerMixin, TimeSeriesBaseEstimator):
+class TimeSeriesScalerBase(TimeSeriesBaseEstimator):
     """Base class for time series scalers"""
 
     def __init__(self,
-                 per_timeseries:typing.Optional[bool]=True,
-                 per_feature:typing.Optional[bool]=True) -> None:
+                 per_timeseries: bool = True,
+                 per_feature: bool = True) -> None:
 
         self.per_timeseries = per_timeseries
         self.per_feature = per_feature
@@ -65,7 +65,7 @@ class TimeSeriesScalerBase(TransformerMixin, TimeSeriesBaseEstimator):
         return more_tags
 
 
-class TimeSeriesScalerMeanVariance(TimeSeriesScalerBase):
+class TimeSeriesScalerMeanVariance(TransformerMixin, TimeSeriesScalerBase):
     """Scaler for time series datasets. Scales fetures values so that their mean (resp.
     standard deviation) in given dimensions is mu (resp. std).
 
@@ -109,10 +109,10 @@ class TimeSeriesScalerMeanVariance(TimeSeriesScalerBase):
             [ 0.81649658,  1.63299316]]])
     """
     def __init__(self,
-                 mu:typing.Optional[float]=0.,
-                 std:typing.Optional[float]=1.,
-                 per_timeseries:typing.Optional[bool]=True,
-                 per_feature:typing.Optional[bool]=True) -> None:
+                 mu: float = 0.,
+                 std: float = 1.,
+                 per_timeseries: bool = True,
+                 per_feature: bool = True) -> None:
         self.mu = mu
         self.std = std
         super().__init__(per_timeseries=per_timeseries, per_feature=per_feature)
@@ -149,7 +149,7 @@ class TimeSeriesScalerMeanVariance(TimeSeriesScalerBase):
         return X_
 
 
-class TimeSeriesScalerMinMax(TimeSeriesScalerBase):
+class TimeSeriesScalerMinMax(TransformerMixin, TimeSeriesScalerBase):
     """Scaler for time series datasets. Scales features values so that their span in given dimensions
     is between ``min`` and ``max`` where ``value_range=(min, max)``.
 
@@ -192,9 +192,9 @@ class TimeSeriesScalerMinMax(TimeSeriesScalerBase):
             [1.75, 2.  ]]])
     """
     def __init__(self,
-                 value_range: typing.Optional[tuple[float, float]] = (0., 1.),
-                 per_timeseries: typing.Optional[bool] = True,
-                 per_feature:typing.Optional[bool]=True) -> None:
+                 value_range: tuple[float, float] = (0., 1.),
+                 per_timeseries: bool = True,
+                 per_feature: bool = True) -> None:
         self.value_range = value_range
         super().__init__(per_timeseries=per_timeseries, per_feature=per_feature)
 
