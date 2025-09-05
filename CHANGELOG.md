@@ -14,6 +14,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 ### Changed
 
 * Explicit exception when using Global Alignment Kernel with sigma close to zero ([#440](https://github.com/tslearn-team/tslearn/issues/440))
+* Move preprocessing classes into dedicated modules.
 
 ### Removed
 
@@ -23,6 +24,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 * `per_timeseries` and `per_feature` options for min-max and mean-variance scalers ([#536](https://github.com/tslearn-team/tslearn/issues/536))
 * `TimeSeriesImputer`class: missing value imputer for time series ([#564](https://github.com/tslearn-team/tslearn/issues/564))
+* `mean`, `max` and `uniform` resampling methods to the `TimeSeriesResampler`class: missing value imputer for time series ([#537](https://github.com/tslearn-team/tslearn/issues/537))
 
 ## [v0.6.4]
 
