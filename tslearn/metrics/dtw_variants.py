@@ -31,6 +31,8 @@ def _njit_local_squared_dist(x, y):
     """
     dist = 0.0
     for di in range(x.shape[0]):
+        if np.isnan(x[di]) or  np.isnan(y[di]):
+            continue
         diff = x[di] - y[di]
         dist += diff * diff
     return dist
