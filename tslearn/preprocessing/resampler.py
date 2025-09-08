@@ -72,15 +72,15 @@ class TimeSeriesResampler(TransformerMixin, TimeSeriesBaseEstimator):
             [13.5]]])
     """
     def __init__(self,
-                 sz: typing.Optional[int]=-1,
-                 method: typing.Optional[str]='linear',
-                 window_size: typing.Optional[typing.Union[int, None]]=None) -> None:
+                 sz: int = -1,
+                 method: str = 'linear',
+                 window_size: typing.Optional[int] = None) -> None:
         self.sz = sz
         self.method = method
         self.window_size = window_size
 
     @property
-    def _resampler(self) -> typing.Union[typing.Callable, None]:
+    def _resampler(self) -> typing.Optional[typing.Callable]:
         return getattr(self, "_{}_resample".format(self.method), None)
 
     def _get_resampling_size(self, X) -> int:

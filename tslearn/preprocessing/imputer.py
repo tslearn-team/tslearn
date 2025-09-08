@@ -99,8 +99,8 @@ class TimeSeriesImputer(TransformerMixin, TimeSeriesBaseEstimator):
             [ 6.]]])
     """
     def __init__(self,
-                 method: typing.Union[str, typing.Callable]="mean",
-                 value: typing.Optional[float]=numpy.nan,
+                 method: typing.Union[str, typing.Callable] = "mean",
+                 value: float = numpy.nan,
                  keep_trailing_nans: bool = False) -> None:
         self.method = method
         self.value = value

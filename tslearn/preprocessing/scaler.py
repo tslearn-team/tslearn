@@ -44,21 +44,6 @@ class TimeSeriesScalerBase(TimeSeriesBaseEstimator):
         self._X_fit_dims = X_.shape
         return self
 
-    def fit_transform(self, X, y=None, **kwargs):
-        """Fit to data, then transform it.
-
-        Parameters
-        ----------
-        X : array-like of shape (n_ts, sz, d)
-            Time series dataset to be rescaled.
-
-        Returns
-        -------
-        numpy.ndarray
-            Resampled time series dataset.
-        """
-        return self.fit(X).transform(X)
-
     def _more_tags(self) -> dict[str, typing.Any]:
         more_tags = super()._more_tags()
         more_tags.update({'allow_nan': True})
