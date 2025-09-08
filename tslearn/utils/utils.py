@@ -247,7 +247,6 @@ def to_time_series_dataset(dataset, dtype=float, be=None):
     --------
     to_time_series : Transforms a single time series
     """
-    print('New')
     be = instantiate_backend(be, dataset)
 
     try:
