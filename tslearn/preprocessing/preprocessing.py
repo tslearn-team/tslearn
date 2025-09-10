@@ -375,42 +375,59 @@ class TimeSeriesScalerMeanVariance(TransformerMixin, TimeSeriesBaseEstimator):
 class TimeSeriesImputer(TransformerMixin, TimeSeriesBaseEstimator):
     """Missing value imputer for time series.
 
-    Missing values are replaced according to the choosen imputation method.
-    There might be cases where the computation of missing values is impossible,
-    in which case nans are left unchanged
+    Missing values (nans) are replaced according to the chosen imputation
+    method. There might be cases where the computation of missing values is
+    impossible, in which case they are left unchanged
     (ex: mean of all nans, ffill for the first value... ).
+
+    The imputer can be configured so that trailing 'empty' samples (nans for
+    all features) are unprocessed by setting the `keep_trailing_nans` parameter
+    to `True`. This might be handy when dealing with variable length time
+    series datasets formatted with
+    :ref:`to_time_series_dataset <fun-tslearn.utils.to_time_series_dataset>`,
+    where time series are padded with 'empty' samples to match the length of the
+    longest time serie. This option aims at preserving the variable length
+    nature of the input dataset.
+
+    Time series are processed sequentially by the :func:`~transform` and
+    :func:`~fit_transform` methods, and gathered using
+    :ref:`to_time_series_dataset <fun-tslearn.utils.to_time_series_dataset>`,
+    effectively padding if needed.
 
     Parameters
     ----------
-    method : {'mean', 'median', 'ffill', 'bfill', 'constant', Callable}(default: 'mean')
+    method : {'mean', 'median', 'ffill', 'bfill', 'linear', 'constant', Callable}(default: 'mean')
         The method used to compute missing values.
+
+        When using linear imputation, starting nans will be replaced with first non-null value
+        and ending nans will be replaced with last non-null value (
+        except for 'empty' samples when `keep_trailing_nans` set to `True`).
+
         When using a Callable, the function should take an array-like
         representing a timeseries with missing values as input parameter and
         should return the transformed timeseries.
     value: float (default: nan)
         The value to replace missing values with. Only used when method is
-        "constant".
+        `constant`.
     keep_trailing_nans: bool (default: False)
-        Whether the trailing nans should be considered as padding for variable
-        length time series and kept unprocessed. When set to True, trailing nans
-        will not be imputed, which can be usefull when feeding the imputer with
-        :ref:`to_time_series_dataset <fun-tslearn.utils.to_time_series_dataset>`
-        results.
+        Whether trailing samples with nans on all dimensions should be considered
+        padding for variable length time series and kept unprocessed. When set to
+        `True`, trailing 'empty' samples  will not be imputed.
 
     Notes
     -----
         This method allows datasets of variable lenght time series.
         While most missing values should be replaced, there might still be nan
         values in the resulting dataset representing padding when used with
-        variable length time series.
+        variable length time series, or uncomputable data.
 
     Examples
     --------
-    >>> import math
-    >>> TimeSeriesImputer().fit_transform([[0, math.nan, 6]])
+    >>> TimeSeriesImputer().fit_transform([[0, numpy.nan, 6]])
     array([[[0.],
             [3.],
             [6.]]])
+    >>> # Padding occurs after processing for variable length inputs
     >>> TimeSeriesImputer().fit_transform([[numpy.nan, 3, 6], [numpy.nan, 3]])
     array([[[4.5],
             [3. ],
@@ -419,12 +436,20 @@ class TimeSeriesImputer(TransformerMixin, TimeSeriesBaseEstimator):
            [[3. ],
             [3. ],
             [nan]]])
-    >>> TimeSeriesImputer('ffill').fit_transform([[[1, math.nan], [2, 3]], [[3, 4], [4, math.nan]]])
-    array([[[ 1., nan],
-            [ 2.,  3.]],
+    >>> # Trailing empty samples are preserved with `keep_trailing_nans`
+    >>> TimeSeriesImputer('ffill', keep_trailing_nans=True).fit_transform(
+    ... [[[1, 2], [2, numpy.nan]], [[3, 4], [numpy.nan, numpy.nan]]]
+    ... )
+    array([[[ 1.,  2.],
+            [ 2.,  2.]],
     <BLANKLINE>
            [[ 3.,  4.],
-            [ 4.,  4.]]])
+            [nan, nan]]])
+    >>> # Uncomputable values are left unchanged
+    >>> TimeSeriesImputer('ffill').fit_transform([[numpy.nan, 3, 6]])
+    array([[[nan],
+            [ 3.],
+            [ 6.]]])
     """
     def __init__(self,
                  method: Union[str, Callable]="mean",
@@ -454,6 +479,18 @@ class TimeSeriesImputer(TransformerMixin, TimeSeriesBaseEstimator):
     @staticmethod
     def _median_impute(ts):
         return numpy.where(numpy.isnan(ts), numpy.nanmedian(ts, axis=0, keepdims=True), ts)
+
+    @staticmethod
+    def _linear_impute(ts):
+        for di in range(ts.shape[-1]):
+            ts_di = ts[:, di]
+            mask = numpy.isnan(ts_di)
+            ts_di[mask] = numpy.interp(
+                numpy.nonzero(mask)[0],
+                numpy.nonzero(~mask)[0],
+                ts_di[~mask]
+            )
+        return ts
 
     @staticmethod
     def _ffill_impute(ts):

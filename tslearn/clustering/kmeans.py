@@ -1,3 +1,4 @@
+"""K-means related clustering for time series."""
 import numpy
 
 from scipy.spatial.distance import cdist
@@ -148,11 +149,14 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
     kernel_params : dict or None (default: None)
         Kernel parameters to be passed to the kernel function.
         None means no kernel parameter is set.
+
         For Global Alignment Kernel, the only parameter of interest is `sigma`.
         If set to 'auto', it is computed based on a sampling of the training
         set
         (cf :ref:`tslearn.metrics.sigma_gak <fun-tslearn.metrics.sigma_gak>`).
         If no specific value is set for `sigma`, its defaults to 1.
+        A `RuntimeError` is raised at fit time when computed or explicit value is
+        close to 0 and therefore not compatible with 'gak' kernel.
 
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel for GAK cross-similarity matrix
@@ -253,9 +257,16 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
     def _get_kernel(self, X, Y=None):
         kernel_params = self._get_kernel_params()
         if self.kernel == "gak":
-            return cdist_gak(
-                X, Y, n_jobs=self.n_jobs, verbose=self.verbose, **kernel_params
-            )
+            try:
+                return cdist_gak(
+                    X, Y, n_jobs=self.n_jobs, verbose=self.verbose, **kernel_params
+                )
+            except ZeroDivisionError:
+                raise RuntimeError(
+                    "The{} `sigma` parameter is close to 0 and "
+                    "cannot be used with gak kernel."
+                    .format(" auto computed" if self.kernel_params.get("sigma") == "auto" else ""))
+
         else:
             X_sklearn = to_sklearn_dataset(X)
             if Y is not None:

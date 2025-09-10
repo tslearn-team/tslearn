@@ -3,6 +3,9 @@
 # Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
 # https://docs.microsoft.com/azure/devops/pipelines/languages/python
 
+trigger:
+- main
+
 jobs:
 
 - job: 'tests_linux'
@@ -341,3 +344,11 @@ jobs:
     env:
       CODECOV_TOKEN: $(CODECOV_TOKEN_SECRET)
     displayName: 'Upload coverage to codecov.io'
+
+  - task: SonarQubePrepare@7
+    inputs:
+      SonarQube: 'sonarqube_inria'
+      scannermode: 'cli'
+    displayName: 'Prepare analysis'
+  - task: SonarQubeAnalyze@7
+    displayName: 'Run analysis'
