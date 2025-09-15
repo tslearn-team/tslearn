@@ -659,7 +659,7 @@ class TimeSeriesKMeans(
                     X, self.n_clusters, cdist_metric=metric_fun, random_state=rs
                 )
         elif self.init == "random":
-            indices = rs.choice(X.shape[0], self.n_clusters)
+            indices = rs.choice(X.shape[0], self.n_clusters, replace=False)
             self.cluster_centers_ = X[indices].copy()
         else:
             raise ValueError("Value %r for parameter 'init'" "is invalid" % self.init)
