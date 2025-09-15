@@ -199,8 +199,8 @@ def test_kshape():
     np.testing.assert_allclose(ks.labels_, dists.argmin(axis=1))
     np.testing.assert_allclose(ks.labels_, ks.predict(time_series))
 
-    assert KShape(n_clusters=101, verbose=False,
-                  random_state=rng).fit(time_series)._X_fit is None
+    with pytest.raises(ValueError):
+        KShape(n_clusters=101, verbose=False, random_state=rng).fit(time_series)
 
 
 def test_silhouette():
