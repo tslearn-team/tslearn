@@ -34,29 +34,35 @@ def test_constrained_paths():
     y_pred_softdtw = model_softdtw.fit(X, y).predict(X)
 
     model_dtw = KNeighborsTimeSeriesClassifier(
-            n_neighbors=3,
-            metric="dtw"
+        n_neighbors=3,
+        metric="dtw"
     )
     y_pred_dtw = model_dtw.fit(X, y).predict(X)
 
     np.testing.assert_equal(y_pred_dtw, y_pred_softdtw)
 
     model_ctw = KNeighborsTimeSeriesClassifier(
-            n_neighbors=3,
-            metric="ctw"
+        n_neighbors=3,
+        metric="ctw"
     )
     # Just testing that things run, nothing smart here :(
     model_ctw.fit(X, y).predict(X)
 
     model_sax = KNeighborsTimeSeriesClassifier(
-            n_neighbors=3,
-            metric="sax",
-            metric_params={
-                "alphabet_size_avg": 6,
-                "n_segments": 10
-            }
+        n_neighbors=3,
+        metric="sax",
+        metric_params={
+            "alphabet_size_avg": 6,
+            "n_segments": 10
+        }
     )
     model_sax.fit(X, y)
+
+    model_frechet = KNeighborsTimeSeriesClassifier(
+        n_neighbors=3,
+        metric="frechet"
+    )
+    model_frechet.fit(X, y)
 
     # The MINDIST of SAX is a lower bound of the euclidean distance
     euc_dist, _ = model_euc.kneighbors(X, n_neighbors=5)
