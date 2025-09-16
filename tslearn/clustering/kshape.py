@@ -159,7 +159,7 @@ class KShape(ClusterMixin, TimeSeriesCentroidBasedClusteringMixin,
         if hasattr(self.init, '__array__'):
             self.cluster_centers_ = self.init.copy()
         elif self.init == "random":
-            indices = rs.choice(X.shape[0], self.n_clusters)
+            indices = rs.choice(X.shape[0], self.n_clusters, replace=False)
             self.cluster_centers_ = X[indices].copy()
         else:
             raise ValueError("Value %r for parameter 'init' is "
