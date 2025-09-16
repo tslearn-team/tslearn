@@ -104,6 +104,12 @@ def test_kmeans():
                                 random_state=rng).fit(time_series)
     assert(km_nofit._X_fit is None)
 
+    with pytest.raises(ValueError):
+        KShape(n_clusters=101, verbose=False, init="random").fit(time_series)
+
+    with pytest.raises(ValueError):
+        KShape(n_clusters=2, verbose=False, init="invalid").fit(time_series)
+
     X_bis = to_time_series_dataset([[1, 2, 3, 4],
                                     [1, 2, 3],
                                     [2, 5, 6, 7, 8, 9]])
@@ -201,6 +207,9 @@ def test_kshape():
 
     with pytest.raises(ValueError):
         KShape(n_clusters=101, verbose=False, random_state=rng).fit(time_series)
+
+    with pytest.raises(ValueError):
+        KShape(n_clusters=2, verbose=False, init="invalid").fit(time_series)
 
 
 def test_silhouette():
