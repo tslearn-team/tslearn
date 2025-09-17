@@ -123,7 +123,7 @@ def frechet(
         frechet_path_from_metric : Compute similarity score and path
             using a user-defined distance metric
         cdist_frechet : Cross similarity matrix between time series datasets
-        
+
         References
         ----------
         .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
@@ -403,8 +403,8 @@ def frechet_path_from_metric(
     be=None,
     **kwds
 ):
-    r"""Compute Frechet similarity measure and an optimal alignment path 
-    between (possibly multidimensional) time series using a distance metric 
+    r"""Compute Frechet similarity measure and an optimal alignment path
+    between (possibly multidimensional) time series using a distance metric
     defined by the user.
 
     It is not required that both time series share the same size, but they must
@@ -431,7 +431,7 @@ def frechet_path_from_metric(
     metric : string or callable (default: "precomputed")
         If metric is "precomputed", `s1` is assumed to be a distance matrix.
 
-        Otherwise, function used to compute the pairwise distances between each 
+        Otherwise, function used to compute the pairwise distances between each
         points of `s1` and `s2`.
         If metric is a string, it must be one of the options compatible
         with sklearn.metrics.pairwise_distances.
