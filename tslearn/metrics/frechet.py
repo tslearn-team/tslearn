@@ -121,7 +121,7 @@ def frechet(
         --------
         frechet_path : Get both the matching path and the similarity score
         frechet_path_from_metric : Compute similarity score and path
-        using a user-defined distance metric
+            using a user-defined distance metric
         cdist_frechet : Cross similarity matrix between time series datasets
         
         References
@@ -290,6 +290,7 @@ def _frechet_accumulated_matrix_from_distance_matrix(distance_matrix, mask, back
                 )
     return acc_matrix[1:, 1:]
 
+
 def frechet_path(
     s1,
     s2,
@@ -371,7 +372,7 @@ def frechet_path(
     --------
     frechet : Get only the similarity score
     frechet_path_from_metric : Compute similarity score and path
-    using a user-defined distance metric
+        using a user-defined distance metric
     cdist_frechet : Cross similarity matrix between time series datasets
 
     References
@@ -390,6 +391,7 @@ def frechet_path(
         be,
         return_path=True
     )
+
 
 def frechet_path_from_metric(
     s1,
@@ -554,6 +556,7 @@ def frechet_path_from_metric(
         **kwds
     )
 
+
 def cdist_frechet(
     dataset1,
     dataset2=None,
@@ -660,7 +663,7 @@ def cdist_frechet(
     frechet : Get only the similarity score
     frechet_path : Get both the matching path and the similarity score
     frechet_path_from_metric : Compute Frechet similarity score and path
-    using a user-defined distance metric
+        using a user-defined distance metric
 
     References
     ----------
