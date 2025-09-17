@@ -87,10 +87,10 @@ def frechet(
 
         Examples
         --------
-        >>> frechet([1, 2, 3], [1., 2., 2., 3.])
-        np.float64(0.0)
-        >>> frechet([1, 2, 3], [1., 2., 2., 3., 4.])
-        np.float64(1.0)
+        >>> float(frechet([1, 2, 3], [1., 2., 2., 3.]))
+        0.0
+        >>> float(frechet([1, 2, 3], [1., 2., 2., 3., 4.]))
+        1.0
 
         The PyTorch backend can be used to compute gradients:
 
