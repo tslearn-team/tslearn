@@ -1,3 +1,4 @@
+"""Frechet metric toolbox."""
 
 import numpy
 
@@ -214,7 +215,7 @@ def _njit_frechet_accumulated_matrix(s1, s2, mask, squared=True):
 
     for i in range(l1):
         for j in range(l2):
-            if mask[i, j]:
+            if numpy.isfinite(mask[i, j]):
                 local_distance = numpy.linalg.norm(s1[i] - s2[j])
                 if squared:
                     local_distance = local_distance ** 2
@@ -236,7 +237,7 @@ def _frechet_accumulated_matrix(s1, s2, mask, backend, metric, **kwds):
 
     for i in range(l1):
         for j in range(l2):
-            if mask[i, j]:
+            if backend.isfinite(mask[i, j]):
                     local_distance = (
                         backend.pairwise_distances(s1[i].reshape(1, -1),
                                                    s2[j].reshape(1, -1),
@@ -261,7 +262,7 @@ def _njit_frechet_accumulated_matrix_from_distance_matrix(distance_matrix, mask)
 
     for i in range(l1):
         for j in range(l2):
-            if mask[i, j]:
+            if numpy.isfinite(mask[i, j]):
                 acc_matrix[i + 1, j + 1] = max(
                     distance_matrix[i, j],
                     min(acc_matrix[i, j + 1],
@@ -280,7 +281,7 @@ def _frechet_accumulated_matrix_from_distance_matrix(distance_matrix, mask, back
 
     for i in range(l1):
         for j in range(l2):
-            if mask[i, j]:
+            if backend.isfinite(mask[i, j]):
                 acc_matrix[i + 1, j + 1] = max(
                     distance_matrix[i, j],
                     min(acc_matrix[i, j + 1],
