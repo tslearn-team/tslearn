@@ -79,7 +79,7 @@ def _cdist_generic(
     if dataset2 is None:
         # Inspired from code by @GillesVandewiele:
         # https://github.com/rtavenar/tslearn/pull/128#discussion_r314978479
-        matrix = be.zeros((len(dataset1), len(dataset1)))
+        matrix = be.zeros((len(dataset1), len(dataset1)), dtype=dataset1.dtype)
         indices = be.triu_indices(
             len(dataset1), k=0 if compute_diagonal else 1, m=len(dataset1)
         )
@@ -89,7 +89,8 @@ def _cdist_generic(
                 delayed(dist_fun)(dataset1[i], dataset1[j], *args, **kwargs)
                 for i in range(len(dataset1))
                 for j in range(i if compute_diagonal else i + 1, len(dataset1))
-            )
+            ),
+            dtype=matrix.dtype
         )
 
         indices = be.tril_indices(len(dataset1), k=-1, m=len(dataset1))
