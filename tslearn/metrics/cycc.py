@@ -129,7 +129,7 @@ def y_shifted_sbd_vec(ref_ts, dataset, norm_ref, norms_dataset):
     for i in prange(n_ts):
         cc = normalized_cc(ref_ts, dataset[i], norm1=norm_ref, norm2=norms_dataset[i])
         idx = np.argmax(cc)
-        shift = idx - sz
+        shift = idx + 1 - sz
         if shift > 0:
             dataset_shifted[i, shift:] = dataset[i, :-shift, :]
         elif shift < 0:
