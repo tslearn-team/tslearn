@@ -810,6 +810,18 @@ def test_soft_dtw_loss_pytorch():
 
 def test_frechet():
 
+    with pytest.raises(ValueError):
+        tslearn.metrics.frechet(
+            [],
+            np.random.randn(3, 2)
+        )
+
+    with pytest.raises(ValueError):
+        tslearn.metrics.frechet(
+            np.random.randn(3, 1),
+            np.random.randn(3, 2)
+        )
+
     np.random.seed(42)
     s1 = np.random.randn(10, 4)
     s2 = np.random.randn(10, 4)

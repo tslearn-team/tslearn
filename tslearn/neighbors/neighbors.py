@@ -207,6 +207,7 @@ class KNeighborsTimeSeriesMixin():
         tags.input_tags.sparse = False
         return tags
 
+
 class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
                            BaseModelPackage):
     """Unsupervised learner for implementing neighbor searches for Time Series.
