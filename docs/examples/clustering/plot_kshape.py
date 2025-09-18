@@ -21,8 +21,7 @@ from tslearn.clustering import KShape
 from tslearn.datasets import CachedDatasets
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 
-seed = 0
-numpy.random.seed(seed)
+numpy.random.seed(0)
 X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")
 # Keep first 3 classes and 50 first time series
 X_train = X_train[y_train < 4]
@@ -33,7 +32,8 @@ X_train = TimeSeriesScalerMeanVariance().fit_transform(X_train)
 sz = X_train.shape[1]
 
 # kShape clustering
-ks = KShape(n_clusters=3, verbose=True, random_state=seed)
+init=numpy.array([X_train[44], X_train[47], X_train[0]])
+ks = KShape(n_clusters=3, verbose=True, init=init)
 y_pred = ks.fit_predict(X_train)
 
 plt.figure()
