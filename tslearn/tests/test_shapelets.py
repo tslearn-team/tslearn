@@ -119,6 +119,7 @@ def test_series_lengths():
 
 def test_locate():
     shapelets = pytest.importorskip('tslearn.shapelets')
+    from keras.backend import backend
 
     y = [0, 1]
     time_series = to_time_series_dataset([[1, 2, 3, 4, 5], [3, 2, 1]])
@@ -128,10 +129,16 @@ def test_locate():
                             random_state=0)
     clf.fit(time_series, y)
     shapelet = clf.shapelets_[0]
-    np.testing.assert_allclose(
-        shapelet,
-        np.array([[2.6348903], [2.3668802]])
-    )
+    if backend() == 'torch':
+        np.testing.assert_allclose(
+            shapelet,
+            np.array([[2.6348903], [2.3668802]])
+        )
+    elif backend() == 'tensorflow':
+        np.testing.assert_allclose(
+            shapelet,
+            np.array([[2.4961665], [2.5056334]])
+        )
 
     predicted_locations = clf.locate(time_series)
     distances = []

@@ -85,7 +85,10 @@ class GlobalMinPooling1D(Layer):
     def compute_output_shape(self, input_shape):
         return input_shape[0], input_shape[2]
 
-    def call(self, inputs):
+    def call(self, inputs, mask=None):
+        if mask is not None:
+            max_ = ops.max(inputs)
+            inputs = ops.where(mask, inputs, max_)
         return ops.min(inputs, axis=1)
 
 
@@ -112,7 +115,10 @@ class GlobalArgminPooling1D(Layer):
     def compute_output_shape(self, input_shape):
         return input_shape[0], input_shape[2]
 
-    def call(self, inputs, **_):
+    def call(self, inputs, mask=None):
+        if mask is not None:
+            max_ = ops.max(inputs)
+            inputs = ops.where(mask, inputs, max_)
         return ops.cast(ops.argmin(inputs, axis=1), dtype=float)
 
 
@@ -138,7 +144,7 @@ class PatchingLayer(Layer):
             self.shapelet_length, input_shape[2]
         )
 
-    def call(self, inputs, **_):
+    def call(self, inputs):
         n_ts, sz, d = ops.shape(inputs)
         inputs = ops.reshape(inputs, (n_ts, sz * d))
         inputs = ops.extract_sequences(inputs, self.shapelet_length * d, d)
@@ -146,15 +152,6 @@ class PatchingLayer(Layer):
             inputs,
             (n_ts, sz - self.shapelet_length + 1, self.shapelet_length, d)
         )
-
-        # This is pytorch specific
-        for index, patches in enumerate(inputs):
-            patches = ops.nan_to_num(patches, nan=numpy.inf)
-            _ = ops.sum(patches, axis=(-1, -2))
-            mask = ops.isfinite(_)
-            elem = ops.take(patches, ops.argmin(_), axis=0)
-            inputs[index][~mask] = elem
-
         return inputs
 
     def get_config(self):
@@ -193,7 +190,15 @@ class LocalSquaredDistanceLayer(Layer):
                                       trainable=True)
         super().build(input_shape)
 
+    def compute_mask(self, inputs, mask=None):
+        mask = ops.isfinite(ops.sum(inputs, axis=(-1, -2)))
+        mask = ops.expand_dims(mask, axis=-1)
+        return mask
+
     def call(self, x, **kwargs):
+        # Remove nans for backward pass, use mask to propagate invalidity
+        x = ops.nan_to_num(x, nan=0)
+
         shapelet_size = ops.shape(self.kernel)[1]
         nb_features = ops.shape(self.kernel)[2]
 
@@ -740,9 +745,8 @@ class LearningShapelets(ClassifierMixin, TransformerMixin,
         self.transformer_model_.compile(loss="mean_squared_error",
                                         optimizer=self.optimizer)
 
-        min_pool_inputs = [self.model_.get_layer("min_pooling_%d" % i).input
+        min_pool_inputs = [self.model_.get_layer("min_pooling_%d" % i).input[0]
                            for i in range(self._n_shapelet_sizes)]
-
         pool_layers_locations = [
             GlobalArgminPooling1D(name="min_pooling_%d" % i)(pool_input)
             for i, pool_input in enumerate(min_pool_inputs)
