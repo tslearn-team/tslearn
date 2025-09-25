@@ -139,6 +139,11 @@ def test_locate():
             shapelet,
             np.array([[2.4961665], [2.5056334]])
         )
+    elif backend() == 'jax':
+        np.testing.assert_allclose(
+            shapelet,
+            np.array([[2.3752568], [2.6265109]])
+        )
 
     predicted_locations = clf.locate(time_series)
     distances = []

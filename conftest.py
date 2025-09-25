@@ -1,14 +1,14 @@
-import os
 import warnings
 
 import pytest
 
+from tslearn.backend import check_keras_backend
 from tslearn.datasets import UCR_UEA_datasets
 
 try:
-    os.environ["KERAS_BACKEND"] = "torch"
+    check_keras_backend()
     import keras
-except:
+except ImportError:
     keras = None
 
 

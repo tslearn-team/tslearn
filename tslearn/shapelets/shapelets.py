@@ -1,12 +1,8 @@
-import os
 import warnings
 
-# Should be set before importing keras
-os.environ["KERAS_BACKEND"] = "torch"
-
-import keras.backend
-if keras.backend.backend() != 'torch':
-    raise RuntimeError("Keras with Pytorch backend required.")
+# Backend must be set before importing keras
+from tslearn.backend import check_keras_backend
+check_keras_backend()
 
 from keras.layers import (
     InputSpec,
