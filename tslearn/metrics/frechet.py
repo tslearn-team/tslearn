@@ -23,7 +23,7 @@ def frechet(
     itakura_max_slope=None,
     be=None
 ):
-    r"""Compute Frechet similarity measure between
+    r"""Compute Frechet similarity [1]_ measure between
         (possibly multidimensional) time series and return it.
 
         Frechet similarity score is computed as the maximum distance between
@@ -51,7 +51,7 @@ def frechet(
 
         sakoe_chiba_radius : int or None (default: None)
             Radius to be used for Sakoe-Chiba band global constraint.
-            The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [1]_,
+            The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [2]_,
             it controls how far in time we can go in order to match a given
             point from one time series to a point in another time series.
             If None and `global_constraint` is set to "sakoe_chiba", a radius of
@@ -126,7 +126,9 @@ def frechet(
 
         References
         ----------
-        .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
+        .. [1] FRÉCHET, M. "Sur quelques points du calcul fonctionnel. 
+           Rendiconti del Circolo Mathematico di Palermo", 22, 1–74, 1906.
+        .. [2] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
            spoken word recognition," IEEE Transactions on Acoustics, Speech and
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
 
@@ -299,7 +301,7 @@ def frechet_path(
     itakura_max_slope=None,
     be=None,
 ):
-    r"""Compute Frechet similarity measure between
+    r"""Compute Frechet similarity measure [1]_ between
     (possibly multidimensional) time series and an optimal alignment path.
 
     Frechet distance is computed as the maximium distance between aligned time series,
@@ -322,7 +324,7 @@ def frechet_path(
         Global constraint to restrict admissible paths for Frechet distance.
     sakoe_chiba_radius : int or None (default: None)
         Radius to be used for Sakoe-Chiba band global constraint.
-        The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [1]_,
+        The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [2]_,
         it controls how far in time we can go in order to match a given
         point from one time series to a point in another time series.
         If None and `global_constraint` is set to "sakoe_chiba", a radius of
@@ -377,7 +379,9 @@ def frechet_path(
 
     References
     ----------
-    .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
+    .. [1] FRÉCHET, M. "Sur quelques points du calcul fonctionnel.
+           Rendiconti del Circolo Mathematico di Palermo", 22, 1–74, 1906.
+    .. [2] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
            spoken word recognition," IEEE Transactions on Acoustics, Speech and
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
 
@@ -403,7 +407,7 @@ def frechet_path_from_metric(
     be=None,
     **kwds
 ):
-    r"""Compute Frechet similarity measure and an optimal alignment path
+    r"""Compute Frechet similarity measure and an optimal alignment path [1]_
     between (possibly multidimensional) time series using a distance metric
     defined by the user.
 
@@ -445,7 +449,7 @@ def frechet_path_from_metric(
 
     sakoe_chiba_radius : int or None (default: None)
         Radius to be used for Sakoe-Chiba band global constraint.
-        The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [1]_,
+        The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [2]_,
         it controls how far in time we can go in order to match a given
         point from one time series to a point in another time series.
         If None and `global_constraint` is set to "sakoe_chiba", a radius of
@@ -533,9 +537,11 @@ def frechet_path_from_metric(
 
     References
     ----------
-    .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
-           spoken word recognition," IEEE Transactions on Acoustics, Speech and
-           Signal Processing, vol. 26(1), pp. 43--49, 1978.
+    .. [1] FRÉCHET, M. "Sur quelques points du calcul fonctionnel. 
+       Rendiconti del Circolo Mathematico di Palermo", 22, 1–74, 1906.
+    .. [2] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
+       spoken word recognition," IEEE Transactions on Acoustics, Speech and
+       Signal Processing, vol. 26(1), pp. 43--49, 1978.
 
     .. _pairwise_distances: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.pairwise_distances.html
 
@@ -568,7 +574,7 @@ def cdist_frechet(
     be=None,
 ):
     r"""Compute cross-similarity matrix using Frechet
-    similarity measure.
+    similarity measure [1]_.
 
     Frechet is computed as the maximum distance between aligned time series,
     i.e., if :math:`\pi` is an optimal alignment path:
@@ -600,7 +606,7 @@ def cdist_frechet(
 
     sakoe_chiba_radius : int or None (default: None)
         Radius to be used for Sakoe-Chiba band global constraint.
-        The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [1]_,
+        The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [2]_,
         it controls how far in time we can go in order to match a given
         point from one time series to a point in another time series.
         If None and `global_constraint` is set to "sakoe_chiba", a radius of
@@ -667,7 +673,9 @@ def cdist_frechet(
 
     References
     ----------
-    .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
+    .. [1] FRÉCHET, M. "Sur quelques points du calcul fonctionnel. 
+       Rendiconti del Circolo Mathematico di Palermo", 22, 1–74, 1906.
+    .. [2] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
            spoken word recognition," IEEE Transactions on Acoustics, Speech and
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
     """  # noqa: E501

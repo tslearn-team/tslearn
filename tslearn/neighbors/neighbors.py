@@ -2,7 +2,6 @@ import numpy
 
 from scipy.spatial.distance import cdist as scipy_cdist
 
-from sklearn import neighbors
 from sklearn.neighbors import (KNeighborsClassifier, NearestNeighbors,
                                KNeighborsRegressor)
 from sklearn.utils.validation import check_is_fitted
@@ -23,8 +22,6 @@ from tslearn.utils import (
     check_array,
     check_dims
 )
-
-neighbors.VALID_METRICS['brute'].extend(['dtw', 'softdtw', 'sax', 'ctw'])
 
 
 class KNeighborsTimeSeriesMixin():
@@ -147,9 +144,7 @@ class KNeighborsTimeSeriesMixin():
             else:
                 fit_X = self._X_fit
 
-            if (self.metric in TSLEARN_VALID_METRICS or
-                    self.metric in [cdist_dtw, cdist_ctw,
-                                    cdist_soft_dtw, cdist_sax]):
+            if self.metric in TSLEARN_VALID_METRICS:
                 full_dist_matrix = self._precompute_cross_dist(X,
                                                                other_X=fit_X)
             elif self.metric in ["euclidean", "sqeuclidean", "cityblock"]:
@@ -160,8 +155,8 @@ class KNeighborsTimeSeriesMixin():
             else:
                 raise ValueError("Unrecognized time series metric string: %s "
                                  "(should be one of 'dtw', 'softdtw', "
-                                 "'sax', 'euclidean', 'sqeuclidean' "
-                                 "or 'cityblock')" % self.metric)
+                                 "'frechet', 'sax', 'euclidean', 'sqeuclidean'"
+                                 " or 'cityblock')" % self.metric)
 
         # Code similar to sklearn (sklearn/neighbors/base.py), to make sure
         # that TimeSeriesKNeighbor~(metric='euclidean') has the same results as
