@@ -1,18 +1,27 @@
 import numpy
-from sklearn import neighbors
+
+from scipy.spatial.distance import cdist as scipy_cdist
+
 from sklearn.neighbors import (KNeighborsClassifier, NearestNeighbors,
                                KNeighborsRegressor)
 from sklearn.utils.validation import check_is_fitted
-from scipy.spatial.distance import cdist as scipy_cdist
 
-from tslearn.metrics import cdist_dtw, cdist_ctw, cdist_soft_dtw, \
-    cdist_sax, TSLEARN_VALID_METRICS
-from tslearn.piecewise import SymbolicAggregateApproximation
-from tslearn.utils import (to_time_series_dataset, to_sklearn_dataset,
-                           check_array, check_dims)
 from tslearn.bases import BaseModelPackage
-
-neighbors.VALID_METRICS['brute'].extend(['dtw', 'softdtw', 'sax', 'ctw'])
+from tslearn.metrics import (
+    cdist_dtw,
+    cdist_ctw,
+    cdist_soft_dtw,
+    cdist_sax,
+    cdist_frechet,
+    TSLEARN_VALID_METRICS
+)
+from tslearn.piecewise import SymbolicAggregateApproximation
+from tslearn.utils import (
+    to_time_series_dataset,
+    to_sklearn_dataset,
+    check_array,
+    check_dims
+)
 
 
 class KNeighborsTimeSeriesMixin():
@@ -60,17 +69,30 @@ class KNeighborsTimeSeriesMixin():
         X = to_time_series_dataset(X)
 
         if self._ts_metric == "dtw":
-            X_ = cdist_dtw(X, other_X, n_jobs=self.n_jobs,
-                           **metric_params)
+            X_ = cdist_dtw(
+                X,
+                other_X,
+                n_jobs=self.n_jobs,
+                **metric_params)
         elif self._ts_metric == "ctw":
             X_ = cdist_ctw(X, other_X, **metric_params)
         elif self._ts_metric == "softdtw":
             X_ = cdist_soft_dtw(X, other_X, **metric_params)
         elif self._ts_metric == "sax":
             X = self._sax_preprocess(X, **metric_params)
-            X_ = cdist_sax(X, self._sax.breakpoints_avg_,
-                           self._sax._X_fit_dims_[1], other_X,
-                           n_jobs=self.n_jobs)
+            X_ = cdist_sax(
+                X,
+                self._sax.breakpoints_avg_,
+                self._sax._X_fit_dims_[1],
+                other_X,
+                n_jobs=self.n_jobs)
+        elif self._ts_metric == "frechet":
+            X_ = cdist_frechet(
+                X,
+                other_X,
+                n_jobs=self.n_jobs,
+                **metric_params
+            )
         else:
             raise ValueError("Invalid metric recorded: %s" %
                              self._ts_metric)
@@ -122,9 +144,7 @@ class KNeighborsTimeSeriesMixin():
             else:
                 fit_X = self._X_fit
 
-            if (self.metric in TSLEARN_VALID_METRICS or
-                    self.metric in [cdist_dtw, cdist_ctw,
-                                    cdist_soft_dtw, cdist_sax]):
+            if self.metric in TSLEARN_VALID_METRICS:
                 full_dist_matrix = self._precompute_cross_dist(X,
                                                                other_X=fit_X)
             elif self.metric in ["euclidean", "sqeuclidean", "cityblock"]:
@@ -135,8 +155,8 @@ class KNeighborsTimeSeriesMixin():
             else:
                 raise ValueError("Unrecognized time series metric string: %s "
                                  "(should be one of 'dtw', 'softdtw', "
-                                 "'sax', 'euclidean', 'sqeuclidean' "
-                                 "or 'cityblock')" % self.metric)
+                                 "'frechet', 'sax', 'euclidean', 'sqeuclidean'"
+                                 " or 'cityblock')" % self.metric)
 
         # Code similar to sklearn (sklearn/neighbors/base.py), to make sure
         # that TimeSeriesKNeighbor~(metric='euclidean') has the same results as
@@ -181,6 +201,7 @@ class KNeighborsTimeSeriesMixin():
         tags.input_tags.allow_nan = True
         tags.input_tags.sparse = False
         return tags
+
 
 class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
                            BaseModelPackage):
@@ -331,12 +352,25 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
             X = check_dims(X, X_fit_dims=self._ts_fit.shape, extend=True,
                            check_n_features_only=True)
             if self._ts_metric == "dtw":
-                X_ = cdist_dtw(X, self._ts_fit, n_jobs=self.n_jobs,
-                               verbose=self.verbose, **metric_params)
+                X_ = cdist_dtw(
+                    X,
+                    self._ts_fit,
+                    n_jobs=self.n_jobs,
+                    verbose=self.verbose,
+                    **metric_params
+                )
             elif self._ts_metric == "ctw":
                 X_ = cdist_ctw(X, self._ts_fit, **metric_params)
             elif self._ts_metric == "softdtw":
                 X_ = cdist_soft_dtw(X, self._ts_fit, **metric_params)
+            elif self._ts_metric == "frechet":
+                X_ = cdist_frechet(
+                    X,
+                    self._ts_fit,
+                    n_jobs=self.n_jobs,
+                    verbose=self.verbose,
+                    **metric_params
+                )
             else:
                 raise ValueError("Invalid metric recorded: %s" %
                                  self._ts_metric)
