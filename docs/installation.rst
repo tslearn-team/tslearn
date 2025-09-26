@@ -40,7 +40,8 @@ A note on requirements
 Those should automatically be pulled on a standard ``tslearn`` installation.
 
 If you plan to use the :mod:`tslearn.shapelets` module from
-``tslearn``, ``keras`` (v3+) and ``pytorch`` should also be installed.
+``tslearn``, ``keras`` (v3+) and a dedicated backend should also be installed.
+See :doc:`the shapelets section <shapelets>` for more information.
 ``pytorch`` can also be used as a computational backend for some metrics.
 See :doc:`the backend section <backend>` for more information.
 
