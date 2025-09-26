@@ -3,25 +3,28 @@
 Learning Shapelets: decision boundaries in 2D distance space
 ============================================================
 
-This example illustrates the use of the "Learning Shapelets" method in order
-to learn a collection of shapelets that linearly separates the timeseries.
+This example illustrates the use of the "Learning Shapelets" method, presented
+in [1]_, in order to learn a collection of shapelets that linearly separates
+the timeseries.
 In this example, we will extract two shapelets which are then used to
 transform our input time series in a two-dimensional space, which is called
 the shapelet-transform space in the related literature. Moreover, we plot the
 decision boundaries of our classifier for each of the different classes.
 
-More information on the method can be found at:
-http://fs.ismll.de/publicspace/LearningShapelets/.
+References
+----------
+.. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
 """
-
-# %%
-# .. warning::
-#     When using tensorflow 2.11 to 2.15 (highly probable with python3.8) use
-#     ` from tensorflow.keras.optimizers.legacy import Adam`
 
 # Author: Gilles Vandewiele
 # License: BSD 3 clause
 
+import os
+
+# Should be set before importing keras
+os.environ["KERAS_BACKEND"] = "torch"
+
+from keras.optimizers import Adam
 import numpy
 from matplotlib import cm
 import matplotlib.pyplot as plt
@@ -29,10 +32,6 @@ import matplotlib.pyplot as plt
 from tslearn.datasets import CachedDatasets
 from tslearn.preprocessing import TimeSeriesScalerMinMax
 from tslearn.shapelets import LearningShapelets
-from tensorflow.keras.optimizers import Adam
-
-# Set a seed to ensure determinism
-numpy.random.seed(42)
 
 # Load the Trace dataset
 X_train, y_train, _, _ = CachedDatasets().load_dataset("Trace")
@@ -54,7 +53,7 @@ shp_clf = LearningShapelets(n_shapelets_per_size=shapelet_sizes,
                             max_iter=300,
                             verbose=0,
                             scale=False,
-                            random_state=42)
+                            random_state=0)
 shp_clf.fit(X_train, y_train)
 
 # We will plot our distances in a 2D space

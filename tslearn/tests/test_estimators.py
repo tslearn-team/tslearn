@@ -2,7 +2,7 @@
 The :mod:`tslearn.testing_utils` module includes various utilities that can
 be used for testing.
 """
-
+import contextlib
 import os
 
 import tslearn
@@ -41,7 +41,10 @@ except ImportError:
 
 
 from tslearn.neural_network import TimeSeriesMLPClassifier
-from tslearn.shapelets import LearningShapelets
+# Mock Learning shapelets, the class won't be tested anyway
+LearningShapelets = type("LearningShapelets", (), {})
+with contextlib.suppress(ImportError):
+    from tslearn.shapelets import LearningShapelets
 from tslearn.tests.sklearn_patches import (
                              check_clustering,
                              check_non_transf_est_n_iter,
@@ -94,7 +97,7 @@ def _get_all_classes():
                 # keras is likely not installed
                 warnings.warn('Skipped common tests for shapelets '
                               'as it could not be imported. keras '
-                              '(and tensorflow) are probably not '
+                              'is probably not '
                               'installed!')
                 continue
             elif name.endswith('pytorch_backend'):
@@ -247,7 +250,4 @@ def test_all_estimators(name, Estimator):
                  Estimator().get_tags()["allow_nan"])
     if allow_nan:
         checks.ALLOW_NAN.append(name)
-    if name in ["ShapeletModel"]:
-        # Deprecated models
-        return
     check_estimator(Estimator)
