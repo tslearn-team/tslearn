@@ -3,14 +3,6 @@
 Shapelets
 =========
 
-.. note::
-    The LearningShapelets implementation depends on Keras3+ which requires a dedicated backend.
-    ``Keras`` and ``pytorch`` backend are installed with ``tslearn`` through the [all_features] extra.
-    You can install a Keras backend of your choice and use it by setting the `KERAS_BACKEND
-    environment variable<https://keras.io/getting_started/>`_. When KERAS_BACKEND environment variable
-    is not set, the backend defaults to the first installed one among ``pytorch``, ``tensorflow`` and
-    ``jax`` in that order.
-
 Shapelets are defined in [1]_ as "subsequences that are in some sense
 maximally representative of a class".
 Informally, if we assume a binary classification setting, a shapelet is
@@ -107,8 +99,14 @@ module but this can be done internally by the algorithm itself by setting the
 ``scale``
 parameter.
 
-
-
+Implementation note
+-------------------
+The LearningShapelets implementation depends on ``Keras`` (v3+) which requires a dedicated backend.
+``keras`` and ``pytorch`` backend are installed with ``tslearn`` through the [all_features] extra.
+You can install a Keras backend of your choice and use it by setting the `KERAS_BACKEND
+environment variable <https://keras.io/getting_started/>`_. When KERAS_BACKEND environment variable
+is not set, the backend defaults to the first installed one among ``pytorch``, ``tensorflow`` and
+``jax`` in that order.
 
 .. minigallery:: tslearn.shapelets.LearningShapelets
     :add-heading: Examples Involving Shapelet-based Estimators
