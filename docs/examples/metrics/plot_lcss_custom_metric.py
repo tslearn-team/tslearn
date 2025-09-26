@@ -29,7 +29,6 @@ occurred within the pre-defined threshold, is represented in white on the image.
 
 # Author: Daniela Duarte
 # License: BSD 3 clause
-# sphinx_gallery_thumbnail_number = 2
 
 import numpy as np
 from numpy import pi
