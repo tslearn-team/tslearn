@@ -25,7 +25,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 * The `shapelets` module now depends on Keras3+ and the underlying backend can be selected through
 the KERAS_BACKEND environment variable. Defaults to the first found installed backend among `torch`,
 `tensorflow` and `jax` (in that order).
-* Fixed `LearningShapelets` with variable length timeseries 
+* Fixed `LearningShapelets` with variable length timeseries ([#352](https://github.com/tslearn-team/tslearn/issues/352)) 
 
 ## [v0.6.4]
 
