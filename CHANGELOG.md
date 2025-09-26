@@ -13,7 +13,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ### Removed
 
-* Support for Python version 3.8 is dropped
+* Support for Python versions 3.8 and 3.9 are dropped
 
 ### Added
 
