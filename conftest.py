@@ -41,8 +41,8 @@ def pytest_collection_modifyitems(config, items):
                 "tslearn.metrics.softdtw_variants.cdist_soft_dtw_normalized",
                 "tslearn.metrics.softdtw_variants.soft_dtw",
                 "tslearn.metrics.softdtw_variants.soft_dtw_alignment",
-                "tslearn.metrics.softdtw_variants.cdist_soft_dtw"
-
+                "tslearn.metrics.softdtw_variants.cdist_soft_dtw",
+                "tslearn.metrics.frechet.frechet"
             ]:
                 item.add_marker(skip_marker)
     if pandas is None:
