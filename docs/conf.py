@@ -83,6 +83,7 @@ sphinx_gallery_conf = {
     'subsection_order': ["examples/metrics", "examples/neighbors",
                          "examples/clustering", "examples/classification",
                          "examples/autodiff", "examples/misc"].index,
+    'within_subsection_order': "FileNameSortKey",
     'image_scrapers': (matplotlib_svg_scraper,),
 }
 
@@ -226,7 +227,7 @@ html_theme_options = {
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "_static/tslearn_logo.svg"
+html_logo = "_static/tslearn_logo_white_background.png"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -237,6 +238,7 @@ html_logo = "_static/tslearn_logo.svg"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+html_css_files = ['custom.css']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied

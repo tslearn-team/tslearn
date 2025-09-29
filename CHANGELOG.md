@@ -11,6 +11,11 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ## [Towards v0.7.0]
 
+### Changed
+
+* Explicit exception when using Global Alignment Kernel with sigma close to zero ([#440](https://github.com/tslearn-team/tslearn/issues/440))
+* Fix shifting in K-shape shape extraction process ([#385](https://github.com/tslearn-team/tslearn/issues/385))
+
 ### Removed
 
 * Support for Python versions 3.8 and 3.9 are dropped
@@ -19,6 +24,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 * `per_timeseries` and `per_feature` options for min-max and mean-variance scalers ([#536](https://github.com/tslearn-team/tslearn/issues/536))
 * `TimeSeriesImputer`class: missing value imputer for time series ([#564](https://github.com/tslearn-team/tslearn/issues/564))
+* Frechet metrics and KNeighbors integration ([#402](https://github.com/tslearn-team/tslearn/issues/402)
 
 ### Changed
 

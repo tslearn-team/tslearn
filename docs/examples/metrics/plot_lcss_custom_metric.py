@@ -29,7 +29,6 @@ occurred within the pre-defined threshold, is represented in white on the image.
 
 # Author: Daniela Duarte
 # License: BSD 3 clause
-# sphinx_gallery_thumbnail_number = 2
 
 import numpy as np
 from numpy import pi
@@ -66,7 +65,7 @@ dataset_scaled_1 = scaler.fit_transform(dataset_1)
 
 # LCSS using a function as the metric argument
 path_1, sim_1 = metrics.lcss_path_from_metric(
-    dataset_scaled_1[0], dataset_scaled_1[1], metric=arc_length
+    dataset_scaled_1[0], dataset_scaled_1[1], eps=1, metric=arc_length
 )
 
 # Plots

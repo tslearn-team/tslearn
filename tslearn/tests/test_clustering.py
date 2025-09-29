@@ -1,14 +1,27 @@
+import math
+
 import numpy as np
 
-from tslearn.utils import to_time_series_dataset, ts_size
-from tslearn.clustering import EmptyClusterError, TimeSeriesKMeans, \
-    KernelKMeans, KShape
-from tslearn.clustering.utils import _check_full_length, \
-    _check_no_empty_cluster
-from tslearn.metrics import cdist_dtw, cdist_soft_dtw
-from tslearn.preprocessing import TimeSeriesScalerMeanVariance
+import pytest
 
 from scipy.spatial.distance import cdist
+
+from tslearn.clustering import (
+    EmptyClusterError,
+    TimeSeriesKMeans,
+    KernelKMeans,
+    KShape
+)
+from tslearn.clustering.utils import (
+    _check_full_length,
+    _check_no_empty_cluster,
+    silhouette_score
+)
+from tslearn.generators import random_walks
+from tslearn.metrics import cdist_dtw, cdist_soft_dtw, dtw
+from tslearn.preprocessing import TimeSeriesScalerMeanVariance
+from tslearn.utils import to_time_series_dataset, ts_size
+
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -42,6 +55,12 @@ def test_kernel_kmeans():
                           max_iter=5,
                           random_state=rng).fit(time_series)
     assert gak_km._X_fit is None
+
+    with pytest.raises(RuntimeError):
+        KernelKMeans(n_clusters=101, verbose=False,
+                     max_iter=5,
+                     kernel_params={"sigma": 0},
+                     random_state=rng).fit(time_series)
 
     gak_km = KernelKMeans(n_clusters=2, verbose=False, kernel="rbf",
                           kernel_params={"gamma": 1.},
@@ -84,6 +103,12 @@ def test_kmeans():
                                 verbose=False,
                                 random_state=rng).fit(time_series)
     assert(km_nofit._X_fit is None)
+
+    with pytest.raises(ValueError):
+        KShape(n_clusters=101, verbose=False, init="random").fit(time_series)
+
+    with pytest.raises(ValueError):
+        KShape(n_clusters=2, verbose=False, init="invalid").fit(time_series)
 
     X_bis = to_time_series_dataset([[1, 2, 3, 4],
                                     [1, 2, 3],
@@ -168,8 +193,6 @@ def test_kmeans():
     np.testing.assert_equal(set(preds), set(range(4)))
 
 
-
-
 def test_kshape():
     n, sz, d = 15, 10, 3
     rng = np.random.RandomState(0)
@@ -182,5 +205,39 @@ def test_kshape():
     np.testing.assert_allclose(ks.labels_, dists.argmin(axis=1))
     np.testing.assert_allclose(ks.labels_, ks.predict(time_series))
 
-    assert KShape(n_clusters=101, verbose=False,
-                  random_state=rng).fit(time_series)._X_fit is None
+    with pytest.raises(ValueError):
+        KShape(n_clusters=101, verbose=False, random_state=rng).fit(time_series)
+
+    with pytest.raises(ValueError):
+        KShape(n_clusters=2, verbose=False, init="invalid").fit(time_series)
+
+
+def test_silhouette():
+    np.random.seed(0)
+    X = random_walks(n_ts=20, sz=16, d=1)
+    labels = np.random.randint(2, size=20)
+    assert math.isclose(
+        silhouette_score(X, labels, metric="dtw"),
+        0.13383800,
+        rel_tol=1e-07
+    )
+    assert math.isclose(
+        silhouette_score(X, labels, metric=dtw),
+        0.13383800,
+        rel_tol=1e-07
+    )
+    assert math.isclose(
+        silhouette_score(cdist_dtw(X), labels, metric="precomputed"),
+        0.13383800,
+        rel_tol=1e-07
+    )
+    assert math.isclose(
+        silhouette_score(X, labels, metric="euclidean"),
+        0.09126917,
+        rel_tol=1e-07
+    )
+    assert math.isclose(
+        silhouette_score(X, labels, metric="softdtw"),
+        0.17953934,
+        rel_tol=1e-07
+    )
