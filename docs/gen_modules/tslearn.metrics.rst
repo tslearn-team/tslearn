@@ -36,3 +36,7 @@ tslearn.metrics
       sigma_gak
       gamma_soft_dtw
       SoftDTWLossPyTorch
+      frechet
+      frechet_path
+      frechet_path_from_metric
+      cdist_frechet

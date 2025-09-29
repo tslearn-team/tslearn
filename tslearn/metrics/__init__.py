@@ -23,34 +23,52 @@ from .softdtw_variants import (cdist_soft_dtw, cdist_gak,
                                SoftDTW)
 from .soft_dtw_loss_pytorch import SoftDTWLossPyTorch
 from .cycc import cdist_normalized_cc, y_shifted_sbd_vec
+from .frechet import frechet, frechet_path, frechet_path_from_metric, cdist_frechet
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
-TSLEARN_VALID_METRICS = ["ctw", "dtw", "gak", "sax", "softdtw", "lcss"]
-VARIABLE_LENGTH_METRICS = ["ctw", "dtw", "gak", "sax", "softdtw", "lcss"]
+TSLEARN_VALID_METRICS = ["ctw", "dtw", "gak", "sax", "softdtw", "lcss", "frechet"]
+VARIABLE_LENGTH_METRICS = ["ctw", "dtw", "gak", "sax", "softdtw", "lcss", "frechet"]
 
 __all__ = [
-    "TSLEARN_VALID_METRICS", "VARIABLE_LENGTH_METRICS",
-
-    "dtw", "dtw_limited_warping_length",
-    "dtw_path_limited_warping_length", "subsequence_path",
-    "subsequence_cost_matrix",
-    "dtw_path", "dtw_path_from_metric",
-    "dtw_subsequence_path", "cdist_dtw",
+    "TSLEARN_VALID_METRICS",
+    "VARIABLE_LENGTH_METRICS",
     "GLOBAL_CONSTRAINT_CODE",
-    "lb_envelope", "lb_keogh",
-    "sakoe_chiba_mask", "itakura_mask",
-    "lcss", "lcss_path", "lcss_path_from_metric",
-
-    "ctw_path", "ctw", "cdist_ctw",
-
+    "dtw",
+    "dtw_limited_warping_length",
+    "dtw_path_limited_warping_length",
+    "subsequence_path",
+    "subsequence_cost_matrix",
+    "dtw_path",
+    "dtw_path_from_metric",
+    "dtw_subsequence_path",
+    "cdist_dtw",
+    "lb_envelope",
+    "lb_keogh",
+    "sakoe_chiba_mask",
+    "itakura_mask",
+    "lcss",
+    "lcss_path",
+    "lcss_path_from_metric",
+    "ctw_path",
+    "ctw",
+    "cdist_ctw",
     "cdist_sax",
-
-    "cdist_soft_dtw", "cdist_gak",
-    "cdist_soft_dtw_normalized", "gak", "soft_dtw", "soft_dtw_alignment",
-    "sigma_gak", "gamma_soft_dtw", "SquaredEuclidean", "SoftDTW",
-
+    "cdist_soft_dtw",
+    "cdist_gak",
+    "cdist_soft_dtw_normalized",
+    "gak",
+    "soft_dtw",
+    "soft_dtw_alignment",
+    "sigma_gak",
+    "gamma_soft_dtw",
+    "SquaredEuclidean",
+    "SoftDTW",
     "SoftDTWLossPyTorch",
-
-    "cdist_normalized_cc", "y_shifted_sbd_vec"
+    "cdist_normalized_cc",
+    "y_shifted_sbd_vec",
+    "frechet",
+    "frechet_path",
+    "frechet_path_from_metric",
+    "cdist_frechet"
 ]
