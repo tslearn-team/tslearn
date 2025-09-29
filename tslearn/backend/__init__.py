@@ -20,14 +20,15 @@ def check_keras_backend():
             try:
                 import_module(keras_backend)
                 os.environ["KERAS_BACKEND"] = keras_backend
-                logging.info(
-                    "Using %s as Keras backend, may be overloaded through " +
-                    "the `KERAS_BACKEND` environment variable." % keras_backend
-                )
+                logging.info((
+                    "Using {} as Keras backend, may be overloaded through " +
+                    "the `KERAS_BACKEND` environment variable.").format(
+                    keras_backend
+                ))
                 break
             except ModuleNotFoundError:
                 logging.debug(
-                    "Skipping %s backend for Keras: not installed" % keras_backend
+                    "Skipping {} backend for Keras: not installed".format(keras_backend)
                 )
         else:
             raise ImportError("No Keras backend installed")
