@@ -303,7 +303,7 @@ class LearningShapelets(ClassifierMixin, TransformerMixin,
     n_shapelets_per_size: dict (default: None)
         Dictionary giving, for each shapelet size (key),
         the number of such shapelets to be trained (value).
-        If None, `grabocka_params_to_shapelet_size_dict` is used and the
+        If None, :func:`grabocka_params_to_shapelet_size_dict` is used and the
         size used to compute is that of the shortest time series passed at fit
         time.
 
