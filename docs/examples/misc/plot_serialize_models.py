@@ -60,15 +60,17 @@ seed = 0
 numpy.random.seed(seed)
 X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")
 
-# Keep first 3 classes
+# Keep first 3 classes and 50 first time series
 X_train = X_train[y_train < 4]
+X_train = X_train[:50]
 numpy.random.shuffle(X_train)
-# Keep only 50 time series
-X_train = TimeSeriesScalerMeanVariance().fit_transform(X_train[:50])
+# For this method to operate properly, prior scaling is required
+X_train = TimeSeriesScalerMeanVariance().fit_transform(X_train)
 sz = X_train.shape[1]
 
 # Instantiate k-Shape model
-ks = KShape(n_clusters=3, verbose=True, random_state=seed)
+init=numpy.array([X_train[44], X_train[47], X_train[0]])
+ks = KShape(n_clusters=3, verbose=True, init=init)
 
 # Train
 ks.fit(X_train)
