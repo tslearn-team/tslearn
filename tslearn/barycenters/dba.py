@@ -4,6 +4,8 @@ from scipy.interpolate import interp1d
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.utils import check_random_state
 
+#%pip install git+https://github.com/michelegentili93/tslearn.git
+
 from ..metrics import dtw_path
 from ..utils import to_time_series_dataset, ts_size
 from .utils import _set_weights
@@ -339,10 +341,14 @@ def _mm_update_barycenter(X, diag_sum_v_k, list_w_k):
     d = X.shape[2]
     barycenter_size = diag_sum_v_k.shape[0]
     sum_w_x = numpy.zeros((barycenter_size, d))
+    count_w_x = numpy.zeros((barycenter_size, d))
     for k, (w_k, x_k) in enumerate(zip(list_w_k, X)):
-        # because w_k is the matching bertween ts timestamps and centroid timestamps, and is the same across dimension, we gotta discount the diag_sum_v_k (which is how many timestamp from the ts have been assigned to that centroid timestamp) of the timestamps that have a nan in that specific dimension.
+        # because w_k is the matching between ts timestamps and centroid timestamps, and is the same across dimension, we gotta discount the diag_sum_v_k (which is how many timestamp from the ts have been assigned to that centroid timestamp) of the timestamps that have a nan in that specific dimension.
         x_k_na0 = numpy.nan_to_num(x_k, nan=0)
+        x_notna = (~numpy.isnan(x_k))
         sum_w_x += w_k.dot(x_k_na0[:ts_size(x_k)])
+        # count how many timestamps of the ts have been assigned to each time stamp of the centroid
+        count_w_x += w_k.dot(x_notna[:ts_size(x_k)])
 
     # given we compute the average of the ts values for each timestamp (following the assignement from dtw: (1/D)(sum_w_x) 
     # where D is a vector (size of baricenter n_timestamps), with the number of the assigned ts for that timestamp of the centroid.
@@ -350,9 +356,7 @@ def _mm_update_barycenter(X, diag_sum_v_k, list_w_k):
     # we need make D as a matrix for each dimension, intead of one for each dimension and remove  for every timestamp and  dimension i where there are k np.nans in the ts for which sum_w_x was computing replacing nans with 0., with a matrix x_nan. So that for every dimension i we will compute D_adj_i = D-k_i
     # where k_i is the vector with the number of missing values on the ts, assigned to the timestamps, for that dimension.
     # so diag_sum_w_na = (1/D_adj_i)*sum_w_x_i. * is pairwise product
-    diag_sum_w_na = numpy.tile(diag_sum_v_k, (X.shape[2], 1)).T
-    diag_sum_w_na = diag_sum_w_na - numpy.isnan(X).sum(axis=(0))
-    barycenter = (1/diag_sum_w_na) * sum_w_x
+    barycenter = (1/count_w_x) * sum_w_x
     #barycenter = numpy.diag(1. / diag_sum_v_k).dot(sum_w_x)
     return barycenter
 
