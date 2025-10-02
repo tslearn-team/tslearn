@@ -806,3 +806,124 @@ def test_soft_dtw_loss_pytorch():
         axis=2,
     )
     np.testing.assert_allclose(batch_ts_2.grad, expected_grad_ts2, rtol=5e-5)
+
+
+def test_frechet():
+
+    with pytest.raises(ValueError):
+        tslearn.metrics.frechet(
+            [],
+            np.random.randn(3, 2)
+        )
+
+    with pytest.raises(ValueError):
+        tslearn.metrics.frechet(
+            np.random.randn(3, 1),
+            np.random.randn(3, 2)
+        )
+
+    np.random.seed(42)
+    s1 = np.random.randn(10, 4)
+    s2 = np.random.randn(10, 4)
+
+    for be in backends:
+        for array_type in array_types:
+
+            path, dist = tslearn.metrics.frechet_path(
+                cast([1., 2, 3], array_type),
+                cast([1.0, 2.0, 2.0, 3.0], array_type),
+                be=be
+            )
+            if be is not None:
+                assert be.belongs_to_backend(dist)
+            else:
+                assert instantiate_backend(array_type).belongs_to_backend(dist)
+
+            np.testing.assert_allclose(dist, [0.])
+            assert isinstance(path, list)
+            assert path == [(0, 0), (1, 1), (1, 2), (2, 3)]
+
+            path, dist = tslearn.metrics.frechet_path([1., 2, 3], [1.0, 0., 2.0, 4.0], be=be)
+            np.testing.assert_allclose(dist, [1.])
+            assert path == [(0, 0), (0, 1), (1, 2), (2, 3)]
+
+            path, dist = tslearn.metrics.frechet_path([1., 2, 3], [-2.0, 5.0, 7.0], be=be)
+            np.testing.assert_allclose(dist, [4.])
+            assert path == [(0, 0), (1, 1), (2, 2)]
+
+            path, dist = tslearn.metrics.frechet_path(
+                [1, 1, 1, 2, 3],
+                [1, 2, 2, 2, 3],
+                global_constraint="sakoe_chiba",
+                sakoe_chiba_radius=1,
+                be=be
+            )
+            np.testing.assert_allclose(dist, 1)
+            assert path == [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4)]
+
+            path, dist = tslearn.metrics.frechet_path(s1, s2, be=be)
+            np.testing.assert_allclose(dist, [3.092], rtol=1e-03)
+            assert path == [
+                (0, 0), (0, 1), (1, 2), (1, 3), (2, 4), (3, 5),
+                (4, 5), (5, 5), (6, 6), (6, 7), (7, 8), (8, 9), (9, 9)
+            ]
+
+            dist = tslearn.metrics.frechet(s1, s2, be=be)
+            np.testing.assert_allclose(dist, [3.092], rtol=1e-03)
+
+            path, dist = tslearn.metrics.frechet_path_from_metric(s1, s2, metric="euclidean", be=be)
+            np.testing.assert_allclose(dist, [3.092], rtol=1e-03)
+
+            dist_matrix = cast(cdist(s1, s2, metric="sqeuclidean"), array_type)
+            path, dist = tslearn.metrics.frechet_path_from_metric(dist_matrix, be=be)
+            np.testing.assert_allclose(dist, [9.560], rtol=1e-03)
+
+            path, dist = tslearn.metrics.frechet_path_from_metric(s1, s2, metric="sqeuclidean", be=be)
+            np.testing.assert_allclose(dist, [9.560], rtol=1e-03)
+
+            path, dist = tslearn.metrics.frechet_path(
+                [[1, 1], [2, 2], [3, 3]],
+                [[1, 1], [2, 2], [3, 3], [2, 2], [3, 3]],
+                be=be
+            )
+            np.testing.assert_allclose(dist, [1.414], rtol=1e-03)
+            assert path == [(0, 0), (1, 1), (1, 2), (1, 3), (2, 4)]
+
+            path, dist = tslearn.metrics.frechet_path_from_metric(
+                [[1, 1], [2, 2], [3, 3]],
+                [[1, 1], [2, 2], [3, 3], [2, 2], [3, 3]],
+                metric="euclidean",
+                be=be
+            )
+            np.testing.assert_allclose(dist, [1.414], rtol=1e-03)
+            assert path == [(0, 0), (1, 1), (1, 2), (1, 3), (2, 4)]
+
+            path, dist = tslearn.metrics.frechet_path_from_metric(
+                [[1, 1], [2, 2], [3, 3]],
+                [[1, 1], [2, 2], [3, 3], [2, 2], [3, 3]],
+                metric="sqeuclidean",
+                be=be
+            )
+            np.testing.assert_allclose(dist, [2], rtol=1e-07)
+            assert path == [(0, 0), (1, 1), (1, 2), (1, 3), (2, 4)]
+
+            path, dist = tslearn.metrics.frechet_path_from_metric(
+                [[1, 1], [2, 2], [3, 3]],
+                [[1, 1], [2, 2], [3, 3], [2, 2], [3, 3]],
+                metric=lambda x, y: sum((x - y) ** 2),
+                be=be
+            )
+            np.testing.assert_allclose(dist, [2], rtol=1e-07)
+            assert path == [(0, 0), (1, 1), (1, 2), (1, 3), (2, 4)]
+
+            dists = tslearn.metrics.cdist_frechet(
+                [[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]],
+                [[1, 2, 3], [2, 3, 4, 5]],
+                be=be or instantiate_backend(array_type)
+            )
+            np.testing.assert_allclose(dists, [[0.0, 2], [1.0, 1]], atol=1e-5)
+            if be is not None:
+                assert be.belongs_to_backend(dists)
+            else:
+                assert instantiate_backend(array_type).belongs_to_backend(dists)
+

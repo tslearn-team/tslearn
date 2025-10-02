@@ -28,7 +28,7 @@ setup(
     ],
     packages=find_packages(),
     package_data={"tslearn": [".cached_datasets/singleTrainTest.csv", ".cached_datasets/Trace.npz"]},
-    python_requires='>=3.9',
+    python_requires='>=3.10',
     install_requires=[
         "scikit-learn>=1.4,<1.7",
         "numpy>=1.24.3,<2.3",
@@ -40,9 +40,7 @@ setup(
         "pytorch": ['torch'],
         "tests": [
             "pytest",
-            "torch",
             "h5py",
-            "tensorflow; python_version < '3.13'",
         ],
         "docs": [
             "sphinx",
@@ -56,10 +54,12 @@ setup(
         ],
         "all_features": [
             "torch",
+            # Torch dropped support of macOS intel after version 2.2.2
+            # which does not support numpy2.
+            "numpy<2; 'darwin' in sys_platform and 'x86_64' in platform_machine",
             "h5py",
-            "tensorflow;  python_version < '3.13'",
-            "cesium>=0.12.2; 'darwin' not in sys_platform",
-            "cesium==0.12.1; 'darwin' in sys_platform",
+            "keras",
+            "cesium",
             "pandas",
             "stumpy",
         ]

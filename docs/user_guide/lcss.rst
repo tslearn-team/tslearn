@@ -16,9 +16,9 @@ shapes `(n, d)` and `(m, d)` and LCSS can be computed using the following code:
 
     from tslearn.metrics import lcss, lcss_path
 
-    lcss_score = lcss(x, y)
+    lcss_score = lcss(x, y, eps=1)
     # Or, if the path is also an important information:
-    path, lcss_score = lcss_path(x, y)
+    path, lcss_score = lcss_path(x, y, eps=1)
 
 
 Problem
@@ -78,7 +78,7 @@ would then be:
 .. code-block:: python
 
     from tslearn.metrics import lcss_path_from_metric
-    path, cost = lcss_path_from_metric(x, y, metric=compatible_metric)
+    path, cost = lcss_path_from_metric(x, y, eps=1, metric=compatible_metric)
 
 
 Properties
@@ -116,7 +116,7 @@ The corresponding code would be:
 .. code-block:: python
 
     from tslearn.metrics import lcss
-    cost = lcss(x, y, global_constraint="sakoe_chiba", sakoe_chiba_radius=3)
+    cost = lcss(x, y, eps=1, global_constraint="sakoe_chiba", sakoe_chiba_radius=3)
 
 
 The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [1]_,
@@ -138,7 +138,7 @@ The corresponding code would be:
 .. code-block:: python
 
     from tslearn.metrics import lcss
-    cost = lcss(x, y, global_constraint="itakura", itakura_max_slope=2.)
+    cost = lcss(x, y, eps=1, global_constraint="itakura", itakura_max_slope=2.)
 
 
 .. minigallery:: tslearn.metrics.lcss tslearn.metrics.lcss_path tslearn.metrics.lcss_path_from_metric

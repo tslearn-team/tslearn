@@ -15,16 +15,25 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 * Explicit exception when using Global Alignment Kernel with sigma close to zero ([#440](https://github.com/tslearn-team/tslearn/issues/440))
 * Move preprocessing classes into dedicated modules.
+* Fix shifting in K-shape shape extraction process ([#385](https://github.com/tslearn-team/tslearn/issues/385))
 
 ### Removed
 
-* Support for Python version 3.8 is dropped
+* Support for Python versions 3.8 and 3.9 are dropped
 
 ### Added
 
 * `per_timeseries` and `per_feature` options for min-max and mean-variance scalers ([#536](https://github.com/tslearn-team/tslearn/issues/536))
 * `TimeSeriesImputer`class: missing value imputer for time series ([#564](https://github.com/tslearn-team/tslearn/issues/564))
 * `mean`, `max` and `uniform` resampling methods to the `TimeSeriesResampler`class: missing value imputer for time series ([#537](https://github.com/tslearn-team/tslearn/issues/537))
+* Frechet metrics and KNeighbors integration ([#402](https://github.com/tslearn-team/tslearn/issues/402)
+
+### Changed
+
+* The `shapelets` module now depends on Keras3+ and the underlying backend can be selected through
+the KERAS_BACKEND environment variable. Defaults to the first found installed backend among `torch`,
+`tensorflow` and `jax` (in that order).
+* Fixed `LearningShapelets` with variable length timeseries ([#352](https://github.com/tslearn-team/tslearn/issues/352)) 
 
 ## [v0.6.4]
 

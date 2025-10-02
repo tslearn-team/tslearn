@@ -13,14 +13,14 @@ jobs:
     vmImage: 'ubuntu-latest'
   strategy:
     matrix:
-      Python39:
-        python.version: '3.9'
       Python310:
         python.version: '3.10'
       Python311:
         python.version: '3.11'
       Python312:
         python.version: '3.12'
+      Python313:
+        python.version: '3.13'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -36,8 +36,8 @@ jobs:
       set -xe
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -e '.[tests,all_features]'
-    displayName: 'Install tslearn and dependencies for tests'
+      python -m pip install .[tests,all_features]
+    displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
       set -xe
@@ -51,14 +51,14 @@ jobs:
     vmImage: 'ubuntu-latest'
   strategy:
     matrix:
-      Python39:
-        python.version: '3.9'
       Python310:
         python.version: '3.10'
       Python311:
         python.version: '3.11'
       Python312:
         python.version: '3.12'
+      Python313:
+        python.version: '3.13'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -74,8 +74,8 @@ jobs:
       set -xe
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -e '.[tests,all_features]'
-    displayName: 'Install tslearn and dependencies for tests'
+      python -m pip install .[tests,all_features]
+    displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
       set -xe
@@ -89,15 +89,12 @@ jobs:
     vmImage: 'macos-latest'
   strategy:
     matrix:
-      Python39:
-        python.version: '3.9'
       Python310:
         python.version: '3.10'
       Python311:
         python.version: '3.11'
       Python312:
         python.version: '3.12'
-
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -115,8 +112,8 @@ jobs:
       brew install openblas  # required due to https://github.com/numpy/numpy/issues/15947
       export OPENBLAS=$(brew --prefix openblas)
       python -m pip install --upgrade pip
-      python -m pip install -e '.[tests,all_features]'
-    displayName: 'Install tslearn and dependencies for tests'
+      python -m pip install .[tests,all_features]
+    displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
       set -xe
@@ -130,15 +127,12 @@ jobs:
     vmImage: 'macos-latest'
   strategy:
     matrix:
-      Python39:
-        python.version: '3.9'
       Python310:
         python.version: '3.10'
       Python311:
         python.version: '3.11'
       Python312:
         python.version: '3.12'
-
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -156,8 +150,8 @@ jobs:
       brew install openblas  # required due to https://github.com/numpy/numpy/issues/15947
       export OPENBLAS=$(brew --prefix openblas)
       python -m pip install --upgrade pip
-      python -m pip install -e '.[tests,all_features]'
-    displayName: 'Install tslearn and dependencies for tests'
+      python -m pip install .[tests,all_features]
+    displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
       set -xe
@@ -171,14 +165,14 @@ jobs:
     vmImage: 'windows-latest'
   strategy:
     matrix:
-      Python39:
-        python.version: '3.9'
       Python310:
         python.version: '3.10'
       Python311:
         python.version: '3.11'
       Python312:
         python.version: '3.12'
+      Python313:
+        python.version: '3.13'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -192,8 +186,8 @@ jobs:
   - script: |
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -e ".[tests,all_features]"
-    displayName: 'Install tslearn and dependencies for tests'
+      python -m pip install .[tests,all_features]
+    displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
       python -m pip install pytest-azurepipelines
@@ -206,14 +200,14 @@ jobs:
     vmImage: 'windows-latest'
   strategy:
     matrix:
-      Python39:
-        python.version: '3.9'
       Python310:
         python.version: '3.10'
       Python311:
         python.version: '3.11'
       Python312:
         python.version: '3.12'
+      Python313:
+        python.version: '3.13'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -227,8 +221,8 @@ jobs:
   - script: |
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -e ".[tests,all_features]"
-    displayName: 'Install tslearn and dependencies for tests'
+      python -m pip install .[tests,all_features]
+    displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
       python -m pip install pytest-azurepipelines
@@ -236,7 +230,7 @@ jobs:
       python -m pytest -v tslearn/ --doctest-modules -k "not test_ or test_all_estimators"
     displayName: 'Doctest'
 
-- job: 'tests_without_torch'
+- job: 'tests_basic'
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
@@ -258,9 +252,8 @@ jobs:
       set -xe
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -e '.[tests,all_features]'
-      python -m pip uninstall -y torch
-    displayName: 'Install tslearn and dependencies for tests, torch removed'
+      python -m pip install .[tests]
+    displayName: 'Install tslearn and dependencies for tests'
 
   - script: |
       set -xe
@@ -269,7 +262,7 @@ jobs:
       python -m pytest -v tslearn/ -k "not test_all_estimators"
     displayName: 'Test'
 
-- job: 'doctests_without_torch'
+- job: 'doctests_basic'
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
@@ -291,15 +284,14 @@ jobs:
       set -xe
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -e '.[tests,all_features]'
-      python -m pip uninstall -y torch
-    displayName: 'Install tslearn and dependencies for tests, torch removed'
+      python -m pip install .[tests]
+    displayName: 'Install tslearn and dependencies for tests'
 
   - script: |
       set -xe
       python -m pip install pytest-azurepipelines
       pip list
-      python -m pytest -v tslearn/ --doctest-modules -k 'not test_ and not tslearn.metrics.softdtw_variants.soft_dtw and not tslearn.metrics.softdtw_variants.cdist_soft_dtw and not tslearn.metrics.dtw_variants.dtw or tslearn.metrics.dtw_variants.dtw_ or test_all_estimators'
+      python -m pytest -v tslearn/ --doctest-modules -k 'not test_ or test_all_estimators'
     displayName: 'Doctest'
 
 - job: 'codecov'  # must be a separate job to only disable Numbas's JIT here
@@ -311,8 +303,8 @@ jobs:
         python.version: '3.10'
   variables:
     OMP_NUM_THREADS: '2'
+    NUMBA_DISABLE_JIT: '1'
     NUMBA_NUM_THREADS: '2'
-    NUMBA_DISABLE_JIT: '1'  # special for coverage testing
     PIP_PREFER_BINARY: 'true'
 
   steps:
@@ -325,8 +317,8 @@ jobs:
       set -xe
       python --version
       python -m pip install --upgrade pip
-      python -m pip install -e '.[tests,all_features]'
-    displayName: 'Install tslearn and dependencies for tests, torch included'
+      python -m pip install .[tests,all_features]
+    displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
       set -xe
