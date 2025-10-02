@@ -10,7 +10,7 @@
         <img alt="PyPI" src="https://badge.fury.io/py/tslearn.svg?cache-control=no-cache">
     </a>
     <a href="https://www.python.org/downloads/releases">
-        <img alt="Python 3.9+" src="https://img.shields.io/badge/python-3.9+-blue.svg">
+        <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10+-blue.svg">
     </a>
     <a href="http://tslearn.readthedocs.io/en/stable/?badge=stable">
         <img alt="Documentation" src="https://readthedocs.org/projects/tslearn/badge/?version=stable">
