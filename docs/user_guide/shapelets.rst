@@ -106,7 +106,8 @@ The LearningShapelets implementation depends on ``Keras`` (v3+) which requires a
 You can install a Keras backend of your choice and use it by setting the `KERAS_BACKEND
 environment variable <https://keras.io/getting_started/>`_. When KERAS_BACKEND environment variable
 is not set, the backend defaults to the first installed one among ``pytorch``, ``tensorflow`` and
-``jax`` in that order.
+``jax`` in that order. Please note that setting the ``Keras`` backend through ~/.keras/keras.json is
+not supported.
 
 .. minigallery:: tslearn.shapelets.LearningShapelets
     :add-heading: Examples Involving Shapelet-based Estimators
