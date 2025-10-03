@@ -2,3 +2,7 @@
   text-align: center;
   justify-content: center;
 }
+
+.bd-main .bd-content .bd-article-container {
+  max-width: 100%;  /* default is 60em */
+}

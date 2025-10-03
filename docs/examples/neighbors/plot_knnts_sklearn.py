@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Hyper-parameter tuning of a Pipeline with KNeighborsTimeSeriesClassifier
-========================================================================
+Hyper-parameter tuning of a pipeline with KNeighbors time series classifier
+===========================================================================
 
 In this example, we demonstrate how it is possible to use the different
 algorithms of tslearn in combination with sklearn utilities, such as
