@@ -134,7 +134,8 @@ predicted class output by ``predict``.
 References
 ----------
 
-.. [1] M. Cuturi. "Fast Global Alignment Kernels," ICML 2011.
+.. [1] M. Cuturi. "Fast Global Alignment Kernels,"
+   ICML 2011.
 
 .. [2] I. S. Dhillon, Y. Guan & B. Kulis.
        "Kernel k-means, Spectral Clustering and Normalized Cuts," KDD 2004.

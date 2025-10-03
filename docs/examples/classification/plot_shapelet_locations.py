@@ -14,7 +14,8 @@ across the longer time series and taking the minimal pointwise distance.
 
 References
 ----------
-.. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
+.. [1] J. Grabocka et al. Learning Time-Series Shapelets.
+   SIGKDD 2014.
 """
 
 # Author: Romain Tavenard

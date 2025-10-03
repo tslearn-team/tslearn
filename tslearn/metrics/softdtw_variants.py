@@ -182,7 +182,8 @@ def unnormalized_gak(s1, s2, sigma=1.0, be=None):
 
     References
     ----------
-    .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
+    .. [1] M. Cuturi, "Fast global alignment kernels,"
+       ICML 2011.
     """
     be = instantiate_backend(be, s1, s2)
     s1 = to_time_series(s1, remove_nans=True, be=be)
@@ -241,7 +242,8 @@ def gak(s1, s2, sigma=1.0, be=None):  # TODO: better doc (formula for the kernel
 
     References
     ----------
-    .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
+    .. [1] M. Cuturi, "Fast global alignment kernels,"
+       ICML 2011.
     """
     be = instantiate_backend(be, s1, s2)
     s1 = be.array(s1)
@@ -314,7 +316,8 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.0, n_jobs=None, verbose=0, be=Non
 
     References
     ----------
-    .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
+    .. [1] M. Cuturi, "Fast global alignment kernels,"
+       ICML 2011.
     """  # noqa: E501
     be = instantiate_backend(be, dataset1, dataset2)
 
@@ -391,7 +394,8 @@ def sigma_gak(dataset, n_samples=100, random_state=None, be=None):
 
     References
     ----------
-    .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
+    .. [1] M. Cuturi, "Fast global alignment kernels,"
+       ICML 2011.
     """
     be = instantiate_backend(be, dataset)
 
@@ -461,7 +465,8 @@ def gamma_soft_dtw(dataset, n_samples=100, random_state=None, be=None):
 
     References
     ----------
-    .. [1] M. Cuturi, "Fast global alignment kernels," ICML 2011.
+    .. [1] M. Cuturi, "Fast global alignment kernels,"
+       ICML 2011.
     """
     be = instantiate_backend(be, dataset)
     return (

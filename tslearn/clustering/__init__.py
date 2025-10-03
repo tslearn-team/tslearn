@@ -2,8 +2,8 @@
 The :mod:`tslearn.clustering` module gathers time series specific clustering
 algorithms.
 
-**User guide:** See the :ref:`Clustering <clustering>` section for further 
- details.
+**User guide:** See the :ref:`Clustering <clustering>` section for further
+details.
 """
 from .kshape import KShape
 from .utils import (EmptyClusterError, silhouette_score,

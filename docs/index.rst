@@ -31,26 +31,26 @@
     <div style="clear: both"></div>
     <div class="container-fluid hidden-xs hidden-sm">
       <div class="row">
-        <a href="auto_examples/metrics/plot_dtw.html">
-          <div class="col-md-2 thumbnail">
+        <div class="col-md-2 thumbnail">
+          <a href="auto_examples/metrics/plot_dtw.html">
             <img src="_static/img/dtw_thumb.png">
-          </div>
-        </a>
-        <a href="auto_examples/clustering/plot_barycenter_interpolate.html">
-          <div class="col-md-2 thumbnail">
+          </a>
+        </div>
+        <div class="col-md-2 thumbnail">
+          <a href="auto_examples/clustering/plot_barycenter_interpolate.html">
             <img src="_static/img/bary_interp_thumb.png">
-          </div>
-        </a>
-        <a href="auto_examples/clustering/plot_kmeans.html">
-          <div class="col-md-2 thumbnail">
+          </a>
+        </div>
+        <div class="col-md-2 thumbnail">
+          <a href="auto_examples/clustering/plot_kmeans.html">
             <img src="_static/img/kmeans_thumb.png">
-          </div>
-        </a>
-        <a href="auto_examples/misc/plot_sax.html">
-          <div class="col-md-2 thumbnail">
+          </a>
+        </div>
+        <div class="col-md-2 thumbnail">
+          <a href="auto_examples/misc/plot_sax.html">
             <img src="_static/img/sax_thumb.png">
-          </div>
-        </a>
+          </a>
+        </div>
       </div>
     </div>
 

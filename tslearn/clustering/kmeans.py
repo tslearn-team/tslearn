@@ -210,7 +210,8 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
     .. [1] Kernel k-means, Spectral Clustering and Normalized Cuts.
            Inderjit S. Dhillon, Yuqiang Guan, Brian Kulis. KDD 2004.
 
-    .. [2] Fast Global Alignment Kernels. Marco Cuturi. ICML 2011.
+    .. [2] Fast Global Alignment Kernels. Marco Cuturi.
+       ICML 2011.
     """
 
     def __init__(
