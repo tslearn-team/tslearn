@@ -9,7 +9,8 @@ performance when used for a shapelet transform.
 
 References
 ----------
-.. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
+.. [1] J. Grabocka et al. Learning Time-Series Shapelets.
+   SIGKDD 2014.
 """
 
 # Author: Romain Tavenard

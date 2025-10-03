@@ -13,7 +13,8 @@ decision boundaries of our classifier for each of the different classes.
 
 References
 ----------
-.. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
+.. [1] J. Grabocka et al. Learning Time-Series Shapelets.
+   SIGKDD 2014.
 """
 
 # Author: Gilles Vandewiele

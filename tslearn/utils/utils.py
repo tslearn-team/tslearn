@@ -636,7 +636,8 @@ class LabelCategorizer(TransformerMixin, TimeSeriesBaseEstimator):
 
     References
     ----------
-    .. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
+    .. [1] J. Grabocka et al. Learning Time-Series Shapelets.
+       SIGKDD 2014.
     """
 
     def __init__(

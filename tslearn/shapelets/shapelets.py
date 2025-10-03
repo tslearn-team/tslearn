@@ -262,7 +262,8 @@ def grabocka_params_to_shapelet_size_dict(n_ts, ts_sz, n_classes, l, r):
 
     References
     ----------
-    .. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
+    .. [1] J. Grabocka et al. Learning Time-Series Shapelets.
+       SIGKDD 2014.
     """
     base_size = int(l * ts_sz)
     base_size = max(base_size, 1)
@@ -395,7 +396,8 @@ class LearningShapelets(ClassifierMixin, TransformerMixin,
 
     References
     ----------
-    .. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
+    .. [1] J. Grabocka et al. Learning Time-Series Shapelets.
+       SIGKDD 2014.
     """
     def __init__(self, n_shapelets_per_size=None,
                  max_iter=10000,
