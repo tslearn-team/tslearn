@@ -44,12 +44,11 @@ setup(
         ],
         "docs": [
             "sphinx",
-            "sphinx_bootstrap_theme",
+            "pydata_sphinx_theme",
             "sphinx-gallery",
+            "sphinx_copybutton",
             "numpydoc",
-            "nbsphinx",
             "matplotlib",
-            "ipykernel",
             "pypandoc",
         ],
         "all_features": [
