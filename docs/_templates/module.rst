@@ -1,42 +1,62 @@
 .. _mod-{{ fullname }}:
 
-{{ fullname | underline }}
+{{ fullname | escape | underline }}
 
 .. automodule:: {{ fullname }}
 
-   {% block functions %}
-   {% if functions %}
-   .. rubric:: Functions
+   {% block attributes %}
+   {%- if attributes %}
+   .. rubric:: {{ _('Module Attributes') }}
 
    .. autosummary::
-      :toctree: {{ objname }}
-      :template: function.rst
+   {% for item in attributes %}
+      {{ item }}
+   {%- endfor %}
+   {% endif %}
+   {%- endblock %}
+
+   {%- block functions %}
+   {%- if functions %}
+   .. rubric:: {{ _('Functions') }}
+
+   .. autosummary::
    {% for item in functions %}
       {{ item }}
    {%- endfor %}
    {% endif %}
-   {% endblock %}
+   {%- endblock %}
 
-   {% block classes %}
-   {% if classes %}
-   .. rubric:: Classes
+   {%- block classes %}
+   {%- if classes %}
+   .. rubric:: {{ _('Classes') }}
 
    .. autosummary::
-      :toctree: {{ objname }}
-      :template: class.rst
    {% for item in classes %}
       {{ item }}
    {%- endfor %}
    {% endif %}
-   {% endblock %}
+   {%- endblock %}
 
-   {% block exceptions %}
-   {% if exceptions %}
-   .. rubric:: Exceptions
+   {%- block exceptions %}
+   {%- if exceptions %}
+   .. rubric:: {{ _('Exceptions') }}
 
    .. autosummary::
    {% for item in exceptions %}
       {{ item }}
    {%- endfor %}
    {% endif %}
-   {% endblock %}
+   {%- endblock %}
+
+{%- block modules %}
+{%- if modules %}
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+{% for item in modules %}
+   {{ item }}
+{%- endfor %}
+{% endif %}
+{%- endblock %}

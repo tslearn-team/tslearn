@@ -1,6 +1,6 @@
 .. _fun-{{ fullname }}:
 
-{{ fullname | underline }}
+{{ objname | escape | underline }}
 
 .. currentmodule:: {{ module }}
 

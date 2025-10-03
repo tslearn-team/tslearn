@@ -1,14 +1,12 @@
 .. _class-{{ fullname }}:
 
-:mod:`{{module}}`.{{objname}}
-{{ underline }}==============
+{{ objname | escape | underline}}
 
 .. currentmodule:: {{ module }}
 
 .. autoclass:: {{ objname }}
    :members:
    :inherited-members:
-
 
 .. include:: ../backreferences/{{module}}.{{objname}}.examples
 
