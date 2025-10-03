@@ -6,6 +6,7 @@ look at our :doc:`API Reference <reference>`.
 
 .. toctree::
     :maxdepth: 2
+    :numbered:
 
     installation
     gettingstarted

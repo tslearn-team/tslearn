@@ -123,4 +123,5 @@ References
 
 .. [1] L. Ye & E. Keogh. Time series shapelets: a new primitive for data
        mining. SIGKDD 2009.
-.. [2] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
+.. [2] J. Grabocka et al. Learning Time-Series Shapelets.
+   SIGKDD 2014.
