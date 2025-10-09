@@ -237,9 +237,23 @@ def _configure(estimator, check):
         from tslearn.shapelets.shapelets import _kmeans_init_shapelets
         _kmeans_init_shapelets.__defaults__ = (1,)
         if isinstance(estimator, (LearningShapelets, TimeSeriesMLPClassifier)):
-            estimator._more_tags = lambda *args, **kwargs: {'poor_score': True,
-                                                            'allow_nan': True,
-                                                            'allow_variable_length': True}
+
+            orig_more_tags = estimator._more_tags
+            orig_sklearn_tags = estimator.__sklearn_tags__
+
+            def new_more_tags():
+                tags = orig_more_tags()
+                tags['poor_score'] = True
+                return tags
+
+            def new_sklearn_tags():
+                tags = orig_sklearn_tags()
+                getattr(tags, f"{tags.estimator_type}_tags").poor_score = True
+                return tags
+
+            estimator._more_tags = new_more_tags
+            estimator.__sklearn_tags__ = new_sklearn_tags
+
             estimator.set_params(max_iter=1)
 
 
