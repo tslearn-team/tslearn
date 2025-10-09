@@ -3,7 +3,7 @@ import numpy
 
 from scipy.spatial.distance import cdist
 
-from sklearn.base import ClusterMixin, TransformerMixin
+from sklearn.base import ClusterMixin, TransformerMixin, BaseEstimator
 from sklearn.cluster._kmeans import _kmeans_plusplus
 from sklearn.metrics.pairwise import pairwise_kernels
 from sklearn.utils import check_random_state
@@ -16,7 +16,7 @@ from tslearn.barycenters import (
     euclidean_barycenter,
     softdtw_barycenter,
 )
-from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
+from tslearn.bases import BaseModelPackage, TimeSeriesMixin
 from tslearn.metrics import cdist_dtw, cdist_gak, cdist_soft_dtw, sigma_gak
 from tslearn.utils import check_array, check_dims, to_sklearn_dataset, to_time_series_dataset
 
@@ -117,7 +117,7 @@ def _k_init_metric(X, n_clusters, cdist_metric, random_state, n_local_trials=Non
     return centers
 
 
-class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
+class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackage):
     """Kernel K-means.
 
     Parameters
@@ -444,21 +444,32 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
         return dist.argmin(axis=1)
 
     def _more_tags(self):
+        tags = super()._more_tags()
         sample_weight_failure_msg = "Currently not supported due to clusters initialization"
-        return {"allow_nan": True,
-                "allow_variable_length": True,
-                "_xfail_checks": {
-                    "check_sample_weight_equivalence_on_dense_data": sample_weight_failure_msg,
-                    "check_sample_weight_equivalence_on_sparse_data": sample_weight_failure_msg
-                }}
+        tags.update(
+            {"allow_nan": True,
+             "allow_variable_length": True,
+             "_xfail_checks": {
+                 "check_sample_weight_equivalence_on_dense_data": sample_weight_failure_msg,
+                 "check_sample_weight_equivalence_on_sparse_data": sample_weight_failure_msg
+             }}
+        )
+        return tags
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        tags.allow_variable_length = True
+        # TODO: XFAILS
+        return tags
 
 
 class TimeSeriesKMeans(
+    TimeSeriesCentroidBasedClusteringMixin,
     TransformerMixin,
     ClusterMixin,
-    TimeSeriesCentroidBasedClusteringMixin,
+    BaseEstimator,
     BaseModelPackage,
-    TimeSeriesBaseEstimator,
 ):
     """K-means clustering for time-series data.
 
@@ -887,4 +898,11 @@ class TimeSeriesKMeans(
         return self._transform(X)
 
     def _more_tags(self):
-        return {"allow_nan": True, "allow_variable_length": True}
+        tags = super()._more_tags()
+        tags.update({"allow_variable_length": True})
+        return tags
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.allow_variable_length = True
+        return tags

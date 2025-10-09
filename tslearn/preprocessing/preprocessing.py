@@ -3,10 +3,10 @@ from typing import Callable, Optional, Union
 
 import numpy
 
-from sklearn.base import TransformerMixin
+from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.utils.validation import check_is_fitted
 
-from tslearn.bases import TimeSeriesBaseEstimator
+from tslearn.bases import TimeSeriesMixin
 from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from tslearn.utils import (
     check_variable_length_input,
@@ -21,7 +21,7 @@ from tslearn.utils import (
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
-class TimeSeriesResampler(TransformerMixin, TimeSeriesBaseEstimator):
+class TimeSeriesResampler(TimeSeriesMixin, TransformerMixin, BaseEstimator):
     """Resampler for time series. Resample time series so that they reach the
     target size.
 
@@ -123,12 +123,18 @@ class TimeSeriesResampler(TransformerMixin, TimeSeriesBaseEstimator):
         return X_out
 
     def _more_tags(self):
-        more_tags = super()._more_tags()
-        more_tags.update({'allow_nan': True, ALLOW_VARIABLE_LENGTH: True})
-        return more_tags
+        tags = super()._more_tags()
+        tags.update({'allow_nan': True, ALLOW_VARIABLE_LENGTH: True})
+        return tags
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        tags.allow_variable_length = True
+        return tags
 
 
-class TimeSeriesScalerMinMax(TransformerMixin, TimeSeriesBaseEstimator):
+class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
     """Scaler for time series datasets. Scales features values so that their span in given dimensions
     is between ``min`` and ``max`` where ``value_range=(min, max)``.
 
@@ -248,12 +254,17 @@ class TimeSeriesScalerMinMax(TransformerMixin, TimeSeriesBaseEstimator):
         return X_
 
     def _more_tags(self):
-        more_tags = super()._more_tags()
-        more_tags.update({'allow_nan': True})
-        return more_tags
+        tags = super()._more_tags()
+        tags.update({'allow_nan': True})
+        return tags
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        return tags
 
 
-class TimeSeriesScalerMeanVariance(TransformerMixin, TimeSeriesBaseEstimator):
+class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstimator):
     """Scaler for time series datasets. Scales fetures values so that their mean (resp.
     standard deviation) in given dimensions is mu (resp. std).
 
@@ -367,12 +378,17 @@ class TimeSeriesScalerMeanVariance(TransformerMixin, TimeSeriesBaseEstimator):
         return X_
 
     def _more_tags(self):
-        more_tags = super()._more_tags()
-        more_tags.update({'allow_nan': True})
-        return more_tags
+        tags = super()._more_tags()
+        tags.update({'allow_nan': True})
+        return tags
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        return tags
 
 
-class TimeSeriesImputer(TransformerMixin, TimeSeriesBaseEstimator):
+class TimeSeriesImputer(TimeSeriesMixin, TransformerMixin, BaseEstimator):
     """Missing value imputer for time series.
 
     Missing values (nans) are replaced according to the chosen imputation
@@ -595,3 +611,9 @@ class TimeSeriesImputer(TransformerMixin, TimeSeriesBaseEstimator):
         more_tags = super()._more_tags()
         more_tags.update({'allow_nan': True, ALLOW_VARIABLE_LENGTH: True})
         return more_tags
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        tags.allow_variable_length = True
+        return tags

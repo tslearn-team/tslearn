@@ -1,3 +1,3 @@
-from .bases import TimeSeriesBaseEstimator, BaseModelPackage
+from .bases import TimeSeriesMixin, BaseModelPackage, get_tags
 
-__all__ = ["TimeSeriesBaseEstimator", "BaseModelPackage"]
+__all__ = ["TimeSeriesMixin", "BaseModelPackage", "get_tags"]

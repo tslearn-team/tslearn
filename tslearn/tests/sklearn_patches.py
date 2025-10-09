@@ -2,7 +2,6 @@ from tslearn.generators import random_walk_blobs
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 
 import sklearn
-import warnings
 from sklearn.base import clone
 
 from sklearn.base import is_classifier, is_outlier_detector, is_regressor
@@ -14,34 +13,22 @@ from sklearn.metrics.pairwise import rbf_kernel, linear_kernel, pairwise_distanc
 
 from sklearn.utils import shuffle
 
-try:
-    # sklearn >= 0.24
-    from sklearn.utils._testing import (
-        set_random_state,
-        assert_array_equal,
-        assert_array_almost_equal,
-        assert_allclose,
-        assert_allclose_dense_sparse
-    )
+from tslearn.bases import get_tags
+from sklearn.utils._testing import (
+    set_random_state,
+    assert_array_equal,
+    assert_array_almost_equal,
+    assert_allclose,
+    assert_allclose_dense_sparse
+)
 
-    from unittest import TestCase
-    _dummy = TestCase('__init__')
-    assert_equal = _dummy.assertEqual
-    assert_greater = _dummy.assertGreater
-    assert_greater_equal = _dummy.assertGreaterEqual
-    assert_raises = _dummy.assertRaises
-    assert_raises_regex = _dummy.assertRaisesRegex
-
-except:
-    from sklearn.utils.testing import (
-        set_random_state, assert_equal, assert_greater, assert_array_equal,
-        assert_raises, assert_array_almost_equal, assert_greater_equal,
-        assert_allclose, assert_raises_regex, assert_allclose_dense_sparse
-    )
-    warnings.warn(
-        "Scikit-learn <0.24 will be deprecated in a "
-        "future release of tslearn"
-    )
+from unittest import TestCase
+_dummy = TestCase('__init__')
+assert_equal = _dummy.assertEqual
+assert_greater = _dummy.assertGreater
+assert_greater_equal = _dummy.assertGreaterEqual
+assert_raises = _dummy.assertRaises
+assert_raises_regex = _dummy.assertRaisesRegex
 
 from sklearn.utils.estimator_checks import (
     check_classifiers_predictions,
@@ -58,23 +45,11 @@ from sklearn.utils.estimator_checks import (
     check_regressors_int
 )
 
-try:
-    # Most recent
-    from sklearn.utils.estimator_checks import (
-        _choose_check_classifiers_labels as choose_check_classifiers_labels
-    )
-except ImportError:
-    # Deprecated from sklearn v0.24 onwards
-    from sklearn.utils.estimator_checks import (
-        choose_check_classifiers_labels
-    )
+from sklearn.utils.estimator_checks import (
+    _choose_check_classifiers_labels as choose_check_classifiers_labels
+)
 
-try:
-    # Most recent
-    from sklearn.utils._testing import ignore_warnings, SkipTest
-except ImportError:
-    # Deprecated from sklearn v0.24 onwards
-    from sklearn.utils.testing import ignore_warnings, SkipTest
+from sklearn.utils._testing import ignore_warnings, SkipTest
 from sklearn.exceptions import SkipTestWarning
 from sklearn.utils.estimator_checks import (_yield_classifier_checks,
                                             _yield_regressor_checks,
@@ -461,7 +436,7 @@ def check_estimators_pickle(*args, **kwargs):
 
 @ignore_warnings(category=(DeprecationWarning, FutureWarning))
 def check_supervised_y_2d(name, estimator_orig):
-    tags = estimator_orig._get_tags()
+    tags = get_tags(estimator_orig)
     X, y = _create_small_ts_dataset()
     if tags['binary_only']:
         X = X[y != 2]
@@ -607,7 +582,7 @@ def check_different_length_fit_predict_transform(name, estimator):
 
 
 def yield_all_checks(name, estimator):
-    tags = estimator._get_tags()
+    tags = get_tags(estimator)
     if "2darray" not in tags["X_types"]:
         warnings.warn("Can't test estimator {} which requires input "
                       " of type {}".format(name, tags["X_types"]),

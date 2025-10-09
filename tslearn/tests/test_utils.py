@@ -34,19 +34,6 @@ def test_save_load_known():
                         ts1[:tslearn.utils.ts_size(ts1)])
 
 
-def test_label_categorizer():
-    y = np.array([-1, 2, 1, 1, 2])
-    lc = tslearn.utils.LabelCategorizer()
-    lc.fit(y)
-
-    s = pickle.dumps(lc)
-    lc2 = pickle.loads(s)
-    y_tr = lc2.inverse_transform([[0, 1, 0], [0, 0, 1], [1, 0, 0]])
-    ref = np.array([1., 2., -1.])
-
-    assert_allclose(ref, y_tr)
-
-
 def test_conversions():
     n, sz, d = 15, 10, 3
     rng = np.random.RandomState(0)

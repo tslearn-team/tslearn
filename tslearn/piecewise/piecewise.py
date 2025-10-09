@@ -1,9 +1,9 @@
 import numpy
 from scipy.stats import norm
-from sklearn.base import TransformerMixin
+from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.utils.validation import check_is_fitted
 
-from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
+from tslearn.bases import BaseModelPackage, TimeSeriesMixin
 from tslearn.metrics.cysax import (cydist_sax, cyslopes, cydist_1d_sax,
                                    inv_transform_1d_sax, inv_transform_sax,
                                    inv_transform_paa)
@@ -56,9 +56,10 @@ def _bin_medians(n_bins, scale=1.):
                     scale=scale)
 
 
-class PiecewiseAggregateApproximation(TransformerMixin,
-                                      BaseModelPackage,
-                                      TimeSeriesBaseEstimator):
+class PiecewiseAggregateApproximation(TimeSeriesMixin,
+                                      TransformerMixin,
+                                      BaseEstimator,
+                                      BaseModelPackage):
     """Piecewise Aggregate Approximation (PAA) transformation.
 
     PAA was originally presented in [1]_.
@@ -255,7 +256,15 @@ class PiecewiseAggregateApproximation(TransformerMixin,
         return inv_transform_paa(X, original_size=self._X_fit_dims_[1])
 
     def _more_tags(self):
-        return {'allow_nan': True, 'allow_variable_length': True}
+        tags = super()._more_tags()
+        tags.update({'allow_nan': True, 'allow_variable_length': True})
+        return tags
+
+    def __sklearn_tags__(self):
+        tags= super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        tags.allow_variable_length = True
+        return tags
 
 
 class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):

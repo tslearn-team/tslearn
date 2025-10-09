@@ -24,11 +24,11 @@ from keras.utils import to_categorical, set_random_seed
 
 import numpy
 
-from sklearn.base import ClassifierMixin, TransformerMixin
+from sklearn.base import ClassifierMixin, TransformerMixin, BaseEstimator
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.multiclass import unique_labels
 
-from ..bases import BaseModelPackage, TimeSeriesBaseEstimator
+from ..bases import BaseModelPackage, TimeSeriesMixin
 from ..clustering import TimeSeriesKMeans
 from ..preprocessing import TimeSeriesScalerMinMax
 from ..utils import (
@@ -279,9 +279,15 @@ def grabocka_params_to_shapelet_size_dict(n_ts, ts_sz, n_classes, l, r):
     return d
 
 
-class LearningShapelets(ClassifierMixin, TransformerMixin,
-                        BaseModelPackage, TimeSeriesBaseEstimator):
+class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, BaseEstimator,
+                        BaseModelPackage):
     r"""Learning Time-Series Shapelets model.
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        tags.allow_variable_length = True
+        return tags
 
 
     Learning Time-Series Shapelets was originally presented in [1]_.
@@ -959,8 +965,12 @@ class LearningShapelets(ClassifierMixin, TransformerMixin,
         return inst
 
     def _more_tags(self):
-        # This is added due to the fact that there are small rounding
-        # errors in the `transform` method, while sklearn performs checks
-        # that requires the output of transform to have less than 1e-9
-        # difference between outputs of same input.
-        return {'allow_nan': True, 'allow_variable_length': True}
+        tags = super()._more_tags()
+        tags.update({'allow_nan': True, 'allow_variable_length': True})
+        return tags
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        tags.allow_variable_length = True
+        return tags

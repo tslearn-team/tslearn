@@ -3,11 +3,6 @@ import warnings
 from io import StringIO
 
 import numpy
-from sklearn.base import TransformerMixin
-from sklearn.utils import column_or_1d
-from sklearn.utils.validation import check_is_fitted
-from sklearn.utils.validation import check_array as sk_check_array
-from sklearn.utils.validation import check_X_y as sk_check_X_y
 
 try:
     from scipy.io import arff
@@ -16,12 +11,12 @@ try:
 except:
     HAS_ARFF = False
 
-try:
-    from sklearn.utils.estimator_checks import _NotAnArray as NotAnArray
-except ImportError:  # Old sklearn versions
-    from sklearn.utils.estimator_checks import NotAnArray
+from sklearn.utils.estimator_checks import _NotAnArray as NotAnArray
+from sklearn.utils.validation import check_array as sk_check_array
+from sklearn.utils.validation import check_X_y as sk_check_X_y
+
 from tslearn.backend import instantiate_backend
-from tslearn.bases import TimeSeriesBaseEstimator
+
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
@@ -592,118 +587,6 @@ def check_dataset(
             "({} here)".format(X_.shape[0])
         )
     return X_
-
-
-class LabelCategorizer(TransformerMixin, TimeSeriesBaseEstimator):
-    """Transformer to transform indicator-based labels into categorical ones.
-
-    Attributes
-    ----------
-    single_column_if_binary : boolean (optional, default: False)
-        If true, generate a single column for binary classification case.
-        Otherwise, will generate 2.
-        If there are more than 2 labels, this option will not change anything.
-    forward_match : dict
-        A dictionary that maps each element that occurs in the label vector
-        on a index {y_i : i} with i in [0, C - 1], C the total number of
-        unique labels and y_i the ith unique label.
-    backward_match : array-like
-        An array that maps an index back to the original label. Where
-        backward_match[i] results in y_i.
-
-    Examples
-    --------
-    >>> y = numpy.array([-1, 2, 1, 1, 2])
-    >>> lc = LabelCategorizer()
-    >>> lc.fit_transform(y)
-    array([[1., 0., 0.],
-           [0., 0., 1.],
-           [0., 1., 0.],
-           [0., 1., 0.],
-           [0., 0., 1.]])
-    >>> lc.inverse_transform([[0, 1, 0], [0, 0, 1], [1, 0, 0]])
-    array([ 1.,  2., -1.])
-    >>> y = numpy.array([-1, 2, -1, -1, 2])
-    >>> lc = LabelCategorizer(single_column_if_binary=True)
-    >>> lc.fit_transform(y)
-    array([[1.],
-           [0.],
-           [1.],
-           [1.],
-           [0.]])
-    >>> lc.inverse_transform(lc.transform(y))
-    array([-1.,  2., -1., -1.,  2.])
-
-    References
-    ----------
-    .. [1] J. Grabocka et al. Learning Time-Series Shapelets.
-       SIGKDD 2014.
-    """
-
-    def __init__(
-        self, single_column_if_binary=False, forward_match=None, backward_match=None
-    ):
-        self.single_column_if_binary = single_column_if_binary
-        self.forward_match = forward_match
-        self.backward_match = backward_match
-
-    def _init(self):
-        self.forward_match = {}
-        self.backward_match = []
-
-    def fit(self, y):
-        self._init()
-        y = column_or_1d(y, warn=True)
-        values = sorted(set(y))
-        for i, v in enumerate(values):
-            self.forward_match[v] = i
-            self.backward_match.append(v)
-        return self
-
-    def transform(self, y):
-        check_is_fitted(self, ["backward_match", "forward_match"])
-        y = column_or_1d(y, warn=True)
-        n_classes = len(self.backward_match)
-        n = len(y)
-        y_out = numpy.zeros((n, n_classes))
-        for i in range(n):
-            y_out[i, self.forward_match[y[i]]] = 1
-        if n_classes == 2 and self.single_column_if_binary:
-            return y_out[:, 0].reshape((-1, 1))
-        else:
-            return y_out
-
-    def inverse_transform(self, y):
-        check_is_fitted(self, ["backward_match", "forward_match"])
-        y_ = numpy.array(y)
-        n, n_c = y_.shape
-        if n_c == 1 and self.single_column_if_binary:
-            y_ = numpy.hstack((y_, 1 - y_))
-        y_out = numpy.zeros((n,))
-        for i in range(n):
-            y_out[i] = self.backward_match[y_[i].argmax()]
-        return y_out
-
-    def get_params(self, deep=True):
-        """Get parameters for this estimator.
-        Parameters
-        ----------
-        deep : boolean, optional
-            If True, will return the parameters for this estimator and
-            contained subobjects that are estimators.
-        Returns
-        -------
-        params : mapping of string to any
-            Parameter names mapped to their values.
-        """
-        out = TimeSeriesBaseEstimator.get_params(self, deep=deep)
-        out["single_column_if_binary"] = self.single_column_if_binary
-        out["forward_match"] = self.forward_match
-        out["backward_match"] = self.backward_match
-        return out
-
-    def _more_tags(self):
-        return {"X_types": ["1dlabels"]}
 
 
 def _load_arff_uea(dataset_path):

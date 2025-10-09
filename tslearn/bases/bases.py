@@ -1,14 +1,13 @@
 from abc import ABCMeta, abstractmethod
-from sklearn.exceptions import NotFittedError
-from sklearn.base import BaseEstimator
+from dataclasses import dataclass, fields
 import json
 import pickle
-import numpy as np
 from warnings import warn
+
+import numpy as np
 
 h5py_msg = 'h5py not installed, hdf5 features will not be supported.\n'\
            'Install h5py to use hdf5 features: http://docs.h5py.org/'
-
 try:
     import h5py
 except ImportError:
@@ -18,28 +17,76 @@ else:
     from tslearn import hdftools
     HDF5_INSTALLED = True
 
+from sklearn.exceptions import NotFittedError
+try:
+    from sklearn.utils import Tags
+
+    @dataclass
+    class TsLearnTags(Tags):
+        allow_variable_length: bool = False
+
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+            self.input_tags.sparse = False
+            self.input_tags.three_d_array = True
+
+except ImportError:
+    # sklearn < 1.6
+    TsLearnTags = dict
+
+
 ALLOW_VARIABLE_LENGTH = 'allow_variable_length'
 _DEFAULT_TAGS = {
     ALLOW_VARIABLE_LENGTH: False,
+    'sparse': False
 }
 
 
-class TimeSeriesBaseEstimator(BaseEstimator):
+def get_tags(estimator):
+    try:
+        # sklearn > 1.6 raises AttributeError
+        return estimator._get_tags()
+    except AttributeError:
+        from sklearn.utils import get_tags as sk_get_tags
+        return sk_get_tags(estimator)
+
+
+class TimeSeriesMixin(object):
 
     def _get_tags(self):
         # sklearn < 1.6 super()._get_tags() returns dict based on _more_tags
-        # sklearn >= 1.6 super()._get_tags() returns dict based on __sklearn_tags__
+        # 1.7 > sklearn >= 1.6 super()._get_tags() returns dict based on __sklearn_tags__
+        # through _to_old_tags if available, defaults to _more_tags if not available
+        # BaseEstimator.__get_tags remove in sklearn 1.7 -> raises attribute error
         tags = super()._get_tags()
 
-        # Make sure update tags based on _more_tags for sklearn > 1.6
-        tags.update(self._more_tags())
+        # Make sure to update tags for sklearn 1.6
+        # because _to_old_tags trims allow_variable_length
+        # custom tag and _xfails_checks tag
+        if not hasattr(tags, ALLOW_VARIABLE_LENGTH) and tags.get(ALLOW_VARIABLE_LENGTH) is None:
+            more_tags = self._more_tags()
+            tags[ALLOW_VARIABLE_LENGTH] = more_tags[ALLOW_VARIABLE_LENGTH]
+            if more_tags.get("_xfail_checks") is not None:
+                tags["_xfail_checks"] = more_tags["_xfail_checks"]
         return tags
 
     def _more_tags(self):
-        return _DEFAULT_TAGS.copy()
+        tags = super()._more_tags()
+        tags.update(_DEFAULT_TAGS)
+        tags.setdefault("X_types", []).append("3darray")
+        return tags
+
+    def __sklearn_tags__(self):
+        tags_orig = super().__sklearn_tags__()
+        as_dict = {
+            field.name: getattr(tags_orig, field.name)
+            for field in fields(tags_orig)
+        }
+        tags = TsLearnTags(**as_dict)
+        return tags
 
 
-class BaseModelPackage:
+class BaseModelPackage(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod

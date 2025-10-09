@@ -3,20 +3,20 @@ The :mod:`tslearn.svm.svm` module contains Support Vector Classifier (SVC) and
 Support Vector Regressor (SVR) models for time series.
 """
 from sklearn.svm import SVC, SVR
-from sklearn.base import ClassifierMixin, RegressorMixin
+from sklearn.base import ClassifierMixin, RegressorMixin, BaseEstimator
 from sklearn.utils.validation import check_is_fitted
 import numpy
 
 from ..metrics import cdist_gak, gamma_soft_dtw, VARIABLE_LENGTH_METRICS
 from ..utils import to_time_series_dataset, check_array, check_dims, check_X_y, to_sklearn_dataset
-from ..bases import TimeSeriesBaseEstimator
+from ..bases import TimeSeriesMixin
 
 import warnings
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
-class TimeSeriesSVMMixin:
+class TimeSeriesSVMMixin(TimeSeriesMixin):
     """Time series mixin for SVM based estimators."""
     @property
     def support_(self):
@@ -88,9 +88,31 @@ class TimeSeriesSVMMixin:
         else:
             return sklearn_X, y
 
+    def _more_tags(self):
+        tags = super()._more_tags()
+        sample_weight_failure_msg = "zero sample_weight is not equivalent to removing samples"
+        tags.update({
+            "non_deterministic": True,
+            "allow_nan": False,
+            "allow_variable_length": True,
+            "_xfail_checks": {
+                "check_sample_weights_invariance": sample_weight_failure_msg,
+                "check_sample_weight_equivalence_on_dense_data": sample_weight_failure_msg,
+                "check_sample_weight_equivalence_on_sparse_data":sample_weight_failure_msg
+            }
+        })
+        return tags
 
-class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
-                    TimeSeriesBaseEstimator):
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        tags.allow_variable_length = True
+        tags.non_deterministic = True
+        # TODO : XFAILS
+        return tags
+
+
+class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin, BaseEstimator):
     """Time-series specific Support Vector Classifier.
 
     Parameters
@@ -390,20 +412,8 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin,
         sklearn_X = self._preprocess_sklearn(X, fit_time=False)
         return self.svm_estimator_.predict_proba(sklearn_X)
 
-    def _more_tags(self):
-        sample_weight_failure_msg = "zero sample_weight is not equivalent to removing samples"
-        return {'non_deterministic': True,
-                'allow_nan': False,
-                'allow_variable_length': True,
-                "_xfail_checks": {
-                    "check_sample_weights_invariance": sample_weight_failure_msg,
-                    "check_sample_weight_equivalence_on_dense_data": sample_weight_failure_msg,
-                    "check_sample_weight_equivalence_on_sparse_data":sample_weight_failure_msg
-                }}
 
-
-class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
-                    TimeSeriesBaseEstimator):
+class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin, BaseEstimator):
     """Time-series specific Support Vector Regressor.
 
     Parameters
@@ -591,14 +601,3 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin,
         """
         sklearn_X = self._preprocess_sklearn(X, fit_time=False)
         return self.svm_estimator_.predict(sklearn_X)
-
-    def _more_tags(self):
-        sample_weight_failure_msg = "zero sample_weight is not equivalent to removing samples"
-        return {'non_deterministic': True,
-                'allow_nan': False,
-                'allow_variable_length': True,
-                "_xfail_checks": {
-                    "check_sample_weights_invariance": sample_weight_failure_msg,
-                    "check_sample_weight_equivalence_on_dense_data": sample_weight_failure_msg,
-                    "check_sample_weight_equivalence_on_sparse_data":sample_weight_failure_msg
-                }}
