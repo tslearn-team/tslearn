@@ -565,7 +565,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         """
         if self.metric in TSLEARN_VALID_METRICS:
             check_is_fitted(self, '_ts_fit')
-            X = check_array(X, allow_nd=True)
+            X = check_array(X, allow_nd=True, force_all_finite=False)
             X = to_time_series_dataset(X)
             X = check_dims(X, X_fit_dims=self._ts_fit.shape, extend=True,
                            check_n_features_only=True)
@@ -596,7 +596,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         """
         if self.metric in TSLEARN_VALID_METRICS:
             check_is_fitted(self, '_ts_fit')
-            X = check_array(X, allow_nd=True)
+            X = check_array(X, allow_nd=True, force_all_finite=False)
             X = check_dims(X, X_fit_dims=self._ts_fit.shape, extend=True,
                            check_n_features_only=True)
             X_ = self._precompute_cross_dist(X)
@@ -750,7 +750,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         """
         if self.metric in TSLEARN_VALID_METRICS:
             check_is_fitted(self, '_ts_fit')
-            X = check_array(X, allow_nd=True)
+            X = check_array(X, allow_nd=True, force_all_finite=False)
             X = to_time_series_dataset(X)
             X = check_dims(X, X_fit_dims=self._ts_fit.shape, extend=True,
                            check_n_features_only=True)
