@@ -123,7 +123,7 @@ class PiecewiseAggregateApproximation(TimeSeriesMixin,
 
     def _fit(self, X, y=None):
         self._X_fit_dims_ = numpy.array(X.shape)
-        self.n_features_in_ = self._X_fit_dims_[-1]
+        self.n_features_in_ = self._X_fit_dims_[-1].item()
         return self
 
     def fit(self, X, y=None):
