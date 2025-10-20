@@ -797,13 +797,13 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
                 nb_shapelets,
                 init = init_shapelets,
                 name="shapelets_%d" % index,
-                dtype=X.dtype
+                dtype=X.dtype.name
             )(patching_layer)
 
             pool_layers.append(
                 GlobalMinPooling1D(
                     name="min_pooling_%d" % index,
-                    dtype=X.dtype
+                    dtype=X.dtype.name
                 )(shapelets_layer)
             )
         if self._n_shapelet_sizes > 1:
