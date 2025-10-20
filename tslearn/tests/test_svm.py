@@ -20,7 +20,7 @@ def test_gamma_value_svm():
     gamma = 10.
     for ModelClass in [TimeSeriesSVC, TimeSeriesSVR]:
         gak_model = ModelClass(kernel="gak", gamma=gamma)
-        sklearn_X, _ = gak_model._preprocess_sklearn(time_series,
+        sklearn_X, *_ = gak_model._preprocess_sklearn(time_series,
                                                      labels,
                                                      fit_time=True)
 
