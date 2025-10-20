@@ -51,14 +51,14 @@ def check_variable_length_input(X):
     """
     if getattr(X, "shape", None) is None:
         if isinstance(X, NotAnArray):
-            X = check_array(X, allow_nd=True)
+            X = check_array(X, allow_nd=True, force_all_finite=False)
         else:
             # Check each time series when X can be of variable length before
             # to_time_series_dataset processing
             for ts in X:
-                check_array([ts], allow_nd=True)
+                check_array([ts], allow_nd=True, force_all_finite=False)
     else:
-        X = check_array(X, allow_nd=True)
+        X = check_array(X, allow_nd=True, force_all_finite=False)
     return to_time_series_dataset(X)
 
 
