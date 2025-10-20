@@ -4,6 +4,7 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.utils.validation import check_is_fitted
 
 from tslearn.bases import BaseModelPackage, TimeSeriesMixin
+from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from tslearn.metrics.cysax import (cydist_sax, cyslopes, cydist_1d_sax,
                                    inv_transform_1d_sax, inv_transform_sax,
                                    inv_transform_paa)
@@ -122,6 +123,7 @@ class PiecewiseAggregateApproximation(TimeSeriesMixin,
 
     def _fit(self, X, y=None):
         self._X_fit_dims_ = numpy.array(X.shape)
+        self.n_features_in_ = self._X_fit_dims_[-1]
         return self
 
     def fit(self, X, y=None):
@@ -257,7 +259,13 @@ class PiecewiseAggregateApproximation(TimeSeriesMixin,
 
     def _more_tags(self):
         tags = super()._more_tags()
-        tags.update({'allow_nan': True, 'allow_variable_length': True})
+        tags.update({
+            'allow_nan': True,
+            ALLOW_VARIABLE_LENGTH: True,
+            "_xfail_checks": {
+                "check_transformer_preserve_dtypes" : "Forces int transform"
+            }
+        })
         return tags
 
     def __sklearn_tags__(self):

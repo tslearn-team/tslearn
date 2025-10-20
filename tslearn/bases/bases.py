@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from contextlib import contextmanager
 from dataclasses import dataclass, fields
 import json
 import pickle
@@ -42,15 +43,6 @@ _DEFAULT_TAGS = {
 }
 
 
-def get_tags(estimator):
-    try:
-        # sklearn > 1.6 raises AttributeError
-        return estimator._get_tags()
-    except AttributeError:
-        from sklearn.utils import get_tags as sk_get_tags
-        return sk_get_tags(estimator)
-
-
 class TimeSeriesMixin(object):
 
     def _get_tags(self):
@@ -70,10 +62,23 @@ class TimeSeriesMixin(object):
                 tags["_xfail_checks"] = more_tags["_xfail_checks"]
         return tags
 
+    @contextmanager
+    def _patch_attribute(self, attribute_name, value):
+        """Context manager to patch a sklearn estimator's attribute."""
+        orig = getattr(self, attribute_name)
+        setattr(self, attribute_name, value)
+        try:
+            yield
+        finally:
+            setattr(self, attribute_name, orig)
+
     def _more_tags(self):
         tags = super()._more_tags()
         tags.update(_DEFAULT_TAGS)
-        tags.setdefault("X_types", []).append("3darray")
+        if "3darray" not in tags.setdefault("X_types", []):
+            tags["X_types"].append("3darray")
+        if "2darray" not in tags.setdefault("X_types", []):
+            tags["X_types"].append("2darray")
         return tags
 
     def __sklearn_tags__(self):

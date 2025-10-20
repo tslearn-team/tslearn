@@ -18,6 +18,7 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 class TimeSeriesSVMMixin(TimeSeriesMixin):
     """Time series mixin for SVM based estimators."""
+
     @property
     def support_(self):
         check_is_fitted(self, ['svm_estimator_', '_X_fit'])
@@ -47,11 +48,12 @@ class TimeSeriesSVMMixin(TimeSeriesMixin):
             X, y = check_X_y(X, y, allow_nd=True,
                              force_all_finite=force_all_finite)
         X = to_time_series_dataset(X)
+        nb_features = X.shape[-1]
 
         if fit_time:
             self._X_fit = X
             if self.gamma == "auto":
-                self.gamma_ = gamma_soft_dtw(X)
+                self.gamma_ = gamma_soft_dtw(X, random_state=self.random_state)
             else:
                 self.gamma_ = self.gamma
             self.classes_ = numpy.unique(y)
@@ -83,22 +85,18 @@ class TimeSeriesSVMMixin(TimeSeriesMixin):
             self.estimator_kernel_ = self.kernel
             sklearn_X = to_sklearn_dataset(X)
 
-        if y is None:
-            return sklearn_X
-        else:
-            return sklearn_X, y
+        return sklearn_X, y, nb_features
 
     def _more_tags(self):
         tags = super()._more_tags()
         sample_weight_failure_msg = "zero sample_weight is not equivalent to removing samples"
         tags.update({
-            "non_deterministic": True,
             "allow_nan": False,
             "allow_variable_length": True,
             "_xfail_checks": {
                 "check_sample_weights_invariance": sample_weight_failure_msg,
                 "check_sample_weight_equivalence_on_dense_data": sample_weight_failure_msg,
-                "check_sample_weight_equivalence_on_sparse_data":sample_weight_failure_msg
+                "check_sample_weight_equivalence_on_sparse_data":sample_weight_failure_msg,
             }
         })
         return tags
@@ -107,8 +105,6 @@ class TimeSeriesSVMMixin(TimeSeriesMixin):
         tags = super().__sklearn_tags__()
         tags.input_tags.allow_nan = True
         tags.allow_variable_length = True
-        tags.non_deterministic = True
-        # TODO : XFAILS
         return tags
 
 
@@ -314,7 +310,7 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin, BaseEstimator):
             classifier to put more emphasis on these points.
         """
         try:
-            sklearn_X, y = self._preprocess_sklearn(X, y, fit_time=True)
+            sklearn_X, y, nb_features = self._preprocess_sklearn(X, y, fit_time=True)
         except ZeroDivisionError:
             raise RuntimeError(
                 "The{} `gamma` parameter is close to 0 and "
@@ -331,7 +327,7 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin, BaseEstimator):
             random_state=self.random_state
         )
         self.svm_estimator_.fit(sklearn_X, y, sample_weight=sample_weight)
-
+        self.n_features_in_ = nb_features
         return self
 
     def predict(self, X):
@@ -349,8 +345,10 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin, BaseEstimator):
             Index of the cluster each sample belongs to or class probability
             matrix, depending on what was provided at training time.
         """
-        sklearn_X = self._preprocess_sklearn(X, fit_time=False)
-        return self.svm_estimator_.predict(sklearn_X)
+        sklearn_X, y, nb_features = self._preprocess_sklearn(X, fit_time=False)
+        estimator = self.svm_estimator_.predict(sklearn_X)
+        self.n_features_in_ = nb_features
+        return estimator
 
     def decision_function(self, X):
         """Evaluates the decision function for the samples in X.
@@ -367,7 +365,7 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin, BaseEstimator):
             in the model.
             If decision_function_shape='ovr', the shape is (n_samples,
             n_classes)."""
-        sklearn_X = self._preprocess_sklearn(X, fit_time=False)
+        sklearn_X, *_ = self._preprocess_sklearn(X, fit_time=False)
         return self.svm_estimator_.decision_function(sklearn_X)
 
     def predict_log_proba(self, X):
@@ -388,7 +386,7 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin, BaseEstimator):
         array of shape=(n_ts, n_classes),
             Class probability matrix.
         """
-        sklearn_X = self._preprocess_sklearn(X, fit_time=False)
+        sklearn_X, *_ = self._preprocess_sklearn(X, fit_time=False)
         return self.svm_estimator_.predict_log_proba(sklearn_X)
 
     def predict_proba(self, X):
@@ -409,7 +407,7 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin, BaseEstimator):
         array of shape=(n_ts, n_classes),
             Class probability matrix.
         """
-        sklearn_X = self._preprocess_sklearn(X, fit_time=False)
+        sklearn_X, *_ = self._preprocess_sklearn(X, fit_time=False)
         return self.svm_estimator_.predict_proba(sklearn_X)
 
 
@@ -481,6 +479,13 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin, BaseEstimator):
     max_iter : int, optional (default=-1)
         Hard limit on iterations within solver, or -1 for no limit.
 
+    random_state : int, RandomState instance or None, optional (default=None)
+        The seed of the pseudo random number generator to use when shuffling
+        the data.  If int, random_state is the seed used by the random number
+        generator; If RandomState instance, random_state is the random number
+        generator; If None, the random number generator is the RandomState
+        instance used by `np.random`.
+
     Attributes
     ----------
     support_ : array-like, shape = [n_SV]
@@ -528,7 +533,8 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin, BaseEstimator):
     """
     def __init__(self, C=1.0, kernel="gak", degree=3, gamma="auto",
                  coef0=0.0, tol=0.001, epsilon=0.1, shrinking=True,
-                 cache_size=200, n_jobs=None, verbose=0, max_iter=-1):
+                 cache_size=200, n_jobs=None, verbose=0, max_iter=-1,
+                 random_state=None):
         self.C = C
         self.kernel = kernel
         self.degree = degree
@@ -541,6 +547,7 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin, BaseEstimator):
         self.n_jobs = n_jobs
         self.verbose = verbose
         self.max_iter = max_iter
+        self.random_state = random_state
 
     @property
     def n_iter_(self):
@@ -569,7 +576,7 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin, BaseEstimator):
             classifier to put more emphasis on these points.
         """
         try:
-            sklearn_X, y = self._preprocess_sklearn(X, y, fit_time=True)
+            sklearn_X, y, nb_features = self._preprocess_sklearn(X, y, fit_time=True)
         except ZeroDivisionError:
             raise RuntimeError(
                 "The{} `gamma` parameter is close to 0 and "
@@ -583,6 +590,7 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin, BaseEstimator):
             verbose=self.verbose, max_iter=self.max_iter
         )
         self.svm_estimator_.fit(sklearn_X, y, sample_weight=sample_weight)
+        self.n_features_in_ = nb_features
         return self
 
     def predict(self, X):
@@ -599,5 +607,5 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin, BaseEstimator):
         of the target vector provided at training time.
             Predicted targets
         """
-        sklearn_X = self._preprocess_sklearn(X, fit_time=False)
+        sklearn_X, *_ = self._preprocess_sklearn(X, fit_time=False)
         return self.svm_estimator_.predict(sklearn_X)

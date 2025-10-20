@@ -7,6 +7,7 @@ from sklearn.neighbors import (KNeighborsClassifier, NearestNeighbors,
 from sklearn.utils.validation import check_is_fitted
 
 from tslearn.bases import BaseModelPackage, TimeSeriesMixin
+from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from tslearn.metrics import (
     cdist_dtw,
     cdist_ctw,
@@ -189,7 +190,10 @@ class KNeighborsTimeSeriesMixin(TimeSeriesMixin):
 
     def _more_tags(self):
         tags = super()._more_tags()
-        tags.update({'allow_nan': True, 'allow_variable_length': True})
+        tags.update({
+            'allow_nan': True,
+            ALLOW_VARIABLE_LENGTH: True}
+        )
         return tags
 
     def __sklearn_tags__(self):
@@ -541,6 +545,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         else:
             self._X_fit, self._d = to_sklearn_dataset(X, return_dim=True)
         super().fit(self._X_fit, y)
+        self.n_features_in_ = self._d
         if hasattr(self, '_ts_metric'):
             self.metric = self._ts_metric
         return self
@@ -560,6 +565,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         """
         if self.metric in TSLEARN_VALID_METRICS:
             check_is_fitted(self, '_ts_fit')
+            X = check_array(X, allow_nd=True)
             X = to_time_series_dataset(X)
             X = check_dims(X, X_fit_dims=self._ts_fit.shape, extend=True,
                            check_n_features_only=True)
@@ -590,6 +596,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         """
         if self.metric in TSLEARN_VALID_METRICS:
             check_is_fitted(self, '_ts_fit')
+            X = check_array(X, allow_nd=True)
             X = check_dims(X, X_fit_dims=self._ts_fit.shape, extend=True,
                            check_n_features_only=True)
             X_ = self._precompute_cross_dist(X)
@@ -723,6 +730,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         else:
             self._X_fit, self._d = to_sklearn_dataset(X, return_dim=True)
         super().fit(self._X_fit, y)
+        self.n_features_in_ = self._d
         if hasattr(self, '_ts_metric'):
             self.metric = self._ts_metric
         return self
@@ -742,6 +750,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         """
         if self.metric in TSLEARN_VALID_METRICS:
             check_is_fitted(self, '_ts_fit')
+            X = check_array(X, allow_nd=True)
             X = to_time_series_dataset(X)
             X = check_dims(X, X_fit_dims=self._ts_fit.shape, extend=True,
                            check_n_features_only=True)

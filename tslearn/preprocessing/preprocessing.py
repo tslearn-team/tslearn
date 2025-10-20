@@ -61,7 +61,7 @@ class TimeSeriesResampler(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         """
         X_ = check_variable_length_input(X)
         self._X_fit_dims = X_.shape
-
+        self.n_features_in_ = self._X_fit_dims[-1]
         return self
 
     def _transform_unit_sz(self, X):
@@ -102,7 +102,12 @@ class TimeSeriesResampler(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         check_is_fitted(self, '_X_fit_dims')
 
         X_ = check_variable_length_input(X)
-        X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, extend=False)
+        X_ = check_dims(
+            X_,
+            X_fit_dims=self._X_fit_dims,
+            extend=False,
+            check_n_features_only=True
+        )
 
         target_sz = self._get_resampling_size(X_)
         if target_sz == 1:
@@ -197,6 +202,7 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         X_ = check_array(X, allow_nd=True, force_all_finite=False)
         X_ = to_time_series_dataset(X_)
         self._X_fit_dims = X_.shape
+        self.n_features_in_ = self._X_fit_dims[-1]
         return self
 
     def fit_transform(self, X, y=None, **kwargs):
@@ -329,6 +335,7 @@ class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstima
         X_ = check_array(X, allow_nd=True, force_all_finite=False)
         X_ = to_time_series_dataset(X_)
         self._X_fit_dims = X_.shape
+        self.n_features_in_ = self._X_fit_dims[-1]
         return self
 
     def fit_transform(self, X, y=None, **kwargs):
@@ -560,6 +567,7 @@ class TimeSeriesImputer(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         """
         X_ = check_variable_length_input(X)
         self._X_fit_dims = X_.shape
+        self.n_features_in_ = self._X_fit_dims[-1]
         return self
 
     def fit_transform(self, X, y=None, **kwargs):
@@ -575,7 +583,7 @@ class TimeSeriesImputer(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         numpy.ndarray
             Imputed time series dataset.
         """
-        return self.fit(X).transform(X, kwargs)
+        return self.fit(X).transform(X, **kwargs)
 
     def transform(self, X, y=None, **kwargs):
         """Fit to data, then transform it.
@@ -593,7 +601,12 @@ class TimeSeriesImputer(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         check_is_fitted(self, '_X_fit_dims')
 
         X_ = check_variable_length_input(X)
-        X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, extend=False)
+        X_ = check_dims(
+            X_,
+            X_fit_dims=self._X_fit_dims,
+            extend=False,
+            check_n_features_only=True
+        )
 
         imputer = self._imputer
         if imputer is None:
@@ -609,7 +622,13 @@ class TimeSeriesImputer(TimeSeriesMixin, TransformerMixin, BaseEstimator):
 
     def _more_tags(self):
         more_tags = super()._more_tags()
-        more_tags.update({'allow_nan': True, ALLOW_VARIABLE_LENGTH: True})
+        more_tags.update({
+            'allow_nan': True,
+            ALLOW_VARIABLE_LENGTH: True,
+            "_xfail_checks": {
+                "check_transformer_data_not_an_array" : "Uses X"
+            }
+        })
         return more_tags
 
     def __sklearn_tags__(self):

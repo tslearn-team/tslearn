@@ -428,12 +428,6 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
         self.scale = scale
         self.random_state = random_state
 
-        if not scale:
-            warnings.warn("The default value for 'scale' is set to False "
-                          "in version 0.4 to ensure backward compatibility, "
-                          "but is likely to change in a future version.",
-                          FutureWarning)
-
     @property
     def _n_shapelet_sizes(self):
         return len(self.n_shapelets_per_size_)
@@ -494,6 +488,12 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
         y : array-like of shape=(n_ts, )
             Time series labels.
         """
+        if not self.scale:
+            warnings.warn("The default value for 'scale' is set to False "
+                          "in version 0.4 to ensure backward compatibility, "
+                          "but is likely to change in a future version.",
+                          FutureWarning)
+
         X, y = check_X_y(X, y, allow_nd=True, force_all_finite=False)
         X = self._preprocess_series(X)
         X = check_dims(X)
@@ -533,6 +533,7 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
         )
         self.history_ = h.history
         self.n_iter_ = len(self.history_.get("loss", []))
+        self.n_features_in_ = d
         return self
 
     def predict(self, X):
@@ -654,7 +655,7 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
         """
         check_is_fitted(self, '_X_fit_dims')
         X = check_array(X, allow_nd=True, force_all_finite=False)
-        X = self._preprocess_series(X)
+        X = self._preprocess_series(X, fit_time=True)
         X = check_dims(X, X_fit_dims=self._X_fit_dims,
                        check_n_features_only=True)
         self._check_series_length(X)
@@ -700,18 +701,22 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
                                  "length {} and max_size is "
                                  "{}".format(max_sz_X, max_size))
 
-    def _preprocess_series(self, X):
+    def _preprocess_series(self, X, fit_time=False):
         if self.scale:
             X = TimeSeriesScalerMinMax().fit_transform(X)
         else:
             X = to_time_series_dataset(X)
-        if self.max_size is not None and self.max_size != X.shape[1]:
-            if X.shape[1] > self.max_size:
+        if fit_time:
+            max_size = self.max_size
+        else:
+            max_size = self._X_fit_dims[1] if hasattr(self, '_X_fit_dims') else None
+        if max_size is not None and max_size != X.shape[1]:
+            if X.shape[1] > max_size:
                 raise ValueError(
                     "Cannot feed model with series of length {} "
                     "max_size is {}".format(X.shape[1], self.max_size)
                 )
-            X_ = numpy.zeros((X.shape[0], self.max_size, X.shape[2]))
+            X_ = numpy.zeros((X.shape[0], max_size, X.shape[2]))
             X_[:, :X.shape[1]] = X
             X_[:, X.shape[1]:] = numpy.nan
             return X_
@@ -786,18 +791,19 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
             init_shapelets = _kmeans_init_shapelets(
                 X,
                 nb_shapelets,
-                sz_shapelet,
-                n_draw=10000
+                sz_shapelet
             )
             shapelets_layer = LocalSquaredDistanceLayer(
                 nb_shapelets,
                 init = init_shapelets,
-                name="shapelets_%d" % index
+                name="shapelets_%d" % index,
+                dtype=X.dtype
             )(patching_layer)
 
             pool_layers.append(
                 GlobalMinPooling1D(
-                    name="min_pooling_%d" % index
+                    name="min_pooling_%d" % index,
+                    dtype=X.dtype
                 )(shapelets_layer)
             )
         if self._n_shapelet_sizes > 1:

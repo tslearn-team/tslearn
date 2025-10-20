@@ -1,8 +1,9 @@
 from sklearn.neural_network import MLPClassifier, MLPRegressor
+from sklearn.utils.validation import check_is_fitted
 
-from tslearn.utils import check_array
+from tslearn.bases import TimeSeriesMixin
+from tslearn.utils import check_array, check_dims, to_time_series_dataset
 
-from ..bases import TimeSeriesMixin
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -51,8 +52,42 @@ class TimeSeriesMLPClassifier(TimeSeriesMixin, MLPClassifier):
             The fitted estimator
         """
         X_ = check_array(X, force_all_finite=True, allow_nd=True)
+        X_ = to_time_series_dataset(X_)
+        self._X_fit_dims = X_.shape
         X_ = X_.reshape((X_.shape[0], -1))
-        return super(TimeSeriesMLPClassifier, self).fit(X_, y)
+        estimator = super().fit(X_, y)
+        self.n_features_in_ = self._X_fit_dims[-1]
+        return estimator
+
+    def partial_fit(self, X, y, *args, **kwargs):
+        """Update the model with a single iteration over the given data.
+
+            Parameters
+            ----------
+            X : array-like, shape (n_ts, sz, d)
+                The input data.
+
+            y : array-like, shape (n_ts, ) or (n_ts, dim_y)
+            Target values.
+
+            *args, **kwargs : arguments for the underlying
+            MLPClassifier's method from scikit-learn
+
+            Returns
+            -------
+            TimeSeriesMLPClassifier
+              The fitted estimator
+            """
+        X_ = check_array(X, force_all_finite=True, allow_nd=True)
+        if hasattr(self, "_X_fit_dims"):
+            X_ = check_dims(X_, self._X_fit_dims, extend=True)
+        else:
+            X_ = to_time_series_dataset(X_)
+            self._X_fit_dims = X_.shape
+            self.n_features_in_ = self._X_fit_dims[-1]
+        X_ = X_.reshape((X_.shape[0], -1))
+        with self._patch_attribute("n_features_in_", X_.shape[1]):
+            return super().partial_fit(X_, y, *args, **kwargs)
 
     def predict(self, X):
         """Predict the class labels for the provided data
@@ -67,26 +102,12 @@ class TimeSeriesMLPClassifier(TimeSeriesMixin, MLPClassifier):
         array, shape = (n_ts, )
             Array of predicted class labels
         """
+        check_is_fitted(self)
         X_ = check_array(X, force_all_finite=True, allow_nd=True)
+        X_ = check_dims(X_, self._X_fit_dims, extend=True)
         X_ = X_.reshape((X_.shape[0], -1))
-        return super(TimeSeriesMLPClassifier, self).predict(X_)
-
-    def predict_log_proba(self, X):
-        """Predict the class log-probabilities for the provided data
-
-        Parameters
-        ----------
-        X : array-like, shape (n_ts, sz, d)
-            Test samples.
-
-        Returns
-        -------
-        array, shape = (n_ts, n_classes)
-            Array of predicted class log-probabilities
-        """
-        X_ = check_array(X, force_all_finite=True, allow_nd=True)
-        X_ = X_.reshape((X_.shape[0], -1))
-        return super(TimeSeriesMLPClassifier, self).predict_log_proba(X_)
+        with self._patch_attribute("n_features_in_", X_.shape[1]):
+            return super().predict(X_)
 
     def predict_proba(self, X):
         """Predict the class probabilities for the provided data
@@ -101,9 +122,12 @@ class TimeSeriesMLPClassifier(TimeSeriesMixin, MLPClassifier):
         array, shape = (n_ts, n_classes)
             Array of predicted class probabilities
         """
+        check_is_fitted(self)
         X_ = check_array(X, force_all_finite=True, allow_nd=True)
+        X_ = check_dims(X_, self._X_fit_dims, extend=True)
         X_ = X_.reshape((X_.shape[0], -1))
-        return super(TimeSeriesMLPClassifier, self).predict_proba(X_)
+        with self._patch_attribute("n_features_in_", X_.shape[1]):
+            return super().predict_proba(X_)
 
 
 class TimeSeriesMLPRegressor(TimeSeriesMixin, MLPRegressor):
@@ -148,8 +172,42 @@ class TimeSeriesMLPRegressor(TimeSeriesMixin, MLPRegressor):
             The fitted estimator
         """
         X_ = check_array(X, force_all_finite=True, allow_nd=True)
+        X_ = to_time_series_dataset(X_)
+        self._X_fit_dims = X_.shape
         X_ = X_.reshape((X_.shape[0], -1))
-        return super(TimeSeriesMLPRegressor, self).fit(X_, y)
+        estimator = super(TimeSeriesMLPRegressor, self).fit(X_, y)
+        self.n_features_in_ = self._X_fit_dims[-1]
+        return estimator
+
+    def partial_fit(self, X, y, *args, **kwargs):
+        """Update the model with a single iteration over the given data.
+
+            Parameters
+            ----------
+            X : array-like, shape (n_ts, sz, d)
+                The input data.
+
+            y : array-like, shape (n_ts, ) or (n_ts, dim_y)
+            Target values.
+
+            *args, **kwargs : arguments for the underlying
+            MLPClassifier's method from scikit-learn
+
+            Returns
+            -------
+            TimeSeriesMLPRegressor
+              The fitted estimator
+            """
+        X_ = check_array(X, force_all_finite=True, allow_nd=True)
+        if hasattr(self, "_X_fit_dims"):
+            X_ = check_dims(X_, self._X_fit_dims, extend=True)
+        else:
+            X_ = to_time_series_dataset(X_)
+            self._X_fit_dims = X_.shape
+            self.n_features_in_ = self._X_fit_dims[-1]
+        X_ = X_.reshape((X_.shape[0], -1))
+        with self._patch_attribute("n_features_in_", X_.shape[1]):
+            return super().partial_fit(X_, y, *args, **kwargs)
 
     def predict(self, X):
         """Predict the target for the provided data
@@ -164,6 +222,9 @@ class TimeSeriesMLPRegressor(TimeSeriesMixin, MLPRegressor):
         array, shape = (n_ts, ) or (n_ts, dim_y)
             Array of predicted targets
         """
+        check_is_fitted(self)
         X_ = check_array(X, force_all_finite=True, allow_nd=True)
+        X_ = check_dims(X_, self._X_fit_dims, extend=True)
         X_ = X_.reshape((X_.shape[0], -1))
-        return super(TimeSeriesMLPRegressor, self).predict(X_)
+        with self._patch_attribute("n_features_in_", X_.shape[1]):
+            return super().predict(X_)

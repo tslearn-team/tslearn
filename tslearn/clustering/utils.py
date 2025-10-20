@@ -217,13 +217,4 @@ class TimeSeriesCentroidBasedClusteringMixin(TimeSeriesMixin):
             self.inertia_ = inertia
         else:
             self._X_fit = None
-
-    def _more_tags(self):
-        tags = super()._more_tags()
-        tags.update({"allow_nan": True})
-        return tags
-
-    def __sklearn_tags__(self):
-        tags = super().__sklearn_tags__()
-        tags.input_tags.allow_nan = True
-        return tags
+        self.n_features_in_ = X_fitted.shape[-1]

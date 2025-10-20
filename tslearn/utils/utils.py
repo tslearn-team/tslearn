@@ -50,12 +50,15 @@ def check_variable_length_input(X):
         The converted and validated array.
     """
     if getattr(X, "shape", None) is None:
-        # Check each time series when X can be of variable length before
-        # to_time_series_dataset processing
-        for ts in X:
-            check_array([ts], allow_nd=True, force_all_finite=False)
+        if isinstance(X, NotAnArray):
+            X = check_array(X, allow_nd=True)
+        else:
+            # Check each time series when X can be of variable length before
+            # to_time_series_dataset processing
+            for ts in X:
+                check_array([ts], allow_nd=True)
     else:
-        X = check_array(X, allow_nd=True, force_all_finite=False)
+        X = check_array(X, allow_nd=True)
     return to_time_series_dataset(X)
 
 

@@ -132,6 +132,7 @@ class MatrixProfile(TimeSeriesMixin,
 
     def _fit(self, X, y=None):
         self._X_fit_dims = X.shape
+        self.n_features_in_ = X.shape[-1]
         return self
 
     def fit(self, X, y=None):

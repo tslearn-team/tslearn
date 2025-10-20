@@ -2,85 +2,23 @@
 The :mod:`tslearn.testing_utils` module includes various utilities that can
 be used for testing.
 """
-import contextlib
-import os
-
-import tslearn
-import pkgutil
-import inspect
 from functools import partial
-from operator import itemgetter
+import inspect
+import pkgutil
+import os
+import warnings
 
 import sklearn
-from sklearn.base import (BaseEstimator, ClassifierMixin, ClusterMixin,
-                          RegressorMixin, TransformerMixin)
-
-try:
-    # Most recent
-    from sklearn.utils._testing import SkipTest
-except ImportError:
-    # Deprecated from sklearn v0.24 onwards
-    from sklearn.utils.testing import SkipTest
-from sklearn.exceptions import SkipTestWarning
-from sklearn.utils.estimator_checks import (
-    check_no_attributes_set_in_init,
-    check_parameters_default_constructible
+from sklearn.base import (
+    BaseEstimator,
+    ClassifierMixin,
+    ClusterMixin,
+    RegressorMixin,
+    TransformerMixin
 )
+from sklearn.utils.estimator_checks import parametrize_with_checks
 
-try:
-    # sklearn version < 1.6
-    from sklearn.utils.estimator_checks import _maybe_skip
-except ImportError:
-    # sklearn version >= 1.6
-    from sklearn.utils.estimator_checks import _maybe_mark
-    def _maybe_skip(estimator, check):
-        return sklearn.utils.estimator_checks._maybe_mark(estimator,
-                                                          check,
-                                                          estimator._get_tags().get('_xfail_checks'),
-                                                          "skip")[1]
-
-
-from tslearn.neural_network import TimeSeriesMLPClassifier
-# Mock Learning shapelets, the class won't be tested anyway
-LearningShapelets = type("LearningShapelets", (), {})
-with contextlib.suppress(ImportError):
-    from tslearn.shapelets import LearningShapelets
-from tslearn.tests.sklearn_patches import (
-                             check_clustering,
-                             check_non_transf_est_n_iter,
-                             check_fit_idempotent,
-                             check_classifiers_classes,
-                             check_classifiers_train,
-                             check_estimators_pickle,
-                             check_supervised_y_2d,
-                             check_regressor_data_not_an_array,
-                             check_classifier_data_not_an_array,
-                             check_regressors_int_patched,
-                             check_classifiers_cont_target,
-                             check_pipeline_consistency,
-                             yield_all_checks,
-                             _create_large_ts_dataset)
-
-import warnings
-import pytest
-
-
-# Patching some check functions to work on ts data instead of tabular data.
-checks = sklearn.utils.estimator_checks
-checks._yield_all_checks = yield_all_checks
-checks.check_clustering = check_clustering
-checks.check_non_transformer_estimators_n_iter = check_non_transf_est_n_iter
-checks.check_fit_idempotent = check_fit_idempotent
-checks.check_classifiers_classes = check_classifiers_classes
-checks.check_classifiers_train = check_classifiers_train
-checks.check_estimators_pickle = check_estimators_pickle
-checks.check_supervised_y_2d = check_supervised_y_2d
-checks.check_regressor_data_not_an_array = check_regressor_data_not_an_array
-checks.check_classifier_data_not_an_array = check_classifier_data_not_an_array
-checks.check_regressors_int = check_regressors_int_patched
-checks.check_classifiers_regression_target = check_classifiers_cont_target
-checks.check_pipeline_consistency = check_pipeline_consistency
-checks._regression_dataset = _create_large_ts_dataset
+import tslearn
 
 
 def _get_all_classes():
@@ -93,6 +31,10 @@ def _get_all_classes():
         try:
             module = __import__(name, fromlist="dummy")
         except ImportError:
+            if name.endswith('sklearn_patches_new_tags') and sklearn.__version__ < '1.6':
+                continue
+            if name.endswith('sklearn_patches_old_tags') and sklearn.__version__ >= '1.6':
+                continue
             if name.endswith('shapelets'):
                 # keras is likely not installed
                 warnings.warn('Skipped common tests for shapelets '
@@ -139,21 +81,20 @@ def get_estimators(type_filter='all'):
     """
 
     if type_filter not in ['all', 'classifier', 'transformer', 'cluster']:
-        # TODO: make this exception more specific
-        raise Exception("type_filter should be element of "
+        raise ValueError("type_filter should be element of "
                         "['all', 'classifier', 'transformer', 'cluster']")
 
     all_classes = _get_all_classes()
 
     # Filter out those that are not a subclass of `sklearn.BaseEstimator`
-    all_classes = [c for c in set(all_classes)
+    all_classes = [c[1] for c in set(all_classes)
                    if issubclass(c[1], BaseEstimator)]
 
     # get rid of abstract base classes
-    all_classes = filter(lambda c: not is_abstract(c[1]), all_classes)
+    all_classes = filter(lambda c: not is_abstract(c), all_classes)
 
     # only keep those that are from tslearn
-    all_classes = filter(lambda c: not is_sklearn(c[1]), all_classes)
+    all_classes = filter(lambda c: not is_sklearn(c), all_classes)
 
     # Now filter out the estimators that are not of the specified type
     filters = {
@@ -163,55 +104,14 @@ def get_estimators(type_filter='all'):
         'transformer': [TransformerMixin],
         'cluster': [ClusterMixin]
     }[type_filter]
-    filtered_classes = []
-    for _class in all_classes:
-        if any([issubclass(_class[1], mixin) for mixin in filters]):
-            filtered_classes.append(_class)
-
-    # Remove duplicates and return the list of remaining estimators
-    return sorted(set(filtered_classes), key=itemgetter(0))
-
-
-def check_estimator(Estimator):
-    """Check if estimator adheres to scikit-learn conventions.
-    This estimator will run an extensive test-suite for input validation,
-    shapes, etc.
-    Additional tests for classifiers, regressors, clustering or transformers
-    will be run if the Estimator class inherits from the corresponding mixin
-    from sklearn.base.
-    This test can be applied to classes or instances.
-    Classes currently have some additional tests that related to construction,
-    while passing instances allows the testing of multiple options.
-    Parameters
-    ----------
-    estimator : estimator object or class
-        Estimator to check. Estimator is a class object or instance.
-    """
-    if isinstance(Estimator, type):
-        # got a class
-        name = Estimator.__name__
-        estimator = Estimator()
-
-        check_parameters_default_constructible(name, estimator)
-        check_no_attributes_set_in_init(name, estimator)
-    else:
-        # got an instance
-        estimator = Estimator
-        name = type(estimator).__name__
-
-    def checks_generator():
-        for check in checks._yield_all_checks(name, estimator):
-            check = _maybe_skip(estimator, check)
-            yield estimator, partial(check, name)
-
-    for estimator, check in checks_generator():
-        try:
-            _configure(estimator, check)
-            check(estimator)
-        except SkipTest as exception:
-            # the only SkipTest thrown currently results from not
-            # being able to import pandas.
-            warnings.warn(str(exception), SkipTestWarning)
+    filtered_estimators = []
+    for _class in set(all_classes):
+        if any([issubclass(_class, mixin) for mixin in filters]):
+            filtered_estimators.append(_class())
+            # Add variable length version of estimator
+            if _class.__name__ in ["TimeSeriesKmeans"]:
+                filtered_estimators.append(_class(metric="dtw"))
+    return sorted(filtered_estimators, key=lambda x: x.__class__.__name__)
 
 
 def _configure(estimator, check):
@@ -222,12 +122,12 @@ def _configure(estimator, check):
     if hasattr(estimator, 'probability'):
         estimator.set_params(probability=True)
 
-    if (isinstance(estimator, (LearningShapelets,
-                               TimeSeriesMLPClassifier)) and
+    if (estimator.__class__.__name__ in ("LearningShapelets",
+                                         "TimeSeriesMLPClassifier") and
         check.func.__name__ in ['check_classifiers_classes',
                                 'check_classifiers_train']):
         estimator.set_params(max_iter=1000)
-    elif isinstance(estimator, LearningShapelets):
+    elif estimator.__class__.__name__ == "LearningShapelets":
         estimator.set_params(max_iter=100)
     elif hasattr(estimator, 'max_iter'):
         estimator.set_params(max_iter=10)
@@ -236,32 +136,82 @@ def _configure(estimator, check):
         # Tweak to ensure fast execution of code coverage job on azure pipelines
         from tslearn.shapelets.shapelets import _kmeans_init_shapelets
         _kmeans_init_shapelets.__defaults__ = (1,)
-        if isinstance(estimator, (LearningShapelets, TimeSeriesMLPClassifier)):
-
-            orig_more_tags = estimator._more_tags
-            orig_sklearn_tags = estimator.__sklearn_tags__
-
-            def new_more_tags():
-                tags = orig_more_tags()
-                tags['poor_score'] = True
+        if estimator.__class__.__name__ in ("LearningShapelets", "TimeSeriesMLPClassifier"):
+            more_tags_orig = estimator._more_tags
+            def more_tags_poor_score():
+                tags = more_tags_orig().update({"poor_score": True})
                 return tags
-
-            def new_sklearn_tags():
-                tags = orig_sklearn_tags()
-                getattr(tags, f"{tags.estimator_type}_tags").poor_score = True
+            estimator._more_tags = more_tags_poor_score
+            sklearn_tags_orig = estimator.__sklearn_tags__
+            def sklearn_tags_poor_score():
+                tags = sklearn_tags_orig()
+                tags.classifier_tags.poor_score = True
                 return tags
-
-            estimator._more_tags = new_more_tags
-            estimator.__sklearn_tags__ = new_sklearn_tags
-
+            estimator.__sklearn_tags__ = sklearn_tags_poor_score
             estimator.set_params(max_iter=1)
 
 
-@pytest.mark.parametrize('name, Estimator', get_estimators('all'))
-def test_all_estimators(name, Estimator):
-    """Test all the estimators in tslearn."""
-    allow_nan = (hasattr(checks, 'ALLOW_NAN') and
-                 Estimator().get_tags()["allow_nan"])
-    if allow_nan:
-        checks.ALLOW_NAN.append(name)
-    check_estimator(Estimator)
+def patch_check_from_module(check, module):
+    if hasattr(module, check.func.__name__):
+        patched_check = getattr(module, check.func.__name__)
+        return partial(patched_check, *check.args, **check.keywords)
+
+    return  check
+
+
+try:
+
+    # sklearn 1.6 + with new tags
+    BASE_EXPECTED_XFAIL_CHECKS = {
+        "check_estimators_pickle": "'Pickling is currently NOT tested!'"
+    }
+
+    PER_ESTIMATOR_XFAIL_CHECKS = {
+        'KernelKMeans': {
+            "check_sample_weight_equivalence_on_dense_data": "Currently not supported due to clusters initialization",
+            "check_sample_weight_equivalence_on_sparse_data": "Currently not supported due to clusters initialization"
+        },
+        'TimeSeriesSVC': {
+            "check_sample_weights_invariance": "zero sample_weight is not equivalent to removing samples",
+            "check_sample_weight_equivalence_on_dense_data": "zero sample_weight is not equivalent to removing samples",
+            "check_sample_weight_equivalence_on_sparse_data": "zero sample_weight is not equivalent to removing samples"
+        },
+        'TimeSeriesSVR': {
+            "check_fit_idempotent": "Non deterministic",
+            "check_sample_weights_invariance": "zero sample_weight is not equivalent to removing samples",
+            "check_sample_weight_equivalence_on_dense_data": "zero sample_weight is not equivalent to removing samples",
+            "check_sample_weight_equivalence_on_sparse_data": "zero sample_weight is not equivalent to removing samples"
+        },
+        #'PiecewiseAggregateApproximation': {"check_transformer_preserve_dtypes": "Forces int transform"},
+        'SymbolicAggregateApproximation': {"check_transformer_preserve_dtypes": "Forces int transform"},
+        'OneD_SymbolicAggregateApproximation': {"check_transformer_preserve_dtypes": "Forces int transform"},
+        'TimeSeriesImputer': {"check_transformer_data_not_an_array": "Uses X"}
+    }
+
+    def get_expected_fails(estimator):
+        from sklearn.utils import get_tags
+
+        # Compute expected fails for a given estimator
+        expected_fails = PER_ESTIMATOR_XFAIL_CHECKS.get(estimator.__class__.__name__, {})
+        expected_fails.update(BASE_EXPECTED_XFAIL_CHECKS)
+
+        return expected_fails
+
+    @parametrize_with_checks(
+        get_estimators('all'),
+        expected_failed_checks=get_expected_fails
+    )
+    def test_all_estimators(estimator, check):
+        from tslearn.tests import sklearn_patches_new_tags
+        actual_check = patch_check_from_module(check, sklearn_patches_new_tags)
+        _configure(estimator, actual_check)
+        actual_check(estimator)
+
+except TypeError:
+    # sklearn < 1.6, parametrize has only one parameter and uses old tags
+    @parametrize_with_checks(get_estimators('all'))
+    def test_all_estimators(estimator, check):
+        from tslearn.tests import sklearn_patches_old_tags
+        actual_check = patch_check_from_module(check, sklearn_patches_old_tags)
+        _configure(estimator, actual_check)
+        actual_check(estimator)
