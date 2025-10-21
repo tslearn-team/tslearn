@@ -352,6 +352,8 @@ jobs:
       python -m pip install coverage pytest-cov
       pip list
       python -m pytest -v tslearn/ --cov=tslearn
+      pip install scikit-learn~=1.4.0
+      python -m pytest -v tslearn/ --cov=tslearn --cov-append
     displayName: 'Test'
 
   # Upload coverage to codecov.io
