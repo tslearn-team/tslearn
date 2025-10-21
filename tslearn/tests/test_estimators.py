@@ -2,6 +2,7 @@
 The :mod:`tslearn.testing_utils` module includes various utilities that can
 be used for testing.
 """
+from contextlib import contextmanager
 from functools import partial
 import inspect
 import pkgutil
@@ -114,6 +115,7 @@ def get_estimators(type_filter='all'):
     return sorted(filtered_estimators, key=lambda x: x.__class__.__name__)
 
 
+@contextmanager
 def _configure(estimator, check):
     """ Configure estimator for a given check depending on the platform """
     if hasattr(estimator, 'total_lengths'):
@@ -149,6 +151,11 @@ def _configure(estimator, check):
                 return tags
             estimator.__sklearn_tags__ = sklearn_tags_poor_score
             estimator.set_params(max_iter=1)
+    try:
+        yield
+    finally:
+        if os.environ.get("SYSTEM_PHASENAME", "") == "codecov":
+            _kmeans_init_shapelets.__defaults__ = (10000,)
 
 
 def patch_check_from_module(check, module):
@@ -204,8 +211,8 @@ try:
     def test_all_estimators(estimator, check):
         from tslearn.tests import sklearn_patches_new_tags
         actual_check = patch_check_from_module(check, sklearn_patches_new_tags)
-        _configure(estimator, actual_check)
-        actual_check(estimator)
+        with _configure(estimator, actual_check):
+            actual_check(estimator)
 
 except TypeError:
     # sklearn < 1.6, parametrize has only one parameter and uses old tags
@@ -213,5 +220,5 @@ except TypeError:
     def test_all_estimators(estimator, check):
         from tslearn.tests import sklearn_patches_old_tags
         actual_check = patch_check_from_module(check, sklearn_patches_old_tags)
-        _configure(estimator, actual_check)
-        actual_check(estimator)
+        with _configure(estimator, actual_check):
+            actual_check(estimator)
