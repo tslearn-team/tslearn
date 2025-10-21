@@ -30,11 +30,11 @@ setup(
     package_data={"tslearn": [".cached_datasets/singleTrainTest.csv", ".cached_datasets/Trace.npz"]},
     python_requires='>=3.10',
     install_requires=[
-        "scikit-learn>=1.4,<1.7",
-        "numpy>=1.24.3,<2.3",
-        "scipy>=1.10.1,<1.17",
-        "numba>=0.58.1,<0.62",
-        "joblib>=1.2,<1.6",
+        "scikit-learn>=1.4,<2",
+        "numpy>=1.24.3,<3",
+        "scipy>=1.10.1,<2",
+        "numba>=0.58.1,<1",
+        "joblib>=1.2,<2",
     ],
     extras_require={
         "pytorch": ['torch'],
