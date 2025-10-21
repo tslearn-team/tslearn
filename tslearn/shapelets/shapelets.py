@@ -655,7 +655,7 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
         """
         check_is_fitted(self, '_X_fit_dims')
         X = check_array(X, allow_nd=True, force_all_finite=False)
-        X = self._preprocess_series(X, fit_time=True)
+        X = self._preprocess_series(X)
         X = check_dims(X, X_fit_dims=self._X_fit_dims,
                        check_n_features_only=True)
         self._check_series_length(X)
@@ -670,8 +670,8 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
         """Ensures that time series in X matches the following requirements:
 
         - their length is greater than the size of the longest shapelet
-        - (at predict time) their length is lower than the maximum allowed
-        length, as set by self.max_size
+        - their length is lower than the maximum allowed length,
+        as set by max_size or deduced from fitted data.
         """
         sizes = numpy.array([ts_size(Xi) for Xi in X])
         self._min_sz_fit = sizes.min()
@@ -686,36 +686,30 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
                                  "length {} and longest shapelet is of length "
                                  "{}".format(self._min_sz_fit, max_sz_shp))
 
-        if hasattr(self, 'model_') or self.max_size is not None:
-            # Model is already fitted
-            max_sz_X = sizes.max()
+        max_size = self.max_size
+        if max_size is None:
+            max_size = self._X_fit_dims[1] if hasattr(self, '_X_fit_dims') else X.shape[1]
 
-            if hasattr(self, 'model_'):
-                max_size = self._X_fit_dims[1]
-            else:
-                max_size = self.max_size
-            if max_size < max_sz_X:
-                raise ValueError("Sizes in X do not match maximum allowed "
-                                 "size as set by max_size. "
-                                 "Longest time series is of "
-                                 "length {} and max_size is "
-                                 "{}".format(max_sz_X, max_size))
+        if X.shape[1] > max_size:
+            raise ValueError("Sizes in X do not match maximum allowed "
+                             "size as set by max_size or "
+                             "computed when fit. "
+                             "Longest time series is of "
+                             "length {} and maximum allowed size is "
+                             "{}".format(X.shape[1], max_size))
 
-    def _preprocess_series(self, X, fit_time=False):
+    def _preprocess_series(self, X):
+        """Scale if needed, pad with nans if needed."""
         if self.scale:
             X = TimeSeriesScalerMinMax().fit_transform(X)
         else:
             X = to_time_series_dataset(X)
-        if fit_time:
-            max_size = self.max_size
-        else:
-            max_size = self._X_fit_dims[1] if hasattr(self, '_X_fit_dims') else None
-        if max_size is not None and max_size != X.shape[1]:
-            if X.shape[1] > max_size:
-                raise ValueError(
-                    "Cannot feed model with series of length {} "
-                    "max_size is {}".format(X.shape[1], self.max_size)
-                )
+
+        max_size = self.max_size
+        if max_size is None:
+            max_size = self._X_fit_dims[1] if hasattr(self, '_X_fit_dims') else X.shape[1]
+
+        if max_size > X.shape[1]:
             X_ = numpy.zeros((X.shape[0], max_size, X.shape[2]))
             X_[:, :X.shape[1]] = X
             X_[:, X.shape[1]:] = numpy.nan
