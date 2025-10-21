@@ -141,7 +141,8 @@ def _configure(estimator, check):
         if estimator.__class__.__name__ in ("LearningShapelets", "TimeSeriesMLPClassifier"):
             more_tags_orig = estimator._more_tags
             def more_tags_poor_score():
-                tags = more_tags_orig().update({"poor_score": True})
+                tags = more_tags_orig()
+                tags.update({"poor_score": True})
                 return tags
             estimator._more_tags = more_tags_poor_score
             sklearn_tags_orig = estimator.__sklearn_tags__
