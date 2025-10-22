@@ -266,7 +266,7 @@ class PiecewiseAggregateApproximation(TimeSeriesMixin,
         return tags
 
     def __sklearn_tags__(self):
-        tags= super().__sklearn_tags__()
+        tags = super().__sklearn_tags__()
         tags.input_tags.allow_nan = True
         tags.allow_variable_length = True
         return tags
@@ -520,6 +520,10 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
             "check_transformer_preserve_dtypes" : "Forces int transform"
         })
         return tags
+
+    def __sklearn_tags__(self):
+        # Needed for check_estimator_tags_renamed
+        return super().__sklearn_tags__()
 
 
 class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
@@ -803,3 +807,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
             "check_transformer_preserve_dtypes" : "Forces int transform"
         })
         return tags
+
+    def __sklearn_tags__(self):
+        # Needed for check_estimator_tags_renamed
+        return super().__sklearn_tags__()
