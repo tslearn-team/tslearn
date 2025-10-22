@@ -263,9 +263,6 @@ class PiecewiseAggregateApproximation(TimeSeriesMixin,
             'allow_nan': True,
             ALLOW_VARIABLE_LENGTH: True,
         })
-        tags['_xfail_checks'].update({
-            "check_transformer_preserve_dtypes" : "Forces int transform"
-        })
         return tags
 
     def __sklearn_tags__(self):
@@ -516,6 +513,13 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
                 original_size=self._X_fit_dims_[1]
         )
         return self._unscale(X_orig)
+
+    def _more_tags(self):
+        tags = super()._more_tags()
+        tags['_xfail_checks'].update({
+            "check_transformer_preserve_dtypes" : "Forces int transform"
+        })
+        return tags
 
 
 class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
@@ -792,3 +796,10 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
                 original_size=self._X_fit_dims_[1]
         )
         return self._unscale(X_orig)
+
+    def _more_tags(self):
+        tags = super()._more_tags()
+        tags['_xfail_checks'].update({
+            "check_transformer_preserve_dtypes" : "Forces int transform"
+        })
+        return tags

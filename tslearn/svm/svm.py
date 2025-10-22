@@ -102,7 +102,7 @@ class TimeSeriesSVMMixin(TimeSeriesMixin):
 
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
-        tags.input_tags.allow_nan = True
+        tags.input_tags.allow_nan = False
         tags.allow_variable_length = True
         return tags
 
