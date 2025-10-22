@@ -97,8 +97,6 @@ class TimeSeriesSVMMixin(TimeSeriesMixin):
         })
         tags["_xfail_checks"].update({
             "check_sample_weights_invariance": sample_weight_failure_msg,
-            "check_sample_weight_equivalence_on_dense_data": sample_weight_failure_msg,
-            "check_sample_weight_equivalence_on_sparse_data":sample_weight_failure_msg,
         })
         return tags
 

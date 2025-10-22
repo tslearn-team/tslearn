@@ -1,3 +1,4 @@
+import copy
 from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
 from dataclasses import dataclass, fields
@@ -19,6 +20,8 @@ else:
     HDF5_INSTALLED = True
 
 from sklearn.exceptions import NotFittedError
+
+
 try:
     from sklearn.utils import Tags
 
@@ -39,28 +42,15 @@ except ImportError:
 ALLOW_VARIABLE_LENGTH = 'allow_variable_length'
 _DEFAULT_TAGS = {
     ALLOW_VARIABLE_LENGTH: False,
-    'sparse': False
+    'sparse': False,
+    "X_types": ["2darray", "3darray"],
+    "_xfail_checks": {
+        "check_estimators_pickle": "Pickling is currently NOT tested!"
+    }
 }
 
 
 class TimeSeriesMixin(object):
-
-    def _get_tags(self):
-        # sklearn < 1.6 super()._get_tags() returns dict based on _more_tags
-        # 1.7 > sklearn >= 1.6 super()._get_tags() returns dict based on __sklearn_tags__
-        # through _to_old_tags if available, defaults to _more_tags if not available
-        # BaseEstimator.__get_tags remove in sklearn 1.7 -> raises attribute error
-        tags = super()._get_tags()
-
-        # Make sure to update tags for sklearn 1.6
-        # because _to_old_tags trims allow_variable_length
-        # custom tag and _xfails_checks tag
-        if not hasattr(tags, ALLOW_VARIABLE_LENGTH) and tags.get(ALLOW_VARIABLE_LENGTH) is None:
-            more_tags = self._more_tags()
-            tags[ALLOW_VARIABLE_LENGTH] = more_tags[ALLOW_VARIABLE_LENGTH]
-            if more_tags.get("_xfail_checks") is not None:
-                tags["_xfail_checks"] = more_tags["_xfail_checks"]
-        return tags
 
     @contextmanager
     def _patch_attribute(self, attribute_name, value):
@@ -73,17 +63,7 @@ class TimeSeriesMixin(object):
             setattr(self, attribute_name, orig)
 
     def _more_tags(self):
-        tags = super()._more_tags()
-        tags.update(_DEFAULT_TAGS)
-        if "3darray" not in tags.setdefault("X_types", []):
-            tags["X_types"].append("3darray")
-        if "2darray" not in tags.setdefault("X_types", []):
-            tags["X_types"].append("2darray")
-        # in sklearn < 1.6, BaseEstimator _xfail_checks is False
-        if not tags.get("_xfail_checks"):
-            tags["_xfail_checks"] = {}
-        tags["_xfail_checks"]["check_estimators_pickle"] = "Pickling is currently NOT tested!"
-        return tags
+        return copy.deepcopy(_DEFAULT_TAGS)
 
     def __sklearn_tags__(self):
         tags_orig = super().__sklearn_tags__()

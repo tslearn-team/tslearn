@@ -452,14 +452,13 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
 
     def _more_tags(self):
         tags = super()._more_tags()
-        sample_weight_failure_msg = "Currently not supported due to clusters initialization"
+        sample_weight_failure_msg = "Not supported due to clusters initialization"
         tags.update({
             "allow_nan": True,
             ALLOW_VARIABLE_LENGTH: True,
         })
         tags["_xfail_checks"].update({
-                "check_sample_weight_equivalence_on_dense_data": sample_weight_failure_msg,
-                "check_sample_weight_equivalence_on_sparse_data": sample_weight_failure_msg
+            "check_sample_weight_equivalence_on_dense_data": sample_weight_failure_msg,
         })
         return tags
 
