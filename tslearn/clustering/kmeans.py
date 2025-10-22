@@ -918,11 +918,13 @@ class TimeSeriesKMeans(
     def _more_tags(self):
         tags = super()._more_tags()
         tags.update({
+            "allow_nan": self.metric != "euclidean",
             ALLOW_VARIABLE_LENGTH: self.metric != "euclidean"}
         )
         return tags
 
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = self.metric != "euclidean"
         tags.allow_variable_length = self.metric != "euclidean"
         return tags

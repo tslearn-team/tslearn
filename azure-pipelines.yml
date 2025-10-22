@@ -353,7 +353,7 @@ jobs:
       pip list
       python -m pytest -v tslearn/ --cov=tslearn
       pip install scikit-learn~=1.4.0
-      python -m pytest -v tslearn/ --cov=tslearn --cov-append  -k "test_all_estimators"
+      python -m pytest -v tslearn/ --cov=tslearn --cov-append  -k "test_all_estimators or test_scaler_allow_variable_length"
     displayName: 'Test'
 
   # Upload coverage to codecov.io

@@ -20,6 +20,7 @@ from sklearn.base import (
 from sklearn.utils.estimator_checks import parametrize_with_checks
 
 import tslearn
+from tslearn.tests import sklearn_patches
 
 
 def _get_all_classes():
@@ -34,16 +35,14 @@ def _get_all_classes():
         except ImportError:
             if name.endswith('sklearn_patches_new_tags') and sklearn.__version__ < '1.6':
                 continue
-            if name.endswith('sklearn_patches_old_tags') and sklearn.__version__ >= '1.6':
-                continue
-            if name.endswith('shapelets'):
+            elif name.endswith('shapelets'): # pragma: no cover
                 # keras is likely not installed
                 warnings.warn('Skipped common tests for shapelets '
                               'as it could not be imported. keras '
                               'is probably not '
                               'installed!')
                 continue
-            elif name.endswith('pytorch_backend'):
+            elif name.endswith('pytorch_backend'): # pragma: no cover
                 # pytorch is likely not installed
                 continue
             else:
@@ -81,7 +80,7 @@ def get_estimators(type_filter='all'):
         Collection of estimators of the type specified in `type_filter`
     """
 
-    if type_filter not in ['all', 'classifier', 'transformer', 'cluster']:
+    if type_filter not in ['all', 'classifier', 'transformer', 'cluster']: # pragma: no cover
         raise ValueError("type_filter should be element of "
                         "['all', 'classifier', 'transformer', 'cluster']")
 
@@ -110,7 +109,7 @@ def get_estimators(type_filter='all'):
         if any([issubclass(_class, mixin) for mixin in filters]):
             filtered_estimators.append(_class())
             # Add variable length version of estimator
-            if _class.__name__ in ["TimeSeriesKmeans"]:
+            if _class.__name__ in ["TimeSeriesKMeans"]:
                 filtered_estimators.append(_class(metric="dtw"))
     return sorted(filtered_estimators, key=lambda x: x.__class__.__name__)
 
@@ -164,9 +163,9 @@ def _configure(estimator, check):
             _kmeans_init_shapelets.__defaults__ = (10000,)
 
 
-def patch_check_from_module(check, module):
-    if hasattr(module, check.func.__name__):
-        patched_check = getattr(module, check.func.__name__)
+def patch_check(check):
+    if hasattr(sklearn_patches, check.func.__name__):
+        patched_check = getattr(sklearn_patches, check.func.__name__)
         return partial(patched_check, *check.args, **check.keywords)
 
     return  check
@@ -195,12 +194,9 @@ try:
     }
 
     def get_expected_fails(estimator):
-        from sklearn.utils import get_tags
-
         # Compute expected fails for a given estimator
         expected_fails = PER_ESTIMATOR_XFAIL_CHECKS.get(estimator.__class__.__name__, {})
         expected_fails.update(BASE_EXPECTED_XFAIL_CHECKS)
-
         return expected_fails
 
     @parametrize_with_checks(
@@ -208,8 +204,7 @@ try:
         expected_failed_checks=get_expected_fails
     )
     def test_all_estimators(estimator, check):
-        from tslearn.tests import sklearn_patches_new_tags
-        actual_check = patch_check_from_module(check, sklearn_patches_new_tags)
+        actual_check = patch_check(check)
         with _configure(estimator, actual_check):
             actual_check(estimator)
 
@@ -217,7 +212,6 @@ except TypeError:
     # sklearn < 1.6, parametrize has only one parameter and uses old tags
     @parametrize_with_checks(get_estimators('all'))
     def test_all_estimators(estimator, check):
-        from tslearn.tests import sklearn_patches_old_tags
-        actual_check = patch_check_from_module(check, sklearn_patches_old_tags)
+        actual_check = patch_check(check)
         with _configure(estimator, actual_check):
             actual_check(estimator)
