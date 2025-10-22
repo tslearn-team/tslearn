@@ -7,6 +7,7 @@ from sklearn.base import ClassifierMixin, RegressorMixin, BaseEstimator
 from sklearn.utils.validation import check_is_fitted
 import numpy
 
+from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from ..metrics import cdist_gak, gamma_soft_dtw, VARIABLE_LENGTH_METRICS
 from ..utils import to_time_series_dataset, check_array, check_dims, check_X_y, to_sklearn_dataset
 from ..bases import TimeSeriesMixin
@@ -92,12 +93,12 @@ class TimeSeriesSVMMixin(TimeSeriesMixin):
         sample_weight_failure_msg = "zero sample_weight is not equivalent to removing samples"
         tags.update({
             "allow_nan": False,
-            "allow_variable_length": True,
-            "_xfail_checks": {
-                "check_sample_weights_invariance": sample_weight_failure_msg,
-                "check_sample_weight_equivalence_on_dense_data": sample_weight_failure_msg,
-                "check_sample_weight_equivalence_on_sparse_data":sample_weight_failure_msg,
-            }
+            ALLOW_VARIABLE_LENGTH: True,
+        })
+        tags["_xfail_checks"].update({
+            "check_sample_weights_invariance": sample_weight_failure_msg,
+            "check_sample_weight_equivalence_on_dense_data": sample_weight_failure_msg,
+            "check_sample_weight_equivalence_on_sparse_data":sample_weight_failure_msg,
         })
         return tags
 

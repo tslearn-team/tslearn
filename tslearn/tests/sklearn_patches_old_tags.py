@@ -1,27 +1,13 @@
-import warnings
-
-from sklearn.base import clone, is_regressor
-from sklearn.metrics import adjusted_rand_score, accuracy_score
+from sklearn.metrics import accuracy_score
 from sklearn.metrics.pairwise import linear_kernel, pairwise_distances
-from sklearn.utils import shuffle
 from sklearn.utils._testing import (
-    set_random_state,
-    assert_array_equal,
     assert_array_almost_equal,
-    assert_allclose,
-    raises,
-    SkipTest
+    assert_allclose
 )
 from sklearn.utils.estimator_checks import (
-    _enforce_estimator_tags_X,
-    _enforce_estimator_tags_y,
     _is_pairwise_metric,
-    check_estimators_data_not_an_array,
-    check_transformer_general as sk_check_transformer_general,
 )
 
-from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
-from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.tests.sklearn_patches_base import *
 
 
@@ -31,7 +17,6 @@ assert_equal = _dummy.assertEqual
 assert_greater = _dummy.assertGreater
 assert_greater_equal = _dummy.assertGreaterEqual
 assert_raises = _dummy.assertRaises
-assert_raises_regex = _dummy.assertRaisesRegex
 
 
 def pairwise_estimator_convert_X(X, estimator, kernel=linear_kernel):
@@ -41,56 +26,6 @@ def pairwise_estimator_convert_X(X, estimator, kernel=linear_kernel):
         return kernel(X, X)
 
     return X
-
-
-@ignore_warnings(category=(DeprecationWarning, FutureWarning))
-def check_clustering(name, clusterer_orig, readonly_memmap=False):
-
-    clusterer = clone(clusterer_orig)
-    X, y = create_small_ts_dataset()
-    X, y = shuffle(X, y, random_state=7)
-    X = TimeSeriesScalerMeanVariance().fit_transform(X)
-    rng = np.random.RandomState(42)
-    X_noise = X + (rng.randn(*X.shape) / 5)
-
-    n_samples, n_features, dim = X.shape
-    # catch deprecation and neighbors warnings
-    if hasattr(clusterer, "n_clusters"):
-        clusterer.set_params(n_clusters=3)
-    set_random_state(clusterer)
-
-    # fit
-    clusterer.fit(X)
-    # with lists
-    clusterer.fit(X.tolist())
-
-    pred = clusterer.labels_
-    assert_equal(pred.shape, (n_samples,))
-    assert_greater(adjusted_rand_score(pred, y), 0.4)
-
-    if clusterer._get_tags()['non_deterministic']:
-        return
-
-    set_random_state(clusterer)
-    with warnings.catch_warnings(record=True):
-        pred2 = clusterer.fit_predict(X)
-    assert_array_equal(pred, pred2)
-
-    # fit_predict(X) and labels_ should be of type int
-    assert pred.dtype in [np.dtype('int32'), np.dtype('int64')]
-    assert pred2.dtype in [np.dtype('int32'), np.dtype('int64')]
-
-    # Add noise to X to test the possible values of the labels
-    labels = clusterer.fit_predict(X_noise)
-
-    # There should be at least one sample in every original cluster
-    labels_sorted = np.unique(labels)
-    assert_array_equal(labels_sorted, np.arange(0, 3))
-
-    # Labels should be less than n_clusters - 1
-    if hasattr(clusterer, 'n_clusters'):
-        n_clusters = getattr(clusterer, 'n_clusters')
-        assert_greater_equal(n_clusters - 1, labels_sorted[-1])
 
 
 @ignore_warnings  # Warnings are raised by decision function
@@ -231,66 +166,3 @@ def check_classifiers_train(name, classifier_orig, readonly_memmap=False,
                 y_log_prob = classifier.predict_log_proba(X)
                 assert_allclose(y_log_prob, np.log(y_prob), 8, atol=1e-9)
                 assert_array_equal(np.argsort(y_log_prob), np.argsort(y_prob))
-
-
-@ignore_warnings
-def check_estimators_pickle(*args, **kwargs):
-    raise SkipTest('Pickling is currently NOT tested!')
-
-
-@ignore_warnings(category=DeprecationWarning)
-def check_regressor_data_not_an_array(name, estimator_orig):
-    X, y = create_small_ts_dataset()
-    X = pairwise_estimator_convert_X(X, estimator_orig)
-    y = _enforce_estimator_tags_y(estimator_orig, y)
-    for obj_type in ["NotAnArray", "PandasDataframe"]:
-        if obj_type == "PandasDataframe":
-            X_ = X[:, :, 0]  # pandas df cant be 3d
-        else:
-            X_ = X
-        check_estimators_data_not_an_array(name, estimator_orig, X_, y,
-                                           obj_type)
-
-
-def check_transformer_general(name, estimator, readonly_memmap=False):
-    if estimator._get_tags()[ALLOW_VARIABLE_LENGTH]:
-        with raises(
-            AssertionError,
-            match=(
-                f"The transformer {name} does not raise an error "
-                "when the number of features in transform is different from "
-                "the number of features in fit."
-            ),
-            err_msg="Estimators allowing variable length input should pass this test"
-        ):
-            sk_check_transformer_general(name, estimator, readonly_memmap)
-    else:
-        sk_check_transformer_general(name, estimator, readonly_memmap)
-
-
-def check_n_features_in(name, estimator_orig):
-    # Make sure that n_features_in_ attribute doesn't exist until fit is
-    # called, and that its value is correct.
-
-    rng = np.random.RandomState(0)
-
-    estimator = clone(estimator_orig)
-    set_random_state(estimator)
-    if "warm_start" in estimator.get_params():
-        estimator.set_params(warm_start=False)
-
-    n_ts = 15
-    n_samples = 10
-    n_features = 3 if name != "MatrixProfile" else 1
-    X = rng.normal(loc=100, size=(n_ts, n_samples, n_features))
-    X = _enforce_estimator_tags_X(estimator, X)
-    if is_regressor(estimator_orig):
-        y = rng.normal(size=n_ts)
-    else:
-        y = rng.randint(low=0, high=2, size=n_ts)
-    y = _enforce_estimator_tags_y(estimator, y)
-
-    assert not hasattr(estimator, "n_features_in_")
-    estimator.fit(X, y)
-    assert hasattr(estimator, "n_features_in_")
-    assert estimator.n_features_in_ == X.shape[-1]

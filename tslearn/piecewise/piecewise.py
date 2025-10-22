@@ -262,9 +262,9 @@ class PiecewiseAggregateApproximation(TimeSeriesMixin,
         tags.update({
             'allow_nan': True,
             ALLOW_VARIABLE_LENGTH: True,
-            "_xfail_checks": {
-                "check_transformer_preserve_dtypes" : "Forces int transform"
-            }
+        })
+        tags['_xfail_checks'].update({
+            "check_transformer_preserve_dtypes" : "Forces int transform"
         })
         return tags
 

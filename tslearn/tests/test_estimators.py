@@ -2,7 +2,7 @@
 The :mod:`tslearn.testing_utils` module includes various utilities that can
 be used for testing.
 """
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from functools import partial
 import inspect
 import pkgutil
@@ -136,9 +136,11 @@ def _configure(estimator, check):
 
     if os.environ.get("SYSTEM_PHASENAME", "") == "codecov":
         # Tweak to ensure fast execution of code coverage job on azure pipelines
-        from tslearn.shapelets.shapelets import _kmeans_init_shapelets
-        _kmeans_init_shapelets.__defaults__ = (1,)
-        if estimator.__class__.__name__ in ("LearningShapelets", "TimeSeriesMLPClassifier"):
+        if estimator.__class__.__name__ == "LearningShapelets":
+
+            from tslearn.shapelets.shapelets import _kmeans_init_shapelets
+            _kmeans_init_shapelets.__defaults__ = (1,)
+
             get_tags_orig = estimator._get_tags
             def get_tags_poor_score():
                 tags = get_tags_orig()
@@ -155,7 +157,7 @@ def _configure(estimator, check):
     try:
         yield
     finally:
-        if os.environ.get("SYSTEM_PHASENAME", "") == "codecov":
+        with suppress(UnboundLocalError):
             _kmeans_init_shapelets.__defaults__ = (10000,)
 
 

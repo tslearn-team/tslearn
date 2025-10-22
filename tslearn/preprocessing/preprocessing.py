@@ -621,15 +621,15 @@ class TimeSeriesImputer(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         return to_time_series_dataset(X_)
 
     def _more_tags(self):
-        more_tags = super()._more_tags()
-        more_tags.update({
+        tags = super()._more_tags()
+        tags.update({
             'allow_nan': True,
             ALLOW_VARIABLE_LENGTH: True,
-            "_xfail_checks": {
-                "check_transformer_data_not_an_array" : "Uses X"
-            }
         })
-        return more_tags
+        tags['_xfail_checks'].update({
+            "check_transformer_data_not_an_array": "Uses X"
+        })
+        return tags
 
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()

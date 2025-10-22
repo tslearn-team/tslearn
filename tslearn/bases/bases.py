@@ -79,6 +79,10 @@ class TimeSeriesMixin(object):
             tags["X_types"].append("3darray")
         if "2darray" not in tags.setdefault("X_types", []):
             tags["X_types"].append("2darray")
+        # in sklearn < 1.6, BaseEstimator _xfail_checks is False
+        if not tags.get("_xfail_checks"):
+            tags["_xfail_checks"] = {}
+        tags["_xfail_checks"]["check_estimators_pickle"] = "Pickling is currently NOT tested!"
         return tags
 
     def __sklearn_tags__(self):
