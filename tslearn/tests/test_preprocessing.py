@@ -27,16 +27,16 @@ def test_scaler_allow_variable_length():
         estimator = estimator_cls()
 
         try:
+            # slearn >= 1.6
+            from sklearn.utils import get_tags
+            tags = get_tags(estimator)
+            assert not tags.allow_variable_length
+
+        except ImportError:
             # slearn < 1.6
             tags = estimator._get_tags()
             assert ALLOW_VARIABLE_LENGTH in tags
             assert not tags[ALLOW_VARIABLE_LENGTH]
-
-        except AttributeError:
-            # slearn > 1.6
-            from sklearn.utils import get_tags
-            tags = get_tags(estimator)
-            assert not tags.allow_variable_length
 
         with pytest.raises(ValueError):
             estimator.fit_transform(variable_length_dataset)
