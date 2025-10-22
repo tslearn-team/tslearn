@@ -139,12 +139,12 @@ def _configure(estimator, check):
         from tslearn.shapelets.shapelets import _kmeans_init_shapelets
         _kmeans_init_shapelets.__defaults__ = (1,)
         if estimator.__class__.__name__ in ("LearningShapelets", "TimeSeriesMLPClassifier"):
-            more_tags_orig = estimator._more_tags
-            def more_tags_poor_score():
-                tags = more_tags_orig()
+            get_tags_orig = estimator._get_tags
+            def get_tags_poor_score():
+                tags = get_tags_orig()
                 tags.update({"poor_score": True})
                 return tags
-            estimator._more_tags = more_tags_poor_score
+            estimator._get_tags = get_tags_poor_score
             sklearn_tags_orig = estimator.__sklearn_tags__
             def sklearn_tags_poor_score():
                 tags = sklearn_tags_orig()
