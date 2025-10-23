@@ -343,7 +343,7 @@ jobs:
       set -xe
       python --version
       python -m pip install --upgrade pip
-      python -m pip install .[tests,all_features]
+      python -m pip install .[tests]
     displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
@@ -351,8 +351,12 @@ jobs:
       python -m pip install pytest-azurepipelines
       python -m pip install coverage pytest-cov
       pip list
-      python -m pytest -v tslearn/ --cov=tslearn
+      python -m pytest -v tslearn/ --cov=tslearn -k "not test_all_estimators"
+      python -m pip install .[all_features]
+      pip list
+      python -m pytest -v tslearn/ --cov=tslearn --cov-append
       pip install scikit-learn~=1.4.0
+      pip list
       python -m pytest -v tslearn/ --cov=tslearn --cov-append  -k "test_all_estimators or test_scaler_allow_variable_length"
     displayName: 'Test'
 

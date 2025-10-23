@@ -15,6 +15,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 * Explicit exception when using Global Alignment Kernel with sigma close to zero ([#440](https://github.com/tslearn-team/tslearn/issues/440))
 * Fix shifting in K-shape shape extraction process ([#385](https://github.com/tslearn-team/tslearn/issues/385))
+* Support for `scikit-learn` up to 1.7 ([#549](https://github.com/tslearn-team/tslearn/issues/549))
 
 ### Removed
 

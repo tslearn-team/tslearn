@@ -138,7 +138,7 @@ def check_clustering(name, clusterer_orig, readonly_memmap=False):
     pred = clusterer.labels_
     assert pred.shape == (n_ts,)
     assert adjusted_rand_score(pred, y) > 0.4
-    if get_tag(clusterer, "non_deterministic"):
+    if get_tag(clusterer, "non_deterministic"): # pragma: no cover
         return
     set_random_state(clusterer)
     with warnings.catch_warnings(record=True):
@@ -364,7 +364,7 @@ def check_classifiers_train(
                             get_tag(classifier_orig, "target_tags"),
                             "single_output", None)):
                         assert decision.shape == (n_ts,)
-                    else:
+                    else: # pragma: no cover
                         assert decision.shape == (n_ts, 1)
                     dec_pred = (decision.ravel() > 0).astype(int)
                     assert_array_equal(dec_pred, y_pred)

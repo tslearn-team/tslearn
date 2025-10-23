@@ -9,7 +9,6 @@ import pkgutil
 import os
 import warnings
 
-import sklearn
 from sklearn.base import (
     BaseEstimator,
     ClassifierMixin,
@@ -33,19 +32,17 @@ def _get_all_classes():
         try:
             module = __import__(name, fromlist="dummy")
         except ImportError:
-            if name.endswith('sklearn_patches_new_tags') and sklearn.__version__ < '1.6':
-                continue
-            elif name.endswith('shapelets'): # pragma: no cover
+            if name.endswith('shapelets'):
                 # keras is likely not installed
                 warnings.warn('Skipped common tests for shapelets '
                               'as it could not be imported. keras '
                               'is probably not '
                               'installed!')
                 continue
-            elif name.endswith('pytorch_backend'): # pragma: no cover
+            elif name.endswith('pytorch_backend'):
                 # pytorch is likely not installed
                 continue
-            else:
+            else: # pragma: no cover
                 raise Exception('Could not import module %s' % name)
 
         all_classes.extend(inspect.getmembers(module, inspect.isclass))
