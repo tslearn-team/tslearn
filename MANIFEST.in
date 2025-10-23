@@ -1,12 +1,6 @@
-include *.rst
-recursive-include tslearn *.c *.h *.pyx
-include LICENSE
-include README.md
-include pyproject.toml
-include conftest.py
-include MANIFEST.in
+include CHANGELOG.md
+include CODE_OF_CONDUCT.md
+include CONTRIBUTING.md
+include tslearn/.cached_datasets/singleTrainTest.csv
+include tslearn/.cached_datasets/Trace.npz
 
-# exclude from sdist
-recursive-exclude .github *
-exclude .readthedocs.yml
-exclude azure-pipelines.yml
