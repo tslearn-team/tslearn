@@ -33,7 +33,7 @@ setup(
         "scikit-learn>=1.4,<1.8",
         "numpy>=1.24.3,<2.4",
         "scipy>=1.10.1,<1.17",
-        "numba>=0.58.1,<0.62",
+        "numba>=0.58.1,<0.63",
         "joblib>=1.2,<1.6",
     ],
     extras_require={
