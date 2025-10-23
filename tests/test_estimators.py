@@ -45,7 +45,7 @@ from tslearn.neural_network import TimeSeriesMLPClassifier
 LearningShapelets = type("LearningShapelets", (), {})
 with contextlib.suppress(ImportError):
     from tslearn.shapelets import LearningShapelets
-from tslearn.tests.sklearn_patches import (
+from tests.sklearn_patches import (
                              check_clustering,
                              check_non_transf_est_n_iter,
                              check_fit_idempotent,
