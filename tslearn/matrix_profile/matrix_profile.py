@@ -1,10 +1,10 @@
 import numpy as np
 from numpy.lib.stride_tricks import as_strided
 from scipy.spatial.distance import pdist, squareform
-from sklearn.base import TransformerMixin
+from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.utils.validation import check_is_fitted
 
-from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
+from tslearn.bases import BaseModelPackage, TimeSeriesMixin
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.utils import check_array, check_dims
 
@@ -66,9 +66,10 @@ def _series_to_segments(time_series, segment_size):
     return segments
 
 
-class MatrixProfile(TransformerMixin,
-                    BaseModelPackage,
-                    TimeSeriesBaseEstimator):
+class MatrixProfile(TimeSeriesMixin,
+                    TransformerMixin,
+                    BaseEstimator,
+                    BaseModelPackage):
     """Matrix Profile transformation.
 
     Matrix Profile was originally presented in [1]_.
@@ -131,6 +132,7 @@ class MatrixProfile(TransformerMixin,
 
     def _fit(self, X, y=None):
         self._X_fit_dims = X.shape
+        self.n_features_in_ = X.shape[-1]
         return self
 
     def fit(self, X, y=None):
@@ -250,4 +252,12 @@ class MatrixProfile(TransformerMixin,
         return self._fit(X)._transform(X)
 
     def _more_tags(self):
-        return {'allow_nan': True, 'allow_variable_length': True}
+        tags = super()._more_tags()
+        tags.update({'allow_nan': True, 'allow_variable_length': True})
+        return tags
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        tags.allow_variable_length = True
+        return tags

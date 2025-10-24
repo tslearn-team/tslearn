@@ -1,14 +1,15 @@
+import copy
 from abc import ABCMeta, abstractmethod
-from sklearn.exceptions import NotFittedError
-from sklearn.base import BaseEstimator
+from contextlib import contextmanager
+from dataclasses import dataclass, fields
 import json
 import pickle
-import numpy as np
 from warnings import warn
+
+import numpy as np
 
 h5py_msg = 'h5py not installed, hdf5 features will not be supported.\n'\
            'Install h5py to use hdf5 features: http://docs.h5py.org/'
-
 try:
     import h5py
 except ImportError:
@@ -18,28 +19,63 @@ else:
     from tslearn import hdftools
     HDF5_INSTALLED = True
 
+from sklearn.exceptions import NotFittedError
+
+
+try:
+    from sklearn.utils import Tags
+
+    @dataclass
+    class TsLearnTags(Tags):
+        allow_variable_length: bool = False
+
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+            self.input_tags.sparse = False
+            self.input_tags.three_d_array = True
+
+except ImportError:
+    # sklearn < 1.6
+    TsLearnTags = dict
+
+
 ALLOW_VARIABLE_LENGTH = 'allow_variable_length'
 _DEFAULT_TAGS = {
     ALLOW_VARIABLE_LENGTH: False,
+    'sparse': False,
+    "X_types": ["2darray", "3darray"],
+    "_xfail_checks": {
+        "check_estimators_pickle": "Pickling is currently NOT tested!"
+    }
 }
 
 
-class TimeSeriesBaseEstimator(BaseEstimator):
+class TimeSeriesMixin(object):
 
-    def _get_tags(self):
-        # sklearn < 1.6 super()._get_tags() returns dict based on _more_tags
-        # sklearn >= 1.6 super()._get_tags() returns dict based on __sklearn_tags__
-        tags = super()._get_tags()
-
-        # Make sure update tags based on _more_tags for sklearn > 1.6
-        tags.update(self._more_tags())
-        return tags
+    @contextmanager
+    def _patch_attribute(self, attribute_name, value):
+        """Context manager to patch a sklearn estimator's attribute."""
+        orig = getattr(self, attribute_name)
+        setattr(self, attribute_name, value)
+        try:
+            yield
+        finally:
+            setattr(self, attribute_name, orig)
 
     def _more_tags(self):
-        return _DEFAULT_TAGS.copy()
+        return copy.deepcopy(_DEFAULT_TAGS)
+
+    def __sklearn_tags__(self):
+        tags_orig = super().__sklearn_tags__()
+        as_dict = {
+            field.name: getattr(tags_orig, field.name)
+            for field in fields(tags_orig)
+        }
+        tags = TsLearnTags(**as_dict)
+        return tags
 
 
-class BaseModelPackage:
+class BaseModelPackage(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod

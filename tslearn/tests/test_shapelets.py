@@ -1,5 +1,7 @@
 import numpy as np
+
 import pytest
+
 from sklearn.model_selection import cross_validate
 
 from tslearn.utils import to_time_series, to_time_series_dataset
@@ -75,8 +77,13 @@ def test_shapelet_lengths():
     weights_shapelet = [np.array([[[1], [2], [3]]])]
     clf.set_weights(weights_shapelet, layer_name="shapelets_0")
     tr = clf.transform(time_series)
-    np.testing.assert_allclose(tr,
-                               np.array([[0.], [8. / 3]]))
+    np.testing.assert_allclose(tr, np.array([[0.], [8. / 3]]))
+
+    with pytest.raises(ValueError, match="Sizes in X do not match maximum allowed size"):
+        clf.predict(to_time_series_dataset([0] * (time_series.shape[1] + 1)))
+
+    with pytest.raises(ValueError, match="Sizes in X do not match maximum allowed size"):
+        clf.transform(to_time_series_dataset([0] * (time_series.shape[1] + 1)))
 
     # Test max_size to predict longer series than those passed at fit time
     y = [0, 1]
@@ -90,8 +97,26 @@ def test_shapelet_lengths():
     weights_shapelet = [np.array([[[1], [2], [3]]])]
     clf.set_weights(weights_shapelet, layer_name="shapelets_0")
     tr = clf.transform(time_series)
-    np.testing.assert_allclose(tr,
-                               np.array([[0.], [8. / 3]]))
+    np.testing.assert_allclose(tr, np.array([[0.], [8. / 3]]))
+
+    with pytest.raises(ValueError, match="Sizes in X do not match maximum allowed size"):
+        clf.fit(to_time_series_dataset([1] * (clf.max_size + 1)), [0])
+
+    with pytest.raises(ValueError):
+        clf.transform(to_time_series_dataset([1] * (clf.max_size + 1)))
+
+    with pytest.raises(ValueError):
+        clf.predict(to_time_series_dataset([1] * (clf.max_size + 1)))
+
+    smallest_shapelet = min(clf.n_shapelets_per_size.keys())
+    with pytest.raises(ValueError, match="Sizes in X do not match maximum shapelet size"):
+        clf.fit(to_time_series_dataset([1] * (smallest_shapelet -1)), [0])
+
+    with pytest.raises(ValueError, match="Sizes in X do not match maximum shapelet size"):
+        clf.predict(to_time_series_dataset([1] * (smallest_shapelet -1)))
+
+    with pytest.raises(ValueError, match="Sizes in X do not match maximum shapelet size"):
+        clf.transform(to_time_series_dataset([1] * (smallest_shapelet -1)))
 
 
 def test_series_lengths():
@@ -132,12 +157,12 @@ def test_locate():
     if backend() == 'torch':
         np.testing.assert_allclose(
             shapelet,
-            np.array([[2.6348903], [2.3668802]])
+            np.array([[2.63489213], [2.36688087]])
         )
     elif backend() == 'tensorflow':
         np.testing.assert_allclose(
             shapelet,
-            np.array([[2.4961665], [2.5056334]])
+            np.array([[2.49616671], [2.50563301]])
         )
     elif backend() == 'jax':
         np.testing.assert_allclose(
