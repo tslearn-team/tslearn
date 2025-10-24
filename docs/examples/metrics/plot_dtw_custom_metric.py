@@ -103,7 +103,7 @@ rect_dist = [left_h, bottom, width, height]
 rect_s_x = [left_h, bottom_h, width, h_ts]
 
 # Plot example 1
-plt.figure(1, figsize=(6, 6))
+plt.figure(1, layout="constrained", figsize=(6, 6))
 ax_dist = plt.axes(rect_dist)
 ax_s_x = plt.axes(rect_s_x)
 ax_s_y = plt.axes(rect_s_y)
@@ -133,7 +133,7 @@ for loc, s in zip(ticks_location, ticks_labels):
                 horizontalalignment="center", verticalalignment="top")
 
 # Plot example 2
-plt.figure(2, figsize=(6, 6))
+plt.figure(2, layout="constrained", figsize=(6, 6))
 ax_dist = plt.axes(rect_dist)
 ax_s_x = plt.axes(rect_s_x)
 ax_s_y = plt.axes(rect_s_y)
@@ -153,5 +153,4 @@ ax_s_x.axis("off")
 ax_s_y.imshow(np.flip(dataset_2[0], axis=1), aspect="auto", cmap=cm)
 ax_s_y.axis("off")
 
-plt.tight_layout()
 plt.show()
