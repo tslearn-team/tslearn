@@ -57,7 +57,7 @@ def _gak(gram, be=None):
     gram = be.array(gram)
     sz1, sz2 = be.shape(gram)
 
-    cum_sum = be.zeros((sz1 + 1, sz2 + 1))
+    cum_sum = be.zeros((sz1 + 1, sz2 + 1), dtype=gram.dtype)
     cum_sum[0, 0] = 1.0
 
     for i in range(sz1):
@@ -248,10 +248,8 @@ def gak(s1, s2, sigma=1.0, be=None):  # TODO: better doc (formula for the kernel
     be = instantiate_backend(be, s1, s2)
     s1 = be.array(s1)
     s2 = be.array(s2)
-    denom = be.sqrt(
-        unnormalized_gak(s1, s1, sigma=sigma, be=be)
-        * unnormalized_gak(s2, s2, sigma=sigma, be=be)
-    )
+    denom = be.sqrt(unnormalized_gak(s1, s1, sigma=sigma, be=be)) * be.sqrt(
+        unnormalized_gak(s2, s2, sigma=sigma, be=be))
     return unnormalized_gak(s1, s2, sigma=sigma, be=be) / denom
 
 
