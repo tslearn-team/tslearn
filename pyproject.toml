@@ -1,9 +1,9 @@
 [build-system]
-requires = ["setuptools>77.0.3"]
+requires = ["setuptools>77.0.3", "setuptools_scm[toml]>=8"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = {find = {include = ["tslearn"], exclude=["tests*", "docs*"]}}
+packages = ["tslearn"]
 dynamic.version = {attr = "tslearn.__version__"}
 
 [project]
@@ -26,7 +26,7 @@ classifiers=[
     "Topic :: Software Development :: Libraries",
 ]
 dependencies = [
-    "scikit-learn>=1.4,<1.8",
+    "scikit-learn>=1.4,<1.7",
     "numpy>=1.24.3,<2.4",
     "scipy>=1.10.1,<1.17",
     "numba>=0.58.1,<0.63",
@@ -63,3 +63,8 @@ all_features = [
     "stumpy",
 ]
 
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+    "tslearn"
+]

@@ -1,6 +1,9 @@
-include CHANGELOG.md
-include CODE_OF_CONDUCT.md
-include CONTRIBUTING.md
-include tslearn/.cached_datasets/singleTrainTest.csv
-include tslearn/.cached_datasets/Trace.npz
+include conftest.py
 
+# exclude from sdist
+recursive-exclude .github *
+recursive-exclude tslearn.egg-info *
+exclude .readthedocs.yml
+exclude azure-pipelines.yml
+exclude sonar-project.properties
+exclude .gitignore
