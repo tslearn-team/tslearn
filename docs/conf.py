@@ -15,7 +15,10 @@
 import os
 import subprocess
 import sys
+import tomllib
 import warnings
+
+from packaging.requirements import Requirement
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -242,14 +245,15 @@ warnings.filterwarnings("ignore", category=UserWarning,
 
 def get_dependencies():
     """ Retrieve required dependencies """
-    import distutils.core
-    from packaging.requirements import Requirement
-    setup_ = distutils.core.run_setup("../setup.py", stop_after='run')
-    return [Requirement(requirement) for requirement in setup_.install_requires]
+    with open("../pyproject.toml", "rb") as f:
+        pyproject = tomllib.load(f)
+        return [Requirement(requirement) for requirement in pyproject["project"]["dependencies"]]
+
 
 rst_templates= {
     "dependencies.rst": {"dependencies": get_dependencies()}
 }
+
 
 def setup(app):
     """ Setup our app """
