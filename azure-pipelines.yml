@@ -320,7 +320,7 @@ jobs:
       set -xe
       python -m pip install pytest-azurepipelines
       pip list
-      python -m pytest -v tslearn/
+      python -m pytest -v
     displayName: 'Test sklearn versions'
 
 
@@ -351,13 +351,13 @@ jobs:
       python -m pip install pytest-azurepipelines
       python -m pip install coverage pytest-cov
       pip list
-      python -m pytest -v --cov=tslearn -k "not test_all_estimators"
+      python -m pytest -v --cov=tslearn --cov=tests -k "not test_all_estimators"
       python -m pip install .[all_features]
       pip list
-      python -m pytest -v --cov=tslearn --cov-append
+      python -m pytest -v --cov=tslearn --cov=tests --cov-append
       pip install scikit-learn~=1.4.0
       pip list
-      python -m pytest -v --cov=tslearn --cov-append  -k "test_all_estimators or test_scaler_allow_variable_length"
+      python -m pytest -v --cov=tslearn --cov=tests --cov-append  -k "test_all_estimators or test_scaler_allow_variable_length"
     displayName: 'Test'
 
   # Upload coverage to codecov.io
