@@ -233,6 +233,10 @@ jobs:
 - job: 'tests_basic'
   pool:
     vmImage: 'ubuntu-latest'
+  strategy:
+    matrix:
+      Python310:
+        python.version: '3.10'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -241,8 +245,8 @@ jobs:
   steps:
   - task: UsePythonVersion@0
     inputs:
-      versionSpec: '3.11'
-    displayName: 'Use Python 3.11'
+      versionSpec: '$(python.version)'
+    displayName: 'Use Python $(python.version)'
 
   - script: |
       set -xe
@@ -261,6 +265,10 @@ jobs:
 - job: 'doctests_basic'
   pool:
     vmImage: 'ubuntu-latest'
+  strategy:
+    matrix:
+      Python310:
+        python.version: '3.10'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -269,8 +277,8 @@ jobs:
   steps:
   - task: UsePythonVersion@0
     inputs:
-      versionSpec: '3.11'
-    displayName: 'Use Python 3.11'
+      versionSpec: '$(python.version)'
+    displayName: 'Use Python $(python.version)'
 
   - script: |
       set -xe
@@ -286,47 +294,13 @@ jobs:
       python -m pytest -v --doctest-modules -k 'not test_ or test_all_estimators'
     displayName: 'Doctest'
 
-- job: 'tests_sklearn_version'
+- job: 'codecov'  # must be a separate job to only disable Numbas's JIT here
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
     matrix:
-      sklearn1_4:
-        skLearnVersion: '1.4.0'
-      sklearn1_5:
-        skLearnVersion: '1.5.0'
-      sklearn1_6:
-        skLearnVersion: '1.6.0'
-  variables:
-    OMP_NUM_THREADS: '2'
-    NUMBA_NUM_THREADS: '2'
-    PIP_PREFER_BINARY: 'true'
-
-  steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '3.11'
-    displayName: 'Use Python 3.11'
-
-  - script: |
-      set -xe
-      python --version
-      python -m pip install --upgrade pip
-      python -m pip install 'scikit-learn~=$(skLearnVersion)'
-      python -m pip install .[tests,all_features]
-    displayName: 'Install tslearn all_features and dependencies for tests'
-
-  - script: |
-      set -xe
-      python -m pip install pytest-azurepipelines
-      pip list
-      python -m pytest -v
-    displayName: 'Test sklearn versions'
-
-
-- job: 'codecov'  # must be a separate job to only disable Numbas's JIT here
-  pool:
-    vmImage: 'ubuntu-latest'
+      Python310:
+        python.version: '3.10'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_DISABLE_JIT: '1'
@@ -336,14 +310,14 @@ jobs:
   steps:
   - task: UsePythonVersion@0
     inputs:
-      versionSpec: '3.11'
-    displayName: 'Use Python 3.11'
+      versionSpec: '$(python.version)'
+    displayName: 'Use Python $(python.version)'
 
   - script: |
       set -xe
       python --version
       python -m pip install --upgrade pip
-      python -m pip install .[tests]
+      python -m pip install .[tests,all_features]
     displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
@@ -351,13 +325,7 @@ jobs:
       python -m pip install pytest-azurepipelines
       python -m pip install coverage pytest-cov
       pip list
-      python -m pytest -v --cov=tslearn --cov=tests -k "not test_all_estimators"
-      python -m pip install .[all_features]
-      pip list
-      python -m pytest -v --cov=tslearn --cov=tests --cov-append
-      pip install scikit-learn~=1.4.0
-      pip list
-      python -m pytest -v --cov=tslearn --cov=tests --cov-append  -k "test_all_estimators or test_scaler_allow_variable_length"
+      python -m pytest -v --cov=tslearn --cov=tests
     displayName: 'Test'
 
   # Upload coverage to codecov.io

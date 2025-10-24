@@ -64,7 +64,6 @@ all_features = [
 ]
 
 [tool.pytest.ini_options]
-minversion = "7"
 testpaths = [
     "tests",
     "tslearn"
