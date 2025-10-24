@@ -19,6 +19,7 @@ from sklearn.base import (
 from sklearn.utils.estimator_checks import parametrize_with_checks
 
 import tslearn
+
 from . import sklearn_patches
 
 
