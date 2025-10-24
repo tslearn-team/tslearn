@@ -117,7 +117,7 @@ Here is a description of useful tools to check your code locally:
   `pytest <https://docs.pytest.org/en/latest/>`_ and `pytest-cov <https://pytest-cov.readthedocs.io/en/latest/>`_ Python packages::
 
      $ pip install -e .[tests,all_features]
-     $ pytest --cov tslearn
+     $ pytest --cov
 
 - To build the documentation locally, install the following packages and run
   the ``make html`` command in the ``tslearn/docs`` folder::
