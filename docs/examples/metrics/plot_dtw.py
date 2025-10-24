@@ -67,7 +67,7 @@ sz = s_y1.shape[0]
 
 path, sim = metrics.dtw_path(s_y1, s_y2)
 
-plt.figure(1, figsize=(8, 8))
+plt.figure(layout="constrained", figsize=(8, 8))
 
 # definitions for the axes
 left, bottom = 0.01, 0.1
@@ -100,5 +100,4 @@ ax_s_y.plot(- s_y1, numpy.arange(sz), "b-", linewidth=3.)
 ax_s_y.axis("off")
 ax_s_y.set_ylim((0, sz - 1))
 
-plt.tight_layout()
 plt.show()

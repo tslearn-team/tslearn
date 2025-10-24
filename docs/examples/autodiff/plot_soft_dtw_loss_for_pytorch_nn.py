@@ -115,11 +115,11 @@ model.fit(X_subset[:, :150], X_subset[:, 150:], max_epochs=1000)
 ts_index = 50
 y_pred = model(X_test[:, :150, 0]).detach().numpy()
 
-plt.figure()
+plt.figure(1, layout="constrained")
 plt.title('Multi-step ahead forecasting using MSE')
 plt.plot(X_test[ts_index].ravel())
 plt.plot(np.arange(150, 275), y_pred[ts_index], 'r-')
-
+plt.show()
 
 ##############################################################################
 # Using Soft-DTW as a loss function
@@ -143,7 +143,8 @@ model.fit(X_subset[:, :150], X_subset[:, 150:], max_epochs=100)
 
 y_pred = model(X_test[:, :150, 0]).detach().numpy()
 
-plt.figure()
+plt.figure(2, layout="constrained")
 plt.title('Multi-step ahead forecasting using Soft-DTW loss')
 plt.plot(X_test[ts_index].ravel())
 plt.plot(np.arange(150, 275), y_pred[ts_index], 'r-')
+plt.show()
