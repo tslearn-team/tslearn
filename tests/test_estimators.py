@@ -40,9 +40,6 @@ def _get_all_classes():
                               'is probably not '
                               'installed!')
                 continue
-            elif name.endswith('pytorch_backend'):
-                # pytorch is likely not installed
-                continue
             else: # pragma: no cover
                 raise Exception('Could not import module %s' % name)
 
@@ -55,7 +52,7 @@ def is_abstract(c):
         return False
     if not len(c.__abstractmethods__):
         return False
-    return True
+    return True # pragma: no cover
 
 
 def is_sklearn(x):
