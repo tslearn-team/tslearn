@@ -112,6 +112,7 @@ docs/_build/
 docs/auto_examples/
 docs/examples/misc/ks_trained.hdf5
 docs/gen_modules/*/
+docs/**/sg_execution_times.rst
 
 # Local files
 private_info.md

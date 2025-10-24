@@ -379,7 +379,7 @@ def check_classifiers_train(
                         err_msg=msg.format(name, "decision_function"),
                     ):
                         classifier.decision_function(X.T)
-            except NotImplementedError:
+            except NotImplementedError: # pragma: no cover
                 pass
 
         if hasattr(classifier, "predict_proba"):
