@@ -43,7 +43,7 @@ jobs:
       set -xe
       python -m pip install pytest-azurepipelines
       pip list
-      python -m pytest -v tslearn/ -k "not test_all_estimators"
+      python -m pytest -v -k "not test_all_estimators"
     displayName: 'Test'
 
 - job: 'doctests_linux'
@@ -81,7 +81,7 @@ jobs:
       set -xe
       python -m pip install pytest-azurepipelines
       pip list
-      python -m pytest -v tslearn/ --doctest-modules -k "not test_ or test_all_estimators"
+      python -m pytest -v --doctest-modules -k "not test_ or test_all_estimators"
     displayName: 'Doctest'
 
 - job: 'tests_macOS'
@@ -119,7 +119,7 @@ jobs:
       set -xe
       python -m pip install pytest-azurepipelines
       pip list
-      python -m pytest -v tslearn/ -k "not test_all_estimators"
+      python -m pytest -v -k "not test_all_estimators"
     displayName: 'Test'
 
 - job: 'doctests_macOS'
@@ -157,7 +157,7 @@ jobs:
       set -xe
       python -m pip install pytest-azurepipelines
       pip list
-      python -m pytest -v tslearn/ --doctest-modules -k "not test_ or test_all_estimators"
+      python -m pytest -v --doctest-modules -k "not test_ or test_all_estimators"
     displayName: 'Doctest'
 
 - job: 'tests_windows'
@@ -192,7 +192,7 @@ jobs:
   - script: |
       python -m pip install pytest-azurepipelines
       pip list
-      python -m pytest -v tslearn/ -k "not test_all_estimators"
+      python -m pytest -v -k "not test_all_estimators"
     displayName: 'Test'
 
 - job: 'doctests_windows'
@@ -227,10 +227,10 @@ jobs:
   - script: |
       python -m pip install pytest-azurepipelines
       pip list
-      python -m pytest -v tslearn/ --doctest-modules -k "not test_ or test_all_estimators"
+      python -m pytest -v --doctest-modules -k "not test_ or test_all_estimators"
     displayName: 'Doctest'
 
-- job: 'tests_basic'
+- job: 'tests_doctests_basic'
   pool:
     vmImage: 'ubuntu-latest'
   variables:
@@ -255,36 +255,8 @@ jobs:
       set -xe
       python -m pip install pytest-azurepipelines
       pip list
-      python -m pytest -v tslearn/ -k "not test_all_estimators"
+      python -m pytest -v --doctest-modules
     displayName: 'Test'
-
-- job: 'doctests_basic'
-  pool:
-    vmImage: 'ubuntu-latest'
-  variables:
-    OMP_NUM_THREADS: '2'
-    NUMBA_NUM_THREADS: '2'
-    PIP_PREFER_BINARY: 'true'
-
-  steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '3.10'
-    displayName: 'Use Python 3.10'
-
-  - script: |
-      set -xe
-      python --version
-      python -m pip install --upgrade pip
-      python -m pip install .[tests]
-    displayName: 'Install tslearn and dependencies for tests'
-
-  - script: |
-      set -xe
-      python -m pip install pytest-azurepipelines
-      pip list
-      python -m pytest -v tslearn/ --doctest-modules -k 'not test_ or test_all_estimators'
-    displayName: 'Doctest'
 
 - job: 'tests_sklearn_version'
   pool:
@@ -320,7 +292,7 @@ jobs:
       set -xe
       python -m pip install pytest-azurepipelines
       pip list
-      python -m pytest -v tslearn/
+      python -m pytest -v
     displayName: 'Test sklearn versions'
 
 
@@ -351,13 +323,13 @@ jobs:
       python -m pip install pytest-azurepipelines
       python -m pip install coverage pytest-cov
       pip list
-      python -m pytest -v tslearn/ --cov=tslearn -k "not test_all_estimators"
+      python -m pytest -v --cov=tests --cov=tslearn
       python -m pip install .[all_features]
       pip list
-      python -m pytest -v tslearn/ --cov=tslearn --cov-append
+      python -m pytest -v --cov=tests --cov=tslearn --cov-append
       pip install scikit-learn~=1.4.0
       pip list
-      python -m pytest -v tslearn/ --cov=tslearn --cov-append  -k "test_all_estimators or test_scaler_allow_variable_length"
+      python -m pytest -v --cov=tests --cov=tslearn --cov-append  -k "test_all_estimators or test_scaler_allow_variable_length"
     displayName: 'Test'
 
   # Upload coverage to codecov.io
