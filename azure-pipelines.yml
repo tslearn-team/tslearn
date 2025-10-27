@@ -230,13 +230,9 @@ jobs:
       python -m pytest -v --doctest-modules -k "not test_ or test_all_estimators"
     displayName: 'Doctest'
 
-- job: 'tests_basic'
+- job: 'tests_doctests_basic'
   pool:
     vmImage: 'ubuntu-latest'
-  strategy:
-    matrix:
-      Python310:
-        python.version: '3.10'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -245,8 +241,8 @@ jobs:
   steps:
   - task: UsePythonVersion@0
     inputs:
-      versionSpec: '$(python.version)'
-    displayName: 'Use Python $(python.version)'
+      versionSpec: '3.10'
+    displayName: 'Use Python 3.10'
 
   - script: |
       set -xe
@@ -259,16 +255,20 @@ jobs:
       set -xe
       python -m pip install pytest-azurepipelines
       pip list
-      python -m pytest -v -k "not test_all_estimators"
+      python -m pytest -v --doctest-modules
     displayName: 'Test'
 
-- job: 'doctests_basic'
+- job: 'tests_sklearn_version'
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
     matrix:
-      Python310:
-        python.version: '3.10'
+      sklearn1_4:
+        skLearnVersion: '1.4.0'
+      sklearn1_5:
+        skLearnVersion: '1.5.0'
+      sklearn1_6:
+        skLearnVersion: '1.6.0'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -277,30 +277,28 @@ jobs:
   steps:
   - task: UsePythonVersion@0
     inputs:
-      versionSpec: '$(python.version)'
-    displayName: 'Use Python $(python.version)'
+      versionSpec: '3.11'
+    displayName: 'Use Python 3.11'
 
   - script: |
       set -xe
       python --version
       python -m pip install --upgrade pip
-      python -m pip install .[tests]
-    displayName: 'Install tslearn and dependencies for tests'
+      python -m pip install 'scikit-learn~=$(skLearnVersion)'
+      python -m pip install .[tests,all_features]
+    displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
       set -xe
       python -m pip install pytest-azurepipelines
       pip list
-      python -m pytest -v --doctest-modules -k 'not test_ or test_all_estimators'
-    displayName: 'Doctest'
+      python -m pytest -v
+    displayName: 'Test sklearn versions'
+
 
 - job: 'codecov'  # must be a separate job to only disable Numbas's JIT here
   pool:
     vmImage: 'ubuntu-latest'
-  strategy:
-    matrix:
-      Python310:
-        python.version: '3.10'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_DISABLE_JIT: '1'
@@ -310,14 +308,14 @@ jobs:
   steps:
   - task: UsePythonVersion@0
     inputs:
-      versionSpec: '$(python.version)'
-    displayName: 'Use Python $(python.version)'
+      versionSpec: '3.11'
+    displayName: 'Use Python 3.11'
 
   - script: |
       set -xe
       python --version
       python -m pip install --upgrade pip
-      python -m pip install .[tests,all_features]
+      python -m pip install .[tests]
     displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
@@ -325,7 +323,13 @@ jobs:
       python -m pip install pytest-azurepipelines
       python -m pip install coverage pytest-cov
       pip list
-      python -m pytest -v --cov=tslearn --cov=tests
+      python -m pytest -v --cov=tests --cov=tslearn -k "not test_all_estimators"
+      python -m pip install .[all_features]
+      pip list
+      python -m pytest -v --cov=tests --cov=tslearn --cov-append
+      pip install scikit-learn~=1.4.0
+      pip list
+      python -m pytest -v --cov=tests --cov=tslearn --cov-append  -k "test_all_estimators or test_scaler_allow_variable_length"
     displayName: 'Test'
 
   # Upload coverage to codecov.io
