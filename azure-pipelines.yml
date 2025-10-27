@@ -323,7 +323,7 @@ jobs:
       python -m pip install pytest-azurepipelines
       python -m pip install coverage pytest-cov
       pip list
-      python -m pytest -v --cov=tests --cov=tslearn -k "not test_all_estimators"
+      python -m pytest -v --cov=tests --cov=tslearn
       python -m pip install .[all_features]
       pip list
       python -m pytest -v --cov=tests --cov=tslearn --cov-append
