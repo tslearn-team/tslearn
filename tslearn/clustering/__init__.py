@@ -9,16 +9,17 @@ from .kshape import KShape
 from .utils import (EmptyClusterError, silhouette_score,
                     TimeSeriesCentroidBasedClusteringMixin)
 from .kmeans import (TimeSeriesKMeans, KernelKMeans)
-
+from .dbscan import TimeSeriesDBSCAN
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 __all__ = [
     "KShape",
-
-    "EmptyClusterError", "silhouette_score",
+    "EmptyClusterError",
+    "silhouette_score",
     "TimeSeriesCentroidBasedClusteringMixin",
-
-    "TimeSeriesKMeans", "KernelKMeans"
+    "TimeSeriesKMeans",
+    "KernelKMeans",
+    "TimeSeriesDBSCAN",
 ]
