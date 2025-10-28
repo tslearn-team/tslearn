@@ -7,7 +7,7 @@ from sklearn.utils.validation import check_is_fitted
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.utils import to_time_series_dataset, check_dims, check_array
 from tslearn.metrics import cdist_normalized_cc, y_shifted_sbd_vec
-from tslearn.bases import BaseModelPackage, TimeSeriesMixin
+from tslearn.bases import BaseModelPackage
 
 from .utils import (TimeSeriesCentroidBasedClusteringMixin,
                     _check_no_empty_cluster, _compute_inertia,
