@@ -54,10 +54,13 @@ docs = [
 all_features = [
     "torch",
     # Torch dropped support of macOS intel after version 2.2.2
-    # which does not support numpy2.
+    # which does not support numpy 2+
     "numpy<2; 'darwin' in sys_platform and 'x86_64' in platform_machine",
     "h5py",
-    "keras",
+    # Torch dropped support of macOS intel after version 2.2.2
+    # which does not support keras 3.12+
+    "keras<3.12; 'darwin' in sys_platform and 'x86_64' in platform_machine",
+    "kears",
     "cesium",
     "pandas",
     "stumpy",
