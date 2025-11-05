@@ -60,7 +60,7 @@ all_features = [
     # Torch dropped support of macOS intel after version 2.2.2
     # which does not support keras 3.12+
     "keras<3.12; 'darwin' in sys_platform and 'x86_64' in platform_machine",
-    "kears",
+    "keras",
     "cesium",
     "pandas",
     "stumpy",
