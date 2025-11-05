@@ -1,4 +1,74 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>77.0.3", "setuptools_scm[toml]>=8"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+packages = ["tslearn"]
+dynamic.version = {attr = "tslearn.__version__"}
+
+[project]
+name = "tslearn"
+description= "A machine learning toolkit dedicated to time-series data"
+authors = [
+    {name="Romain Tavenard", email="romain.tavenard@univ-rennes2.fr"}
+]
+readme = "README.md"
+dynamic = ["version"]
+requires-python = ">=3.10"
+license = "BSD-2-Clause"
+license-files = ["LICENSE"]
+classifiers=[
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries",
+]
+dependencies = [
+    "scikit-learn>=1.4,<1.8",
+    "numpy>=1.24.3,<2.4",
+    "scipy>=1.10.1,<1.17",
+    "numba>=0.58.1,<0.63",
+    "joblib>=1.2,<1.6"
+]
+
+[project.urls]
+documentation = "http://tslearn.readthedocs.io"
+source = "https://github.com/tslearn-team/tslearn"
+issues = "https://github.com/tslearn-team/tslearn/issues"
+changelog = "https://github.com/tslearn-team/tslearn/CHANGELOG.md"
+
+[project.optional-dependencies]
+pytorch = ['torch']
+tests = ["pytest", "h5py"]
+docs = [
+    "sphinx",
+    "pydata_sphinx_theme",
+    "sphinx-gallery",
+    "sphinx_copybutton",
+    "numpydoc",
+    "matplotlib",
+    "pypandoc",
+]
+all_features = [
+    "torch",
+    # Torch dropped support of macOS intel after version 2.2.2
+    # which does not support numpy 2+
+    "numpy<2; 'darwin' in sys_platform and 'x86_64' in platform_machine",
+    "h5py",
+    # Torch dropped support of macOS intel after version 2.2.2
+    # which does not support keras 3.12+
+    "keras<3.12; 'darwin' in sys_platform and 'x86_64' in platform_machine",
+    "keras",
+    "cesium",
+    "pandas",
+    "stumpy",
+]
+
+[tool.pytest.ini_options]
+minversion = "7"
+testpaths = [
+    "tests",
+    "tslearn"
+]

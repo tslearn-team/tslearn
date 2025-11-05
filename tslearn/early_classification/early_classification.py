@@ -1,5 +1,5 @@
 from sklearn.metrics import confusion_matrix, accuracy_score
-from sklearn.base import ClassifierMixin, clone
+from sklearn.base import ClassifierMixin, clone, BaseEstimator
 from sklearn.model_selection import train_test_split
 import numpy as np
 from scipy.sparse import coo_matrix
@@ -9,10 +9,10 @@ from sklearn.utils.validation import check_is_fitted
 from ..utils import to_time_series_dataset, check_array, check_dims
 from ..neighbors import KNeighborsTimeSeriesClassifier
 from ..clustering import TimeSeriesKMeans
-from ..bases import TimeSeriesBaseEstimator
+from ..bases import TimeSeriesMixin
 
 
-class NonMyopicEarlyClassifier(ClassifierMixin, TimeSeriesBaseEstimator):
+class NonMyopicEarlyClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
     """Early Classification modelling for time series using the model
     presented in [1]_.
 
@@ -579,3 +579,11 @@ class NonMyopicEarlyClassifier(ClassifierMixin, TimeSeriesBaseEstimator):
         more_tags = super()._more_tags()
         more_tags.update({"no_validation": True})
         return more_tags
+
+    def __sklearn_tags__(self):
+        # Because some of the data validation checks rely on datasets that are
+        # too small to pass here (only 1 item in one of the clusters, hence no
+        # stratified split possible)
+        tags = super().__sklearn_tags__()
+        tags.no_validation = True
+        return tags

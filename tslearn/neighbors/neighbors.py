@@ -6,7 +6,8 @@ from sklearn.neighbors import (KNeighborsClassifier, NearestNeighbors,
                                KNeighborsRegressor)
 from sklearn.utils.validation import check_is_fitted
 
-from tslearn.bases import BaseModelPackage
+from tslearn.bases import BaseModelPackage, TimeSeriesMixin
+from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from tslearn.metrics import (
     cdist_dtw,
     cdist_ctw,
@@ -24,7 +25,7 @@ from tslearn.utils import (
 )
 
 
-class KNeighborsTimeSeriesMixin():
+class KNeighborsTimeSeriesMixin(TimeSeriesMixin):
     """Mixin for k-neighbors searches on Time Series."""
 
     def _sax_preprocess(self, X, n_segments=10, alphabet_size_avg=4,
@@ -187,23 +188,23 @@ class KNeighborsTimeSeriesMixin():
         else:
             return ind
 
-    def _get_tags(self):
-        # sklearn < 1.6 super()._get_tags() returns dict based on _more_tags
-        # sklearn >= 1.6 super()._get_tags() returns dict based on __sklearn_tags__
-        tags = super()._get_tags()
-
-        # Make sure update tags based on _more_tags for sklearn > 1.6
-        tags.update(self._more_tags())
+    def _more_tags(self):
+        tags = super()._more_tags()
+        tags.update({
+            'allow_nan': True,
+            ALLOW_VARIABLE_LENGTH: True}
+        )
         return tags
 
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
         tags.input_tags.allow_nan = True
-        tags.input_tags.sparse = False
+        tags.allow_variable_length = True
         return tags
 
 
-class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
+class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin,
+                           NearestNeighbors,
                            BaseModelPackage):
     """Unsupervised learner for implementing neighbor searches for Time Series.
 
@@ -398,8 +399,8 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin, NearestNeighbors,
 
 
 class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
-                                     BaseModelPackage,
-                                     KNeighborsClassifier):
+                                     KNeighborsClassifier,
+                                     BaseModelPackage):
     """Classifier implementing the k-nearest neighbors vote for Time Series.
 
     Parameters
@@ -544,6 +545,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         else:
             self._X_fit, self._d = to_sklearn_dataset(X, return_dim=True)
         super().fit(self._X_fit, y)
+        self.n_features_in_ = self._d
         if hasattr(self, '_ts_metric'):
             self.metric = self._ts_metric
         return self
@@ -563,6 +565,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         """
         if self.metric in TSLEARN_VALID_METRICS:
             check_is_fitted(self, '_ts_fit')
+            X = check_array(X, allow_nd=True, force_all_finite=False)
             X = to_time_series_dataset(X)
             X = check_dims(X, X_fit_dims=self._ts_fit.shape, extend=True,
                            check_n_features_only=True)
@@ -593,6 +596,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         """
         if self.metric in TSLEARN_VALID_METRICS:
             check_is_fitted(self, '_ts_fit')
+            X = check_array(X, allow_nd=True, force_all_finite=False)
             X = check_dims(X, X_fit_dims=self._ts_fit.shape, extend=True,
                            check_n_features_only=True)
             X_ = self._precompute_cross_dist(X)
@@ -607,12 +611,10 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             X_ = check_dims(X_, X_fit_dims=self._X_fit.shape, extend=False)
             return super().predict_proba(X_)
 
-    def _more_tags(self):
-        return {'allow_nan': True, 'allow_variable_length': True}
-
 
 class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
-                                    KNeighborsRegressor):
+                                    KNeighborsRegressor,
+                                    BaseModelPackage):
     """Classifier implementing the k-nearest neighbors vote for Time Series.
 
     Parameters
@@ -728,6 +730,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         else:
             self._X_fit, self._d = to_sklearn_dataset(X, return_dim=True)
         super().fit(self._X_fit, y)
+        self.n_features_in_ = self._d
         if hasattr(self, '_ts_metric'):
             self.metric = self._ts_metric
         return self
@@ -747,6 +750,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         """
         if self.metric in TSLEARN_VALID_METRICS:
             check_is_fitted(self, '_ts_fit')
+            X = check_array(X, allow_nd=True, force_all_finite=False)
             X = to_time_series_dataset(X)
             X = check_dims(X, X_fit_dims=self._ts_fit.shape, extend=True,
                            check_n_features_only=True)
@@ -761,6 +765,3 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
             X_ = to_sklearn_dataset(X)
             X_ = check_dims(X_, X_fit_dims=self._X_fit.shape, extend=False)
             return super().predict(X_)
-
-    def _more_tags(self):
-        return {'allow_nan': True, 'allow_variable_length': True}

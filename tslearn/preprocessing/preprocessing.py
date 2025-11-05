@@ -3,10 +3,10 @@ from typing import Callable, Optional, Union
 
 import numpy
 
-from sklearn.base import TransformerMixin
+from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.utils.validation import check_is_fitted
 
-from tslearn.bases import TimeSeriesBaseEstimator
+from tslearn.bases import TimeSeriesMixin
 from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from tslearn.utils import (
     check_variable_length_input,
@@ -21,7 +21,7 @@ from tslearn.utils import (
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
-class TimeSeriesResampler(TransformerMixin, TimeSeriesBaseEstimator):
+class TimeSeriesResampler(TimeSeriesMixin, TransformerMixin, BaseEstimator):
     """Resampler for time series. Resample time series so that they reach the
     target size.
 
@@ -61,7 +61,7 @@ class TimeSeriesResampler(TransformerMixin, TimeSeriesBaseEstimator):
         """
         X_ = check_variable_length_input(X)
         self._X_fit_dims = X_.shape
-
+        self.n_features_in_ = self._X_fit_dims[-1]
         return self
 
     def _transform_unit_sz(self, X):
@@ -102,7 +102,12 @@ class TimeSeriesResampler(TransformerMixin, TimeSeriesBaseEstimator):
         check_is_fitted(self, '_X_fit_dims')
 
         X_ = check_variable_length_input(X)
-        X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, extend=False)
+        X_ = check_dims(
+            X_,
+            X_fit_dims=self._X_fit_dims,
+            extend=False,
+            check_n_features_only=True
+        )
 
         target_sz = self._get_resampling_size(X_)
         if target_sz == 1:
@@ -123,12 +128,18 @@ class TimeSeriesResampler(TransformerMixin, TimeSeriesBaseEstimator):
         return X_out
 
     def _more_tags(self):
-        more_tags = super()._more_tags()
-        more_tags.update({'allow_nan': True, ALLOW_VARIABLE_LENGTH: True})
-        return more_tags
+        tags = super()._more_tags()
+        tags.update({'allow_nan': True, ALLOW_VARIABLE_LENGTH: True})
+        return tags
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        tags.allow_variable_length = True
+        return tags
 
 
-class TimeSeriesScalerMinMax(TransformerMixin, TimeSeriesBaseEstimator):
+class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
     """Scaler for time series datasets. Scales features values so that their span in given dimensions
     is between ``min`` and ``max`` where ``value_range=(min, max)``.
 
@@ -191,6 +202,7 @@ class TimeSeriesScalerMinMax(TransformerMixin, TimeSeriesBaseEstimator):
         X_ = check_array(X, allow_nd=True, force_all_finite=False)
         X_ = to_time_series_dataset(X_)
         self._X_fit_dims = X_.shape
+        self.n_features_in_ = self._X_fit_dims[-1]
         return self
 
     def fit_transform(self, X, y=None, **kwargs):
@@ -248,12 +260,17 @@ class TimeSeriesScalerMinMax(TransformerMixin, TimeSeriesBaseEstimator):
         return X_
 
     def _more_tags(self):
-        more_tags = super()._more_tags()
-        more_tags.update({'allow_nan': True})
-        return more_tags
+        tags = super()._more_tags()
+        tags.update({'allow_nan': True})
+        return tags
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        return tags
 
 
-class TimeSeriesScalerMeanVariance(TransformerMixin, TimeSeriesBaseEstimator):
+class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstimator):
     """Scaler for time series datasets. Scales fetures values so that their mean (resp.
     standard deviation) in given dimensions is mu (resp. std).
 
@@ -318,6 +335,7 @@ class TimeSeriesScalerMeanVariance(TransformerMixin, TimeSeriesBaseEstimator):
         X_ = check_array(X, allow_nd=True, force_all_finite=False)
         X_ = to_time_series_dataset(X_)
         self._X_fit_dims = X_.shape
+        self.n_features_in_ = self._X_fit_dims[-1]
         return self
 
     def fit_transform(self, X, y=None, **kwargs):
@@ -367,12 +385,17 @@ class TimeSeriesScalerMeanVariance(TransformerMixin, TimeSeriesBaseEstimator):
         return X_
 
     def _more_tags(self):
-        more_tags = super()._more_tags()
-        more_tags.update({'allow_nan': True})
-        return more_tags
+        tags = super()._more_tags()
+        tags.update({'allow_nan': True})
+        return tags
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        return tags
 
 
-class TimeSeriesImputer(TransformerMixin, TimeSeriesBaseEstimator):
+class TimeSeriesImputer(TimeSeriesMixin, TransformerMixin, BaseEstimator):
     """Missing value imputer for time series.
 
     Missing values (nans) are replaced according to the chosen imputation
@@ -544,6 +567,7 @@ class TimeSeriesImputer(TransformerMixin, TimeSeriesBaseEstimator):
         """
         X_ = check_variable_length_input(X)
         self._X_fit_dims = X_.shape
+        self.n_features_in_ = self._X_fit_dims[-1]
         return self
 
     def fit_transform(self, X, y=None, **kwargs):
@@ -559,7 +583,7 @@ class TimeSeriesImputer(TransformerMixin, TimeSeriesBaseEstimator):
         numpy.ndarray
             Imputed time series dataset.
         """
-        return self.fit(X).transform(X, kwargs)
+        return self.fit(X).transform(X, **kwargs)
 
     def transform(self, X, y=None, **kwargs):
         """Fit to data, then transform it.
@@ -577,7 +601,12 @@ class TimeSeriesImputer(TransformerMixin, TimeSeriesBaseEstimator):
         check_is_fitted(self, '_X_fit_dims')
 
         X_ = check_variable_length_input(X)
-        X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, extend=False)
+        X_ = check_dims(
+            X_,
+            X_fit_dims=self._X_fit_dims,
+            extend=False,
+            check_n_features_only=True
+        )
 
         imputer = self._imputer
         if imputer is None:
@@ -592,6 +621,18 @@ class TimeSeriesImputer(TransformerMixin, TimeSeriesBaseEstimator):
         return to_time_series_dataset(X_)
 
     def _more_tags(self):
-        more_tags = super()._more_tags()
-        more_tags.update({'allow_nan': True, ALLOW_VARIABLE_LENGTH: True})
-        return more_tags
+        tags = super()._more_tags()
+        tags.update({
+            'allow_nan': True,
+            ALLOW_VARIABLE_LENGTH: True,
+        })
+        tags['_xfail_checks'].update({
+            "check_transformer_data_not_an_array": "Uses X"
+        })
+        return tags
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        tags.allow_variable_length = True
+        return tags
