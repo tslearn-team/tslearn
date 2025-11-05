@@ -25,10 +25,18 @@ def test_scaler_allow_variable_length():
 
     for estimator_cls in [TimeSeriesScalerMeanVariance, TimeSeriesScalerMinMax]:
         estimator = estimator_cls()
-        tags = estimator._get_tags()
 
-        assert ALLOW_VARIABLE_LENGTH in tags
-        assert not tags[ALLOW_VARIABLE_LENGTH]
+        try:
+            # slearn >= 1.6
+            from sklearn.utils import get_tags
+            tags = get_tags(estimator)
+            assert not tags.allow_variable_length
+
+        except ImportError:
+            # slearn < 1.6
+            tags = estimator._get_tags()
+            assert ALLOW_VARIABLE_LENGTH in tags
+            assert not tags[ALLOW_VARIABLE_LENGTH]
 
         with pytest.raises(ValueError):
             estimator.fit_transform(variable_length_dataset)

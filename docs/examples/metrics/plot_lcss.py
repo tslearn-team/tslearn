@@ -62,5 +62,4 @@ for positions in dtw_path:
 plt.legend()
 plt.title("Time series matching with DTW")
 
-plt.tight_layout()
 plt.show()

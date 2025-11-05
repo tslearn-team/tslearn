@@ -24,11 +24,11 @@ from keras.utils import to_categorical, set_random_seed
 
 import numpy
 
-from sklearn.base import ClassifierMixin, TransformerMixin
+from sklearn.base import ClassifierMixin, TransformerMixin, BaseEstimator
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.multiclass import unique_labels
 
-from ..bases import BaseModelPackage, TimeSeriesBaseEstimator
+from ..bases import BaseModelPackage, TimeSeriesMixin
 from ..clustering import TimeSeriesKMeans
 from ..preprocessing import TimeSeriesScalerMinMax
 from ..utils import (
@@ -279,9 +279,15 @@ def grabocka_params_to_shapelet_size_dict(n_ts, ts_sz, n_classes, l, r):
     return d
 
 
-class LearningShapelets(ClassifierMixin, TransformerMixin,
-                        BaseModelPackage, TimeSeriesBaseEstimator):
+class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, BaseEstimator,
+                        BaseModelPackage):
     r"""Learning Time-Series Shapelets model.
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        tags.allow_variable_length = True
+        return tags
 
 
     Learning Time-Series Shapelets was originally presented in [1]_.
@@ -422,12 +428,6 @@ class LearningShapelets(ClassifierMixin, TransformerMixin,
         self.scale = scale
         self.random_state = random_state
 
-        if not scale:
-            warnings.warn("The default value for 'scale' is set to False "
-                          "in version 0.4 to ensure backward compatibility, "
-                          "but is likely to change in a future version.",
-                          FutureWarning)
-
     @property
     def _n_shapelet_sizes(self):
         return len(self.n_shapelets_per_size_)
@@ -488,6 +488,12 @@ class LearningShapelets(ClassifierMixin, TransformerMixin,
         y : array-like of shape=(n_ts, )
             Time series labels.
         """
+        if not self.scale:
+            warnings.warn("The default value for 'scale' is set to False "
+                          "in version 0.4 to ensure backward compatibility, "
+                          "but is likely to change in a future version.",
+                          FutureWarning)
+
         X, y = check_X_y(X, y, allow_nd=True, force_all_finite=False)
         X = self._preprocess_series(X)
         X = check_dims(X)
@@ -527,6 +533,7 @@ class LearningShapelets(ClassifierMixin, TransformerMixin,
         )
         self.history_ = h.history
         self.n_iter_ = len(self.history_.get("loss", []))
+        self.n_features_in_ = d
         return self
 
     def predict(self, X):
@@ -663,8 +670,8 @@ class LearningShapelets(ClassifierMixin, TransformerMixin,
         """Ensures that time series in X matches the following requirements:
 
         - their length is greater than the size of the longest shapelet
-        - (at predict time) their length is lower than the maximum allowed
-        length, as set by self.max_size
+        - their length is lower than the maximum allowed length,
+        as set by max_size or deduced from fitted data.
         """
         sizes = numpy.array([ts_size(Xi) for Xi in X])
         self._min_sz_fit = sizes.min()
@@ -679,33 +686,31 @@ class LearningShapelets(ClassifierMixin, TransformerMixin,
                                  "length {} and longest shapelet is of length "
                                  "{}".format(self._min_sz_fit, max_sz_shp))
 
-        if hasattr(self, 'model_') or self.max_size is not None:
-            # Model is already fitted
-            max_sz_X = sizes.max()
+        max_size = self.max_size
+        if max_size is None:
+            max_size = self._X_fit_dims[1] if hasattr(self, '_X_fit_dims') else X.shape[1]
 
-            if hasattr(self, 'model_'):
-                max_size = self._X_fit_dims[1]
-            else:
-                max_size = self.max_size
-            if max_size < max_sz_X:
-                raise ValueError("Sizes in X do not match maximum allowed "
-                                 "size as set by max_size. "
-                                 "Longest time series is of "
-                                 "length {} and max_size is "
-                                 "{}".format(max_sz_X, max_size))
+        if X.shape[1] > max_size:
+            raise ValueError("Sizes in X do not match maximum allowed "
+                             "size as set by max_size or "
+                             "computed when fit. "
+                             "Longest time series is of "
+                             "length {} and maximum allowed size is "
+                             "{}".format(X.shape[1], max_size))
 
     def _preprocess_series(self, X):
+        """Scale if needed, pad with nans if needed."""
         if self.scale:
             X = TimeSeriesScalerMinMax().fit_transform(X)
         else:
             X = to_time_series_dataset(X)
-        if self.max_size is not None and self.max_size != X.shape[1]:
-            if X.shape[1] > self.max_size:
-                raise ValueError(
-                    "Cannot feed model with series of length {} "
-                    "max_size is {}".format(X.shape[1], self.max_size)
-                )
-            X_ = numpy.zeros((X.shape[0], self.max_size, X.shape[2]))
+
+        max_size = self.max_size
+        if max_size is None:
+            max_size = self._X_fit_dims[1] if hasattr(self, '_X_fit_dims') else X.shape[1]
+
+        if max_size > X.shape[1]:
+            X_ = numpy.zeros((X.shape[0], max_size, X.shape[2]))
             X_[:, :X.shape[1]] = X
             X_[:, X.shape[1]:] = numpy.nan
             return X_
@@ -780,18 +785,19 @@ class LearningShapelets(ClassifierMixin, TransformerMixin,
             init_shapelets = _kmeans_init_shapelets(
                 X,
                 nb_shapelets,
-                sz_shapelet,
-                n_draw=10000
+                sz_shapelet
             )
             shapelets_layer = LocalSquaredDistanceLayer(
                 nb_shapelets,
                 init = init_shapelets,
-                name="shapelets_%d" % index
+                name="shapelets_%d" % index,
+                dtype=X.dtype.name
             )(patching_layer)
 
             pool_layers.append(
                 GlobalMinPooling1D(
-                    name="min_pooling_%d" % index
+                    name="min_pooling_%d" % index,
+                    dtype=X.dtype.name
                 )(shapelets_layer)
             )
         if self._n_shapelet_sizes > 1:
@@ -959,8 +965,12 @@ class LearningShapelets(ClassifierMixin, TransformerMixin,
         return inst
 
     def _more_tags(self):
-        # This is added due to the fact that there are small rounding
-        # errors in the `transform` method, while sklearn performs checks
-        # that requires the output of transform to have less than 1e-9
-        # difference between outputs of same input.
-        return {'allow_nan': True, 'allow_variable_length': True}
+        tags = super()._more_tags()
+        tags.update({'allow_nan': True, 'allow_variable_length': True})
+        return tags
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        tags.allow_variable_length = True
+        return tags

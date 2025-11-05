@@ -3,7 +3,7 @@ import numpy
 
 from scipy.spatial.distance import cdist
 
-from sklearn.base import ClusterMixin, TransformerMixin
+from sklearn.base import ClusterMixin, TransformerMixin, BaseEstimator
 from sklearn.cluster._kmeans import _kmeans_plusplus
 from sklearn.metrics.pairwise import pairwise_kernels
 from sklearn.utils import check_random_state
@@ -16,9 +16,15 @@ from tslearn.barycenters import (
     euclidean_barycenter,
     softdtw_barycenter,
 )
-from tslearn.bases import BaseModelPackage, TimeSeriesBaseEstimator
+from tslearn.bases import BaseModelPackage, TimeSeriesMixin
+from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from tslearn.metrics import cdist_dtw, cdist_gak, cdist_soft_dtw, sigma_gak
-from tslearn.utils import check_array, check_dims, to_sklearn_dataset, to_time_series_dataset
+from tslearn.utils import (
+    check_array,
+    check_dims,
+    to_sklearn_dataset,
+    to_time_series_dataset
+)
 
 from .utils import (
     EmptyClusterError,
@@ -117,7 +123,7 @@ def _k_init_metric(X, n_clusters, cdist_metric, random_state, n_local_trials=Non
     return centers
 
 
-class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
+class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackage):
     """Kernel K-means.
 
     Parameters
@@ -374,6 +380,7 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
             self.labels_ = last_correct_labels
             self.inertia_ = min_inertia
             self._X_fit = X
+            self.n_features_in_ = X.shape[-1]
         return self
 
     def _compute_dist(self, K, dist):
@@ -444,21 +451,30 @@ class KernelKMeans(ClusterMixin, BaseModelPackage, TimeSeriesBaseEstimator):
         return dist.argmin(axis=1)
 
     def _more_tags(self):
-        sample_weight_failure_msg = "Currently not supported due to clusters initialization"
-        return {"allow_nan": True,
-                "allow_variable_length": True,
-                "_xfail_checks": {
-                    "check_sample_weight_equivalence_on_dense_data": sample_weight_failure_msg,
-                    "check_sample_weight_equivalence_on_sparse_data": sample_weight_failure_msg
-                }}
+        tags = super()._more_tags()
+        sample_weight_failure_msg = "Not supported due to clusters initialization"
+        tags.update({
+            "allow_nan": True,
+            ALLOW_VARIABLE_LENGTH: True,
+        })
+        tags["_xfail_checks"].update({
+            "check_sample_weight_equivalence_on_dense_data": sample_weight_failure_msg,
+        })
+        return tags
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        tags.allow_variable_length = True
+        return tags
 
 
 class TimeSeriesKMeans(
+    TimeSeriesCentroidBasedClusteringMixin,
     TransformerMixin,
     ClusterMixin,
-    TimeSeriesCentroidBasedClusteringMixin,
+    BaseEstimator,
     BaseModelPackage,
-    TimeSeriesBaseEstimator,
 ):
     """K-means clustering for time-series data.
 
@@ -757,7 +773,12 @@ class TimeSeriesKMeans(
             Ignored
         """
 
-        X = check_array(X, allow_nd=True, force_all_finite="allow-nan")
+        X = check_array(
+            X,
+            allow_nd=True,
+            # For variable length time series with dedicated metric
+            force_all_finite="allow-nan" if self.metric != "euclidean" else True
+        )
 
         if hasattr(self.init, "__array__"):
             X = check_dims(
@@ -850,7 +871,11 @@ class TimeSeriesKMeans(
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
-        X = check_array(X, allow_nd=True, force_all_finite="allow-nan")
+        X = check_array(
+            X,
+            allow_nd=True,
+            force_all_finite="allow-nan" if self.metric != "euclidean" else True
+        )
         check_is_fitted(self, "cluster_centers_")
         X = check_dims(
             X,
@@ -876,7 +901,11 @@ class TimeSeriesKMeans(
         distances : array of shape=(n_ts, n_clusters)
             Distances to cluster centers
         """
-        X = check_array(X, allow_nd=True, force_all_finite="allow-nan")
+        X = check_array(
+            X,
+            allow_nd=True,
+            force_all_finite="allow-nan" if self.metric != "euclidean" else True
+        )
         check_is_fitted(self, "cluster_centers_")
         X = check_dims(
             X,
@@ -887,4 +916,15 @@ class TimeSeriesKMeans(
         return self._transform(X)
 
     def _more_tags(self):
-        return {"allow_nan": True, "allow_variable_length": True}
+        tags = super()._more_tags()
+        tags.update({
+            "allow_nan": self.metric != "euclidean",
+            ALLOW_VARIABLE_LENGTH: self.metric != "euclidean"}
+        )
+        return tags
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = self.metric != "euclidean"
+        tags.allow_variable_length = self.metric != "euclidean"
+        return tags

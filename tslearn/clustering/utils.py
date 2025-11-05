@@ -3,6 +3,7 @@ from sklearn.metrics.cluster import silhouette_score as sklearn_silhouette
 from scipy.spatial.distance import cdist
 import numpy
 
+from tslearn.bases import TimeSeriesMixin
 from tslearn.metrics import cdist_dtw, cdist_soft_dtw_normalized
 from tslearn.preprocessing import TimeSeriesResampler
 from tslearn.utils import to_time_series_dataset, to_time_series
@@ -206,7 +207,7 @@ def _check_initial_guess(init, n_clusters):
             " {} given".format(n_clusters, init.shape[0])
 
 
-class TimeSeriesCentroidBasedClusteringMixin:
+class TimeSeriesCentroidBasedClusteringMixin(TimeSeriesMixin):
     """Mixin class for centroid-based clustering of time series."""
     def _post_fit(self, X_fitted, centroids, inertia):
         if numpy.isfinite(inertia) and (centroids is not None):
@@ -216,3 +217,4 @@ class TimeSeriesCentroidBasedClusteringMixin:
             self.inertia_ = inertia
         else:
             self._X_fit = None
+        self.n_features_in_ = X_fitted.shape[-1]
