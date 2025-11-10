@@ -41,7 +41,11 @@ changelog = "https://github.com/tslearn-team/tslearn/CHANGELOG.md"
 
 [project.optional-dependencies]
 pytorch = ['torch']
-tests = ["pytest", "h5py"]
+tests = [
+    # See https://github.com/pytest-dev/pytest/issues/13895
+    "pytest<9", 
+    "h5py"
+]
 docs = [
     "sphinx",
     "pydata_sphinx_theme",
