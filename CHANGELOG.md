@@ -29,7 +29,7 @@ the KERAS_BACKEND environment variable. Defaults to the first found installed ba
 
 * `per_timeseries` and `per_feature` options for min-max and mean-variance scalers ([#536](https://github.com/tslearn-team/tslearn/issues/536))
 * `TimeSeriesImputer`class: missing value imputer for time series ([#564](https://github.com/tslearn-team/tslearn/issues/564))
-* Frechet metrics and KNeighbors integration ([#402](https://github.com/tslearn-team/tslearn/issues/402)
+* Frechet metrics and KNeighbors integration ([#402](https://github.com/tslearn-team/tslearn/issues/402))
 
 ## [v0.6.4]
 
