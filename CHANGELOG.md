@@ -23,7 +23,7 @@ the KERAS_BACKEND environment variable. Defaults to the first found installed ba
 
 ### Removed
 
-* Support for Python versions 3.8 and 3.9 are dropped
+* Support for Python versions 3.8 and 3.9 is dropped
 
 ### Added
 
