@@ -42,8 +42,7 @@ changelog = "https://github.com/tslearn-team/tslearn/CHANGELOG.md"
 [project.optional-dependencies]
 pytorch = ['torch']
 tests = [
-    # See https://github.com/pytest-dev/pytest/issues/13895
-    "pytest<9", 
+    "pytest", 
     "h5py"
 ]
 docs = [

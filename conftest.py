@@ -12,7 +12,7 @@ except ImportError:
     keras = None
 
 
-def pytest_ignore_collect(collection_path, path, config):
+def pytest_ignore_collect(collection_path, *args, **kwargs):
     if keras is None and "shapelets" in collection_path.parts:
         return True
 
