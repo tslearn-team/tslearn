@@ -1,5 +1,5 @@
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
-__version__ = "0.7.0.dev0"
+__version__ = "0.8.0.dev0"
 __bibtex__ = r"""@article{JMLR:v21:20-091,
   author  = {Romain Tavenard and Johann Faouzi and Gilles Vandewiele and
              Felix Divo and Guillaume Androz and Chester Holtz and
