@@ -15,6 +15,10 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 * Fixed centroids computations in K-shape for multivariate timeseries ([#288](https://github.com/tslearn-team/tslearn/issues/288))
 
+### Added
+
+* DBSCAN estimator for timeseries ([#598](https://github.com/tslearn-team/tslearn/issues/598))
+
 ## [v0.7.0]
 
 ### Changed
