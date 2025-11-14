@@ -10,7 +10,10 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 
 ## [Towards v0.8.0]
-Nothing new yet
+
+### Added
+
+* DBSCAN estimator for timeseries ([#598](https://github.com/tslearn-team/tslearn/issues/598))
 
 ## [v0.7.0]
 
