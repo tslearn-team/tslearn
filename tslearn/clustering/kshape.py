@@ -117,24 +117,29 @@ class KShape(TimeSeriesCentroidBasedClusteringMixin,
         return True
 
     def _shape_extraction(self, X, k):
-        sz = X.shape[1]
+        _, sz, d = X.shape
         Xp = y_shifted_sbd_vec(self.cluster_centers_[k], X[self.labels_ == k],
                                norm_ref=-1,
                                norms_dataset=self.norms_[self.labels_ == k])
-        S = numpy.dot(Xp[:, :, 0].T, Xp[:, :, 0])
-        Q = numpy.eye(sz) - numpy.ones((sz, sz)) / sz
-        M = numpy.dot(Q.T, numpy.dot(S, Q))
-        _, vec = numpy.linalg.eigh(M)
-        mu_k = vec[:, -1].reshape((sz, 1))
 
-        # The way the optimization problem is (ill-)formulated, both mu_k and
-        # -mu_k are candidates for barycenters
-        # In the following, we check which one is best candidate
-        dist_plus_mu = numpy.sum(numpy.linalg.norm(Xp - mu_k, axis=(1, 2)))
-        dist_minus_mu = numpy.sum(numpy.linalg.norm(Xp + mu_k, axis=(1, 2)))
-        if dist_minus_mu < dist_plus_mu:
-            mu_k *= -1
+        mu_k_list = []
+        for i in range(d):
+            S = numpy.dot(Xp[:, :, i].T, Xp[:, :, i])
+            Q = numpy.eye(sz) - numpy.ones((sz, sz)) / sz
+            M = numpy.dot(Q.T, numpy.dot(S, Q))
+            _, vec = numpy.linalg.eigh(M)
+            mu_k = vec[:, -1].reshape((sz, 1))
 
+            # The way the optimization problem is (ill-)formulated, both mu_k and
+            # -mu_k are candidates for barycenters
+            # In the following, we check which one is the best candidate
+            dist_plus_mu = numpy.sum(numpy.linalg.norm(Xp - mu_k, axis=(1, 2)))
+            dist_minus_mu = numpy.sum(numpy.linalg.norm(Xp + mu_k, axis=(1, 2)))
+            if dist_minus_mu < dist_plus_mu:
+                mu_k *= -1
+            mu_k_list.append(mu_k)
+
+        mu_k = numpy.hstack(mu_k_list)
         return mu_k
 
     def _update_centroids(self, X):
