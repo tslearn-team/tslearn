@@ -10,7 +10,8 @@ from tslearn.clustering import (
     EmptyClusterError,
     TimeSeriesKMeans,
     KernelKMeans,
-    KShape
+    KShape,
+    TimeSeriesDBSCAN
 )
 from tslearn.clustering.utils import (
     _check_full_length,
@@ -258,3 +259,39 @@ def test_silhouette():
         0.17953934,
         rel_tol=1e-07
     )
+
+def test_dbscan():
+    n, sz, d = 15, 10, 3
+    rng = np.random.RandomState(0)
+    time_series = rng.randn(n, sz, d)
+    time_series = TimeSeriesScalerMeanVariance().fit_transform(time_series)
+
+    db = TimeSeriesDBSCAN()
+
+    # lcss: no dist function
+    # softdtw: negative value in distance matrix
+    # sax: 2 required positional arguments: 'breakpoints_avg' and 'size_fitted'
+
+    # Test metrics
+    metrics = ['dtw', 'ctw', 'gak', 'frechet', 'euclidean']
+    for metric in metrics:
+        db.set_params(metric=metric)
+        db.fit(time_series)
+        # TODO what to check
+
+    # Test metric_params
+    metric_params = {"sigma": 0.5}
+    db.set_params(metric='gak', metric_params=metric_params)
+    db.fit(time_series)
+
+    metric_params = {"invalid": 0.5}
+    with pytest.raises(TypeError, match="unexpected keyword argument 'invalid'"):
+        db.set_params(metric='gak', metric_params=metric_params)
+        db.fit(time_series)
+
+    # Test attributes
+    # TODO what to check
+    db.labels_
+    db.components_
+    db.core_ts_indices_
+    db.n_features_in_
