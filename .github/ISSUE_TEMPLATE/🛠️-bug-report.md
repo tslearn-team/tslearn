@@ -1,8 +1,8 @@
 ---
-name: Bug report
+name: "\U0001F6E0️ Bug report"
 about: Create a report to help us improve
 title: ''
-labels: bug
+labels: bug, Triage
 assignees: ''
 
 ---
