@@ -211,6 +211,23 @@ def test_kshape():
     with pytest.raises(ValueError):
         KShape(n_clusters=2, verbose=False, init="invalid").fit(time_series)
 
+    # Test that shape extraction operates on second features
+    feature_1 = rng.randn(1, 10, 1)
+    feature_2_0 = rng.randn(1, 10, 1) + 10
+    feature_2_1 = rng.randn(1, 10, 1) - 10
+    X1 = np.dstack((feature_1, feature_2_0))
+    X2 = np.dstack((feature_1, feature_2_1))
+    X = np.vstack((
+        np.repeat(X1, 10, axis=0),
+        np.repeat(X2, 10, axis=0),
+    ))
+
+    X = TimeSeriesScalerMeanVariance().fit_transform(X)
+    kshape = KShape(n_clusters=2, n_init=5, random_state=rng).fit(X)
+    assert all(kshape.labels_[0] == kshape.labels_[:10])
+    assert all(kshape.labels_[10] == kshape.labels_[10:])
+    assert kshape.labels_[0] != kshape.labels_[10]
+
 
 def test_silhouette():
     np.random.seed(0)
