@@ -260,38 +260,73 @@ def test_silhouette():
         rel_tol=1e-07
     )
 
+
 def test_dbscan():
-    n, sz, d = 15, 10, 3
-    rng = np.random.RandomState(0)
-    time_series = rng.randn(n, sz, d)
-    time_series = TimeSeriesScalerMeanVariance().fit_transform(time_series)
+    # Basic clustering
+    X = np.vstack((
+        np.eye(3).reshape(-1, 3),
+        -1 * np.eye(3).reshape(-1, 3)
+    ))
+    X = np.insert(X, 0, 0, axis=1)
+    X = np.append(X, np.zeros((X.shape[0], 1)), axis=1)
+    X = to_time_series_dataset(X)
 
-    db = TimeSeriesDBSCAN()
+    db = TimeSeriesDBSCAN(eps=1e-6, min_ts=3)
 
-    # lcss: no dist function
-    # softdtw: negative value in distance matrix
-    # sax: 2 required positional arguments: 'breakpoints_avg' and 'size_fitted'
+    # Test invalid metric
+    db.set_params(metric='gak')
+    with pytest.raises(ValueError, match="Metric must be one of"):
+        db.fit(X)
 
-    # Test metrics
-    metrics = ['dtw', 'ctw', 'gak', 'frechet', 'euclidean']
+    # Test TSlearn metrics
+    metrics = ['dtw', 'ctw', 'frechet']
     for metric in metrics:
         db.set_params(metric=metric)
-        db.fit(time_series)
-        # TODO what to check
+        db.fit(X)
+        np.testing.assert_equal(db.labels_, [0, 0, 0, 1, 1, 1])
+        np.testing.assert_equal(db.components_, X)
+        np.testing.assert_equal(db.core_ts_indices_, np.arange(X.shape[0]))
 
-    # Test metric_params
-    metric_params = {"sigma": 0.5}
-    db.set_params(metric='gak', metric_params=metric_params)
-    db.fit(time_series)
+    # Euclidean, no clustering performed
+    db.set_params(metric='euclidean')
+    db.fit(X)
+    np.testing.assert_equal(db.labels_, [-1, -1, -1, -1, -1, -1])
+    np.testing.assert_equal(db.components_, np.array([]).reshape((0, 5)))
+    np.testing.assert_equal(db.core_ts_indices_, np.array([]))
 
-    metric_params = {"invalid": 0.5}
-    with pytest.raises(TypeError, match="unexpected keyword argument 'invalid'"):
-        db.set_params(metric='gak', metric_params=metric_params)
-        db.fit(time_series)
+    # Test precomputed
+    db.set_params(metric='precomputed')
+    db.fit(cdist_dtw(X))
+    np.testing.assert_equal(db.labels_, [0, 0, 0, 1, 1, 1])
+    np.testing.assert_equal(db.core_ts_indices_, np.arange(X.shape[0]))
 
-    # Test attributes
-    # TODO what to check
-    db.labels_
-    db.components_
-    db.core_ts_indices_
-    db.n_features_in_
+    # Clustering with outliers
+    X = np.append(X, np.array([[0], [1.5], [0], [0], [0]])).reshape(-1, 5)
+    X = to_time_series_dataset(X)
+    db = TimeSeriesDBSCAN(eps=1e-6, min_ts=3)
+    db.fit(X)
+    np.testing.assert_equal(db.labels_, [0, 0, 0, 1, 1, 1, -1])
+    np.testing.assert_equal(db.components_, X[:-1])
+    np.testing.assert_equal(db.core_ts_indices_, np.arange(X.shape[0] - 1))
+
+    # Check eps: increase eps so that last point is clustered
+    db.set_params(eps=0.5)
+    db.fit(X)
+    np.testing.assert_equal(db.labels_, [0, 0, 0, 1, 1, 1, 0])
+    np.testing.assert_equal(db.components_, X)
+    np.testing.assert_equal(db.core_ts_indices_, np.arange(X.shape[0]))
+
+    # Check min_ts: last point only has 1 neighboor within the eps range.
+    # Therefore, it is not considered a core component
+    X[0, 1, 0] = 0.9
+    X[1, 2, 0] = 0.9
+    db.fit(X)
+    np.testing.assert_equal(db.labels_, [0, 0, 0, 1, 1, 1, 0])
+    np.testing.assert_equal(db.components_, X[:-1])
+    np.testing.assert_equal(db.core_ts_indices_, np.arange(X.shape[0] -1))
+
+    # Check nb_jobs
+    db = TimeSeriesDBSCAN(metric_params={'n_jobs': 1})
+    assert db._get_metric_params() == {'n_jobs': 1}
+    db = TimeSeriesDBSCAN(n_jobs=5, metric_params={'n_jobs': 1})
+    assert db._get_metric_params() == {'n_jobs': 5}

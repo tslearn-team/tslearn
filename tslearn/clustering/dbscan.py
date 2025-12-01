@@ -28,7 +28,7 @@ class TimeSeriesDBSCAN(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPa
     min_ts : int (default: 5)
         The number of time series (including itself) in a neighborhood for a time series
         to be considered as a core point.
-    metric: {'dtw', 'softdtw', 'ctw', 'gak', 'frechet', 'euclidean', 'precomputed'} (default: 'dtw')
+    metric: {'dtw', 'ctw', 'frechet', 'euclidean', 'precomputed'} (default: 'dtw')
         Metric to be used for similarity measure between time series.
     metric_params : dict (default: None)
         Additional keyword arguments to pass to the metric function.
@@ -77,6 +77,8 @@ class TimeSeriesDBSCAN(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPa
     37
     """
 
+    VALID_METRICS = set(("dtw", "ctw", "frechet", "euclidean", "precomputed"))
+
     def __init__(
             self,
             eps=0.5,
@@ -92,15 +94,15 @@ class TimeSeriesDBSCAN(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPa
         self.n_jobs = n_jobs
 
     def _is_fitted(self):
-        check_is_fitted(self)
+        return check_is_fitted(self) or True # pragma: no cover
 
     def _get_metric_params(self):
         if self.metric_params is None:
-            return {}
+            metric_params = {}
         else:
             metric_params = copy.deepcopy(self.metric_params)
-            if self.n_jobs is not None:
-                metric_params.update({"n_jobs": self.n_jobs})
+        if self.n_jobs is not None:
+            metric_params.update({"n_jobs": self.n_jobs})
         return metric_params
 
     def fit(self, X, y=None):
@@ -119,6 +121,9 @@ class TimeSeriesDBSCAN(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPa
         TimeSeriesDBSCAN
             The fitted estimator
         """
+        if self.metric not in self.VALID_METRICS:
+            raise ValueError("Metric must be one of: {}".format(self.VALID_METRICS))
+
         X = check_array(
             X,
             allow_nd=True,
