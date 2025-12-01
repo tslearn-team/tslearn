@@ -203,7 +203,7 @@ class KNeighborsTimeSeriesMixin(TimeSeriesMixin):
         return tags
     
    
-def _predict_preprocess(caller, X, predict_func):
+def _predict_generic(caller, X, predict_func):
     """Predict the class labels or target (depending on predict_func) for the provided data
 
     Parameters
@@ -595,7 +595,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         array, shape = (n_ts, )
             Array of predicted class labels
         """
-        return _predict_preprocess(self, X, super().predict)
+        return _predict_generic(self, X, super().predict)
 
     def predict_proba(self, X):
         """Predict the class probabilities for the provided data
@@ -610,22 +610,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         array, shape = (n_ts, n_classes)
             Array of predicted class probabilities
         """
-        if self.metric in TSLEARN_VALID_METRICS:
-            check_is_fitted(self, '_ts_fit')
-            X = check_array(X, allow_nd=True, force_all_finite=False)
-            X = check_dims(X, X_fit_dims=self._ts_fit.shape, extend=True,
-                           check_n_features_only=True)
-            X_ = self._precompute_cross_dist(X)
-            pred = super().predict_proba(X_)
-            self.metric = self._ts_metric
-            return pred
-        else:
-            check_is_fitted(self, '_X_fit')
-            X = check_array(X, allow_nd=True)
-            X = to_time_series_dataset(X)
-            X_ = to_sklearn_dataset(X)
-            X_ = check_dims(X_, X_fit_dims=self._X_fit.shape, extend=False)
-            return super().predict_proba(X_)
+        return _predict_generic(self, X, super().predict_proba)
 
 
 class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
@@ -765,4 +750,4 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
             Array of predicted targets
         """
         
-        return _predict_preprocess(self, X, super().predict)
+        return _predict_generic(self, X, super().predict)
