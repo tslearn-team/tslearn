@@ -30,6 +30,17 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 TSLEARN_VALID_METRICS = ["ctw", "dtw", "gak", "sax", "softdtw", "lcss", "frechet"]
 VARIABLE_LENGTH_METRICS = ["ctw", "dtw", "gak", "sax", "softdtw", "lcss", "frechet"]
 
+
+METRIC_TO_FUNCTION = {
+    "ctw": cdist_ctw,
+    "dtw": cdist_dtw,
+    "gak": cdist_gak,
+    "sax": cdist_sax,
+    "softdtw": cdist_soft_dtw,
+    "frechet": cdist_frechet
+}
+
+
 __all__ = [
     "TSLEARN_VALID_METRICS",
     "VARIABLE_LENGTH_METRICS",
