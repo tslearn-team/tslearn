@@ -201,8 +201,8 @@ class KNeighborsTimeSeriesMixin(TimeSeriesMixin):
         tags.input_tags.allow_nan = True
         tags.allow_variable_length = True
         return tags
-    
-   
+
+
 def _predict_generic(caller, X, predict_func):
     """Predict the class labels or target (depending on predict_func) for the provided data
 
@@ -748,6 +748,5 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         -------
         array, shape = (n_ts, ) or (n_ts, dim_y)
             Array of predicted targets
-        """
-        
+        """       
         return _predict_generic(self, X, super().predict)
