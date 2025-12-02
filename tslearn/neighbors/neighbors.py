@@ -748,5 +748,5 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         -------
         array, shape = (n_ts, ) or (n_ts, dim_y)
             Array of predicted targets
-        """       
+        """
         return _predict_generic(self, X, super().predict)
