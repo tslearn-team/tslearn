@@ -201,6 +201,38 @@ class KNeighborsTimeSeriesMixin(TimeSeriesMixin):
         tags.input_tags.allow_nan = True
         tags.allow_variable_length = True
         return tags
+    
+   
+def _predict_generic(caller, X, predict_func):
+    """Predict the class labels or target (depending on predict_func) for the provided data
+
+    Parameters
+    ----------
+    X : array-like, shape (n_ts, sz, d)
+        Test samples.
+
+    Returns
+    -------
+    array, shape = (n_ts, ) or (n_ts, dim_y)
+        Returns the result of predict_func 
+    """
+    if caller.metric in TSLEARN_VALID_METRICS:
+        check_is_fitted(caller, '_ts_fit')
+        X = check_array(X, allow_nd=True, force_all_finite=False)
+        X = to_time_series_dataset(X)
+        X = check_dims(X, X_fit_dims=caller._ts_fit.shape, extend=True,
+                        check_n_features_only=True)
+        X_ = caller._precompute_cross_dist(X)
+        pred = predict_func(X_)
+        caller.metric = caller._ts_metric
+        return pred
+    else:
+        check_is_fitted(caller, '_X_fit')
+        X = check_array(X, allow_nd=True)
+        X = to_time_series_dataset(X)
+        X_ = to_sklearn_dataset(X)
+        X_ = check_dims(X_, X_fit_dims=caller._X_fit.shape, extend=False)
+        return predict_func(X_)
 
 
 class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin,
@@ -563,23 +595,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         array, shape = (n_ts, )
             Array of predicted class labels
         """
-        if self.metric in TSLEARN_VALID_METRICS:
-            check_is_fitted(self, '_ts_fit')
-            X = check_array(X, allow_nd=True, force_all_finite=False)
-            X = to_time_series_dataset(X)
-            X = check_dims(X, X_fit_dims=self._ts_fit.shape, extend=True,
-                           check_n_features_only=True)
-            X_ = self._precompute_cross_dist(X)
-            pred = super().predict(X_)
-            self.metric = self._ts_metric
-            return pred
-        else:
-            check_is_fitted(self, '_X_fit')
-            X = check_array(X, allow_nd=True)
-            X = to_time_series_dataset(X)
-            X_ = to_sklearn_dataset(X)
-            X_ = check_dims(X_, X_fit_dims=self._X_fit.shape, extend=False)
-            return super().predict(X_)
+        return _predict_generic(self, X, super().predict)
 
     def predict_proba(self, X):
         """Predict the class probabilities for the provided data
@@ -594,22 +610,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         array, shape = (n_ts, n_classes)
             Array of predicted class probabilities
         """
-        if self.metric in TSLEARN_VALID_METRICS:
-            check_is_fitted(self, '_ts_fit')
-            X = check_array(X, allow_nd=True, force_all_finite=False)
-            X = check_dims(X, X_fit_dims=self._ts_fit.shape, extend=True,
-                           check_n_features_only=True)
-            X_ = self._precompute_cross_dist(X)
-            pred = super().predict_proba(X_)
-            self.metric = self._ts_metric
-            return pred
-        else:
-            check_is_fitted(self, '_X_fit')
-            X = check_array(X, allow_nd=True)
-            X = to_time_series_dataset(X)
-            X_ = to_sklearn_dataset(X)
-            X_ = check_dims(X_, X_fit_dims=self._X_fit.shape, extend=False)
-            return super().predict_proba(X_)
+        return _predict_generic(self, X, super().predict_proba)
 
 
 class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
@@ -748,20 +749,5 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         array, shape = (n_ts, ) or (n_ts, dim_y)
             Array of predicted targets
         """
-        if self.metric in TSLEARN_VALID_METRICS:
-            check_is_fitted(self, '_ts_fit')
-            X = check_array(X, allow_nd=True, force_all_finite=False)
-            X = to_time_series_dataset(X)
-            X = check_dims(X, X_fit_dims=self._ts_fit.shape, extend=True,
-                           check_n_features_only=True)
-            X_ = self._precompute_cross_dist(X)
-            pred = super().predict(X_)
-            self.metric = self._ts_metric
-            return pred
-        else:
-            check_is_fitted(self, '_X_fit')
-            X = check_array(X, allow_nd=True)
-            X = to_time_series_dataset(X)
-            X_ = to_sklearn_dataset(X)
-            X_ = check_dims(X_, X_fit_dims=self._X_fit.shape, extend=False)
-            return super().predict(X_)
+        
+        return _predict_generic(self, X, super().predict)
