@@ -12,98 +12,100 @@ babel==2.17.0
     # via
     #   pydata-sphinx-theme
     #   sphinx
-beautifulsoup4==4.13.4
+beautifulsoup4==4.14.3
     # via pydata-sphinx-theme
-certifi==2025.6.15
+certifi==2025.11.12
     # via requests
-charset-normalizer==3.4.2
+charset-normalizer==3.4.4
     # via requests
-contourpy==1.3.2
+contourpy==1.3.3
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
-docutils==0.21.2
+docutils==0.22.3
     # via
     #   pydata-sphinx-theme
     #   sphinx
-fonttools==4.58.5
+fonttools==4.61.0
     # via matplotlib
-idna==3.10
+idna==3.11
     # via requests
 imagesize==1.4.1
     # via sphinx
 jinja2==3.1.6
     # via sphinx
-joblib==1.5.1
+joblib==1.5.2
     # via
     #   scikit-learn
-    #   tslearn (setup.py)
-kiwisolver==1.4.8
+    #   tslearn (pyproject.toml)
+kiwisolver==1.4.9
     # via matplotlib
-llvmlite==0.44.0
+llvmlite==0.45.1
     # via numba
-markupsafe==3.0.2
+markupsafe==3.0.3
     # via jinja2
-matplotlib==3.10.3
-    # via tslearn (setup.py)
-numba==0.61.2
-    # via tslearn (setup.py)
-numpy==2.2.6
+matplotlib==3.10.7
+    # via tslearn (pyproject.toml)
+numba==0.62.1
+    # via tslearn (pyproject.toml)
+numpy==2.3.5
     # via
     #   contourpy
     #   matplotlib
     #   numba
     #   scikit-learn
     #   scipy
-    #   tslearn (setup.py)
-numpydoc==1.9.0
-    # via tslearn (setup.py)
+    #   tslearn (pyproject.toml)
+numpydoc==1.10.0
+    # via tslearn (pyproject.toml)
 packaging==25.0
     # via
     #   matplotlib
     #   sphinx
-pillow==11.3.0
+pillow==12.0.0
     # via
     #   matplotlib
     #   sphinx-gallery
 pydata-sphinx-theme==0.16.1
-    # via tslearn (setup.py)
+    # via tslearn (pyproject.toml)
 pygments==2.19.2
     # via
     #   accessible-pygments
     #   pydata-sphinx-theme
     #   sphinx
-pypandoc==1.15
-    # via tslearn (setup.py)
-pyparsing==3.2.3
+pypandoc==1.16.2
+    # via tslearn (pyproject.toml)
+pyparsing==3.2.5
     # via matplotlib
 python-dateutil==2.9.0.post0
     # via matplotlib
-requests==2.32.4
+requests==2.32.5
     # via sphinx
-scikit-learn==1.6.1
-    # via tslearn (setup.py)
-scipy==1.16.0
+roman-numerals==3.1.0
+    # via sphinx
+scikit-learn==1.7.2
+    # via tslearn (pyproject.toml)
+scipy==1.16.3
     # via
     #   scikit-learn
-    #   tslearn (setup.py)
+    #   tslearn (pyproject.toml)
 six==1.17.0
     # via python-dateutil
 snowballstemmer==3.0.1
     # via sphinx
-soupsieve==2.7
+soupsieve==2.8
     # via beautifulsoup4
-sphinx==8.1.3
+sphinx==9.0.4
     # via
     #   numpydoc
     #   pydata-sphinx-theme
     #   sphinx-copybutton
     #   sphinx-gallery
-    #   tslearn (setup.py)
+    #   tslearn (pyproject.toml)
 sphinx-copybutton==0.5.2
-    # via tslearn (setup.py)
-sphinx-gallery==0.19.0
-    # via tslearn (setup.py)
+    # via tslearn (pyproject.toml)
+sphinx-gallery==0.20.0
+    # via tslearn (pyproject.toml)
 sphinxcontrib-applehelp==2.0.0
     # via sphinx
 sphinxcontrib-devhelp==2.0.0
@@ -118,9 +120,9 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 threadpoolctl==3.6.0
     # via scikit-learn
-typing-extensions==4.14.1
+typing-extensions==4.15.0
     # via
     #   beautifulsoup4
     #   pydata-sphinx-theme
-urllib3==2.5.0
+urllib3==2.6.0
     # via requests

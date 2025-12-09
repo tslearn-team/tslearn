@@ -1,0 +1,27 @@
+name: 'Test against nightly dependencies'
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 2 * * *"
+  
+jobs:
+  test_against_nightly:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+            python-version: "3.11"
+        name: 'Setup python'
+      - shell: bash
+        run: |
+          dev_anaconda_url=https://pypi.anaconda.org/scientific-python-nightly-wheels/simple
+          dev_pytorch_url=https://download.pytorch.org/whl/nightly/cpu
+          pip install --pre --upgrade --timeout=60 --extra-index $dev_anaconda_url  --extra-index $dev_pytorch_url .[tests,all_features]
+        name: 'Install tslearn and nightly dependencies'
+      - shell: bash
+        run: |
+          pip list
+          pytest -vsl tslearn --doctest-modules
+        name: 'Run tests'

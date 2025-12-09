@@ -26,11 +26,11 @@ classifiers=[
     "Topic :: Software Development :: Libraries",
 ]
 dependencies = [
-    "scikit-learn>=1.4,<1.8",
-    "numpy>=1.24.3,<2.4",
-    "scipy>=1.10.1,<1.17",
-    "numba>=0.58.1,<0.63",
-    "joblib>=1.2,<1.6"
+    "scikit-learn>=1.4",
+    "numpy>=1.24.3",
+    "scipy>=1.10.1",
+    "numba>=0.58.1",
+    "joblib>=1.2"
 ]
 
 [project.urls]
@@ -41,7 +41,10 @@ changelog = "https://github.com/tslearn-team/tslearn/CHANGELOG.md"
 
 [project.optional-dependencies]
 pytorch = ['torch']
-tests = ["pytest", "h5py"]
+tests = [
+    "pytest", 
+    "h5py"
+]
 docs = [
     "sphinx",
     "pydata_sphinx_theme",
