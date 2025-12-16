@@ -309,7 +309,6 @@ jobs:
     vmImage: 'ubuntu-latest'
   variables:
     OMP_NUM_THREADS: '2'
-    NUMBA_DISABLE_JIT: '1'
     NUMBA_NUM_THREADS: '2'
     PIP_PREFER_BINARY: 'true'
 
@@ -334,7 +333,7 @@ jobs:
       python -m pytest -v --cov=tests --cov=tslearn
       python -m pip install .[all_features]
       pip list
-      python -m pytest -v --cov=tests --cov=tslearn --cov-append
+      NUMBA_DISABLE_JIT=1 python -m pytest -v --cov=tests --cov=tslearn --cov-append
       pip install scikit-learn~=1.4.0
       pip list
       python -m pytest -v --cov=tests --cov=tslearn --cov-append  -k "test_all_estimators or test_scaler_allow_variable_length"
