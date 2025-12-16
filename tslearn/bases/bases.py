@@ -207,7 +207,6 @@ class BaseModelPackage(object):
                     model[param_set][k] = model[param_set][k].decode('utf-8')
         return model
 
-
     def to_hdf5(self, path):
         """
         Save model to a HDF5 file.

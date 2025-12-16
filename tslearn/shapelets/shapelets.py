@@ -21,7 +21,11 @@ from keras.models import Model, model_from_json
 import keras.ops as ops
 from keras.regularizers import l2
 from keras.utils import to_categorical, set_random_seed
-
+from keras.saving import (
+    deserialize_keras_object,
+    register_keras_serializable,
+    serialize_keras_object
+)
 import numpy
 
 from sklearn.base import ClassifierMixin, TransformerMixin, BaseEstimator
@@ -58,6 +62,7 @@ def _kmeans_init_shapelets(X, n_shapelets, shp_len, n_draw=10000):
                             verbose=False).fit(subseries).cluster_centers_
 
 
+@register_keras_serializable()
 class GlobalMinPooling1D(Layer):
     """Global min pooling operation for temporal data.
     # Input shape
@@ -88,6 +93,7 @@ class GlobalMinPooling1D(Layer):
         return ops.min(inputs, axis=1)
 
 
+@register_keras_serializable()
 class GlobalArgminPooling1D(Layer):
     """Global argmin pooling operation for temporal data.
     # Input shape
@@ -118,6 +124,7 @@ class GlobalArgminPooling1D(Layer):
         return ops.cast(ops.argmin(inputs, axis=1), dtype=float)
 
 
+@register_keras_serializable()
 class PatchingLayer(Layer):
     """Format data for processing with patches matching shapelets length
     and nans removal.
@@ -156,6 +163,7 @@ class PatchingLayer(Layer):
         return {**config, **base_config}
 
 
+@register_keras_serializable()
 class LocalSquaredDistanceLayer(Layer):
     """Pairwise (squared) distance computation between local patches and
     shapelets
@@ -283,13 +291,6 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
                         BaseModelPackage):
     r"""Learning Time-Series Shapelets model.
 
-    def __sklearn_tags__(self):
-        tags = super().__sklearn_tags__()
-        tags.input_tags.allow_nan = True
-        tags.allow_variable_length = True
-        return tags
-
-
     Learning Time-Series Shapelets was originally presented in [1]_.
 
     From an input (possibly multidimensional) time series :math:`x` and a set
@@ -329,7 +330,7 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
     optimizer: str or keras.optimizers.Optimizer (default: "sgd")
         `keras` optimizer to use for training.
 
-    weight_regularizer: float or None (default: 0.)
+    weight_regularizer: float (default: 0.)
         Strength of the L2 regularizer to use for training the classification
         (softmax) layer. If 0, no regularization is performed.
 
@@ -399,6 +400,10 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
     (30, 3)
     >>> clf.transform(X).shape
     (30, 5)
+
+    Notes
+    -----
+    This model does not support HDF5 serialization.
 
     References
     ----------
@@ -724,13 +729,13 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
             raise ValueError("Classifier can't train when only one class "
                              "is present.")
         if self.classes_.dtype in [numpy.int32, numpy.int64]:
-            self.label_to_ind_ = {int(lab): ind
+            label_to_ind_ = {int(lab): ind
                                   for ind, lab in enumerate(self.classes_)}
         else:
-            self.label_to_ind_ = {lab: ind
+            label_to_ind_ = {lab: ind
                                   for ind, lab in enumerate(self.classes_)}
         y_ind = numpy.array(
-            [self.label_to_ind_[lab] for lab in y]
+            [label_to_ind_[lab] for lab in y]
         )
         y_ = to_categorical(y_ind)
         if n_labels == 2:
@@ -908,6 +913,15 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
         check_is_fitted(self, 'model_')
         return True
 
+    def _to_dict(self, output=None, hyper_parameters_only=False):
+        result = super()._to_dict(output, hyper_parameters_only)
+
+        # In case optimizer is a keras optimizer, leaves string unchanged
+        result["hyper_params"]["optimizer"] = serialize_keras_object(
+            result["hyper_params"]["optimizer"]
+        )
+        return result
+
     def _get_model_params(self):
         """Get model parameters that are sufficient to recapitulate it."""
         params = super()._get_model_params()
@@ -938,7 +952,19 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
         model_params = model.pop('model_params')
         hyper_params = model.pop('hyper_params')  # hyper-params
 
-        # instantiate with hyper-parameters
+        # In case optimizer is a keras optimizer, leaves string unchanged
+        hyper_params["optimizer"] = deserialize_keras_object(
+            hyper_params["optimizer"]
+        )
+
+        if hyper_params["n_shapelets_per_size"]:
+            # Keys are encoded with strings in json
+            hyper_params["n_shapelets_per_size"] = {
+                int(sz): nb for sz, nb in
+                hyper_params["n_shapelets_per_size"].items()
+            }
+
+        # instantiate with hyperparameters
         inst = cls(**hyper_params)
 
         if "model_" in model_params.keys():
@@ -963,6 +989,11 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
         inst._build_auxiliary_models()
 
         return inst
+
+    def to_hdf5(self, path):
+        """LearningShapelet is not HDF5 serializable"""
+        check_is_fitted(self, 'model_')
+        raise NotImplementedError("LearningShapelet is not HDF5 serializable")
 
     def _more_tags(self):
         tags = super()._more_tags()
