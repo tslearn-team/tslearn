@@ -7,7 +7,6 @@ from sklearn.base import ClusterMixin, TransformerMixin, BaseEstimator
 from sklearn.cluster._kmeans import _kmeans_plusplus
 from sklearn.metrics.pairwise import pairwise_kernels
 from sklearn.utils import check_random_state
-from sklearn.utils.extmath import stable_cumsum
 from sklearn.utils.validation import _check_sample_weight
 from sklearn.utils.validation import check_is_fitted
 
@@ -99,7 +98,7 @@ def _k_init_metric(X, n_clusters, cdist_metric, random_state, n_local_trials=Non
         # to the squared distance to the closest existing center
         rand_vals = random_state.random_sample(n_local_trials) * current_pot
         candidate_ids = numpy.searchsorted(
-            numpy.cumulative_sum(closest_dist_sq.squeeze()), rand_vals
+            numpy.cumsum(closest_dist_sq.squeeze()), rand_vals
         )
         # XXX: numerical imprecision can result in a candidate_id out of range
         numpy.clip(candidate_ids, None, closest_dist_sq.size - 1, out=candidate_ids)
