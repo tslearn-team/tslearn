@@ -170,7 +170,7 @@ def _frechet(
            raise ValueError("All input time series must have the same feature size.")
 
     else:
-        s1 = backend.array(s1)
+        s1 = backend.asarray(s1)
         s2 = s1
 
     mask = compute_mask(
