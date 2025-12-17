@@ -98,7 +98,9 @@ def _k_init_metric(X, n_clusters, cdist_metric, random_state, n_local_trials=Non
         # Choose center candidates by sampling with probability proportional
         # to the squared distance to the closest existing center
         rand_vals = random_state.random_sample(n_local_trials) * current_pot
-        candidate_ids = numpy.searchsorted(stable_cumsum(closest_dist_sq), rand_vals)
+        candidate_ids = numpy.searchsorted(
+            numpy.cumulative_sum(closest_dist_sq.squeeze()), rand_vals
+        )
         # XXX: numerical imprecision can result in a candidate_id out of range
         numpy.clip(candidate_ids, None, closest_dist_sq.size - 1, out=candidate_ids)
 

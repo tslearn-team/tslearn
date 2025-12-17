@@ -119,4 +119,4 @@ def cast(data, array_type="numpy"):
     if array_type == "list":
         return data.tolist()
     be = Backend(array_type)
-    return be.array(data)
+    return be.asarray(data)

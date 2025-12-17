@@ -58,6 +58,7 @@ else:
             self.arange = _torch.arange
             self.argmax = _torch.argmax
             self.argmin = _torch.argmin
+            self.asarray= _torch.asarray
             self.dbl_max = _torch.finfo(_torch.double).max
             self.ceil = _torch.ceil
             self.diag = _torch.diag

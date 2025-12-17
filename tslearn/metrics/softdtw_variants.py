@@ -54,7 +54,7 @@ def _gak(gram, be=None):
         Kernel value
     """
     be = instantiate_backend(be, gram)
-    gram = be.array(gram)
+    gram = be.asarray(gram)
     sz1, sz2 = be.shape(gram)
 
     cum_sum = be.zeros((sz1 + 1, sz2 + 1))
@@ -128,7 +128,7 @@ def _gak_gram(s1, s2, sigma=1.0, be=None):
         raise ZeroDivisionError()
     be = instantiate_backend(be, s1)
     gram = -be.cdist(s1, s2, "sqeuclidean") / (2 * sigma**2)
-    gram = be.array(gram)
+    gram = be.asarray(gram)
     gram -= be.log(2 - be.exp(gram))
     return be.exp(gram)
 
@@ -246,8 +246,8 @@ def gak(s1, s2, sigma=1.0, be=None):  # TODO: better doc (formula for the kernel
        ICML 2011.
     """
     be = instantiate_backend(be, s1, s2)
-    s1 = be.array(s1)
-    s2 = be.array(s2)
+    s1 = be.asarray(s1)
+    s2 = be.asarray(s2)
     denom = be.sqrt(
         unnormalized_gak(s1, s1, sigma=sigma, be=be)
         * unnormalized_gak(s2, s2, sigma=sigma, be=be)
@@ -345,8 +345,8 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.0, n_jobs=None, verbose=0, be=Non
             delayed(unnormalized_gak)(dataset2[j], dataset2[j], sigma=sigma, be=be)
             for j in range(len(dataset2))
         )
-        diagonal_left = be.diag(1.0 / be.sqrt(be.array(diagonal_left)))
-        diagonal_right = be.diag(1.0 / be.sqrt(be.array(diagonal_right)))
+        diagonal_left = be.diag(1.0 / be.sqrt(be.asarray(diagonal_left)))
+        diagonal_right = be.diag(1.0 / be.sqrt(be.asarray(diagonal_right)))
     return diagonal_left @ unnormalized_matrix @ diagonal_right
 
 
@@ -573,8 +573,8 @@ def soft_dtw(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False):
        Time-Series," ICML 2017.
     """  # noqa: E501
     be = instantiate_backend(be, ts1, ts2)
-    ts1 = be.array(ts1)
-    ts2 = be.array(ts2)
+    ts1 = be.asarray(ts1)
+    ts2 = be.asarray(ts2)
     if math.isclose(gamma, 0.0):
         return dtw(ts1, ts2, be=be) ** 2
     return SoftDTW(
@@ -685,8 +685,8 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False)
        Time-Series," ICML 2017.
     """  # noqa: E501
     be = instantiate_backend(be, ts1, ts2)
-    ts1 = be.array(ts1)
-    ts2 = be.array(ts2)
+    ts1 = be.asarray(ts1)
+    ts2 = be.asarray(ts2)
     if math.isclose(gamma, 0.0):
         path, dist = dtw_path(ts1, ts2, be=be)
         dist_sq = dist**2
@@ -1009,7 +1009,7 @@ class SoftDTW:
         self.R_ = self.be.zeros((m + 2, n + 2), dtype=self.be.float64)
         self.computed = False
 
-        self.gamma = self.be.array(gamma, dtype=self.be.float64)
+        self.gamma = self.be.asarray(gamma, dtype=self.be.float64)
 
     def compute(self):
         """Compute soft-DTW by dynamic programming.
@@ -1029,7 +1029,7 @@ class SoftDTW:
                 self.be.to_numpy(self.R_),
                 gamma=self.be.to_numpy(self.gamma),
             )
-            self.R_ = self.be.array(self.R_)
+            self.R_ = self.be.asarray(self.R_)
         else:
             _soft_dtw(self.D, self.R_, gamma=self.gamma, be=self.be)
 
@@ -1069,7 +1069,7 @@ class SoftDTW:
                 self.be.to_numpy(E),
                 gamma=self.be.to_numpy(self.gamma),
             )
-            self.R_ = self.be.array(self.R_)
+            self.R_ = self.be.asarray(self.R_)
         else:
             _soft_dtw_grad(D, self.R_, E, gamma=self.gamma, be=self.be)
 
@@ -1144,7 +1144,7 @@ class SquaredEuclidean:
                 self.be.to_numpy(E).astype(np.float64),
                 self.be.to_numpy(G),
             )
-            G = self.be.array(G)
+            G = self.be.asarray(G)
         else:
             _jacobian_product_sq_euc(
                 self.X, self.Y, self.be.cast(E, self.be.float64), G

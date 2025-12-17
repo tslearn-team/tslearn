@@ -84,7 +84,7 @@ def _cdist_generic(
             len(dataset1), k=0 if compute_diagonal else 1, m=len(dataset1)
         )
 
-        matrix[indices] = be.array(
+        matrix[indices] = be.asarray(
             Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
                 delayed(dist_fun)(dataset1[i], dataset1[j], *args, **kwargs)
                 for i in range(len(dataset1))
@@ -103,4 +103,4 @@ def _cdist_generic(
             for i in range(len(dataset1))
             for j in range(len(dataset2))
         )
-        return be.reshape(be.array(matrix), (len(dataset1), -1))
+        return be.reshape(be.asarray(matrix), (len(dataset1), -1))
