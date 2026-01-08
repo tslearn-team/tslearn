@@ -12,13 +12,12 @@ time series metrics support.
 """
 import numpy as np
 
-from sklearn import metrics
 from sklearn.pipeline import Pipeline
 
 import matplotlib.pyplot as plt
 
 from tslearn.preprocessing import TimeSeriesScalerMinMax
-from tslearn.clustering import TimeSeriesDBSCAN,silhouette_score
+from tslearn.clustering import TimeSeriesDBSCAN
 from tslearn.datasets import CachedDatasets
 
 X_train, y_train, _, _ = CachedDatasets().load_dataset("Trace")
