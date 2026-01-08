@@ -3,47 +3,50 @@
 DBSCAN
 ======
 
+This example illustrates density-based spatial clustering of applications with
+noise (DBSCAN) for time series.
+This method, based on finding high density cores, does not require specifying the number of
+clusters and can identify outliers. The implementation relies on scikit-learn DBSCAN with
+time series metrics support.
 
 """
 import numpy as np
 
 from sklearn import metrics
-from sklearn.utils import check_random_state
+from sklearn.pipeline import Pipeline
 
 import matplotlib.pyplot as plt
 
-from tslearn.generators import random_walk_blobs
 from tslearn.preprocessing import TimeSeriesScalerMinMax
 from tslearn.clustering import TimeSeriesDBSCAN,silhouette_score
+from tslearn.datasets import CachedDatasets
 
-rs = check_random_state(0)
+X_train, y_train, _, _ = CachedDatasets().load_dataset("Trace")
 
-nb_blobs = 3
-X, y = random_walk_blobs(n_ts_per_blob=20, sz=64, n_blobs=nb_blobs, noise_level=0.5, random_state=rs)
+# Keep only timeseries of class 1 and 2 plus 1 outlier from class 3
+X_train = np.concatenate((
+    X_train[y_train == 1][:10],
+    X_train[y_train == 2][:10],
+    X_train[y_train == 3][0].reshape(1, -1, 1),
+))
+y_train = np.concatenate((
+    y_train[y_train == 1][:10],
+    y_train[y_train == 2][:10],
+    np.array([3]),
+))
 
-# Pollute 10 ts
-polluted_ts_indexes = rs.choice(X.shape[0], 10, replace=False)
-for i in polluted_ts_indexes:
-    # nb points impacted
-    polluted_sample_indexes = rs.choice(X.shape[1], rs.randint(0, X.shape[1]), replace=False)
-    X[i, polluted_sample_indexes] += rs.randint(-5, 5, size=polluted_sample_indexes.shape).reshape(-1, 1)
-
-X = TimeSeriesScalerMinMax().fit_transform(X)
-
-fig = plt.figure(1, figsize=(12, 12), layout="compressed")
-axs = fig.subplots(len(np.unique(y)), 1, sharex=True)
-for i, ax in enumerate(axs):
-    for x in X[y==i]:
-        ax.plot(x)
-fig.suptitle("Polluted dataset")
-plt.show()
 
 ##############################################################################
 # Estimator fitting
 # -----------------
 
-db = TimeSeriesDBSCAN(eps=0.4, min_ts=11).fit(X)
-labels = db.labels_
+model = Pipeline([
+    ('normalize', TimeSeriesScalerMinMax()),
+    ('dbscan', TimeSeriesDBSCAN(eps=0.4, min_ts=10))
+    ])
+model = model.fit(X_train)
+labels = model[-1].labels_
+core_ts_indices = model[-1].core_ts_indices_
 
 # Number of clusters in labels, ignoring noise if present.
 n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
@@ -51,36 +54,30 @@ n_noise_ = list(labels).count(-1)
 
 print("Estimated number of clusters: %d" % n_clusters_)
 print("Estimated number of noise points: %d" % n_noise_)
-print(f"Homogeneity: {metrics.homogeneity_score(y, labels):.3f}")
-print(f"Completeness: {metrics.completeness_score(y, labels):.3f}")
-print(f"V-measure: {metrics.v_measure_score(y, labels):.3f}")
-print(f"Adjusted Rand Index: {metrics.adjusted_rand_score(y, labels):.3f}")
-print(
-    "Adjusted Mutual Information:"
-    f" {metrics.adjusted_mutual_info_score(y, labels):.3f}"
-)
-print(f"Silhouette Coefficient: {silhouette_score(X, labels, metric=db.metric):.3f}")
 
 ##############################################################################
-# Core and noise elements
-# -----------------------
+# Core and noise
+# --------------
 
-core_samples_mask = np.zeros_like(labels, dtype=bool)
-core_samples_mask[db.core_ts_indices_] = True
+fig = plt.figure(figsize=(12, 4),layout="compressed")
 
-fig = plt.figure(2, figsize=(12, 12),layout="compressed")
-axs = fig.subplots(n_clusters_, 1, sharex=True)
+core_samples_mask = np.full_like(labels, False, dtype=bool)
+core_samples_mask[model[-1].core_ts_indices_] = True
 
-for i, ax in enumerate(axs):
-    class_member_mask = y == i
+colors = [plt.cm.Spectral(each) for each in np.linspace(0, 1, n_clusters_)]
 
-    # Core TS
-    for x in X[class_member_mask & core_samples_mask]:
-        ax.plot(x, "g")
+for label in np.unique(labels):
+    if label==-1:
+        plt.plot(X_train[labels==label].squeeze(), ":k", alpha=1, label="Outlier")
+    else:
+        plt.plot(X_train[(labels == label) & core_samples_mask].squeeze().T, color=colors[label], alpha=0.5,
+                 ls='-', label=f"Core TS of cluster {label}")
+        plt.plot(X_train[(labels == label) & ~core_samples_mask].squeeze().T, color=colors[label], alpha=0.5,
+                 ls='--', label=f"Non core TS of cluster {label}")
 
-    # Non cores TS, possibly considered as noise
-    mask = class_member_mask & ~core_samples_mask
-    for x, label in zip(X[mask], labels[mask]):
-        ax.plot(x, "r" if label == -1 else ":k", alpha=1 if label == -1 else 0.5)
-fig.suptitle("Core and noise elements")
+handles, labels = plt.gca().get_legend_handles_labels()
+by_label = dict(zip(labels, handles))
+plt.legend(by_label.values(), by_label.keys(), loc='lower right')
+
+fig.suptitle("Clustering results")
 plt.show()
