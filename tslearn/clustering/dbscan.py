@@ -1,5 +1,5 @@
 """DBSCAN clustering."""
-
+from inspect import signature
 import copy
 
 import numpy as np
@@ -34,7 +34,9 @@ class TimeSeriesDBSCAN(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPa
         Additional keyword arguments to pass to the metric function.
         For metrics that accept parallelization of the cross-distance matrix
         computations, `n_jobs` key passed in `metric_params` is overridden by
-        the `n_jobs` argument.
+        the `n_jobs` argument. Parameters that do not match the metric computation function
+        signature are ignored.
+
     n_jobs : int or None (default=None)
         The number of jobs to run in parallel for cross-distance matrix
         computations.
@@ -77,7 +79,8 @@ class TimeSeriesDBSCAN(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPa
     37
     """
 
-    VALID_METRICS = set(("dtw", "ctw", "frechet", "euclidean", "precomputed"))
+    VALID_METRICS = {"dtw", "ctw", "frechet",
+                     "softdtw_normalized", "euclidean", "precomputed"}
 
     def __init__(
             self,
@@ -133,17 +136,26 @@ class TimeSeriesDBSCAN(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPa
         X = to_time_series_dataset(X)
         X = check_dims(X)
 
+        # Force the use of n_job attribute in underlying model
+        model_metric_params = self._get_metric_params()
+        model_n_jobs = model_metric_params.pop("n_jobs", None)
         neighbors_model = KNeighborsTimeSeries(
             metric=self.metric,
-            metric_params=self.metric_params,
-            n_jobs=self.n_jobs,
+            metric_params=model_metric_params,
+            n_jobs=model_n_jobs,
         )
         neighbors_model.fit(X)
 
         if self.metric in TSLEARN_VALID_METRICS:
+            # Get metric function and filter parameters accordingly
+            func = METRIC_TO_FUNCTION[self.metric]
+            metric_params = {
+                k: v for k, v in self._get_metric_params().items()
+                if k in signature(func).parameters
+            }
             distance_matrix = METRIC_TO_FUNCTION[self.metric](
                 X,
-                **self._get_metric_params()
+                **metric_params
             )
             with neighbors_model._patch_attribute("metric", "precomputed"):
                 neighborhoods = neighbors_model.radius_neighbors(

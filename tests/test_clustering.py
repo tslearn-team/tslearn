@@ -300,6 +300,16 @@ def test_dbscan():
     np.testing.assert_equal(db.labels_, [0, 0, 0, 1, 1, 1])
     np.testing.assert_equal(db.core_ts_indices_, np.arange(X.shape[0]))
 
+    # Softdtw-normalized with gamma metric param
+    db.set_params(metric='softdtw_normalized')
+    db.fit(X)
+    np.testing.assert_equal(db.labels_, [-1, -1, -1, -1, -1, -1])
+    db.set_params(eps=0.1)
+    db.set_params(metric_params={'gamma': 0.1})
+    db.fit(X)
+    np.testing.assert_equal(db.labels_, [0, 0, 0, 1, 1, 1])
+    np.testing.assert_equal(db.core_ts_indices_, [1, 4])
+
     # Clustering with outliers
     X = np.append(X, np.array([[0], [1.5], [0], [0], [0]])).reshape(-1, 5)
     X = to_time_series_dataset(X)
@@ -326,7 +336,10 @@ def test_dbscan():
     np.testing.assert_equal(db.core_ts_indices_, np.arange(X.shape[0] -1))
 
     # Check nb_jobs
-    db = TimeSeriesDBSCAN(metric_params={'n_jobs': 1})
-    assert db._get_metric_params() == {'n_jobs': 1}
-    db = TimeSeriesDBSCAN(n_jobs=5, metric_params={'n_jobs': 1})
+    db = TimeSeriesDBSCAN(n_jobs=5, metric_params={'n_jobs': 1}).fit(X)
     assert db._get_metric_params() == {'n_jobs': 5}
+
+    # Ensure unused params don't raise
+    TimeSeriesDBSCAN(metric="softdtw_normalized", n_jobs=1, metric_params={'n_jobs': 1}).fit(X)
+    TimeSeriesDBSCAN(metric="dtw", metric_params={'gamma': 2}).fit(X)
+    TimeSeriesDBSCAN(metric="euclidean", metric_params={'whatever': "trimmed"}).fit(X)
