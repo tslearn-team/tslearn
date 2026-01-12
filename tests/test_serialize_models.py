@@ -1,11 +1,14 @@
-import os
 from glob import glob
+import os
+
 import numpy
+
 import pytest
+
 from sklearn.exceptions import NotFittedError
+
 from tslearn import hdftools
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
-
 from tslearn.neighbors import KNeighborsTimeSeries, \
     KNeighborsTimeSeriesClassifier
 from tslearn.clustering import KShape, TimeSeriesKMeans, \
@@ -68,7 +71,7 @@ def _check_not_fitted(model):
 
 
 def _check_params_predict(model, X, test_methods, check_params_fun=None,
-                          formats=None):
+                          formats=None, exclude_hyper_params=None):
     if formats is None:
         formats = all_formats
     # serialize to all all_formats
@@ -107,8 +110,11 @@ def _check_params_predict(model, X, test_methods, check_params_fun=None,
                                        check_params_fun(sm))
 
         # check that hyper-params are the same
+        exclude_hyper_params = exclude_hyper_params or []
         hyper_params = model.get_params()
         for p in hyper_params.keys():
+            if p in exclude_hyper_params:
+                continue
             numpy.testing.assert_equal(getattr(model, p), getattr(sm, p))
 
     clear_tmp()
@@ -274,6 +280,8 @@ def test_serialize_1dsax():
 
 def test_serialize_shapelets():
     shapelets = pytest.importorskip('tslearn.shapelets')
+    from keras.optimizers import Adam
+
     def get_model_weights(model):
         return model.model_.get_weights()
 
@@ -284,9 +292,35 @@ def test_serialize_shapelets():
     for y in [rng.randint(low=0, high=3, size=n),
               rng.choice(["one", "two", "three"], size=n)]:
 
+        # Test with default args
         shp = shapelets.LearningShapelets(max_iter=1)
         _check_not_fitted(shp)
         shp.fit(X, y)
         _check_params_predict(shp, X, ['predict'],
                               check_params_fun=get_model_weights,
                               formats=["json", "pickle"])
+
+        # Tests args with types differing from default
+        shp = shapelets.LearningShapelets(
+            n_shapelets_per_size={2: 2},
+            optimizer=Adam(0.01),
+            max_iter=1,
+            max_size=10,
+            random_state=42
+        )
+        _check_not_fitted(shp)
+        shp.fit(X, y)
+        _check_params_predict(
+            shp,
+            X,
+            ['predict'],
+            check_params_fun=get_model_weights,
+            formats=["json", "pickle"],
+            exclude_hyper_params=["optimizer"]
+        )
+
+        # HDF5 serialization not supported
+        with pytest.raises(NotImplementedError):
+            _check_params_predict(shp, X, ['predict'],
+                                  check_params_fun=get_model_weights,
+                                  formats=["hdf5"])
