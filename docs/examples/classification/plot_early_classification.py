@@ -16,6 +16,7 @@ series as a non myopic sequential decision making problem. ECML/PKDD 2015
 
 # Author: Romain Tavenard
 # License: BSD 3 clause
+# sphinx_gallery_thumbnail_number = 2
 
 import numpy
 import matplotlib.pyplot as plt
