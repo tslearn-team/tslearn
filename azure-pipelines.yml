@@ -37,13 +37,13 @@ jobs:
   - script: |
       set -xe
       python --version
-      python -m pip install --upgrade pip
-      python -m pip install .[tests,all_features]
+      python -m pip install --no-cache-dir --upgrade pip
+      python -m pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu .[tests,all_features]
     displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
       set -xe
-      python -m pip install pytest-azurepipelines
+      python -m pip install --no-cache-dir pytest-azurepipelines
       pip list
       python -m pytest -v -k "not test_all_estimators"
     displayName: 'Test'
@@ -77,13 +77,13 @@ jobs:
   - script: |
       set -xe
       python --version
-      python -m pip install --upgrade pip
-      python -m pip install .[tests,all_features]
+      python -m pip install --no-cache-dir --upgrade pip
+      python -m pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu .[tests,all_features]
     displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
       set -xe
-      python -m pip install pytest-azurepipelines
+      python -m pip install --no-cache-dir pytest-azurepipelines
       pip list
       python -m pytest -v --doctest-modules -k "not test_ or test_all_estimators"
     displayName: 'Doctest'
@@ -115,8 +115,8 @@ jobs:
       python --version
       brew install openblas  # required due to https://github.com/numpy/numpy/issues/15947
       export OPENBLAS=$(brew --prefix openblas)
-      python -m pip install --upgrade pip
-      python -m pip install .[tests,all_features]
+      python -m pip install --no-cache-dir --upgrade pip
+      python -m pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu .[tests,all_features]
     displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
@@ -153,13 +153,13 @@ jobs:
       python --version
       brew install openblas  # required due to https://github.com/numpy/numpy/issues/15947
       export OPENBLAS=$(brew --prefix openblas)
-      python -m pip install --upgrade pip
-      python -m pip install .[tests,all_features]
+      python -m pip install --no-cache-dir --upgrade pip
+      python -m pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu .[tests,all_features]
     displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
       set -xe
-      python -m pip install pytest-azurepipelines
+      python -m pip install --no-cache-dir pytest-azurepipelines
       pip list
       python -m pytest -v --doctest-modules -k "not test_ or test_all_estimators"
     displayName: 'Doctest'
@@ -191,12 +191,12 @@ jobs:
 
   - script: |
       python --version
-      python -m pip install --upgrade pip
-      python -m pip install .[tests,all_features]
+      python -m pip install --no-cache-dir --upgrade pip
+      python -m pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu .[tests,all_features]
     displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
-      python -m pip install pytest-azurepipelines
+      python -m pip install --no-cache-dir pytest-azurepipelines
       pip list
       python -m pytest -v -k "not test_all_estimators"
     displayName: 'Test'
@@ -228,12 +228,12 @@ jobs:
 
   - script: |
       python --version
-      python -m pip install --upgrade pip
-      python -m pip install .[tests,all_features]
+      python -m pip install --no-cache-dir --upgrade pip
+      python -m pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu .[tests,all_features]
     displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
-      python -m pip install pytest-azurepipelines
+      python -m pip install --no-cache-dir pytest-azurepipelines
       pip list
       python -m pytest -v --doctest-modules -k "not test_ or test_all_estimators"
     displayName: 'Doctest'
@@ -255,8 +255,8 @@ jobs:
   - script: |
       set -xe
       python --version
-      python -m pip install --upgrade pip
-      python -m pip install .[tests]
+      python -m pip install --no-cache-dir --upgrade pip
+      python -m pip install --no-cache-dir .[tests]
     displayName: 'Install tslearn and dependencies for tests'
 
   - script: |
@@ -291,14 +291,14 @@ jobs:
   - script: |
       set -xe
       python --version
-      python -m pip install --upgrade pip
-      python -m pip install 'scikit-learn~=$(skLearnVersion)'
-      python -m pip install .[tests,all_features]
+      python -m pip install --no-cache-dir --upgrade pip
+      python -m pip install --no-cache-dir 'scikit-learn~=$(skLearnVersion)'
+      python -m pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu .[tests,all_features]
     displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
       set -xe
-      python -m pip install pytest-azurepipelines
+      python -m pip install --no-cache-dir pytest-azurepipelines
       pip list
       python -m pytest -v
     displayName: 'Test sklearn versions'
@@ -321,20 +321,20 @@ jobs:
   - script: |
       set -xe
       python --version
-      python -m pip install --upgrade pip
-      python -m pip install .[tests]
+      python -m pip install --no-cache-dir --upgrade pip
+      python -m pip install --no-cache-dir .[tests]
     displayName: 'Install tslearn all_features and dependencies for tests'
 
   - script: |
       set -xe
-      python -m pip install pytest-azurepipelines
-      python -m pip install coverage pytest-cov
+      python -m pip install --no-cache-dir pytest-azurepipelines
+      python -m pip install --no-cache-dir coverage pytest-cov
       pip list
       python -m pytest -v --cov=tests --cov=tslearn
-      python -m pip install .[all_features]
+      python -m pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu .[all_features]
       pip list
       NUMBA_DISABLE_JIT=1 python -m pytest -v --cov=tests --cov=tslearn --cov-append
-      pip install scikit-learn~=1.4.0
+      pip install --no-cache-dir scikit-learn~=1.4.0
       pip list
       python -m pytest -v --cov=tests --cov=tslearn --cov-append  -k "test_all_estimators or test_scaler_allow_variable_length"
     displayName: 'Test'
