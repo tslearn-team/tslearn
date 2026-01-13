@@ -27,8 +27,22 @@ from .frechet import frechet, frechet_path, frechet_path_from_metric, cdist_frec
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
-TSLEARN_VALID_METRICS = ["ctw", "dtw", "gak", "sax", "softdtw", "lcss", "frechet"]
-VARIABLE_LENGTH_METRICS = ["ctw", "dtw", "gak", "sax", "softdtw", "lcss", "frechet"]
+TSLEARN_VALID_METRICS = ["ctw", "dtw", "gak", "sax", "softdtw",
+                         "softdtw_normalized", "lcss", "frechet"]
+VARIABLE_LENGTH_METRICS = ["ctw", "dtw", "gak", "sax", "softdtw",
+                           "softdtw_normalized", "lcss", "frechet"]
+
+
+METRIC_TO_FUNCTION = {
+    "ctw": cdist_ctw,
+    "dtw": cdist_dtw,
+    "gak": cdist_gak,
+    "sax": cdist_sax,
+    "softdtw": cdist_soft_dtw,
+    "softdtw_normalized": cdist_soft_dtw_normalized,
+    "frechet": cdist_frechet
+}
+
 
 __all__ = [
     "TSLEARN_VALID_METRICS",

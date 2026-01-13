@@ -10,7 +10,8 @@ from tslearn.clustering import (
     EmptyClusterError,
     TimeSeriesKMeans,
     KernelKMeans,
-    KShape
+    KShape,
+    TimeSeriesDBSCAN
 )
 from tslearn.clustering.utils import (
     _check_full_length,
@@ -258,3 +259,87 @@ def test_silhouette():
         0.17953934,
         rel_tol=1e-07
     )
+
+
+def test_dbscan():
+    # Basic clustering
+    X = np.vstack((
+        np.eye(3).reshape(-1, 3),
+        -1 * np.eye(3).reshape(-1, 3)
+    ))
+    X = np.insert(X, 0, 0, axis=1)
+    X = np.append(X, np.zeros((X.shape[0], 1)), axis=1)
+    X = to_time_series_dataset(X)
+
+    db = TimeSeriesDBSCAN(eps=1e-6, min_ts=3)
+
+    # Test invalid metric
+    db.set_params(metric='gak')
+    with pytest.raises(ValueError, match="Metric must be one of"):
+        db.fit(X)
+
+    # Test TSlearn metrics
+    metrics = ['dtw', 'ctw', 'frechet']
+    for metric in metrics:
+        db.set_params(metric=metric)
+        db.fit(X)
+        np.testing.assert_equal(db.labels_, [0, 0, 0, 1, 1, 1])
+        np.testing.assert_equal(db.components_, X)
+        np.testing.assert_equal(db.core_ts_indices_, np.arange(X.shape[0]))
+
+    # Euclidean, no clustering performed
+    db.set_params(metric='euclidean')
+    db.fit(X)
+    np.testing.assert_equal(db.labels_, [-1, -1, -1, -1, -1, -1])
+    np.testing.assert_equal(db.components_, np.array([]).reshape((0, 5)))
+    np.testing.assert_equal(db.core_ts_indices_, np.array([]))
+
+    # Test precomputed
+    db.set_params(metric='precomputed')
+    db.fit(cdist_dtw(X))
+    np.testing.assert_equal(db.labels_, [0, 0, 0, 1, 1, 1])
+    np.testing.assert_equal(db.core_ts_indices_, np.arange(X.shape[0]))
+
+    # Softdtw-normalized with gamma metric param
+    db.set_params(metric='softdtw_normalized')
+    db.fit(X)
+    np.testing.assert_equal(db.labels_, [-1, -1, -1, -1, -1, -1])
+    db.set_params(eps=0.1)
+    db.set_params(metric_params={'gamma': 0.1})
+    db.fit(X)
+    np.testing.assert_equal(db.labels_, [0, 0, 0, 1, 1, 1])
+    np.testing.assert_equal(db.core_ts_indices_, [1, 4])
+
+    # Clustering with outliers
+    X = np.append(X, np.array([[0], [1.5], [0], [0], [0]])).reshape(-1, 5)
+    X = to_time_series_dataset(X)
+    db = TimeSeriesDBSCAN(eps=1e-6, min_ts=3)
+    db.fit(X)
+    np.testing.assert_equal(db.labels_, [0, 0, 0, 1, 1, 1, -1])
+    np.testing.assert_equal(db.components_, X[:-1])
+    np.testing.assert_equal(db.core_ts_indices_, np.arange(X.shape[0] - 1))
+
+    # Check eps: increase eps so that last point is clustered
+    db.set_params(eps=0.5)
+    db.fit(X)
+    np.testing.assert_equal(db.labels_, [0, 0, 0, 1, 1, 1, 0])
+    np.testing.assert_equal(db.components_, X)
+    np.testing.assert_equal(db.core_ts_indices_, np.arange(X.shape[0]))
+
+    # Check min_ts: last point only has 1 neighboor within the eps range.
+    # Therefore, it is not considered a core component
+    X[0, 1, 0] = 0.9
+    X[1, 2, 0] = 0.9
+    db.fit(X)
+    np.testing.assert_equal(db.labels_, [0, 0, 0, 1, 1, 1, 0])
+    np.testing.assert_equal(db.components_, X[:-1])
+    np.testing.assert_equal(db.core_ts_indices_, np.arange(X.shape[0] -1))
+
+    # Check nb_jobs
+    db = TimeSeriesDBSCAN(n_jobs=5, metric_params={'n_jobs': 1}).fit(X)
+    assert db._get_metric_params() == {'n_jobs': 5}
+
+    # Ensure unused params don't raise
+    TimeSeriesDBSCAN(metric="softdtw_normalized", n_jobs=1, metric_params={'n_jobs': 1}).fit(X)
+    TimeSeriesDBSCAN(metric="dtw", metric_params={'gamma': 2}).fit(X)
+    TimeSeriesDBSCAN(metric="euclidean", metric_params={'whatever': "trimmed"}).fit(X)
