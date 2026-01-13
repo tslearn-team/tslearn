@@ -145,7 +145,7 @@ def ctw_path(
     be = instantiate_backend(be, s1, s2)
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
-    s1, s2 = be.array(s1, dtype=be.float64), be.array(s2, dtype=be.float64)
+    s1, s2 = be.asarray(s1, dtype=be.float64), be.asarray(s2, dtype=be.float64)
 
     if n_components is None:
         n_components = min(s1.shape[-1], s2.shape[-1])
@@ -283,8 +283,8 @@ def ctw(
        human behavior". NIPS 2009.
     """
     be = instantiate_backend(be, s1, s2)
-    s1 = be.array(s1)
-    s2 = be.array(s2)
+    s1 = be.asarray(s1)
+    s2 = be.asarray(s2)
     return ctw_path(
         s1=s1,
         s2=s2,

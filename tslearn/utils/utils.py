@@ -195,7 +195,7 @@ def to_time_series(ts, remove_nans=False, be=None):
     to_time_series_dataset : Transforms a dataset of time series
     """
     be = instantiate_backend(be, ts)
-    ts_out = be.array(ts)
+    ts_out = be.asarray(ts)
     if ts_out.ndim <= 1:
         ts_out = be.reshape(ts_out, (-1, 1))
     if not be.is_float(ts_out):
@@ -251,14 +251,14 @@ def to_time_series_dataset(dataset, dtype=float, be=None):
         import pandas as pd
 
         if isinstance(dataset, pd.DataFrame):
-            return to_time_series_dataset(be.array(dataset), be=be)
+            return to_time_series_dataset(be.asarray(dataset), be=be)
     except ImportError:
         pass
     if isinstance(dataset, NotAnArray):  # Patch to pass sklearn tests
-        return to_time_series_dataset(be.array(dataset), be=be)
+        return to_time_series_dataset(be.asarray(dataset), be=be)
     if len(dataset) == 0:
         return be.zeros((0, 0, 0))
-    if be.ndim(be.array(dataset[0])) == 0:
+    if be.ndim(be.asarray(dataset[0])) == 0:
         dataset = [dataset]
     n_ts = len(dataset)
     max_sz = max(
