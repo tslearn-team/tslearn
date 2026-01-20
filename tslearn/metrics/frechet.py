@@ -5,11 +5,10 @@ import numpy
 from numba import njit
 
 from tslearn.backend import instantiate_backend
-from tslearn.metrics.dtw_variants import (
-    compute_mask,
-    GLOBAL_CONSTRAINT_CODE,
-    _njit_return_path,
-    _return_path
+from tslearn.metrics._masks import GLOBAL_CONSTRAINT_CODE, compute_mask
+from tslearn.metrics._dtw import (
+    _njit_compute_path,
+    _compute_path
 )
 from tslearn.metrics.utils import _cdist_generic
 from tslearn.utils import to_time_series
@@ -201,9 +200,9 @@ def _frechet(
     path = None
     if return_path:
         if backend.is_numpy:
-            path = _njit_return_path(acc_matrix)
+            path = _njit_compute_path(acc_matrix)
         else:
-            path = _return_path(acc_matrix, be=backend)
+            path = _compute_path(acc_matrix)
 
     return path, acc_matrix[-1, -1]
 
@@ -217,7 +216,7 @@ def _njit_frechet_accumulated_matrix(s1, s2, mask, squared=True):
 
     for i in range(l1):
         for j in range(l2):
-            if numpy.isfinite(mask[i, j]):
+            if mask[i, j]:
                 local_distance = numpy.linalg.norm(s1[i] - s2[j])
                 if squared:
                     local_distance = local_distance ** 2
@@ -239,19 +238,19 @@ def _frechet_accumulated_matrix(s1, s2, mask, backend, metric, **kwds):
 
     for i in range(l1):
         for j in range(l2):
-            if backend.isfinite(mask[i, j]):
-                    local_distance = (
-                        backend.pairwise_distances(s1[i].reshape(1, -1),
-                                                   s2[j].reshape(1, -1),
-                                                   metric=metric,
-                                                   **kwds)
-                    )
-                    acc_matrix[i + 1, j + 1] = max(
-                        local_distance,
-                        min(acc_matrix[i, j + 1],
-                            acc_matrix[i + 1, j],
-                            acc_matrix[i, j])
-                    )
+            if mask[i, j]:
+                local_distance = (
+                    backend.pairwise_distances(s1[i].reshape(1, -1),
+                                               s2[j].reshape(1, -1),
+                                               metric=metric,
+                                               **kwds)
+                )
+                acc_matrix[i + 1, j + 1] = max(
+                    local_distance,
+                    min(acc_matrix[i, j + 1],
+                        acc_matrix[i + 1, j],
+                        acc_matrix[i, j])
+                )
     return acc_matrix[1:, 1:]
 
 
@@ -264,7 +263,7 @@ def _njit_frechet_accumulated_matrix_from_distance_matrix(distance_matrix, mask)
 
     for i in range(l1):
         for j in range(l2):
-            if numpy.isfinite(mask[i, j]):
+            if mask[i, j]:
                 acc_matrix[i + 1, j + 1] = max(
                     distance_matrix[i, j],
                     min(acc_matrix[i, j + 1],
@@ -283,7 +282,7 @@ def _frechet_accumulated_matrix_from_distance_matrix(distance_matrix, mask, back
 
     for i in range(l1):
         for j in range(l2):
-            if backend.isfinite(mask[i, j]):
+            if mask[i, j]:
                 acc_matrix[i + 1, j + 1] = max(
                     distance_matrix[i, j],
                     min(acc_matrix[i, j + 1],

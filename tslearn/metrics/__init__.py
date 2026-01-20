@@ -5,22 +5,44 @@ used at the core of machine learning algorithms.
 **User guide:** See the :ref:`Dynamic Time Warping (DTW) <dtw>` section for 
 further details.
 """
-from .dtw_variants import (dtw, dtw_limited_warping_length,
-                           dtw_path_limited_warping_length, subsequence_path,
-                           subsequence_cost_matrix,
-                           dtw_path, dtw_path_from_metric,
-                           dtw_subsequence_path, cdist_dtw,
-                           GLOBAL_CONSTRAINT_CODE,
-                           lb_envelope, lb_keogh,
-                           sakoe_chiba_mask, itakura_mask,
-                           lcss, lcss_path, lcss_path_from_metric)
+from ._masks import (
+    GLOBAL_CONSTRAINT_CODE,
+    compute_mask,
+    itakura_mask,
+    sakoe_chiba_mask
+)
+from ._dtw import(
+    dtw,
+    dtw_path,
+    cdist_dtw
+)
+from .dtw_variants import (
+   dtw_limited_warping_length,
+   dtw_path_limited_warping_length,
+   subsequence_path,
+   subsequence_cost_matrix,
+   dtw_path_from_metric,
+   dtw_subsequence_path,
+   lb_envelope,
+   lb_keogh,
+   lcss,
+   lcss_path,
+   lcss_path_from_metric
+)
 from .ctw import ctw_path, ctw, cdist_ctw
 from .sax import cdist_sax
-from .softdtw_variants import (cdist_soft_dtw, cdist_gak,
-                               cdist_soft_dtw_normalized, gak, soft_dtw,
-                               soft_dtw_alignment,
-                               sigma_gak, gamma_soft_dtw, SquaredEuclidean,
-                               SoftDTW)
+from .softdtw_variants import (
+    cdist_soft_dtw,
+    cdist_gak,
+    cdist_soft_dtw_normalized,
+    gak,
+    soft_dtw,
+    soft_dtw_alignment,
+    sigma_gak,
+    gamma_soft_dtw,
+    SquaredEuclidean,
+    SoftDTW
+)
 from .soft_dtw_loss_pytorch import SoftDTWLossPyTorch
 from .cycc import cdist_normalized_cc, y_shifted_sbd_vec
 from .frechet import frechet, frechet_path, frechet_path_from_metric, cdist_frechet
@@ -48,19 +70,22 @@ __all__ = [
     "TSLEARN_VALID_METRICS",
     "VARIABLE_LENGTH_METRICS",
     "GLOBAL_CONSTRAINT_CODE",
+    "compute_mask",
+    "itakura_mask",
+    "sakoe_chiba_mask",
     "dtw",
+    "dtw_path",
+    "cdist_dtw",
     "dtw_limited_warping_length",
     "dtw_path_limited_warping_length",
     "subsequence_path",
     "subsequence_cost_matrix",
-    "dtw_path",
+    "dtw_limited_warping_length",
+    "dtw_path_limited_warping_length",
     "dtw_path_from_metric",
     "dtw_subsequence_path",
-    "cdist_dtw",
     "lb_envelope",
     "lb_keogh",
-    "sakoe_chiba_mask",
-    "itakura_mask",
     "lcss",
     "lcss_path",
     "lcss_path_from_metric",
