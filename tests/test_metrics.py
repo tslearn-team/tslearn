@@ -514,11 +514,11 @@ def test_gak():
             assert backend.belongs_to_backend(sqeuc_compute)
 
 
-@pytest.mark.skipif(
-    (sys.version_info.major, sys.version_info.minor) == (3, 9)
-    and "mac" in platform.platform().lower(),
-    reason="Test failing for MacOS with python3.9 (Segmentation fault)",
-)
+# @pytest.mark.skipif(
+#     (sys.version_info.major, sys.version_info.minor) == (3, 9)
+#     and "mac" in platform.platform().lower(),
+#     reason="Test failing for MacOS with python3.9 (Segmentation fault)",
+# )
 def test_gamma_soft_dtw():
     for be in backends:
         for array_type in array_types:
@@ -685,12 +685,9 @@ def test_dtw_path_with_empty_or_nan_inputs():
             )
 
 
-@pytest.mark.skipif(
-    len(backends) == 1,
-    reason="Skipping test that requires pytorch backend",
-)
 def test_soft_dtw_loss_pytorch():
     """Tests for the class SoftDTWLossPyTorch."""
+    pytest.importorskip('torch')
     from tslearn.metrics.soft_dtw_loss_pytorch import _SoftDTWLossPyTorch
 
     b = 5
