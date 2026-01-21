@@ -1,18 +1,18 @@
-import numpy
+"""DTW Barycenter Averaging (DBA)"""
 import warnings
+
+import numpy
+
 from scipy.interpolate import interp1d
+
 from sklearn.exceptions import ConvergenceWarning
-try:
-    from sklearn.externals.array_api_compat import is_numpy_array
-except ImportError:
-    from tslearn.backend import instantiate_backend
-    def is_numpy_array(array):
-        return instantiate_backend(array).is_numpy
 from sklearn.utils import check_random_state
 
-from ..metrics._dtw import _dtw_path, _njit_dtw_path
-from ..utils import to_time_series_dataset, to_time_series, ts_size
-from .utils import _set_weights
+from tslearn.backend import instantiate_backend
+from tslearn.barycenters.utils import _set_weights
+from tslearn.metrics._dtw import _njit_dtw_path
+from tslearn.utils import to_time_series_dataset, to_time_series, ts_size
+
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -29,8 +29,7 @@ def _init_avg(X, barycenter_size):
 
 
 def _petitjean_assignment(X, barycenter,  weights, metric_params=None):
-
-    dtw_path_ = _njit_dtw_path if is_numpy_array(X) else _dtw_path
+    backend = instantiate_backend("numpy")
 
     if metric_params is None:
         metric_params = {}
@@ -40,9 +39,9 @@ def _petitjean_assignment(X, barycenter,  weights, metric_params=None):
               [[] for _ in range(barycenter_size)])
     cost = 0
     for i in range(n):
-        dist_i, path = dtw_path_(
-            to_time_series(X[i], remove_nans=True),
-            to_time_series(barycenter, remove_nans=True),
+        dist_i, path = _njit_dtw_path(
+            to_time_series(X[i], remove_nans=True, be=backend),
+            to_time_series(barycenter, remove_nans=True, be=backend),
             **metric_params
         )
         for pair in path:
@@ -59,18 +58,6 @@ def _petitjean_update_barycenter(X, assign, barycenter_size, weights):
         barycenter[t] = numpy.average(X[assign[0][t], assign[1][t]], axis=0,
                                       weights=weights[assign[0][t]])
     return barycenter
-
-
-def _petitjean_cost(X, barycenter, assign, weights):
-    cost = 0.
-    barycenter_size = barycenter.shape[0]
-    for t_barycenter in range(barycenter_size):
-        for i_ts, t_ts in zip(assign[0][t_barycenter],
-                              assign[1][t_barycenter]):
-            sq_norm = numpy.linalg.norm(X[i_ts, t_ts] -
-                                        barycenter[t_barycenter]) ** 2
-            cost += weights[i_ts] * sq_norm
-    return cost / weights.sum()
 
 
 def dtw_barycenter_averaging_petitjean(
@@ -169,7 +156,9 @@ def dtw_barycenter_averaging_petitjean(
        for dynamic time warping, with applications to clustering. Pattern
        Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
     """
-    X_ = to_time_series_dataset(X)
+    backend = instantiate_backend("numpy")
+
+    X_ = to_time_series_dataset(X, be=backend)
     if barycenter_size is None:
         barycenter_size = X_.shape[1]
     weights = _set_weights(weights, X_.shape[0])
@@ -225,7 +214,7 @@ def _mm_assignment(X, barycenter, weights, metric_params=None):
     float
         Current alignment cost
     """
-    dtw_path_ = _njit_dtw_path if is_numpy_array(X) else _dtw_path
+    backend = instantiate_backend("numpy")
 
     if metric_params is None:
         metric_params = {}
@@ -233,9 +222,9 @@ def _mm_assignment(X, barycenter, weights, metric_params=None):
     cost = 0.
     list_p_k = []
     for i in range(n):
-        dist_i, path = dtw_path_(
-            to_time_series(barycenter, remove_nans=True),
-            to_time_series(X[i], remove_nans=True),
+        dist_i, path = _njit_dtw_path(
+            to_time_series(barycenter, remove_nans=True, be=backend),
+            to_time_series(X[i], remove_nans=True, be=backend),
             **metric_params
         )
         cost += dist_i ** 2 * weights[i]
@@ -614,7 +603,9 @@ def dtw_barycenter_averaging_one_init(
        for Averaging in Dynamic Time Warping Spaces.
        Pattern Recognition, 74, 340-358.
     """
-    X_ = to_time_series_dataset(X)
+    backend = instantiate_backend("numpy")
+
+    X_ = to_time_series_dataset(X, be=backend)
     if barycenter_size is None:
         barycenter_size = X_.shape[1]
     weights = _set_weights(weights, X_.shape[0])
@@ -735,8 +726,9 @@ def dtw_barycenter_averaging_subgradient(X, barycenter_size=None,
        Pattern Recognition, 74, 340-358.
     """
     rng = check_random_state(random_state)
+    backend = instantiate_backend("numpy")
 
-    X_ = to_time_series_dataset(X)
+    X_ = to_time_series_dataset(X, be=backend)
     if barycenter_size is None:
         barycenter_size = X_.shape[1]
     weights = _set_weights(weights, X_.shape[0])
