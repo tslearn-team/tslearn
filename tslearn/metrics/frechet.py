@@ -171,11 +171,11 @@ def _frechet(
 
     else:
         s1 = backend.array(s1)
-        s2 = s1
+        s2 = s1.T
 
     mask = compute_mask(
-        s1,
-        s2,
+        s1.shape[0],
+        s2.shape[0],
         GLOBAL_CONSTRAINT_CODE[global_constraint],
         sakoe_chiba_radius=sakoe_chiba_radius,
         itakura_max_slope=itakura_max_slope
