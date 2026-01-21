@@ -5,6 +5,7 @@ from numba import njit
 import numpy
 
 from tslearn.backend import instantiate_backend
+from tslearn.backend.pytorch_backend import HAS_TORCH
 from tslearn.metrics._masks import GLOBAL_CONSTRAINT_CODE, _compute_mask, _njit_compute_mask
 from tslearn.utils import to_time_series, to_time_series_dataset
 
@@ -73,7 +74,10 @@ def __make_accumulated_matrix(backend):
         return _accumulated_matrix_generic
 
 _njit_accumulated_matrix = __make_accumulated_matrix(numpy)
-_accumulated_matrix = __make_accumulated_matrix(instantiate_backend("TorchBackend"))
+if HAS_TORCH:
+    _accumulated_matrix = __make_accumulated_matrix(instantiate_backend("TorchBackend"))
+else:
+    _accumulated_matrix = _njit_accumulated_matrix
 
 
 def dtw(
@@ -359,7 +363,10 @@ def __make_compute_path(backend):
         return _compute_path_generic
 
 _njit_compute_path = __make_compute_path(numpy)
-_compute_path = __make_compute_path(instantiate_backend("torch"))
+if HAS_TORCH:
+    _compute_path = __make_compute_path(instantiate_backend("torch"))
+else:
+    _compute_path = _njit_compute_path
 
 
 def __make_dtw(backend):
@@ -387,7 +394,10 @@ def __make_dtw(backend):
         return _dtw_generic
 
 _njit_dtw = __make_dtw(numpy)
-_dtw = __make_dtw(instantiate_backend("torch"))
+if HAS_TORCH:
+    _dtw = __make_dtw(instantiate_backend("torch"))
+else:
+    _dtw = _njit_dtw
 
 
 def __make_dtw_path(backend):
@@ -419,7 +429,10 @@ def __make_dtw_path(backend):
 
 
 _njit_dtw_path = __make_dtw_path(numpy)
-_dtw_path = __make_dtw_path(instantiate_backend("torch"))
+if HAS_TORCH:
+    _dtw_path = __make_dtw_path(instantiate_backend("torch"))
+else:
+    _dtw_path = _njit_dtw_path
 
 
 def cdist_dtw(
