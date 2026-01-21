@@ -4,12 +4,8 @@ from numba import njit, prange
 import numpy
 
 from tslearn.backend import instantiate_backend
+from tslearn.backend.pytorch_backend import HAS_TORCH
 
-try:
-    from sklearn.externals.array_api_compat import is_numpy_array
-except ImportError:
-    def is_numpy_array(array):
-        return instantiate_backend(array).is_numpy
 
 GLOBAL_CONSTRAINT_CODE = {None: 0, "": 0, "itakura": 1, "sakoe_chiba": 2}
 
@@ -40,8 +36,11 @@ def __make_sakoe_chiba_mask(backend):
     else:
         return _sakoe_chiba_mask_generic
 
-_sakoe_chiba_mask = __make_sakoe_chiba_mask(instantiate_backend("torch"))
 _njit_sakoe_chiba_mask = __make_sakoe_chiba_mask(numpy)
+if HAS_TORCH:
+    _sakoe_chiba_mask = __make_sakoe_chiba_mask(instantiate_backend("torch"))
+else:
+    _sakoe_chiba_mask = _njit_sakoe_chiba_mask
 
 
 def sakoe_chiba_mask(sz1, sz2, radius=1, be=None):
@@ -153,8 +152,11 @@ def __make_itakura_mask(backend):
     else:
         return _itakura_mask_generic
 
-_itakura_mask = __make_itakura_mask(instantiate_backend("torch"))
 _njit_itakura_mask = __make_itakura_mask(numpy)
+if HAS_TORCH:
+    _itakura_mask = __make_itakura_mask(instantiate_backend("torch"))
+else:
+    _itakura_mask = _njit_itakura_mask
 
 
 def itakura_mask(sz1, sz2, max_slope=2.0, be=None):
@@ -355,4 +357,7 @@ def __make_compute_mask(backend):
         return _compute_mask_generic
 
 _njit_compute_mask = __make_compute_mask(numpy)
-_compute_mask = __make_compute_mask(instantiate_backend("torch"))
+if HAS_TORCH:
+    _compute_mask = __make_compute_mask(instantiate_backend("torch"))
+else:
+    _compute_mask = _njit_compute_mask
