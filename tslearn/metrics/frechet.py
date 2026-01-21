@@ -171,7 +171,7 @@ def _frechet(
 
     else:
         s1 = backend.array(s1)
-        s2 = s1
+        s2 = s1.T
 
     mask = compute_mask(
         s1,
