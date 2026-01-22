@@ -80,7 +80,7 @@ def njit_accumulated_matrix(s1, s2, mask):
     s2 : array-like, shape=(sz2, d)
         Second time series.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have infinite values.
+        Mask. Unconsidered cells must have False values.
 
     Returns
     -------
@@ -112,7 +112,7 @@ def accumulated_matrix(s1, s2, mask, be=None):
     s2 : array-like, shape=(sz2, d)
         Second time series.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have infinite values.
+        Mask. Unconsidered cells must have False values.
     be : Backend object or string or None
         Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
         the NumPy backend is used.
@@ -157,7 +157,7 @@ def _njit_dtw(s1, s2, mask):
     s2 : array-like, shape=(sz2, d)
         Second time series.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have infinite values.
+        Mask. Unconsidered cells must have False values.
 
     Returns
     -------
@@ -179,7 +179,7 @@ def _dtw(s1, s2, mask, be=None):
     s2 : array-like, shape=(sz2, d)
         Second time series.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have infinite values.
+        Mask. Unconsidered cells must have False values.
     be : Backend object or string or None
         Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
         the NumPy backend is used.
@@ -425,7 +425,7 @@ def njit_accumulated_matrix_from_dist_matrix(dist_matrix, mask):
     dist_matrix : array-like, shape=(sz1, sz2)
         Array containing the pairwise distances.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have infinite values.
+        Mask. Unconsidered cells must have False values.
 
     Returns
     -------
@@ -455,7 +455,7 @@ def accumulated_matrix_from_dist_matrix(dist_matrix, mask, be=None):
     dist_matrix : array-like, shape=(sz1, sz2)
         Array containing the pairwise distances.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have infinite values.
+        Mask. Unconsidered cells must have False values.
     be : Backend object or string or None
         Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
         the NumPy backend is used.
@@ -2231,7 +2231,7 @@ def njit_lcss_accumulated_matrix(s1, s2, eps, mask):
     eps : float
         Matching threshold.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have infinite values.
+        Mask. Unconsidered cells must have False values.
         
     Returns
     -------
@@ -2268,7 +2268,7 @@ def lcss_accumulated_matrix(s1, s2, eps, mask, be=None):
     eps : float
         Matching threshold.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have infinite values.
+        Mask. Unconsidered cells must have False values.
     be : Backend object or string or None
         Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
         the NumPy backend is used.
@@ -2321,7 +2321,7 @@ def _njit_lcss(s1, s2, eps, mask):
     eps : float (default: 1.)
         Maximum matching distance threshold.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have infinite values.
+        Mask. Unconsidered cells must have False values.
 
     Returns
     -------
@@ -2347,7 +2347,7 @@ def _lcss(s1, s2, eps, mask, be=None):
     eps : float (default: 1.)
         Maximum matching distance threshold.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have infinite values.
+        Mask. Unconsidered cells must have False values.
     be : Backend object or string or None
         Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
         the NumPy backend is used.
@@ -2502,7 +2502,7 @@ def _njit_return_lcss_path(s1, s2, eps, mask, acc_cost_mat, sz1, sz2):
     eps : float
         Maximum matching distance threshold.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have infinite values.
+        Mask. Unconsidered cells must have False values.
     acc_cost_mat : array-like, shape=(sz1 + 1, sz2 + 1)
         Accumulated cost matrix.
     sz1 : int
@@ -2543,7 +2543,7 @@ def _return_lcss_path(s1, s2, eps, mask, acc_cost_mat, sz1, sz2, be=None):
     eps : float
         Maximum matching distance threshold.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have infinite values.
+        Mask. Unconsidered cells must have False values.
     acc_cost_mat : array-like, shape=(sz1 + 1, sz2 + 1)
         Accumulated cost matrix.
     sz1 : int
@@ -2601,7 +2601,7 @@ def _njit_return_lcss_path_from_dist_matrix(
     eps : float
         Maximum matching distance threshold.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have infinite values.
+        Mask. Unconsidered cells must have False values.
     acc_cost_mat : array-like, shape=(sz1 + 1, sz2 + 1)
         Accumulated cost matrix.
     sz1 : int
@@ -2644,7 +2644,7 @@ def _return_lcss_path_from_dist_matrix(
     eps : float
         Maximum matching distance threshold.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have infinite values.
+        Mask. Unconsidered cells must have False values.
     acc_cost_mat : array-like, shape=(sz1 + 1, sz2 + 1)
         Accumulated cost matrix.
     sz1 : int
@@ -2829,7 +2829,7 @@ def njit_lcss_accumulated_matrix_from_dist_matrix(dist_matrix, eps, mask):
     eps : float (default: 1.)
         Maximum matching distance threshold.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have infinite values.
+        Mask. Unconsidered cells must have False values.
 
     Returns
     -------
@@ -2863,7 +2863,7 @@ def lcss_accumulated_matrix_from_dist_matrix(dist_matrix, eps, mask, be=None):
     eps : float (default: 1.)
         Maximum matching distance threshold.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have infinite values.
+        Mask. Unconsidered cells must have False values.
     be : Backend object or string or None
         Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
         the NumPy backend is used.
