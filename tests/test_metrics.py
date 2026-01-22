@@ -470,46 +470,48 @@ def test_masks():
             np.testing.assert_allclose(i_mask, reference_mask)
             assert backend.belongs_to_backend(i_mask)
 
-            # Test masks for different combinations of global_constraints /
-            # sakoe_chiba_radius / itakura_max_slope
-            sz = 10
-            ts0 = cast(np.empty((sz, 1)), array_type)
-            ts1 = cast(np.empty((sz, 1)), array_type)
-            mask_no_constraint = tslearn.metrics.dtw_variants.compute_mask(
-                ts0, ts1, global_constraint=0, be=be
-            )
-            np.testing.assert_array_equal(mask_no_constraint, np.full((sz, sz), True))
-            backend = instantiate_backend(be, array_type)
-            assert backend.belongs_to_backend(mask_no_constraint)
+            for compute_mask in [tslearn.metrics.compute_mask,
+                                 tslearn.metrics.dtw_variants.compute_mask]:
+                # Test masks for different combinations of global_constraints /
+                # sakoe_chiba_radius / itakura_max_slope
+                sz = 10
+                ts0 = cast(np.empty((sz, 1)), array_type)
+                ts1 = cast(np.empty((sz, 1)), array_type)
+                mask_no_constraint = compute_mask(
+                    ts0, ts1, global_constraint=0, be=be
+                )
+                np.testing.assert_array_equal(mask_no_constraint, np.full((sz, sz), True))
+                backend = instantiate_backend(be, array_type)
+                assert backend.belongs_to_backend(mask_no_constraint)
 
-            mask_itakura = tslearn.metrics.dtw_variants.compute_mask(
-                ts0, ts1, global_constraint=1, be=be
-            )
-            mask_itakura_bis = tslearn.metrics.dtw_variants.compute_mask(
-                ts0, ts1, itakura_max_slope=2.0, be=be
-            )
-            np.testing.assert_allclose(mask_itakura, mask_itakura_bis)
-            assert backend.belongs_to_backend(mask_itakura)
+                mask_itakura = compute_mask(
+                    ts0, ts1, global_constraint=1, be=be
+                )
+                mask_itakura_bis = compute_mask(
+                    ts0, ts1, itakura_max_slope=2.0, be=be
+                )
+                np.testing.assert_allclose(mask_itakura, mask_itakura_bis)
+                assert backend.belongs_to_backend(mask_itakura)
 
-            mask_sakoe = tslearn.metrics.dtw_variants.compute_mask(
-                ts0, ts1, global_constraint=2, be=be
-            )
+                mask_sakoe = compute_mask(
+                    ts0, ts1, global_constraint=2, be=be
+                )
 
-            mask_sakoe_bis = tslearn.metrics.dtw_variants.compute_mask(
-                ts0, ts1, sakoe_chiba_radius=1, be=be
-            )
-            np.testing.assert_allclose(mask_sakoe, mask_sakoe_bis)
-            assert backend.belongs_to_backend(mask_sakoe)
+                mask_sakoe_bis = compute_mask(
+                    ts0, ts1, sakoe_chiba_radius=1, be=be
+                )
+                np.testing.assert_allclose(mask_sakoe, mask_sakoe_bis)
+                assert backend.belongs_to_backend(mask_sakoe)
 
-            np.testing.assert_raises(
-                RuntimeWarning,
-                tslearn.metrics.dtw_variants.compute_mask,
-                ts0,
-                ts1,
-                sakoe_chiba_radius=1,
-                itakura_max_slope=2.0,
-                be=be,
-            )
+                np.testing.assert_raises(
+                    RuntimeWarning,
+                    compute_mask,
+                    ts0,
+                    ts1,
+                    sakoe_chiba_radius=1,
+                    itakura_max_slope=2.0,
+                    be=be,
+                )
 
             # Tests for estimators that can set masks through metric_params
             n, sz, d = 15, 10, 3

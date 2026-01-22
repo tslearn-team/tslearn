@@ -126,7 +126,10 @@ def accumulated_matrix(s1, s2, mask, be=None):
     mat : array-like, shape=(sz1, sz2)
         Accumulated cost matrix.
     """
-    warnings.warn("This method is deprecated, use tslearn.metrics._dtw.accumulated_matrix instead.", DeprecationWarning)
+    warnings.warn(
+        "This method is deprecated, use tslearn.metrics.accumulated_matrix instead.",
+        DeprecationWarning
+    )
 
     be = instantiate_backend(be, s1, s2)
     s1 = be.array(s1)
@@ -384,7 +387,10 @@ def dtw_path(
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
 
     """
-    warnings.warn("This method is deprecated, use tslearn.metrics._dtw.dtw_path instead.", DeprecationWarning)
+    warnings.warn(
+        "This method is deprecated, use tslearn.metrics.dtw_path instead.",
+        DeprecationWarning
+    )
 
     be = instantiate_backend(be, s1, s2)
     s1 = to_time_series(s1, remove_nans=True, be=be)
@@ -1558,7 +1564,10 @@ def sakoe_chiba_mask(sz1, sz2, radius=1, be=None):
            [ True,  True,  True],
            [False,  True,  True]])
     """
-    warnings.warn("This method is deprecated, use tslearn.metrics._masks.sakoe_chiba_mask instead.", DeprecationWarning)
+    warnings.warn(
+        "This method is deprecated, use tslearn.metrics.sakoe_chiba_mask instead.",
+        DeprecationWarning
+    )
 
     be = instantiate_backend(be)
     mask = be.full((sz1, sz2), False)
@@ -1751,7 +1760,10 @@ def itakura_mask(sz1, sz2, max_slope=2.0, be=None):
            [False, False, False,  True,  True, False],
            [False, False, False, False, False,  True]])
     """
-    warnings.warn("This method is deprecated, use tslearn.metrics._masks.itakura_mask instead.", DeprecationWarning)
+    warnings.warn(
+        "This method is deprecated, use tslearn.metrics.itakura_mask instead.",
+        DeprecationWarning
+    )
 
     be = instantiate_backend(be)
 
@@ -1820,7 +1832,10 @@ def compute_mask(
     mask : array-like, shape=(sz1, sz2)
         Constraint region.
     """
-    warnings.warn("This method is deprecated, use tslearn.metrics._masks.compute_mask instead.", DeprecationWarning)
+    warnings.warn(
+        "This method is deprecated, use tslearn.metrics.compute_mask instead.",
+        DeprecationWarning
+    )
 
     be = instantiate_backend(be, s1, s2)
     # The output mask will be of shape (sz1, sz2)
@@ -1975,7 +1990,10 @@ def cdist_dtw(
            spoken word recognition," IEEE Transactions on Acoustics, Speech and
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
     """  # noqa: E501
-    warnings.warn("This method is deprecated, use tslearn.metrics._dtw.cdist_dtw instead.", DeprecationWarning)
+    warnings.warn(
+        "This method is deprecated, use tslearn.metrics.cdist_dtw instead.",
+        DeprecationWarning
+    )
 
     be = instantiate_backend(be, dataset1, dataset2)
     return _cdist_generic(
