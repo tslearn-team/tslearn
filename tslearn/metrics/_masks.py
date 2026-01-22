@@ -1,5 +1,5 @@
 """ Masks """
-from numba import njit, prange
+from numba import njit
 
 import numpy
 
@@ -11,28 +11,24 @@ GLOBAL_CONSTRAINT_CODE = {None: 0, "": 0, "itakura": 1, "sakoe_chiba": 2}
 
 
 def __make_sakoe_chiba_mask(backend):
-    if backend is numpy:
-        range_ = prange
-    else:
-        range_ = range
 
     def _sakoe_chiba_mask_generic(sz1, sz2, radius=1):
         mask = backend.full((sz1, sz2), False)
         if sz1 > sz2:
             width = sz1 - sz2 + radius
-            for i in range_(sz2):
+            for i in range(sz2):
                 lower = max(0, i - radius)
                 upper = min(sz1, i + width) + 1
                 mask[lower:upper, i] = True
         else:
             width = sz2 - sz1 + radius
-            for i in range_(sz1):
+            for i in range(sz1):
                 lower = max(0, i - radius)
                 upper = min(sz2, i + width) + 1
                 mask[i, lower:upper] = True
         return mask
     if backend is numpy:
-        return njit(nogil=True, parallel=True)(_sakoe_chiba_mask_generic)
+        return njit(nogil=True)(_sakoe_chiba_mask_generic)
     else:
         return _sakoe_chiba_mask_generic
 
@@ -91,10 +87,6 @@ def sakoe_chiba_mask(sz1, sz2, radius=1, be=None):
 
 
 def __make_itakura_mask(backend):
-    if backend is numpy:
-        range_ = prange
-    else:
-        range_ = range
 
     def _itakura_mask_generic(sz1, sz2, max_slope=2.0):
         min_slope = 1 / float(max_slope)
@@ -105,7 +97,7 @@ def __make_itakura_mask(backend):
         lower_bound[0] = min_slope * backend.arange(sz2)
         lower_bound[1] = (sz1 - 1) - max_slope * (sz2 - 1) + max_slope * backend.arange(sz2)
         lower_bound_ = backend.empty(sz2)
-        for i in range_(sz2):
+        for i in range(sz2):
             lower_bound_[i] = max(
                 backend.round(lower_bound[0, i], decimals=2),
                 backend.round(lower_bound[1, i], decimals=2)
@@ -116,7 +108,7 @@ def __make_itakura_mask(backend):
         upper_bound[0] = max_slope * backend.arange(sz2)
         upper_bound[1] = (sz1 - 1) - min_slope * (sz2 - 1) + min_slope * backend.arange(sz2)
         upper_bound_ = backend.empty(sz2)
-        for i in range_(sz2):
+        for i in range(sz2):
             upper_bound_[i] = min(
                 backend.round(upper_bound[0, i], decimals=2),
                 backend.round(upper_bound[1, i], decimals=2)
@@ -124,7 +116,7 @@ def __make_itakura_mask(backend):
         upper_bound_ = backend.floor(upper_bound_ + 1)
 
         mask = backend.full((sz1, sz2), False)
-        for i in range_(sz2):
+        for i in range(sz2):
             mask[int(lower_bound_[i]): int(upper_bound_[i]), i] = True
 
         # Post-check
@@ -148,7 +140,7 @@ def __make_itakura_mask(backend):
         return mask
 
     if backend is numpy:
-        return njit(nogil=True, parallel=True)(_itakura_mask_generic)
+        return njit(nogil=True)(_itakura_mask_generic)
     else:
         return _itakura_mask_generic
 
