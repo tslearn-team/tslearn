@@ -37,6 +37,7 @@ def pytest_collection_modifyitems(config, items):
         skip_marker = pytest.mark.skip(reason="torch not installed!")
         for item in items:
             if item.name in [
+                "tslearn.metrics._dtw.dtw",
                 "tslearn.metrics.dtw_variants.dtw",
                 "tslearn.metrics.softdtw_variants.cdist_soft_dtw_normalized",
                 "tslearn.metrics.softdtw_variants.soft_dtw",
