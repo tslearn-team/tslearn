@@ -1,5 +1,4 @@
-import platform
-import sys
+import warnings
 
 import numpy as np
 
@@ -23,37 +22,112 @@ except ImportError:
     array_types = ["numpy", "list"]
 
 
+def test_accumulated_matrix():
+    for be in backends:
+        for array_type in array_types:
+            backend = instantiate_backend(be, array_type)
+            s1 = cast([1, 2, 3], array_type)
+            s2 = cast([1.0, 2.0, 2.0, 3.0], array_type)
+            mask = tslearn.metrics.compute_mask(s1, s2, be=be)
+            matrix_1 = tslearn.metrics.accumulated_matrix(s1, s2, mask,  be=be)
+            with pytest.deprecated_call():
+                matrix_2 = tslearn.metrics.dtw_variants.accumulated_matrix(
+                    to_time_series(s1),
+                    to_time_series(s2),
+                    tslearn.metrics.compute_mask(s1, s2, be=be),
+                    be=be
+                )
+            expected = backend.array([[0.0, 1.0, 2.0, 6.0], [1.0, 0.0, 0.0, 1.0], [5.0, 1.0, 1.0, 0.0]])
+            for matrix in [matrix_1, matrix_2]:
+                assert backend.belongs_to_backend(matrix)
+                np.testing.assert_array_equal(matrix, expected)
+
+
 def test_dtw():
     for be in backends:
         for array_type in array_types:
             backend = instantiate_backend(be, array_type)
+
             # dtw_path
-            path, dist = tslearn.metrics.dtw_path(cast([1, 2, 3], array_type), cast([1.0, 2.0, 2.0, 3.0], array_type), be=be)
+            path, dist = tslearn.metrics.dtw_path(
+                cast([1, 2, 3], array_type),
+                cast([1.0, 2.0, 2.0, 3.0], array_type),
+                be=be
+            )
             np.testing.assert_equal(path, [(0, 0), (1, 1), (1, 2), (2, 3)])
             np.testing.assert_allclose(dist, [0.0])
             if not backend.is_numpy:
                 assert backend.belongs_to_backend(dist)
 
             path, dist = tslearn.metrics.dtw_path(
-                cast([1, 2, 3], array_type), cast([1.0, 2.0, 2.0, 3.0, 4.0], array_type), be=be
+                cast([1, 2, 3], array_type),
+                cast([1.0, 2.0, 2.0, 3.0, 4.0], array_type),
+                be=be
             )
             np.testing.assert_allclose(dist, [1.0])
             if not backend.is_numpy:
                 assert backend.belongs_to_backend(dist)
 
+            with pytest.deprecated_call():
+                deprecated_path, deprecated_dist = tslearn.metrics.dtw_variants.dtw_path(
+                    cast([1, 2, 3], array_type),
+                    cast([1.0, 2.0, 2.0, 3.0, 4.0], array_type),
+                    be=be
+                )
+                assert deprecated_path == path
+                assert deprecated_dist == dist
+
+            with pytest.raises(ValueError):
+                tslearn.metrics.dtw_path([], [], be=be)
+            with pytest.raises(ValueError):
+                tslearn.metrics.dtw_path([1], [[1, 2]], be=be)
+            with warnings.catch_warnings():
+                with pytest.raises(ValueError):
+                    tslearn.metrics.dtw_variants.dtw_path([], [], be=be)
+                with pytest.raises(ValueError):
+                    tslearn.metrics.dtw_variants.dtw_path([1], [[1, 2]], be=be)
+
             # dtw
             n1, n2, d = 15, 10, 3
-            rng = np.random.RandomState(0)
-            x = cast(rng.randn(n1, d), array_type)
-            y = cast(rng.randn(n2, d), array_type)
-
+            x = cast(np.random.randn(n1, d), array_type)
+            y = cast(np.random.randn(n2, d), array_type)
             np.testing.assert_allclose(
-                tslearn.metrics.dtw(x, y, be=be), tslearn.metrics.dtw_path(x, y, be=be)[1]
+                tslearn.metrics.dtw(x, y, be=be),
+                tslearn.metrics.dtw_path(x, y, be=be)[1]
             )
+            with pytest.raises(ValueError):
+                nan_y = cast([np.nan] * 5, array_type)
+                tslearn.metrics.dtw(x, nan_y, be=be)
+            with pytest.raises(ValueError):
+                wrong_feature_size_y = cast(np.random.randn(n2, 2), array_type)
+                tslearn.metrics.dtw(x, wrong_feature_size_y, be=be)
+
+            with pytest.deprecated_call():
+                deprecated_dist = tslearn.metrics.dtw_variants.dtw(
+                    cast([1, 2, 3], array_type),
+                    cast([1.0, 2.0, 2.0, 3.0, 4.0], array_type),
+                    be=be
+                )
+                assert deprecated_dist == dist
+
+            with pytest.raises(ValueError):
+                tslearn.metrics.dtw([], [], be=be)
+            with pytest.raises(ValueError):
+                tslearn.metrics.dtw([1], [[1, 2]], be=be)
+            with warnings.catch_warnings():
+                with pytest.raises(ValueError):
+                    tslearn.metrics.dtw_variants.dtw([], [], be=be)
+                with pytest.raises(ValueError):
+                    tslearn.metrics.dtw_variants.dtw([1], [[1, 2]], be=be)
 
             # cdist_dtw
-            dists = tslearn.metrics.cdist_dtw(cast([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], array_type), be=be)
+            dists = tslearn.metrics.cdist_dtw(
+                cast([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], array_type),
+                be=be
+            )
             np.testing.assert_allclose(dists, cast([[0.0, 1.0], [1.0, 0.0]], array_type))
+            assert backend.belongs_to_backend(dists)
+
             dists = tslearn.metrics.cdist_dtw(
                 cast([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], array_type),
                 [[1, 2, 3], [2, 3, 4, 5]],  # The second dataset can not be cast to array because of its shape
@@ -61,6 +135,24 @@ def test_dtw():
             )
             np.testing.assert_allclose(dists, [[0.0, 2.44949], [1.0, 1.414214]], atol=1e-5)
             assert backend.belongs_to_backend(dists)
+
+            parallel_dists = tslearn.metrics.cdist_dtw(
+                cast([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], array_type),
+                [[1, 2, 3], [2, 3, 4, 5]],  # The second dataset can not be cast to array because of its shape
+                n_jobs=2,
+                be=be
+            )
+            np.testing.assert_array_equal(dists, parallel_dists)
+            assert backend.belongs_to_backend(parallel_dists)
+
+            with pytest.deprecated_call():
+                deprecated_dists = tslearn.metrics.dtw_variants.cdist_dtw(
+                    cast([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], array_type),
+                    [[1, 2, 3], [2, 3, 4, 5]],  # The second dataset can not be cast to array because of its shape
+                    be=be
+                )
+                np.testing.assert_array_equal(deprecated_dists, dists)
+                assert backend.belongs_to_backend(deprecated_dists)
 
 
 def test_ctw():
@@ -514,11 +606,6 @@ def test_gak():
             assert backend.belongs_to_backend(sqeuc_compute)
 
 
-# @pytest.mark.skipif(
-#     (sys.version_info.major, sys.version_info.minor) == (3, 9)
-#     and "mac" in platform.platform().lower(),
-#     reason="Test failing for MacOS with python3.9 (Segmentation fault)",
-# )
 def test_gamma_soft_dtw():
     for be in backends:
         for array_type in array_types:
@@ -531,11 +618,6 @@ def test_gamma_soft_dtw():
             assert backend.belongs_to_backend(gamma)
 
 
-# @pytest.mark.skipif(
-#     (sys.version_info.major, sys.version_info.minor) == (3, 9)
-#     and "mac" in platform.platform().lower(),
-#     reason="Test failing for MacOS with python3.9 (Segmentation fault)",
-# )
 def test_symmetric_cdist():
     for be in backends:
         for array_type in array_types:

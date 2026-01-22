@@ -1,9 +1,87 @@
 from joblib import Parallel, delayed
 
+from numba import njit
+
+import numpy
+
 from tslearn.backend import instantiate_backend
-from tslearn.utils import to_time_series_dataset
+from tslearn.backend.pytorch_backend import HAS_TORCH
+from tslearn.utils import to_time_series, to_time_series_dataset
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
+
+
+def accumulated_matrix(s1, s2, mask, be=None):
+    """Compute the accumulated cost matrix score between two time series.
+
+    It is not required that both time series share the same size, but they must
+    be the same dimension.
+
+    Parameters
+    ----------
+    s1 : array-like, shape=(sz1, d)
+        First time series.
+    s2 : array-like, shape=(sz2, d)
+        Second time series.
+    mask : array-like, shape=(sz1, sz2)
+        Mask. Unconsidered cells must have infinite values.
+    be : Backend object or string or None
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
+
+    Returns
+    -------
+    mat : array-like, shape=(sz1, sz2)
+        Accumulated cost matrix.
+    """
+    be = instantiate_backend(be, s1, s2)
+    s1 = to_time_series(s1, be=be)
+    s2 = to_time_series(s2, be=be)
+
+    if be.is_numpy:
+        compute_accumulated_matrix = _njit_accumulated_matrix
+    else:
+        compute_accumulated_matrix = _accumulated_matrix
+    return compute_accumulated_matrix(s1, s2, mask)
+
+
+def __make_accumulated_matrix(backend):
+
+    def _accumulated_matrix_generic(s1, s2, mask):
+        l1 = s1.shape[0]
+        l2 = s2.shape[0]
+        cum_sum = backend.full((l1 + 1, l2 + 1), backend.inf)
+        cum_sum[0, 0] = 0.0
+
+        for i in range(l1):
+            for j in range(l2):
+                if mask[i, j]:
+                    dist = 0.0
+                    for di in range(s1[i].shape[0]):
+                        diff = s1[i][di] - s2[j][di]
+                        dist += diff * diff
+                    cum_sum[i + 1, j + 1] = dist
+                    cum_sum[i + 1, j + 1] += min(
+                        cum_sum[i, j + 1],
+                        cum_sum[i + 1, j],
+                        cum_sum[i, j]
+                    )
+        return cum_sum[1:, 1:]
+
+    if backend is numpy:
+        return njit(nogil=True)(_accumulated_matrix_generic)
+    else:
+        return _accumulated_matrix_generic
+
+_njit_accumulated_matrix = __make_accumulated_matrix(numpy)
+if HAS_TORCH:
+    _accumulated_matrix = __make_accumulated_matrix(instantiate_backend("TorchBackend"))
+else:
+    _accumulated_matrix = _njit_accumulated_matrix
 
 
 def _cdist_generic(

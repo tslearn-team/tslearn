@@ -46,6 +46,7 @@ from .softdtw_variants import (
 from .soft_dtw_loss_pytorch import SoftDTWLossPyTorch
 from .cycc import cdist_normalized_cc, y_shifted_sbd_vec
 from .frechet import frechet, frechet_path, frechet_path_from_metric, cdist_frechet
+from .utils import accumulated_matrix
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -70,6 +71,7 @@ __all__ = [
     "TSLEARN_VALID_METRICS",
     "VARIABLE_LENGTH_METRICS",
     "GLOBAL_CONSTRAINT_CODE",
+    "accumulated_matrix",
     "compute_mask",
     "itakura_mask",
     "sakoe_chiba_mask",

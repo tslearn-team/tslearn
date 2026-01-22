@@ -1,4 +1,4 @@
-from joblib import Parallel, delayed
+from joblib import delayed, Parallel
 
 from numba import njit
 
@@ -7,77 +7,8 @@ import numpy
 from tslearn.backend import instantiate_backend
 from tslearn.backend.pytorch_backend import HAS_TORCH
 from tslearn.metrics._masks import GLOBAL_CONSTRAINT_CODE, _compute_mask, _njit_compute_mask
+from tslearn.metrics.utils import _njit_accumulated_matrix, _accumulated_matrix
 from tslearn.utils import to_time_series, to_time_series_dataset
-
-
-def accumulated_matrix(s1, s2, mask, be=None):
-    """Compute the accumulated cost matrix score between two time series.
-
-    Parameters
-    ----------
-    s1 : array-like, shape=(sz1, d)
-        First time series.
-    s2 : array-like, shape=(sz2, d)
-        Second time series.
-    mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have infinite values.
-    be : Backend object or string or None
-        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
-        the NumPy backend is used.
-        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
-        the PyTorch backend is used.
-        If `be` is `None`, the backend is determined by the input arrays.
-        See our :ref:`dedicated user-guide page <backend>` for more information.
-
-    Returns
-    -------
-    mat : array-like, shape=(sz1, sz2)
-        Accumulated cost matrix.
-    """
-    be = instantiate_backend(be, s1, s2)
-    s1 = be.array(s1)
-    s2 = be.array(s2)
-
-    if be.is_numpy:
-        compute_accumulated_matrix = _njit_accumulated_matrix
-    else:
-        compute_accumulated_matrix = _accumulated_matrix
-    return compute_accumulated_matrix(s1, s2, mask)
-
-
-def __make_accumulated_matrix(backend):
-
-    def _accumulated_matrix_generic(s1, s2, mask):
-        l1 = s1.shape[0]
-        l2 = s2.shape[0]
-        cum_sum = backend.full((l1 + 1, l2 + 1), backend.inf)
-        cum_sum[0, 0] = 0.0
-
-        for i in range(l1):
-            for j in range(l2):
-                if mask[i, j]:
-                    dist = 0.0
-                    for di in range(s1[i].shape[0]):
-                        diff = s1[i][di] - s2[j][di]
-                        dist += diff * diff
-                    cum_sum[i + 1, j + 1] = dist
-                    cum_sum[i + 1, j + 1] += min(
-                        cum_sum[i, j + 1],
-                        cum_sum[i + 1, j],
-                        cum_sum[i, j]
-                    )
-        return cum_sum[1:, 1:]
-
-    if backend is numpy:
-        return njit(nogil=True)(_accumulated_matrix_generic)
-    else:
-        return _accumulated_matrix_generic
-
-_njit_accumulated_matrix = __make_accumulated_matrix(numpy)
-if HAS_TORCH:
-    _accumulated_matrix = __make_accumulated_matrix(instantiate_backend("TorchBackend"))
-else:
-    _accumulated_matrix = _njit_accumulated_matrix
 
 
 def dtw(
@@ -199,12 +130,12 @@ def dtw(
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
 
-    if len(s1) == 0 or len(s2) == 0:
+    if s1.shape[0] == 0 or s2.shape[0] == 0:
         raise ValueError(
             "One of the input time series contains only nans or has zero length."
         )
 
-    if be.shape(s1)[1] != be.shape(s2)[1]:
+    if s1.shape[1] != s2.shape[1]:
         raise ValueError("All input time series must have the same feature size.")
 
     global_constraint_ = GLOBAL_CONSTRAINT_CODE[global_constraint]
@@ -312,12 +243,12 @@ def dtw_path(
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
 
-    if len(s1) == 0 or len(s2) == 0:
+    if s1.shape[0] == 0 or s2.shape[0] == 0:
         raise ValueError(
             "One of the input time series contains only nans or has zero length."
         )
 
-    if be.shape(s1)[1] != be.shape(s2)[1]:
+    if s1.shape[1] != s2.shape[1]:
         raise ValueError("All input time series must have the same feature size.")
 
     global_constraint_ = GLOBAL_CONSTRAINT_CODE[global_constraint]
