@@ -19,12 +19,12 @@ def accumulated_matrix(s1, s2, mask, be=None):
 
     Parameters
     ----------
-    s1 : array-like, shape=(sz1, d)
+    s1 : array-like, shape=(sz1,) or (sz1, d)
         First time series.
-    s2 : array-like, shape=(sz2, d)
+    s2 : array-like, shape=(sz2,) or (sz2, d)
         Second time series.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have infinite values.
+        Mask used to constrain the region of computation. Unconsidered cells must have False values.
     be : Backend object or string or None
         Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
         the NumPy backend is used.
@@ -36,7 +36,7 @@ def accumulated_matrix(s1, s2, mask, be=None):
     Returns
     -------
     mat : array-like, shape=(sz1, sz2)
-        Accumulated cost matrix.
+        Accumulated cost matrix. Non computed cells due to masking have infinite value.
     """
     be = instantiate_backend(be, s1, s2)
     s1 = to_time_series(s1, be=be)
