@@ -1630,25 +1630,6 @@ def _njit_itakura_mask(sz1, sz2, max_slope=2.0):
     mask = numpy.full((sz1, sz2), False)
     for i in prange(sz2):
         mask[int(lower_bound_[i]) : int(upper_bound_[i]), i] = True
-
-    # Post-check
-    raise_warning = False
-    for i in range(sz1):
-        if not numpy.any(mask[i]):
-            raise_warning = True
-            break
-    if not raise_warning:
-        for j in range(sz2):
-            if not numpy.any(mask[:, j]):
-                raise_warning = True
-                break
-    if raise_warning:
-        raise RuntimeWarning(
-            "'itakura_max_slope' constraint is unfeasible "
-            "(ie. leads to no admissible path) for the "
-            "provided time series sizes",
-        )
-
     return mask
 
 
@@ -1706,23 +1687,6 @@ def _itakura_mask(sz1, sz2, max_slope=2.0, be=None):
     mask = be.full((sz1, sz2), False)
     for i in range(sz2):
         mask[int(lower_bound_[i]) : int(upper_bound_[i]), i] = True
-    # Post-check
-    raise_warning = False
-    for i in range(sz1):
-        if not be.any(mask[i]):
-            raise_warning = True
-            break
-    if not raise_warning:
-        for j in range(sz2):
-            if not be.any(mask[:, j]):
-                raise_warning = True
-                break
-    if raise_warning:
-        raise RuntimeWarning(
-            "'itakura_max_slope' constraint is unfeasible "
-            "(ie. leads to no admissible path) for the "
-            "provided time series sizes",
-        )
     return mask
 
 
@@ -1771,6 +1735,25 @@ def itakura_mask(sz1, sz2, max_slope=2.0, be=None):
         mask = _njit_itakura_mask(sz1, sz2, max_slope=max_slope)
     else:
         mask = _itakura_mask(sz1, sz2, max_slope=max_slope, be=be)
+
+    # Post-check
+    raise_warning = False
+    for i in range(sz1):
+        if not be.any(be.isfinite(mask[i])):
+            raise_warning = True
+            break
+    if not raise_warning:
+        for j in range(sz2):
+            if not be.any(be.isfinite(mask[:, j])):
+                raise_warning = True
+                break
+    if raise_warning:
+        warnings.warn(
+            "'itakura_max_slope' constraint is unfeasible "
+            "(ie. leads to no admissible path) for the "
+            "provided time series sizes",
+            RuntimeWarning,
+        )
 
     return mask
 
