@@ -742,7 +742,7 @@ def dtw_barycenter_averaging_subgradient(
         barycenter = _init_avg(X_, barycenter_size)
     else:
         barycenter = to_time_series(init_barycenter, be=backend)
-        barycenter_size = init_barycenter.shape[0]
+        barycenter_size = barycenter.shape[0]
     cost_prev, cost = numpy.inf, numpy.inf
     eta = initial_step_size
     n = X_.shape[0]

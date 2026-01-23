@@ -1,8 +1,11 @@
 import numpy as np
 
 import tslearn.barycenters
+from tslearn.utils import to_time_series
+
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
+
 
 
 def test_set_weights():
@@ -112,7 +115,7 @@ def test_dba():
             init_barycenter=init_barycenter,
             max_iter=0
         ),
-        np.array(init_barycenter)
+        to_time_series(init_barycenter)
     )
 
 
