@@ -104,6 +104,17 @@ def test_dba():
     np.testing.assert_allclose(dba_bar, ref, atol=1e-6)
     np.testing.assert_allclose(dba_bar_mm, ref, atol=1e-6)
 
+    # Subgradient averaging, 0 iter -> init
+    init_barycenter = [0]
+    np.testing.assert_array_equal(
+        tslearn.barycenters.dtw_barycenter_averaging_subgradient(
+            time_series,
+            init_barycenter=init_barycenter,
+            max_iter=0
+        ),
+        np.array(init_barycenter)
+    )
+
 
 def test_softdtw_barycenter():
     n, sz, d = 15, 10, 3

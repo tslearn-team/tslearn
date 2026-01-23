@@ -61,14 +61,14 @@ def _petitjean_update_barycenter(X, assign, barycenter_size, weights):
 
 
 def dtw_barycenter_averaging_petitjean(
-        X,
-        barycenter_size=None,
-        init_barycenter=None,
-        max_iter=30,
-        tol=1e-5,
-        weights=None,
-        metric_params=None,
-        verbose=False
+    X,
+    barycenter_size=None,
+    init_barycenter=None,
+    max_iter=30,
+    tol=1e-5,
+    weights=None,
+    metric_params=None,
+    verbose=False
 ):
     """DTW Barycenter Averaging (DBA) method.
 
@@ -407,15 +407,15 @@ def _subgradient_update_barycenter(X, list_diag_v_k, list_w_k, weights_sum,
 
 
 def dtw_barycenter_averaging(
-        X,
-        barycenter_size=None,
-        init_barycenter=None,
-        max_iter=30,
-        tol=1e-5,
-        weights=None,
-        metric_params=None,
-        verbose=False,
-        n_init=1
+    X,
+    barycenter_size=None,
+    init_barycenter=None,
+    max_iter=30,
+    tol=1e-5,
+    weights=None,
+    metric_params=None,
+    verbose=False,
+    n_init=1
 ):
     """DTW Barycenter Averaging (DBA) method estimated through
     Expectation-Maximization algorithm.
@@ -633,13 +633,19 @@ def dtw_barycenter_averaging_one_init(
     return barycenter, cost
 
 
-def dtw_barycenter_averaging_subgradient(X, barycenter_size=None,
-                                         init_barycenter=None, max_iter=30,
-                                         initial_step_size=.05,
-                                         final_step_size=.005,
-                                         tol=1e-5, random_state=None,
-                                         weights=None,
-                                         metric_params=None, verbose=False):
+def dtw_barycenter_averaging_subgradient(
+    X,
+    barycenter_size=None,
+    init_barycenter=None,
+    max_iter=30,
+    initial_step_size=.05,
+    final_step_size=.005,
+    tol=1e-5,
+    random_state=None,
+    weights=None,
+    metric_params=None,
+    verbose=False
+):
     """DTW Barycenter Averaging (DBA) method estimated through subgradient
     descent algorithm.
 
@@ -735,8 +741,8 @@ def dtw_barycenter_averaging_subgradient(X, barycenter_size=None,
     if init_barycenter is None:
         barycenter = _init_avg(X_, barycenter_size)
     else:
+        barycenter = to_time_series(init_barycenter, be=backend)
         barycenter_size = init_barycenter.shape[0]
-        barycenter = init_barycenter
     cost_prev, cost = numpy.inf, numpy.inf
     eta = initial_step_size
     n = X_.shape[0]
