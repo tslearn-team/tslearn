@@ -429,59 +429,69 @@ def test_masks():
     for be in backends:
         for array_type in array_types:
             backend = instantiate_backend(be)
-            sk_mask = tslearn.metrics.sakoe_chiba_mask(4, 4, 1, be=be)
-            reference_mask = np.array(
-                [
-                    [True, True, False, False],
-                    [True, True, True, False],
-                    [False, True, True, True],
-                    [False, False, True, True],
-                ]
-            )
-            np.testing.assert_allclose(sk_mask, reference_mask)
-            assert backend.belongs_to_backend(sk_mask)
 
-            sk_mask = tslearn.metrics.sakoe_chiba_mask(7, 3, 1, be=be)
-            reference_mask = np.array(
-                [
-                    [True, True, False],
-                    [True, True, True],
-                    [True, True, True],
-                    [True, True, True],
-                    [True, True, True],
-                    [True, True, True],
-                    [False, True, True],
-                ]
-            )
-            np.testing.assert_allclose(sk_mask, reference_mask)
-            assert backend.belongs_to_backend(sk_mask)
+            for sakoe_chiba_mask in [tslearn.metrics.sakoe_chiba_mask,
+                                     tslearn.metrics.dtw_variants.sakoe_chiba_mask]:
 
-            i_mask = tslearn.metrics.itakura_mask(6, 6, be=be)
-            reference_mask = np.array(
-                [
-                    [True, False, False, False, False, False],
-                    [False, True, True, False, False, False],
-                    [False, True, True, True, False, False],
-                    [False, False, True, True, True, False],
-                    [False, False, False, True, True, False],
-                    [False, False, False, False, False, True],
-                ]
-            )
-            np.testing.assert_allclose(i_mask, reference_mask)
-            assert backend.belongs_to_backend(i_mask)
+                sk_mask = sakoe_chiba_mask(4, 4, 1, be=be)
+                reference_mask = np.array(
+                    [
+                        [True, True, False, False],
+                        [True, True, True, False],
+                        [False, True, True, True],
+                        [False, False, True, True],
+                    ]
+                )
+                np.testing.assert_allclose(sk_mask, reference_mask)
+                assert backend.belongs_to_backend(sk_mask)
+
+                sk_mask = sakoe_chiba_mask(7, 3, 1, be=be)
+                reference_mask = np.array(
+                    [
+                        [True, True, False],
+                        [True, True, True],
+                        [True, True, True],
+                        [True, True, True],
+                        [True, True, True],
+                        [True, True, True],
+                        [False, True, True],
+                    ]
+                )
+                np.testing.assert_allclose(sk_mask, reference_mask)
+                assert backend.belongs_to_backend(sk_mask)
+
+            for itakura_mask in [tslearn.metrics.itakura_mask,
+                                 tslearn.metrics.dtw_variants.itakura_mask]:
+                i_mask = itakura_mask(6, 6, be=be)
+                reference_mask = np.array(
+                    [
+                        [True, False, False, False, False, False],
+                        [False, True, True, False, False, False],
+                        [False, True, True, True, False, False],
+                        [False, False, True, True, True, False],
+                        [False, False, False, True, True, False],
+                        [False, False, False, False, False, True],
+                    ]
+                )
+                np.testing.assert_allclose(i_mask, reference_mask)
+                assert backend.belongs_to_backend(i_mask)
 
             for compute_mask in [tslearn.metrics.compute_mask,
                                  tslearn.metrics.dtw_variants.compute_mask]:
+                backend = instantiate_backend(be, array_type)
+
                 # Test masks for different combinations of global_constraints /
                 # sakoe_chiba_radius / itakura_max_slope
                 sz = 10
+                mask_no_constraint = compute_mask(sz, sz, be=be)
+                np.testing.assert_array_equal(mask_no_constraint, np.full((sz, sz), True))
+
                 ts0 = cast(np.empty((sz, 1)), array_type)
                 ts1 = cast(np.empty((sz, 1)), array_type)
                 mask_no_constraint = compute_mask(
                     ts0, ts1, global_constraint=0, be=be
                 )
                 np.testing.assert_array_equal(mask_no_constraint, np.full((sz, sz), True))
-                backend = instantiate_backend(be, array_type)
                 assert backend.belongs_to_backend(mask_no_constraint)
 
                 mask_itakura = compute_mask(
@@ -496,7 +506,6 @@ def test_masks():
                 mask_sakoe = compute_mask(
                     ts0, ts1, global_constraint=2, be=be
                 )
-
                 mask_sakoe_bis = compute_mask(
                     ts0, ts1, sakoe_chiba_radius=1, be=be
                 )
