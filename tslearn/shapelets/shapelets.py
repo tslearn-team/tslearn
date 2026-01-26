@@ -796,13 +796,11 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
                 nb_shapelets,
                 init = init_shapelets,
                 name="shapelets_%d" % index,
-                dtype=X.dtype.name
             )(patching_layer)
 
             pool_layers.append(
                 GlobalMinPooling1D(
                     name="min_pooling_%d" % index,
-                    dtype=X.dtype.name
                 )(shapelets_layer)
             )
         if self._n_shapelet_sizes > 1:
@@ -997,11 +995,16 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
 
     def _more_tags(self):
         tags = super()._more_tags()
-        tags.update({'allow_nan': True, 'allow_variable_length': True})
+        tags.update({
+            'allow_nan': True,
+            'allow_variable_length': True,
+            'preserves_dtype': [numpy.float32],
+        })
         return tags
 
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
         tags.input_tags.allow_nan = True
         tags.allow_variable_length = True
+        tags.transformer_tags.preserves_dtype = ['float32']
         return tags
