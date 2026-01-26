@@ -88,13 +88,11 @@ jobs:
       python -m pytest -v --doctest-modules -k "not test_ or test_all_estimators"
     displayName: 'Doctest'
 
-- job: 'tests_macOS'
+- job: 'tests_macOS_arm64'
   pool:
     vmImage: 'macOS-15-arm64'
   strategy:
     matrix:
-      Python310:
-        python.version: '3.10'
       Python311:
         python.version: '3.11'
       Python312:
@@ -129,6 +127,84 @@ jobs:
       pip list
       python -m pytest -v -k "not test_all_estimators"
     displayName: 'Test'
+
+- job: 'tests_macOS_intel'
+  pool:
+    vmImage: 'macOS-latest'
+  strategy:
+    matrix:
+      Python310:
+        python.version: '3.10'
+      Python311:
+        python.version: '3.11'
+      Python312:
+        python.version: '3.12'
+  variables:
+    OMP_NUM_THREADS: '2'
+    NUMBA_NUM_THREADS: '2'
+    PIP_PREFER_BINARY: 'true'
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+    displayName: 'Use Python $(python.version)'
+
+  - script: |
+      set -xe
+      python --version
+      brew install openblas  # required due to https://github.com/numpy/numpy/issues/15947
+      export OPENBLAS=$(brew --prefix openblas)
+      python -m pip install --no-cache-dir --upgrade pip
+      python -m pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu .[tests,all_features]
+    displayName: 'Install tslearn all_features and dependencies for tests'
+
+  - script: |
+      set -xe
+      python -m pip install pytest-azurepipelines
+      pip list
+      python -m pytest -v -k "not test_all_estimators"
+    displayName: 'Test'
+
+- job: 'doctests_macOS_arm64'
+  pool:
+    vmImage: 'macOS-15-arm64'
+  strategy:
+    matrix:
+      Python311:
+        python.version: '3.11'
+      Python312:
+        python.version: '3.12'
+      Python313:
+        python.version: '3.13'
+      Python314:
+        python.version: '3.14'
+  variables:
+    OMP_NUM_THREADS: '2'
+    NUMBA_NUM_THREADS: '2'
+    PIP_PREFER_BINARY: 'true'
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+    displayName: 'Use Python $(python.version)'
+
+  - script: |
+      set -xe
+      python --version
+      brew install openblas  # required due to https://github.com/numpy/numpy/issues/15947
+      export OPENBLAS=$(brew --prefix openblas)
+      python -m pip install --no-cache-dir --upgrade pip
+      python -m pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu .[tests,all_features]
+    displayName: 'Install tslearn all_features and dependencies for tests'
+
+  - script: |
+      set -xe
+      python -m pip install --no-cache-dir pytest-azurepipelines
+      pip list
+      python -m pytest -v --doctest-modules -k "not test_ or test_all_estimators"
+    displayName: 'Doctest'
 
 - job: 'doctests_macOS'
   pool:
