@@ -80,12 +80,17 @@ class Backend(object):
     def __init__(self, data=None):
         self.backend = select_backend(data)
 
-        for element in dir(self.backend):
-            if "__" not in element:
-                setattr(self, element, getattr(self.backend, element))
+    def __getattr__(self, item):
+        # Forwards missing attribute calls to backend
+        return getattr(self.backend, item)
 
-        self.is_numpy = self.backend_string == "numpy"
-        self.is_pytorch = self.backend_string == "pytorch"
+    @property
+    def is_numpy(self):
+        return self.backend_string == "numpy"
+
+    @property
+    def is_pytorch(self):
+        return self.backend_string == "pytorch"
 
     def get_backend(self):
         return self.backend

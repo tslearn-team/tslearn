@@ -6,7 +6,8 @@ Backend selection and use
 `tslearn` proposes different backends (`NumPy` and `PyTorch`)
 to compute time series metrics such as `DTW` and `Soft-DTW`.
 The `PyTorch` backend can be used to compute gradients of
-metric functions thanks to automatic differentiation.
+metric functions thanks to automatic differentiation. The `PyTorch`
+backend requires the `pytorch package to be installed. <https://pytorch.org/get-started/locally/>`__.
 
 Backend selection
 -----------------
