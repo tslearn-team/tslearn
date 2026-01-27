@@ -1,18 +1,7 @@
 """The generic backend."""
 
 from tslearn.backend.numpy_backend import NumPyBackend
-
-try:
-    import torch
-
-    from tslearn.backend.pytorch_backend import PyTorchBackend
-except ImportError:
-
-    class PyTorchBackend:
-        def __init__(self):
-            raise ValueError(
-                "Could not use pytorch backend since torch is not installed"
-            )
+from tslearn.backend.pytorch_backend import PyTorchBackend
 
 
 def instantiate_backend(*args):
