@@ -13,6 +13,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ### Changed
 
+* Ensure dtype is preserved in to_time_series_dataset
 * Fixed centroids computations in K-shape for multivariate timeseries ([#288](https://github.com/tslearn-team/tslearn/issues/288))
 * Fixed json and pickle serialization for LearningShapelet ([#387](https://github.com/tslearn-team/tslearn/issues/387))([#403](https://github.com/tslearn-team/tslearn/issues/403)) 
 
