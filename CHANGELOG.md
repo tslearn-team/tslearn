@@ -15,6 +15,8 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 * Rework `cdist_dtw` and underlying Numba jited DTW computation to speed things up for numpy Backends. 
 * Masks as returned by `compute_mask`, `sakoe_chiba_mask` and `itakura_mask` now have boolean values.
+* Backend attributes are now dynamic. 
+* Ensure dtype is preserved in to_time_series_dataset
 * Fixed centroids computations in K-shape for multivariate timeseries ([#288](https://github.com/tslearn-team/tslearn/issues/288))
 * Fixed json and pickle serialization for LearningShapelet ([#387](https://github.com/tslearn-team/tslearn/issues/387))([#403](https://github.com/tslearn-team/tslearn/issues/403)) 
 
