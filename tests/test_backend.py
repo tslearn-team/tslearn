@@ -11,6 +11,7 @@ def test_backend_no_torch():
         Backend("torch")
 
 
+@pytest.mark.skipif(not HAS_TORCH, reason="PyTorch is not installed")
 def test_backend():
     backend_ = Backend("torch")
     assert backend_.is_pytorch
