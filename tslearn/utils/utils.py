@@ -151,7 +151,7 @@ def check_dims(X, X_fit_dims=None, extend=True, check_n_features_only=False):
     return X
 
 
-def to_time_series(ts, remove_nans=False, be=None):
+def to_time_series(ts, remove_nans=False, be=None, dtype=float):
     """Transforms a time series so that it fits the format used in ``tslearn``
     models.
 
@@ -170,6 +170,8 @@ def to_time_series(ts, remove_nans=False, be=None):
         the PyTorch backend is used.
         If `be` is `None`, the backend is determined by the input arrays.
         See our :ref:`dedicated user-guide page <backend>` for more information.
+    dtype : data type (default: float)
+        Data type for the returned dataset, depending on the backend.
 
     Returns
     -------
@@ -195,11 +197,9 @@ def to_time_series(ts, remove_nans=False, be=None):
     to_time_series_dataset : Transforms a dataset of time series
     """
     be = instantiate_backend(be, ts)
-    ts_out = be.array(ts)
+    ts_out = be.array(ts, dtype=dtype)
     if ts_out.ndim <= 1:
         ts_out = be.reshape(ts_out, (-1, 1))
-    if not be.is_float(ts_out):
-        ts_out = be.cast(ts_out, dtype=float)
     if remove_nans:
         ts_out = ts_out[: ts_size(ts_out, be=be)]
     return ts_out
@@ -215,7 +215,14 @@ def to_time_series_dataset(dataset, dtype=float, be=None):
         The dataset of time series to be transformed. A single time series will
         be automatically wrapped into a dataset with a single entry.
     dtype : data type (default: float)
-        Data type for the returned dataset.
+        Data type for the returned dataset, depending on the backend.
+    be : Backend object or string or None
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
 
     Returns
     -------
@@ -265,11 +272,11 @@ def to_time_series_dataset(dataset, dtype=float, be=None):
         [ts_size(to_time_series(ts, remove_nans=True, be=be)) for ts in dataset]
     )
     d = be.shape(to_time_series(dataset[0], be=be))[1]
-    dataset_out = be.zeros((n_ts, max_sz, d), dtype=dtype) + be.nan
+    dataset_out = be.full((n_ts, max_sz, d), be.nan, dtype=dtype)
     for i in range(n_ts):
-        ts = to_time_series(dataset[i], remove_nans=True, be=be)
+        ts = to_time_series(dataset[i], remove_nans=True, be=be, dtype=dtype)
         dataset_out[i, : ts.shape[0]] = ts
-    return be.cast(dataset_out, dtype=dtype)
+    return dataset_out
 
 
 def time_series_to_str(ts, fmt="%.18e"):
