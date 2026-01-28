@@ -11,7 +11,6 @@ from sklearn.utils.validation import _check_sample_weight
 from sklearn.utils.validation import check_is_fitted
 
 from tslearn.barycenters import (
-    dtw_barycenter_averaging,
     dtw_barycenter_averaging_petitjean,
     softdtw_barycenter,
 )
