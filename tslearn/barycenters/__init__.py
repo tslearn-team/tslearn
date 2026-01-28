@@ -27,10 +27,9 @@ from .softdtw import softdtw_barycenter
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 __all__ = [
-        "euclidean_barycenter",
-
-        "dtw_barycenter_averaging", "dtw_barycenter_averaging_subgradient",
-        "dtw_barycenter_averaging_petitjean",
-
-        "softdtw_barycenter"
+    "euclidean_barycenter",
+    "dtw_barycenter_averaging",
+    "dtw_barycenter_averaging_subgradient",
+    "dtw_barycenter_averaging_petitjean",
+    "softdtw_barycenter"
 ]

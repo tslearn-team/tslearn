@@ -12,6 +12,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from tslearn.barycenters import (
     dtw_barycenter_averaging,
+    dtw_barycenter_averaging_petitjean,
     softdtw_barycenter,
 )
 from tslearn.bases import BaseModelPackage, TimeSeriesMixin
@@ -742,7 +743,7 @@ class TimeSeriesKMeans(
         metric_params = self._get_metric_params()
         for k in range(self.n_clusters):
             if self.metric == "dtw":
-                self.cluster_centers_[k] = dtw_barycenter_averaging(
+                self.cluster_centers_[k] = dtw_barycenter_averaging_petitjean(
                     X=X[self.labels_ == k],
                     barycenter_size=None,
                     init_barycenter=self.cluster_centers_[k],
