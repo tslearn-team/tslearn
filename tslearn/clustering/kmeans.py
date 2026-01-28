@@ -12,7 +12,6 @@ from sklearn.utils.validation import check_is_fitted
 
 from tslearn.barycenters import (
     dtw_barycenter_averaging_petitjean,
-    euclidean_barycenter,
     softdtw_barycenter,
 )
 from tslearn.bases import BaseModelPackage, TimeSeriesMixin
@@ -758,7 +757,8 @@ class TimeSeriesKMeans(
                     **metric_params
                 )
             else:
-                self.cluster_centers_[k] = euclidean_barycenter(X=X[self.labels_ == k])
+                self.cluster_centers_[k] = numpy.average(X[self.labels_ == k],
+                                                         axis=0)
 
     def fit(self, X, y=None):
         """Compute k-means clustering.
