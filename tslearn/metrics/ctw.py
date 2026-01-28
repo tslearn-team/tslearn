@@ -3,10 +3,9 @@ from sklearn.cross_decomposition import CCA
 
 from tslearn.backend import instantiate_backend
 
-from ..utils import to_time_series
-from .dtw_variants import dtw_path
+from ._dtw import dtw_path
 from .utils import _cdist_generic
-
+from ..utils import to_time_series
 
 def _get_warp_matrices(warp_path, be):
     """Convert warping path sequence to matrices.

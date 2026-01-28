@@ -1,8 +1,11 @@
 import numpy as np
 
 import tslearn.barycenters
+from tslearn.utils import to_time_series
+
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
+
 
 
 def test_set_weights():
@@ -77,6 +80,43 @@ def test_dba():
         weights=weights,
         max_iter=5)
     np.testing.assert_allclose(dba_bar, dba_bar_mm)
+
+    # With an init of different size
+    init_barycenter = rng.randn(sz-1, d)
+    ref = np.array([[0.421127, 0.054492, -0.124027],
+                    [-0.498396, -0.200649, 0.029864],
+                    [0.431492, -0.397721, -0.585897],
+                    [-0.906793, 0.021529, -0.514742],
+                    [0.629140, -0.152363, -0.434802],
+                    [0.609915, 0.348230, 0.447403],
+                    [-0.041696, 0.760246, -0.361783],
+                    [-0.042272, -0.642698, -0.662480],
+                    [0.261962, 0.111322, 0.389292]])
+    dba_bar = tslearn.barycenters.dtw_barycenter_averaging_petitjean(
+        time_series,
+        init_barycenter=init_barycenter,
+        max_iter=5,
+        verbose=1
+    )
+    dba_bar_mm = tslearn.barycenters.dtw_barycenter_averaging(
+        time_series,
+        init_barycenter=init_barycenter,
+        max_iter=5,
+        verbose=1
+    )
+    np.testing.assert_allclose(dba_bar, ref, atol=1e-6)
+    np.testing.assert_allclose(dba_bar_mm, ref, atol=1e-6)
+
+    # Subgradient averaging, 0 iter -> init
+    init_barycenter = [0]
+    np.testing.assert_array_equal(
+        tslearn.barycenters.dtw_barycenter_averaging_subgradient(
+            time_series,
+            init_barycenter=init_barycenter,
+            max_iter=0
+        ),
+        to_time_series(init_barycenter)
+    )
 
 
 def test_softdtw_barycenter():
