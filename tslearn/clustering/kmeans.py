@@ -757,7 +757,8 @@ class TimeSeriesKMeans(
                     **metric_params
                 )
             else:
-                self.cluster_centers_[k] = numpy.average(X, axis=0)
+                self.cluster_centers_[k] = numpy.average(X[self.labels_ == k],
+                                                         axis=0)
 
     def fit(self, X, y=None):
         """Compute k-means clustering.
