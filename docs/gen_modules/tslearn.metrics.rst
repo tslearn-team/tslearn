@@ -11,8 +11,15 @@ tslearn.metrics
       :toctree: metrics
       :template: function.rst
 
+      compute_mask
+      sakoe_chiba_mask
+      itakura_mask
+      accumulated_matrix
       cdist_dtw
       cdist_gak
+      cdist_soft_dtw
+      cdist_soft_dtw_normalized
+      cdist_frechet
       ctw
       ctw_path
       dtw
@@ -29,8 +36,6 @@ tslearn.metrics
       gak
       soft_dtw
       soft_dtw_alignment
-      cdist_soft_dtw
-      cdist_soft_dtw_normalized
       lb_envelope
       lb_keogh
       sigma_gak
@@ -39,4 +44,3 @@ tslearn.metrics
       frechet
       frechet_path
       frechet_path_from_metric
-      cdist_frechet

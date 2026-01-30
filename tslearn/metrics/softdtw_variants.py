@@ -14,7 +14,7 @@ from tslearn.utils import (
     ts_size,
 )
 
-from .dtw_variants import dtw, dtw_path
+from ._dtw import dtw, dtw_path
 from .soft_dtw_fast import (
     _jacobian_product_sq_euc,
     _njit_jacobian_product_sq_euc,

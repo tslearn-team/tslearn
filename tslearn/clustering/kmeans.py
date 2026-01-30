@@ -7,13 +7,11 @@ from sklearn.base import ClusterMixin, TransformerMixin, BaseEstimator
 from sklearn.cluster._kmeans import _kmeans_plusplus
 from sklearn.metrics.pairwise import pairwise_kernels
 from sklearn.utils import check_random_state
-from sklearn.utils.extmath import stable_cumsum
 from sklearn.utils.validation import _check_sample_weight
 from sklearn.utils.validation import check_is_fitted
 
 from tslearn.barycenters import (
-    dtw_barycenter_averaging,
-    euclidean_barycenter,
+    dtw_barycenter_averaging_petitjean,
     softdtw_barycenter,
 )
 from tslearn.bases import BaseModelPackage, TimeSeriesMixin
@@ -98,7 +96,7 @@ def _k_init_metric(X, n_clusters, cdist_metric, random_state, n_local_trials=Non
         # Choose center candidates by sampling with probability proportional
         # to the squared distance to the closest existing center
         rand_vals = random_state.random_sample(n_local_trials) * current_pot
-        candidate_ids = numpy.searchsorted(stable_cumsum(closest_dist_sq), rand_vals)
+        candidate_ids = numpy.searchsorted(numpy.cumsum(closest_dist_sq, dtype=numpy.float64), rand_vals)
         # XXX: numerical imprecision can result in a candidate_id out of range
         numpy.clip(candidate_ids, None, closest_dist_sq.size - 1, out=candidate_ids)
 
@@ -744,7 +742,7 @@ class TimeSeriesKMeans(
         metric_params = self._get_metric_params()
         for k in range(self.n_clusters):
             if self.metric == "dtw":
-                self.cluster_centers_[k] = dtw_barycenter_averaging(
+                self.cluster_centers_[k] = dtw_barycenter_averaging_petitjean(
                     X=X[self.labels_ == k],
                     barycenter_size=None,
                     init_barycenter=self.cluster_centers_[k],
@@ -759,7 +757,8 @@ class TimeSeriesKMeans(
                     **metric_params
                 )
             else:
-                self.cluster_centers_[k] = euclidean_barycenter(X=X[self.labels_ == k])
+                self.cluster_centers_[k] = numpy.average(X[self.labels_ == k],
+                                                         axis=0)
 
     def fit(self, X, y=None):
         """Compute k-means clustering.

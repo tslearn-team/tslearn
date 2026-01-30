@@ -3,7 +3,6 @@ from os.path import join
 import warnings
 
 import numpy as np
-import pickle
 from numpy.testing import assert_allclose
 
 import pytest

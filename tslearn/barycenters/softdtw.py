@@ -107,7 +107,7 @@ def softdtw_barycenter(X, gamma=1.0, weights=None, method="L-BFGS-B", tol=1e-3,
 
         # The function works with vectors so we need to vectorize barycenter.
         res = minimize(f, barycenter.ravel(), method=method, jac=True, tol=tol,
-                       options=dict(maxiter=max_iter, disp=False))
+                       options=dict(maxiter=max_iter))
         return res.x.reshape(barycenter.shape)
     else:
         return barycenter

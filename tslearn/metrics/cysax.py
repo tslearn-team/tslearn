@@ -124,7 +124,7 @@ def cyslopes(dataset, t0):
             with objmode(dataset_out_i_di="float64"):
                 dataset_out_i_di = (
                     LinearRegression()
-                    .fit(vec_t, dataset[i, :, di].reshape((-1, 1)))
+                    .fit(vec_t, dataset[i, :, di])
                     .coef_[0]
                 )
             dataset_out[i, di] = dataset_out_i_di
