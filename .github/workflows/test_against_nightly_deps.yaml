@@ -23,5 +23,5 @@ jobs:
       - shell: bash
         run: |
           pip list
-          pytest -vsl tslearn --doctest-modules
+          pytest -vsl --doctest-modules
         name: 'Run tests'
