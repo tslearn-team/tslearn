@@ -45,48 +45,8 @@ jobs:
       set -xe
       python -m pip install --no-cache-dir pytest-azurepipelines
       pip list
-      python -m pytest -v -k "not test_all_estimators"
+      python -m pytest -v --doctest-modules
     displayName: 'Test'
-
-- job: 'doctests_linux'
-  pool:
-    vmImage: 'ubuntu-latest'
-  strategy:
-    matrix:
-      Python310:
-        python.version: '3.10'
-      Python311:
-        python.version: '3.11'
-      Python312:
-        python.version: '3.12'
-      Python313:
-        python.version: '3.13'
-      Python314:
-        python.version: '3.14'
-  variables:
-    OMP_NUM_THREADS: '2'
-    NUMBA_NUM_THREADS: '2'
-    PIP_PREFER_BINARY: 'true'
-
-  steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '$(python.version)'
-    displayName: 'Use Python $(python.version)'
-
-  - script: |
-      set -xe
-      python --version
-      python -m pip install --no-cache-dir --upgrade pip
-      python -m pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu .[tests,all_features]
-    displayName: 'Install tslearn all_features and dependencies for tests'
-
-  - script: |
-      set -xe
-      python -m pip install --no-cache-dir pytest-azurepipelines
-      pip list
-      python -m pytest -v --doctest-modules -k "not test_ or test_all_estimators"
-    displayName: 'Doctest'
 
 - job: 'tests_macOS'
   pool:
@@ -123,46 +83,8 @@ jobs:
       set -xe
       python -m pip install pytest-azurepipelines
       pip list
-      python -m pytest -v -k "not test_all_estimators"
+      python -m pytest -v --doctest-modules
     displayName: 'Test'
-
-- job: 'doctests_macOS'
-  pool:
-    vmImage: 'macos-latest'
-  strategy:
-    matrix:
-      Python310:
-        python.version: '3.10'
-      Python311:
-        python.version: '3.11'
-      Python312:
-        python.version: '3.12'
-  variables:
-    OMP_NUM_THREADS: '2'
-    NUMBA_NUM_THREADS: '2'
-    PIP_PREFER_BINARY: 'true'
-
-  steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '$(python.version)'
-    displayName: 'Use Python $(python.version)'
-
-  - script: |
-      set -xe
-      python --version
-      brew install openblas  # required due to https://github.com/numpy/numpy/issues/15947
-      export OPENBLAS=$(brew --prefix openblas)
-      python -m pip install --no-cache-dir --upgrade pip
-      python -m pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu .[tests,all_features]
-    displayName: 'Install tslearn all_features and dependencies for tests'
-
-  - script: |
-      set -xe
-      python -m pip install --no-cache-dir pytest-azurepipelines
-      pip list
-      python -m pytest -v --doctest-modules -k "not test_ or test_all_estimators"
-    displayName: 'Doctest'
 
 - job: 'tests_windows'
   pool:
@@ -198,47 +120,10 @@ jobs:
   - script: |
       python -m pip install --no-cache-dir pytest-azurepipelines
       pip list
-      python -m pytest -v -k "not test_all_estimators"
+      python -m pytest -v --doctest-modules
     displayName: 'Test'
 
-- job: 'doctests_windows'
-  pool:
-    vmImage: 'windows-latest'
-  strategy:
-    matrix:
-      Python310:
-        python.version: '3.10'
-      Python311:
-        python.version: '3.11'
-      Python312:
-        python.version: '3.12'
-      Python313:
-        python.version: '3.13'
-      Python314:
-        python.version: '3.14'
-  variables:
-    OMP_NUM_THREADS: '2'
-    NUMBA_NUM_THREADS: '2'
-    PIP_PREFER_BINARY: 'true'
-
-  steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '$(python.version)'
-
-  - script: |
-      python --version
-      python -m pip install --no-cache-dir --upgrade pip
-      python -m pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu .[tests,all_features]
-    displayName: 'Install tslearn all_features and dependencies for tests'
-
-  - script: |
-      python -m pip install --no-cache-dir pytest-azurepipelines
-      pip list
-      python -m pytest -v --doctest-modules -k "not test_ or test_all_estimators"
-    displayName: 'Doctest'
-
-- job: 'tests_doctests_basic'
+- job: 'tests_basic'
   pool:
     vmImage: 'ubuntu-latest'
   variables:
@@ -277,6 +162,8 @@ jobs:
         skLearnVersion: '1.5.0'
       sklearn1_6:
         skLearnVersion: '1.6.0'
+      sklearn1_7:
+        skLearnVersion: '1.7.0'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
@@ -300,7 +187,7 @@ jobs:
       set -xe
       python -m pip install --no-cache-dir pytest-azurepipelines
       pip list
-      python -m pytest -v
+      python -m pytest -v --doctest-modules
     displayName: 'Test sklearn versions'
 
 
@@ -315,8 +202,8 @@ jobs:
   steps:
   - task: UsePythonVersion@0
     inputs:
-      versionSpec: '3.11'
-    displayName: 'Use Python 3.11'
+      versionSpec: '3.12'
+    displayName: 'Use Python 3.12'
 
   - script: |
       set -xe
