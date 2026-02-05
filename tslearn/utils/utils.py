@@ -201,7 +201,7 @@ def to_time_series(ts, remove_nans=False, be=None, dtype=float):
     if ts_out.ndim <= 1:
         ts_out = be.reshape(ts_out, (-1, 1))
     if remove_nans:
-        ts_out = ts_out[: ts_size(ts_out, be=be)]
+        ts_out = ts_out[:_ts_size(ts_out, backend=be)]
     return ts_out
 
 
@@ -269,7 +269,7 @@ def to_time_series_dataset(dataset, dtype=float, be=None):
         dataset = [dataset]
     n_ts = len(dataset)
     max_sz = max(
-        [ts_size(to_time_series(ts, remove_nans=True, be=be)) for ts in dataset]
+        [ts_size(ts, be) for ts in dataset]
     )
     d = be.shape(to_time_series(dataset[0], be=be))[1]
     dataset_out = be.full((n_ts, max_sz, d), be.nan, dtype=dtype)
@@ -440,11 +440,19 @@ def check_equal_size(dataset, be=None):
     be = instantiate_backend(be, dataset)
 
     dataset_ = to_time_series_dataset(dataset, be=be)
-    if len(dataset_) == 0:
+    return _check_equal_size(dataset_, backend=be)
+
+
+def _check_equal_size(dataset, backend=None):
+    """Check equal size for already formatted dataset."""
+    if backend is None:
+        backend = instantiate_backend(dataset)
+    if len(dataset) == 0:
         return True
 
-    size = ts_size(dataset[0], be=be)
-    return all(ts_size(ds) == size for ds in dataset_[1:])
+    size = _ts_size(dataset[0], backend=backend)
+    return all(_ts_size(ds) == size for ds in dataset[1:])
+
 
 
 def ts_size(ts, be=None):
@@ -490,8 +498,15 @@ def ts_size(ts, be=None):
     """
     be = instantiate_backend(be, ts)
     ts_ = to_time_series(ts, be=be)
-    sz = be.shape(ts_)[0]
-    while sz > 0 and be.all(be.isnan(ts_[sz - 1])):
+    return _ts_size(ts_, backend=be)
+
+
+def _ts_size(ts, backend=None):
+    """Ts size computation for already formatted time series."""
+    if backend is None:
+        backend = instantiate_backend(ts)
+    sz = len(ts)
+    while sz > 0 and backend.all(backend.isnan(ts[sz - 1])):
         sz -= 1
     return sz
 
@@ -587,9 +602,9 @@ def check_dataset(
         raise ValueError(
             "Array should be univariate and is of shape: {}".format(X_.shape)
         )
-    if force_equal_length and not check_equal_size(X_):
+    if force_equal_length and not _check_equal_size(X_):
         raise ValueError(
-            "All the time series in the array should be of " "equal lengths"
+            "All the time series in the array should be of equal lengths"
         )
     if force_single_time_series and X_.shape[0] != 1:
         raise ValueError(
