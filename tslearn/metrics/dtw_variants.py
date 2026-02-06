@@ -795,6 +795,11 @@ def dtw(
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
 
     """  # noqa: E501
+    warnings.warn(
+        "This method is deprecated, use tslearn.metrics.dtw instead.",
+        DeprecationWarning
+    )
+
     be = instantiate_backend(be, s1, s2)
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
