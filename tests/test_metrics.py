@@ -9,7 +9,7 @@ from scipy.spatial.distance import cdist
 from tslearn.backend.backend import Backend, cast, instantiate_backend
 import tslearn.clustering
 import tslearn.metrics
-from tslearn.utils.utils import _to_time_series
+from tslearn.utils.utils import to_time_series
 
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
@@ -33,8 +33,8 @@ def test_accumulated_matrix():
             matrix_1 = tslearn.metrics.accumulated_matrix(s1, s2, mask,  be=be)
             with pytest.deprecated_call():
                 matrix_2 = tslearn.metrics.dtw_variants.accumulated_matrix(
-                    _to_time_series(s1),
-                    _to_time_series(s2),
+                    to_time_series(s1),
+                    to_time_series(s2),
                     tslearn.metrics.compute_mask(s1, s2, be=be),
                     be=be
                 )
@@ -412,8 +412,8 @@ def test_dtw_subseq_path():
             # subseq, longseq = [1, 4], [1.0, 2.0, 2.0, 3.0, 4.0]
             subseq = cast([1, 4], array_type)
             longseq = cast([1.0, 2.0, 2.0, 3.0, 4.0], array_type)
-            subseq = _to_time_series(subseq)
-            longseq = _to_time_series(longseq)
+            subseq = to_time_series(subseq)
+            longseq = to_time_series(longseq)
             cost_matrix = tslearn.metrics.subsequence_cost_matrix(subseq, longseq, be=be)
             assert backend.belongs_to_backend(cost_matrix)
 
