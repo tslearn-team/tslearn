@@ -12,7 +12,7 @@ from tslearn.backend import instantiate_backend
 from tslearn.barycenters.utils import _set_weights
 from tslearn.metrics._dtw import _njit_dtw_path
 from tslearn.utils import to_time_series_dataset, to_time_series
-from tslearn.utils.utils import _ts_size
+from tslearn.utils.utils import _to_time_series
 
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -41,7 +41,7 @@ def _petitjean_assignment(X, barycenter,  weights, metric_params=None):
     cost = 0
     for i in range(n):
         dist_i, path = _njit_dtw_path(
-            X[i, :_ts_size(X[i], backend=backend)],
+            _to_time_series(X[i], True, backend),
             barycenter,
             **metric_params
         )
@@ -167,7 +167,11 @@ def dtw_barycenter_averaging_petitjean(
         barycenter = _init_avg(X_, barycenter_size)
     else:
         barycenter_size = init_barycenter.shape[0]
-        barycenter = init_barycenter
+        barycenter = to_time_series(
+            init_barycenter,
+            remove_nans=True,
+            be=backend
+        )
     cost_prev, cost = numpy.inf, numpy.inf
     for it in range(max_iter):
         assign, cost = _petitjean_assignment(X_, barycenter, weights, metric_params)
@@ -225,7 +229,7 @@ def _mm_assignment(X, barycenter, weights, metric_params=None):
     for i in range(n):
         dist_i, path = _njit_dtw_path(
             barycenter,
-            X[i, :_ts_size(X[i], backend=backend)],
+            _to_time_series(X[i], True, backend),
             **metric_params
         )
         cost += dist_i ** 2 * weights[i]
@@ -352,11 +356,13 @@ def _mm_update_barycenter(X, diag_sum_v_k, list_w_k):
        for Averaging in Dynamic Time Warping Spaces.
        Pattern Recognition, 74, 340-358.
     """
+    backend = instantiate_backend("numpy")
+
     d = X.shape[2]
     barycenter_size = diag_sum_v_k.shape[0]
     sum_w_x = numpy.zeros((barycenter_size, d))
     for k, (w_k, x_k) in enumerate(zip(list_w_k, X)):
-        sum_w_x += w_k.dot(x_k[:_ts_size(x_k)])
+        sum_w_x += w_k.dot(_to_time_series(x_k, True, backend))
     barycenter = numpy.diag(1. / diag_sum_v_k).dot(sum_w_x)
     return barycenter
 
@@ -397,12 +403,14 @@ def _subgradient_update_barycenter(X, list_diag_v_k, list_w_k, weights_sum,
        for Averaging in Dynamic Time Warping Spaces.
        Pattern Recognition, 74, 340-358.
     """
+    backend = instantiate_backend("numpy")
+
     d = X.shape[2]
     barycenter_size = barycenter.shape[0]
     delta_bar = numpy.zeros((barycenter_size, d))
     for k, (v_k, w_k, x_k) in enumerate(zip(list_diag_v_k, list_w_k, X)):
         delta_bar += v_k.reshape((-1, 1)) * barycenter
-        delta_bar -= w_k.dot(x_k[:_ts_size(x_k)])
+        delta_bar -= w_k.dot(_to_time_series(x_k, True, backend))
     barycenter -= (2. * eta / weights_sum) * delta_bar
     return barycenter
 
@@ -614,7 +622,11 @@ def dtw_barycenter_averaging_one_init(
         barycenter = _init_avg(X_, barycenter_size)
     else:
         barycenter_size = init_barycenter.shape[0]
-        barycenter = init_barycenter
+        barycenter = to_time_series(
+            init_barycenter,
+            remove_nans=True,
+            be=backend
+        )
     cost_prev, cost = numpy.inf, numpy.inf
     for it in range(max_iter):
         list_p_k, cost = _mm_assignment(X_, barycenter, weights, metric_params)
@@ -742,7 +754,11 @@ def dtw_barycenter_averaging_subgradient(
     if init_barycenter is None:
         barycenter = _init_avg(X_, barycenter_size)
     else:
-        barycenter = to_time_series(init_barycenter, be=backend)
+        barycenter = to_time_series(
+            init_barycenter,
+            remove_nans=True,
+            be=backend
+        )
         barycenter_size = barycenter.shape[0]
     cost_prev, cost = numpy.inf, numpy.inf
     eta = initial_step_size

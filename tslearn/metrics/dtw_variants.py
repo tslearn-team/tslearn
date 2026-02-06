@@ -1246,8 +1246,6 @@ def subsequence_cost_matrix(subseq, longseq, be=None):
         Accumulated cost matrix.
     """
     be = instantiate_backend(be, subseq, longseq)
-    subseq = be.array(subseq)
-    longseq = be.array(longseq)
     subseq = to_time_series(subseq, remove_nans=True, be=be)
     longseq = to_time_series(longseq, remove_nans=True, be=be)
     if be.is_numpy:
@@ -2211,7 +2209,6 @@ def lb_envelope(ts, radius=1, be=None):
        Conference on Very Large Data Bases, 2002. pp 406-417.
     """
     be = instantiate_backend(be, ts)
-    ts = be.array(ts)
     ts = to_time_series(ts, be=be)
     if be.is_numpy:
         return _njit_lb_envelope(ts, radius=radius)
@@ -2284,8 +2281,6 @@ def lcss_accumulated_matrix(s1, s2, eps, mask, be=None):
         Accumulated cost matrix.
     """
     be = instantiate_backend(be, s1, s2)
-    s1 = be.array(s1)
-    s2 = be.array(s2)
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
     l1 = be.shape(s1)[0]

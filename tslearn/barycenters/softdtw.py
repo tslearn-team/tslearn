@@ -1,12 +1,14 @@
 # Code for soft DTW is by Mathieu Blondel under Simplified BSD license
 
 import numpy
+
 from scipy.optimize import minimize
 
-from tslearn.utils import to_time_series_dataset
-from tslearn.preprocessing import TimeSeriesResampler
+from tslearn.backend import instantiate_backend
 from tslearn.metrics import SquaredEuclidean, SoftDTW
-from tslearn.utils.utils import _check_equal_size, _ts_size
+from tslearn.preprocessing import TimeSeriesResampler
+from tslearn.utils import to_time_series_dataset
+from tslearn.utils.utils import _check_equal_size, _to_time_series
 
 from .utils import _set_weights
 from .euclidean import euclidean_barycenter
@@ -88,7 +90,9 @@ def softdtw_barycenter(X, gamma=1.0, weights=None, method="L-BFGS-B", tol=1e-3,
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
        Time-Series," ICML 2017.
     """
-    X_ = to_time_series_dataset(X)
+    backend = instantiate_backend(X)
+    X_ = to_time_series_dataset(X, be=backend)
+
     weights = _set_weights(weights, X_.shape[0])
     if init is None:
         if _check_equal_size(X_):
@@ -100,7 +104,7 @@ def softdtw_barycenter(X, gamma=1.0, weights=None, method="L-BFGS-B", tol=1e-3,
         barycenter = init
 
     if max_iter > 0:
-        X_ = [d[:_ts_size(d)] for d in X_]
+        X_ = [_to_time_series(d, True, backend) for d in X_]
 
         def f(Z):
             return _softdtw_func(Z, X_, weights, barycenter, gamma)
