@@ -8,6 +8,7 @@ from tslearn.backend import instantiate_backend
 from tslearn.utils import to_time_series
 
 from .utils import _cdist_generic
+from . _masks import compute_mask  as compute_mask_
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
@@ -404,7 +405,7 @@ def dtw_path(
     if be.shape(s1)[1] != be.shape(s2)[1]:
         raise ValueError("All input time series must have the same feature size.")
 
-    mask = compute_mask(
+    mask = compute_mask_(
         s1,
         s2,
         GLOBAL_CONSTRAINT_CODE[global_constraint],
@@ -647,7 +648,7 @@ def dtw_path_from_metric(
     if metric == "precomputed":  # Pairwise distance given as input
         s1 = be.array(s1)
         sz1, sz2 = be.shape(s1)
-        mask = compute_mask(
+        mask = compute_mask_(
             sz1,
             sz2,
             GLOBAL_CONSTRAINT_CODE[global_constraint],
@@ -659,7 +660,7 @@ def dtw_path_from_metric(
     else:
         s1 = to_time_series(s1, remove_nans=True, be=be)
         s2 = to_time_series(s2, remove_nans=True, be=be)
-        mask = compute_mask(
+        mask = compute_mask_(
             s1,
             s2,
             GLOBAL_CONSTRAINT_CODE[global_constraint],
@@ -794,6 +795,11 @@ def dtw(
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
 
     """  # noqa: E501
+    warnings.warn(
+        "This method is deprecated, use tslearn.metrics.dtw instead.",
+        DeprecationWarning
+    )
+
     be = instantiate_backend(be, s1, s2)
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
@@ -806,7 +812,7 @@ def dtw(
     if be.shape(s1)[1] != be.shape(s2)[1]:
         raise ValueError("All input time series must have the same feature size.")
 
-    mask = compute_mask(
+    mask = compute_mask_(
         s1,
         s2,
         GLOBAL_CONSTRAINT_CODE[global_constraint],
@@ -2472,7 +2478,7 @@ def lcss(
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
 
-    mask = compute_mask(
+    mask = compute_mask_(
         s1,
         s2,
         GLOBAL_CONSTRAINT_CODE[global_constraint],
@@ -2792,7 +2798,7 @@ def lcss_path(
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
 
-    mask = compute_mask(
+    mask = compute_mask_(
         s1,
         s2,
         GLOBAL_CONSTRAINT_CODE[global_constraint],
@@ -3041,7 +3047,7 @@ def lcss_path_from_metric(
     if metric == "precomputed":  # Pairwise distance given as input
         s1 = be.array(s1)
         sz1, sz2 = be.shape(s1)
-        mask = compute_mask(
+        mask = compute_mask_(
             sz1,
             sz2,
             GLOBAL_CONSTRAINT_CODE[global_constraint],
@@ -3055,7 +3061,7 @@ def lcss_path_from_metric(
         s2 = to_time_series(s2, remove_nans=True, be=be)
         sz1 = be.shape(s1)[0]
         sz2 = be.shape(s2)[0]
-        mask = compute_mask(
+        mask = compute_mask_(
             s1,
             s2,
             GLOBAL_CONSTRAINT_CODE[global_constraint],

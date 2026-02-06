@@ -279,8 +279,8 @@ def compute_mask(
     if isinstance(s1, int) and isinstance(s2, int):
         sz1, sz2 = s1, s2
     else:
-        sz1 = be.array(s1).shape[0]
-        sz2 = be.array(s2).shape[0]
+        sz1 = len(s1)
+        sz2 = len(s2)
 
     if be.is_numpy:
         x = _njit_compute_mask(

@@ -737,7 +737,7 @@ def test_softdtw():
             assert isinstance(path_ref, list)
             if not backend.is_numpy:
                 assert backend.belongs_to_backend(dist_ref)
-            mat_path_ref = np.zeros((10, 30))
+            mat_path_ref = backend.zeros((10, 30))
             for i, j in path_ref:
                 mat_path_ref[i, j] = 1.0
 
@@ -747,8 +747,8 @@ def test_softdtw():
             if not backend.is_numpy:
                 assert backend.belongs_to_backend(dist_ref)
 
-            np.testing.assert_equal(dist, dist_ref**2)
-            np.testing.assert_allclose(matrix_path, mat_path_ref)
+            backend.testing.assert_equal(dist, dist_ref**2)
+            backend.testing.assert_allclose(matrix_path, mat_path_ref)
 
             ts1 = cast([[0.0]], array_type)
             ts2 = cast([[1.0]], array_type)
