@@ -39,9 +39,9 @@ from ..utils import (
     to_time_series_dataset,
     check_array,
     check_dims,
-    check_X_y,
-    ts_size
+    check_X_y
 )
+from tslearn.utils.utils import _ts_size
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -50,7 +50,7 @@ def _kmeans_init_shapelets(X, n_shapelets, shp_len, n_draw=10000):
     n_ts, sz, d = X.shape
     indices_ts = numpy.random.choice(n_ts, size=n_draw, replace=True)
     indices_time = numpy.array(
-        [numpy.random.choice(ts_size(ts) - shp_len + 1, size=1)[0]
+        [numpy.random.choice(_ts_size(ts) - shp_len + 1, size=1)[0]
          for ts in X[indices_ts]]
     )
     subseries = numpy.zeros((n_draw, shp_len, d))
@@ -678,8 +678,7 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
         - their length is lower than the maximum allowed length,
         as set by max_size or deduced from fitted data.
         """
-        sizes = numpy.array([ts_size(Xi) for Xi in X])
-        self._min_sz_fit = sizes.min()
+        self._min_sz_fit = min(_ts_size(Xi) for Xi in X)
 
         if self.n_shapelets_per_size is not None:
             max_sz_shp = max(self.n_shapelets_per_size.keys())

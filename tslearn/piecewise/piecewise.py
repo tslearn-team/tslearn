@@ -8,7 +8,8 @@ from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from tslearn.metrics.cysax import (cydist_sax, cyslopes, cydist_1d_sax,
                                    inv_transform_1d_sax, inv_transform_sax,
                                    inv_transform_paa)
-from tslearn.utils import ts_size, check_dims, check_array
+from tslearn.utils import check_dims, check_array
+from tslearn.utils.utils import _ts_size
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -147,7 +148,7 @@ class PiecewiseAggregateApproximation(TimeSeriesMixin,
         n_ts, sz, d = X.shape
         X_transformed = numpy.empty((n_ts, self.n_segments, d))
         for i_ts in range(n_ts):
-            sz_segment = ts_size(X[i_ts]) // self.n_segments
+            sz_segment = _ts_size(X[i_ts]) // self.n_segments
             for i_seg in range(self.n_segments):
                 start = i_seg * sz_segment
                 end = start + sz_segment

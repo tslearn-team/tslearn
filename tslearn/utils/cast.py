@@ -8,7 +8,12 @@ try:
 except:
     HAS_ARFF = False
 
-from .utils import check_array, check_dataset, ts_size, to_time_series_dataset
+from .utils import (
+    check_array,
+    check_dataset,
+    to_time_series_dataset,
+    _ts_size
+)
 
 
 def to_sklearn_dataset(dataset, dtype=float, return_dim=False):
@@ -165,7 +170,7 @@ def to_seglearn_dataset(X):
     (10, 2)
     """
     X_ = check_dataset(X)
-    return numpy.array([Xi[:ts_size(Xi)] for Xi in X_], dtype=object)
+    return numpy.array([Xi[:_ts_size(Xi)] for Xi in X_], dtype=object)
 
 
 def from_seglearn_dataset(X):
@@ -236,7 +241,7 @@ def to_stumpy_dataset(X):
         else:
             return ts.transpose()
 
-    return [transpose_or_flatten(Xi[:ts_size(Xi)]) for Xi in X_]
+    return [transpose_or_flatten(Xi[:_ts_size(Xi)]) for Xi in X_]
 
 
 def from_stumpy_dataset(X):
@@ -311,7 +316,7 @@ def to_sktime_dataset(X):
     X_ = check_dataset(X)
     X_pd = pd.DataFrame(dtype=float)
     for dim in range(X_.shape[2]):
-        X_pd['dim_' + str(dim)] = [pd.Series(data=Xi[:ts_size(Xi), dim])
+        X_pd['dim_' + str(dim)] = [pd.Series(data=Xi[:_ts_size(Xi), dim])
                                    for Xi in X_]
     return X_pd
 
@@ -548,7 +553,7 @@ def to_tsfresh_dataset(X):
     for i, Xi in enumerate(X_):
         df = pd.DataFrame(columns=["id", "time"] +
                                   ["dim_%d" % di for di in range(d)])
-        Xi_ = Xi[:ts_size(Xi)]
+        Xi_ = Xi[:_ts_size(Xi)]
         sz = Xi_.shape[0]
         df["time"] = numpy.arange(sz)
         df["id"] = numpy.zeros((sz,), dtype=int) + i
@@ -681,7 +686,7 @@ def to_cesium_dataset(X):
                           "if cesium is not installed.")
 
     def transpose_or_flatten(ts):
-        ts_ = ts[:ts_size(ts)]
+        ts_ = ts[:_ts_size(ts)]
         if ts.shape[1] == 1:
             return ts_.reshape((-1, ))
         else:

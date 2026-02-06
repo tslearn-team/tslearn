@@ -11,7 +11,8 @@ from sklearn.utils import check_random_state
 from tslearn.backend import instantiate_backend
 from tslearn.barycenters.utils import _set_weights
 from tslearn.metrics._dtw import _njit_dtw_path
-from tslearn.utils import to_time_series_dataset, to_time_series, ts_size
+from tslearn.utils import to_time_series_dataset, to_time_series
+from tslearn.utils.utils import _ts_size
 
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -40,8 +41,8 @@ def _petitjean_assignment(X, barycenter,  weights, metric_params=None):
     cost = 0
     for i in range(n):
         dist_i, path = _njit_dtw_path(
-            to_time_series(X[i], remove_nans=True, be=backend),
-            to_time_series(barycenter, remove_nans=True, be=backend),
+            X[i, :_ts_size(X[i], backend=backend)],
+            barycenter,
             **metric_params
         )
         for pair in path:
@@ -223,8 +224,8 @@ def _mm_assignment(X, barycenter, weights, metric_params=None):
     list_p_k = []
     for i in range(n):
         dist_i, path = _njit_dtw_path(
-            to_time_series(barycenter, remove_nans=True, be=backend),
-            to_time_series(X[i], remove_nans=True, be=backend),
+            barycenter,
+            X[i, :_ts_size(X[i], backend=backend)],
             **metric_params
         )
         cost += dist_i ** 2 * weights[i]
@@ -355,7 +356,7 @@ def _mm_update_barycenter(X, diag_sum_v_k, list_w_k):
     barycenter_size = diag_sum_v_k.shape[0]
     sum_w_x = numpy.zeros((barycenter_size, d))
     for k, (w_k, x_k) in enumerate(zip(list_w_k, X)):
-        sum_w_x += w_k.dot(x_k[:ts_size(x_k)])
+        sum_w_x += w_k.dot(x_k[:_ts_size(x_k)])
     barycenter = numpy.diag(1. / diag_sum_v_k).dot(sum_w_x)
     return barycenter
 
@@ -401,7 +402,7 @@ def _subgradient_update_barycenter(X, list_diag_v_k, list_w_k, weights_sum,
     delta_bar = numpy.zeros((barycenter_size, d))
     for k, (v_k, w_k, x_k) in enumerate(zip(list_diag_v_k, list_w_k, X)):
         delta_bar += v_k.reshape((-1, 1)) * barycenter
-        delta_bar -= w_k.dot(x_k[:ts_size(x_k)])
+        delta_bar -= w_k.dot(x_k[:_ts_size(x_k)])
     barycenter -= (2. * eta / weights_sum) * delta_bar
     return barycenter
 

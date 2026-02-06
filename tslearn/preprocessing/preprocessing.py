@@ -12,11 +12,11 @@ from tslearn.utils import (
     check_variable_length_input,
     to_time_series_dataset,
     to_time_series,
-    check_equal_size,
-    ts_size,
     check_array,
     check_dims
 )
+from tslearn.utils.utils import _check_equal_size, _ts_size
+
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -114,11 +114,11 @@ class TimeSeriesResampler(TimeSeriesMixin, TransformerMixin, BaseEstimator):
             return self._transform_unit_sz(X_)
 
         n_ts, sz, d = X_.shape
-        equal_size = check_equal_size(X_)
+        equal_size = _check_equal_size(X_)
         X_out = numpy.empty((n_ts, target_sz, d))
         for i in range(X_.shape[0]):
             if not equal_size:
-                sz = ts_size(X_[i])
+                sz = _ts_size(X_[i])
             for di in range(d):
                 X_out[i, :, di] = numpy.interp(
                     numpy.linspace(0, 1, target_sz),
@@ -616,7 +616,7 @@ class TimeSeriesImputer(TimeSeriesMixin, TransformerMixin, BaseEstimator):
             ts = to_time_series(X[ts_index])
             stop_index = ts.shape[0]
             if self.keep_trailing_nans:
-                stop_index = ts_size(ts)
+                stop_index = _ts_size(ts)
             X_[ts_index, :stop_index] = imputer(ts[:stop_index])
         return to_time_series_dataset(X_)
 

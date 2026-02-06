@@ -118,6 +118,15 @@ def test_dba():
         to_time_series(init_barycenter)
     )
 
+    # Subgradient averaging with a single input returns it
+    time_series = rng.randn(1, sz, d)
+    np.testing.assert_array_equal(
+        tslearn.barycenters.dtw_barycenter_averaging_subgradient(
+            time_series
+        ),
+        time_series.reshape(sz, d)
+    )
+
 
 def test_softdtw_barycenter():
     n, sz, d = 15, 10, 3

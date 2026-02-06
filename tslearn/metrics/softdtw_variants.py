@@ -8,11 +8,10 @@ from sklearn.utils import check_random_state
 
 from tslearn.backend import instantiate_backend
 from tslearn.utils import (
-    check_equal_size,
     to_time_series,
     to_time_series_dataset,
-    ts_size,
 )
+from tslearn.utils.utils import _check_equal_size, _ts_size
 
 from ._dtw import dtw, dtw_path
 from .soft_dtw_fast import (
@@ -578,7 +577,7 @@ def soft_dtw(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False):
     if math.isclose(gamma, 0.0):
         return dtw(ts1, ts2, be=be) ** 2
     return SoftDTW(
-        SquaredEuclidean(ts1[: ts_size(ts1)], ts2[: ts_size(ts2)], be=be),
+        SquaredEuclidean(ts1[: _ts_size(ts1)], ts2[: _ts_size(ts2)], be=be),
         gamma=gamma,
         be=be,
         compute_with_backend=compute_with_backend,
@@ -690,12 +689,12 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False)
     if math.isclose(gamma, 0.0):
         path, dist = dtw_path(ts1, ts2, be=be)
         dist_sq = dist**2
-        a = be.zeros((ts_size(ts1), ts_size(ts2)))
+        a = be.zeros((_ts_size(ts1), _ts_size(ts2)))
         for i, j in path:
             a[i, j] = 1.0
     else:
         sdtw = SoftDTW(
-            SquaredEuclidean(ts1[: ts_size(ts1)], ts2[: ts_size(ts2)], be=be),
+            SquaredEuclidean(ts1[: _ts_size(ts1)], ts2[: _ts_size(ts2)], be=be),
             gamma=gamma,
             be=be,
             compute_with_backend=compute_with_backend,
@@ -810,19 +809,19 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0, be=None, compute_with_bac
 
     dists = be.empty((dataset1.shape[0], dataset2.shape[0]))
 
-    equal_size_ds1 = check_equal_size(dataset1, be=be)
-    equal_size_ds2 = check_equal_size(dataset2, be=be)
+    equal_size_ds1 = _check_equal_size(dataset1, backend=be)
+    equal_size_ds2 = _check_equal_size(dataset2, backend=be)
 
     for i, ts1 in enumerate(dataset1):
         if equal_size_ds1:
             ts1_short = ts1
         else:
-            ts1_short = ts1[: ts_size(ts1)]
+            ts1_short = ts1[:_ts_size(ts1)]
         for j, ts2 in enumerate(dataset2):
             if equal_size_ds2:
                 ts2_short = ts2
             else:
-                ts2_short = ts2[: ts_size(ts2)]
+                ts2_short = ts2[:_ts_size(ts2)]
             if self_similarity and j < i:
                 dists[i, j] = dists[j, i]
             else:
@@ -951,14 +950,14 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None, compu
     else:
         self_dists1 = be.empty((dataset1.shape[0], 1))
         for i, ts1 in enumerate(dataset1):
-            ts1_short = ts1[:ts_size(ts1)]
+            ts1_short = ts1[:_ts_size(ts1)]
             self_dists1[i, 0] = soft_dtw(
                 ts1_short, ts1_short, gamma=gamma, be=be, compute_with_backend=compute_with_backend
             )
 
         self_dists2 = be.empty((1, dataset2.shape[0]))
         for j, ts2 in enumerate(dataset2):
-            ts2_short = ts2[:ts_size(ts2)]
+            ts2_short = ts2[:_ts_size(ts2)]
             self_dists2[0, j] = soft_dtw(
                 ts2_short, ts2_short, gamma=gamma, be=be, compute_with_backend=compute_with_backend
             )

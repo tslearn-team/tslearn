@@ -3,10 +3,10 @@
 import numpy
 from scipy.optimize import minimize
 
-from tslearn.utils import to_time_series_dataset, check_equal_size, \
-    to_time_series
+from tslearn.utils import to_time_series_dataset
 from tslearn.preprocessing import TimeSeriesResampler
 from tslearn.metrics import SquaredEuclidean, SoftDTW
+from tslearn.utils.utils import _check_equal_size, _ts_size
 
 from .utils import _set_weights
 from .euclidean import euclidean_barycenter
@@ -91,7 +91,7 @@ def softdtw_barycenter(X, gamma=1.0, weights=None, method="L-BFGS-B", tol=1e-3,
     X_ = to_time_series_dataset(X)
     weights = _set_weights(weights, X_.shape[0])
     if init is None:
-        if check_equal_size(X_):
+        if _check_equal_size(X_):
             barycenter = euclidean_barycenter(X_, weights)
         else:
             resampled_X = TimeSeriesResampler(sz=X_.shape[1]).fit_transform(X_)
@@ -100,7 +100,7 @@ def softdtw_barycenter(X, gamma=1.0, weights=None, method="L-BFGS-B", tol=1e-3,
         barycenter = init
 
     if max_iter > 0:
-        X_ = [to_time_series(d, remove_nans=True) for d in X_]
+        X_ = [d[:_ts_size(d)] for d in X_]
 
         def f(Z):
             return _softdtw_func(Z, X_, weights, barycenter, gamma)
