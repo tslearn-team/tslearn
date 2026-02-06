@@ -9,7 +9,8 @@ from keras.layers import (
     Dense,
     Layer,
     Input,
-    concatenate
+    concatenate,
+    Masking
 )
 from keras.metrics import (
     categorical_accuracy,
@@ -63,7 +64,7 @@ def _kmeans_init_shapelets(X, n_shapelets, shp_len, n_draw=10000):
 
 
 @register_keras_serializable()
-class GlobalMinPooling1D(Layer):
+class GlobalMinPooling1D(Masking):
     """Global min pooling operation for temporal data.
     # Input shape
         3D tensor with shape: `(batch_size, steps, features)`.
@@ -94,7 +95,7 @@ class GlobalMinPooling1D(Layer):
 
 
 @register_keras_serializable()
-class GlobalArgminPooling1D(Layer):
+class GlobalArgminPooling1D(Masking):
     """Global argmin pooling operation for temporal data.
     # Input shape
         3D tensor with shape: `(batch_size, steps, features)`.
