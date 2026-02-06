@@ -10,7 +10,7 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 def test_shapelets():
-    shapelets = pytest.importorskip('tslearn.shapelets')
+    shapelets = pytest.importorskip('tslearn.shapelets', exc_type=ImportError)
     from keras.optimizers import Adam
 
     n, sz, d = 15, 10, 2
@@ -63,7 +63,7 @@ def test_shapelets():
 
 
 def test_shapelet_lengths():
-    shapelets = pytest.importorskip('tslearn.shapelets')
+    shapelets = pytest.importorskip('tslearn.shapelets', exc_type=ImportError)
 
     # Test variable-length
     y = [0, 1]
@@ -120,7 +120,7 @@ def test_shapelet_lengths():
 
 
 def test_series_lengths():
-    shapelets = pytest.importorskip('tslearn.shapelets')
+    shapelets = pytest.importorskip('tslearn.shapelets', exc_type=ImportError)
 
     # Test long shapelets
     y = [0, 1]
@@ -143,7 +143,7 @@ def test_series_lengths():
 
 
 def test_locate():
-    shapelets = pytest.importorskip('tslearn.shapelets')
+    shapelets = pytest.importorskip('tslearn.shapelets', exc_type=ImportError)
     from keras.backend import backend
 
     y = [0, 1]

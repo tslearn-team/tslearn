@@ -279,7 +279,7 @@ def test_serialize_1dsax():
 
 
 def test_serialize_shapelets():
-    shapelets = pytest.importorskip('tslearn.shapelets')
+    shapelets = pytest.importorskip('tslearn.shapelets', exc_type=ImportError)
     from keras.optimizers import Adam
 
     def get_model_weights(model):
