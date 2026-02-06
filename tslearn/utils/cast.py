@@ -8,11 +8,13 @@ try:
 except:
     HAS_ARFF = False
 
+from tslearn.backend import instantiate_backend
 from .utils import (
     check_array,
     check_dataset,
     to_time_series_dataset,
-    _ts_size
+    _ts_size,
+    _to_time_series
 )
 
 
@@ -170,7 +172,11 @@ def to_seglearn_dataset(X):
     (10, 2)
     """
     X_ = check_dataset(X)
-    return numpy.array([Xi[:_ts_size(Xi)] for Xi in X_], dtype=object)
+    backend = instantiate_backend(X_)
+    return numpy.array(
+        [_to_time_series(Xi, True, backend) for Xi in X_],
+        dtype=object
+    )
 
 
 def from_seglearn_dataset(X):
@@ -234,6 +240,7 @@ def to_stumpy_dataset(X):
     (2, 16)
     """
     X_ = check_dataset(X)
+    backend = instantiate_backend(X_)
 
     def transpose_or_flatten(ts):
         if ts.shape[1] == 1:
@@ -241,7 +248,9 @@ def to_stumpy_dataset(X):
         else:
             return ts.transpose()
 
-    return [transpose_or_flatten(Xi[:_ts_size(Xi)]) for Xi in X_]
+    return [
+        transpose_or_flatten(_to_time_series(Xi, True, backend)) for Xi in X_
+    ]
 
 
 def from_stumpy_dataset(X):
@@ -314,10 +323,12 @@ def to_sktime_dataset(X):
         raise ImportError("Conversion from/to sktime cannot be performed "
                           "if pandas is not installed.")
     X_ = check_dataset(X)
+    backend = instantiate_backend(X_)
     X_pd = pd.DataFrame(dtype=float)
     for dim in range(X_.shape[2]):
-        X_pd['dim_' + str(dim)] = [pd.Series(data=Xi[:_ts_size(Xi), dim])
-                                   for Xi in X_]
+        X_pd['dim_' + str(dim)] = [
+            pd.Series(data=Xi[:_ts_size(Xi, backend), dim]) for Xi in X_
+        ]
     return X_pd
 
 
@@ -548,12 +559,13 @@ def to_tsfresh_dataset(X):
         raise ImportError("Conversion from/to tsfresh cannot be performed "
                           "if pandas is not installed.")
     X_ = check_dataset(X)
+    backend = instantiate_backend(X_)
     n, sz, d = X_.shape
     dataframes = []
     for i, Xi in enumerate(X_):
         df = pd.DataFrame(columns=["id", "time"] +
                                   ["dim_%d" % di for di in range(d)])
-        Xi_ = Xi[:_ts_size(Xi)]
+        Xi_ = _to_time_series(Xi, True, backend)
         sz = Xi_.shape[0]
         df["time"] = numpy.arange(sz)
         df["id"] = numpy.zeros((sz,), dtype=int) + i
@@ -685,14 +697,16 @@ def to_cesium_dataset(X):
         raise ImportError("Conversion from/to cesium cannot be performed "
                           "if cesium is not installed.")
 
+    X_ = check_dataset(X)
+    backend = instantiate_backend(X_)
+
     def transpose_or_flatten(ts):
-        ts_ = ts[:_ts_size(ts)]
+        ts_ = _to_time_series(ts, True, backend)
         if ts.shape[1] == 1:
             return ts_.reshape((-1, ))
         else:
             return ts_.transpose()
 
-    X_ = check_dataset(X)
     return [TimeSeries(m=transpose_or_flatten(Xi)) for Xi in X_]
 
 

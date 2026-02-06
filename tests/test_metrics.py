@@ -9,7 +9,8 @@ from scipy.spatial.distance import cdist
 from tslearn.backend.backend import Backend, cast, instantiate_backend
 import tslearn.clustering
 import tslearn.metrics
-from tslearn.utils import to_time_series
+from tslearn.utils.utils import to_time_series
+
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
@@ -411,8 +412,8 @@ def test_dtw_subseq_path():
             # subseq, longseq = [1, 4], [1.0, 2.0, 2.0, 3.0, 4.0]
             subseq = cast([1, 4], array_type)
             longseq = cast([1.0, 2.0, 2.0, 3.0, 4.0], array_type)
-            subseq = to_time_series(subseq, be=None)
-            longseq = to_time_series(longseq, be=None)
+            subseq = to_time_series(subseq)
+            longseq = to_time_series(longseq)
             cost_matrix = tslearn.metrics.subsequence_cost_matrix(subseq, longseq, be=be)
             assert backend.belongs_to_backend(cost_matrix)
 

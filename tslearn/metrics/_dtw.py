@@ -9,6 +9,7 @@ from tslearn.backend.pytorch_backend import HAS_TORCH
 from tslearn.metrics._masks import GLOBAL_CONSTRAINT_CODE, _compute_mask, _njit_compute_mask
 from tslearn.metrics.utils import _njit_accumulated_matrix, _accumulated_matrix
 from tslearn.utils import to_time_series, to_time_series_dataset
+from tslearn.utils.utils import _to_time_series
 
 
 def dtw(
@@ -500,8 +501,8 @@ def cdist_dtw(
             matrix[indices] = be.array(
                 Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
                     delayed(dtw_)(
-                        to_time_series(dataset1[i], remove_nans=True, be=be),
-                        to_time_series(dataset1[j], remove_nans=True, be=be),
+                        _to_time_series(dataset1[i], True, be),
+                        _to_time_series(dataset1[j], True, be),
                         **mask_args
                     )
                     for i in range(n_ts_1)
@@ -511,8 +512,8 @@ def cdist_dtw(
         else:
             matrix[indices] = be.array([
                 dtw_(
-                    to_time_series(dataset1[i], remove_nans=True, be=be),
-                    to_time_series(dataset1[j], remove_nans=True, be=be),
+                    _to_time_series(dataset1[i], True, be),
+                    _to_time_series(dataset1[j], True, be),
                     **mask_args
                 )
                 for i in range(n_ts_1)
@@ -528,8 +529,8 @@ def cdist_dtw(
             matrix = be.array(
                 Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
                     delayed(dtw_)(
-                        to_time_series(dataset1[i], remove_nans=True, be=be),
-                        to_time_series(dataset2[j], remove_nans=True, be=be),
+                        _to_time_series(dataset1[i], True, be),
+                        _to_time_series(dataset2[j], True, be),
                         **mask_args
                     )
                     for i in range(n_ts_1)
@@ -539,8 +540,8 @@ def cdist_dtw(
         else:
             matrix = be.array([
                 dtw_(
-                    to_time_series(dataset1[i], remove_nans=True, be=be),
-                    to_time_series(dataset2[j], remove_nans=True, be=be),
+                    _to_time_series(dataset1[i], True, be),
+                    _to_time_series(dataset2[j], True, be),
                     **mask_args
                 )
                 for i in range(n_ts_1)

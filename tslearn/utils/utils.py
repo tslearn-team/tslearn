@@ -198,11 +198,18 @@ def to_time_series(ts, remove_nans=False, be=None, dtype=float):
     """
     be = instantiate_backend(be, ts)
     ts_out = be.array(ts, dtype=dtype)
-    if ts_out.ndim <= 1:
-        ts_out = be.reshape(ts_out, (-1, 1))
+    return _to_time_series(ts_out, remove_nans, be)
+
+
+def _to_time_series(ts, remove_nans=False, backend=None):
+    """Times series formatting for inputs already converted to a backend."""
+    if backend is None:
+        backend = instantiate_backend(ts)
+    if ts.ndim <= 1:
+        ts = ts.reshape(-1, 1)
     if remove_nans:
-        ts_out = ts_out[:_ts_size(ts_out, backend=be)]
-    return ts_out
+        ts = ts[:_ts_size(ts, backend=backend)]
+    return ts
 
 
 def to_time_series_dataset(dataset, dtype=float, be=None):
