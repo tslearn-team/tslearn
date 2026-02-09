@@ -1,11 +1,13 @@
 import numpy as np
+
 from sklearn.cross_decomposition import CCA
 
 from tslearn.backend import instantiate_backend
+from tslearn.utils import to_time_series_dataset, to_time_series
 
 from ._dtw import dtw_path
 from .utils import _cdist_generic
-from ..utils import to_time_series
+
 
 def _get_warp_matrices(warp_path, be):
     """Convert warping path sequence to matrices.
@@ -404,6 +406,38 @@ def cdist_ctw(
        human behavior". NIPS 2009.
     """  # noqa: E501
     be = instantiate_backend(be, dataset1, dataset2)
+    dataset1 = to_time_series_dataset(dataset1, be=be)
+    if dataset2 is not None:
+        dataset2 = to_time_series_dataset(dataset2, be=be)
+    return _cdist_ctw(
+        dataset1=dataset1,
+        dataset2=dataset2,
+        max_iter=max_iter,
+        n_components=n_components,
+        global_constraint=global_constraint,
+        sakoe_chiba_radius=sakoe_chiba_radius,
+        itakura_max_slope=itakura_max_slope,
+        n_jobs=n_jobs,
+        verbose=verbose,
+        be=be,
+    )
+
+
+def  _cdist_ctw(
+    dataset1,
+    dataset2=None,
+    max_iter=100,
+    n_components=None,
+    global_constraint=None,
+    sakoe_chiba_radius=None,
+    itakura_max_slope=None,
+    n_jobs=None,
+    verbose=0,
+    be=None,
+):
+    if be is None:
+        be = instantiate_backend(dataset1, dataset2)
+    # TODO: dev and use fully jitted ctw for numpy backend
     return _cdist_generic(
         dist_fun=ctw,
         dataset1=dataset1,

@@ -8,7 +8,7 @@ from sklearn.utils.validation import check_is_fitted
 import numpy
 
 from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
-from ..metrics import cdist_gak, gamma_soft_dtw, VARIABLE_LENGTH_METRICS
+from ..metrics import _cdist_gak, gamma_soft_dtw, VARIABLE_LENGTH_METRICS
 from ..utils import to_time_series_dataset, check_array, check_dims, check_X_y, to_sklearn_dataset
 from ..bases import TimeSeriesMixin
 
@@ -71,12 +71,12 @@ class TimeSeriesSVMMixin(TimeSeriesMixin):
             assert self.kernel == "gak"
             self.estimator_kernel_ = "precomputed"
             if fit_time:
-                sklearn_X = cdist_gak(X,
+                sklearn_X = _cdist_gak(X,
                                       sigma=numpy.sqrt(self.gamma_ / 2.),
                                       n_jobs=self.n_jobs,
                                       verbose=self.verbose)
             else:
-                sklearn_X = cdist_gak(X,
+                sklearn_X = _cdist_gak(X,
                                       self._X_fit,
                                       sigma=numpy.sqrt(self.gamma_ / 2.),
                                       n_jobs=self.n_jobs,

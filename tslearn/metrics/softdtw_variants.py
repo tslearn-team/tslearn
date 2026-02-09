@@ -57,10 +57,9 @@ def _gak(gram, be=None):
         Kernel value
     """
     be = instantiate_backend(be, gram)
-    gram = be.array(gram)
-    sz1, sz2 = be.shape(gram)
+    sz1, sz2 = gram.shape
 
-    cum_sum = be.zeros((sz1 + 1, sz2 + 1))
+    cum_sum = be.zeros((sz1 + 1, sz2 + 1), dtype=gram.dtype)
     cum_sum[0, 0] = 1.0
 
     for i in range(sz1):
@@ -131,7 +130,6 @@ def _gak_gram(s1, s2, sigma=1.0, be=None):
         raise ZeroDivisionError()
     be = instantiate_backend(be, s1)
     gram = -be.cdist(s1, s2, "sqeuclidean") / (2 * sigma**2)
-    gram = be.array(gram)
     gram -= be.log(2 - be.exp(gram))
     return be.exp(gram)
 
@@ -258,7 +256,14 @@ def gak(s1, s2, sigma=1.0, be=None):  # TODO: better doc (formula for the kernel
     return unnormalized_gak(s1, s2, sigma=sigma, be=be) / denom
 
 
-def cdist_gak(dataset1, dataset2=None, sigma=1.0, n_jobs=None, verbose=0, be=None):
+def cdist_gak(
+    dataset1,
+    dataset2=None,
+    sigma=1.0,
+    n_jobs=None,
+    verbose=0,
+    be=None
+):
     r"""Compute cross-similarity matrix using Global Alignment kernel (GAK).
 
     GAK was originally presented in [1]_.
@@ -323,34 +328,54 @@ def cdist_gak(dataset1, dataset2=None, sigma=1.0, n_jobs=None, verbose=0, be=Non
        ICML 2011.
     """  # noqa: E501
     be = instantiate_backend(be, dataset1, dataset2)
-
-    unnormalized_matrix = _cdist_generic(
-        dist_fun=unnormalized_gak,
+    dataset1 = to_time_series_dataset(dataset1, be=be)
+    if dataset2 is not None:
+        dataset2 = to_time_series_dataset(dataset2, be=be)
+    return _cdist_gak(
         dataset1=dataset1,
         dataset2=dataset2,
+        sigma=sigma,
         n_jobs=n_jobs,
         verbose=verbose,
-        sigma=sigma,
-        compute_diagonal=True,
         be=be,
     )
-    dataset1 = to_time_series_dataset(dataset1, be=be)
-    if dataset2 is None:
-        diagonal = be.diag(be.sqrt(1.0 / be.diag(unnormalized_matrix)))
-        diagonal_left = diagonal_right = diagonal
-    else:
-        dataset2 = to_time_series_dataset(dataset2, be=be)
-        diagonal_left = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
-            delayed(unnormalized_gak)(dataset1[i], dataset1[i], sigma=sigma, be=be)
-            for i in range(len(dataset1))
-        )
-        diagonal_right = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
-            delayed(unnormalized_gak)(dataset2[j], dataset2[j], sigma=sigma, be=be)
-            for j in range(len(dataset2))
-        )
-        diagonal_left = be.diag(1.0 / be.sqrt(be.array(diagonal_left)))
-        diagonal_right = be.diag(1.0 / be.sqrt(be.array(diagonal_right)))
-    return diagonal_left @ unnormalized_matrix @ diagonal_right
+
+
+def _cdist_gak(
+    dataset1,
+    dataset2=None,
+    sigma=1.0,
+    n_jobs=None,
+    verbose=0,
+    be=None
+):
+   if be is None:
+       be = instantiate_backend(dataset1, dataset2)
+   unnormalized_matrix = _cdist_generic(
+       dist_fun=unnormalized_gak,
+       dataset1=dataset1,
+       dataset2=dataset2,
+       n_jobs=n_jobs,
+       verbose=verbose,
+       sigma=sigma,
+       compute_diagonal=True,
+       be=be,
+   )
+   if dataset2 is None:
+       diagonal = be.diag(be.sqrt(1.0 / be.diag(unnormalized_matrix)))
+       diagonal_left = diagonal_right = diagonal
+   else:
+       diagonal_left = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
+           delayed(unnormalized_gak)(dataset1[i], dataset1[i], sigma=sigma, be=be)
+           for i in range(len(dataset1))
+       )
+       diagonal_right = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
+           delayed(unnormalized_gak)(dataset2[j], dataset2[j], sigma=sigma, be=be)
+           for j in range(len(dataset2))
+       )
+       diagonal_left = be.diag(1.0 / be.sqrt(diagonal_left))
+       diagonal_right = be.diag(1.0 / be.sqrt(diagonal_right))
+   return diagonal_left @ unnormalized_matrix @ diagonal_right
 
 
 def sigma_gak(dataset, n_samples=100, random_state=None, be=None):
@@ -810,13 +835,31 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0, be=None, compute_with_bac
        Time-Series," ICML 2017.
     """  # noqa: E501
     be = instantiate_backend(be, dataset1, dataset2)
-    dataset1 = to_time_series_dataset(dataset1, dtype=be.float64, be=be)
+    dataset1 = to_time_series_dataset(dataset1, be=be)
+    if dataset2 is not None:
+        dataset2 = to_time_series_dataset(dataset2, be=be)
+    return _cdist_soft_dtw(
+        dataset1=dataset1,
+        dataset2=dataset2,
+        gamma=gamma,
+        be=be,
+        compute_with_backend=compute_with_backend
+    )
 
+
+def  _cdist_soft_dtw(
+    dataset1,
+    dataset2=None,
+    gamma=1.0,
+    be=None,
+    compute_with_backend=False
+):
+    if be is None:
+        be = instantiate_backend(dataset1, dataset2)
     if dataset2 is None:
         dataset2 = dataset1
         self_similarity = True
     else:
-        dataset2 = to_time_series_dataset(dataset2, dtype=be.float64, be=be)
         self_similarity = False
 
     dists = be.empty((dataset1.shape[0], dataset2.shape[0]))
@@ -953,8 +996,30 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None, compu
     dataset1 = to_time_series_dataset(dataset1, be=be)
     if dataset2 is not None:
         dataset2 = to_time_series_dataset(dataset2, be=be)
-    dists = cdist_soft_dtw(
-        dataset1, dataset2=dataset2, gamma=gamma, be=be, compute_with_backend=compute_with_backend
+    return _cdist_soft_dtw_normalized(
+        dataset1=dataset1,
+        dataset2=dataset2,
+        gamma=gamma,
+        be=be,
+        compute_with_backend=compute_with_backend
+    )
+
+
+def _cdist_soft_dtw_normalized(
+    dataset1,
+    dataset2=None,
+    gamma=1.0,
+    be=None,
+    compute_with_backend=False
+):
+    if be is None:
+        be = instantiate_backend(dataset1, dataset2)
+    dists = _cdist_soft_dtw(
+        dataset1,
+        dataset2=dataset2,
+        gamma=gamma,
+        be=be,
+        compute_with_backend=compute_with_backend
     )
     if dataset2 is None:
         d_ii = be.diag(dists)

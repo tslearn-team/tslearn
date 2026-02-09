@@ -5,13 +5,19 @@ import numpy
 from numba import njit
 
 from tslearn.backend import instantiate_backend
-from tslearn.metrics._masks import GLOBAL_CONSTRAINT_CODE, compute_mask
-from tslearn.metrics._dtw import (
+from tslearn.utils import to_time_series, to_time_series_dataset
+from tslearn.utils.utils import _to_time_series
+
+from ._dtw import (
     _njit_compute_path,
     _compute_path
 )
-from tslearn.metrics.utils import _cdist_generic
-from tslearn.utils import to_time_series
+from ._masks import (
+    GLOBAL_CONSTRAINT_CODE,
+    _njit_compute_mask,
+    _compute_mask
+)
+from .utils import _cdist_generic
 
 
 def frechet(
@@ -132,6 +138,9 @@ def frechet(
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
 
     """  # noqa: E501
+    be = instantiate_backend(be, s1, s2)
+    s1 = to_time_series(s1, remove_nans=True, be=be)
+    s2 = to_time_series(s2, remove_nans=True, be=be)
     return _frechet(
         s1,
         s2,
@@ -153,12 +162,10 @@ def _frechet(
     metric="euclidean",
     **kwds
 ):
-    backend = instantiate_backend(be, s1, s2)
+    if be is None:
+        be = instantiate_backend(s1, s2)
 
     if metric != "precomputed":
-
-        s1 = to_time_series(s1, remove_nans=True, be=backend)
-        s2 = to_time_series(s2, remove_nans=True, be=backend)
 
         if s1.shape[0] == 0 or s2.shape[0] == 0:
             raise ValueError(
@@ -169,12 +176,12 @@ def _frechet(
            raise ValueError("All input time series must have the same feature size.")
 
     else:
-        s1 = backend.array(s1)
         s2 = s1.T
 
-    mask = compute_mask(
-        s1,
-        s2,
+    compute_mask_ = _njit_compute_mask if be.is_numpy else _compute_mask
+    mask = compute_mask_(
+        len(s1),
+        len(s2),
         GLOBAL_CONSTRAINT_CODE[global_constraint],
         sakoe_chiba_radius=sakoe_chiba_radius,
         itakura_max_slope=itakura_max_slope
@@ -183,23 +190,23 @@ def _frechet(
     distance_matrix = None
     if metric == "precomputed":
         distance_matrix = s1
-    elif metric not in ["euclidean", "sqeuclidean"] and backend.is_numpy:
-        distance_matrix = backend.pairwise_distances(s1, s2, metric=metric, **kwds)
+    elif metric not in ["euclidean", "sqeuclidean"] and be.is_numpy:
+        distance_matrix = be.pairwise_distances(s1, s2, metric=metric, **kwds)
 
     if distance_matrix is not None:
-        if backend.is_numpy:
+        if be.is_numpy:
             acc_matrix = _njit_frechet_accumulated_matrix_from_distance_matrix(distance_matrix, mask)
         else:
-            acc_matrix = _frechet_accumulated_matrix_from_distance_matrix(distance_matrix, mask, backend)
+            acc_matrix = _frechet_accumulated_matrix_from_distance_matrix(distance_matrix, mask, be)
     else:
-        if backend.is_numpy:
+        if be.is_numpy:
             acc_matrix = _njit_frechet_accumulated_matrix(s1, s2, mask, squared=metric=="sqeuclidean")
         else:
-            acc_matrix = _frechet_accumulated_matrix(s1, s2, mask, backend, metric, **kwds)
+            acc_matrix = _frechet_accumulated_matrix(s1, s2, mask, be, metric, **kwds)
 
     path = None
     if return_path:
-        if backend.is_numpy:
+        if be.is_numpy:
             path = _njit_compute_path(acc_matrix)
         else:
             path = _compute_path(acc_matrix)
@@ -385,6 +392,9 @@ def frechet_path(
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
 
     """  # noqa: E501
+    be = instantiate_backend(be, s1, s2)
+    s1 = to_time_series(s1, remove_nans=True, be=be)
+    s2 = to_time_series(s2, remove_nans=True, be=be)
     return _frechet(
         s1,
         s2,
@@ -549,6 +559,12 @@ def frechet_path_from_metric(
     .. _scipy: https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html
 
     """  # noqa: E501
+    be = instantiate_backend(be, s1, s2)
+    if metric != "precomputed":
+        s1 = to_time_series(s1, remove_nans=True, be=be)
+        s2 = to_time_series(s2, remove_nans=True, be=be)
+    else:
+        s1 = be.array(s1)
     return _frechet(
         s1,
         s2,
@@ -678,8 +694,37 @@ def cdist_frechet(
            spoken word recognition," IEEE Transactions on Acoustics, Speech and
            Signal Processing, vol. 26(1), pp. 43--49, 1978.
     """  # noqa: E501
+    be = instantiate_backend(be, dataset1, dataset2)
+    dataset1 = to_time_series_dataset(dataset1, be=be)
+    if dataset2 is not None:
+        dataset2 = to_time_series_dataset(dataset2, be=be)
+    return _cdist_frechet(
+        dataset1=dataset1,
+        dataset2=dataset2,
+        global_constraint=global_constraint,
+        sakoe_chiba_radius=sakoe_chiba_radius,
+        itakura_max_slope=itakura_max_slope,
+        n_jobs=n_jobs,
+        verbose=verbose,
+        be=be,
+    )
+
+
+def _cdist_frechet(
+    dataset1,
+    dataset2=None,
+    global_constraint=None,
+    sakoe_chiba_radius=None,
+    itakura_max_slope=None,
+    n_jobs=None,
+    verbose=0,
+    be=None,
+):
+    if be is None:
+        be = instantiate_backend(dataset1, dataset2)
+    # TODO: dev and use fully jitted _frechet for numpy backend
     return _cdist_generic(
-        dist_fun=frechet,
+        dist_fun=lambda *args, **kwargs: _frechet(*args, **kwargs)[1],
         dataset1=dataset1,
         dataset2=dataset2,
         n_jobs=n_jobs,

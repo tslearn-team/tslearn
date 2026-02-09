@@ -5,7 +5,7 @@ import numpy
 from numba import njit, prange
 
 from tslearn.backend import instantiate_backend
-from tslearn.utils import to_time_series
+from tslearn.utils import to_time_series, to_time_series_dataset
 
 from .utils import _cdist_generic
 from . _masks import compute_mask  as compute_mask_
@@ -1983,6 +1983,9 @@ def cdist_dtw(
     )
 
     be = instantiate_backend(be, dataset1, dataset2)
+    dataset1 = to_time_series_dataset(dataset1, be=be)
+    if dataset2 is not None:
+        dataset2 = to_time_series_dataset(dataset2, be=be)
     return _cdist_generic(
         dist_fun=dtw,
         dataset1=dataset1,

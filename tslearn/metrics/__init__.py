@@ -11,10 +11,17 @@ from ._masks import (
     itakura_mask,
     sakoe_chiba_mask
 )
+from .ctw import (
+    ctw,
+    ctw_path,
+    cdist_ctw,
+    _cdist_ctw
+)
 from ._dtw import(
     dtw,
     dtw_path,
-    cdist_dtw
+    cdist_dtw,
+    _cdist_dtw
 )
 from .dtw_variants import (
    dtw_limited_warping_length,
@@ -29,12 +36,14 @@ from .dtw_variants import (
    lcss_path,
    lcss_path_from_metric
 )
-from .ctw import ctw_path, ctw, cdist_ctw
-from .sax import cdist_sax
+from .sax import cdist_sax, _cdist_sax
 from .softdtw_variants import (
     cdist_soft_dtw,
+    _cdist_soft_dtw,
     cdist_gak,
+    _cdist_gak,
     cdist_soft_dtw_normalized,
+    _cdist_soft_dtw_normalized,
     gak,
     soft_dtw,
     soft_dtw_alignment,
@@ -45,7 +54,13 @@ from .softdtw_variants import (
 )
 from .soft_dtw_loss_pytorch import SoftDTWLossPyTorch
 from .cycc import cdist_normalized_cc, y_shifted_sbd_vec
-from .frechet import frechet, frechet_path, frechet_path_from_metric, cdist_frechet
+from ._frechet import (
+    frechet,
+    frechet_path,
+    frechet_path_from_metric,
+    cdist_frechet,
+    _cdist_frechet
+)
 from .utils import accumulated_matrix
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -57,13 +72,13 @@ VARIABLE_LENGTH_METRICS = ["ctw", "dtw", "gak", "sax", "softdtw",
 
 
 METRIC_TO_FUNCTION = {
-    "ctw": cdist_ctw,
-    "dtw": cdist_dtw,
-    "gak": cdist_gak,
-    "sax": cdist_sax,
-    "softdtw": cdist_soft_dtw,
-    "softdtw_normalized": cdist_soft_dtw_normalized,
-    "frechet": cdist_frechet
+    "ctw": _cdist_ctw,
+    "dtw": _cdist_dtw,
+    "gak": _cdist_gak,
+    "sax": _cdist_sax,
+    "softdtw": _cdist_soft_dtw,
+    "softdtw_normalized": _cdist_soft_dtw_normalized,
+    "frechet": _cdist_frechet
 }
 
 

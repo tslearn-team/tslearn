@@ -3,10 +3,13 @@ from sklearn.metrics.cluster import silhouette_score as sklearn_silhouette
 from scipy.spatial.distance import cdist
 import numpy
 
+from tslearn.backend import instantiate_backend
 from tslearn.bases import TimeSeriesMixin
-from tslearn.metrics import cdist_dtw, cdist_soft_dtw_normalized
+from tslearn.metrics import _cdist_dtw, _cdist_soft_dtw_normalized
 from tslearn.preprocessing import TimeSeriesResampler
-from tslearn.utils import to_time_series_dataset, to_time_series
+from tslearn.utils import to_time_series_dataset
+from tslearn.utils.utils import _to_time_series
+
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -162,6 +165,7 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
     >>> float(silhouette_score(X, labels, metric=dtw))  # doctest: +ELLIPSIS
     0.13383800...
     """
+    be = instantiate_backend(X)
     sklearn_metric = "precomputed"
     if metric_params is None:
         metric_params_ = {}
@@ -174,24 +178,35 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
     if metric == "precomputed":
         sklearn_X = X
     elif metric == "dtw" or metric is None:
-        sklearn_X = cdist_dtw(X, n_jobs=n_jobs, verbose=verbose,
-                              **metric_params_)
+        X = to_time_series_dataset(X, be=be)
+        sklearn_X = _cdist_dtw(
+            X,
+            n_jobs=n_jobs,
+            verbose=verbose,
+            be=be,
+            **metric_params_
+        )
     elif metric == "softdtw":
-        sklearn_X = cdist_soft_dtw_normalized(X, **metric_params_)
+        X = to_time_series_dataset(X)
+        sklearn_X = _cdist_soft_dtw_normalized(X, be=be, **metric_params_)
     elif metric == "euclidean":
-        X_ = to_time_series_dataset(X)
+        X_ = to_time_series_dataset(X, be=be)
         X_ = X_.reshape((X_.shape[0], -1))
         sklearn_X = cdist(X_, X_, metric="euclidean")
     else:
-        X_ = to_time_series_dataset(X)
+        X_ = to_time_series_dataset(X, be=be)
         n, sz, d = X_.shape
         sklearn_X = X_.reshape((n, -1))
 
         def sklearn_metric(x, y):
-            return metric(to_time_series(x.reshape((sz, d)),
-                                         remove_nans=True),
-                          to_time_series(y.reshape((sz, d)),
-                                         remove_nans=True))
+            return metric(
+                _to_time_series(x.reshape(sz, d),
+                                remove_nans=True,
+                                backend=be),
+                _to_time_series(y.reshape(sz, d),
+                                remove_nans=True,
+                                backend=be)
+            )
     return sklearn_silhouette(X=sklearn_X,
                               labels=labels,
                               metric=sklearn_metric,
