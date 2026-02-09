@@ -6,7 +6,6 @@ from numba import njit
 
 from tslearn.backend import instantiate_backend
 from tslearn.utils import to_time_series, to_time_series_dataset
-from tslearn.utils.utils import _to_time_series
 
 from ._dtw import (
     _njit_compute_path,
