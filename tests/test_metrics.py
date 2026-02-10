@@ -1026,3 +1026,13 @@ def test_frechet():
             else:
                 assert instantiate_backend(array_type).belongs_to_backend(dists)
 
+def test_sax():
+
+    expected = np.array([[0,1], [1,0]])
+    dists = tslearn.metrics.cdist_sax(
+        [[-1, 0, 1], [1, 0, 1]],
+        [[-1, 0, 1], [1, 0, 1]],
+        [-0.5, 0., 0.5],
+        3
+    )
+    np.testing.assert_equal(dists, expected)
