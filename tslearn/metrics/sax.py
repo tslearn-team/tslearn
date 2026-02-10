@@ -1,11 +1,20 @@
+from tslearn.backend import instantiate_backend
+from tslearn.utils import to_time_series_dataset
+
 from .utils import _cdist_generic
 from .cysax import cydist_sax
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
-def cdist_sax(dataset1, breakpoints_avg, size_fitted, dataset2=None,
-              n_jobs=None, verbose=0):
+def cdist_sax(
+    dataset1,
+    breakpoints_avg,
+    size_fitted,
+    dataset2=None,
+    n_jobs=None,
+    verbose=0
+):
     r"""Calculates a matrix of distances (MINDIST) on SAX-transformed data,
     as presented in [1]_. It is important to note that this function
     expects the timeseries in dataset1 and dataset2 to be normalized
@@ -58,5 +67,40 @@ def cdist_sax(dataset1, breakpoints_avg, size_fitted, dataset2=None,
            discovery 15.2 (2007): 107-144.
 
     """  # noqa: E501
-    return _cdist_generic(cydist_sax, dataset1, dataset2, n_jobs, verbose,
-                          False, int, None, breakpoints_avg, size_fitted)
+    be = instantiate_backend("numpy")
+    dataset1 = to_time_series_dataset(dataset1, dtype=int,  be=be)
+    if dataset2 is not None:
+        dataset2 = to_time_series_dataset(dataset2, dtype=int, be=be)
+    return _cdist_sax(
+        dataset1=dataset1,
+        dataset2=dataset2,
+        n_jobs=n_jobs,
+        verbose=verbose,
+        be=be,
+        breakpoints=breakpoints_avg,
+        original_size=size_fitted
+    )
+
+
+def _cdist_sax(
+    dataset1,
+    breakpoints,
+    original_size,
+    dataset2=None,
+    n_jobs=None,
+    verbose=0,
+    be=None
+):
+    if be is None:
+        be = instantiate_backend("numpy")
+    return _cdist_generic(
+        dist_fun=cydist_sax,
+        dataset1=dataset1,
+        dataset2=dataset2,
+        n_jobs=n_jobs,
+        verbose=verbose,
+        compute_diagonal=False,
+        be=be,
+        breakpoints=breakpoints,
+        original_size=original_size
+    )

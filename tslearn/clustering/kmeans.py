@@ -16,7 +16,12 @@ from tslearn.barycenters import (
 )
 from tslearn.bases import BaseModelPackage, TimeSeriesMixin
 from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
-from tslearn.metrics import cdist_dtw, cdist_gak, cdist_soft_dtw, sigma_gak
+from tslearn.metrics import (
+    _cdist_dtw,
+    _cdist_gak,
+    _cdist_soft_dtw,
+    sigma_gak
+)
 from tslearn.utils import (
     check_array,
     check_dims,
@@ -263,7 +268,7 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
         kernel_params = self._get_kernel_params()
         if self.kernel == "gak":
             try:
-                return cdist_gak(
+                return _cdist_gak(
                     X, Y, n_jobs=self.n_jobs, verbose=self.verbose, **kernel_params
                 )
             except ZeroDivisionError:
@@ -652,7 +657,7 @@ class TimeSeriesKMeans(
                 if self.metric == "dtw":
 
                     def metric_fun(x, y):
-                        return cdist_dtw(
+                        return _cdist_dtw(
                             x,
                             y,
                             n_jobs=self.n_jobs,
@@ -663,7 +668,7 @@ class TimeSeriesKMeans(
                 elif self.metric == "softdtw":
 
                     def metric_fun(x, y):
-                        return cdist_soft_dtw(x, y, **metric_params)
+                        return _cdist_soft_dtw(x, y, **metric_params)
 
                 else:
                     raise ValueError(
@@ -706,7 +711,7 @@ class TimeSeriesKMeans(
                 metric="euclidean",
             )
         elif self.metric == "dtw":
-            return cdist_dtw(
+            return _cdist_dtw(
                 X,
                 self.cluster_centers_,
                 n_jobs=self.n_jobs,
@@ -714,7 +719,7 @@ class TimeSeriesKMeans(
                 **metric_params
             )
         elif self.metric == "softdtw":
-            return cdist_soft_dtw(X, self.cluster_centers_, **metric_params)
+            return _cdist_soft_dtw(X, self.cluster_centers_, **metric_params)
         else:
             raise ValueError(
                 "Incorrect metric: %s (should be one of 'dtw', "
@@ -728,7 +733,7 @@ class TimeSeriesKMeans(
             self.labels_ = matched_labels
             _check_no_empty_cluster(self.labels_, self.n_clusters)
             if self.dtw_inertia and self.metric != "dtw":
-                inertia_dists = cdist_dtw(
+                inertia_dists = _cdist_dtw(
                     X, self.cluster_centers_, n_jobs=self.n_jobs, verbose=self.verbose
                 )
             else:

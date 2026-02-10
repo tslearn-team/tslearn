@@ -9,11 +9,11 @@ from sklearn.utils.validation import check_is_fitted
 from tslearn.bases import BaseModelPackage, TimeSeriesMixin
 from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from tslearn.metrics import (
-    cdist_dtw,
-    cdist_ctw,
-    cdist_soft_dtw,
-    cdist_sax,
-    cdist_frechet,
+    _cdist_dtw,
+    _cdist_ctw,
+    _cdist_soft_dtw,
+    _cdist_sax,
+    _cdist_frechet,
     TSLEARN_VALID_METRICS
 )
 from tslearn.piecewise import SymbolicAggregateApproximation
@@ -70,25 +70,25 @@ class KNeighborsTimeSeriesMixin(TimeSeriesMixin):
         X = to_time_series_dataset(X)
 
         if self._ts_metric == "dtw":
-            X_ = cdist_dtw(
+            X_ = _cdist_dtw(
                 X,
                 other_X,
                 n_jobs=self.n_jobs,
                 **metric_params)
         elif self._ts_metric == "ctw":
-            X_ = cdist_ctw(X, other_X, **metric_params)
+            X_ = _cdist_ctw(X, other_X, **metric_params)
         elif self._ts_metric == "softdtw":
-            X_ = cdist_soft_dtw(X, other_X, **metric_params)
+            X_ = _cdist_soft_dtw(X, other_X, **metric_params)
         elif self._ts_metric == "sax":
             X = self._sax_preprocess(X, **metric_params)
-            X_ = cdist_sax(
+            X_ = _cdist_sax(
                 X,
                 self._sax.breakpoints_avg_,
                 self._sax._X_fit_dims_[1],
                 other_X,
                 n_jobs=self.n_jobs)
         elif self._ts_metric == "frechet":
-            X_ = cdist_frechet(
+            X_ = _cdist_frechet(
                 X,
                 other_X,
                 n_jobs=self.n_jobs,
@@ -385,7 +385,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin,
             X = check_dims(X, X_fit_dims=self._ts_fit.shape, extend=True,
                            check_n_features_only=True)
             if self._ts_metric == "dtw":
-                X_ = cdist_dtw(
+                X_ = _cdist_dtw(
                     X,
                     self._ts_fit,
                     n_jobs=self.n_jobs,
@@ -393,11 +393,11 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin,
                     **metric_params
                 )
             elif self._ts_metric == "ctw":
-                X_ = cdist_ctw(X, self._ts_fit, **metric_params)
+                X_ = _cdist_ctw(X, self._ts_fit, **metric_params)
             elif self._ts_metric == "softdtw":
-                X_ = cdist_soft_dtw(X, self._ts_fit, **metric_params)
+                X_ = _cdist_soft_dtw(X, self._ts_fit, **metric_params)
             elif self._ts_metric == "frechet":
-                X_ = cdist_frechet(
+                X_ = _cdist_frechet(
                     X,
                     self._ts_fit,
                     n_jobs=self.n_jobs,

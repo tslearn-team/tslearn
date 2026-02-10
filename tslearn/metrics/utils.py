@@ -6,7 +6,8 @@ import numpy
 
 from tslearn.backend import instantiate_backend
 from tslearn.backend.pytorch_backend import HAS_TORCH
-from tslearn.utils import to_time_series, to_time_series_dataset
+from tslearn.utils import to_time_series
+from tslearn.utils.utils import _to_time_series
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
@@ -90,9 +91,9 @@ def _cdist_generic(
     dataset2,
     n_jobs,
     verbose,
+    be,
     compute_diagonal=True,
     dtype=float,
-    be=None,
     *args,
     **kwargs
 ):
@@ -151,34 +152,69 @@ def _cdist_generic(
     cdist : array-like, shape=(n_ts1, n_ts2)
         Cross-similarity matrix.
     """  # noqa: E501
-    be = instantiate_backend(be, dataset1, dataset2)
-    dataset1 = to_time_series_dataset(dataset1, dtype=dtype, be=be)
+    n_ts_1 = len(dataset1)
+    use_parallel = n_jobs not in [None, 1]
 
     if dataset2 is None:
         # Inspired from code by @GillesVandewiele:
         # https://github.com/rtavenar/tslearn/pull/128#discussion_r314978479
-        matrix = be.zeros((len(dataset1), len(dataset1)))
+        matrix = be.zeros((n_ts_1, n_ts_1), dtype=dtype)
         indices = be.triu_indices(
-            len(dataset1), k=0 if compute_diagonal else 1, m=len(dataset1)
+            n_ts_1, k=0 if compute_diagonal else 1, m=n_ts_1
         )
 
-        matrix[indices] = be.array(
-            Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
-                delayed(dist_fun)(dataset1[i], dataset1[j], *args, **kwargs)
-                for i in range(len(dataset1))
-                for j in range(i if compute_diagonal else i + 1, len(dataset1))
+        if use_parallel:
+            cdists = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
+                delayed(dist_fun)(
+                    _to_time_series(dataset1[i], True, be),
+                    _to_time_series(dataset1[j], True, be),
+                    *args,
+                    **kwargs
+                )
+                for i in range(n_ts_1)
+                for j in range(i if compute_diagonal else i + 1, n_ts_1)
             )
-        )
+        else:
+             cdists = [
+                dist_fun(
+                    _to_time_series(dataset1[i], True, be),
+                    _to_time_series(dataset1[j], True, be),
+                    *args,
+                    **kwargs
+                )
+                for i in range(n_ts_1)
+                for j in range(i if compute_diagonal else i + 1, n_ts_1)
+            ]
 
-        indices = be.tril_indices(len(dataset1), k=-1, m=len(dataset1))
+        matrix[indices] = be.array(cdists, dtype=dtype)
+        indices = be.tril_indices(n_ts_1, k=-1, m=n_ts_1)
         matrix[indices] = matrix.T[indices]
 
         return matrix
     else:
-        dataset2 = to_time_series_dataset(dataset2, dtype=dtype, be=be)
-        matrix = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
-            delayed(dist_fun)(dataset1[i], dataset2[j], *args, **kwargs)
-            for i in range(len(dataset1))
-            for j in range(len(dataset2))
-        )
-        return be.reshape(be.array(matrix), (len(dataset1), -1))
+        n_ts_2 = len(dataset2)
+
+        if use_parallel:
+            cdists = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
+                delayed(dist_fun)(
+                    _to_time_series(dataset1[i], True, be),
+                    _to_time_series(dataset2[j], True, be),
+                    *args,
+                    **kwargs
+                )
+                for i in range(n_ts_1)
+                for j in range(n_ts_2)
+            )
+        else:
+            cdists = [
+                dist_fun(
+                    _to_time_series(dataset1[i], True, be),
+                    _to_time_series(dataset2[j], True, be),
+                    *args,
+                    **kwargs
+                )
+                for i in range(n_ts_1)
+                for j in range(n_ts_2)
+            ]
+        matrix = be.array(cdists, dtype=dtype).reshape(n_ts_1, n_ts_2)
+        return matrix

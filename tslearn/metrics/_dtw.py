@@ -1,16 +1,21 @@
-from joblib import delayed, Parallel
-
 from numba import njit
 
 import numpy
 
 from tslearn.backend import instantiate_backend
 from tslearn.backend.pytorch_backend import HAS_TORCH
-from tslearn.metrics._masks import GLOBAL_CONSTRAINT_CODE, _compute_mask, _njit_compute_mask
-from tslearn.metrics.utils import _njit_accumulated_matrix, _accumulated_matrix
 from tslearn.utils import to_time_series, to_time_series_dataset
-from tslearn.utils.utils import _to_time_series
 
+from ._masks import (
+    GLOBAL_CONSTRAINT_CODE,
+    _compute_mask,
+    _njit_compute_mask
+)
+from .utils import (
+    _njit_accumulated_matrix,
+    _accumulated_matrix,
+    _cdist_generic
+)
 
 def dtw(
     s1,
@@ -484,67 +489,43 @@ def cdist_dtw(
     """  # noqa: E501
     be = instantiate_backend(be, dataset1, dataset2)
     dataset1 = to_time_series_dataset(dataset1, be=be)
-    n_ts_1 = dataset1.shape[0]
-
-    mask_args = {
-        "global_constraint": GLOBAL_CONSTRAINT_CODE[global_constraint],
-        "sakoe_chiba_radius": sakoe_chiba_radius,
-        "itakura_max_slope": itakura_max_slope,
-    }
-    dtw_ = _njit_dtw if be.is_numpy else _dtw
-    use_parallel = n_jobs not in [None, 1]
-
-    if dataset2 is None:
-        matrix = be.zeros((n_ts_1, n_ts_1))
-        indices = be.triu_indices(n_ts_1, k=1, m=n_ts_1)
-        if use_parallel:
-            matrix[indices] = be.array(
-                Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
-                    delayed(dtw_)(
-                        _to_time_series(dataset1[i], True, be),
-                        _to_time_series(dataset1[j], True, be),
-                        **mask_args
-                    )
-                    for i in range(n_ts_1)
-                    for j in range(i + 1, n_ts_1)
-                )
-            )
-        else:
-            matrix[indices] = be.array([
-                dtw_(
-                    _to_time_series(dataset1[i], True, be),
-                    _to_time_series(dataset1[j], True, be),
-                    **mask_args
-                )
-                for i in range(n_ts_1)
-                for j in range(i + 1, n_ts_1)
-            ])
-        indices = be.tril_indices(n_ts_1, k=-1, m=n_ts_1)
-        matrix[indices] = matrix.T[indices]
-        return matrix
-    else:
+    if dataset2 is not None:
         dataset2 = to_time_series_dataset(dataset2, be=be)
-        n_ts_2 = dataset2.shape[0]
-        if use_parallel:
-            matrix = be.array(
-                Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
-                    delayed(dtw_)(
-                        _to_time_series(dataset1[i], True, be),
-                        _to_time_series(dataset2[j], True, be),
-                        **mask_args
-                    )
-                    for i in range(n_ts_1)
-                    for j in range(n_ts_2)
-                )
-            )
-        else:
-            matrix = be.array([
-                dtw_(
-                    _to_time_series(dataset1[i], True, be),
-                    _to_time_series(dataset2[j], True, be),
-                    **mask_args
-                )
-                for i in range(n_ts_1)
-                for j in range(n_ts_2)
-            ])
-        return matrix.reshape((n_ts_1, n_ts_2))
+
+    return _cdist_dtw(
+        dataset1=dataset1,
+        dataset2=dataset2,
+        n_jobs=n_jobs,
+        verbose=verbose,
+        be=be,
+        global_constraint=global_constraint,
+        sakoe_chiba_radius=sakoe_chiba_radius,
+        itakura_max_slope=itakura_max_slope,
+    )
+
+
+def _cdist_dtw(
+    dataset1,
+    dataset2=None,
+    global_constraint=None,
+    sakoe_chiba_radius=None,
+    itakura_max_slope=None,
+    n_jobs=None,
+    verbose=0,
+    be=None,
+):
+    if be is None:
+        be = instantiate_backend(dataset1, dataset2)
+    dtw_ = _njit_dtw if be.is_numpy else _dtw
+    return _cdist_generic(
+        dist_fun=dtw_,
+        dataset1=dataset1,
+        dataset2=dataset2,
+        n_jobs=n_jobs,
+        verbose=verbose,
+        be=be,
+        compute_diagonal=False,
+        global_constraint=GLOBAL_CONSTRAINT_CODE[global_constraint],
+        sakoe_chiba_radius=sakoe_chiba_radius,
+        itakura_max_slope=itakura_max_slope,
+    )
