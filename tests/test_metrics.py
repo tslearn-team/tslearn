@@ -1028,11 +1028,11 @@ def test_frechet():
 
 def test_sax():
 
-    expected = np.array([[0,1], [1,0]])
+    expected = np.array([[0, 1], [1, 0]])
     dists = tslearn.metrics.cdist_sax(
         [[-1, 0, 1], [1, 0, 1]],
-        [[-1, 0, 1], [1, 0, 1]],
         [-0.5, 0., 0.5],
-        3
+        3,
+        dataset2=[[-1, 0, 1], [1, 0, 1]],
     )
     np.testing.assert_equal(dists, expected)
