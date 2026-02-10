@@ -106,7 +106,7 @@ def frechet(
         >>> s2 = torch.tensor([[3.0], [4.0], [-3.0]])
         >>> sim = frechet(s1, s2, be="pytorch")
         >>> print(sim)
-        tensor(6., grad_fn=<SelectBackward0>)
+        tensor(6., grad_fn=<SqrtBackward0>)
         >>> sim.backward()
         >>> print(s1.grad)
         tensor([[0.],
@@ -117,7 +117,7 @@ def frechet(
         >>> s2_2d = torch.tensor([[3.0, 3.0], [4.0, 4.0], [-3.0, -3.0]])
         >>> sim = frechet(s1_2d, s2_2d, be="pytorch")
         >>> print(sim)
-        tensor(8.4853, grad_fn=<SelectBackward0>)
+        tensor(8.4853, grad_fn=<SqrtBackward0>)
         >>> sim.backward()
         >>> print(s1_2d.grad)
         tensor([[0.0000, 0.0000],
