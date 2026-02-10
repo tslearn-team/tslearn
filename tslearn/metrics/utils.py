@@ -152,6 +152,10 @@ def _cdist_generic(
     cdist : array-like, shape=(n_ts1, n_ts2)
         Cross-similarity matrix.
     """  # noqa: E501
+
+    if be is None:
+        be = instantiate_backend(dataset1, dataset2)
+
     n_ts_1 = len(dataset1)
     use_parallel = n_jobs not in [None, 1]
 
