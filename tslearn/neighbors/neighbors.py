@@ -37,6 +37,8 @@ class KNeighborsTimeSeriesMixin(TimeSeriesMixin):
                 alphabet_size_avg=alphabet_size_avg,
                 scale=scale
             )
+
+        X = to_time_series_dataset(X)
         X_sax = self._sax.fit_transform(X)
 
         return X_sax

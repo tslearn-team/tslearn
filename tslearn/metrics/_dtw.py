@@ -1,5 +1,3 @@
-"""DTW metric toolbox."""
-
 from numba import njit
 
 import numpy
@@ -14,11 +12,10 @@ from ._masks import (
     _njit_compute_mask
 )
 from .utils import (
-    _njit_compute_path,
-    _compute_path,
+    _njit_accumulated_matrix,
+    _accumulated_matrix,
     _cdist_generic
 )
-
 
 def dtw(
     s1,
@@ -266,88 +263,47 @@ def dtw_path(
         dtw_path_ = _njit_dtw_path
     else:
         dtw_path_ = _dtw_path
-    dist, path = dtw_path_(
-        s1,
-        s2,
-        global_constraint_,
-        sakoe_chiba_radius,
-        itakura_max_slope
-    )
+    dist, path = dtw_path_(s1, s2, global_constraint_, sakoe_chiba_radius, itakura_max_slope)
     return path, dist
 
 
-def accumulated_matrix(s1, s2, mask, be=None):
-    """Compute the DTW accumulated cost matrix score between two time series.
+def __make_compute_path(backend):
 
-    It is not required that both time series share the same size, but they must
-    be the same dimension.
-
-    Parameters
-    ----------
-    s1 : array-like, shape=(sz1,) or (sz1, d)
-        First time series.
-    s2 : array-like, shape=(sz2,) or (sz2, d)
-        Second time series.
-    mask : array-like, shape=(sz1, sz2)
-        Mask used to constrain the region of computation. Unconsidered cells must have False values.
-    be : Backend object or string or None
-        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
-        the NumPy backend is used.
-        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
-        the PyTorch backend is used.
-        If `be` is `None`, the backend is determined by the input arrays.
-        See our :ref:`dedicated user-guide page <backend>` for more information.
-
-    Returns
-    -------
-    mat : array-like, shape=(sz1, sz2)
-        Accumulated cost matrix. Non computed cells due to masking have infinite value.
-    """
-    be = instantiate_backend(be, s1, s2)
-    s1 = to_time_series(s1, be=be)
-    s2 = to_time_series(s2, be=be)
-
-    if be.is_numpy:
-        compute_accumulated_matrix = _njit_accumulated_matrix
-    else:
-        compute_accumulated_matrix = _accumulated_matrix
-    return compute_accumulated_matrix(s1, s2, mask)
-
-
-def __make_accumulated_matrix(backend):
-
-    def _accumulated_matrix_generic(s1, s2, mask):
-        l1 = s1.shape[0]
-        l2 = s2.shape[0]
-        cum_sum = backend.full((l1 + 1, l2 + 1), backend.inf)
-        cum_sum[0, 0] = 0.0
-
-        for i in range(l1):
-            for j in range(l2):
-                if mask[i, j]:
-                    dist = 0.0
-                    for di in range(s1[i].shape[0]):
-                        diff = s1[i][di] - s2[j][di]
-                        dist += diff * diff
-                    cum_sum[i + 1, j + 1] = dist
-                    cum_sum[i + 1, j + 1] += min(
-                        cum_sum[i, j + 1],
-                        cum_sum[i + 1, j],
-                        cum_sum[i, j]
-                    )
-        return cum_sum[1:, 1:]
-
+    def _compute_path_generic(acc_cost_mat):
+        sz1, sz2 = acc_cost_mat.shape
+        path = [(sz1 - 1, sz2 - 1)]
+        while path[-1] != (0, 0):
+            i, j = path[-1]
+            if i == 0:
+                path.append((0, j - 1))
+            elif j == 0:
+                path.append((i - 1, 0))
+            else:
+                arr = backend.array(
+                    [
+                        acc_cost_mat[i - 1][j - 1],
+                        acc_cost_mat[i - 1][j],
+                        acc_cost_mat[i][j - 1],
+                    ]
+                )
+                argmin = backend.argmin(arr)
+                if argmin == 0:
+                    path.append((i - 1, j - 1))
+                elif argmin == 1:
+                    path.append((i - 1, j))
+                else:
+                    path.append((i, j - 1))
+        return path[::-1]
     if backend is numpy:
-        return njit(nogil=True)(_accumulated_matrix_generic)
+        return njit(nogil=True)(_compute_path_generic)
     else:
-        return _accumulated_matrix_generic
+        return _compute_path_generic
 
-
-_njit_accumulated_matrix = __make_accumulated_matrix(numpy)
+_njit_compute_path = __make_compute_path(numpy)
 if HAS_TORCH:
-    _accumulated_matrix = __make_accumulated_matrix(instantiate_backend("TorchBackend"))
+    _compute_path = __make_compute_path(instantiate_backend("torch"))
 else:
-    _accumulated_matrix = _njit_accumulated_matrix
+    _compute_path = _njit_compute_path
 
 
 def __make_dtw(backend):

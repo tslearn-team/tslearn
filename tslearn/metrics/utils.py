@@ -1,65 +1,31 @@
 from joblib import Parallel, delayed
 
-from numba import njit, prange
+from numba import njit
 
 import numpy
 
 from tslearn.backend import instantiate_backend
 from tslearn.backend.pytorch_backend import HAS_TORCH
+from tslearn.utils import to_time_series
 from tslearn.utils.utils import _to_time_series
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
 
 
-def __make_compute_path(backend):
+def accumulated_matrix(s1, s2, mask, be=None):
+    """Compute the accumulated cost matrix score between two time series.
 
-    def _compute_path_generic(acc_cost_mat):
-        sz1, sz2 = acc_cost_mat.shape
-        path = [(sz1 - 1, sz2 - 1)]
-        while path[-1] != (0, 0):
-            i, j = path[-1]
-            if i == 0:
-                path.append((0, j - 1))
-            elif j == 0:
-                path.append((i - 1, 0))
-            else:
-                arr = backend.array(
-                    [
-                        acc_cost_mat[i - 1][j - 1],
-                        acc_cost_mat[i - 1][j],
-                        acc_cost_mat[i][j - 1],
-                    ]
-                )
-                argmin = backend.argmin(arr)
-                if argmin == 0:
-                    path.append((i - 1, j - 1))
-                elif argmin == 1:
-                    path.append((i - 1, j))
-                else:
-                    path.append((i, j - 1))
-        return path[::-1]
-    if backend is numpy:
-        return njit(nogil=True)(_compute_path_generic)
-    else:
-        return _compute_path_generic
-
-_njit_compute_path = __make_compute_path(numpy)
-if HAS_TORCH:
-    _compute_path = __make_compute_path(instantiate_backend("torch"))
-else:
-    _compute_path = _njit_compute_path
-
-
-def accumulated_matrix_from_dist_matrix(dist_matrix, mask, be=None):
-    """Compute the accumulated cost matrix score between two time series using
-    a precomputed distance matrix.
+    It is not required that both time series share the same size, but they must
+    be the same dimension.
 
     Parameters
     ----------
-    dist_matrix : array-like, shape=(sz1, sz2)
-        Array containing the pairwise distances.
+    s1 : array-like, shape=(sz1,) or (sz1, d)
+        First time series.
+    s2 : array-like, shape=(sz2,) or (sz2, d)
+        Second time series.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have False values.
+        Mask used to constrain the region of computation. Unconsidered cells must have False values.
     be : Backend object or string or None
         Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
         the NumPy backend is used.
@@ -71,50 +37,52 @@ def accumulated_matrix_from_dist_matrix(dist_matrix, mask, be=None):
     Returns
     -------
     mat : array-like, shape=(sz1, sz2)
-        Accumulated cost matrix.
+        Accumulated cost matrix. Non computed cells due to masking have infinite value.
     """
-    be = instantiate_backend(be, dist_matrix)
-    dist_matrix = be.array(dist_matrix)
-    if be.isnumpy:
-        acc_matrix_from_dist_matrix_ = _njit_acc_matrix_from_dist_matrix
+    be = instantiate_backend(be, s1, s2)
+    s1 = to_time_series(s1, be=be)
+    s2 = to_time_series(s2, be=be)
+
+    if be.is_numpy:
+        compute_accumulated_matrix = _njit_accumulated_matrix
     else:
-        acc_matrix_from_dist_matrix_ = _acc_matrix_from_dist_matrix
+        compute_accumulated_matrix = _accumulated_matrix
+    return compute_accumulated_matrix(s1, s2, mask)
 
-    return acc_matrix_from_dist_matrix_(dist_matrix, mask)
 
+def __make_accumulated_matrix(backend):
 
-def __make_acc_matrix_from_dist_matrix(backend):
-    if backend is numpy:
-        range_ = prange
-    else:
-        range_ = range
-
-    def _acc_matrix_from_dist_matrix_generic(dist_matrix, mask):
-        l1, l2 = dist_matrix.shape
+    def _accumulated_matrix_generic(s1, s2, mask):
+        l1 = s1.shape[0]
+        l2 = s2.shape[0]
         cum_sum = backend.full((l1 + 1, l2 + 1), backend.inf)
         cum_sum[0, 0] = 0.0
 
-        for i in range_(l1):
-            for j in range_(l2):
+        for i in range(l1):
+            for j in range(l2):
                 if mask[i, j]:
-                    cum_sum[i + 1, j + 1] = max(
-                        dist_matrix[i, j],
-                        min(cum_sum[i, j + 1],
-                            cum_sum[i + 1, j],
-                            cum_sum[i, j])
+                    dist = 0.0
+                    for di in range(s1[i].shape[0]):
+                        diff = s1[i][di] - s2[j][di]
+                        dist += diff * diff
+                    cum_sum[i + 1, j + 1] = dist
+                    cum_sum[i + 1, j + 1] += min(
+                        cum_sum[i, j + 1],
+                        cum_sum[i + 1, j],
+                        cum_sum[i, j]
                     )
         return cum_sum[1:, 1:]
+
     if backend is numpy:
-        return njit(nogil=True)(_acc_matrix_from_dist_matrix_generic)
+        return njit(nogil=True)(_accumulated_matrix_generic)
     else:
-        return _acc_matrix_from_dist_matrix_generic
+        return _accumulated_matrix_generic
 
-_njit_acc_matrix_from_dist_matrix = __make_acc_matrix_from_dist_matrix(numpy)
+_njit_accumulated_matrix = __make_accumulated_matrix(numpy)
 if HAS_TORCH:
-    _acc_matrix_from_dist_matrix = __make_acc_matrix_from_dist_matrix(instantiate_backend("torch"))
+    _accumulated_matrix = __make_accumulated_matrix(instantiate_backend("TorchBackend"))
 else:
-    _acc_matrix_from_dist_matrix = _njit_acc_matrix_from_dist_matrix
-
+    _accumulated_matrix = _njit_accumulated_matrix
 
 
 def _cdist_generic(

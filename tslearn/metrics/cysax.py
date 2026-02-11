@@ -40,9 +40,9 @@ def cydist_sax(sax1, sax2, breakpoints, original_size):
 
     Parameters
     ----------
-    sax1 : array-like, shape=(sz, d)
+    sax1 : array-like, shape=(sz, d), dtype=float64 (Linux and MacOS) or float32 (Windows)
         SAX representation of a time series.
-    sax2 : array-like, shape=(sz, d)
+    sax2 : array-like, shape=(sz, d), dtype=float64 (Linux and MacOS) or float32 (Windows)
         SAX representation of another time series.
     breakpoints : array-like, ndim=1, dtype=float64
         The breakpoints used to assign the alphabet symbols.

@@ -21,8 +21,7 @@ from ._dtw import(
     dtw,
     dtw_path,
     cdist_dtw,
-    _cdist_dtw,
-    accumulated_matrix as dtw_accumulated_matrix
+    _cdist_dtw
 )
 from .dtw_variants import (
    dtw_limited_warping_length,
@@ -60,9 +59,9 @@ from ._frechet import (
     frechet_path,
     frechet_path_from_metric,
     cdist_frechet,
-    _cdist_frechet,
-    accumulated_matrix as frechet_accumulated_matrix
+    _cdist_frechet
 )
+from .utils import accumulated_matrix
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -87,13 +86,12 @@ __all__ = [
     "TSLEARN_VALID_METRICS",
     "VARIABLE_LENGTH_METRICS",
     "GLOBAL_CONSTRAINT_CODE",
+    "accumulated_matrix",
     "compute_mask",
     "itakura_mask",
     "sakoe_chiba_mask",
     "dtw",
     "dtw_path",
-    "dtw_accumulated_matrix",
-    "dtw_path_from_metric",
     "cdist_dtw",
     "dtw_limited_warping_length",
     "dtw_path_limited_warping_length",
@@ -101,6 +99,7 @@ __all__ = [
     "subsequence_cost_matrix",
     "dtw_limited_warping_length",
     "dtw_path_limited_warping_length",
+    "dtw_path_from_metric",
     "dtw_subsequence_path",
     "lb_envelope",
     "lb_keogh",
@@ -126,7 +125,6 @@ __all__ = [
     "y_shifted_sbd_vec",
     "frechet",
     "frechet_path",
-    "frechet_accumulated_matrix",
     "frechet_path_from_metric",
     "cdist_frechet"
 ]
