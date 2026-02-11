@@ -82,7 +82,13 @@ def test_kmeans():
                   km.cluster_centers_.reshape((3, -1)))
     np.testing.assert_allclose(km.labels_, dists.argmin(axis=1))
     np.testing.assert_allclose(km.labels_, km.predict(time_series))
-    expected_inertia = np.sum(dists[i, km.labels_[i]] ** 2 for i in range(n)) / n
+    expected_inertia = np.sum(
+        np.fromiter(
+            (dists[i, km.labels_[i]] ** 2 for i in range(n)),
+            dtype=float
+        )
+    ) / n
+
     assert km.inertia_ == expected_inertia
 
     km_dtw_inertia = TimeSeriesKMeans(
@@ -94,7 +100,12 @@ def test_kmeans():
         random_state=rng
     ).fit(time_series)
     dists = cdist_dtw(time_series, km_dtw_inertia.cluster_centers_)
-    expected_inertia = np.sum(dists[i, km_dtw_inertia.labels_[i]]**2 for i in range(n)) / n
+    expected_inertia = np.sum(
+        np.fromiter(
+            (dists[i, km_dtw_inertia.labels_[i]]**2 for i in range(n)),
+            dtype=float
+        )
+    ) / n
     assert km_dtw_inertia.inertia_ == expected_inertia
     assert km.inertia_ >= km_dtw_inertia.inertia_
 
