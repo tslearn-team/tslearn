@@ -23,14 +23,14 @@ except ImportError:
     array_types = ["numpy", "list"]
 
 
-def test_accumulated_matrix():
+def test_dtw_accumulated_matrix():
     for be in backends:
         for array_type in array_types:
             backend = instantiate_backend(be, array_type)
             s1 = cast([1, 2, 3], array_type)
             s2 = cast([1.0, 2.0, 2.0, 3.0], array_type)
             mask = tslearn.metrics.compute_mask(s1, s2, be=be)
-            matrix_1 = tslearn.metrics.accumulated_matrix(s1, s2, mask,  be=be)
+            matrix_1 = tslearn.metrics.dtw_accumulated_matrix(s1, s2, mask,  be=be)
             with pytest.deprecated_call():
                 matrix_2 = tslearn.metrics.dtw_variants.accumulated_matrix(
                     to_time_series(s1),
@@ -921,22 +921,33 @@ def test_frechet():
             np.random.randn(3, 2)
         )
 
+    with pytest.raises(ValueError):
+        tslearn.metrics.frechet_path(
+            [],
+            np.random.randn(3, 2)
+        )
+
+    with pytest.raises(ValueError):
+        tslearn.metrics.frechet_path(
+            np.random.randn(3, 1),
+            np.random.randn(3, 2)
+        )
+
     np.random.seed(42)
     s1 = np.random.randn(10, 4)
     s2 = np.random.randn(10, 4)
 
     for be in backends:
         for array_type in array_types:
+            backend = instantiate_backend(be, array_type)
 
             path, dist = tslearn.metrics.frechet_path(
                 cast([1., 2, 3], array_type),
                 cast([1.0, 2.0, 2.0, 3.0], array_type),
                 be=be
             )
-            if be is not None:
-                assert be.belongs_to_backend(dist)
-            else:
-                assert instantiate_backend(array_type).belongs_to_backend(dist)
+            if not backend.is_numpy:
+                assert backend.belongs_to_backend(dist)
 
             np.testing.assert_allclose(dist, [0.])
             assert isinstance(path, list)
@@ -1021,10 +1032,21 @@ def test_frechet():
                 be=be or instantiate_backend(array_type)
             )
             np.testing.assert_allclose(dists, [[0.0, 2], [1.0, 1]], atol=1e-5)
-            if be is not None:
-                assert be.belongs_to_backend(dists)
-            else:
-                assert instantiate_backend(array_type).belongs_to_backend(dists)
+            assert backend.belongs_to_backend(dists)
+
+
+def test_frechet_accumulated_matrix():
+    for be in backends:
+        for array_type in array_types:
+            backend = instantiate_backend(be, array_type)
+            s1 = cast([1, 2, 3], array_type)
+            s2 = cast([1.0, 2.0, 2.0, 3.0], array_type)
+            mask = tslearn.metrics.compute_mask(s1, s2, be=be)
+            matrix = tslearn.metrics.frechet_accumulated_matrix(s1, s2, mask,  be=be)
+            expected = backend.array([[0.0, 1.0, 1.0, 4.0], [1.0, 0.0, 0.0, 1.0], [4.0, 1.0, 1.0, 0.0]])
+            assert backend.belongs_to_backend(matrix)
+            np.testing.assert_array_equal(matrix, expected)
+
 
 def test_sax():
 

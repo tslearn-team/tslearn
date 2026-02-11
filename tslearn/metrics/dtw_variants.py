@@ -445,7 +445,7 @@ def njit_accumulated_matrix_from_dist_matrix(dist_matrix, mask):
 
     for i in prange(l1):
         for j in prange(l2):
-            if numpy.isfinite(mask[i, j]):
+            if mask[i, j]:
                 cum_sum[i + 1, j + 1] = dist_matrix[i, j]
                 cum_sum[i + 1, j + 1] += min(
                     cum_sum[i, j + 1], cum_sum[i + 1, j], cum_sum[i, j]
@@ -1743,12 +1743,12 @@ def itakura_mask(sz1, sz2, max_slope=2.0, be=None):
     # Post-check
     raise_warning = False
     for i in range(sz1):
-        if not be.any(be.isfinite(mask[i])):
+        if not be.any(mask[i]):
             raise_warning = True
             break
     if not raise_warning:
         for j in range(sz2):
-            if not be.any(be.isfinite(mask[:, j])):
+            if not be.any(mask[:, j]):
                 raise_warning = True
                 break
     if raise_warning:

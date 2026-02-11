@@ -1,22 +1,23 @@
 """Frechet metric toolbox."""
 
-import numpy
-
 from numba import njit
 
+import numpy
+
 from tslearn.backend import instantiate_backend
+from tslearn.backend.pytorch_backend import HAS_TORCH
 from tslearn.utils import to_time_series, to_time_series_dataset
 
-from ._dtw import (
-    _njit_compute_path,
-    _compute_path
-)
 from ._masks import (
     GLOBAL_CONSTRAINT_CODE,
     _njit_compute_mask,
     _compute_mask
 )
-from .utils import _cdist_generic
+from .utils import (
+    _cdist_generic,
+    _njit_compute_path,
+    _compute_path
+)
 
 
 def frechet(
@@ -103,7 +104,7 @@ def frechet(
         >>> s2 = torch.tensor([[3.0], [4.0], [-3.0]])
         >>> sim = frechet(s1, s2, be="pytorch")
         >>> print(sim)
-        tensor(6., grad_fn=<SelectBackward0>)
+        tensor(6., grad_fn=<SqrtBackward0>)
         >>> sim.backward()
         >>> print(s1.grad)
         tensor([[0.],
@@ -114,7 +115,7 @@ def frechet(
         >>> s2_2d = torch.tensor([[3.0, 3.0], [4.0, 4.0], [-3.0, -3.0]])
         >>> sim = frechet(s1_2d, s2_2d, be="pytorch")
         >>> print(sim)
-        tensor(8.4853, grad_fn=<SelectBackward0>)
+        tensor(8.4853, grad_fn=<SqrtBackward0>)
         >>> sim.backward()
         >>> print(s1_2d.grad)
         tensor([[0.0000, 0.0000],
@@ -130,7 +131,7 @@ def frechet(
 
         References
         ----------
-        .. [1] FRÉCHET, M. "Sur quelques points du calcul fonctionnel. 
+        .. [1] FRÉCHET, M. "Sur quelques points du calcul fonctionnel.
            Rendiconti del Circolo Mathematico di Palermo", 22, 1–74, 1906.
         .. [2] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
            spoken word recognition," IEEE Transactions on Acoustics, Speech and
@@ -140,162 +141,24 @@ def frechet(
     be = instantiate_backend(be, s1, s2)
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
-    return _frechet(
+
+    if s1.shape[0] == 0 or s2.shape[0] == 0:
+        raise ValueError(
+            "One of the input time series contains only nans or has zero length."
+        )
+
+    if s1.shape[1] != s2.shape[1]:
+        raise ValueError("All input time series must have the same feature size.")
+
+    global_constraint_ = GLOBAL_CONSTRAINT_CODE[global_constraint]
+    frechet_ = _njit_frechet if be.is_numpy else _frechet
+    return frechet_(
         s1,
         s2,
-        global_constraint,
+        global_constraint_,
         sakoe_chiba_radius,
         itakura_max_slope,
-        be
-    )[1]
-
-
-def _frechet(
-    s1,
-    s2,
-    global_constraint=None,
-    sakoe_chiba_radius=None,
-    itakura_max_slope=None,
-    be=None,
-    return_path=False,
-    metric="euclidean",
-    **kwds
-):
-    if be is None:
-        be = instantiate_backend(s1, s2)
-
-    if metric != "precomputed":
-
-        if s1.shape[0] == 0 or s2.shape[0] == 0:
-            raise ValueError(
-                "One of the input time series contains only nans or has zero length."
-            )
-
-        if s1.shape[1] != s2.shape[1]:
-           raise ValueError("All input time series must have the same feature size.")
-
-    else:
-        s2 = s1.T
-
-    compute_mask_ = _njit_compute_mask if be.is_numpy else _compute_mask
-    mask = compute_mask_(
-        len(s1),
-        len(s2),
-        GLOBAL_CONSTRAINT_CODE[global_constraint],
-        sakoe_chiba_radius=sakoe_chiba_radius,
-        itakura_max_slope=itakura_max_slope
     )
-
-    distance_matrix = None
-    if metric == "precomputed":
-        distance_matrix = s1
-    elif metric not in ["euclidean", "sqeuclidean"] and be.is_numpy:
-        distance_matrix = be.pairwise_distances(s1, s2, metric=metric, **kwds)
-
-    if distance_matrix is not None:
-        if be.is_numpy:
-            acc_matrix = _njit_frechet_accumulated_matrix_from_distance_matrix(distance_matrix, mask)
-        else:
-            acc_matrix = _frechet_accumulated_matrix_from_distance_matrix(distance_matrix, mask, be)
-    else:
-        if be.is_numpy:
-            acc_matrix = _njit_frechet_accumulated_matrix(s1, s2, mask, squared=metric=="sqeuclidean")
-        else:
-            acc_matrix = _frechet_accumulated_matrix(s1, s2, mask, be, metric, **kwds)
-
-    path = None
-    if return_path:
-        if be.is_numpy:
-            path = _njit_compute_path(acc_matrix)
-        else:
-            path = _compute_path(acc_matrix)
-
-    return path, acc_matrix[-1, -1]
-
-
-@njit
-def _njit_frechet_accumulated_matrix(s1, s2, mask, squared=True):
-    l1, l2 = s1.shape[0], s2.shape[0]
-
-    acc_matrix = numpy.full((l1 + 1, l2 + 1), numpy.inf)
-    acc_matrix[0, 0] = 0
-
-    for i in range(l1):
-        for j in range(l2):
-            if mask[i, j]:
-                local_distance = numpy.linalg.norm(s1[i] - s2[j])
-                if squared:
-                    local_distance = local_distance ** 2
-                acc_matrix[i + 1, j + 1] = max(
-                    local_distance,
-                    min(acc_matrix[i, j + 1],
-                        acc_matrix[i + 1, j],
-                        acc_matrix[i, j])
-                )
-
-    return acc_matrix[1:, 1:]
-
-
-def _frechet_accumulated_matrix(s1, s2, mask, backend, metric, **kwds):
-    l1, l2 = s1.shape[0], s2.shape[0]
-
-    acc_matrix = backend.full((l1 + 1, l2 + 1), numpy.inf)
-    acc_matrix[0, 0] = 0
-
-    for i in range(l1):
-        for j in range(l2):
-            if mask[i, j]:
-                local_distance = (
-                    backend.pairwise_distances(s1[i].reshape(1, -1),
-                                               s2[j].reshape(1, -1),
-                                               metric=metric,
-                                               **kwds)
-                )
-                acc_matrix[i + 1, j + 1] = max(
-                    local_distance,
-                    min(acc_matrix[i, j + 1],
-                        acc_matrix[i + 1, j],
-                        acc_matrix[i, j])
-                )
-    return acc_matrix[1:, 1:]
-
-
-@njit
-def _njit_frechet_accumulated_matrix_from_distance_matrix(distance_matrix, mask):
-    l1, l2 = distance_matrix.shape[0], distance_matrix.shape[1]
-
-    acc_matrix = numpy.full((l1 + 1, l2 + 1), numpy.inf)
-    acc_matrix[0, 0] = 0
-
-    for i in range(l1):
-        for j in range(l2):
-            if mask[i, j]:
-                acc_matrix[i + 1, j + 1] = max(
-                    distance_matrix[i, j],
-                    min(acc_matrix[i, j + 1],
-                        acc_matrix[i + 1, j],
-                        acc_matrix[i, j])
-                )
-
-    return acc_matrix[1:, 1:]
-
-
-def _frechet_accumulated_matrix_from_distance_matrix(distance_matrix, mask, backend):
-    l1, l2 = distance_matrix.shape[0], distance_matrix.shape[1]
-
-    acc_matrix = backend.full((l1 + 1, l2 + 1), numpy.inf)
-    acc_matrix[0, 0] = 0
-
-    for i in range(l1):
-        for j in range(l2):
-            if mask[i, j]:
-                acc_matrix[i + 1, j + 1] = max(
-                    distance_matrix[i, j],
-                    min(acc_matrix[i, j + 1],
-                        acc_matrix[i + 1, j],
-                        acc_matrix[i, j])
-                )
-    return acc_matrix[1:, 1:]
 
 
 def frechet_path(
@@ -394,15 +257,168 @@ def frechet_path(
     be = instantiate_backend(be, s1, s2)
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
-    return _frechet(
+
+    if s1.shape[0] == 0 or s2.shape[0] == 0:
+        raise ValueError(
+            "One of the input time series contains only nans or has zero length."
+        )
+
+    if s1.shape[1] != s2.shape[1]:
+        raise ValueError("All input time series must have the same feature size.")
+
+    global_constraint_ = GLOBAL_CONSTRAINT_CODE[global_constraint]
+    frechet_path_ = _njit_frechet_path if be.is_numpy else _frechet_path
+    dist, path = frechet_path_(
         s1,
         s2,
-        global_constraint,
+        global_constraint_,
         sakoe_chiba_radius,
-        itakura_max_slope,
-        be,
-        return_path=True
+        itakura_max_slope
     )
+    return path, dist
+
+
+def accumulated_matrix(s1, s2, mask, be=None):
+    """Compute the Frechet accumulated cost matrix score between two time series.
+
+    It is not required that both time series share the same size, but they must
+    be the same dimension.
+
+    Parameters
+    ----------
+    s1 : array-like, shape=(sz1,) or (sz1, d)
+        First time series.
+    s2 : array-like, shape=(sz2,) or (sz2, d)
+        Second time series.
+    mask : array-like, shape=(sz1, sz2)
+        Mask used to constrain the region of computation. Unconsidered cells must have False values.
+    be : Backend object or string or None
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
+
+    Returns
+    -------
+    mat : array-like, shape=(sz1, sz2)
+        Accumulated cost matrix. Non computed cells due to masking have infinite value.
+    """
+    be = instantiate_backend(be, s1, s2)
+    s1 = to_time_series(s1, be=be)
+    s2 = to_time_series(s2, be=be)
+
+    if be.is_numpy:
+        compute_accumulated_matrix = _njit_accumulated_matrix
+    else:
+        compute_accumulated_matrix = _accumulated_matrix
+    return compute_accumulated_matrix(s1, s2, mask)
+
+
+def __make_accumulated_matrix(backend):
+
+    def _accumulated_matrix_generic(s1, s2, mask):
+
+        l1, l2 = s1.shape[0], s2.shape[0]
+
+        acc_matrix = backend.full((l1 + 1, l2 + 1), backend.inf)
+        acc_matrix[0, 0] = 0
+
+        for i in range(l1):
+            for j in range(l2):
+                if mask[i, j]:
+                    dist = 0.0
+                    for di in range(s1[i].shape[0]):
+                        diff = s1[i][di] - s2[j][di]
+                        dist += diff * diff
+                    acc_matrix[i + 1, j + 1] = max(
+                        dist,
+                        min(acc_matrix[i, j + 1],
+                            acc_matrix[i + 1, j],
+                            acc_matrix[i, j])
+                    )
+
+        return acc_matrix[1:, 1:]
+
+    if backend is numpy:
+        return njit(nogil=True)(_accumulated_matrix_generic)
+    else:
+        return _accumulated_matrix_generic
+
+
+_njit_accumulated_matrix = __make_accumulated_matrix(numpy)
+if HAS_TORCH:
+    _accumulated_matrix = __make_accumulated_matrix(instantiate_backend("TorchBackend"))
+else:
+    _accumulated_matrix = _njit_accumulated_matrix
+
+
+def __make_frechet(backend):
+    if backend is numpy:
+        compute_mask_ = _njit_compute_mask
+        accumulated_matrix_ = _njit_accumulated_matrix
+    else:
+        compute_mask_ = _compute_mask
+        accumulated_matrix_ = _accumulated_matrix
+
+    def _frechet_generic(
+        s1,
+        s2,
+        global_constraint=0,
+        sakoe_chiba_radius=None,
+        itakura_max_slope=None
+    ):
+        mask = compute_mask_(s1.shape[0], s2.shape[0], global_constraint, sakoe_chiba_radius, itakura_max_slope)
+        cum_sum = accumulated_matrix_(s1, s2, mask)
+        return backend.sqrt(cum_sum[-1, -1])
+
+    if backend is numpy:
+        return njit(nogil=True)(_frechet_generic)
+    else:
+        return _frechet_generic
+
+
+_njit_frechet = __make_frechet(numpy)
+if HAS_TORCH:
+    _frechet = __make_frechet(instantiate_backend("torch"))
+else:
+    _frechet = _njit_frechet
+
+
+def __make_frechet_path(backend):
+    if backend is numpy:
+        compute_mask_ = _njit_compute_mask
+        accumulated_matrix_ = _njit_accumulated_matrix
+        compute_path_ = _njit_compute_path
+    else:
+        compute_mask_ = _compute_mask
+        accumulated_matrix_ = _accumulated_matrix
+        compute_path_ = _compute_path
+
+    def _frechet_path_generic(
+        s1,
+        s2,
+        global_constraint=0,
+        sakoe_chiba_radius=None,
+        itakura_max_slope=None,
+    ):
+        mask = compute_mask_(s1.shape[0], s2.shape[0], global_constraint, sakoe_chiba_radius, itakura_max_slope)
+        cum_sum = accumulated_matrix_(s1, s2, mask)
+        path = compute_path_(cum_sum)
+        return backend.sqrt(cum_sum[-1, -1]), path
+
+    if backend is numpy:
+        return njit(nogil=True)(_frechet_path_generic)
+    else:
+        return _frechet_path_generic
+
+
+_njit_frechet_path = __make_frechet_path(numpy)
+if HAS_TORCH:
+    _frechet_path = __make_frechet_path(instantiate_backend("torch"))
+else:
+    _frechet_path = _njit_frechet_path
 
 
 def frechet_path_from_metric(
@@ -545,7 +561,7 @@ def frechet_path_from_metric(
 
     References
     ----------
-    .. [1] FRÉCHET, M. "Sur quelques points du calcul fonctionnel. 
+    .. [1] FRÉCHET, M. "Sur quelques points du calcul fonctionnel.
        Rendiconti del Circolo Mathematico di Palermo", 22, 1–74, 1906.
     .. [2] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
        spoken word recognition," IEEE Transactions on Acoustics, Speech and
@@ -559,22 +575,72 @@ def frechet_path_from_metric(
 
     """  # noqa: E501
     be = instantiate_backend(be, s1, s2)
-    if metric != "precomputed":
+
+    compute_mask_ = _njit_compute_mask if be.is_numpy else _compute_mask
+
+    if metric == "precomputed":
+        s1 = be.array(s1)
+        sz1, sz2 = be.shape(s1)
+        mask = compute_mask_(
+            sz1,
+            sz2,
+            GLOBAL_CONSTRAINT_CODE[global_constraint],
+            sakoe_chiba_radius,
+            itakura_max_slope,
+        )
+        dist_mat = s1
+    else:
         s1 = to_time_series(s1, remove_nans=True, be=be)
         s2 = to_time_series(s2, remove_nans=True, be=be)
+        mask = compute_mask_(
+            len(s1),
+            len(s2),
+            GLOBAL_CONSTRAINT_CODE[global_constraint],
+            sakoe_chiba_radius,
+            itakura_max_slope,
+        )
+        dist_mat = be.pairwise_distances(s1, s2, metric=metric, **kwds)
+
+    if be.is_numpy:
+        acc_cost_mat = _njit_acc_matrix_from_dist_matrix(dist_mat, mask)
+        path = _njit_compute_path(acc_cost_mat)
     else:
-        s1 = be.array(s1)
-    return _frechet(
-        s1,
-        s2,
-        global_constraint,
-        sakoe_chiba_radius,
-        itakura_max_slope,
-        be,
-        return_path=True,
-        metric=metric,
-        **kwds
-    )
+        dist_mat = be.array(dist_mat)
+        acc_cost_mat = _acc_matrix_from_dist_matrix(dist_mat, mask)
+        path = _compute_path(acc_cost_mat)
+    return path, acc_cost_mat[-1, -1]
+
+
+def __make_acc_matrix_from_dist_matrix(backend):
+
+    def _acc_matrix_from_dist_matrix_generic(dist_matrix, mask):
+        l1, l2 = dist_matrix.shape
+        cum_sum = backend.full((l1 + 1, l2 + 1), backend.inf)
+        cum_sum[0, 0] = 0.0
+
+        for i in range(l1):
+            for j in range(l2):
+                if mask[i, j]:
+                    cum_sum[i + 1, j + 1] = max(
+                        dist_matrix[i, j],
+                        min(
+                            cum_sum[i, j + 1],
+                            cum_sum[i + 1, j],
+                            cum_sum[i, j]
+                        )
+                    )
+        return cum_sum[1:, 1:]
+    if backend is numpy:
+        return njit(nogil=True)(_acc_matrix_from_dist_matrix_generic)
+    else:
+        return _acc_matrix_from_dist_matrix_generic
+
+
+_njit_acc_matrix_from_dist_matrix = __make_acc_matrix_from_dist_matrix(numpy)
+if HAS_TORCH:
+    _acc_matrix_from_dist_matrix = __make_acc_matrix_from_dist_matrix(instantiate_backend("torch"))
+else:
+    _acc_matrix_from_dist_matrix = _njit_acc_matrix_from_dist_matrix
 
 
 def cdist_frechet(
@@ -687,7 +753,7 @@ def cdist_frechet(
 
     References
     ----------
-    .. [1] FRÉCHET, M. "Sur quelques points du calcul fonctionnel. 
+    .. [1] FRÉCHET, M. "Sur quelques points du calcul fonctionnel.
        Rendiconti del Circolo Mathematico di Palermo", 22, 1–74, 1906.
     .. [2] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
            spoken word recognition," IEEE Transactions on Acoustics, Speech and
@@ -697,6 +763,7 @@ def cdist_frechet(
     dataset1 = to_time_series_dataset(dataset1, be=be)
     if dataset2 is not None:
         dataset2 = to_time_series_dataset(dataset2, be=be)
+
     return _cdist_frechet(
         dataset1=dataset1,
         dataset2=dataset2,
@@ -721,16 +788,16 @@ def _cdist_frechet(
 ):
     if be is None:
         be = instantiate_backend(dataset1, dataset2)
-    # TODO: dev and use fully jitted _frechet for numpy backend
+    frechet_ = _njit_frechet if be.is_numpy else _frechet
     return _cdist_generic(
-        dist_fun=lambda *args, **kwargs: _frechet(*args, **kwargs)[1],
+        dist_fun=frechet_,
         dataset1=dataset1,
         dataset2=dataset2,
         n_jobs=n_jobs,
         verbose=verbose,
+        be=be,
         compute_diagonal=False,
         global_constraint=global_constraint,
         sakoe_chiba_radius=sakoe_chiba_radius,
         itakura_max_slope=itakura_max_slope,
-        be=be,
     )
