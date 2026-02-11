@@ -62,7 +62,7 @@ packaging==25.0
     # via
     #   matplotlib
     #   sphinx
-pillow==12.1.0
+pillow==12.1.1
     # via
     #   matplotlib
     #   sphinx-gallery
