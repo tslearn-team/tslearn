@@ -16,9 +16,7 @@ from ._masks import (
 from .utils import (
     _cdist_generic,
     _njit_compute_path,
-    _compute_path,
-    _njit_acc_matrix_from_dist_matrix,
-    _acc_matrix_from_dist_matrix
+    _compute_path
 )
 
 
@@ -611,6 +609,38 @@ def frechet_path_from_metric(
         acc_cost_mat = _acc_matrix_from_dist_matrix(dist_mat, mask)
         path = _compute_path(acc_cost_mat)
     return path, acc_cost_mat[-1, -1]
+
+
+def __make_acc_matrix_from_dist_matrix(backend):
+
+    def _acc_matrix_from_dist_matrix_generic(dist_matrix, mask):
+        l1, l2 = dist_matrix.shape
+        cum_sum = backend.full((l1 + 1, l2 + 1), backend.inf)
+        cum_sum[0, 0] = 0.0
+
+        for i in range(l1):
+            for j in range(l2):
+                if mask[i, j]:
+                    cum_sum[i + 1, j + 1] = max(
+                        dist_matrix[i, j],
+                        min(
+                            cum_sum[i, j + 1],
+                            cum_sum[i + 1, j],
+                            cum_sum[i, j]
+                        )
+                    )
+        return cum_sum[1:, 1:]
+    if backend is numpy:
+        return njit(nogil=True)(_acc_matrix_from_dist_matrix_generic)
+    else:
+        return _acc_matrix_from_dist_matrix_generic
+
+
+_njit_acc_matrix_from_dist_matrix = __make_acc_matrix_from_dist_matrix(numpy)
+if HAS_TORCH:
+    _acc_matrix_from_dist_matrix = __make_acc_matrix_from_dist_matrix(instantiate_backend("torch"))
+else:
+    _acc_matrix_from_dist_matrix = _njit_acc_matrix_from_dist_matrix
 
 
 def cdist_frechet(

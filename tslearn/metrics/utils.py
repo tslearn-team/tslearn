@@ -1,6 +1,6 @@
 from joblib import Parallel, delayed
 
-from numba import njit, prange
+from numba import njit
 
 import numpy
 
@@ -48,73 +48,6 @@ if HAS_TORCH:
     _compute_path = __make_compute_path(instantiate_backend("torch"))
 else:
     _compute_path = _njit_compute_path
-
-
-def accumulated_matrix_from_dist_matrix(dist_matrix, mask, be=None):
-    """Compute the accumulated cost matrix score between two time series using
-    a precomputed distance matrix.
-
-    Parameters
-    ----------
-    dist_matrix : array-like, shape=(sz1, sz2)
-        Array containing the pairwise distances.
-    mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have False values.
-    be : Backend object or string or None
-        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
-        the NumPy backend is used.
-        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
-        the PyTorch backend is used.
-        If `be` is `None`, the backend is determined by the input arrays.
-        See our :ref:`dedicated user-guide page <backend>` for more information.
-
-    Returns
-    -------
-    mat : array-like, shape=(sz1, sz2)
-        Accumulated cost matrix.
-    """
-    be = instantiate_backend(be, dist_matrix)
-    dist_matrix = be.array(dist_matrix)
-    if be.isnumpy:
-        acc_matrix_from_dist_matrix_ = _njit_acc_matrix_from_dist_matrix
-    else:
-        acc_matrix_from_dist_matrix_ = _acc_matrix_from_dist_matrix
-
-    return acc_matrix_from_dist_matrix_(dist_matrix, mask)
-
-
-def __make_acc_matrix_from_dist_matrix(backend):
-    if backend is numpy:
-        range_ = prange
-    else:
-        range_ = range
-
-    def _acc_matrix_from_dist_matrix_generic(dist_matrix, mask):
-        l1, l2 = dist_matrix.shape
-        cum_sum = backend.full((l1 + 1, l2 + 1), backend.inf)
-        cum_sum[0, 0] = 0.0
-
-        for i in range_(l1):
-            for j in range_(l2):
-                if mask[i, j]:
-                    cum_sum[i + 1, j + 1] = max(
-                        dist_matrix[i, j],
-                        min(cum_sum[i, j + 1],
-                            cum_sum[i + 1, j],
-                            cum_sum[i, j])
-                    )
-        return cum_sum[1:, 1:]
-    if backend is numpy:
-        return njit(nogil=True)(_acc_matrix_from_dist_matrix_generic)
-    else:
-        return _acc_matrix_from_dist_matrix_generic
-
-_njit_acc_matrix_from_dist_matrix = __make_acc_matrix_from_dist_matrix(numpy)
-if HAS_TORCH:
-    _acc_matrix_from_dist_matrix = __make_acc_matrix_from_dist_matrix(instantiate_backend("torch"))
-else:
-    _acc_matrix_from_dist_matrix = _njit_acc_matrix_from_dist_matrix
-
 
 
 def _cdist_generic(

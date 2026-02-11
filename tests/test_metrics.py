@@ -23,7 +23,7 @@ except ImportError:
     array_types = ["numpy", "list"]
 
 
-def test_accumulated_matrix():
+def test_dtw_accumulated_matrix():
     for be in backends:
         for array_type in array_types:
             backend = instantiate_backend(be, array_type)
@@ -1021,6 +1021,19 @@ def test_frechet():
             )
             np.testing.assert_allclose(dists, [[0.0, 2], [1.0, 1]], atol=1e-5)
             assert backend.belongs_to_backend(dists)
+
+
+def test_frechet_accumulated_matrix():
+    for be in backends:
+        for array_type in array_types:
+            backend = instantiate_backend(be, array_type)
+            s1 = cast([1, 2, 3], array_type)
+            s2 = cast([1.0, 2.0, 2.0, 3.0], array_type)
+            mask = tslearn.metrics.compute_mask(s1, s2, be=be)
+            matrix = tslearn.metrics.frechet_accumulated_matrix(s1, s2, mask,  be=be)
+            expected = backend.array([[0.0, 1.0, 1.0, 4.0], [1.0, 0.0, 0.0, 1.0], [4.0, 1.0, 1.0, 0.0]])
+            assert backend.belongs_to_backend(matrix)
+            np.testing.assert_array_equal(matrix, expected)
 
 
 def test_sax():
