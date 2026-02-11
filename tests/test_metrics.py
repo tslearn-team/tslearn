@@ -921,6 +921,18 @@ def test_frechet():
             np.random.randn(3, 2)
         )
 
+    with pytest.raises(ValueError):
+        tslearn.metrics.frechet_path(
+            [],
+            np.random.randn(3, 2)
+        )
+
+    with pytest.raises(ValueError):
+        tslearn.metrics.frechet_path(
+            np.random.randn(3, 1),
+            np.random.randn(3, 2)
+        )
+
     np.random.seed(42)
     s1 = np.random.randn(10, 4)
     s2 = np.random.randn(10, 4)
