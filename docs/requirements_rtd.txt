@@ -8,7 +8,7 @@ accessible-pygments==0.0.5
     # via pydata-sphinx-theme
 alabaster==1.0.0
     # via sphinx
-babel==2.17.0
+babel==2.18.0
     # via
     #   pydata-sphinx-theme
     #   sphinx
@@ -58,11 +58,11 @@ numpy==2.3.5
     #   tslearn (pyproject.toml)
 numpydoc==1.10.0
     # via tslearn (pyproject.toml)
-packaging==25.0
+packaging==26.0
     # via
     #   matplotlib
     #   sphinx
-pillow==12.1.0
+pillow==12.1.1
     # via
     #   matplotlib
     #   sphinx-gallery
@@ -75,7 +75,7 @@ pygments==2.19.2
     #   sphinx
 pypandoc==1.16.2
     # via tslearn (pyproject.toml)
-pyparsing==3.3.1
+pyparsing==3.3.2
     # via matplotlib
 python-dateutil==2.9.0.post0
     # via matplotlib
@@ -85,7 +85,7 @@ roman-numerals==4.1.0
     # via sphinx
 scikit-learn==1.8.0
     # via tslearn (pyproject.toml)
-scipy==1.16.3
+scipy==1.17.0
     # via
     #   scikit-learn
     #   tslearn (pyproject.toml)
@@ -93,7 +93,7 @@ six==1.17.0
     # via python-dateutil
 snowballstemmer==3.0.1
     # via sphinx
-soupsieve==2.8.1
+soupsieve==2.8.3
     # via beautifulsoup4
 sphinx==9.1.0
     # via
