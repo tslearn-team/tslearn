@@ -48,23 +48,36 @@ def test_kernel_kmeans():
     rng = np.random.RandomState(0)
     time_series = rng.randn(n, sz, d)
 
-    gak_km = KernelKMeans(n_clusters=3, verbose=False,
+    gak_km = KernelKMeans(n_clusters=3,
+                          verbose=False,
+                          max_iter=5,
+                          kernel_params={"sigma": "auto"},
+                          random_state=0).fit(time_series)
+    np.testing.assert_allclose(gak_km.labels_, gak_km.predict(time_series))
+    assert gak_km.sigma_gak_ == 6.7384149084372655
+
+    gak_km = KernelKMeans(n_clusters=3,
+                          verbose=False,
                           max_iter=5,
                           random_state=rng).fit(time_series)
     np.testing.assert_allclose(gak_km.labels_, gak_km.predict(time_series))
 
-    gak_km = KernelKMeans(n_clusters=101, verbose=False,
+    gak_km = KernelKMeans(n_clusters=101,
+                          verbose=False,
                           max_iter=5,
                           random_state=rng).fit(time_series)
     assert gak_km._X_fit is None
 
     with pytest.raises(RuntimeError):
-        KernelKMeans(n_clusters=101, verbose=False,
+        KernelKMeans(n_clusters=101,
+                     verbose=False,
                      max_iter=5,
                      kernel_params={"sigma": 0},
                      random_state=rng).fit(time_series)
 
-    gak_km = KernelKMeans(n_clusters=2, verbose=False, kernel="rbf",
+    gak_km = KernelKMeans(n_clusters=2,
+                          verbose=False,
+                          kernel="rbf",
                           kernel_params={"gamma": 1.},
                           max_iter=5,
                           random_state=rng).fit(time_series)

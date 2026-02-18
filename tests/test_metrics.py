@@ -610,12 +610,17 @@ def test_gak():
                 )
 
             g = tslearn.metrics.cdist_gak(
-                cast([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], array_type), sigma=2.0, be=be
+                dataset, sigma=2.0, be=be
             )
             np.testing.assert_allclose(
                 g, np.array([[1.0, 0.656297], [0.656297, 1.0]]), atol=1e-5
             )
             assert backend.belongs_to_backend(g)
+            with pytest.deprecated_call():
+                backend.testing.assert_allclose(
+                    g,
+                    tslearn.metrics.softdtw_variants.cdist_gak(dataset, sigma=2, be=be)
+                )
             g = tslearn.metrics.cdist_gak(
                 [[1, 2, 2], [1.0, 2.0, 3.0, 4.0]],  # Can not be cast to array because of its shape
                 cast([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], array_type),
