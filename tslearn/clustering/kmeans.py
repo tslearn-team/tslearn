@@ -20,7 +20,7 @@ from tslearn.metrics import (
     _cdist_dtw,
     _cdist_gak,
     _cdist_soft_dtw,
-    sigma_gak
+    _sigma_gak as sigma_gak
 )
 from tslearn.utils import (
     check_array,
