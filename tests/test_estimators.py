@@ -114,7 +114,6 @@ def _configure(estimator, check):
     """ Configure estimator for a given check depending on the platform """
     if hasattr(estimator, 'total_lengths'):
         estimator.set_params(total_lengths=1)
-
     if hasattr(estimator, 'probability'):
         estimator.set_params(probability=True)
 
@@ -128,34 +127,7 @@ def _configure(estimator, check):
     elif hasattr(estimator, 'max_iter'):
         estimator.set_params(max_iter=10)
 
-    if os.environ.get("SYSTEM_PHASENAME", "") == "codecov":
-        # Tweak to ensure fast execution of code coverage job on azure pipelines
-        if estimator.__class__.__name__ == "LearningShapelets":
-
-            from tslearn.shapelets.shapelets import _kmeans_init_shapelets
-            _kmeans_init_shapelets.__defaults__ = (1,)
-
-            with suppress(AttributeError):
-                # _get_tags removed in sklearn 1.7
-                get_tags_orig = estimator._get_tags
-                def get_tags_poor_score():
-                    tags = get_tags_orig()
-                    tags.update({"poor_score": True})
-                    return tags
-                estimator._get_tags = get_tags_poor_score
-
-            sklearn_tags_orig = estimator.__sklearn_tags__
-            def sklearn_tags_poor_score():
-                tags = sklearn_tags_orig()
-                tags.classifier_tags.poor_score = True
-                return tags
-            estimator.__sklearn_tags__ = sklearn_tags_poor_score
-            estimator.set_params(max_iter=1)
-    try:
-        yield
-    finally:
-        with suppress(UnboundLocalError):
-            _kmeans_init_shapelets.__defaults__ = (10000,)
+    yield
 
 
 def patch_check(check):

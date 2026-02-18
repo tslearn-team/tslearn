@@ -50,15 +50,17 @@ jobs:
 
 - job: 'tests_macOS'
   pool:
-    vmImage: 'macos-latest'
+    vmImage: 'macos-15-arm'
   strategy:
     matrix:
-      Python310:
-        python.version: '3.10'
       Python311:
         python.version: '3.11'
       Python312:
         python.version: '3.12'
+      Python313:
+        python.version: '3.13'
+      Python314:
+        python.version: '3.14'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
