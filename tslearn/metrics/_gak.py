@@ -74,7 +74,7 @@ def _sigma_gak(dataset, n_samples=100, random_state=None, be=None):
     if be is None:
         be = instantiate_backend(dataset)
 
-    n_ts, sz, d = dataset.shape
+    _, sz, d = dataset.shape
 
     # Remove points with nans from dataset
     dataset = dataset.reshape((-1, d))
@@ -163,8 +163,8 @@ def gak(s1, s2, sigma=1.0, be=None):
         raise ZeroDivisionError("Sigma must be non-zero.")
 
     be = instantiate_backend(be, s1, s2)
-    s1 = to_time_series(s1)
-    s2 = to_time_series(s2)
+    s1 = to_time_series(s1, remove_nans=True, be=be)
+    s2 = to_time_series(s2, remove_nans=True, be=be)
 
     denom = be.sqrt(
         _unnormalized_gak(s1, s1, sigma=sigma, backend=be)
@@ -245,7 +245,7 @@ def unnormalized_gak(s1, s2, sigma=1.0, be=None):
 
 
 def _unnormalized_gak(s1, s2, sigma, backend):
-    gram = -backend.cdist(s1, s2, "sqeuclidean") / (2 * sigma ** 2)
+    gram = -backend.cdist(s1, s2, "sqeuclidean") / (2 * sigma * sigma)
     gram -= backend.log(2 - backend.exp(gram))
     gram = backend.exp(gram)
     if backend.is_numpy:
