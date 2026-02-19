@@ -114,6 +114,7 @@ def _configure(estimator, check):
     """ Configure estimator for a given check depending on the platform """
     if hasattr(estimator, 'total_lengths'):
         estimator.set_params(total_lengths=1)
+
     if hasattr(estimator, 'probability'):
         estimator.set_params(probability=True)
 
