@@ -158,12 +158,12 @@ def test_locate():
     if backend() == 'torch':
         np.testing.assert_allclose(
             shapelet,
-            np.array([[2.63489213], [2.36688087]])
+            np.array([[2.6348903], [2.3668802]])
         )
     elif backend() == 'tensorflow':
         np.testing.assert_allclose(
             shapelet,
-            np.array([[2.49616671], [2.50563301]])
+            np.array([[2.4961665], [2.5056334]])
         )
     elif backend() == 'jax':
         np.testing.assert_allclose(

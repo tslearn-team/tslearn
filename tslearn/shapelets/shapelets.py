@@ -9,8 +9,7 @@ from keras.layers import (
     Dense,
     Layer,
     Input,
-    concatenate,
-    Masking
+    concatenate
 )
 from keras.metrics import (
     categorical_accuracy,
@@ -64,7 +63,7 @@ def _kmeans_init_shapelets(X, n_shapelets, shp_len, n_draw=10000):
 
 
 @register_keras_serializable()
-class GlobalMinPooling1D(Masking):
+class GlobalMinPooling1D(Layer):
     """Global min pooling operation for temporal data.
     # Input shape
         3D tensor with shape: `(batch_size, steps, features)`.
@@ -95,7 +94,7 @@ class GlobalMinPooling1D(Masking):
 
 
 @register_keras_serializable()
-class GlobalArgminPooling1D(Masking):
+class GlobalArgminPooling1D(Layer):
     """Global argmin pooling operation for temporal data.
     # Input shape
         3D tensor with shape: `(batch_size, steps, features)`.
@@ -182,7 +181,7 @@ class LocalSquaredDistanceLayer(Layer):
         if init is None:
             self.initializer = "uniform"
         else:
-           self.initializer = lambda *args, **kwargs: init
+           self.initializer = lambda *args, **kwargs: init.astype("float32")
         super().__init__(**kwargs)
         self.input_spec = InputSpec(ndim=4)
 
@@ -796,13 +795,11 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
                 nb_shapelets,
                 init = init_shapelets,
                 name="shapelets_%d" % index,
-                dtype=X.dtype.name
             )(patching_layer)
 
             pool_layers.append(
                 GlobalMinPooling1D(
                     name="min_pooling_%d" % index,
-                    dtype=X.dtype.name
                 )(shapelets_layer)
             )
         if self._n_shapelet_sizes > 1:
