@@ -75,7 +75,7 @@ class GlobalMinPooling1D(Layer):
     --------
     >>> x = numpy.array([5.0, 6.8, numpy.inf])
     >>> x = x.reshape([1, 3, 1])
-    >>> GlobalMinPooling1D()(x).numpy()
+    >>> GlobalMinPooling1D()(x).cpu().numpy()
     array([[5.]], dtype=float32)
     """
 
@@ -106,7 +106,7 @@ class GlobalArgminPooling1D(Layer):
     --------
     >>> x = numpy.array([5.0, 6.8, numpy.inf])
     >>> x = x.reshape([1, 3, 1])
-    >>> GlobalArgminPooling1D()(x).numpy()
+    >>> GlobalArgminPooling1D()(x).cpu().numpy()
     array([[0.]], dtype=float32)
     """
 
