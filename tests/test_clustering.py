@@ -54,7 +54,7 @@ def test_kernel_kmeans():
                           kernel_params={"sigma": "auto"},
                           random_state=0).fit(time_series)
     np.testing.assert_allclose(gak_km.labels_, gak_km.predict(time_series))
-    assert gak_km.sigma_gak_ == 6.7384149084372655
+    np.isclose(gak_km.sigma_gak_, 6.7384149084372655)
 
     gak_km = KernelKMeans(n_clusters=3,
                           verbose=False,
