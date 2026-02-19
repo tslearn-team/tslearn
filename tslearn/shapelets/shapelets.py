@@ -994,11 +994,12 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
 
     def _more_tags(self):
         tags = super()._more_tags()
-        tags.update({'allow_nan': True, 'allow_variable_length': True})
+        tags.update({'allow_nan': True, 'allow_variable_length': True, "preserves_dtype": [numpy.float32]})
         return tags
 
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
         tags.input_tags.allow_nan = True
         tags.allow_variable_length = True
+        tags.transformer_tags.preserves_dtype = ["float32"]
         return tags
