@@ -9,7 +9,7 @@ and this project adheres to
 Changelogs for this project are recorded in this file since v0.2.0.
 
 
-## [Towards v0.8.0]
+## [v0.8.0]
 
 ### Changed
 
