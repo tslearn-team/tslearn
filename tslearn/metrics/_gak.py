@@ -295,6 +295,7 @@ def cdist_gak(
     be=None
 ):
     r"""Compute cross-similarity matrix using Global Alignment kernel (GAK).
+    Note that GAK is a kernel, the larger GAK values mean more similar time series.
 
     GAK was originally presented in [1]_.
 
