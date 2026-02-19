@@ -24,6 +24,14 @@ from ._dtw import(
     _cdist_dtw,
     accumulated_matrix as dtw_accumulated_matrix
 )
+from ._gak import (
+    sigma_gak,
+    _sigma_gak,
+    gak,
+    unnormalized_gak,
+    cdist_gak,
+    _cdist_gak,
+)
 from .dtw_variants import (
    dtw_limited_warping_length,
    dtw_path_limited_warping_length,
@@ -41,14 +49,10 @@ from .sax import cdist_sax, _cdist_sax
 from .softdtw_variants import (
     cdist_soft_dtw,
     _cdist_soft_dtw,
-    cdist_gak,
-    _cdist_gak,
     cdist_soft_dtw_normalized,
     _cdist_soft_dtw_normalized,
-    gak,
     soft_dtw,
     soft_dtw_alignment,
-    sigma_gak,
     gamma_soft_dtw,
     SquaredEuclidean,
     SoftDTW
@@ -112,12 +116,13 @@ __all__ = [
     "cdist_ctw",
     "cdist_sax",
     "cdist_soft_dtw",
-    "cdist_gak",
     "cdist_soft_dtw_normalized",
+    "sigma_gak",
     "gak",
+    "unnormalized_gak",
+    "cdist_gak",
     "soft_dtw",
     "soft_dtw_alignment",
-    "sigma_gak",
     "gamma_soft_dtw",
     "SquaredEuclidean",
     "SoftDTW",

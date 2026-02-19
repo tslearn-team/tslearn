@@ -557,17 +557,70 @@ def test_masks():
 
 
 def test_gak():
+
+    with pytest.raises(ZeroDivisionError):
+        tslearn.metrics.gak([1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0], sigma=0)
+
+    with pytest.raises(ZeroDivisionError):
+        tslearn.metrics.unnormalized_gak([1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0], sigma=0)
+
+    with pytest.raises(ZeroDivisionError):
+        tslearn.metrics.cdist_gak([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], sigma=0)
+
     for be in backends:
         for array_type in array_types:
             backend = instantiate_backend(be, array_type)
+
+            # Sigma
+            dataset = cast([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], array_type)
+            s = tslearn.metrics.sigma_gak(
+                dataset,
+                n_samples=200,
+                random_state=0,
+                be=be
+            )
+            np.testing.assert_allclose(s, 2.0, atol=1e-5)
+            with pytest.deprecated_call():
+                backend.testing.assert_allclose(
+                    s,
+                    tslearn.metrics.softdtw_variants.sigma_gak(
+                        dataset,
+                        n_samples=200,
+                        random_state=0,
+                        be=be
+                    )
+                )
+
             # GAK
+            s1, s2 = cast([1, 2, 2, 3], array_type), cast([1.0, 2.0, 3.0, 4.0], array_type)
+            g = tslearn.metrics.gak(s1, s2, sigma=2, be=be)
+            np.testing.assert_allclose(g, 0.656297, atol=1e-5)
+            with pytest.deprecated_call():
+                backend.testing.assert_allclose(
+                    g,
+                    tslearn.metrics.softdtw_variants.gak(s1, s2, sigma=2, be=be)
+                )
+
+            g = tslearn.metrics.unnormalized_gak(s1, s2, be=be)
+            np.testing.assert_allclose(g, 3.745675, atol=1e-5)
+            with pytest.deprecated_call():
+                backend.testing.assert_allclose(
+                    g,
+                    tslearn.metrics.softdtw_variants.unnormalized_gak(s1, s2, be=be)
+                )
+
             g = tslearn.metrics.cdist_gak(
-                cast([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], array_type), sigma=2.0, be=be
+                dataset, sigma=2.0, be=be
             )
             np.testing.assert_allclose(
                 g, np.array([[1.0, 0.656297], [0.656297, 1.0]]), atol=1e-5
             )
             assert backend.belongs_to_backend(g)
+            with pytest.deprecated_call():
+                backend.testing.assert_allclose(
+                    g,
+                    tslearn.metrics.softdtw_variants.cdist_gak(dataset, sigma=2, be=be)
+                )
             g = tslearn.metrics.cdist_gak(
                 [[1, 2, 2], [1.0, 2.0, 3.0, 4.0]],  # Can not be cast to array because of its shape
                 cast([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], array_type),

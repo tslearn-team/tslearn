@@ -20,7 +20,7 @@ from tslearn.metrics import (
     _cdist_dtw,
     _cdist_gak,
     _cdist_soft_dtw,
-    sigma_gak
+    _sigma_gak as sigma_gak
 )
 from tslearn.utils import (
     check_array,
@@ -338,12 +338,14 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
 
         sample_weight = _check_sample_weight(sample_weight=sample_weight, X=X)
 
+        rs = check_random_state(self.random_state)
+
         max_attempts = max(self.n_init, 10)
         kernel_params = self._get_kernel_params()
         if self.kernel == "gak":
             self.sigma_gak_ = kernel_params.get("sigma", 1.0)
             if self.sigma_gak_ == "auto":
-                self.sigma_gak_ = sigma_gak(X)
+                self.sigma_gak_ = sigma_gak(X, random_state=rs)
         else:
             self.sigma_gak_ = None
 
@@ -359,7 +361,6 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
         K = self._get_kernel(X)
         sw = sample_weight if sample_weight is not None else numpy.ones(n_samples)
         self.sample_weight_ = sw
-        rs = check_random_state(self.random_state)
 
         last_correct_labels = None
         min_inertia = numpy.inf

@@ -1,5 +1,6 @@
 """Soft-DTW toolbox"""
 import math
+import warnings
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -186,6 +187,11 @@ def unnormalized_gak(s1, s2, sigma=1.0, be=None):
     .. [1] M. Cuturi, "Fast global alignment kernels,"
        ICML 2011.
     """
+    warnings.warn(
+        "This method is deprecated, use tslearn.metrics.unnormalized_gak instead.",
+        DeprecationWarning
+    )
+
     be = instantiate_backend(be, s1, s2)
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
@@ -246,6 +252,11 @@ def gak(s1, s2, sigma=1.0, be=None):  # TODO: better doc (formula for the kernel
     .. [1] M. Cuturi, "Fast global alignment kernels,"
        ICML 2011.
     """
+    warnings.warn(
+        "This method is deprecated, use tslearn.metrics.gak instead.",
+        DeprecationWarning
+    )
+
     be = instantiate_backend(be, s1, s2)
     s1 = be.array(s1)
     s2 = be.array(s2)
@@ -327,6 +338,11 @@ def cdist_gak(
     .. [1] M. Cuturi, "Fast global alignment kernels,"
        ICML 2011.
     """  # noqa: E501
+    warnings.warn(
+        "This method is deprecated, use tslearn.metrics.unnormalized_gak instead.",
+        DeprecationWarning
+    )
+
     be = instantiate_backend(be, dataset1, dataset2)
     dataset1 = to_time_series_dataset(dataset1, be=be)
     if dataset2 is not None:
@@ -425,6 +441,11 @@ def sigma_gak(dataset, n_samples=100, random_state=None, be=None):
     .. [1] M. Cuturi, "Fast global alignment kernels,"
        ICML 2011.
     """
+    warnings.warn(
+        "This method is deprecated, use tslearn.metrics.sigma_gak instead.",
+        DeprecationWarning
+    )
+
     be = instantiate_backend(be, dataset)
 
     random_state = check_random_state(random_state)
