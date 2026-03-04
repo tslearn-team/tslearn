@@ -179,3 +179,9 @@ def test_locate():
             for i in range(len(time_serie) - len(shapelet))
         ])
     np.testing.assert_array_equal(predicted_locations, np.nanargmin(distances, axis=1, keepdims=True))
+
+    # Test masking in GlobalArgMinPooling
+    np.testing.assert_array_equal(
+        clf.locate(to_time_series_dataset([15, 14, 13])),
+        np.array([[1]])
+    )
