@@ -155,8 +155,6 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
 
     Notes
     -----
-        This method requires a dataset of equal-sized time series.
-
         NaNs within a time series are ignored when calculating min and max.
 
     Examples
@@ -242,7 +240,7 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         check_is_fitted(self, '_X_fit_dims')
         X_ = check_array(X, allow_nd=True, force_all_finite=False)
         X_ = to_time_series_dataset(X_)
-        X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, extend=False)
+        X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, check_n_features_only=True, extend=False)
 
         axis = (1,)
         if not self.per_feature:
@@ -261,12 +259,13 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
 
     def _more_tags(self):
         tags = super()._more_tags()
-        tags.update({'allow_nan': True})
+        tags.update({'allow_nan': True, ALLOW_VARIABLE_LENGTH: True})
         return tags
 
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
         tags.input_tags.allow_nan = True
+        tags.allow_variable_length = True
         return tags
 
 
@@ -288,8 +287,6 @@ class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstima
 
     Notes
     -----
-        This method requires a dataset of equal-sized time series.
-
         NaNs within a time series are ignored when calculating mu and std.
 
     Examples
@@ -369,7 +366,7 @@ class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstima
         check_is_fitted(self, '_X_fit_dims')
         X_ = check_array(X, allow_nd=True, force_all_finite=False)
         X_ = to_time_series_dataset(X_)
-        X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, extend=False)
+        X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, check_n_features_only=True, extend=False)
 
         axis = (1,)
         if not self.per_timeseries:
@@ -386,12 +383,13 @@ class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstima
 
     def _more_tags(self):
         tags = super()._more_tags()
-        tags.update({'allow_nan': True})
+        tags.update({'allow_nan': True, ALLOW_VARIABLE_LENGTH: True})
         return tags
 
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
         tags.input_tags.allow_nan = True
+        tags.allow_variable_length = True
         return tags
 
 

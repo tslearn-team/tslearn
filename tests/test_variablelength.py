@@ -2,10 +2,15 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_array_less
 from sklearn.model_selection import cross_val_score, KFold
 
-from tslearn.neighbors import KNeighborsTimeSeriesClassifier
-from tslearn.preprocessing import TimeSeriesScalerMeanVariance
-from tslearn.svm import TimeSeriesSVC, TimeSeriesSVR
 from tslearn.clustering import KernelKMeans, TimeSeriesKMeans
+from tslearn.neighbors import KNeighborsTimeSeriesClassifier
+from tslearn.preprocessing import (
+    TimeSeriesImputer,
+    TimeSeriesResampler,
+    TimeSeriesScalerMeanVariance,
+    TimeSeriesScalerMinMax
+)
+from tslearn.svm import TimeSeriesSVC, TimeSeriesSVR
 from tslearn.utils import to_time_series_dataset
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -33,6 +38,7 @@ def test_variable_length_knn():
     clf.fit(X_transf, y)
     assert_allclose(clf.predict(X_transf), [0, 0, 1, 1])
 
+
 def test_variable_length_svm():
     X = to_time_series_dataset([[1, 2, 3, 4],
                                 [1, 2, 3],
@@ -49,6 +55,7 @@ def test_variable_length_svm():
     clf.fit(X, y_reg)
     assert_array_less(clf.predict(X[:2]), 0.)
     assert_array_less(-clf.predict(X[2:]), 0.)
+
 
 def test_variable_length_clustering():
     # TODO: here we just check that they can accept variable-length TS, not
@@ -92,3 +99,25 @@ def test_variable_cross_val():
         # TODO: cannot test for clustering methods since they don't have a
         # score method yet
         cross_val_score(estimator, X=X, y=y, cv=cv)
+
+
+def test_variable_length_preprocessing():
+    # Just check that they can accept variable-length TS
+    X = to_time_series_dataset([
+        [1, 2, 3, 4],
+        [1, 2, 3],
+        [2, 5, 6, 7, 8, 9],
+        [3, 5, 6, 7, 8]]
+    )
+    other_X = to_time_series_dataset([
+        [1, 2, 3],
+        [3, 5, 6, 7, 8]
+    ])
+    estimators = [
+        TimeSeriesResampler(),
+        TimeSeriesImputer(),
+        TimeSeriesScalerMeanVariance(),
+        TimeSeriesScalerMinMax()
+    ]
+    for estimator in estimators:
+        estimator.fit(X).transform(other_X)

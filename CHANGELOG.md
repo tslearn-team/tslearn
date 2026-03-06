@@ -9,6 +9,12 @@ and this project adheres to
 Changelogs for this project are recorded in this file since v0.2.0.
 
 
+## [v0.8.1]
+
+### Changed
+
+* `TimeSeriesScalerMinMax` and `TimeSeriesScalerMeanVariance` now support variable length timeseries. 
+
 ## [v0.8.0]
 
 ### Changed
