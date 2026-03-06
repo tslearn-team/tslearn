@@ -2,7 +2,6 @@ import numpy as np
 
 import pytest
 
-from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from tslearn.preprocessing import (TimeSeriesScalerMeanVariance,
                                    TimeSeriesScalerMinMax,
                                    TimeSeriesImputer)
@@ -20,27 +19,26 @@ def test_single_value_ts_no_nan():
     assert np.sum(np.isnan(minmax_scaler.fit_transform(X))) == 0
 
 
-def test_scaler_allow_variable_length():
-    variable_length_dataset = [[1, 2], [1, 2, 3]]
+def test_min_max_scaler_variable_length():
+    X = [
+        [1, np.nan],
+        [3, 4]
+    ]
 
-    for estimator_cls in [TimeSeriesScalerMeanVariance, TimeSeriesScalerMinMax]:
-        estimator = estimator_cls()
-
-        try:
-            # slearn >= 1.6
-            from sklearn.utils import get_tags
-            tags = get_tags(estimator)
-            assert not tags.allow_variable_length
-
-        except ImportError:
-            # slearn < 1.6
-            tags = estimator._get_tags()
-            assert ALLOW_VARIABLE_LENGTH in tags
-            assert not tags[ALLOW_VARIABLE_LENGTH]
-
-        with pytest.raises(ValueError):
-            estimator.fit_transform(variable_length_dataset)
-
+    estimator = TimeSeriesScalerMinMax(per_timeseries=True)
+    transformed = estimator.fit_transform(X)
+    np.testing.assert_array_equal(
+        transformed,
+        np.array([
+            [[0], [np.nan]],
+            [[0], [1]],
+        ])
+    )
+    transformed = estimator.transform([[1, 2, 3]])
+    np.testing.assert_array_equal(
+        transformed,
+        np.array([[[0], [0.5], [1]]])
+    )
 
 def test_min_max_scaler_modes():
     univariate_dataset = [
@@ -124,6 +122,28 @@ def test_min_max_scaler_modes():
             [[0], [0.25], [0.5]],
             [[0.5], [0.75], [1]],
         ])
+    )
+
+
+def test_mean_variance_scaler_variable_length():
+    X = [
+        [1, np.nan],
+        [3, 4]
+    ]
+
+    estimator = TimeSeriesScalerMeanVariance(per_timeseries=True)
+    transformed = estimator.fit_transform(X)
+    np.testing.assert_array_equal(
+        transformed,
+        np.array([
+            [[0], [np.nan]],
+            [[-1], [1]],
+        ])
+    )
+    transformed = estimator.transform([[1, 2, 3]])
+    np.testing.assert_array_equal(
+        transformed,
+        np.array([[[-np.sqrt(3/2)], [0], [np.sqrt(3/2)]]])
     )
 
 
