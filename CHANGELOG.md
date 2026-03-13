@@ -14,6 +14,8 @@ Changelogs for this project are recorded in this file since v0.2.0.
 ### Changed
 
 * `TimeSeriesScalerMinMax` and `TimeSeriesScalerMeanVariance` now support variable length timeseries. 
+* Bump numba dependency min version
+* Fix variable-length support in Shapelets locate 
 
 ## [v0.8.0]
 
