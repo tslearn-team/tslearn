@@ -11,7 +11,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ## [Towards v0.9.0]
 
-# Nothing yet
+### Nothing yet
 
 ## [v0.8.1]
 
