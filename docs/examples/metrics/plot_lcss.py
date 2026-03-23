@@ -4,20 +4,20 @@ Longest Common Subsequence
 ==========================
 
 This example illustrates LCSS computation between time series and plots the
-alignment path [1]. and its relationship to the DTW.
+alignment path [1]_. and its relationship to the DTW.
 
 Since LCSS focuses on the similar parts between two time-series, a potential
 use case is to identify the similarity between time-series whose lengths differ
-greatly or have noise. As one example, M. Vlachos et al. [1] used this method
+greatly or have noise. As one example, M. Vlachos et al. [1]_ used this method
 to cluster time series regarding human writing in the presence of noise.
 
 The example demonstrates the use of the functions `lcss_path` and `dtw_path`
 to calculate the alignment path between them and compare the two approaches
 when dealing with unequal-length sequence data and noise.
 
-[1] M. Vlachos, D. Gunopoulos, and G. Kollios. 2002. "Discovering Similar
-Multidimensional Trajectories", In Proceedings of the 18th International
-Conference on Data Engineering (ICDE '02). IEEE Computer Society, USA, 673.
+.. [1] M. Vlachos, D. Gunopoulos, and G. Kollios. 2002. "Discovering Similar
+  Multidimensional Trajectories", In Proceedings of the 18th International
+  Conference on Data Engineering (ICDE '02). IEEE Computer Society, USA, 673.
 """
 
 # Author: Daniela Duarte

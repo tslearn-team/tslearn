@@ -3,12 +3,12 @@
 KShape
 ======
 
-This example uses the KShape clustering method [1] that is based on
+This example uses the KShape clustering method [1]_ that is based on
 cross-correlation to cluster time series.
 
 
-[1] J. Paparrizos & L. Gravano. k-Shape: Efficient and Accurate Clustering \
-of Time Series. SIGMOD 2015. pp. 1855-1870.
+.. [1] J. Paparrizos & L. Gravano. k-Shape: Efficient and Accurate Clustering
+  of Time Series. SIGMOD 2015. pp. 1855-1870.
 """
 
 # Author: Romain Tavenard

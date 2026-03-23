@@ -13,7 +13,7 @@ to convert data sets from and to other formats.
 transforms an array-like object into a three-dimensional array of shape
 ``(n_ts, sz, d)`` with the following conventions:
 
-- the fist axis is the sample axis, ``n_ts`` being the number of time series;
+- the first axis is the sample axis, ``n_ts`` being the number of time series;
 - the second axis is the time axis, ``sz`` being the maximum number of time points;
 - the third axis is the dimension axis, ``d`` being the number of dimensions.
 

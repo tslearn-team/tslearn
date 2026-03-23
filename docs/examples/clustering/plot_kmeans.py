@@ -6,8 +6,8 @@ k-means
 This example uses :math:`k`-means clustering for time series. Three variants of
 the algorithm are available: standard
 Euclidean :math:`k`-means, DBA-:math:`k`-means (for DTW Barycenter
-Averaging [1])
-and Soft-DTW :math:`k`-means [2].
+Averaging [1]_)
+and Soft-DTW :math:`k`-means [2]_.
 
 In the figure below, each row corresponds to the result of a different
 clustering. In a row, each sub-figure corresponds to a cluster.
@@ -29,11 +29,11 @@ This means that one cannot scale barycenters back to data range because each
 time series is scaled independently and there is hence no such thing as an
 overall data range.
 
-[1] F. Petitjean, A. Ketterlin & P. Gancarski. A global averaging method \
-for dynamic time warping, with applications to clustering. Pattern \
-Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
-[2] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for \
-Time-Series," ICML 2017.
+.. [1] F. Petitjean, A. Ketterlin & P. Gancarski. A global averaging method
+  for dynamic time warping, with applications to clustering. Pattern
+  Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
+.. [2] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
+  Time-Series", ICML 2017.
 """
 
 # Author: Romain Tavenard

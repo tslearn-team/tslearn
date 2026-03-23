@@ -1,7 +1,7 @@
 Methods for variable-length time series
 =======================================
 
-This page lists machine learning methods in `tslearn` that are able to deal
+This page lists machine learning methods in ``tslearn`` that are able to deal
 with datasets containing time series of different lengths.
 We also provide example usage for these methods using the following
 variable-length time series dataset:
@@ -76,6 +76,7 @@ Clustering
 
 * :class:`tslearn.clustering.KernelKMeans`
 * :class:`tslearn.clustering.TimeSeriesKMeans`
+* :class:`tslearn.clustering.TimeSeriesDBSCAN`
 * :class:`tslearn.clustering.silhouette_score`
 
 Examples
@@ -86,6 +87,12 @@ Examples
     from tslearn.clustering import KernelKMeans
     gak_km = KernelKMeans(n_clusters=2, kernel="gak")
     labels_gak = gak_km.fit_predict(X)
+
+.. code-block:: python
+
+    from tslearn.clustering import TimeSeriesDBSCAN
+    dbscan = TimeSeriesDBSCAN(min_ts=2, eps=1, metric="dtw")
+    labels_dbscan = dbscan.fit_predict(X)
 
 .. code-block:: python
 
@@ -107,7 +114,6 @@ Examples
 Barycenter computation
 ----------------------
 
-
 * :class:`tslearn.barycenters.dtw_barycenter_averaging`
 * :class:`tslearn.barycenters.softdtw_barycenter`
 
@@ -125,6 +131,27 @@ Examples
     from tslearn.utils import ts_zeros
     initial_barycenter = ts_zeros(sz=5)
     bar = softdtw_barycenter(X, init=initial_barycenter)
+
+Preprocessing
+-------------
+
+* :class:`tslearn.preprocessing.TimeSeriesScalerMinMax`
+* :class:`tslearn.preprocessing.TimeSeriesScalerMeanVariance`
+* :class:`tslearn.preprocessing.TimeSeriesImputer`
+
+Examples
+~~~~~~~~
+
+.. code-block:: python
+
+    from tslearn.preprocessing import (
+        TimeSeriesScalerMinMax,
+        TimeSeriesScalerMeanVariance,
+        TimeSeriesImputer
+    )
+    scaled = TimeSeriesScalerMinMax().fit_transform(X)
+    scaled = TimeSeriesScalerMeanVariance().fit_transform(X)
+    imputed = TimeSeriesImputer().fit_transform(X)
 
 Model selection
 ---------------
