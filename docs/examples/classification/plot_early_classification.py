@@ -7,11 +7,11 @@ This example presents the concept of early classification.
 
 Early classifiers are implemented in the 
 :mod:`tslearn.early_classification` module and in this example 
-we use the method from [1].
+we use the method from [1]_.
 
 
-[1] A. Dachraoui, A. Bondu & A. Cornuejols. Early classification of time
-series as a non myopic sequential decision making problem. ECML/PKDD 2015
+.. [1] A. Dachraoui, A. Bondu & A. Cornuejols. Early classification of time
+  series as a non myopic sequential decision making problem. ECML/PKDD 2015
 """
 
 # Author: Romain Tavenard

@@ -270,7 +270,7 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
 
 
 class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstimator):
-    """Scaler for time series datasets. Scales fetures values so that their mean (resp.
+    """Scaler for time series datasets. Scales features values so that their mean (resp.
     standard deviation) in given dimensions is mu (resp. std).
 
     Parameters
