@@ -754,6 +754,7 @@ class TimeSeriesKMeans(
                     init_barycenter=self.cluster_centers_[k],
                     metric_params=metric_params,
                     verbose=False,
+                    n_jobs=self.n_jobs
                 )
             elif self.metric == "softdtw":
                 self.cluster_centers_[k] = softdtw_barycenter(
@@ -763,6 +764,7 @@ class TimeSeriesKMeans(
                     **metric_params
                 )
             else:
+                # Euclidean
                 self.cluster_centers_[k] = numpy.average(X[self.labels_ == k],
                                                          axis=0)
 
