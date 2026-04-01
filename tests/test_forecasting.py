@@ -54,6 +54,7 @@ def test_VARIMA():
         predicted,
         np.zeros((data.shape[0], horizon, data.shape[-1]))
     )
+
     # Test p, q, d = 0 with constant, should predict constant mean
     horizon = 5
     data = random_walks(d=3)
@@ -96,15 +97,34 @@ def test_VARIMA():
 
     # Univariate with constant x(t+1) - x(t) = 0.5(x(t) - x(t-1)) + 0.5 -> x(t+1) = 1.5x(t) - 0.5x(t-1)) + 0.5
     data = np.array([
-        [[4], [6.5], [8.25], [9.625], [10.8125]],
-        [[8], [12.5], [15.25], [17.125], [18.5625]],
-        [[6], [9.5], [11.75], [13.375], [14.6875]],
+        [[4], [6.5], [8.25], [9.625]],
+        [[8], [12.5], [15.25], [17.125]],
+        [[6], [9.5], [11.75], [13.375]],
     ])
     model = VARIMA(1, 1, 0).fit(data)
-    predicted = model.predict()
+    predicted = model.predict(n=2)
     expected = np.array([
-        [[11.90625]],
-        [[19.78125]],
-        [[15.84375]],
+        [[10.8125], [11.90625]],
+        [[18.5625], [19.78125]],
+        [[14.6875], [15.84375]],
     ])
     np.testing.assert_almost_equal(predicted, expected)
+    np.testing.assert_almost_equal(
+        model.predict(data, n=2),
+        expected
+    )
+
+    # MA X(t) = e(t) + 0.9e(t-1)
+    rng = np.random.RandomState(0)
+    noise = rng.normal(size=(2, 100, 2))
+    data = noise[:, 1:] + 0.9 * noise[:, :-1]
+    model = VARIMA(0, 0, 1).fit(data)
+    np.testing.assert_allclose(
+        model.ma_coeffs_,
+        np.array([[[0.9, 0], [0, 0.9]]]),
+        atol=0.1
+    )
+    np.testing.assert_allclose(
+        model.predict(n=2),
+        model.predict(data, n=2)
+    )

@@ -304,16 +304,18 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
 
         res = np.zeros((last_values.shape[0], n, self.n_features_in_))
         for i in range(n):
-            varma_estimate = self._varma_next(diff_last_values, residuals=last_residuals)
-            diff_last_values[:, :-1] = diff_last_values[:, 1:]
-            diff_last_values[:, -1] = varma_estimate
-            if self.q > 0 and n > 1:
-                last_residuals[:-1] = last_residuals[1:]
+            estimate = self._varma_next(diff_last_values, residuals=last_residuals)
+            diff_last_values = np.roll(diff_last_values, -1)
+            diff_last_values[:, -1] = estimate
+            if self.q > 0:
+                last_residuals = np.roll(last_residuals, -1)
                 last_residuals[-1] = np.zeros(self.n_features_in_)
             if self.d:
-                res[:, i] = self._undifference(last_values, varma_estimate)
-            else:
-                res[:, i] = varma_estimate
+                estimate = self._undifference(last_values, estimate)
+                last_values = np.roll(last_values, -1)
+                last_values[:, -1] = estimate
+            res[:, i] = estimate
+
         return res
 
     def fit_predict(self, X, y=None, n=1):
