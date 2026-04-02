@@ -20,15 +20,18 @@ def compute_var(p, X, with_constant=False):
 
     Parameters
     ----------
-    p : AR order
+        p : int
+            AR order
 
-    X : (sz, d) array type series data, sz should be greater or equal than p
+        X : array-like, shape (sz, d)
+            time-series data, sz should be greater or equal than p
 
-    with_constant : (bool) whether to compute an intercept term.
+        with_constant : bool (default: False)
+            whether to compute an intercept term.
 
     Returns
     -------
-    (intercept, ar_coeffs, residuals) tuple
+        (intercept, ar_coeffs, residuals) tuple
 
     """
     X = check_array(X, ensure_min_samples=p)
@@ -66,18 +69,21 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         q : int (default: 0)
           Moving-Average (MA) order of the model.
         d : int (default: 0)
-          differentiation order of the model.
+          Differentiation order of the model.
         with_constant : bool (default: True)
-          whether the model should include an intercept term.
+          Whether the model should include an intercept term.
+        seasonal_period: int or None (default: None)
+          When set to a positive integer :math:`m`, the model includes
+          a naïve seasonal integration step where :math:`x'_t = x_t - x_{t-m}`.
         max_iter : int (default: 50)
-          the maximum number of iterations used while fitting the model.
+          The maximum number of iterations used while fitting the model.
 
     Attributes
     ----------
         lle_ : float
-          loglikelihood of the fitted model
+          Loglikelihood of the fitted model
         intercept_ : array-like of shape=(n_features)
-          intercept term of the fitted model
+          Intercept term of the fitted model
         ar_coeffs_ : array-like of shape=(p, n_features, n_features)
           AR coefficients of the fitted model
         ma_coeffs_ : array-like of shape=(q, n_features, n_features)
@@ -98,11 +104,12 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
 
     """
 
-    def __init__(self, p=1, d=0, q=0, with_constant=True, max_iter=50):
+    def __init__(self, p=1, d=0, q=0, with_constant=True, seasonal_period=None, max_iter=50):
         self.p = p
         self.d = d
         self.q = q
         self.with_constant = with_constant
+        self.seasonal_period = seasonal_period
         self.max_iter = max_iter
 
     def fit(self, X, y=None):
@@ -123,8 +130,8 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         X_ = check_array(X, allow_nd=True, force_all_finite="allow-nan")
         X_ = to_time_series_dataset(X_)
 
-        # Minimum number of samples needed to compute default params
-        self._min_samples = self.p + self.q + self.d + 1
+        # Minimum number of samples needed
+        self._min_samples = self.p + self.q + self.d + 1 + (self.seasonal_period or 0)
 
         # Check min_samples
         if any(_ts_size(ts) < self._min_samples for ts in X):
@@ -132,45 +139,59 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
 
         n_ts, n_samples, n_features_in = X_.shape
 
-        differenced_X = np.diff(X_, n=self.d, axis=1)
+        # Seasonal differencing
+        s_X_ = self._seasonal_differencing(X_)
+        # d-th order differencing
+        d_X_ = np.diff(s_X_, n=self.d, axis=1)
 
         if self.q > 0:
             res = scipy.optimize.minimize(
                 method="nelder-mead",
-                fun=lambda params: self._loss(differenced_X, params)[0],
-                x0=self._default_params(differenced_X),
+                fun=lambda params: self._loss(d_X_, params)[0],
+                x0=self._default_params(d_X_),
                 tol=0,
                 options={"maxiter": self.max_iter},
             )
             self.intercept_, self.ar_coeffs_, self.ma_coeffs_ = self._unravel_params(res.x, n_features_in)
         else:
             self.intercept_, self.ar_coeffs_, self.ma_coeffs_ = self._unravel_params(
-                self._default_params(differenced_X),
+                self._default_params(d_X_),
                 n_features_in
             )
 
-        n_lle, self._last_residuals = self._loss(differenced_X)
+        # Last residuals and last timestamps needed to predict fitted data
+        n_lle, self._last_residuals = self._loss(d_X_)
+        self._last_timestamps = self._get_last_timestamps(X_)
+
         self.lle_ = -n_lle
-
-        self._last_values = self._get_last_values(X_)
-
         self.n_ts_ = n_ts
         self.n_samples_ = n_samples
         self.n_features_in_ = n_features_in
 
         return self
 
-    def _get_last_values(self, X):
+    def _seasonal_differencing(self, X):
+        if self.seasonal_period is not None:
+            seasonal_differenced_X = (
+                X[:, self.seasonal_period:] -
+                X[:, :-self.seasonal_period]
+            )
+        else:
+            seasonal_differenced_X = X
+        return seasonal_differenced_X
+
+    def _get_last_timestamps(self, X):
         n_ts, sz, n_features_in = X.shape
-        if max(self.p, self.q, self.d):
+        if max(self.p, self.q, self.d, self.seasonal_period or 0):
             # Move nans of variable length time series up front to properly select last_values
             for i, ts in enumerate(X):
                 X[i] = np.roll(ts, sz - _ts_size(ts), axis=0)
-            last_values = X[:, - self.d - max(self.p, self.q):]
+            n_timestamp_to_keep = (self.seasonal_period or 0) + self.d + self.p
+            last_timestamps = X[:, -n_timestamp_to_keep:]
         else:
             # No need to keep any
-            last_values = np.empty((n_ts, 0, n_features_in))
-        return last_values
+            last_timestamps = np.empty((n_ts, 0, n_features_in))
+        return last_timestamps
 
     def _default_params(self, X):
         params = np.vstack([
@@ -225,10 +246,10 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         for i in range(start, n_samples):
             current_err = X[:, i] - self._varma_next(
                 X[:, i - start:i],
+                residuals,
                 ar_coeffs,
                 ma_coeffs,
                 intercept,
-                residuals
             )
             # Deals with variable length series padded with nan
             sse += np.nansum(current_err * current_err)
@@ -242,7 +263,7 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         n_loglikelihood = (n_valid_samples - n_ts * start) * (np.log(2* np.pi) + np.log(variance) + 1) / 2
         return n_loglikelihood, residuals
 
-    def _varma_next(self, X, ar_coeffs=None, ma_coeffs=None, intercept=None, residuals = None):
+    def _varma_next(self, X, residuals, ar_coeffs=None, ma_coeffs=None, intercept=None):
         n_ts, n_samples, n_features_in = X.shape
 
         ar_coeffs = ar_coeffs if ar_coeffs is not None else self.ar_coeffs_
@@ -287,7 +308,7 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         check_is_fitted(self)
 
         if X is None:
-            last_values = self._last_values
+            last_timestamps = self._last_timestamps
             last_residuals = self._last_residuals
 
         else:
@@ -301,29 +322,40 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
             # Check number of features
             check_dims(X_, (0, 0, self.n_features_in_), check_n_features_only=True)
 
-            differenced_X = np.diff(X_, n=self.d, axis=1)
+            # Retrieve last residuals and last timestamps needed to compute estimate
+            last_timestamps = self._get_last_timestamps(X_)
+            seasonal_differrenced_X = self._seasonal_differencing(X_)
+            differenced_X = np.diff(seasonal_differrenced_X, n=self.d, axis=1)
             last_residuals = self._loss(differenced_X)[1]
-            last_values = self._get_last_values(X_)
 
-        diff_last_values = np.diff(last_values, n=self.d, axis=1)
+        # Seasonal differencing
+        sd_timestamps = self._seasonal_differencing(last_timestamps)
+        # d-th order differencing
+        dd_timestamps = np.diff(sd_timestamps, n=self.d, axis=1)
 
-        res = np.zeros((last_values.shape[0], n, self.n_features_in_))
+        res = np.zeros((last_timestamps.shape[0], n, self.n_features_in_))
         for i in range(n):
-            estimate = self._varma_next(diff_last_values, residuals=last_residuals)
+            estimate = self._varma_next(dd_timestamps, last_residuals)
             if self.p > 0 and n > 1:
                 # Rolling for next estimate
-                diff_last_values = np.roll(diff_last_values, -1, axis=1)
-                diff_last_values[:, -1] = estimate
+                dd_timestamps = np.roll(dd_timestamps, -1, axis=1)
+                dd_timestamps[:, -1] = estimate
             if self.q > 0 and n > 1:
                 # Rolling for next estimate
                 last_residuals = np.roll(last_residuals, -1, axis=1)
                 last_residuals[:, -1] = np.zeros(self.n_features_in_)
             if self.d:
-                estimate = self._undifference(last_values, estimate)
+                estimate = self._undifference(sd_timestamps, estimate)
                 if n > 1:
                     # Rolling for next estimate
-                    last_values = np.roll(last_values, -1, axis=1)
-                    last_values[:, -1] = estimate
+                    sd_timestamps = np.roll(sd_timestamps, -1, axis=1)
+                    sd_timestamps[:, -1] = estimate
+            if self.seasonal_period:
+                estimate = estimate + last_timestamps[:, -self.seasonal_period]
+                if n > 1:
+                    # Rolling for next estimate
+                    last_timestamps = np.roll(last_timestamps, -1, axis=1)
+                    last_timestamps[:, -1] = estimate
             res[:, i] = estimate
 
         return res
@@ -381,6 +413,8 @@ class AutoVARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         Used as differentiation order if stationarity cannot be achieved
         within max_d. If None, an error is raised if stationarity cannot
         be achieved within max_d.
+    seasonal_period: int or None (default: None)
+        Naïve seasonal integration to apply to VARIMA models
 
     Attributes
     ----------
@@ -404,11 +438,12 @@ class AutoVARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
 
     """
 
-    def __init__(self, max_p=5, max_d=2, max_q=5, default_d_for_non_stationarity=0):
+    def __init__(self, max_p=5, max_d=2, max_q=5, default_d_for_non_stationarity=0, seasonal_period=None):
         self.max_p = max_p
         self.max_q = max_q
         self.max_d = max_d
         self.default_d_for_non_stationarity = default_d_for_non_stationarity
+        self.seasonal_period = seasonal_period
 
     def fit(self, X, y=None):
         """Selects the best Vector Autoregressive Moving Average (VARIMA) model
@@ -531,7 +566,7 @@ class AutoVARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         eligible_variations = eligible_variations - computed_adjustable_hyperparams
 
         return {
-            VARIMA(p, current_best_model.d, q, with_constant)
+            VARIMA(p, current_best_model.d, q, with_constant, self.seasonal_period)
             for p, q, with_constant in eligible_variations
         }
 
