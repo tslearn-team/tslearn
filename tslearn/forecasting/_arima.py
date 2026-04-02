@@ -305,14 +305,14 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         res = np.zeros((last_values.shape[0], n, self.n_features_in_))
         for i in range(n):
             estimate = self._varma_next(diff_last_values, residuals=last_residuals)
-            diff_last_values = np.roll(diff_last_values, -1)
+            diff_last_values = np.roll(diff_last_values, -1, axis=1)
             diff_last_values[:, -1] = estimate
             if self.q > 0:
-                last_residuals = np.roll(last_residuals, -1)
+                last_residuals = np.roll(last_residuals, -1, axis=1)
                 last_residuals[-1] = np.zeros(self.n_features_in_)
             if self.d:
                 estimate = self._undifference(last_values, estimate)
-                last_values = np.roll(last_values, -1)
+                last_values = np.roll(last_values, -1, axis=1)
                 last_values[:, -1] = estimate
             res[:, i] = estimate
 
