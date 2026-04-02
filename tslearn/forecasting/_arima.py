@@ -309,7 +309,7 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
             diff_last_values[:, -1] = estimate
             if self.q > 0:
                 last_residuals = np.roll(last_residuals, -1, axis=1)
-                last_residuals[-1] = np.zeros(self.n_features_in_)
+                last_residuals[:, -1] = np.zeros(self.n_features_in_)
             if self.d:
                 estimate = self._undifference(last_values, estimate)
                 last_values = np.roll(last_values, -1, axis=1)
