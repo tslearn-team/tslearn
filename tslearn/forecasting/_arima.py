@@ -152,16 +152,25 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         n_lle, self._last_residuals = self._loss(differenced_X)
         self.lle_ = -n_lle
 
-        # Move nans of variable length time series up front to properly select last_values
-        for i, ts in enumerate(X_):
-            X_[i] = np.roll(ts, ts.shape[0] - _ts_size(ts), axis=0)
-        self._last_values = X_[:, - self.d - max(self.p, self.q):]
+        self._last_values = self._get_last_values(X_)
 
         self.n_ts_ = n_ts
         self.n_samples_ = n_samples
         self.n_features_in_ = n_features_in
 
         return self
+
+    def _get_last_values(self, X):
+        n_ts, sz, n_features_in = X.shape
+        if max(self.p, self.q, self.d):
+            # Move nans of variable length time series up front to properly select last_values
+            for i, ts in enumerate(X):
+                X[i] = np.roll(ts, sz - _ts_size(ts), axis=0)
+            last_values = X[:, - self.d - max(self.p, self.q):]
+        else:
+            # No need to keep any
+            last_values = np.empty((n_ts, 0, n_features_in))
+        return last_values
 
     def _default_params(self, X):
         params = np.vstack([
@@ -279,41 +288,42 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
 
         if X is None:
             last_values = self._last_values
-            last_residuals = self._last_residuals.copy()
+            last_residuals = self._last_residuals
 
         else:
             X_ = check_array(X, allow_nd=True, force_all_finite="allow-nan")
             X_ = to_time_series_dataset(X_)
 
+            # Check min_samples
+            if any(_ts_size(ts) < self._min_samples for ts in X):
+                raise ValueError(f"{self._min_samples} timestamps are required per TS")
+
             # Check number of features
-            check_dims(X_, (self.n_ts_, self.n_samples_, self.n_features_in_), check_n_features_only=True)
+            check_dims(X_, (0, 0, self.n_features_in_), check_n_features_only=True)
 
             differenced_X = np.diff(X_, n=self.d, axis=1)
             last_residuals = self._loss(differenced_X)[1]
-
-            # Move nans of variable length time series up front to properly select last_values
-            for i, ts in enumerate(X_):
-                ts_size = _ts_size(ts)
-                if ts_size < self._min_samples:
-                    raise ValueError(f"{self._min_samples} samples are required per TS")
-                X_[i] = np.roll(ts, ts.shape[0] - ts_size, axis=0)
-
-            last_values = X_[:, - self.d - max(self.p, self.q):]
+            last_values = self._get_last_values(X_)
 
         diff_last_values = np.diff(last_values, n=self.d, axis=1)
 
         res = np.zeros((last_values.shape[0], n, self.n_features_in_))
         for i in range(n):
             estimate = self._varma_next(diff_last_values, residuals=last_residuals)
-            diff_last_values = np.roll(diff_last_values, -1, axis=1)
-            diff_last_values[:, -1] = estimate
-            if self.q > 0:
+            if self.p > 0 and n > 1:
+                # Rolling for next estimate
+                diff_last_values = np.roll(diff_last_values, -1, axis=1)
+                diff_last_values[:, -1] = estimate
+            if self.q > 0 and n > 1:
+                # Rolling for next estimate
                 last_residuals = np.roll(last_residuals, -1, axis=1)
                 last_residuals[:, -1] = np.zeros(self.n_features_in_)
             if self.d:
                 estimate = self._undifference(last_values, estimate)
-                last_values = np.roll(last_values, -1, axis=1)
-                last_values[:, -1] = estimate
+                if n > 1:
+                    # Rolling for next estimate
+                    last_values = np.roll(last_values, -1, axis=1)
+                    last_values[:, -1] = estimate
             res[:, i] = estimate
 
         return res
