@@ -11,7 +11,9 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ## [Towards v0.9.0]
 
-### Nothing yet
+### Changed
+
+* Fix masking issue in `LearningShapelets` with Keras 3.14
 
 ## [v0.8.1]
 
