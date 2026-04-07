@@ -448,7 +448,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         - [callable] : a user-defined function which accepts an array of
           distances, and returns an array of the same
           shape containing the weights.
-    metric : one of the metrics allowed for :class:`.KNeighborsTimeSeries`
+    metric : one of the metrics allowed for :class:`.KNeighborsTimeSeries`\
     class (default: 'dtw')
         Metric to be used at the core of the nearest neighbor procedure
     metric_params : dict or None (default: None)
@@ -614,7 +614,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
 class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
                                     KNeighborsRegressor,
                                     BaseModelPackage):
-    """Classifier implementing the k-nearest neighbors vote for Time Series.
+    """Regressor implementing the k-nearest neighbors vote for Time Series.
 
     Parameters
     ----------
@@ -631,7 +631,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         - [callable] : a user-defined function which accepts an array of
           distances, and returns an array of the same
           shape containing the weights.
-    metric : one of the metrics allowed for :class:`.KNeighborsTimeSeries`
+    metric : one of the metrics allowed for :class:`.KNeighborsTimeSeries`\
     class (default: 'dtw')
         Metric to be used at the core of the nearest neighbor procedure
     metric_params : dict or None (default: None)

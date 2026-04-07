@@ -15,6 +15,10 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 * Allow parallel computation of DTW barycenters and plug it in `TimeSeriesKMeans`.
 
+### Changed
+
+* Fix masking issue in `LearningShapelets` with Keras 3.14
+
 ## [v0.8.1]
 
 ### Changed

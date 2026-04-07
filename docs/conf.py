@@ -96,7 +96,6 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'tslearn'
-copyright = u'2025, Romain Tavenard'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

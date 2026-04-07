@@ -3,16 +3,16 @@
 Matrix Profile
 ==============
 
-This example presents a toy example of using Matrix Profile [1] for anomaly 
+This example presents a toy example of using Matrix Profile [1]_ for anomaly
 detection.
 
 Matrix Profile transforms a time series into a sequence of 1-Nearest-Neighbor 
 distances between its subseries.
 
-[1] C. M. Yeh, Y. Zhu, L. Ulanova, N.Begum et al. 
-Matrix Profile I: All Pairs Similarity Joins for Time Series: A 
-Unifying View that Includes Motifs, Discords and Shapelets.
-ICDM 2016.
+.. [1] C. M. Yeh, Y. Zhu, L. Ulanova, N.Begum et al.
+  Matrix Profile I: All Pairs Similarity Joins for Time Series: A
+  Unifying View that Includes Motifs, Discords and Shapelets.
+  ICDM 2016.
 """
 
 # Author: Romain Tavenard
