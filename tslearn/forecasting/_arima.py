@@ -7,6 +7,7 @@ import scipy
 from sklearn.base import BaseEstimator
 from sklearn.utils.validation import check_is_fitted
 
+from statsmodels.tools.sm_exceptions import InterpolationWarning
 from statsmodels.tsa.stattools import kpss
 
 from tslearn.bases import TimeSeriesMixin, BaseModelPackage
@@ -464,6 +465,13 @@ class AutoVARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         X_ = check_array(X, allow_nd=True, force_all_finite="allow-nan")
         X_ = to_time_series_dataset(X_)
 
+        # Minimum samples needed for seasonal integration for kpss test
+        self._min_samples = self.seasonal_period or 0
+
+        # Check min_samples
+        if any(_ts_size(ts) < self._min_samples for ts in X):
+            raise ValueError(f"{self._min_samples} timestamps are required per TS")
+
         self.best_estimator_ = self._get_best_model_for_given_d(self._determine_d(X_), X_)
         self.best_estimator_.fit(X_)
 
@@ -517,15 +525,26 @@ class AutoVARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
     @staticmethod
     def _is_stationary(X):
         # Check stationarity for each feature of each TS
-        return all(
-            kpss(_to_time_series(x, remove_nans=True), regression='c')[1] > 0.05
-            for k in range(X.shape[-1])
-            for x in X[:, :, k]
-        )
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=InterpolationWarning)
+            return all(
+                kpss(_to_time_series(x, remove_nans=True), regression='c')[1] > 0.05
+                for k in range(X.shape[-1])
+                for x in X[:, :, k]
+            )
 
     def _determine_d(self, X):
+        # Apply naïve seasonality first
+        if self.seasonal_period is not None:
+            seasonal_differenced_X = (
+                    X[:, self.seasonal_period:] -
+                    X[:, :-self.seasonal_period]
+            )
+        else:
+            seasonal_differenced_X = X
+
         d = 0
-        while not self._is_stationary(np.diff(X, d, axis=0)):
+        while not self._is_stationary(np.diff(seasonal_differenced_X, d, axis=0)):
             d += 1
             if d > self.max_d:
                 if self.default_d_for_non_stationarity is not None:
@@ -533,16 +552,15 @@ class AutoVARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
                 raise ValueError("Maximum differencing order reached")
         return d
 
-    @staticmethod
-    def _init_models(d):
+    def _init_models(self, d):
         models = {
-            VARIMA(0, d, 0, with_constant=d < 2),
-            VARIMA(2, d, 2, with_constant=d < 2),
-            VARIMA(1, d, 0, with_constant=d < 2),
-            VARIMA(0, d, 1, with_constant=d < 2)
+            VARIMA(0, d, 0, with_constant=d < 2, seasonal_period=self.seasonal_period),
+            VARIMA(2, d, 2, with_constant=d < 2, seasonal_period=self.seasonal_period),
+            VARIMA(1, d, 0, with_constant=d < 2, seasonal_period=self.seasonal_period),
+            VARIMA(0, d, 1, with_constant=d < 2, seasonal_period=self.seasonal_period)
         }
         if d <= 1:
-            models.add(VARIMA(0, d, 0, with_constant=False))
+            models.add(VARIMA(0, d, 0, with_constant=False, seasonal_period=self.seasonal_period))
         return models
 
     def _compute_model_variations(self, current_best_model, computed_adjustable_hyperparams):
