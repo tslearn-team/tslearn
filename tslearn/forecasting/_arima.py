@@ -1,5 +1,7 @@
 import warnings
 
+from numba import njit
+
 import numpy as np
 
 import scipy
@@ -57,6 +59,56 @@ def compute_var(p, X, with_constant=False):
     residuals = Y - np.dot(Z, coeffs)
 
     return intercept, ar_coeffs, residuals
+
+
+@njit
+def _loss(X, intercept, ar_coeffs, ma_coeffs):
+    n_ts, n_samples, n_features_in = X.shape
+
+    # Number of valid samples, discarding nans for variable length datasets
+    n_valid_samples = np.sum(np.isfinite(np.sum(X, axis=-1)))
+
+    p = ar_coeffs.shape[0]
+    q = ma_coeffs.shape[0]
+
+    sse = 0
+    residuals = np.zeros((n_ts, q, n_features_in))
+    start = max(p, q)
+    for i in range(start, n_samples):
+        current_err = X[:, i] - _varma_next(
+            X[:, i - start:i],
+            residuals,
+            ar_coeffs,
+            ma_coeffs,
+            intercept,
+        )
+        # Deals with variable length series padded with nan
+        sse += np.nansum(current_err * current_err)
+        if q > 0:
+            for i in range(n_ts):
+                if np.all(np.isfinite(current_err[i])):
+                    residuals[i, :-1] = residuals[i, 1:]
+                    residuals[i, -1] = current_err[i]
+
+    variance = sse / (n_valid_samples - n_ts * start)
+    n_loglikelihood = (n_valid_samples - n_ts * start) * (np.log(2* np.pi) + np.log(variance) + 1) / 2
+    return n_loglikelihood, residuals
+
+
+@njit
+def _varma_next(X, residuals, ar_coeffs, ma_coeffs, intercept):
+    n_ts, n_samples, n_features_in = X.shape
+
+    ar_forecast = np.zeros((n_ts, n_features_in))
+    for k in range(ar_coeffs.shape[0]):
+        ar_forecast += np.dot(X[:, n_samples - k - 1], ar_coeffs[k])
+    ma_forecast = np.zeros((n_ts, n_features_in))
+    for k in range(ma_coeffs.shape[0]):
+        ma_forecast += np.dot(residuals[:, k], ma_coeffs[k])
+
+    intercept = np.zeros(n_features_in) if intercept.shape[0] == 0 else intercept
+
+    return ar_forecast + ma_forecast + np.expand_dims(intercept, axis=0)
 
 
 class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
@@ -221,67 +273,23 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
             ar_coeffs = ar_coeffs.reshape(self.p, n_features_in, n_features_in)
             params = params[n_features_in * (n_features_in * self.p):]
         else:
-            ar_coeffs = np.array([])
+            ar_coeffs = np.empty((0, n_features_in, n_features_in))
         if self.q > 0:
             ma_coeffs = params[:n_features_in * (n_features_in * self.q)]
             ma_coeffs = ma_coeffs.reshape(self.q, n_features_in, n_features_in)
         else:
-            ma_coeffs = np.array([])
+            ma_coeffs = np.empty((0, n_features_in, n_features_in))
 
         return intercept, ar_coeffs, ma_coeffs
 
     def _loss(self, X, params=None):
-        n_ts, n_samples, n_features_in = X.shape
-
-        # Number of valid samples, discarding nans for variable length datasets
-        n_valid_samples = np.sum(np.isfinite(np.sum(X, axis=-1)))
+        n_features_in = X.shape[-1]
 
         if params is not None:
             intercept, ar_coeffs, ma_coeffs = self._unravel_params(params, n_features_in)
         else:
             intercept, ar_coeffs, ma_coeffs = self.intercept_, self.ar_coeffs_, self.ma_coeffs_
-
-        sse = 0
-        residuals = np.zeros((n_ts, self.q, n_features_in))
-        start = max(self.p, self.q)
-        for i in range(start, n_samples):
-            current_err = X[:, i] - self._varma_next(
-                X[:, i - start:i],
-                residuals,
-                ar_coeffs,
-                ma_coeffs,
-                intercept,
-            )
-            # Deals with variable length series padded with nan
-            sse += np.nansum(current_err * current_err)
-            if self.q > 0:
-                for i in range(n_ts):
-                    if all(np.isfinite(current_err[i])):
-                        residuals[i, :-1] = residuals[i, 1:]
-                        residuals[i, -1] = current_err[i]
-
-        variance = sse / (n_valid_samples - n_ts * start)
-        n_loglikelihood = (n_valid_samples - n_ts * start) * (np.log(2* np.pi) + np.log(variance) + 1) / 2
-        return n_loglikelihood, residuals
-
-    def _varma_next(self, X, residuals, ar_coeffs=None, ma_coeffs=None, intercept=None):
-        n_ts, n_samples, n_features_in = X.shape
-
-        ar_coeffs = ar_coeffs if ar_coeffs is not None else self.ar_coeffs_
-        ma_coeffs = ma_coeffs if ma_coeffs is not None else self.ma_coeffs_
-        intercept = intercept if intercept is not None else self.intercept_
-        residuals = residuals if residuals is not None else self._last_residuals
-
-        ar_forecast = np.zeros((n_ts, n_features_in))
-        for k in range(self.p):
-            ar_forecast += np.dot(X[:, n_samples - k - 1], ar_coeffs[k])
-        ma_forecast = np.zeros((n_ts, n_features_in))
-        for k in range(self.q):
-            ma_forecast += np.dot(residuals[:, k], ma_coeffs[k])
-
-        intercept = np.zeros(n_features_in) if intercept.shape[0] == 0 else intercept
-
-        return ar_forecast + ma_forecast + np.expand_dims(intercept, axis=0)
+        return _loss(X, intercept, ar_coeffs, ma_coeffs)
 
     def _undifference(self, initial_values, prediction):
         _ = np.array([(-1 ** (j+1)) * scipy.special.binom(j + 1, self.d) for j in range(self.d)])
@@ -336,7 +344,13 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
 
         res = np.zeros((last_timestamps.shape[0], n, self.n_features_in_))
         for i in range(n):
-            estimate = self._varma_next(dd_timestamps, last_residuals)
+            estimate = _varma_next(
+                dd_timestamps,
+                last_residuals,
+                self.ar_coeffs_,
+                self.ma_coeffs_,
+                self.intercept_
+            )
             if self.p > 0 and n > 1:
                 # Rolling for next estimate
                 dd_timestamps = np.roll(dd_timestamps, -1, axis=1)
