@@ -1,6 +1,8 @@
 """DTW Barycenter Averaging (DBA)"""
 import warnings
 
+from joblib import Parallel, delayed
+
 import numpy
 
 from scipy.interpolate import interp1d
@@ -29,8 +31,15 @@ def _init_avg(X, barycenter_size):
         return f(xnew)
 
 
-def _petitjean_assignment(X, barycenter,  weights, metric_params=None):
+def _petitjean_assignment(
+    X,
+    barycenter,
+    weights,
+    metric_params=None,
+    n_jobs=None
+):
     backend = instantiate_backend("numpy")
+    use_parallel = n_jobs not in [None, 1]
 
     if metric_params is None:
         metric_params = {}
@@ -39,16 +48,35 @@ def _petitjean_assignment(X, barycenter,  weights, metric_params=None):
     assign = ([[] for _ in range(barycenter_size)],
               [[] for _ in range(barycenter_size)])
     cost = 0
-    for i in range(n):
-        dist_i, path = _njit_dtw_path(
-            _to_time_series(X[i], True, backend),
-            barycenter,
-            **metric_params
+
+    if use_parallel:
+        res = Parallel(n_jobs=n_jobs, prefer="threads")(
+            delayed(_njit_dtw_path)(
+                _to_time_series(X[i], True, backend),
+                barycenter,
+                **metric_params
+            )
+            for i in range(n)
         )
-        for pair in path:
-            assign[0][pair[1]].append(i)
-            assign[1][pair[1]].append(pair[0])
-        cost += dist_i ** 2 * weights[i]
+
+        for i, (dist, path) in enumerate(res):
+            cost += dist ** 2 * weights[i]
+            for pair in path:
+                assign[0][pair[1]].append(i)
+                assign[1][pair[1]].append(pair[0])
+
+    else:
+        for i in range(n):
+            dist_i, path = _njit_dtw_path(
+                _to_time_series(X[i], True, backend),
+                barycenter,
+                **metric_params
+            )
+            for pair in path:
+                assign[0][pair[1]].append(i)
+                assign[1][pair[1]].append(pair[0])
+            cost += dist_i ** 2 * weights[i]
+
     cost /= weights.sum()
     return assign, cost
 
@@ -69,7 +97,8 @@ def dtw_barycenter_averaging_petitjean(
     tol=1e-5,
     weights=None,
     metric_params=None,
-    verbose=False
+    verbose=False,
+    n_jobs=None
 ):
     """DTW Barycenter Averaging (DBA) method.
 
@@ -111,6 +140,13 @@ def dtw_barycenter_averaging_petitjean(
 
     verbose : boolean (default: False)
         Whether to print information about the cost at each iteration or not.
+
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See scikit-learns'
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`__
+        for more details.
 
     Returns
     -------
@@ -174,7 +210,7 @@ def dtw_barycenter_averaging_petitjean(
         )
     cost_prev, cost = numpy.inf, numpy.inf
     for it in range(max_iter):
-        assign, cost = _petitjean_assignment(X_, barycenter, weights, metric_params)
+        assign, cost = _petitjean_assignment(X_, barycenter, weights, metric_params, n_jobs)
         if verbose:
             print("[DBA] epoch %d, cost: %.3f" % (it + 1, cost))
         barycenter = _petitjean_update_barycenter(X_, assign, barycenter_size,
@@ -190,8 +226,14 @@ def dtw_barycenter_averaging_petitjean(
     return barycenter
 
 
-def _mm_assignment(X, barycenter, weights, metric_params=None):
-    """Computes item assignement based on DTW alignments and return cost as a
+def _mm_assignment(
+    X,
+    barycenter,
+    weights,
+    metric_params=None,
+    n_jobs=None
+):
+    """Computes item assignment based on DTW alignments and returns cost as a
     bonus.
 
     Parameters
@@ -211,6 +253,13 @@ def _mm_assignment(X, barycenter, weights, metric_params=None):
         a list of accepted parameters
         If None, no constraint is used for DTW computations.
 
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See scikit-learns'
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`__
+        for more details.
+
     Returns
     -------
     list of index pairs
@@ -220,20 +269,38 @@ def _mm_assignment(X, barycenter, weights, metric_params=None):
         Current alignment cost
     """
     backend = instantiate_backend("numpy")
+    use_parallel = n_jobs not in [None, 1]
 
     if metric_params is None:
         metric_params = {}
     n = X.shape[0]
     cost = 0.
     list_p_k = []
-    for i in range(n):
-        dist_i, path = _njit_dtw_path(
-            barycenter,
-            _to_time_series(X[i], True, backend),
-            **metric_params
+
+    if use_parallel:
+        res = Parallel(n_jobs=n_jobs, prefer="threads")(
+            delayed(_njit_dtw_path)(
+                barycenter,
+                _to_time_series(X[i], True, backend),
+                **metric_params
+            )
+            for i in range(n)
         )
-        cost += dist_i ** 2 * weights[i]
-        list_p_k.append(path)
+
+        for i, (dist, path) in enumerate(res):
+            cost += dist ** 2 * weights[i]
+            list_p_k.append(path)
+
+    else:
+        for i in range(n):
+            dist_i, path = _njit_dtw_path(
+                barycenter,
+                _to_time_series(X[i], True, backend),
+                **metric_params
+            )
+            cost += dist_i ** 2 * weights[i]
+            list_p_k.append(path)
+
     cost /= weights.sum()
     return list_p_k, cost
 
@@ -424,13 +491,14 @@ def dtw_barycenter_averaging(
     weights=None,
     metric_params=None,
     verbose=False,
-    n_init=1
+    n_init=1,
+    n_jobs=None
 ):
     """DTW Barycenter Averaging (DBA) method estimated through
     Expectation-Maximization algorithm.
 
     DBA was originally presented in [1]_.
-    This implementation is based on a idea from [2]_ (Majorize-Minimize Mean
+    This implementation is based on an idea from [2]_ (Majorize-Minimize Mean
     Algorithm).
 
     Parameters
@@ -472,6 +540,13 @@ def dtw_barycenter_averaging(
         Number of different initializations to be tried (useful only is
         init_barycenter is set to None, otherwise, all trials will reach the
         same performance)
+
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See scikit-learns'
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`__
+        for more details.
 
     Returns
     -------
@@ -534,7 +609,8 @@ def dtw_barycenter_averaging(
             tol=tol,
             weights=weights,
             metric_params=metric_params,
-            verbose=verbose
+            verbose=verbose,
+            n_jobs=n_jobs
         )
         if loss < best_cost:
             best_cost = loss
@@ -550,7 +626,8 @@ def dtw_barycenter_averaging_one_init(
     tol=1e-5,
     weights=None,
     metric_params=None,
-    verbose=False
+    verbose=False,
+    n_jobs=None
 ):
     """DTW Barycenter Averaging (DBA) method estimated through
     Expectation-Maximization algorithm.
@@ -594,6 +671,14 @@ def dtw_barycenter_averaging_one_init(
     verbose : boolean (default: False)
         Whether to print information about the cost at each iteration or not.
 
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See scikit-learns'
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`__
+        for more details.
+
+
     Returns
     -------
     numpy.array of shape (barycenter_size, d) or (sz, d) if barycenter_size \
@@ -629,7 +714,13 @@ def dtw_barycenter_averaging_one_init(
         )
     cost_prev, cost = numpy.inf, numpy.inf
     for it in range(max_iter):
-        list_p_k, cost = _mm_assignment(X_, barycenter, weights, metric_params)
+        list_p_k, cost = _mm_assignment(
+            X_,
+            barycenter,
+            weights,
+            metric_params,
+            n_jobs
+        )
         diag_sum_v_k, list_w_k = _mm_valence_warping(list_p_k, barycenter_size,
                                                      weights)
         if verbose:
