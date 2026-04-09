@@ -544,7 +544,7 @@ class AutoVARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
             seasonal_differenced_X = X
 
         d = 0
-        while not self._is_stationary(np.diff(seasonal_differenced_X, d, axis=0)):
+        while not self._is_stationary(np.diff(seasonal_differenced_X, d, axis=1)):
             d += 1
             if d > self.max_d:
                 if self.default_d_for_non_stationarity is not None:
