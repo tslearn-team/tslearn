@@ -128,3 +128,25 @@ def test_VARIMA():
         model.predict(n=2),
         model.predict(data, n=2)
     )
+
+
+def test_AutoVARIMA():
+    data = random_walks(n_ts=10, sz=100, std=0.1)
+
+    # Test max orders
+    model = AutoVARIMA(max_p=0, max_q=0, max_d=0).fit(data)
+    assert model.best_estimator_.p == model.best_estimator_.q == model.best_estimator_.d == 0
+
+    # Should error min_size
+    model = AutoVARIMA(max_p=0, max_q=0, max_d=0, seasonal_period=5).fit(data)
+    with pytest.raises(ValueError):
+        model.predict(data[0, :5:])
+    # Should error min_size
+    with pytest.raises(ValueError):
+        model.fit(data[0, :5:])
+
+    # Estimating normally distributed noise
+    rng = np.random.RandomState(0)
+    data = rng.normal(size=(10, 100, 2))
+    model = AutoVARIMA().fit(data)
+    assert model.best_estimator_.p == model.best_estimator_.q == model.best_estimator_.d == 0
