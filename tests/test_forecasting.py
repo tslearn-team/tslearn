@@ -42,8 +42,8 @@ def test_VARIMA():
     data = random_walks(d=3)
     data[25, 250:, :] = np.nan
     data[75, 120:, :] = np.nan
-    model = VARIMA(2, 1, 2, with_constant=False).fit(data)
-    assert model.predict(n=horizon).shape == (data.shape[0], horizon, data.shape[-1])
+    predicted = VARIMA(2, 1, 2, with_constant=False).fit_predict(data, n=horizon)
+    assert predicted.shape == (data.shape[0], horizon, data.shape[-1])
 
     # Test p, q, d = 0 without constant, should predict 0's
     horizon = 5
@@ -131,11 +131,17 @@ def test_VARIMA():
 
 
 def test_AutoVARIMA():
-    data = random_walks(n_ts=10, sz=100, std=0.1)
+    rng = np.random.RandomState(0)
+    data = random_walks(n_ts=10, sz=100, std=0.1, random_state=rng)
 
     # Test max orders
     model = AutoVARIMA(max_p=0, max_q=0, max_d=0).fit(data)
     assert model.best_estimator_.p == model.best_estimator_.q == model.best_estimator_.d == 0
+
+    # Non-stationary AR 1
+    model = AutoVARIMA().fit(data)
+    assert model.best_estimator_.p == model.best_estimator_.q == 0
+    assert model.best_estimator_.d == 1
 
     # Should error min_size
     model = AutoVARIMA(max_p=0, max_q=0, max_d=0, seasonal_period=5).fit(data)
@@ -146,7 +152,25 @@ def test_AutoVARIMA():
         model.fit(data[0, :5:])
 
     # Estimating normally distributed noise
-    rng = np.random.RandomState(0)
     data = rng.normal(size=(10, 100, 2))
     model = AutoVARIMA().fit(data)
     assert model.best_estimator_.p == model.best_estimator_.q == model.best_estimator_.d == 0
+
+    # Test seasonality with MA X(t) = e(t) + 0.9e(t-1)
+    seasonal_period = 10
+    noise = rng.normal(size=(2, 100, 2))
+    data = noise[:, 1:] + 0.9 * noise[:, :-1]
+    seasonal_data = np.cos(np.linspace(0, 2 * np.pi * data.shape[1] / seasonal_period, data.shape[1]))
+    for k in range(data.shape[-1]):
+        data[..., k] += seasonal_data
+    model = AutoVARIMA(seasonal_period=10).fit(data)
+    assert model.best_estimator_.p == model.best_estimator_.d == 0
+    assert model.best_estimator_.q == 1
+    np.testing.assert_allclose(
+        model.predict(n=2),
+        model.predict(data, n=2)
+    )
+    np.testing.assert_allclose(
+        model.predict(n=2),
+        model.fit_predict(data, n=2)
+    )

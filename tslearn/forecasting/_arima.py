@@ -402,7 +402,7 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         tags.input_tags.allow_nan = True
         return tags
 
-    def _more_tags(self):
+    def _more_tags(self): # pragma: no cover
         tags = super()._more_tags()
         tags.update({
             "requires_y": False,
@@ -615,12 +615,14 @@ class AutoVARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
 
         while models_to_test:
             for model in models_to_test:
-                model_adjustable_hyperparams = tuple(getattr(model, hyperparam) for hyperparam in adjustable_hyperparams)
+                model_adjustable_hyperparams = tuple(
+                    getattr(model, hyperparam) for hyperparam in adjustable_hyperparams
+                )
                 computed_adjustable_hyperparams.add(model_adjustable_hyperparams)
 
                 try:
                     model = model.fit(X)
-                except ValueError as e:
+                except ValueError as e: # pragma: no cover
                     warnings.warn(f"Model {model} skipped: {e}")
                     continue
 
@@ -640,7 +642,7 @@ class AutoVARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         tags.input_tags.allow_nan = True
         return tags
 
-    def _more_tags(self):
+    def _more_tags(self): # pragma: no cover
         tags = super()._more_tags()
         tags.update({
             "requires_y": False,
