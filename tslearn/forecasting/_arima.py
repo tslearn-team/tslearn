@@ -90,8 +90,8 @@ def _loss(X, intercept, ar_coeffs, ma_coeffs):
                     residuals[i, :-1] = residuals[i, 1:]
                     residuals[i, -1] = current_err[i]
 
-    variance = sse / (n_valid_samples - n_ts * start)
-    n_loglikelihood = (n_valid_samples - n_ts * start) * (np.log(2* np.pi) + np.log(variance) + 1) / 2
+    variance = sse / ((n_valid_samples - n_ts * start) * n_features_in)
+    n_loglikelihood = n_features_in * n_valid_samples * (np.log(2 * np.pi) + np.log(variance) + 1) / 2
     return n_loglikelihood, residuals
 
 
