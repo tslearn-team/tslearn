@@ -568,11 +568,14 @@ class AutoVARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
 
     def _init_models(self, d):
         models = {
-            VARIMA(0, d, 0, with_constant=d < 2, seasonal_period=self.seasonal_period),
-            VARIMA(2, d, 2, with_constant=d < 2, seasonal_period=self.seasonal_period),
-            VARIMA(1, d, 0, with_constant=d < 2, seasonal_period=self.seasonal_period),
-            VARIMA(0, d, 1, with_constant=d < 2, seasonal_period=self.seasonal_period)
+            VARIMA(0, d, 0, with_constant=d < 2, seasonal_period=self.seasonal_period)
         }
+        if self.max_p > 0:
+            models.add(VARIMA(1, d, 0, with_constant=d < 2, seasonal_period=self.seasonal_period))
+        if self.max_q > 0:
+            models.add(VARIMA(0, d, 1, with_constant=d < 2, seasonal_period=self.seasonal_period))
+        if self.max_p > 1 and self.max_q > 1:
+            models.add(VARIMA(2, d, 2, with_constant=d < 2, seasonal_period=self.seasonal_period),)
         if d <= 1:
             models.add(VARIMA(0, d, 0, with_constant=False, seasonal_period=self.seasonal_period))
         return models
