@@ -134,6 +134,9 @@ def test_AutoVARIMA():
     rng = np.random.RandomState(0)
     data = random_walks(n_ts=10, sz=100, std=0.1, random_state=rng)
 
+    with pytest.raises(ValueError):
+        AutoVARIMA(max_d=0,default_d_for_non_stationarity=None).fit(data)
+
     # Test max orders
     model = AutoVARIMA(max_p=0, max_q=0, max_d=0).fit(data)
     assert model.best_estimator_.p == model.best_estimator_.q == model.best_estimator_.d == 0
@@ -142,6 +145,11 @@ def test_AutoVARIMA():
     model = AutoVARIMA().fit(data)
     assert model.best_estimator_.p == model.best_estimator_.q == 0
     assert model.best_estimator_.d == 1
+
+    # Non-stationary AR 1 with max_d = 0
+    model = AutoVARIMA(max_d=0).fit(data)
+    assert model.best_estimator_.p == 1
+    assert model.best_estimator_.d == 0
 
     # Should error min_size
     model = AutoVARIMA(max_p=0, max_q=0, max_d=0, seasonal_period=5).fit(data)
