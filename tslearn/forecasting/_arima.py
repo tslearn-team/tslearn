@@ -487,7 +487,6 @@ class AutoVARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
             raise ValueError(f"{self._min_samples} timestamps are required per TS")
 
         self.best_estimator_ = self._get_best_model_for_given_d(self._determine_d(X_), X_)
-        self.best_estimator_.fit(X_)
 
         self.n_ts_ = self.best_estimator_.n_ts_
         self.n_samples_ = self.best_estimator_.n_samples_
