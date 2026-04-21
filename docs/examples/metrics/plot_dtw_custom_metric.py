@@ -63,7 +63,7 @@ def arc_length(angle_1, angle_2, r=1.):
         theta = theta - 2 * pi
     # Return the length of the arc
     L = r * np.abs(theta)
-    return(L)
+    return L[0]
 
 
 dataset_1 = random_walks(n_ts=n_ts, sz=sz, d=1)
