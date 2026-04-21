@@ -1,4 +1,4 @@
-"""
+r"""
 The :mod:`tslearn.datasets` module provides simplified access to standard time
 series datasets.
 

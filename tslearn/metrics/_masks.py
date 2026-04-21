@@ -272,6 +272,12 @@ def compute_mask(
            [False,  True,  True, False],
            [False,  True,  True, False],
            [False, False, False,  True]])
+
+    References
+    ----------
+    .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
+           spoken word recognition," IEEE Transactions on Acoustics, Speech and
+           Signal Processing, vol. 26(1), pp. 43--49, 1978.
     """
     be = instantiate_backend(be, s1, s2)
 

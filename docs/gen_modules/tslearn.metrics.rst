@@ -14,7 +14,6 @@ tslearn.metrics
       compute_mask
       sakoe_chiba_mask
       itakura_mask
-      accumulated_matrix
       cdist_dtw
       cdist_gak
       cdist_soft_dtw
@@ -25,6 +24,7 @@ tslearn.metrics
       dtw
       dtw_path
       dtw_path_from_metric
+      dtw_accumulated_matrix
       dtw_limited_warping_length
       dtw_path_limited_warping_length
       subsequence_path
@@ -44,3 +44,4 @@ tslearn.metrics
       frechet
       frechet_path
       frechet_path_from_metric
+      frechet_accumulated_matrix
