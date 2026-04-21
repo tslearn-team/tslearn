@@ -86,7 +86,7 @@ rect_dist = [left_h, bottom, width, height]
 rect_s_x = [left_h, bottom_h, width, h_ts]
 
 # Plot example
-plt.figure(layout="constrained", figsize=(6, 6))
+plt.figure(figsize=(6, 6))
 ax_dist = plt.axes(rect_dist)
 ax_s_x = plt.axes(rect_s_x)
 ax_s_y = plt.axes(rect_s_y)

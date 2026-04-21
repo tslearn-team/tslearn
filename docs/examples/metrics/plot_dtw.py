@@ -67,7 +67,7 @@ sz = s_y1.shape[0]
 
 path, sim = metrics.dtw_path(s_y1, s_y2)
 
-plt.figure(layout="constrained", figsize=(8, 8))
+plt.figure(figsize=(8, 8))
 
 # definitions for the axes
 left, bottom = 0.01, 0.1
