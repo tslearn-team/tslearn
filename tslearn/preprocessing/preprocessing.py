@@ -11,7 +11,6 @@ from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from tslearn.utils import (
     check_variable_length_input,
     to_time_series_dataset,
-    to_time_series,
     check_array,
     check_dims
 )
@@ -611,11 +610,13 @@ class TimeSeriesImputer(TimeSeriesMixin, TransformerMixin, BaseEstimator):
             raise ValueError("Imputer {} not implemented.".format(self.method))
 
         for ts_index in range(X_.shape[0]):
-            ts = to_time_series(X[ts_index])
-            stop_index = ts.shape[0]
+            ts = X_[ts_index]
             if self.keep_trailing_nans:
                 stop_index = _ts_size(ts)
-            X_[ts_index, :stop_index] = imputer(ts[:stop_index])
+                X_[ts_index, :stop_index] = imputer(ts[:stop_index])
+            else:
+                X_[ts_index] = imputer(ts)
+
         return to_time_series_dataset(X_)
 
     def _more_tags(self):
@@ -623,9 +624,6 @@ class TimeSeriesImputer(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         tags.update({
             'allow_nan': True,
             ALLOW_VARIABLE_LENGTH: True,
-        })
-        tags['_xfail_checks'].update({
-            "check_transformer_data_not_an_array": "Uses X"
         })
         return tags
 
