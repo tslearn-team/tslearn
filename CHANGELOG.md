@@ -14,6 +14,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 ### Added
 
 * Allow parallel computation of DTW barycenters and plug it in `TimeSeriesKMeans`.
+* NonMyopicEarlyClassifier can now be used with yet incomplete series to retrieve optimal classification timing.
 
 ### Changed
 
