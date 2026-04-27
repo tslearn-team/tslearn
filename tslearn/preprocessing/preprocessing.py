@@ -429,10 +429,10 @@ class TimeSeriesImputer(TimeSeriesMixin, TransformerMixin, BaseEstimator):
     value: float (default: nan)
         The value to replace missing values with. Only used when method is
         `constant`.
-    keep_trailing_nans: bool (default: False)
+    keep_trailing_nans: bool (default: True)
         Whether trailing samples with nans on all dimensions should be considered
         padding for variable length time series and kept unprocessed. When set to
-        `True`, trailing 'empty' samples  will not be imputed.
+        `False` , trailing 'empty' samples  will be imputed.
 
     Notes
     -----
@@ -474,7 +474,7 @@ class TimeSeriesImputer(TimeSeriesMixin, TransformerMixin, BaseEstimator):
     def __init__(self,
                  method: Union[str, Callable]="mean",
                  value:  Optional[float]=nan,
-                 keep_trailing_nans: bool = False):
+                 keep_trailing_nans: bool = True):
         self.method = method
         self.value = value
         self.keep_trailing_nans = keep_trailing_nans
