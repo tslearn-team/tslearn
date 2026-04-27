@@ -18,6 +18,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 ### Changed
 
 * Fix masking issue in `LearningShapelets` with Keras 3.14
+* Fix imputer crash ([#659](https://github.com/tslearn-team/tslearn/issues/659))
 
 ## [v0.8.1]
 

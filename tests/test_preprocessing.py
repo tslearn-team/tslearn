@@ -248,15 +248,18 @@ def test_imputer():
         [1, 2, np.nan, 9]
     ]
 
-    # Test default params and equivalent mean method
-    imputer = TimeSeriesImputer()
+    # Default method is mean
+    imputer = TimeSeriesImputer(keep_trailing_nans=True)
     transformed = imputer.fit_transform(multivariate_dataset)
     expected = np.array([
         [[1, 2], [2, 3], [2, 2.5]],
         [[3, 4], [3, 5], [np.nan, np.nan]],
     ])
     np.testing.assert_array_equal(transformed, expected)
-    transformed = TimeSeriesImputer(method="mean").fit_transform(multivariate_dataset)
+    transformed = TimeSeriesImputer(
+        method="mean",
+        keep_trailing_nans=True
+    ).fit_transform(multivariate_dataset)
     np.testing.assert_array_equal(transformed, expected)
     transformed = imputer.fit_transform(univariate_dataset)
     expected = np.array([
@@ -264,7 +267,10 @@ def test_imputer():
         [[1], [2], [4], [9]],
     ])
     np.testing.assert_array_equal(transformed, expected)
-    transformed = TimeSeriesImputer(method="mean").fit_transform(univariate_dataset)
+    transformed = TimeSeriesImputer(
+        method="mean",
+        keep_trailing_nans=True
+    ).fit_transform(univariate_dataset)
     np.testing.assert_array_equal(transformed, expected)
 
     # Test median method
@@ -300,11 +306,13 @@ def test_imputer():
     ])
     np.testing.assert_array_equal(transformed, expected)
     transformed = imputer.fit_transform(univariate_dataset)
-    expected = np.array([
-        [[1], [1], [1], [3], [6], [6], [9] ],
-        [[1], [2], [2], [9], [np.nan], [np.nan], [np.nan] ],
-        [[np.nan], [2], [2], [9], [6], [6], [np.nan]],
-    ])
+    expected = np.array(
+        [
+            [[1], [1], [1], [3], [6], [6], [9]],
+            [[1], [2], [2], [9], [np.nan], [np.nan], [np.nan]],
+            [[np.nan], [2], [2], [9], [6], [np.nan], [np.nan]],
+        ]
+    )
     np.testing.assert_array_equal(transformed, expected)
 
     # Test bfill method
@@ -340,7 +348,7 @@ def test_imputer():
         [[np.nan], [2], [np.nan], [9], [6], [np.nan], [np.nan]],
     ])
     np.testing.assert_array_equal(transformed, expected)
-    value=42.42
+    value = 42.42
     imputer.set_params(value=value)
     transformed = imputer.fit_transform(multivariate_dataset)
     expected = np.array([
@@ -349,11 +357,13 @@ def test_imputer():
     ])
     np.testing.assert_array_equal(transformed, expected)
     transformed = imputer.fit_transform(univariate_dataset)
-    expected = np.array([
-        [[1], [value], [value], [3], [6], [value], [9]],
-        [[1], [2], [value], [9], [np.nan], [np.nan], [np.nan]],
-        [[value], [2], [value], [9], [6], [value], [np.nan]],
-    ])
+    expected = np.array(
+        [
+            [[1], [value], [value], [3], [6], [value], [9]],
+            [[1], [2], [value], [9], [np.nan], [np.nan], [np.nan]],
+            [[value], [2], [value], [9], [6], [np.nan], [np.nan]],
+        ]
+    )
     np.testing.assert_array_equal(transformed, expected)
 
     imputer.set_params(method="linear")
@@ -367,11 +377,13 @@ def test_imputer():
         [np.nan, 2, np.nan, 9, 6, np.nan],
     ]
     transformed = imputer.fit_transform(univariate_dataset)
-    expected = np.array([
-        [[1], [5/3], [7/3], [3], [6], [7.5], [9]],
-        [[1], [2], [5.5], [9], [np.nan], [np.nan], [np.nan]],
-        [[2], [2], [5.5], [9], [6], [6], [np.nan]],
-    ])
+    expected = np.array(
+        [
+            [[1], [5 / 3], [7 / 3], [3], [6], [7.5], [9]],
+            [[1], [2], [5.5], [9], [np.nan], [np.nan], [np.nan]],
+            [[2], [2], [5.5], [9], [6], [np.nan], [np.nan]],
+        ]
+    )
     np.testing.assert_array_almost_equal(transformed, expected)
     transformed = imputer.fit_transform(multivariate_dataset)
     expected = np.array([
@@ -389,19 +401,30 @@ def test_imputer():
         [1, 2, np.nan, 9],
         [np.nan, 2, np.nan, 9, 6, np.nan],
     ]
-    imputer.set_params(method="constant", keep_trailing_nans=True)
+    imputer.set_params(method="constant", keep_trailing_nans=False)
     transformed = imputer.fit_transform(multivariate_dataset)
-    expected = np.array([
-        [[1, value], [2, 3], [2, value]],
-        [[3, 4], [value, 5], [np.nan, np.nan]],
-    ])
+    expected = np.array(
+        [
+            [[1, value], [2, 3], [2, value]],
+            [[3, 4], [value, 5], [value, value]],
+        ]
+    )
     np.testing.assert_array_equal(transformed, expected)
     transformed = imputer.fit_transform(univariate_dataset)
-    expected = np.array([
-        [[1], [value], [value], [3], [6], [value], [9]],
-        [[1], [2], [value], [9], [np.nan], [np.nan], [np.nan]],
-        [[value], [2], [value], [9], [6], [np.nan], [np.nan]],
-    ])
+    expected = np.array(
+        [
+            [[1], [value], [value], [3], [6], [value], [9]],
+            [[1], [2], [value], [9], [value], [value], [value]],
+            [[value], [2], [value], [9], [6], [value], [value]],
+        ]
+    )
+    np.testing.assert_array_equal(transformed, expected)
+
+    transformed = imputer.fit_transform([[1, np.nan]])
+    expected = np.array([[[1.0]]])
+    np.testing.assert_array_equal(transformed, expected)
+    imputer.set_params(keep_trailing_nans=True)
+    transformed = imputer.fit_transform([[1, np.nan]])
     np.testing.assert_array_equal(transformed, expected)
 
     imputer.set_params(method=lambda x: to_time_series([1, 2, 3]))
