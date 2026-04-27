@@ -456,15 +456,15 @@ class TimeSeriesImputer(TimeSeriesMixin, TransformerMixin, BaseEstimator):
            [[3. ],
             [3. ],
             [nan]]])
-    >>> # Trailing empty samples are preserved with `keep_trailing_nans`
-    >>> TimeSeriesImputer('ffill', keep_trailing_nans=True).fit_transform(
+    >>> # Process trailing empty samples
+    >>> TimeSeriesImputer('ffill', keep_trailing_nans=False).fit_transform(
     ... [[[1, 2], [2, numpy.nan]], [[3, 4], [numpy.nan, numpy.nan]]]
     ... )
-    array([[[ 1.,  2.],
-            [ 2.,  2.]],
+    array([[[1., 2.],
+            [2., 2.]],
     <BLANKLINE>
-           [[ 3.,  4.],
-            [nan, nan]]])
+           [[3., 4.],
+            [3., 4.]]])
     >>> # Uncomputable values are left unchanged
     >>> TimeSeriesImputer('ffill').fit_transform([[numpy.nan, 3, 6]])
     array([[[nan],
