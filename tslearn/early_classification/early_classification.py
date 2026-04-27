@@ -1,15 +1,18 @@
-from sklearn.metrics import confusion_matrix, accuracy_score
-from sklearn.base import ClassifierMixin, clone, BaseEstimator
-from sklearn.model_selection import train_test_split
+import warnings
+
 import numpy as np
+
 from scipy.sparse import coo_matrix
 
+from sklearn.base import ClassifierMixin, clone, BaseEstimator
+from sklearn.metrics import confusion_matrix, accuracy_score
+from sklearn.model_selection import train_test_split
 from sklearn.utils.validation import check_is_fitted
 
-from ..utils import to_time_series_dataset, check_array, check_dims
-from ..neighbors import KNeighborsTimeSeriesClassifier
-from ..clustering import TimeSeriesKMeans
 from ..bases import TimeSeriesMixin
+from ..clustering import TimeSeriesKMeans
+from ..neighbors import KNeighborsTimeSeriesClassifier
+from ..utils import to_time_series, to_time_series_dataset, check_array, check_dims
 
 
 class NonMyopicEarlyClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
@@ -244,7 +247,6 @@ class NonMyopicEarlyClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
 
         Examples
         --------
-        >>> from tslearn.utils import to_time_series
         >>> dataset = to_time_series_dataset([[1, 2, 3, 4, 5, 6],
         ...                                   [1, 2, 3, 4, 5, 6],
         ...                                   [1, 2, 3, 4, 5, 6],
@@ -312,7 +314,6 @@ class NonMyopicEarlyClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
 
         Examples
         --------
-        >>> from tslearn.utils import to_time_series
         >>> dataset = to_time_series_dataset([[1, 2, 3, 4, 5, 6],
         ...                                   [1, 2, 3, 4, 5, 6],
         ...                                   [1, 2, 3, 4, 5, 6],
@@ -359,27 +360,7 @@ class NonMyopicEarlyClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
 
     def _predict_single_series(self, Xi):
         """
-        This function classifies a single time series xt
-
-        Parameters
-        ----------
-        xt: vector
-            a time series that is probably incomplete but that nonetheless we
-            want to classify
-        Returns
-        -------
-        int: the class which is predicted
-        int : the time of the prediction
-        float : the probability used for computing the cost
-        float : the loss when classifying
-        """
-        t = self._get_prediction_time(Xi)
-        pred = self.classifiers_[t].predict([Xi[:t]])[0]
-        return pred, t
-
-    def _predict_single_series_proba(self, Xi):
-        """
-        This function classifies a single time series xt
+        This function classifies a single time series
 
         Parameters
         ----------
@@ -390,8 +371,26 @@ class NonMyopicEarlyClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
         -------
         int: the class which is predicted
         int : the time of the prediction
-        float : the probability used for computing the cost
-        float : the loss when classifying
+        """
+        t = self._get_prediction_time(Xi)
+        pred = self.classifiers_[t].predict([Xi[:t]])[0]
+        return pred, t
+
+    def _predict_single_series_proba(self, Xi):
+        """
+        This function computes the class probabilities for a single time series
+
+        Parameters
+        ----------
+        Xi: vector
+            a time series that is probably incomplete but that nonetheless we
+            want to compute the class probabilities for.
+        Returns
+        -------
+        array-like of shape (n_classes,)
+            Probability of the time series for each class in the model,
+            where classes are ordered as they are in ``self.classes_``.
+        int : the time of the prediction
         """
         t = self._get_prediction_time(Xi)
         pred = self.classifiers_[t].predict_proba([Xi[:t]])[0]
@@ -414,7 +413,7 @@ class NonMyopicEarlyClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
 
         Returns
         -------
-        array, shape (n_samples,)
+        array, shape (n_series,)
             Predicted classes.
         array-like of shape (n_series, )
             Prediction timestamps.
@@ -446,7 +445,7 @@ class NonMyopicEarlyClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
 
         Returns
         -------
-        array, shape (n_samples,)
+        array, shape (n_series,)
             Predicted classes.
         """
         return self.predict_class_and_earliness(X)[0]
@@ -571,6 +570,199 @@ class NonMyopicEarlyClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
         y_pred, pred_times = self.predict_class_and_earliness(X)
         acc = accuracy_score(y, y_pred)
         return (1. - acc) + np.mean(self._cost_time(pred_times))
+
+    def early_predict(self, X):
+        """
+        Provides predicted classes as well as estimated delays before prediction timestamps
+        for a dataset of incomplete time series.
+
+        Prediction timestamps are timestamps at which a prediction is made in
+        early classification setting.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_series, t, n_features)
+            A dataset of incomplete time series observed up to time t
+
+        Returns
+        -------
+        array-like, shape (n_series,)
+            Predicted classes.
+        array-like, shape (n_series,)
+            Estimated delays before prediction timestamps.
+        """
+        check_is_fitted(self, '_X_fit_dims')
+        X = check_array(X, allow_nd=True)
+        X = check_dims(X, X_fit_dims=self._X_fit_dims, check_n_features_only=True)
+        X = to_time_series_dataset(X)
+        return self._early_predict(X, predict_proba=False)
+
+    def early_predict_proba(self, X):
+        """
+        Provides probability estimates as well as estimated delays before prediction timestamps
+        for a dataset of incomplete time series.
+
+        Prediction timestamps are timestamps at which a prediction is made in
+        early classification setting.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_series, t, n_features)
+            A dataset of incomplete time series observed up to time t
+
+        Returns
+        -------
+        array-like, shape (n_series, n_classes)
+            Probabilities for each class in the model,
+            where classes are ordered as they are in ``self.classes_``.
+        array-like of shape (n_series,)
+            Estimated delays before prediction timestamps.
+        """
+        check_is_fitted(self, '_X_fit_dims')
+        X = check_array(X, allow_nd=True)
+        X = check_dims(X, X_fit_dims=self._X_fit_dims, check_n_features_only=True)
+        X = to_time_series_dataset(X)
+        return self._early_predict(X, predict_proba=True)
+
+    def get_early_predict_generator(self, n_ts=1):
+        """
+        Allows streaming incoming timestamps of a time series and retrieving
+        current predicted class as well as estimated delay before prediction timestamps.
+
+        Prediction timestamps are timestamps at which a prediction is made in
+        early classification setting.
+
+        Parameters
+        ----------
+        n_ts: int (default 1)
+            The number of time series that will be predicted by the generator
+
+        Returns
+        -------
+        generator
+            Use the `send` method of the generator to stream timestamps and retrieve associated prediction and delays.
+            This method takes an array-like, shape (n_ts, n_features), as input and outputs the predicted classes
+            and estimated delays before prediction timestamps at the given timestamp (same output as
+            :func:`~early_predict`).
+
+        Examples
+        --------
+        >>> dataset = to_time_series_dataset([[1, 2, 3, 4, 5, 6],
+        ...                                   [1, 2, 3, 4, 5, 6],
+        ...                                   [1, 2, 3, 4, 5, 6],
+        ...                                   [1, 2, 3, 3, 2, 1],
+        ...                                   [1, 2, 3, 3, 2, 1],
+        ...                                   [1, 2, 3, 3, 2, 1],
+        ...                                   [3, 2, 1, 1, 2, 3],
+        ...                                   [3, 2, 1, 1, 2, 3]])
+        >>> y = [0, 0, 0, 1, 1, 1, 0, 0]
+        >>> model = NonMyopicEarlyClassifier(n_clusters=3, lamb=1000.,
+        ...                                  cost_time_parameter=.1,
+        ...                                  random_state=0).fit(dataset, y)
+        >>> incoming_timestamps = np.array([1, 2, 3, 3, 1, 2]).reshape(6, 1, 1, 1)
+        >>> gen = model.get_early_predict_generator()
+        >>> for x in incoming_timestamps:
+        ...     print(gen.send(x))
+        (array([0]), array([3]))
+        (array([0]), array([2]))
+        (array([0]), array([1]))
+        (array([1]), array([0]))
+        (array([1]), array([0]))
+        (array([1]), array([0]))
+        """
+        return self._get_early_predict_generator(n_ts, predict_proba=False)
+
+    def get_early_predict_proba_generator(self, n_ts=1):
+        """
+        Allows streaming incoming timestamps of a time series and retrieving
+        current probability estimates as well as estimated delay before prediction timestamps.
+
+        Prediction timestamps are timestamps at which a prediction is made in
+        early classification setting.
+
+        Parameters
+        ----------
+        n_ts: int (default 1)
+            The number of time series that will be predicted by the generator
+
+        Returns
+        -------
+        generator
+            Use the `send` method of the generator to stream timestamps and retrieve associated prediction and delays.
+            This method takes an array-like, shape (n_ts, n_timestamps, n_features), as input and outputs the predicted probability
+            estimates and estimated delays before prediction timestamps at the given timestamp (same output as
+            :func:`~early_predict_proba`).
+
+        Examples
+        --------
+        >>> dataset = to_time_series_dataset([[1, 2, 3, 4, 5, 6],
+        ...                                   [1, 2, 3, 4, 5, 6],
+        ...                                   [1, 2, 3, 4, 5, 6],
+        ...                                   [1, 2, 3, 3, 2, 1],
+        ...                                   [1, 2, 3, 3, 2, 1],
+        ...                                   [1, 2, 3, 3, 2, 1],
+        ...                                   [3, 2, 1, 1, 2, 3],
+        ...                                   [3, 2, 1, 1, 2, 3]])
+        >>> y = [0, 0, 0, 1, 1, 1, 0, 0]
+        >>> model = NonMyopicEarlyClassifier(n_clusters=3, lamb=1000.,
+        ...                                  cost_time_parameter=.1,
+        ...                                  random_state=0).fit(dataset, y)
+        >>> incoming_timestamps = np.array([1, 2, 3, 3, 1, 2]).reshape(6, 1, 1, 1)
+        >>> gen = model.get_early_predict_proba_generator()
+        >>> for x in incoming_timestamps:
+        ...     print(gen.send(x))
+        (array([[1., 0.]]), array([3]))
+        (array([[1., 0.]]), array([2]))
+        (array([[1., 0.]]), array([1]))
+        (array([[0., 1.]]), array([0]))
+        (array([[0., 1.]]), array([0]))
+        (array([[0., 1.]]), array([0]))
+        """
+        return self._get_early_predict_generator(n_ts, predict_proba=True)
+
+    def _get_early_predict_generator(self, n_ts, predict_proba):
+        check_is_fitted(self, '_X_fit_dims')
+
+        gen = self._generate_early_predictions(n_ts, predict_proba=predict_proba)
+        next(gen)
+        return gen
+
+    def _generate_early_predictions(self, n_ts, predict_proba=False):
+        data = np.empty((n_ts, 0, self._X_fit_dims[-1]))
+
+        while True:
+            incoming_timestamp = yield self._early_predict(data, predict_proba=predict_proba)
+            if incoming_timestamp is not None:
+                try:
+                    data = np.append(data, incoming_timestamp, axis = 1)
+                except ValueError as e:
+                    warnings.warn(f"Invalid incoming timestamps: {e}", RuntimeWarning)
+
+    def _early_predict(self, X, predict_proba):
+
+        if X.shape[1] > self._X_fit_dims[1]:
+            raise ValueError("Time series should not have more timestamps than those used for training.")
+
+        pred = []
+        time_prediction = []
+        default_pred = [np.nan] * self.__n_classes_ if predict_proba else np.nan
+
+        for ts in X:
+            ts = to_time_series(ts, remove_nans=True)
+            sz = len(ts)
+            if len(ts) < self.min_t:
+                # Not enough timestamps
+                pred.append(default_pred)
+                time_prediction.append(np.nan)
+                continue
+
+            if predict_proba:
+                pred.append(self.classifiers_[sz].predict_proba([ts])[0])
+            else:
+                pred.append(self.classifiers_[sz].predict([ts])[0])
+            time_prediction.append(np.argmin(self._expected_costs(ts)))
+
+        return np.array(pred), np.array(time_prediction)
 
     def _more_tags(self):
         # Because some of the data validation checks rely on datasets that are
