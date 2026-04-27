@@ -18,6 +18,8 @@ Changelogs for this project are recorded in this file since v0.2.0.
 ### Changed
 
 * Fix masking issue in `LearningShapelets` with Keras 3.14
+* `TimeSeriesScalerMinMax` and `TimeSeriesScalerMeanVariance` now scales based on fitted data characteristics
+when `per_timeseries` is False. ([#280](https://github.com/tslearn-team/tslearn/issues/280))
 
 ## [v0.8.1]
 
