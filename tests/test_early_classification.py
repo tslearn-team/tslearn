@@ -49,6 +49,20 @@ def test_NonMyopicEarlyClassifier():
     np.testing.assert_array_equal(pred, np.array([0, 0, 0, 0, 0, 0, 0, 0]))
     np.testing.assert_array_equal(delays, np.array([1, 1, 1, 1, 1, 1, 0, 0]))
 
+    pred, delays = model.early_predict_proba(dataset[:, :3])
+    np.testing.assert_array_equal(
+        pred,
+        np.array([[1.0, 0.0],
+                  [1.0, 0.0],
+                  [1.0, 0.0],
+                  [1.0, 0.0],
+                  [1.0, 0.0],
+                  [1.0, 0.0],
+                  [1.0, 0.0],
+                  [1.0, 0.0]])
+    )
+    np.testing.assert_array_equal(delays, np.array([1, 1, 1, 1, 1, 1, 0, 0]))
+
     # More timestamps than trained dataset
     data = to_time_series_dataset([[1, 2, 3, 3, 2, 1, 1, 2, 3]])
     with pytest.raises(ValueError):
@@ -57,6 +71,22 @@ def test_NonMyopicEarlyClassifier():
     data = to_time_series_dataset([[1, 2, 3, 3, 2, 1]])
     gen = model.get_early_predict_generator()
     expected_preds = np.array([[np.nan], [0], [0], [1], [1], [1]])
+    expected_delays = np.array([[np.nan], [2], [1], [0], [0], [0], [0]])
+    for i in range(data.shape[1]):
+        pred, delay = gen.send(data[:, i:i+1, :])
+        np.testing.assert_array_equal(pred, expected_preds[i])
+        np.testing.assert_array_equal(delay, expected_delays[i])
+
+    data = to_time_series_dataset([[1, 2, 3, 3, 2, 1]])
+    gen = model.get_early_predict_proba_generator()
+    expected_preds = np.array([
+        [[np.nan, np.nan]],
+        [[1.0, 0.0]],
+        [[1.0, 0.0]],
+        [[0.0, 1.0]],
+        [[0.0, 1.0]],
+        [[0.0, 1.0]]
+    ])
     expected_delays = np.array([[np.nan], [2], [1], [0], [0], [0], [0]])
     for i in range(data.shape[1]):
         pred, delay = gen.send(data[:, i:i+1, :])
