@@ -139,8 +139,10 @@ class TimeSeriesResampler(TimeSeriesMixin, TransformerMixin, BaseEstimator):
 
 
 class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
-    """Scaler for time series datasets. Scales features values so that their span in given dimensions
-    is between ``min`` and ``max`` where ``value_range=(min, max)``.
+    """Scaler for time series datasets.
+    When `per_timeseries` is False, scales features based on computation led on the fitted data,
+    so that their span in given dimensions is between ``min`` and ``max`` where ``value_range=(min, max)``.
+    The transformation is stateless otherwise, dealing with each timeseries individually.
 
     Parameters
     ----------
@@ -184,13 +186,13 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         self.per_feature = per_feature
 
     def fit(self, X, y=None, **kwargs):
-        """A dummy method such that it complies to the sklearn requirements.
-        Since this method is completely stateless, it just returns itself.
+        """Computes the min and max to be used for later scaling if `per_timeseries` is False.
+        Just performs dimension checks otherwise.
 
         Parameters
         ----------
-        X
-            Ignored
+        X : array-like of shape (n_ts, sz, d)
+            Time series dataset reference.
 
         Returns
         -------
@@ -200,6 +202,10 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         X_ = to_time_series_dataset(X_)
         self._X_fit_dims = X_.shape
         self.n_features_in_ = self._X_fit_dims[-1]
+
+        if not self.per_timeseries:
+            self.min_, self.max_ = self._process(X_)
+
         return self
 
     def fit_transform(self, X, y=None, **kwargs):
@@ -217,10 +223,23 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         """
         return self.fit(X).transform(X)
 
+    def _process(self, X):
+        axis = (1,)
+        if not self.per_feature:
+            axis += (2,)
+        if not self.per_timeseries:
+            axis += (0,)
+
+        min_ = numpy.nanmin(X, axis=axis, keepdims=True)
+        max_ = numpy.nanmax(X, axis=axis, keepdims=True)
+
+        return min_, max_
+
     def transform(self, X, y=None, **kwargs):
-        """Will normalize (min-max) each of the timeseries. IMPORTANT: this
-        transformation is completely stateless, and is applied to each of
-        the timeseries individually.
+        """Normalizes (min-max) the dataset. If `per_timeseries` is True,
+        this transformation is completely stateless, and is applied to each of
+        the timeseries individually. Otherwise, normalization is performed based on the
+        fitted data.
 
         Parameters
         ----------
@@ -241,18 +260,11 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         X_ = to_time_series_dataset(X_)
         X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, check_n_features_only=True, extend=False)
 
-        axis = (1,)
-        if not self.per_feature:
-            axis += (2,)
-        if not self.per_timeseries:
-            axis += (0,)
+        min_, max_ = self._process(X_) if self.per_timeseries else (self.min_, self.max_)
 
-        min_t = numpy.nanmin(X_, axis=axis, keepdims=True)
-        max_t = numpy.nanmax(X_, axis=axis, keepdims=True)
-
-        range_t = max_t - min_t
+        range_t = max_ - min_
         range_t[range_t == 0.] = 1.
-        nomin = (X_ - min_t) * (self.value_range[1] - self.value_range[0])
+        nomin = (X_ - min_) * (self.value_range[1] - self.value_range[0])
         X_ = nomin / range_t + self.value_range[0]
         return X_
 
@@ -269,8 +281,10 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
 
 
 class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstimator):
-    """Scaler for time series datasets. Scales features values so that their mean (resp.
-    standard deviation) in given dimensions is mu (resp. std).
+    """Scaler for time series datasets.
+    When `per_timeseries` is False, scales features based on computation led on the fitted data,
+    so that their mean (resp. standard deviation) in given dimensions is mu (resp. std).
+    The transformation is stateless otherwise, dealing with each timeseries individually.
 
     Parameters
     ----------
@@ -316,13 +330,13 @@ class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstima
         self.per_feature = per_feature
 
     def fit(self, X, y=None, **kwargs):
-        """A dummy method such that it complies to the sklearn requirements.
-        Since this method is completely stateless, it just returns itself.
+        """Computes the mean and standard deviation to be used for later scaling if `per_timeseries` is False.
+        Just performs dimension checks otherwise.
 
         Parameters
         ----------
-        X
-            Ignored
+        X : array-like of shape (n_ts, sz, d)
+            Time series dataset reference.
 
         Returns
         -------
@@ -332,7 +346,24 @@ class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstima
         X_ = to_time_series_dataset(X_)
         self._X_fit_dims = X_.shape
         self.n_features_in_ = self._X_fit_dims[-1]
+
+        if not self.per_timeseries:
+            self.mean_, self.std_ = self._process(X_)
+
         return self
+
+    def _process(self, X):
+        axis = (1,)
+        if not self.per_timeseries:
+            axis += (0,)
+        if not self.per_feature:
+            axis += (2,)
+
+        mean_ = numpy.nanmean(X, axis=axis, keepdims=True)
+        std_ = numpy.nanstd(X, axis=axis, keepdims=True)
+        std_[std_ == 0.] = 1.
+
+        return mean_, std_
 
     def fit_transform(self, X, y=None, **kwargs):
         """Fit to data, then transform it.
@@ -350,34 +381,30 @@ class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstima
         return self.fit(X).transform(X)
 
     def transform(self, X, y=None, **kwargs):
-        """Fit to data, then transform it.
+        """Normalizes (mean-std) the dataset. If `per_timeseries` is True,
+        this transformation is completely stateless, and is applied to each of
+        the timeseries individually. Otherwise, normalization is performed based on the
+        fitted data.
 
         Parameters
         ----------
         X : array-like of shape (n_ts, sz, d)
-            Time series dataset to be rescaled
+            Time series dataset to be rescaled.
 
         Returns
         -------
         numpy.ndarray
-            Rescaled time series dataset
+            Rescaled time series dataset.
         """
+
         check_is_fitted(self, '_X_fit_dims')
         X_ = check_array(X, allow_nd=True, force_all_finite=False)
         X_ = to_time_series_dataset(X_)
         X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, check_n_features_only=True, extend=False)
 
-        axis = (1,)
-        if not self.per_timeseries:
-            axis += (0,)
-        if not self.per_feature:
-            axis += (2,)
+        mean_, std_ = self._process(X_) if self.per_timeseries else (self.mean_, self.std_)
 
-        mean_t = numpy.nanmean(X_, axis=axis, keepdims=True)
-        std_t = numpy.nanstd(X_, axis=axis, keepdims=True)
-
-        std_t[std_t == 0.] = 1.
-        X_ = (X_ - mean_t) * self.std / std_t + self.mu
+        X_ = (X_ - mean_) * self.std / std_ + self.mu
         return X_
 
     def _more_tags(self):
@@ -447,7 +474,7 @@ class TimeSeriesImputer(TimeSeriesMixin, TransformerMixin, BaseEstimator):
     array([[[0.],
             [3.],
             [6.]]])
-    >>> # Padding occurs after processing for variable length inputs
+    >>> # Dealing with variable length dataset
     >>> TimeSeriesImputer().fit_transform([[numpy.nan, 3, 6], [numpy.nan, 3]])
     array([[[4.5],
             [3. ],
