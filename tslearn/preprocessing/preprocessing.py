@@ -11,7 +11,6 @@ from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from tslearn.utils import (
     check_variable_length_input,
     to_time_series_dataset,
-    to_time_series,
     check_array,
     check_dims
 )
@@ -457,10 +456,10 @@ class TimeSeriesImputer(TimeSeriesMixin, TransformerMixin, BaseEstimator):
     value: float (default: nan)
         The value to replace missing values with. Only used when method is
         `constant`.
-    keep_trailing_nans: bool (default: False)
+    keep_trailing_nans: bool (default: True)
         Whether trailing samples with nans on all dimensions should be considered
         padding for variable length time series and kept unprocessed. When set to
-        `True`, trailing 'empty' samples  will not be imputed.
+        `False` , trailing 'empty' samples  will be imputed.
 
     Notes
     -----
@@ -484,15 +483,15 @@ class TimeSeriesImputer(TimeSeriesMixin, TransformerMixin, BaseEstimator):
            [[3. ],
             [3. ],
             [nan]]])
-    >>> # Trailing empty samples are preserved with `keep_trailing_nans`
-    >>> TimeSeriesImputer('ffill', keep_trailing_nans=True).fit_transform(
+    >>> # Process trailing empty samples
+    >>> TimeSeriesImputer('ffill', keep_trailing_nans=False).fit_transform(
     ... [[[1, 2], [2, numpy.nan]], [[3, 4], [numpy.nan, numpy.nan]]]
     ... )
-    array([[[ 1.,  2.],
-            [ 2.,  2.]],
+    array([[[1., 2.],
+            [2., 2.]],
     <BLANKLINE>
-           [[ 3.,  4.],
-            [nan, nan]]])
+           [[3., 4.],
+            [3., 4.]]])
     >>> # Uncomputable values are left unchanged
     >>> TimeSeriesImputer('ffill').fit_transform([[numpy.nan, 3, 6]])
     array([[[nan],
@@ -502,7 +501,7 @@ class TimeSeriesImputer(TimeSeriesMixin, TransformerMixin, BaseEstimator):
     def __init__(self,
                  method: Union[str, Callable]="mean",
                  value:  Optional[float]=nan,
-                 keep_trailing_nans: bool = False):
+                 keep_trailing_nans: bool = True):
         self.method = method
         self.value = value
         self.keep_trailing_nans = keep_trailing_nans
@@ -638,11 +637,13 @@ class TimeSeriesImputer(TimeSeriesMixin, TransformerMixin, BaseEstimator):
             raise ValueError("Imputer {} not implemented.".format(self.method))
 
         for ts_index in range(X_.shape[0]):
-            ts = to_time_series(X[ts_index])
-            stop_index = ts.shape[0]
+            ts = X_[ts_index]
             if self.keep_trailing_nans:
                 stop_index = _ts_size(ts)
-            X_[ts_index, :stop_index] = imputer(ts[:stop_index])
+                X_[ts_index, :stop_index] = imputer(ts[:stop_index])
+            else:
+                X_[ts_index] = imputer(ts)
+
         return to_time_series_dataset(X_)
 
     def _more_tags(self):
@@ -650,9 +651,6 @@ class TimeSeriesImputer(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         tags.update({
             'allow_nan': True,
             ALLOW_VARIABLE_LENGTH: True,
-        })
-        tags['_xfail_checks'].update({
-            "check_transformer_data_not_an_array": "Uses X"
         })
         return tags
 
