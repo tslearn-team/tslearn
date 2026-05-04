@@ -83,6 +83,7 @@ sphinx_gallery_conf = {
                          "examples/autodiff", "examples/misc"].index,
     'within_subsection_order': "FileNameSortKey",
     'image_scrapers': (matplotlib_svg_scraper,),
+    'matplotlib_animations': True,
 }
 
 # Add any paths that contain templates here, relative to this directory.
