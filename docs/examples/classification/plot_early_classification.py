@@ -88,7 +88,7 @@ early_clf = NonMyopicEarlyClassifier(n_clusters=3,
                                      cost_time_parameter=1e-3,
                                      lamb=1e2,
                                      random_state=0)
-early_clf = early_clf.fit(X_train, y_train)
+early_clf.fit(X_train, y_train)
 
 preds, times = early_clf.predict_class_and_earliness(X_test)
 
