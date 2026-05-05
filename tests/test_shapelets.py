@@ -39,6 +39,12 @@ def test_shapelets():
                             model.shapelets_as_time_series_):
         np.testing.assert_allclose(shp,
                                    _to_time_series(shp_bis, remove_nans=True))
+    model = shapelets.LearningShapelets(n_shapelets_per_size={4: 1, 3: 2}, max_iter=1)
+    model.fit(time_series, y)
+    for shp, shp_bis in zip(model.shapelets_,
+                            model.shapelets_as_time_series_):
+        np.testing.assert_allclose(shp,
+                                   _to_time_series(shp_bis, remove_nans=True))
 
     # Test set_weights / get_weights
     clf = shapelets.LearningShapelets(n_shapelets_per_size={2: 5},

@@ -21,6 +21,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 * Fix imputer crash ([#659](https://github.com/tslearn-team/tslearn/issues/659))
 * `TimeSeriesScalerMinMax` and `TimeSeriesScalerMeanVariance` now scales based on fitted data characteristics
 when `per_timeseries` is False. ([#280](https://github.com/tslearn-team/tslearn/issues/280))
+* Fix `LearningShapelets.shapelets_` attribute computation.
 
 ## [v0.8.1]
 

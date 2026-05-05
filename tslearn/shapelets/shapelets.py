@@ -440,19 +440,15 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
     @property
     def shapelets_(self):
         check_is_fitted(self, '_X_fit_dims')
-        n_shapelets_per_size = self.n_shapelets_per_size_
 
-        total_nb_shapelets = sum(n_shapelets_per_size.values())
-        nb_shapelets_found = 0
+        total_nb_shapelets = sum(self.n_shapelets_per_size_.values())
         shapelets = numpy.empty((total_nb_shapelets,), dtype=object)
-        for i, shp_sz in enumerate(sorted(n_shapelets_per_size)):
+        nb_shapelets_found = 0
+        for i in range(self._n_shapelet_sizes):
             layer = self.model_.get_layer("shapelets_%d" % i)
-            weights = layer.get_weights()[0]
-            assert n_shapelets_per_size[shp_sz] == weights.shape[0]
-            for j in range(weights.shape[0]):
-                shapelets[nb_shapelets_found] = weights[j]
+            for weight in layer.get_weights()[0]:
+                shapelets[nb_shapelets_found] = weight
                 nb_shapelets_found += 1
-        assert nb_shapelets_found == total_nb_shapelets
         return shapelets
 
     @property
