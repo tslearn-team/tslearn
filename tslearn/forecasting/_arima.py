@@ -15,7 +15,7 @@ from statsmodels.tsa.stattools import kpss
 from tslearn.bases import TimeSeriesMixin, BaseModelPackage
 from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from tslearn.utils import check_array, to_time_series_dataset, check_dims
-from tslearn.utils.utils import _to_time_series, _ts_size
+from tslearn.utils.utils import _ts_size
 
 
 def compute_var(p, X, with_constant=False):
@@ -39,12 +39,9 @@ def compute_var(p, X, with_constant=False):
     """
     X = check_array(X, ensure_min_samples=p)
     Y = X[p:]
-    Z = np.array([X[t - p:t][::-1].ravel() for t in range(p, X.shape[0])])
+    Z = np.array([X[t - p : t][::-1].ravel() for t in range(p, X.shape[0])])
     if with_constant:
-        Z = np.hstack((
-            np.ones((X.shape[0] - p, 1)),
-            Z
-        ))
+        Z = np.hstack((np.ones((X.shape[0] - p, 1)), Z))
 
     coeffs, *_ = np.linalg.lstsq(Z, Y, rcond=-1)
 
@@ -76,7 +73,7 @@ def _loss(X, intercept, ar_coeffs, ma_coeffs):
     start = max(p, q)
     for i in range(start, n_samples):
         current_err = X[:, i] - _varma_next(
-            X[:, i - start:i],
+            X[:, i - start : i],
             residuals,
             ar_coeffs,
             ma_coeffs,
@@ -130,6 +127,9 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
           a naïve seasonal integration step where :math:`x'_t = x_t - x_{t-m}`.
         max_iter : int (default: 50)
           The maximum number of iterations used while fitting the model.
+        verbose : int (default 0)
+          When set to a positive integer, displays logs of the iteration of the optimization.
+          Not relevant if q=0.
 
     Attributes
     ----------
@@ -157,13 +157,27 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
 
     """
 
-    def __init__(self, p=1, d=0, q=0, with_constant=True, seasonal_period=None, max_iter=50):
+    def __init__(
+        self,
+        p=1,
+        d=0,
+        q=0,
+        with_constant=True,
+        seasonal_period=None,
+        max_iter=50,
+        verbose=0,
+    ):
         self.p = p
         self.d = d
         self.q = q
         self.with_constant = with_constant
         self.seasonal_period = seasonal_period
         self.max_iter = max_iter
+        self.verbose = verbose
+
+    @property
+    def _seasonal_period(self):
+        return self.seasonal_period or 0
 
     def fit(self, X, y=None):
         """Computes VARIMA model.
@@ -183,38 +197,45 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         X_ = check_array(X, allow_nd=True, force_all_finite="allow-nan")
         X_ = to_time_series_dataset(X_)
 
-        # Minimum number of samples needed
-        self._min_samples = self.p + self.q + self.d + 1 + (self.seasonal_period or 0)
+        ts_sizes = [_ts_size(ts) for ts in X_]
+
+        return self._fit(X_, ts_sizes)
+
+    def _fit(self, X, ts_sizes):
+        self._min_samples = self.p + self.q + self.d + 1 + self._seasonal_period
+        self._ts_sizes = ts_sizes
 
         # Check min_samples
-        if any(_ts_size(ts) < self._min_samples for ts in X):
+        if any(size < self._min_samples for size in self._ts_sizes):
             raise ValueError(f"{self._min_samples} timestamps are required per TS")
 
-        n_ts, n_samples, n_features_in = X_.shape
+        n_ts, n_samples, n_features_in = X.shape
 
         # Seasonal differencing
-        s_X_ = self._seasonal_differencing(X_)
+        s_X = self._seasonal_differencing(X)
         # d-th order differencing
-        d_X_ = np.diff(s_X_, n=self.d, axis=1)
+        d_X = np.diff(s_X, n=self.d, axis=1)
 
         if self.q > 0:
+            kwargs = {"callback": self._make_callback()} if self.verbose else {}
             res = scipy.optimize.minimize(
                 method="nelder-mead",
-                fun=lambda params: self._loss(d_X_, params)[0],
-                x0=self._default_params(d_X_),
-                tol=0,
-                options={"maxiter": self.max_iter},
+                fun=lambda params: self._loss(d_X, params)[0],
+                x0=self._default_params(d_X),
+                options={"maxiter": self.max_iter, "disp": self.verbose},
+                **kwargs,
             )
-            self.intercept_, self.ar_coeffs_, self.ma_coeffs_ = self._unravel_params(res.x, n_features_in)
+            self.intercept_, self.ar_coeffs_, self.ma_coeffs_ = self._unravel_params(
+                res.x, n_features_in
+            )
         else:
             self.intercept_, self.ar_coeffs_, self.ma_coeffs_ = self._unravel_params(
-                self._default_params(d_X_),
-                n_features_in
+                self._default_params(d_X), n_features_in
             )
 
         # Last residuals and last timestamps needed to predict fitted data
-        n_lle, self._last_residuals = self._loss(d_X_)
-        self._last_timestamps = self._get_last_timestamps(X_)
+        n_lle, self._last_residuals = self._loss(d_X)
+        self._last_timestamps = self._get_last_timestamps(X, self._ts_sizes)
 
         self.lle_ = -n_lle
         self.n_ts_ = n_ts
@@ -223,23 +244,32 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
 
         return self
 
+    def _make_callback(self):
+        args = {"n_iter": 0}
+
+        def cb_(intermediate_result):
+            args["n_iter"] += 1
+            if self.verbose:
+                print(f"iteration {args['n_iter']}, nlle {intermediate_result.fun}")
+
+        return cb_
+
     def _seasonal_differencing(self, X):
-        if self.seasonal_period is not None:
+        if self._seasonal_period:
             seasonal_differenced_X = (
-                X[:, self.seasonal_period:] -
-                X[:, :-self.seasonal_period]
+                X[:, self.seasonal_period :] - X[:, : -self.seasonal_period]
             )
         else:
             seasonal_differenced_X = X
         return seasonal_differenced_X
 
-    def _get_last_timestamps(self, X):
+    def _get_last_timestamps(self, X, ts_sizes):
         n_ts, sz, n_features_in = X.shape
-        if max(self.p, self.q, self.d, self.seasonal_period or 0):
+        if max(self.p, self.q, self.d, self._seasonal_period):
             # Move nans of variable length time series up front to properly select last_values
             for i, ts in enumerate(X):
-                X[i] = np.roll(ts, sz - _ts_size(ts), axis=0)
-            n_timestamp_to_keep = (self.seasonal_period or 0) + self.d + self.p
+                X[i] = np.roll(ts, sz - ts_sizes[i], axis=0)
+            n_timestamp_to_keep = self._seasonal_period + self.d + self.p
             last_timestamps = X[:, -n_timestamp_to_keep:]
         else:
             # No need to keep any
@@ -247,21 +277,32 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         return last_timestamps
 
     def _default_params(self, X):
-        params = np.vstack([
-            self._default_params_per_ts(_to_time_series(ts, remove_nans=True)) for ts in X
-        ])
+        params = np.vstack(
+            [
+                self._default_params_per_ts(
+                    ts[: self._ts_sizes[i] - self._seasonal_period - self.d]
+                )
+                for i, ts in enumerate(X)
+            ]
+        )
         return np.mean(params, axis=0)
 
     def _default_params_per_ts(self, ts):
         # Initialize ar_coeffs with VAR results
-        constant_params, ar_start_params, residuals = compute_var(self.p, ts, self.with_constant)
+        constant_params, ar_start_params, residuals = compute_var(
+            self.p, ts, self.with_constant
+        )
         # Initialize ma_coeffs with VAR results on residuals of previous step
         ma_start_params = compute_var(self.q, residuals)[1]
 
-        return np.concatenate((constant_params, ar_start_params.T.ravel(), ma_start_params.T.ravel()))
+        return np.concatenate(
+            (constant_params, ar_start_params.T.ravel(), ma_start_params.T.ravel())
+        )
 
     def _unravel_params(self, params, n_features_in=None):
-        n_features_in = n_features_in if n_features_in is not None else self.n_features_in_
+        n_features_in = (
+            n_features_in if n_features_in is not None else self.n_features_in_
+        )
 
         if self.with_constant:
             intercept = params[:n_features_in]
@@ -269,13 +310,13 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         else:
             intercept = np.array([])
         if self.p > 0:
-            ar_coeffs = params[:n_features_in * (n_features_in * self.p)]
+            ar_coeffs = params[: n_features_in * (n_features_in * self.p)]
             ar_coeffs = ar_coeffs.reshape(self.p, n_features_in, n_features_in)
-            params = params[n_features_in * (n_features_in * self.p):]
+            params = params[n_features_in * (n_features_in * self.p) :]
         else:
             ar_coeffs = np.empty((0, n_features_in, n_features_in))
         if self.q > 0:
-            ma_coeffs = params[:n_features_in * (n_features_in * self.q)]
+            ma_coeffs = params[: n_features_in * (n_features_in * self.q)]
             ma_coeffs = ma_coeffs.reshape(self.q, n_features_in, n_features_in)
         else:
             ma_coeffs = np.empty((0, n_features_in, n_features_in))
@@ -286,14 +327,25 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         n_features_in = X.shape[-1]
 
         if params is not None:
-            intercept, ar_coeffs, ma_coeffs = self._unravel_params(params, n_features_in)
+            intercept, ar_coeffs, ma_coeffs = self._unravel_params(
+                params, n_features_in
+            )
         else:
-            intercept, ar_coeffs, ma_coeffs = self.intercept_, self.ar_coeffs_, self.ma_coeffs_
+            intercept, ar_coeffs, ma_coeffs = (
+                self.intercept_,
+                self.ar_coeffs_,
+                self.ma_coeffs_,
+            )
         return _loss(X, intercept, ar_coeffs, ma_coeffs)
 
     def _undifference(self, initial_values, prediction):
-        _ = np.array([(-1 ** (j+1)) * scipy.special.binom(j + 1, self.d) for j in range(self.d)])
-        res = prediction - np.dot(_, initial_values[:, -self.d:])
+        _ = np.array(
+            [
+                (-(1 ** (j + 1))) * scipy.special.binom(j + 1, self.d)
+                for j in range(self.d)
+            ]
+        )
+        res = prediction - np.dot(_, initial_values[:, -self.d :])
         return res
 
     def predict(self, X=None, n=1):
@@ -323,16 +375,17 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         else:
             X_ = check_array(X, allow_nd=True, force_all_finite="allow-nan")
             X_ = to_time_series_dataset(X_)
+            ts_sizes = [_ts_size(ts) for ts in X_]
 
             # Check min_samples
-            if any(_ts_size(ts) < self._min_samples for ts in X):
+            if any(size < self._min_samples for size in ts_sizes):
                 raise ValueError(f"{self._min_samples} timestamps are required per TS")
 
             # Check number of features
             check_dims(X_, (0, 0, self.n_features_in_), check_n_features_only=True)
 
             # Retrieve last residuals and last timestamps needed to compute estimate
-            last_timestamps = self._get_last_timestamps(X_)
+            last_timestamps = self._get_last_timestamps(X_, ts_sizes)
             seasonal_differrenced_X = self._seasonal_differencing(X_)
             differenced_X = np.diff(seasonal_differrenced_X, n=self.d, axis=1)
             last_residuals = self._loss(differenced_X)[1]
@@ -349,7 +402,7 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
                 last_residuals,
                 self.ar_coeffs_,
                 self.ma_coeffs_,
-                self.intercept_
+                self.intercept_,
             )
             if self.p > 0 and n > 1:
                 # Rolling for next estimate
@@ -365,7 +418,7 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
                     # Rolling for next estimate
                     sd_timestamps = np.roll(sd_timestamps, -1, axis=1)
                     sd_timestamps[:, -1] = estimate
-            if self.seasonal_period:
+            if self._seasonal_period:
                 estimate = estimate + last_timestamps[:, -self.seasonal_period]
                 if n > 1:
                     # Rolling for next estimate
@@ -402,13 +455,11 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         tags.input_tags.allow_nan = True
         return tags
 
-    def _more_tags(self): # pragma: no cover
+    def _more_tags(self):  # pragma: no cover
         tags = super()._more_tags()
-        tags.update({
-            "requires_y": False,
-            "allow_nan": True,
-            ALLOW_VARIABLE_LENGTH: True
-        })
+        tags.update(
+            {"requires_y": False, "allow_nan": True, ALLOW_VARIABLE_LENGTH: True}
+        )
         return tags
 
 
@@ -430,6 +481,12 @@ class AutoVARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         be achieved within max_d.
     seasonal_period: int or None (default: None)
         Naïve seasonal integration to apply to VARIMA models
+    max_iter : int (default: 50)
+        The maximum number of iterations to apply to VARIMA models fitting.
+
+    verbose : int (default 0)
+        When set to a positive integer, displays logs of the tested VARIMA models selection process.
+        If set to 2 or more, also propagates verbosity to the VARIMA models.
 
     Attributes
     ----------
@@ -453,12 +510,27 @@ class AutoVARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
 
     """
 
-    def __init__(self, max_p=5, max_d=2, max_q=5, default_d_for_non_stationarity=0, seasonal_period=None):
+    def __init__(
+        self,
+        max_p=5,
+        max_d=2,
+        max_q=5,
+        default_d_for_non_stationarity=0,
+        seasonal_period=None,
+        max_iter=50,
+        verbose=0,
+    ):
         self.max_p = max_p
         self.max_q = max_q
         self.max_d = max_d
         self.default_d_for_non_stationarity = default_d_for_non_stationarity
         self.seasonal_period = seasonal_period
+        self.max_iter = max_iter
+        self.verbose = verbose
+
+    @property
+    def _seasonal_period(self):
+        return self.seasonal_period or 0
 
     def fit(self, X, y=None):
         """Selects the best Vector Autoregressive Moving Average (VARIMA) model
@@ -480,13 +552,16 @@ class AutoVARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         X_ = to_time_series_dataset(X_)
 
         # Minimum samples needed for seasonal integration for kpss test
-        self._min_samples = self.seasonal_period or 0
+        self._min_samples = self._seasonal_period
+        self._ts_sizes = [_ts_size(ts) for ts in X_]
 
         # Check min_samples
-        if any(_ts_size(ts) < self._min_samples for ts in X):
+        if any(size < self._min_samples for size in self._ts_sizes):
             raise ValueError(f"{self._min_samples} timestamps are required per TS")
 
-        self.best_estimator_ = self._get_best_model_for_given_d(self._determine_d(X_), X_)
+        self.best_estimator_ = self._get_best_model_for_given_d(
+            self._determine_d(X_), X_
+        )
 
         self.n_ts_ = self.best_estimator_.n_ts_
         self.n_samples_ = self.best_estimator_.n_samples_
@@ -494,7 +569,7 @@ class AutoVARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
 
         return self
 
-    def fit_predict(self, X, y=None,  n=1):
+    def fit_predict(self, X, y=None, n=1):
         """Selects the best Vector Autoregressive Moving Average (VARIMA) model
         and forecasts n timestamps for the given data.
 
@@ -535,51 +610,108 @@ class AutoVARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         check_is_fitted(self)
         return self.best_estimator_.predict(X, n)
 
-    @staticmethod
-    def _is_stationary(X):
+    def _is_stationary(self, X, d):
         # Check stationarity for each feature of each TS
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=InterpolationWarning)
             return all(
-                kpss(_to_time_series(x, remove_nans=True), regression='c')[1] > 0.05
+                kpss(x[: self._ts_sizes[i] - self._seasonal_period- d], regression="c")[
+                    1
+                ]
+                > 0.05
                 for k in range(X.shape[-1])
-                for x in X[:, :, k]
+                for i, x in enumerate(X[:, :, k])
             )
 
     def _determine_d(self, X):
         # Apply naïve seasonality first
-        if self.seasonal_period is not None:
+        if self._seasonal_period:
             seasonal_differenced_X = (
-                    X[:, self.seasonal_period:] -
-                    X[:, :-self.seasonal_period]
+                X[:, self.seasonal_period :] - X[:, : -self.seasonal_period]
             )
         else:
             seasonal_differenced_X = X
 
         d = 0
-        while not self._is_stationary(np.diff(seasonal_differenced_X, d, axis=1)):
+        while not self._is_stationary(np.diff(seasonal_differenced_X, d, axis=1), d):
             d += 1
             if d > self.max_d:
                 if self.default_d_for_non_stationarity is not None:
+                    if self.verbose:
+                        print(
+                            f"Default d for non stationarity {self.default_d_for_non_stationarity} is used."
+                        )
                     return self.default_d_for_non_stationarity
                 raise ValueError("Maximum differencing order reached")
+        if self.verbose:
+            print(f"Selected d: {d}.")
         return d
 
     def _init_models(self, d):
         models = {
-            VARIMA(0, d, 0, with_constant=d < 2, seasonal_period=self.seasonal_period)
+            VARIMA(
+                0,
+                d,
+                0,
+                with_constant=d < 2,
+                seasonal_period=self.seasonal_period,
+                max_iter=self.max_iter,
+                verbose=self.verbose > 1,
+            )
         }
         if self.max_p > 0:
-            models.add(VARIMA(1, d, 0, with_constant=d < 2, seasonal_period=self.seasonal_period))
+            models.add(
+                VARIMA(
+                    1,
+                    d,
+                    0,
+                    with_constant=d < 2,
+                    seasonal_period=self.seasonal_period,
+                    max_iter=self.max_iter,
+                    verbose=self.verbose > 1,
+                )
+            )
         if self.max_q > 0:
-            models.add(VARIMA(0, d, 1, with_constant=d < 2, seasonal_period=self.seasonal_period))
+            models.add(
+                VARIMA(
+                    0,
+                    d,
+                    1,
+                    with_constant=d < 2,
+                    seasonal_period=self.seasonal_period,
+                    max_iter=self.max_iter,
+                    verbose=self.verbose > 1,
+                )
+            )
         if self.max_p > 1 and self.max_q > 1:
-            models.add(VARIMA(2, d, 2, with_constant=d < 2, seasonal_period=self.seasonal_period),)
+            models.add(
+                VARIMA(
+                    2,
+                    d,
+                    2,
+                    with_constant=d < 2,
+                    seasonal_period=self.seasonal_period,
+                    max_iter=self.max_iter,
+                    verbose=self.verbose > 1,
+                ),
+            )
         if d <= 1:
-            models.add(VARIMA(0, d, 0, with_constant=False, seasonal_period=self.seasonal_period))
+            models.add(
+                VARIMA(
+                    0,
+                    d,
+                    0,
+                    with_constant=False,
+                    seasonal_period=self.seasonal_period,
+                    max_iter=self.max_iter,
+                    verbose=self.verbose > 1,
+                )
+            )
         return models
 
-    def _compute_model_variations(self, current_best_model, computed_adjustable_hyperparams):
+    def _compute_model_variations(
+        self, current_best_model, computed_adjustable_hyperparams
+    ):
         p_variations = [current_best_model.p]
         if not current_best_model.p + 1 > self.max_p:
             p_variations.append(current_best_model.p + 1)
@@ -592,15 +724,29 @@ class AutoVARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         if current_best_model.q - 1 >= 0:
             q_variations.append(current_best_model.q - 1)
 
-        eligible_variations = {(current_best_model.p, current_best_model.q, not current_best_model.with_constant)}
+        eligible_variations = {
+            (
+                current_best_model.p,
+                current_best_model.q,
+                not current_best_model.with_constant,
+            )
+        }
         for p in p_variations:
             for q in q_variations:
-                eligible_variations.add((p, q,  current_best_model.with_constant))
+                eligible_variations.add((p, q, current_best_model.with_constant))
 
         eligible_variations = eligible_variations - computed_adjustable_hyperparams
 
         return {
-            VARIMA(p, current_best_model.d, q, with_constant, self.seasonal_period)
+            VARIMA(
+                p,
+                current_best_model.d,
+                q,
+                with_constant,
+                self.seasonal_period,
+                max_iter=self.max_iter,
+                verbose=self.verbose > 1,
+            )
             for p, q, with_constant in eligible_variations
         }
 
@@ -614,23 +760,31 @@ class AutoVARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
 
         while models_to_test:
             for model in models_to_test:
+                if self.verbose:
+                    print(f"Testing model {model}.")
                 model_adjustable_hyperparams = tuple(
                     getattr(model, hyperparam) for hyperparam in adjustable_hyperparams
                 )
                 computed_adjustable_hyperparams.add(model_adjustable_hyperparams)
 
                 try:
-                    model = model.fit(X)
-                except ValueError as e: # pragma: no cover
+                    model = model._fit(X.copy(), self._ts_sizes)
+                except ValueError as e:  # pragma: no cover
                     warnings.warn(f"Model {model} skipped: {e}")
                     continue
 
-                model_aic = 2 * (model.p + model.q + (2 if model.with_constant else 1) - model.lle_)
+                model_aic = 2 * (
+                    model.p + model.q + (2 if model.with_constant else 1) - model.lle_
+                )
+                if self.verbose:
+                    print(f"Computed AIC: {model_aic}.")
                 if model_aic < minimal_aic:
                     best_model = model
                     minimal_aic = model_aic
 
-            models_to_test = self._compute_model_variations(best_model, computed_adjustable_hyperparams)
+            models_to_test = self._compute_model_variations(
+                best_model, computed_adjustable_hyperparams
+            )
 
         return best_model
 
@@ -641,11 +795,9 @@ class AutoVARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         tags.input_tags.allow_nan = True
         return tags
 
-    def _more_tags(self): # pragma: no cover
+    def _more_tags(self):  # pragma: no cover
         tags = super()._more_tags()
-        tags.update({
-            "requires_y": False,
-            "allow_nan": True,
-            ALLOW_VARIABLE_LENGTH: True
-        })
+        tags.update(
+            {"requires_y": False, "allow_nan": True, ALLOW_VARIABLE_LENGTH: True}
+        )
         return tags
