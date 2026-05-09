@@ -258,6 +258,48 @@ class PiecewiseAggregateApproximation(TimeSeriesMixin,
         X = check_dims(X)
         return inv_transform_paa(X, original_size=self._X_fit_dims_[1])
 
+    def segment_indices(self):
+        """Return the start/end indices of each PAA segment in the original
+        time series.
+
+        These are the boundaries used when transforming a fitted-length time
+        series into its PAA representation: segment ``i`` of the PAA output
+        is the mean of ``ts[start_i:end_i]`` in the original series.
+
+        Returns
+        -------
+        numpy.ndarray of shape (n_segments, 2), dtype=int
+            ``[[start_0, end_0], [start_1, end_1], ...]`` segment ranges in the
+            original time-series index. ``end_i`` is exclusive and matches the
+            half-open convention used by :meth:`transform` (which slices
+            ``X[i_ts, start:end, :]``).
+
+        Examples
+        --------
+        >>> paa = PiecewiseAggregateApproximation(n_segments=3)
+        >>> _ = paa.fit([[-1., 2., 0.1, -1., 1., -1.]])
+        >>> paa.segment_indices()
+        array([[0, 2],
+               [2, 4],
+               [4, 6]])
+
+        Notes
+        -----
+        The segment width matches what :meth:`transform` uses internally:
+        ``sz_segment = sz_fit // n_segments``. Trailing samples beyond
+        ``n_segments * sz_segment`` are dropped, exactly as in
+        :meth:`transform` — this keeps the indices consistent with the values
+        in ``paa_data``.
+        """
+        self._is_fitted()
+        sz_fit = int(self._X_fit_dims_[1])
+        # Match _transform's segment-width convention so callers can map
+        # paa_data[i_seg] back to ts[start_i:end_i] without off-by-one.
+        sz_segment = sz_fit // self.n_segments
+        starts = numpy.arange(self.n_segments, dtype=int) * sz_segment
+        ends = starts + sz_segment
+        return numpy.stack([starts, ends], axis=1)
+
     def _more_tags(self):
         tags = super()._more_tags()
         tags.update({

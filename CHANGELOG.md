@@ -14,6 +14,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 ### Added
 
 * Allow parallel computation of DTW barycenters and plug it in `TimeSeriesKMeans`.
+* `PiecewiseAggregateApproximation.segment_indices` exposes the start/end indices of each PAA segment in the original time series ([#441](https://github.com/tslearn-team/tslearn/issues/441)).
 
 ### Changed
 

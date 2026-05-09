@@ -24,6 +24,37 @@ def test_paa():
                                paa_est.distance_paa(paa_repr[0], paa_repr[1]))
 
 
+def test_paa_segment_indices():
+    # Regression test for #441: expose PAA segment boundaries so callers can
+    # map paa_data[i] back to the original-series index range it summarises.
+    paa = PiecewiseAggregateApproximation(n_segments=3)
+    data = [[-1., 2., 0.1, -1., 1., -1.]]
+    # Before fitting, segment_indices must raise NotFittedError (consistent
+    # with distance / transform).
+    np.testing.assert_raises(NotFittedError, paa.segment_indices)
+
+    paa_data = paa.fit_transform(data)
+    seg_idx = paa.segment_indices()
+
+    # Shape and dtype contract.
+    assert seg_idx.shape == (3, 2)
+    assert np.issubdtype(seg_idx.dtype, np.integer)
+
+    # The boundaries must reproduce the means stored in paa_data — this is the
+    # property a user actually relies on when locating "where changes occur".
+    arr = np.asarray(data, dtype=float)
+    for i_seg, (start, end) in enumerate(seg_idx):
+        np.testing.assert_allclose(
+            paa_data[0, i_seg, 0], arr[0, start:end].mean()
+        )
+
+    # Non-divisible length: trailing samples are dropped, like transform does.
+    paa2 = PiecewiseAggregateApproximation(n_segments=3)
+    paa2.fit([[1., 2., 3., 4., 5., 6., 7.]])  # sz=7, n_segments=3 -> sz_seg=2
+    seg_idx2 = paa2.segment_indices()
+    np.testing.assert_array_equal(seg_idx2, [[0, 2], [2, 4], [4, 6]])
+
+
 def test_sax():
     unfitted_sax = SymbolicAggregateApproximation(n_segments=3,
                                                   alphabet_size_avg=2)
