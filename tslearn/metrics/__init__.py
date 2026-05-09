@@ -59,6 +59,7 @@ from .softdtw_variants import (
 )
 from .soft_dtw_loss_pytorch import SoftDTWLossPyTorch
 from .cycc import cdist_normalized_cc, y_shifted_sbd_vec
+from ._sbd import sbd, cdist_sbd
 from ._frechet import (
     frechet,
     frechet_path,
@@ -129,6 +130,8 @@ __all__ = [
     "SoftDTWLossPyTorch",
     "cdist_normalized_cc",
     "y_shifted_sbd_vec",
+    "sbd",
+    "cdist_sbd",
     "frechet",
     "frechet_path",
     "frechet_accumulated_matrix",

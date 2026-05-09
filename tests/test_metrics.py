@@ -1111,3 +1111,47 @@ def test_sax():
         dataset2=[[-1, 0, 1], [1, 0, 1]],
     )
     np.testing.assert_equal(dists, expected)
+
+
+def test_sbd_public():
+    # Regression test for #276: SBD must be exposed as a stand-alone scalar
+    # function, the way dtw / soft_dtw / lcss already are. The result must
+    # also match what KShape uses internally (1 - cdist_normalized_cc), so
+    # callers can reproduce KShape's distance without monkey-patching.
+    from tslearn.metrics import sbd, cdist_sbd
+    from tslearn.metrics.cycc import cdist_normalized_cc
+
+    # 1) Identical series → SBD = 0.
+    assert float(sbd([1.0, 2.0, 3.0], [1.0, 2.0, 3.0])) == 0.0
+
+    # 2) Mismatched shapes are rejected with a clear error.
+    with pytest.raises(ValueError):
+        sbd([1.0, 2.0, 3.0], [[1.0, 2.0], [3.0, 4.0]])
+
+    # 3) cdist_sbd returns a true distance matrix (zero on the diagonal,
+    #    symmetric, non-negative). The legacy self_similarity=True branch of
+    #    cdist_normalized_cc is *not* a valid SBD matrix on its own — that's
+    #    the bug this PR works around.
+    rng = np.random.RandomState(0)
+    X = rng.rand(4, 6, 1).astype(np.float64)
+    D = cdist_sbd(X)
+    assert D.shape == (4, 4)
+    np.testing.assert_allclose(np.diag(D), np.zeros(4), atol=1e-12)
+    np.testing.assert_allclose(D, D.T, atol=1e-12)
+    assert (D >= -1e-12).all()
+
+    # 4) Scalar sbd matches the pairwise matrix entries — same path KShape
+    #    takes.
+    np.testing.assert_allclose(sbd(X[0], X[1]), D[0, 1], atol=1e-12)
+
+    # 5) Asymmetric two-dataset call has the right shape and matches scalar.
+    Y = rng.rand(2, 6, 1).astype(np.float64)
+    D2 = cdist_sbd(X, Y)
+    assert D2.shape == (4, 2)
+    np.testing.assert_allclose(sbd(X[2], Y[1]), D2[2, 1], atol=1e-12)
+
+    # 6) Cross-check with raw normalized_cc — this is the contract callers
+    #    rely on when porting KShape-style code.
+    norms = np.full(4, -1.0, dtype=np.float64)
+    cc = cdist_normalized_cc(X, X, norms.copy(), norms.copy(), False)
+    np.testing.assert_allclose(D, 1.0 - cc, atol=1e-12)
