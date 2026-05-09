@@ -14,6 +14,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 ### Added
 
 * Allow parallel computation of DTW barycenters and plug it in `TimeSeriesKMeans`.
+* `tslearn.metrics.sbd` and `tslearn.metrics.cdist_sbd` expose the Shape-Based Distance used inside `KShape` as stand-alone functions ([#276](https://github.com/tslearn-team/tslearn/issues/276)).
 
 ### Changed
 
