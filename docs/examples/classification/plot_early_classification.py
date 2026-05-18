@@ -109,7 +109,29 @@ plt.show()
 ##############################################################################
 # Streaming inputs
 # ----------------
-# Analysing early classification of a time series over time.
+# Let's focus on analyzing early classification of a time series acquired sequentially over time.
+#
+# For each incoming timestamp :math:`t`, the following figure displays data-dependant computations of:
+#
+# * the clustering probabilities :math:`P(C_k | \mathbf{x}_{\rightarrow t})`
+# * the expected cost for all future times :math:`t + \tau`
+#   with :math:`\tau \geq 0`:
+#
+#   .. math::
+#
+#     f_\tau(\mathbf{x}_{\rightarrow t}, y) =
+#         \sum_k \left[ P(C_k | \mathbf{x}_{\rightarrow t})
+#         \sum_i \left( P(y=i | C_k)
+#         \left( \sum_{j \neq i} P_{t+\tau}(\hat{y} = j | y=i, C_k)
+#         \right) \right)
+#         \right]
+#         + \alpha t
+#
+# as described in :ref:`our User Guide section dedicated to early classification <early>`.
+#
+# The estimated optimal :math:`\tau` is derived at each timestamp from minimizing the expected costs.
+#
+# In this exemple, the `NonMyopicEarlyClassifier` recommends a classification decision as early as :math:`t=12`.
 
 ts_index = 1
 sz = X_test.shape[1]
