@@ -640,10 +640,12 @@ class NonMyopicEarlyClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
         Returns
         -------
         generator
-            Use the `send` method of the generator to stream timestamps and retrieve associated prediction and delays.
-            This method takes an array-like, shape (n_ts, n_timestamps, n_features), as input and outputs the predicted
-            classes and estimated delays before prediction timestamps at the given timestamp (same output as
-            :func:`~early_predict`).
+            Use the `send` method of the generator to stream timestamps as they become available and retrieve associated
+            predictions and delays. This method takes an array-like, shape (n_ts, n_timestamps, n_features),
+            representing freshly aquired data for all timeseries as input. This new data is concatenated with previously
+            sent data, if any, to output the predicted classes and estimated delays before optimal prediction
+            timestamps for all timeseries based all on available data (same output as :func:`~early_predict`).
+            Use n_timestamps = 1 for step by step feeding.
 
         Examples
         --------
@@ -688,10 +690,12 @@ class NonMyopicEarlyClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
         Returns
         -------
         generator
-            Use the `send` method of the generator to stream timestamps and retrieve associated prediction and delays.
-            This method takes an array-like, shape (n_ts, n_timestamps, n_features), as input and outputs the predicted probability
-            estimates and estimated delays before prediction timestamps at the given timestamp (same output as
-            :func:`~early_predict_proba`).
+            Use the `send` method of the generator to stream timestamps as they become available and retrieve associated
+            prediction probalities and delays. This method takes an array-like, shape (n_ts, n_timestamps, n_features),
+            representing freshly aquired data for all timeseries as input. This new data is concatenated with previously
+            sent data, if any, to output the predicted probability estimates and estimated delays before optimal prediction
+            timestamps for all timeseries based all on available data (same output as :func:`~early_predict_proba`).
+            Use n_timestamps = 1 for step by step feeding.
 
         Examples
         --------
