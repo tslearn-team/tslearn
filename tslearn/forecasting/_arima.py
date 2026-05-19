@@ -180,7 +180,7 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         return self.seasonal_period or 0
 
     def fit(self, X, y=None):
-        """Computes VARIMA model.
+        """Fits a VARIMA model.
 
         Parameters
         ----------
@@ -464,7 +464,7 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
 
 
 class AutoVARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
-    """Automatically selects the best Vector Autoregressive Moving Average (VARIMA) model
+    """Automatically selects the best Vector Autoregressive Integrated Moving Average (VARIMA) model
     through Hyndman-Khandakar algorithm [1]_ [2]_.
 
     Parameters
