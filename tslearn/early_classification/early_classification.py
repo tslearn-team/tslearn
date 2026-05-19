@@ -641,8 +641,8 @@ class NonMyopicEarlyClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
         -------
         generator
             Use the `send` method of the generator to stream timestamps and retrieve associated prediction and delays.
-            This method takes an array-like, shape (n_ts, n_features), as input and outputs the predicted classes
-            and estimated delays before prediction timestamps at the given timestamp (same output as
+            This method takes an array-like, shape (n_ts, n_timestamps, n_features), as input and outputs the predicted
+            classes and estimated delays before prediction timestamps at the given timestamp (same output as
             :func:`~early_predict`).
 
         Examples

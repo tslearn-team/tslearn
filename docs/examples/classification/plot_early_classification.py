@@ -131,7 +131,7 @@ plt.show()
 #
 # The estimated optimal :math:`\tau` is derived at each timestamp from minimizing the expected costs.
 #
-# In this exemple, the `NonMyopicEarlyClassifier` recommends a classification decision as early as :math:`t=12`.
+# In this example, the `NonMyopicEarlyClassifier` recommends a classification decision as early as :math:`t=12`.
 
 ts_index = 1
 sz = X_test.shape[1]
