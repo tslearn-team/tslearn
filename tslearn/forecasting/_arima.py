@@ -116,10 +116,10 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
     ----------
         p : int, (default: 1)
           AutoRegressive (AR) order of the model.
-        q : int (default: 0)
-          Moving-Average (MA) order of the model.
         d : int (default: 0)
           Differentiation order of the model.
+        q : int (default: 0)
+          Moving-Average (MA) order of the model.
         with_constant : bool (default: True)
           Whether the model should include an intercept term.
         seasonal_period: int or None (default: None)
