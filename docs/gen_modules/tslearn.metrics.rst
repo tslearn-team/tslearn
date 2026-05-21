@@ -45,3 +45,5 @@ tslearn.metrics
       frechet_path
       frechet_path_from_metric
       frechet_accumulated_matrix
+      cdist_normalized_cc
+      y_shifted_sbd_vec

@@ -1111,3 +1111,30 @@ def test_sax():
         dataset2=[[-1, 0, 1], [1, 0, 1]],
     )
     np.testing.assert_equal(dists, expected)
+
+
+def test_cycc_functions_documented():
+    """Regression test for #343: cross-correlation helpers exported from
+    ``tslearn.metrics`` (sourced in ``cycc.py``) must appear in the
+    Sphinx autosummary so they show up in the generated reference docs.
+    """
+    import pathlib
+
+    # Symbols re-exported from cycc.py — these are part of the public API
+    # via ``tslearn.metrics.__all__`` but historically were absent from the
+    # autosummary block, leaving them undocumented on readthedocs.
+    cycc_public = ["cdist_normalized_cc", "y_shifted_sbd_vec"]
+    for name in cycc_public:
+        assert name in tslearn.metrics.__all__, (
+            f"{name} is expected to be re-exported from tslearn.metrics"
+        )
+
+    repo_root = pathlib.Path(__file__).resolve().parents[1]
+    rst_path = repo_root / "docs" / "gen_modules" / "tslearn.metrics.rst"
+    assert rst_path.is_file(), f"missing {rst_path}"
+    rst_text = rst_path.read_text()
+    for name in cycc_public:
+        assert name in rst_text, (
+            f"{name} is exported by tslearn.metrics but missing from "
+            f"docs/gen_modules/tslearn.metrics.rst autosummary"
+        )
