@@ -24,6 +24,9 @@ to retrieve optimal classification timing.
 * `TimeSeriesScalerMinMax` and `TimeSeriesScalerMeanVariance` now scales based on fitted data characteristics
 when `per_timeseries` is False. ([#280](https://github.com/tslearn-team/tslearn/issues/280))
 * Fix `LearningShapelets.shapelets_` attribute computation.
+* Document `cdist_normalized_cc` and `y_shifted_sbd_vec` in the `tslearn.metrics`
+API reference — they were already exported via `tslearn.metrics.__all__`, just
+missing from the Sphinx autosummary. ([#343](https://github.com/tslearn-team/tslearn/issues/343))
 
 ## [v0.8.1]
 
