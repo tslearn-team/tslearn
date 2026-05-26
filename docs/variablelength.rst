@@ -170,7 +170,7 @@ Examples
         AutoVARIMA
     )
     VARIMA().fit(X).predict(X) # Both fit and predict accept variable-length time series datasets
-    AutoVARIMA.fit(X).predict(X) # Both fit and predict accept variable-length time series datasets
+    AutoVARIMA().fit(X).predict(X) # Both fit and predict accept variable-length time series datasets
 
 Model selection
 ---------------
