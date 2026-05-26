@@ -153,6 +153,25 @@ Examples
     scaled = TimeSeriesScalerMeanVariance().fit_transform(X)
     imputed = TimeSeriesImputer().fit_transform(X)
 
+Forecasting
+-----------
+
+* :class:`tslearn.forecasting.AutoVARIMA`
+* :class:`tslearn.forecasting.VARIMA`
+
+
+Examples
+~~~~~~~~
+
+.. code-block:: python
+
+    from tslearn.forecasting import (
+        VARIMA,
+        AutoVARIMA
+    )
+    VARIMA().fit(X).predict(X) # Both fit and predict accept variable-length time series datasets
+    AutoVARIMA.fit(X).predict(X) # Both fit and predict accept variable-length time series datasets
+
 Model selection
 ---------------
 
