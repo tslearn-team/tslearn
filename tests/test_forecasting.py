@@ -182,3 +182,25 @@ def test_AutoVARIMA():
         model.predict(n=2),
         model.fit_predict(data, n=2)
     )
+
+
+def test_verbosity(capteesys):
+    data = random_walks(n_ts=10, sz=100, random_state=0)
+
+    VARIMA(0, 0, 1, max_iter=2, verbose=True).fit(data)
+    captured = capteesys.readouterr()
+    assert "iteration 1, nlle 2944.90830900361\n" in captured.out
+
+    AutoVARIMA(max_iter=2, verbose=1).fit(data)
+    captured = capteesys.readouterr()
+    assert "Selected d: 1.\n" in captured.out
+    assert "Testing model VARIMA" in captured.out
+    assert "iteration" not in captured.out
+    assert "Computed AIC" in captured.out
+
+    AutoVARIMA(max_iter=2, verbose=2).fit(data)
+    captured = capteesys.readouterr()
+    assert "Selected d: 1.\n" in captured.out
+    assert "Testing model VARIMA" in captured.out
+    assert "iteration 1" in captured.out
+    assert "Computed AIC" in captured.out
