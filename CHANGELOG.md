@@ -24,6 +24,7 @@ to retrieve optimal classification timing.
 * `TimeSeriesScalerMinMax` and `TimeSeriesScalerMeanVariance` now scales based on fitted data characteristics
 when `per_timeseries` is False. ([#280](https://github.com/tslearn-team/tslearn/issues/280))
 * Fix `LearningShapelets.shapelets_` attribute computation.
+* Fix `LearningShapelets` with MPS due to unsupported float64 precision
 
 ## [v0.8.1]
 

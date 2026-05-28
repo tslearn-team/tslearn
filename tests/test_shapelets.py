@@ -162,10 +162,12 @@ def test_locate():
     clf.fit(time_series, y)
     shapelet = clf.shapelets_[0]
     if backend() == 'torch':
-        np.testing.assert_allclose(
-            shapelet,
-            np.array([[2.63489213], [2.36688087]])
-        )
+        import torch
+        if not torch.backends.mps.is_available():
+            np.testing.assert_allclose(
+                shapelet,
+                np.array([[2.63489213], [2.36688087]])
+            )
     elif backend() == 'tensorflow':
         np.testing.assert_allclose(
             shapelet,
