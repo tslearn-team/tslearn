@@ -35,6 +35,16 @@ class TimeSeriesFeatureSynchronizer(
     <BLANKLINE>
            [[ 1.,  2.],
             [nan, nan]]])
+    >>> data = [[[1, 2], [2, 4] , [9, np.nan]]]
+    >>> timestamps = np.array([
+    ...    [np.array(["2025-01-01", "2025-01-02"], dtype='datetime64'),
+    ...     np.array(["2025-01-03", "2025-01-07"], dtype='datetime64'),
+    ...     np.array(["2025-01-10", "nat"], dtype='datetime64')],
+    ... ])
+    >>> TimeSeriesFeatureSynchronizer().fit_transform(data, timestamps=timestamps)
+    array([[[1. , 2. ],
+            [2. , 2.4],
+            [9. , 4. ]]])
     """
 
     def __init__(self, reference_feature_index=0):
@@ -71,7 +81,7 @@ class TimeSeriesFeatureSynchronizer(
         y:
             Ignored
 
-        timestamps: array-like of shape (n_ts, sz, d) or None (default: None)
+        timestamps: np.datetime64 array-like of shape (n_ts, sz, d) or None (default: None)
             Acquisition timestamps, same shape as X if not None.
             When provided, timestamps should be increasing for each feature and should use
             np.datetime64('nat') for missing values.
