@@ -72,7 +72,9 @@ class TimeSeriesFeatureSynchronizer(
             Ignored
 
         timestamps: array-like of shape (n_ts, sz, d) or None (default: None)
-            Acquisition timestamps. When provided, timestamps must be increasing for each feature.
+            Acquisition timestamps, same shape as X if not None.
+            When provided, timestamps should be increasing for each feature and should use
+            np.datetime64('nat') for missing values.
 
         Returns
         -------
