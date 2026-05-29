@@ -1,11 +1,16 @@
 """Frechet metric toolbox."""
+import functools
 
 from numba import njit
 
 import numpy
 
+try:
+    import torch
+except ImportError:
+    torch = None
+
 from tslearn.backend import instantiate_backend
-from tslearn.backend.pytorch_backend import HAS_TORCH
 from tslearn.utils import to_time_series, to_time_series_dataset
 
 from ._masks import (
@@ -16,7 +21,8 @@ from ._masks import (
 from .utils import (
     _cdist_generic,
     _njit_compute_path,
-    _compute_path
+    _compute_path,
+    _torch_accumulated_matrix,
 )
 
 
@@ -104,7 +110,7 @@ def frechet(
         >>> s2 = torch.tensor([[3.0], [4.0], [-3.0]])
         >>> sim = frechet(s1, s2, be="pytorch")
         >>> print(sim)
-        tensor(6., grad_fn=<SqrtBackward0>)
+        tensor(6., dtype=torch.float64, grad_fn=<SqrtBackward0>)
         >>> sim.backward()
         >>> print(s1.grad)
         tensor([[0.],
@@ -115,7 +121,7 @@ def frechet(
         >>> s2_2d = torch.tensor([[3.0, 3.0], [4.0, 4.0], [-3.0, -3.0]])
         >>> sim = frechet(s1_2d, s2_2d, be="pytorch")
         >>> print(sim)
-        tensor(8.4853, grad_fn=<SqrtBackward0>)
+        tensor(8.4853, dtype=torch.float64, grad_fn=<SqrtBackward0>)
         >>> sim.backward()
         >>> print(s1_2d.grad)
         tensor([[0.0000, 0.0000],
@@ -316,40 +322,37 @@ def accumulated_matrix(s1, s2, mask, be=None):
     return compute_accumulated_matrix(s1, s2, mask)
 
 
-def __make_accumulated_matrix(backend):
+@njit(nogil=True)
+def _njit_accumulated_matrix(s1, s2, mask):
 
-    def _accumulated_matrix_generic(s1, s2, mask):
+    l1, l2 = s1.shape[0], s2.shape[0]
 
-        l1, l2 = s1.shape[0], s2.shape[0]
+    acc_matrix = numpy.full((l1 + 1, l2 + 1), numpy.inf)
+    acc_matrix[0, 0] = 0
 
-        acc_matrix = backend.full((l1 + 1, l2 + 1), backend.inf)
-        acc_matrix[0, 0] = 0
+    for i in range(l1):
+        for j in range(l2):
+            if mask[i, j]:
+                dist = 0.0
+                for di in range(s1[i].shape[0]):
+                    diff = s1[i][di] - s2[j][di]
+                    dist += diff * diff
+                acc_matrix[i + 1, j + 1] = max(
+                    dist,
+                    min(acc_matrix[i, j + 1],
+                        acc_matrix[i + 1, j],
+                        acc_matrix[i, j])
+                )
 
-        for i in range(l1):
-            for j in range(l2):
-                if mask[i, j]:
-                    dist = 0.0
-                    for di in range(s1[i].shape[0]):
-                        diff = s1[i][di] - s2[j][di]
-                        dist += diff * diff
-                    acc_matrix[i + 1, j + 1] = max(
-                        dist,
-                        min(acc_matrix[i, j + 1],
-                            acc_matrix[i + 1, j],
-                            acc_matrix[i, j])
-                    )
-
-        return acc_matrix[1:, 1:]
-
-    if backend is numpy:
-        return njit(nogil=True)(_accumulated_matrix_generic)
-    else:
-        return _accumulated_matrix_generic
+    return acc_matrix[1:, 1:]
 
 
-_njit_accumulated_matrix = __make_accumulated_matrix(numpy)
-if HAS_TORCH:
-    _accumulated_matrix = __make_accumulated_matrix(instantiate_backend("TorchBackend"))
+
+if torch is not None:
+    _accumulated_matrix = functools.partial(
+        _torch_accumulated_matrix,
+        acc_fun=lambda distances, predecessors: torch.max(distances, torch.min(predecessors, dim=0).values)
+    )
 else:
     _accumulated_matrix = _njit_accumulated_matrix
 
@@ -380,7 +383,7 @@ def __make_frechet(backend):
 
 
 _njit_frechet = __make_frechet(numpy)
-if HAS_TORCH:
+if torch is not None:
     _frechet = __make_frechet(instantiate_backend("torch"))
 else:
     _frechet = _njit_frechet
@@ -415,7 +418,7 @@ def __make_frechet_path(backend):
 
 
 _njit_frechet_path = __make_frechet_path(numpy)
-if HAS_TORCH:
+if torch is not None:
     _frechet_path = __make_frechet_path(instantiate_backend("torch"))
 else:
     _frechet_path = _njit_frechet_path
@@ -637,7 +640,7 @@ def __make_acc_matrix_from_dist_matrix(backend):
 
 
 _njit_acc_matrix_from_dist_matrix = __make_acc_matrix_from_dist_matrix(numpy)
-if HAS_TORCH:
+if torch is not None:
     _acc_matrix_from_dist_matrix = __make_acc_matrix_from_dist_matrix(instantiate_backend("torch"))
 else:
     _acc_matrix_from_dist_matrix = _njit_acc_matrix_from_dist_matrix
