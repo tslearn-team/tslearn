@@ -171,12 +171,12 @@ def to_time_series(ts, remove_nans=False, be=None, dtype=float):
         If `be` is `None`, the backend is determined by the input arrays.
         See our :ref:`dedicated user-guide page <backend>` for more information.
     dtype : data type (default: float)
-        Data type for the returned dataset, depending on the backend.
+        Data type for the returned time series, depending on the backend.
 
     Returns
     -------
     ts_out : array-like, shape=(sz, d)
-        The transformed time series. This is always guaraneteed to be a new
+        The transformed time series. This is always guaranteed to be a new
         time series and never just a view into the old one.
 
     Examples
