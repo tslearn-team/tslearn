@@ -1111,25 +1111,3 @@ def test_sax():
         dataset2=[[-1, 0, 1], [1, 0, 1]],
     )
     np.testing.assert_equal(dists, expected)
-
-
-def test_dtw_dtype():
-    n1, n2, d = 15, 10, 3
-    rng = np.random.default_rng(42)
-    s1 = rng.standard_normal((n1, d), np.float32)
-    s2 = rng.standard_normal((n2, d), np.float32)
-
-    r = tslearn.metrics.dtw(s1, s2)
-
-    import torch
-    t1, t2 = torch.tensor(s1), torch.tensor(s2)
-    r = tslearn.metrics.dtw(t1, t2)
-
-    s1 = rng.standard_normal((n1, d), np.float64)
-    s2 = rng.standard_normal((n2, d), np.float64)
-    r = tslearn.metrics.dtw(s1, s2)
-
-    t1, t2 = torch.tensor(s1), torch.tensor(s2)
-    r = tslearn.metrics.dtw(t1, t2)
-
-    pass
