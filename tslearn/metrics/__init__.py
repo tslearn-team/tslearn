@@ -46,7 +46,6 @@ from .dtw_variants import (
    dtw_path_limited_warping_length,
    subsequence_path,
    subsequence_cost_matrix,
-   dtw_path_from_metric,
    dtw_subsequence_path,
    lb_envelope,
    lb_keogh,
