@@ -644,6 +644,11 @@ def dtw_path_from_metric(
     .. _scipy: https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html
 
     """  # noqa: E501
+    warnings.warn(
+        "This method is deprecated, use tslearn.metrics.dtw_path_from_metric instead.",
+        DeprecationWarning
+    )
+
     be = instantiate_backend(be, s1, s2)
     if metric == "precomputed":  # Pairwise distance given as input
         s1 = be.array(s1)

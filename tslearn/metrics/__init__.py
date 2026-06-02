@@ -20,9 +20,18 @@ from .ctw import (
 from ._dtw import(
     dtw,
     dtw_path,
+    dtw_path_from_metric,
     cdist_dtw,
     _cdist_dtw,
     accumulated_matrix as dtw_accumulated_matrix
+)
+from ._frechet import (
+    frechet,
+    frechet_path,
+    frechet_path_from_metric,
+    cdist_frechet,
+    _cdist_frechet,
+    accumulated_matrix as frechet_accumulated_matrix
 )
 from ._gak import (
     sigma_gak,

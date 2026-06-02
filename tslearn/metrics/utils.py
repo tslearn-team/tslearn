@@ -193,12 +193,17 @@ if torch is not None:
 
     def _torch_accumulated_matrix(s1, s2, mask, acc_fun, **acc_kwargs):
 
-        dist = torch.square(torch.cdist(s1, s2))  # (l1, l2)
-        dist[~mask] = torch.inf
-        l1, l2 = dist.shape
+        # Distance matrix
+        D = torch.square(torch.cdist(s1, s2))  # (l1, l2)
+        return _torch_acc_matrix_from_dist_matrix(D, mask, acc_fun, **acc_kwargs)
+
+    def _torch_acc_matrix_from_dist_matrix(D, mask, acc_fun, **acc_kwargs):
+
+        D[~mask] = torch.inf
+        l1, l2 = D.shape
 
         # Extended matrix with padding
-        cum_sum = torch.full((l1 + 1, l2 + 1), torch.inf, device=s1.device, dtype=dist.dtype)
+        cum_sum = torch.full((l1 + 1, l2 + 1), torch.inf, device=D.device, dtype=D.dtype)
         cum_sum[0, 0] = 0.0
 
         # Anti-diagonal path k = i + j, k in [0, l1+l2-1]
@@ -207,7 +212,7 @@ if torch is not None:
             i_start = max(0, k - l2 + 1)
             i_end = min(l1 - 1, k) + 1
 
-            i_idx = torch.arange(i_start, i_end, device=s1.device)
+            i_idx = torch.arange(i_start, i_end, device=D.device)
             j_idx = k - i_idx
 
             # cum_sum indices: offset +1
@@ -220,8 +225,9 @@ if torch is not None:
                 cum_sum[ci - 1, cj - 1],
             ], dim=0)
 
-            cum_sum[ci, cj] = acc_fun(dist[i_idx, j_idx], predecessors, **acc_kwargs)
+            cum_sum[ci, cj] = acc_fun(D[i_idx, j_idx], predecessors, **acc_kwargs)
 
         return cum_sum[1:, 1:]
 else:
     _torch_accumulated_matrix = None
+    _torch_acc_matrix_from_dist_matrix = None
