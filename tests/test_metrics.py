@@ -744,6 +744,13 @@ def test_dtw_path_from_metric():
             # Use dtw_path as a reference
             path_ref, dist_ref = tslearn.metrics.dtw_path(s1, s2, be=be)
 
+            with pytest.deprecated_call():
+                deprecated_path, deprecated_dist = tslearn.metrics.dtw_variants.dtw_path_from_metric(
+                    s1, s2,  metric="sqeuclidean", be=be
+                )
+                np.testing.assert_equal(path_ref, deprecated_path)
+                np.testing.assert_allclose(backend.sqrt(deprecated_dist), dist_ref)
+
             # Test of using a scipy distance function
             path, dist = tslearn.metrics.dtw_path_from_metric(
                 s1, s2, metric="sqeuclidean", be=be
