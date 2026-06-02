@@ -25,6 +25,7 @@ to retrieve optimal classification timing.
 when `per_timeseries` is False. ([#280](https://github.com/tslearn-team/tslearn/issues/280))
 * Fix `LearningShapelets.shapelets_` attribute computation.
 * Fix `LearningShapelets` with MPS due to unsupported float64 precision
+* Rework `dtw` and `frechet` computation for torch backend (both cpu and gpu) to speed things up. 
 
 ## [v0.8.1]
 
