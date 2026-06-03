@@ -15,8 +15,14 @@ class TimeSeriesFeatureSynchronizer(
     BaseEstimator
 ):
     """
-    Feature synchronizer for time series. Synchronizes features of each time series of a dataset to circumvent
-    acquisition at different sampling rates or desynchronized timestamps through linear interpolation.
+    Feature synchronizer for time series.
+
+    Synchronizes features of each time series of a dataset to deal with:
+
+    * acquisition at different sampling rates:
+      linear interpolation is performed to match the sampling rate of the reference feature
+    * desynchronized timestamps:
+      linear interpolation is performed to match the temporal grid of the reference feature
 
     Parameters
     ----------
@@ -57,6 +63,8 @@ class TimeSeriesFeatureSynchronizer(
         ----------
         X : array-like of shape (n_ts, sz, d)
             Time series dataset.
+        y : Ignored
+            Not used, for API consistency by convention.
 
         Returns
         -------
@@ -72,16 +80,15 @@ class TimeSeriesFeatureSynchronizer(
         Synchronizes features of each time series with the feature of reference through linear interpolation.
         When timestamps are not provided, constant sampling periods are assumed for all features and identical
         start and stop timestamps are assumed for all features of a given times series.
+        When timestamps are provided, features are synchronized on the temporal grid of the reference feature.
 
         Parameters
         ----------
         X : array-like of shape (n_ts, sz, d)
             Time series dataset to be synchronized feature wise.
-
-        y:
-            Ignored
-
-        timestamps: np.datetime64 array-like of shape (n_ts, sz, d) or None (default: None)
+        y : Ignored
+            Not used, for API consistency by convention.
+        timestamps : np.datetime64 array-like of shape (n_ts, sz, d) or None (default: None)
             Acquisition timestamps, same shape as X if not None.
             When provided, timestamps should be increasing for each feature and should use
             np.datetime64('nat') for missing values.
@@ -89,7 +96,7 @@ class TimeSeriesFeatureSynchronizer(
         Returns
         -------
         numpy.ndarray
-            Time series synchronized feature wise dataset.
+            Time series dataset synchronized feature wise.
         """
         check_is_fitted(self, '_X_fit_dims')
 
@@ -147,11 +154,15 @@ class TimeSeriesFeatureSynchronizer(
         ----------
         X : array-like of shape (n_ts, sz, d)
             Time series dataset to be synchronized feature wise.
+        y : Ignored
+            Not used, for API consistency by convention.
+        **transform_params : dict
+            proxies `timestamps` transform parameter
 
         Returns
         -------
         numpy.ndarray
-            Time series synchronized feature wise dataset.
+            Time series dataset synchronized feature wise.
         """
         return self.fit(X, y).transform(X, y,  **transform_params)
 
