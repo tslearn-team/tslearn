@@ -17,6 +17,9 @@ References
 #
 # This example uses open meteorological data from the Ille-et-Vilaine department
 # from https://www.data.gouv.fr/datasets/donnees-climatologiques-de-base-quotidiennes.
+# In the following, the extracted train data corresponds to the collected temperature from 2010 to 2024
+# in different base stations across the department. The test data is the temperature collected by the
+# same base stations from 2024 to date.
 
 import csv
 import gzip
@@ -157,13 +160,13 @@ fig, axes = plt.subplots(math.ceil(len(train_data) / 3), 3, sharex=True, sharey=
 for i in range(len(train_data)):
     j = i + 1
     ax = axes[j // 3][j % 3]
-    predicted_plot, = ax.plot(test_times[0][:horizon], predicted[i], label="predicted")
-    test_plot, = ax.plot(test_times[0][:horizon], test_data[i, :horizon], label="test", alpha=0.7)
+    predicted_plot, = ax.plot(test_times[i][:horizon], predicted[i], label="predicted")
+    test_plot, = ax.plot(test_times[i][:horizon], test_data[i, :horizon], label="test", alpha=0.7)
     ax.set_title(test_places[i])
     for label in ax.get_xticklabels():
         label.set_rotation(40)
         label.set_horizontalalignment('right')
 fig.delaxes(axes[0,0])
 fig.legend(handles=[predicted_plot, test_plot], loc='upper left', bbox_to_anchor=(0.1, 0.95))
-fig.suptitle("Forcasting seasonal data", fontsize=16)
+fig.suptitle("Forecasting seasonal data", fontsize=16)
 plt.show()
