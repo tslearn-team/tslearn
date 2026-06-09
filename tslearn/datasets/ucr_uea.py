@@ -1,3 +1,4 @@
+import os
 import warnings
 import csv
 import shutil
@@ -10,6 +11,26 @@ from .datasets import in_file_string_replace, extract_from_zip_url
 BASE_URL = "https://www.timeseriesclassification.com/aeon-toolkit/"
 
 SUPPORTED_EXT = ["txt", "arff"]
+
+
+def _check_root_dir(root_dir=None):
+    """Get the default root directory for caching datasets, following the XDG Base
+    Directory Specification if possible.
+
+    Returns
+    -------
+    str
+        The path to the default root directory for caching datasets.
+    """
+    if root_dir is not None:
+        return Path(root_dir)
+    # Support for XDG Base Directory Specification for cache location,
+    # with fallback to ~/.tslearn/datasets/UCR_UEA
+    data_home = os.environ.get("XDG_DATA_HOME", None)
+    if data_home is not None:
+        return Path(data_home) / "tslearn"
+    else:
+        return Path.home() / ".tslearn" / "datasets"
 
 
 class UCR_UEA_datasets:
@@ -48,10 +69,7 @@ class UCR_UEA_datasets:
     """
     def __init__(self, use_cache=True, root_dir=None):
         self.use_cache = use_cache
-        if root_dir is None:
-            self._data_dir = Path.home() / ".tslearn" / "datasets" / "UCR_UEA"
-        else:
-            self._data_dir = Path(root_dir) / "UCR_UEA"
+        self._data_dir = _check_root_dir(root_dir) / "UCR_UEA"
         self._data_dir.mkdir(parents=True, exist_ok=True)
 
         try:
