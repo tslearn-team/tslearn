@@ -5,8 +5,8 @@ Early Classification
 
 This example presents the concept of early classification.
 
-Early classifiers are implemented in the 
-:mod:`tslearn.early_classification` module and in this example 
+Early classifiers are implemented in the
+:mod:`tslearn.early_classification` module and in this example
 we use the method from [1]_.
 
 References
@@ -53,10 +53,8 @@ loader = UCR_UEA_datasets()
 # sphinx_gallery_start_ignore
 if "__file__" not in locals():
     # runs by sphinx-gallery
-    import os
-    loader._data_dir = os.path.join(
-        os.path.dirname(os.path.realpath(os.getcwd())), '..', "datasets"
-    )
+    from pathlib import Path
+    loader._data_dir = Path.cwd().parents[1] / "datasets"
 # sphinx_gallery_end_ignore
 X_train, y_train, X_test, y_test = loader.load_dataset("ECG200")
 
