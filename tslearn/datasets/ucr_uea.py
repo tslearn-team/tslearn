@@ -1,11 +1,15 @@
-import os
 import warnings
 import csv
 import shutil
+from pathlib import Path
 from urllib.request import urlretrieve
 
-from tslearn.utils import _load_arff_uea, _load_txt_uea
+from tslearn import utils
 from .datasets import in_file_string_replace, extract_from_zip_url
+
+BASE_URL = "https://www.timeseriesclassification.com/aeon-toolkit/"
+
+SUPPORTED_EXT = ["txt", "arff"]
 
 
 class UCR_UEA_datasets:
@@ -42,25 +46,25 @@ class UCR_UEA_datasets:
     .. [1] A. Bagnall, J. Lines, W. Vickers and E. Keogh, The UEA & UCR Time
        Series Classification Repository, www.timeseriesclassification.com
     """
-    def __init__(self, use_cache=True):
+    def __init__(self, use_cache=True, root_dir=None):
         self.use_cache = use_cache
-        self._data_dir = os.path.expanduser(os.path.join(
-            "~", ".tslearn", "datasets", "UCR_UEA"
-        ))
-        os.makedirs(self._data_dir, exist_ok=True)
+        if root_dir is None:
+            self._data_dir = Path.home() / ".tslearn" / "datasets" / "UCR_UEA"
+        else:
+            self._data_dir = Path(root_dir) / "UCR_UEA"
+        self._data_dir.mkdir(parents=True, exist_ok=True)
 
         try:
-            url_multivariate = ("https://www.timeseriesclassification.com/aeon-toolkit/Archives/"
-                                "summaryMultivariate.csv")
-            self._list_multivariate_filename = os.path.join(
-                self._data_dir, os.path.basename(url_multivariate)
+            url_multivariate = BASE_URL + "Archives/summaryMultivariate.csv"
+            self._list_multivariate_filename = (
+                self._data_dir / Path(url_multivariate).name
             )
             urlretrieve(url_multivariate, self._list_multivariate_filename)
 
-            url_univariate = ("https://www.timeseriesclassification.com/aeon-toolkit/Archives/"
-                            "summaryUnivariate.csv")
-            self._list_univariate_filename = os.path.join(
-                self._data_dir, os.path.basename(url_univariate))
+            url_univariate = BASE_URL + "Archives/summaryUnivariate.csv"
+            self._list_univariate_filename = (
+                self._data_dir / Path(url_univariate).name
+            )
             urlretrieve(url_univariate, self._list_univariate_filename)
 
             # fix typos in that CSV to match with the name in the download link
@@ -69,9 +73,10 @@ class UCR_UEA_datasets:
             in_file_string_replace(self._list_univariate_filename,
                                    "StarlightCurves", "StarLightCurves")
 
-            self._baseline_scores_filename = os.path.join(
-                os.path.dirname(__file__),
-                "../.cached_datasets/singleTrainTest.csv")
+            self._baseline_scores_filename = (
+                Path(__file__).parents[1] / ".cached_datasets" /
+                "singleTrainTest.csv"
+            )
 
         except Exception:
             self._baseline_scores_filename = None
@@ -182,7 +187,7 @@ class UCR_UEA_datasets:
             ]
 
     def list_datasets(self):
-        """List datasets (both univariate and multivariate) available in the 
+        """List datasets (both univariate and multivariate) available in the
         UCR/UEA archive.
 
         Examples
@@ -213,9 +218,8 @@ class UCR_UEA_datasets:
         >>> "BeetleFly" in l
         True
         """
-        return [path for path in os.listdir(self._data_dir)
-                if os.path.isdir(os.path.join(self._data_dir, path)) and
-                path not in self._ignore_list]
+        return [path.name for path in self._data_dir.iterdir()
+                if path.is_dir() and path.name not in self._ignore_list]
 
     def load_dataset(self, dataset_name):
         """Load a dataset from the UCR/UEA archive from its name.
@@ -259,16 +263,17 @@ class UCR_UEA_datasets:
         (7494, 8, 2)
         >>> assert (None, None, None, None) == data_loader.load_dataset(
         ...         "DatasetThatDoesNotExist")
+        >>>
         """
         dataset_name = self._filenames.get(dataset_name, dataset_name)
-        full_path = os.path.join(self._data_dir, dataset_name)
+        full_path = self._data_dir / dataset_name
 
         if not self._has_files(dataset_name) or not self.use_cache:
             # completely clear the target directory first, it will be created
             # by extract_from_zip_url if it does not exist
             try:
                 # maybe it is a normal file (not a directory) for some obscure reason
-                os.remove(full_path)
+                full_path.unlink()
             except FileNotFoundError:
                 pass  # nothing to do here, already deleted
             except IsADirectoryError:
@@ -276,8 +281,7 @@ class UCR_UEA_datasets:
                 shutil.rmtree(full_path, ignore_errors=True)
             # else, actually raise the error!
 
-            url = ("https://www.timeseriesclassification.com/aeon-toolkit/%s.zip"
-                   % dataset_name)
+            url = BASE_URL + Path(dataset_name).with_suffix(".zip").name
             success = extract_from_zip_url(url, target_dir=full_path)
             if not success:
                 warnings.warn("dataset \"%s\" could not be downloaded or "
@@ -289,25 +293,21 @@ class UCR_UEA_datasets:
             # if both TXT and ARFF files are provided, the TXT versions are
             # used
             # both training and test data must be available in the same format
-            if self._has_files(dataset_name, ext="txt"):
-                X_train, y_train = _load_txt_uea(
-                    os.path.join(full_path, dataset_name + "_TRAIN.txt")
-                )
-                X_test, y_test = _load_txt_uea(
-                    os.path.join(full_path, dataset_name + "_TEST.txt")
-                )
-            elif self._has_files(dataset_name, ext="arff"):
-                X_train, y_train = _load_arff_uea(
-                    os.path.join(full_path, dataset_name + "_TRAIN.arff")
-                )
-                X_test, y_test = _load_arff_uea(
-                    os.path.join(full_path, dataset_name + "_TEST.arff")
-                )
+            for ext in SUPPORTED_EXT:
+                if self._has_files(dataset_name, ext=ext):
+                    load_fn = getattr(utils, f"_load_{ext}_uea")
+                    X_train, y_train = load_fn(
+                        full_path / (dataset_name + f"_TRAIN.{ext}")
+                    )
+                    X_test, y_test = load_fn(
+                        full_path / (dataset_name + f"_TEST.{ext}")
+                    )
+                    break
             else:
-                warnings.warn("dataset \"%s\" is not provided in either TXT "
-                              "or ARFF format and thus could not be loaded"
-                              % dataset_name,
-                              category=RuntimeWarning, stacklevel=2)
+                warnings.warn(
+                    f'dataset "{dataset_name}" is not provided in supported '
+                    f'formats {SUPPORTED_EXT} and thus could not be loaded'
+                )
                 return None, None, None, None
 
             return X_train, y_train, X_test, y_test
@@ -338,14 +338,16 @@ class UCR_UEA_datasets:
             file extension
         """
         if ext is None:
-            return (self._has_files(dataset_name, ext="txt") or
-                    self._has_files(dataset_name, ext="arff"))
+            return any(
+                self._has_files(dataset_name, ext=ext) for ext in SUPPORTED_EXT
+            )
         else:
             dataset_name = self._filenames.get(dataset_name, dataset_name)
-            full_path = os.path.join(self._data_dir, dataset_name)
-            basename = os.path.join(full_path, dataset_name)
-            return (os.path.exists(basename + "_TRAIN.%s" % ext) and
-                    os.path.exists(basename + "_TEST.%s" % ext))
+            full_path = self._data_dir / dataset_name
+            return (
+                (full_path / (dataset_name + f"_TRAIN.{ext}")).exists() and
+                (full_path / (dataset_name + f"_TEST.{ext}")).exists()
+            )
 
     def cache_all(self):
         """Cache all datasets from the UCR/UEA archive for later use."""
