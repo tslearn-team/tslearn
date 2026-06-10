@@ -4,7 +4,7 @@ from tslearn.datasets.ucr_uea import UCR_UEA_datasets
 from tslearn.datasets.cached import CachedDatasets
 
 
-def test_ucr_uea_datasets():
+def test_ucr_uea_datasets(require_ucr_datasets):
     data_loader = UCR_UEA_datasets()
     X_train, y_train, X_test, y_test = data_loader.load_dataset("Trace")
     assert X_train.shape == (100, 275, 1)
@@ -19,7 +19,7 @@ def test_cached_datasets():
     assert "Trace" in cached
 
 
-def test_root_dir(tmp_path):
+def test_root_dir(require_ucr_datasets, tmp_path):
     """Check that datasets are cached in the specified root directory."""
     # Make sure the Trace dataset is cached in the default location
     data_loader = UCR_UEA_datasets()
@@ -38,7 +38,7 @@ def test_root_dir(tmp_path):
     assert (Path(tmp_path) / "UCR_UEA" / "Trace").exists()
 
 
-def test_default_data_home(monkeypatch, tmp_path):
+def test_default_data_home(require_ucr_datasets, monkeypatch, tmp_path):
     """Check that datasets are cached in the specified root directory."""
     # Make sure the Trace dataset is cached in the default location
     data_loader = UCR_UEA_datasets()
