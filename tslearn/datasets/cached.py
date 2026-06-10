@@ -20,7 +20,7 @@ class CachedDatasets:
        Series Classification Repository, www.timeseriesclassification.com
     """
     def __init__(self):
-        # Local test datseta are stored in tslearn/.cached_datasets
+        # Local test datasets are stored in tslearn/.cached_datasets
         self.path = Path(__file__).parents[1] / ".cached_datasets"
 
     def list_datasets(self):
