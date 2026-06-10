@@ -51,6 +51,13 @@ class UCR_UEA_datasets:
         Datasets are always cached upon loading, and this parameter only
         determines whether the cached version shall be refreshed upon loading.
 
+    root_dir : str or None (default: None)
+        Directory to be used to cache downloaded datasets.
+        If None, a default directory is used:
+           - If the environment variable `XDG_DATA_HOME` is set, the default
+             directory is `$XDG_DATA_HOME/tslearn/UCR_UEA`.
+           - Otherwise, the default directory is `~/.tslearn/datasets/UCR_UEA`.
+
     Notes
     -----
         Downloading dataset files can be time-consuming, it is recommended
