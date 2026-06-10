@@ -16,6 +16,10 @@ Changelogs for this project are recorded in this file since v0.2.0.
 * Allow parallel computation of DTW barycenters and plug it in `TimeSeriesKMeans`.
 * `NonMyopicEarlyClassifier` can now be used with yet incomplete series or streamed inputs 
 to retrieve optimal classification timing.
+* Add `root_dir` parameter to `UCR_UEA_datasets` to allow users to specify 
+  where downloaded datasets should be cached. If None, a default directory is 
+  used, either in `$XDG_DATA_HOME/tslearn/UCR_UEA` if the environment variable 
+  is set or `~/.tslearn/datasets` otherwise.
 
 ### Changed
 
