@@ -132,8 +132,8 @@ def _soft_dtw_cuda(
 
     max_threads_per_block = torch.cuda.get_device_properties().max_threads_per_block
 
-    D = cuda.as_cuda_array(D.detach().contiguous())
-    R = cuda.as_cuda_array(R.detach().contiguous())
+    D = cuda.as_cuda_array(D)
+    R = cuda.as_cuda_array(R)
     mask = cuda.as_cuda_array(mask)
 
     if max(m, n) > max_threads_per_block:
@@ -172,8 +172,8 @@ def _dtw_cuda(
 
     max_threads_per_block = torch.cuda.get_device_properties().max_threads_per_block
 
-    D = cuda.as_cuda_array(D.detach().contiguous())
-    R = cuda.as_cuda_array(R.detach().contiguous())
+    D = cuda.as_cuda_array(D)
+    R = cuda.as_cuda_array(R)
     mask = cuda.as_cuda_array(mask)
 
     if max(m, n) > max_threads_per_block:
@@ -187,7 +187,7 @@ def _dtw_cuda(
 
             dtw_cuda_diag_acc_matrix_from_dist_matrix[n_blocks, n_threads](D, R, mask, diag_index, 0)
 
-        return R[-1, -1]
+        return math.sqrt(R[-1, -1])
 
     n_threads = min(max_threads_per_block, max(m, n))
     n_blocks = math.ceil(max(m, n) / max_threads_per_block)
@@ -210,8 +210,8 @@ def _frechet_cuda(
     R = D.new_full((m + 1, n + 1), torch.inf)
     R[0, 0] = 0.
 
-    D = cuda.as_cuda_array(D.detach().contiguous())
-    R = cuda.as_cuda_array(R.detach().contiguous())
+    D = cuda.as_cuda_array(D)
+    R = cuda.as_cuda_array(R)
     mask = cuda.as_cuda_array(mask)
 
     max_threads_per_block = torch.cuda.get_device_properties().max_threads_per_block
