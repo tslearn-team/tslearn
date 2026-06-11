@@ -13,6 +13,7 @@ except ImportError:
 from tslearn.backend import instantiate_backend
 from tslearn.utils import to_time_series, to_time_series_dataset
 
+from ._cuda_metrics import _dtw_cuda
 from ._masks import (
     GLOBAL_CONSTRAINT_CODE,
     _compute_mask,
@@ -159,7 +160,7 @@ def dtw(
     if be.is_numpy:
         dtw_ = _njit_dtw
     else:
-        dtw_ = _dtw
+        dtw_ = _dtw_cuda if (s1.device.type=="cuda" and s1.device.type=="cuda") else _dtw
     return dtw_(s1, s2, global_constraint_, sakoe_chiba_radius, itakura_max_slope)
 
 

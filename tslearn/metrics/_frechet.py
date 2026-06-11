@@ -13,6 +13,7 @@ except ImportError:
 from tslearn.backend import instantiate_backend
 from tslearn.utils import to_time_series, to_time_series_dataset
 
+from _cuda_metrics import _frechet_cuda
 from ._masks import (
     GLOBAL_CONSTRAINT_CODE,
     _njit_compute_mask,
@@ -158,7 +159,12 @@ def frechet(
         raise ValueError("All input time series must have the same feature size.")
 
     global_constraint_ = GLOBAL_CONSTRAINT_CODE[global_constraint]
-    frechet_ = _njit_frechet if be.is_numpy else _frechet
+
+    if be.is_numpy:
+        frechet_ = _njit_frechet
+    else:
+        frechet_ = _frechet_cuda if (s1.device.type==s2.device.type=="cuda") else _frechet
+
     return frechet_(
         s1,
         s2,
