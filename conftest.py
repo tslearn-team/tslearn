@@ -17,6 +17,18 @@ def pytest_ignore_collect(collection_path, *args, **kwargs):
         return True
 
 
+@pytest.fixture(scope="session")
+def require_ucr_datasets():
+    "Check that UCR UEA datasets can be fetched, and skip tests if not."
+    try:
+        datasets = UCR_UEA_datasets()
+        if not datasets.list_datasets():
+            raise RuntimeError("No datasets found in cache")
+    except Exception as exc:
+        warnings.warn("Error fetching UCR UEA datasets: {}".format(exc))
+        pytest.skip("UCR UEA datasets not available")
+
+
 def pytest_collection_modifyitems(config, items):
     try:
         import pandas
