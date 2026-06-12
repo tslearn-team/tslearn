@@ -288,7 +288,6 @@ class UCR_UEA_datasets:
         (7494, 8, 2)
         >>> assert (None, None, None, None) == data_loader.load_dataset(
         ...         "DatasetThatDoesNotExist")
-        >>>
         """
         dataset_name = self._filenames.get(dataset_name, dataset_name)
         full_path = self._data_dir / dataset_name
