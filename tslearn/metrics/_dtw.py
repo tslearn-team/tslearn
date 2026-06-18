@@ -489,8 +489,6 @@ def cdist_dtw(
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`__
         for more details.
 
-    dtype
-
     verbose : int, optional (default=0)
         The verbosity level: if non zero, progress messages are printed.
         Above 50, the output is sent to stdout.
