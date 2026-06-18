@@ -18,6 +18,10 @@ Changelogs for this project are recorded in this file since v0.2.0.
 to retrieve optimal classification timing.
 * `TimeSeriesFeatureSynchronizer` is a new preprocessing to deal with acquisition of features 
 at different sampling rates or desynchronized timestamps.
+* Add `root_dir` parameter to `UCR_UEA_datasets` to allow users to specify 
+  where downloaded datasets should be cached. If None, a default directory is 
+  used, either in `$XDG_DATA_HOME/tslearn/UCR_UEA` if the environment variable 
+  is set or `~/.tslearn/datasets` otherwise.
 
 ### Changed
 
@@ -26,6 +30,7 @@ at different sampling rates or desynchronized timestamps.
 * `TimeSeriesScalerMinMax` and `TimeSeriesScalerMeanVariance` now scales based on fitted data characteristics
 when `per_timeseries` is False. ([#280](https://github.com/tslearn-team/tslearn/issues/280))
 * Fix `LearningShapelets.shapelets_` attribute computation.
+* Fix `LearningShapelets` with MPS due to unsupported float64 precision
 
 ## [v0.8.1]
 

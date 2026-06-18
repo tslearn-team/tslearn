@@ -6,8 +6,8 @@ series datasets.
 import zipfile
 import tempfile
 import shutil
-import os
 import warnings
+from pathlib import Path
 from urllib.request import urlretrieve
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -33,11 +33,12 @@ def extract_from_zip_url(url, target_dir=None, verbose=False):
         Directory in which the zip file has been extracted if the process was
         successful, None otherwise
     """
-    fname = os.path.basename(url)
+    fname = Path(url).name
     tmpdir = tempfile.mkdtemp()
-    local_zip_fname = os.path.join(tmpdir, fname)
+    local_zip_fname = Path(tmpdir) / fname
     urlretrieve(url, local_zip_fname)
-    os.makedirs(target_dir, exist_ok=True)
+    target_dir = Path(target_dir)
+    target_dir.mkdir(parents=True, exist_ok=True)
     try:
         with zipfile.ZipFile(local_zip_fname, "r") as f:
             f.extractall(path=target_dir)

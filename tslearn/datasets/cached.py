@@ -1,5 +1,6 @@
 import numpy
-import os
+from pathlib import Path
+
 
 class CachedDatasets:
     """A convenience class to access cached time series datasets.
@@ -19,18 +20,16 @@ class CachedDatasets:
        Series Classification Repository, www.timeseriesclassification.com
     """
     def __init__(self):
-        self.path = os.path.join(os.path.dirname(__file__),
-                                 "..",
-                                 ".cached_datasets")
+        # Local test datasets are stored in tslearn/.cached_datasets
+        self.path = Path(__file__).parents[1] / ".cached_datasets"
 
     def list_datasets(self):
         """List cached datasets.
 
         Examples
         --------
-        >>> from tslearn.datasets import UCR_UEA_datasets
-        >>> _ = UCR_UEA_datasets().load_dataset("Trace")
-        >>> cached = UCR_UEA_datasets().list_cached_datasets()
+        >>> from tslearn.datasets import CachedDatasets
+        >>> cached = CachedDatasets().list_datasets()
         >>> "Trace" in cached
         True
 
@@ -38,11 +37,10 @@ class CachedDatasets:
         -------
         list of str:
             A list of names of all cached (univariate and multivariate) dataset
-            namas.
+            names.
         """
-        return [fname[:fname.rfind(".")]
-                for fname in os.listdir(self.path)
-                if fname.endswith(".npz")]
+        return [fname.with_suffix("").name for fname in self.path.iterdir()
+                if fname.suffix == ".npz"]
 
     def load_dataset(self, dataset_name):
         """Load a cached dataset from its name.
@@ -79,7 +77,7 @@ class CachedDatasets:
         IOError
             If the dataset does not exist or cannot be read.
         """
-        npzfile = numpy.load(os.path.join(self.path, dataset_name + ".npz"))
+        npzfile = numpy.load((self.path / dataset_name).with_suffix(".npz"))
         X_train = npzfile["X_train"]
         X_test = npzfile["X_test"]
         y_train = npzfile["y_train"]
