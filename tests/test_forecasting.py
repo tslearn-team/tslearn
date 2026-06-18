@@ -135,7 +135,7 @@ def test_AutoVARIMA():
     data = random_walks(n_ts=10, sz=100, std=0.1, random_state=rng)
 
     with pytest.raises(ValueError):
-        AutoVARIMA(max_d=0,default_d_for_non_stationarity=None).fit(data)
+        AutoVARIMA(max_d=0, default_d_for_non_stationarity=None).fit(data)
 
     # Test max orders
     model = AutoVARIMA(max_p=0, max_q=0, max_d=0).fit(data)
@@ -204,3 +204,7 @@ def test_verbosity(capteesys):
     assert "Testing model VARIMA" in captured.out
     assert "iteration 1" in captured.out
     assert "Computed AIC" in captured.out
+
+    AutoVARIMA(max_d=0, max_iter=2, verbose=1).fit(data)
+    captured = capteesys.readouterr()
+    assert "Default d for non stationarity 0 is used." in captured.out
