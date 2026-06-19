@@ -1,11 +1,16 @@
 """DTW metric toolbox."""
+import functools
 
 from numba import njit
 
 import numpy
 
+try:
+    import torch
+except ImportError:
+    torch = None
+
 from tslearn.backend import instantiate_backend
-from tslearn.backend.pytorch_backend import HAS_TORCH
 from tslearn.utils import to_time_series, to_time_series_dataset
 
 from ._masks import (
@@ -16,7 +21,9 @@ from ._masks import (
 from .utils import (
     _njit_compute_path,
     _compute_path,
-    _cdist_generic
+    _cdist_generic,
+    _torch_accumulated_matrix,
+    _torch_acc_matrix_from_dist_matrix
 )
 
 
@@ -105,7 +112,7 @@ def dtw(
     >>> s2 = torch.tensor([[3.0], [4.0], [-3.0]])
     >>> sim = dtw(s1, s2, be="pytorch")
     >>> print(sim)
-    tensor(6.4807, grad_fn=<SqrtBackward0>)
+    tensor(6.4807, dtype=torch.float64, grad_fn=<SqrtBackward0>)
     >>> sim.backward()
     >>> print(s1.grad)
     tensor([[-0.3086],
@@ -116,7 +123,7 @@ def dtw(
     >>> s2_2d = torch.tensor([[3.0, 3.0], [4.0, 4.0], [-3.0, -3.0]])
     >>> sim = dtw(s1_2d, s2_2d, be="pytorch")
     >>> print(sim)
-    tensor(9.1652, grad_fn=<SqrtBackward0>)
+    tensor(9.1652, dtype=torch.float64, grad_fn=<SqrtBackward0>)
     >>> sim.backward()
     >>> print(s1_2d.grad)
     tensor([[-0.2182, -0.2182],
@@ -314,40 +321,63 @@ def accumulated_matrix(s1, s2, mask, be=None):
     return compute_accumulated_matrix(s1, s2, mask)
 
 
-def __make_accumulated_matrix(backend):
+@njit(nogil=True)
+def _njit_accumulated_matrix(s1, s2, mask):
+    l1 = s1.shape[0]
+    l2 = s2.shape[0]
+    cum_sum = numpy.full((l1 + 1, l2 + 1), numpy.inf)
+    cum_sum[0, 0] = 0.0
 
-    def _accumulated_matrix_generic(s1, s2, mask):
-        l1 = s1.shape[0]
-        l2 = s2.shape[0]
-        cum_sum = backend.full((l1 + 1, l2 + 1), backend.inf)
-        cum_sum[0, 0] = 0.0
-
-        for i in range(l1):
-            for j in range(l2):
-                if mask[i, j]:
-                    dist = 0.0
-                    for di in range(s1[i].shape[0]):
-                        diff = s1[i][di] - s2[j][di]
-                        dist += diff * diff
-                    cum_sum[i + 1, j + 1] = dist
-                    cum_sum[i + 1, j + 1] += min(
-                        cum_sum[i, j + 1],
-                        cum_sum[i + 1, j],
-                        cum_sum[i, j]
-                    )
-        return cum_sum[1:, 1:]
-
-    if backend is numpy:
-        return njit(nogil=True)(_accumulated_matrix_generic)
-    else:
-        return _accumulated_matrix_generic
+    for i in range(l1):
+        for j in range(l2):
+            if mask[i, j]:
+                dist = 0.0
+                for di in range(s1[i].shape[0]):
+                    diff = s1[i][di] - s2[j][di]
+                    dist += diff * diff
+                cum_sum[i + 1, j + 1] = dist
+                cum_sum[i + 1, j + 1] += min(
+                    cum_sum[i, j + 1],
+                    cum_sum[i + 1, j],
+                    cum_sum[i, j]
+                )
+    return cum_sum[1:, 1:]
 
 
-_njit_accumulated_matrix = __make_accumulated_matrix(numpy)
-if HAS_TORCH:
-    _accumulated_matrix = __make_accumulated_matrix(instantiate_backend("TorchBackend"))
+if torch is not None:
+    _accumulated_matrix = functools.partial(
+        _torch_accumulated_matrix,
+        acc_fun=lambda distances, predecessors: distances + torch.min(predecessors, dim=0).values
+    )
 else:
     _accumulated_matrix = _njit_accumulated_matrix
+
+
+@njit(nogil=True)
+def _njit_acc_matrix_from_dist_matrix(D, mask):
+    l1, l2 = D.shape
+    cum_sum = numpy.full((l1 + 1, l2 + 1), numpy.inf)
+    cum_sum[0, 0] = 0.0
+
+    for i in range(l1):
+        for j in range(l2):
+            if mask[i, j]:
+                cum_sum[i + 1, j + 1] = D[i, j]
+                cum_sum[i + 1, j + 1] += min(
+                    cum_sum[i, j + 1],
+                    cum_sum[i + 1, j],
+                    cum_sum[i, j]
+                )
+    return cum_sum[1:, 1:]
+
+
+if torch is not None:
+    _acc_matrix_from_dist_matrix = functools.partial(
+        _torch_acc_matrix_from_dist_matrix,
+        acc_fun=lambda distances, predecessors: distances + torch.min(predecessors, dim=0).values
+    )
+else:
+    _acc_matrix_from_dist_matrix = _njit_acc_matrix_from_dist_matrix
 
 
 def __make_dtw(backend):
@@ -374,8 +404,9 @@ def __make_dtw(backend):
     else:
         return _dtw_generic
 
+
 _njit_dtw = __make_dtw(numpy)
-if HAS_TORCH:
+if torch is not None:
     _dtw = __make_dtw(instantiate_backend("torch"))
 else:
     _dtw = _njit_dtw
@@ -410,10 +441,199 @@ def __make_dtw_path(backend):
 
 
 _njit_dtw_path = __make_dtw_path(numpy)
-if HAS_TORCH:
+if torch is not None:
     _dtw_path = __make_dtw_path(instantiate_backend("torch"))
 else:
     _dtw_path = _njit_dtw_path
+
+
+def dtw_path_from_metric(
+    s1,
+    s2=None,
+    metric="euclidean",
+    global_constraint=None,
+    sakoe_chiba_radius=None,
+    itakura_max_slope=None,
+    be=None,
+    **kwds
+):
+    r"""Compute Dynamic Time Warping (DTW) similarity measure between
+    (possibly multidimensional) time series using a distance metric defined by
+    the user and return both the path and the similarity.
+
+    Similarity is computed as the cumulative cost along the aligned time
+    series.
+
+    It is not required that both time series share the same size, but they must
+    be the same dimension. DTW was originally presented in [1]_.
+
+    Valid values for metric are the same as for scikit-learn
+    `pairwise_distances`_ function i.e. a string (e.g. "euclidean",
+    "sqeuclidean", "hamming") or a function that is used to compute the
+    pairwise distances. See `scikit`_ and `scipy`_ documentations for more
+    information about the available metrics.
+
+    Parameters
+    ----------
+    s1 : array-like, shape=(sz1, d) or (sz1,) if metric!="precomputed", (sz1, sz2) otherwise
+        A time series or an array of pairwise distances between samples.
+        If shape is (sz1,), the time series is assumed to be univariate.
+
+    s2 : array-like, shape=(sz2, d) or (sz2,), optional (default: None)
+        A second time series, only allowed if metric != "precomputed".
+        If shape is (sz2,), the time series is assumed to be univariate.
+
+    metric : string or callable (default: "euclidean")
+        Function used to compute the pairwise distances between each points of
+        `s1` and `s2`.
+
+        If metric is "precomputed", `s1` is assumed to be a distance matrix.
+
+        If metric is an other string, it must be one of the options compatible
+        with sklearn.metrics.pairwise_distances.
+
+        Alternatively, if metric is a callable function, it is called on pairs
+        of rows of `s1` and `s2`. The callable should take two 1 dimensional
+        arrays as input and return a value indicating the distance between
+        them.
+
+    global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
+        Global constraint to restrict admissible paths for DTW.
+
+    sakoe_chiba_radius : int or None (default: None)
+        Radius to be used for Sakoe-Chiba band global constraint.
+        The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [1]_,
+        it controls how far in time we can go in order to match a given
+        point from one time series to a point in another time series.
+        If None and `global_constraint` is set to "sakoe_chiba", a radius of
+        1 is used.
+        If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+        `global_constraint` is used to infer which constraint to use among the
+        two. In this case, if `global_constraint` corresponds to no global
+        constraint, a `RuntimeWarning` is raised and no global constraint is
+        used.
+
+    itakura_max_slope : float or None (default: None)
+        Maximum slope for the Itakura parallelogram constraint.
+        If None and `global_constraint` is set to "itakura", a maximum slope
+        of 2. is used.
+        If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+        `global_constraint` is used to infer which constraint to use among the
+        two. In this case, if `global_constraint` corresponds to no global
+        constraint, a `RuntimeWarning` is raised and no global constraint is
+        used.
+
+    be : Backend object or string or None
+        Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
+        the NumPy backend is used.
+        If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
+        the PyTorch backend is used.
+        If `be` is `None`, the backend is determined by the input arrays.
+        See our :ref:`dedicated user-guide page <backend>` for more information.
+
+    **kwds
+        Additional arguments to pass to sklearn pairwise_distances to compute
+        the pairwise distances.
+
+    Returns
+    -------
+    list of integer pairs
+        Matching path represented as a list of index pairs. In each pair, the
+        first index corresponds to s1 and the second one corresponds to s2.
+
+    float
+        Similarity score (sum of metric along the wrapped time series).
+
+    Examples
+    --------
+    Lets create 2 numpy arrays to wrap:
+
+    >>> import numpy as np
+    >>> rng = np.random.RandomState(0)
+    >>> s1, s2 = rng.rand(5, 2), rng.rand(6, 2)
+
+    The wrapping can be done by passing a string indicating the metric to pass
+    to scikit-learn pairwise_distances:
+
+    >>> x, y = dtw_path_from_metric(s1, s2,
+    ...                             metric="sqeuclidean")  # doctest: +ELLIPSIS
+    >>> x, float(y)
+    ([(0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.117...)
+
+    Or by defining a custom distance function:
+
+    >>> sqeuclidean = lambda x, y: np.sum((x-y)**2)
+    >>> x, y = dtw_path_from_metric(s1, s2, metric=sqeuclidean)  # doctest: +ELLIPSIS
+    >>> x, float(y)
+    ([(0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.117...)
+
+    Or by using a precomputed distance matrix as input:
+
+    >>> from sklearn.metrics.pairwise import pairwise_distances
+    >>> dist_matrix = pairwise_distances(s1, s2, metric="sqeuclidean")
+    >>> x, y = dtw_path_from_metric(dist_matrix,
+    ...                             metric="precomputed")  # doctest: +ELLIPSIS
+    >>> x, float(y)
+    ([(0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5)], 1.117...)
+
+    Notes
+    -----
+    By using a squared euclidean distance metric as shown above, the output
+    path is the same as the one obtained by using dtw_path but the similarity
+    score is the sum of squared distances instead of the euclidean distance.
+
+    See Also
+    --------
+    dtw_path : Get both the matching path and the similarity score for DTW
+
+    References
+    ----------
+    .. [1] H. Sakoe, S. Chiba, "Dynamic programming algorithm optimization for
+           spoken word recognition," IEEE Transactions on Acoustics, Speech and
+           Signal Processing, vol. 26(1), pp. 43--49, 1978.
+
+    .. _pairwise_distances: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.pairwise_distances.html
+
+    .. _scikit: https://scikit-learn.org/stable/modules/metrics.html
+
+    .. _scipy: https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html
+
+    """  # noqa: E501
+    be = instantiate_backend(be, s1, s2)
+
+    compute_mask_ = _njit_compute_mask if be.is_numpy else _compute_mask
+
+    if metric == "precomputed":  # Pairwise distance given as input
+        s1 = be.array(s1)
+        sz1, sz2 = be.shape(s1)
+        mask = compute_mask_(
+            sz1,
+            sz2,
+            GLOBAL_CONSTRAINT_CODE[global_constraint],
+            sakoe_chiba_radius,
+            itakura_max_slope
+        )
+        dist_mat = s1
+    else:
+        s1 = to_time_series(s1, remove_nans=True, be=be)
+        s2 = to_time_series(s2, remove_nans=True, be=be)
+        mask = compute_mask_(
+            len(s1),
+            len(s2),
+            GLOBAL_CONSTRAINT_CODE[global_constraint],
+            sakoe_chiba_radius,
+            itakura_max_slope,
+        )
+        dist_mat = be.pairwise_distances(s1, s2, metric=metric, **kwds)
+
+    if be.is_numpy:
+        acc_cost_mat = _njit_acc_matrix_from_dist_matrix(dist_mat, mask)
+        path = _njit_compute_path(acc_cost_mat)
+    else:
+        dist_mat = be.array(dist_mat)
+        acc_cost_mat = _acc_matrix_from_dist_matrix(dist_mat, mask)
+        path = _compute_path(acc_cost_mat)
+    return path, acc_cost_mat[-1, -1]
 
 
 def cdist_dtw(
