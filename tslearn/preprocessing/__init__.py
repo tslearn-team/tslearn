@@ -9,10 +9,12 @@ from .preprocessing import (
     TimeSeriesResampler,
     TimeSeriesImputer
 )
+from ._synchronizer import TimeSeriesFeatureSynchronizer
 
 __all__ = [
     "TimeSeriesResampler",
     "TimeSeriesScalerMinMax",
     "TimeSeriesScalerMeanVariance",
-    "TimeSeriesImputer"
+    "TimeSeriesImputer",
+    "TimeSeriesFeatureSynchronizer"
 ]

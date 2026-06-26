@@ -16,6 +16,8 @@ Changelogs for this project are recorded in this file since v0.2.0.
 * Allow parallel computation of DTW barycenters and plug it in `TimeSeriesKMeans`.
 * `NonMyopicEarlyClassifier` can now be used with yet incomplete series or streamed inputs 
 to retrieve optimal classification timing.
+* `TimeSeriesFeatureSynchronizer` is a new preprocessing to deal with acquisition of features 
+at different sampling rates or desynchronized timestamps.
 * Add `root_dir` parameter to `UCR_UEA_datasets` to allow users to specify 
   where downloaded datasets should be cached. If None, a default directory is 
   used, either in `$XDG_DATA_HOME/tslearn/UCR_UEA` if the environment variable 
@@ -332,7 +334,7 @@ requirements "as much as possible" (cf. `tslearn` needs in
 terms of data format, _etc._)
 * `cdist_dtw` and `cdist_gak` now have a `n_jobs` parameter to parallelize
 distance computations using `joblib.Parallel`
-* `n_jobs` is also available as a prameter in
+* `n_jobs` is also available as a parameter in
 `silhouette_score`, `TimeSeriesKMeans`, `KNeighborsTimeSeries`,
 `KNeighborsTimeSeriesClassifier`, `TimeSeriesSVC`,
 `TimeSeriesSVR` and `GlobalAlignmentKernelKMeans`
