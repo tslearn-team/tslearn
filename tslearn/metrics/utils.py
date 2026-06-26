@@ -4,8 +4,12 @@ from numba import njit
 
 import numpy
 
+try:
+    import torch
+except ImportError:
+    torch = None
+
 from tslearn.backend import instantiate_backend
-from tslearn.backend.pytorch_backend import HAS_TORCH
 from tslearn.utils.utils import _to_time_series
 
 __author__ = "Romain Tavenard romain.tavenard[at]univ-rennes2.fr"
@@ -44,7 +48,7 @@ def __make_compute_path(backend):
         return _compute_path_generic
 
 _njit_compute_path = __make_compute_path(numpy)
-if HAS_TORCH:
+if torch is not None:
     _compute_path = __make_compute_path(instantiate_backend("torch"))
 else:
     _compute_path = _njit_compute_path
@@ -183,3 +187,47 @@ def _cdist_generic(
             ]
         matrix = be.array(cdists, dtype=dtype).reshape(n_ts_1, n_ts_2)
         return matrix
+
+
+if torch is not None:
+
+    def _torch_accumulated_matrix(s1, s2, mask, acc_fun, **acc_kwargs):
+
+        # Distance matrix
+        D = torch.square(torch.cdist(s1, s2))  # (l1, l2)
+        return _torch_acc_matrix_from_dist_matrix(D, mask, acc_fun, **acc_kwargs)
+
+    def _torch_acc_matrix_from_dist_matrix(D, mask, acc_fun, **acc_kwargs):
+
+        D[~mask] = torch.inf
+        l1, l2 = D.shape
+
+        # Extended matrix with padding
+        cum_sum = torch.full((l1 + 1, l2 + 1), torch.inf, device=D.device, dtype=D.dtype)
+        cum_sum[0, 0] = 0.0
+
+        # Anti-diagonal path k = i + j, k in [0, l1+l2-1]
+        for k in range(l1 + l2 - 1):
+            # dist indices: i in [0,l1), j in [0,l2), i+j == k
+            i_start = max(0, k - l2 + 1)
+            i_end = min(l1 - 1, k) + 1
+
+            i_idx = torch.arange(i_start, i_end, device=D.device)
+            j_idx = k - i_idx
+
+            # cum_sum indices: offset +1
+            ci = i_idx + 1
+            cj = j_idx + 1
+
+            predecessors = torch.stack([
+                cum_sum[ci - 1, cj],
+                cum_sum[ci, cj - 1],
+                cum_sum[ci - 1, cj - 1],
+            ], dim=0)
+
+            cum_sum[ci, cj] = acc_fun(D[i_idx, j_idx], predecessors, **acc_kwargs)
+
+        return cum_sum[1:, 1:]
+else:
+    _torch_accumulated_matrix = None
+    _torch_acc_matrix_from_dist_matrix = None

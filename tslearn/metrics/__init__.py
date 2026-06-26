@@ -20,9 +20,18 @@ from .ctw import (
 from ._dtw import(
     dtw,
     dtw_path,
+    dtw_path_from_metric,
     cdist_dtw,
     _cdist_dtw,
     accumulated_matrix as dtw_accumulated_matrix
+)
+from ._frechet import (
+    frechet,
+    frechet_path,
+    frechet_path_from_metric,
+    cdist_frechet,
+    _cdist_frechet,
+    accumulated_matrix as frechet_accumulated_matrix
 )
 from ._gak import (
     sigma_gak,
@@ -37,7 +46,6 @@ from .dtw_variants import (
    dtw_path_limited_warping_length,
    subsequence_path,
    subsequence_cost_matrix,
-   dtw_path_from_metric,
    dtw_subsequence_path,
    lb_envelope,
    lb_keogh,
@@ -59,14 +67,7 @@ from .softdtw_variants import (
 )
 from .soft_dtw_loss_pytorch import SoftDTWLossPyTorch
 from .cycc import cdist_normalized_cc, y_shifted_sbd_vec
-from ._frechet import (
-    frechet,
-    frechet_path,
-    frechet_path_from_metric,
-    cdist_frechet,
-    _cdist_frechet,
-    accumulated_matrix as frechet_accumulated_matrix
-)
+
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 

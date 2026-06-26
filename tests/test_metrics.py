@@ -152,7 +152,7 @@ def test_dtw():
                     [[1, 2, 3], [2, 3, 4, 5]],  # The second dataset can not be cast to array because of its shape
                     be=be
                 )
-                np.testing.assert_array_equal(deprecated_dists, dists)
+                np.testing.assert_allclose(deprecated_dists, dists)
                 assert backend.belongs_to_backend(deprecated_dists)
 
 
@@ -743,6 +743,13 @@ def test_dtw_path_from_metric():
 
             # Use dtw_path as a reference
             path_ref, dist_ref = tslearn.metrics.dtw_path(s1, s2, be=be)
+
+            with pytest.deprecated_call():
+                deprecated_path, deprecated_dist = tslearn.metrics.dtw_variants.dtw_path_from_metric(
+                    s1, s2,  metric="sqeuclidean", be=be
+                )
+                np.testing.assert_equal(path_ref, deprecated_path)
+                np.testing.assert_allclose(backend.sqrt(deprecated_dist), dist_ref)
 
             # Test of using a scipy distance function
             path, dist = tslearn.metrics.dtw_path_from_metric(
