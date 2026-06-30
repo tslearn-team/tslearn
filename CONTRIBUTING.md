@@ -62,6 +62,46 @@ to create a pull request from your fork. This will send an email to the committe
 (If any of the above seems like magic to you, please look up the
 [Git documentation](https://git-scm.com/documentation) on the web, or ask a friend or another contributor for help.)
 
+### Running the test suite locally
+
+Before opening a pull request, please make sure the unit tests pass on your
+machine. `tslearn` uses [pytest](https://docs.pytest.org/) and the tests live
+under the top-level `tests/` directory.
+
+1. Set up a virtual environment and install `tslearn` in editable mode along
+   with `pytest`:
+
+   ```bash
+   $ python -m venv .venv
+   $ source .venv/bin/activate   # on Windows: .venv\Scripts\activate
+   $ pip install -e .
+   $ pip install pytest
+   ```
+
+2. Run the full test suite from the repository root:
+
+   ```bash
+   $ pytest tests/
+   ```
+
+3. To run a single file or a single test while iterating, use:
+
+   ```bash
+   $ pytest tests/test_metrics.py
+   $ pytest tests/test_metrics.py::test_dtw -v
+   ```
+
+4. Public methods come with doctests. To run the doctests for a single
+   module, use:
+
+   ```bash
+   $ pytest --doctest-modules tslearn/metrics/dtw_variants.py
+   ```
+
+If a test depends on optional extras (`h5py`, `tensorflow`, `torch`, …),
+install them on demand with `pip install <extra>`; the suite skips the
+corresponding tests when an optional dependency is missing.
+
 ### Pull Request Checklist
 
 We recommended that your contribution complies with the
