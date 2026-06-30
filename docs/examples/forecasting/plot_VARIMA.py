@@ -106,14 +106,14 @@ train_times, train_places = [train_times[i] for i in indices], [train_places[i] 
 #  * :math:`\epsilon_{t-k}` are lagged errors
 #  * :math:`\epsilon_t` is white noise
 #
-# Fitting the model with data estimates the parameters :math:`c, \phi_1, ... \phi_p, \theta1, ..., \theta_q` through
+# Fitting the model with data estimates the parameters :math:`c, \phi_1, ... \phi_p, \theta_1, ..., \theta_q` through
 # maximum likelihood estimation.
 #
 # Let's start toying with an arbitrary autoregressive model (p=2, d=0, q=0). In this model,
 # forecasted values depends on the last two values. Hence, forecasting with a horizon :math:`n > 1`
 # will use computed values for :math:`n-1, ..., 1`.
 
-from sklearn.metrics import mean_absolute_error
+from tslearn.metrics.performance import mae
 
 from tslearn.forecasting import VARIMA
 
@@ -122,15 +122,14 @@ model = VARIMA(p=2, d=0, q=0).fit(train_data)
 horizon = 7
 predicted = model.predict(n=horizon)
 
-MAE = np.mean([mean_absolute_error(test_data[i, :horizon], predicted[i]) for i in range(train_data.shape[0])])
-print("MAE", MAE)
+print("MAE", mae(test_data[:, :horizon], predicted))
 
 ##############################################################################
 #
 # The AutoVARIMA model provides a way to automatically select the hyperparameters of the VARIMA model
 # based on the training data. Selection of the order of differentiation :math:`d` aims at applying VARMA modeling onto
 # stationary data whereas selection of :math:`p` and :math:`q` orders is driven by the minimization of AIC for
-# relative VARMA models.
+# related VARMA models.
 
 from tslearn.forecasting import AutoVARIMA
 
@@ -138,8 +137,7 @@ model = AutoVARIMA().fit(train_data)
 print(f"Selected model: p={model.best_estimator_.p}, q={model.best_estimator_.q}, d={model.best_estimator_.d}")
 
 predicted = model.predict(n=horizon)
-MAE = np.mean([mean_absolute_error(test_data[i, :horizon], predicted[i]) for i in range(train_data.shape[0])])
-print("MAE for selected model", MAE)
+print("MAE for selected model", mae(test_data[:, :horizon], predicted))
 
 ##############################################################################
 #
