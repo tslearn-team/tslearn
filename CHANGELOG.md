@@ -23,6 +23,7 @@ at different sampling rates or desynchronized timestamps.
   where downloaded datasets should be cached. If None, a default directory is 
   used, either in `$XDG_DATA_HOME/tslearn/UCR_UEA` if the environment variable 
   is set or `~/.tslearn/datasets` otherwise.
+* Add `VARIMA` and `AutoVARIMA` forcasting estimator.
 
 ### Changed
 
