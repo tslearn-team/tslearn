@@ -70,10 +70,8 @@ data_loader = UCR_UEA_datasets()
 # sphinx_gallery_start_ignore
 if "__file__" not in locals():
     # runs by sphinx-gallery
-    import os
-    data_loader._data_dir = os.path.join(
-        os.path.dirname(os.path.realpath(os.getcwd())), '..', "datasets"
-    )
+    from pathlib import Path
+    data_loader._data_dir = Path.cwd().parents[1] / "datasets"
 # sphinx_gallery_end_ignore
 datasets = [
     ('SyntheticControl', 16),

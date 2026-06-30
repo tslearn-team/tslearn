@@ -75,7 +75,7 @@ class GlobalMinPooling1D(Layer):
     --------
     >>> x = numpy.array([5.0, 6.8, numpy.inf])
     >>> x = x.reshape([1, 3, 1])
-    >>> GlobalMinPooling1D()(x).numpy()
+    >>> ops.convert_to_numpy(GlobalMinPooling1D()(x))
     array([[5.]], dtype=float32)
     """
 
@@ -106,7 +106,7 @@ class GlobalArgminPooling1D(Layer):
     --------
     >>> x = numpy.array([5.0, 6.8, numpy.inf])
     >>> x = x.reshape([1, 3, 1])
-    >>> GlobalArgminPooling1D()(x).numpy()
+    >>> ops.convert_to_numpy(GlobalArgminPooling1D()(x))
     array([[0.]], dtype=float32)
     """
 
@@ -181,7 +181,7 @@ class LocalSquaredDistanceLayer(Layer):
         if init is None:
             self.initializer = "uniform"
         else:
-           self.initializer = lambda *args, **kwargs: init
+           self.initializer = init
         super().__init__(**kwargs)
         self.input_spec = InputSpec(ndim=4)
 
@@ -620,7 +620,7 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
             X,
             batch_size=self.batch_size, verbose=self.verbose
         )
-        return pred
+        return pred.astype(float)
 
     def locate(self, X):
         """Compute shapelet match location for a set of time series.
@@ -751,8 +751,7 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
         min_pool_inputs = [self.model_.get_layer("min_pooling_%d" % i).input[0]
                            for i in range(self._n_shapelet_sizes)]
         pool_layers_locations = [
-            GlobalArgminPooling1D(name="argmin_pooling_%d" % i,
-                                  dtype=pool_input.dtype)(pool_input)
+            GlobalArgminPooling1D(name="argmin_pooling_%d" % i)(pool_input)
             for i, pool_input in enumerate(min_pool_inputs)
         ]
         if self._n_shapelet_sizes > 1:
@@ -791,14 +790,12 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
             shapelets_layer = LocalSquaredDistanceLayer(
                 nb_shapelets,
                 init = init_shapelets,
-                name="shapelets_%d" % index,
-                dtype=X.dtype.name
+                name="shapelets_%d" % index
             )(patching_layer)
 
             pool_layers.append(
                 GlobalMinPooling1D(
-                    name="min_pooling_%d" % index,
-                    dtype=X.dtype.name
+                    name="min_pooling_%d" % index
                 )(shapelets_layer)
             )
         if self._n_shapelet_sizes > 1:

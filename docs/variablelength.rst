@@ -138,6 +138,7 @@ Preprocessing
 * :class:`tslearn.preprocessing.TimeSeriesScalerMinMax`
 * :class:`tslearn.preprocessing.TimeSeriesScalerMeanVariance`
 * :class:`tslearn.preprocessing.TimeSeriesImputer`
+* :class:`tslearn.preprocessing.TimeSeriesFeatureSynchronizer`
 
 Examples
 ~~~~~~~~
@@ -152,6 +153,7 @@ Examples
     scaled = TimeSeriesScalerMinMax().fit_transform(X)
     scaled = TimeSeriesScalerMeanVariance().fit_transform(X)
     imputed = TimeSeriesImputer().fit_transform(X)
+    synchronized = TimeSeriesFeatureSynchronizer().fit_transform(X)
 
 Forecasting
 -----------
