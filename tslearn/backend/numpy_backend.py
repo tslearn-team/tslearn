@@ -45,6 +45,7 @@ class NumPyBackend(object):
         self.argmax = _np.argmax
         self.argmin = _np.argmin
         self.array = _np.array
+        self.asarray = _np.asarray
         self.cdist = cdist
         self.ceil = _np.ceil
         self.dbl_max = _np.finfo("double").max

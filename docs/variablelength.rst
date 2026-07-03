@@ -138,6 +138,7 @@ Preprocessing
 * :class:`tslearn.preprocessing.TimeSeriesScalerMinMax`
 * :class:`tslearn.preprocessing.TimeSeriesScalerMeanVariance`
 * :class:`tslearn.preprocessing.TimeSeriesImputer`
+* :class:`tslearn.preprocessing.TimeSeriesFeatureSynchronizer`
 
 Examples
 ~~~~~~~~
@@ -152,6 +153,26 @@ Examples
     scaled = TimeSeriesScalerMinMax().fit_transform(X)
     scaled = TimeSeriesScalerMeanVariance().fit_transform(X)
     imputed = TimeSeriesImputer().fit_transform(X)
+    synchronized = TimeSeriesFeatureSynchronizer().fit_transform(X)
+
+Forecasting
+-----------
+
+* :class:`tslearn.forecasting.AutoVARIMA`
+* :class:`tslearn.forecasting.VARIMA`
+
+
+Examples
+~~~~~~~~
+
+.. code-block:: python
+
+    from tslearn.forecasting import (
+        VARIMA,
+        AutoVARIMA
+    )
+    VARIMA().fit(X).predict(X) # Both fit and predict accept variable-length time series datasets
+    AutoVARIMA().fit(X).predict(X) # Both fit and predict accept variable-length time series datasets
 
 Model selection
 ---------------

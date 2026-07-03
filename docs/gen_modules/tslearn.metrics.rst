@@ -5,6 +5,14 @@ tslearn.metrics
 
 .. automodule:: tslearn.metrics
 
+   .. rubric:: Modules
+
+   .. autosummary::
+      :toctree:
+      :template: module.rst
+
+      performance
+
    .. rubric:: Functions
 
    .. autosummary::
