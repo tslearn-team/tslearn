@@ -41,6 +41,15 @@ from ._gak import (
     cdist_gak,
     _cdist_gak,
 )
+from ._soft_dtw import (
+    soft_dtw,
+    soft_dtw_normalized,
+    soft_dtw_alignment,
+    cdist_soft_dtw,
+    _cdist_soft_dtw,
+    cdist_soft_dtw_normalized,
+    _cdist_soft_dtw_normalized,
+)
 from .dtw_variants import (
    dtw_limited_warping_length,
    dtw_path_limited_warping_length,
@@ -55,12 +64,6 @@ from .dtw_variants import (
 )
 from .sax import cdist_sax, _cdist_sax
 from .softdtw_variants import (
-    cdist_soft_dtw,
-    _cdist_soft_dtw,
-    cdist_soft_dtw_normalized,
-    _cdist_soft_dtw_normalized,
-    soft_dtw,
-    soft_dtw_alignment,
     gamma_soft_dtw,
     SquaredEuclidean,
     SoftDTW
