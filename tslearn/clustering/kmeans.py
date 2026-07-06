@@ -669,7 +669,13 @@ class TimeSeriesKMeans(
                 elif self.metric == "softdtw":
 
                     def metric_fun(x, y):
-                        return _cdist_soft_dtw(x, y, **metric_params)
+                        return _cdist_soft_dtw(
+                            x,
+                            y,
+                            n_jobs=self.n_jobs,
+                            verbose=self.verbose,
+                            **metric_params
+                        )
 
                 else:
                     raise ValueError(
@@ -720,7 +726,13 @@ class TimeSeriesKMeans(
                 **metric_params
             )
         elif self.metric == "softdtw":
-            return _cdist_soft_dtw(X, self.cluster_centers_, **metric_params)
+            return _cdist_soft_dtw(
+                X,
+                self.cluster_centers_,
+                n_jobs=self.n_jobs,
+                verbose=self.verbose,
+                **metric_params
+            )
         else:
             raise ValueError(
                 "Incorrect metric: %s (should be one of 'dtw', "
@@ -761,6 +773,7 @@ class TimeSeriesKMeans(
                     X=X[self.labels_ == k],
                     max_iter=self.max_iter_barycenter,
                     init=self.cluster_centers_[k],
+                    n_jobs=self.n_jobs,
                     **metric_params
                 )
             else:
