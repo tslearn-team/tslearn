@@ -39,7 +39,7 @@ def _acc_softdtw_func(
     use_parallel = n_jobs not in [None, 1]
 
     if use_parallel:
-        for obj_tmp, G_tmp in Parallel(n_jobs=n_jobs, prefer="threads", return_as="generator")(
+        for obj_tmp, G_tmp in Parallel(n_jobs=n_jobs, prefer="threads", return_as="generator_unordered")(
             delayed(_softdtw_func)(
                 Z,
                 X[i],
@@ -93,7 +93,7 @@ def _njit_softdtw_func_from_distance_matrix(Z, X, D, weight, gamma, mask):
     return weight * R[-1, -1], weight * _njit_jacobian_product_sq_euc(Z, X, E)
 
 
-@njit(nogil=True, parallel=True, fastmath=True)
+@njit(nogil=True)
 def _njit_jacobian_product_sq_euc(X, Y, E):
     """Compute the square Euclidean product between the Jacobian
     (a linear map from m x d to m x n) and a matrix E.
