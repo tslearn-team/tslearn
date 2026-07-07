@@ -404,7 +404,7 @@ def _njit_accumulated_matrix_from_distance_matrix(D, mask, gamma):
 if torch is not None:
 
     def __acc_fun(distances, predecessors, gamma):
-        return distances + -gamma * torch.logsumexp(predecessors * (-gamma), dim=0)
+        return distances + -gamma * torch.logsumexp(-predecessors/gamma, dim=0)
 
     _accumulated_matrix_from_distance_matrix = functools.partial(
         _torch_acc_matrix_from_dist_matrix,
