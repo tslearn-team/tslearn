@@ -93,7 +93,7 @@ def _njit_softdtw_func_from_distance_matrix(Z, X, D, weight, gamma, mask):
     return weight * R[-1, -1], weight * _njit_jacobian_product_sq_euc(Z, X, E)
 
 
-@njit(nogil=True)
+@njit(nogil=True, fastmath=True)
 def _njit_jacobian_product_sq_euc(X, Y, E):
     """Compute the square Euclidean product between the Jacobian
     (a linear map from m x d to m x n) and a matrix E.
