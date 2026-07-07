@@ -164,3 +164,12 @@ def test_softdtw_barycenter():
                     [0.53149515, -0.24839857, -0.03430969],
                     [-0.17690603, 0.07217633, 0.58071408]])
     np.testing.assert_allclose(sdtw_bar, ref, atol=1e-6)
+
+    # N_jobs
+    sdtw_bar = tslearn.barycenters.softdtw_barycenter(time_series, max_iter=5, n_jobs=-1)
+    np.testing.assert_allclose(sdtw_bar, ref, atol=1e-6)
+
+    # Variable length
+    time_series[-1, :-2, :] = np.nan
+    sdtw_bar = tslearn.barycenters.softdtw_barycenter(time_series, max_iter=5)
+    assert sdtw_bar.shape == (sz, d)

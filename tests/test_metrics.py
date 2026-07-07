@@ -1244,58 +1244,94 @@ def test_softdtw_migration():
     from tslearn.metrics import _soft_dtw as new
     from tslearn.metrics import softdtw_variants as old
 
-    # Soft-dtw
-    s1 = np.random.rand(10, 2)
-    s2 = np.random.rand(8, 2)
-    gamma = random.random()
-    np.testing.assert_allclose(new.soft_dtw(s1, s2, gamma), old.soft_dtw(s1, s2, gamma))
-
-    # soft-dtw alignment
-    new_alignment, new_dist = new.soft_dtw_alignment(s1, s2, gamma)
-    with pytest.deprecated_call():
-        old_alignment, old_dist = old.soft_dtw_alignment(s1, s2, gamma)
-    np.testing.assert_allclose(new_dist, old_dist)
-    np.testing.assert_allclose(new_alignment, new_alignment)
-
-    new_alignment, new_dist = new.soft_dtw_alignment(s1, s2, 0)
-    with pytest.deprecated_call():
-        old_alignment, old_dist = old.soft_dtw_alignment(s1, s2, 0)
-    np.testing.assert_allclose(new_dist, old_dist)
-    np.testing.assert_allclose(new_alignment, new_alignment)
-
-    # Cdist
-    X = np.random.rand(2, 10, 2)
-    Y = np.random.rand(3, 11, 2)
-    with pytest.deprecated_call():
-        old_cdist = old.cdist_soft_dtw(X, Y, gamma)
-    np.testing.assert_allclose(
-        new.cdist_soft_dtw(X, Y, gamma),
-        old_cdist
-    )
-
-    # Cdist normalized
-    with pytest.deprecated_call():
-        old_cdist_normalized = old.cdist_soft_dtw_normalized(X, Y, gamma)
-    np.testing.assert_allclose(
-        new.cdist_soft_dtw_normalized(X, Y, gamma),
-        old_cdist_normalized
-    )
-
-    # Cdist
-    X = np.random.rand(2, 10, 2)
+    rng = np.random.default_rng(0)
+    s1 = rng.random((10, 2))
+    s2 = rng.random((8, 2))
+    X = rng.random((2, 10, 2))
+    Y = rng.random((3, 11, 2))
     X[1, -1, :] = np.nan
-    with pytest.deprecated_call():
-        old_cdist = old.cdist_soft_dtw(X, gamma=gamma)
-    np.testing.assert_allclose(
-        new.cdist_soft_dtw(X, gamma=gamma),
-        old_cdist
-    )
+    Y[-1, -3:, :] = np.nan
 
-    # Cdist normalized
-    with pytest.deprecated_call():
-        old_cdist_normalized = old.cdist_soft_dtw_normalized(X, gamma=gamma)
-    np.testing.assert_allclose(
-        new.cdist_soft_dtw_normalized(X, gamma=gamma),
-        old_cdist_normalized
-    )
+    random.seed(0)
+    gamma = random.random()
 
+    for array_type in array_types:
+        s1 = cast(s1, array_type)
+        s2 = cast(s2, array_type)
+        X = cast(X, array_type)
+        Y = cast(Y, array_type)
+
+        # Soft-dtw
+        new_dist = new.soft_dtw(s1, s2, gamma)
+        with pytest.deprecated_call():
+            old_dist = old.soft_dtw(s1, s2, gamma, compute_with_backend=True)
+        np.testing.assert_allclose(new_dist, old_dist)
+
+        # soft-dtw alignment
+        new_alignment, new_dist = new.soft_dtw_alignment(s1, s2, gamma)
+        with pytest.deprecated_call():
+            old_alignment, old_dist = old.soft_dtw_alignment(s1, s2, gamma, compute_with_backend=True)
+        np.testing.assert_allclose(new_dist, old_dist)
+        np.testing.assert_allclose(new_alignment, new_alignment)
+
+        new_alignment, new_dist = new.soft_dtw_alignment(s1, s2, 0)
+        with pytest.deprecated_call():
+            old_alignment, old_dist = old.soft_dtw_alignment(s1, s2, 0)
+        np.testing.assert_allclose(new_dist, old_dist)
+        np.testing.assert_allclose(new_alignment, new_alignment)
+
+        # Cdist (warning old cdist with pytorch uses float32, may induce small differences )
+
+        # Cdist X Y
+        with pytest.deprecated_call():
+            old_cdist = old.cdist_soft_dtw(X, Y, gamma, compute_with_backend=True)
+        np.testing.assert_allclose(
+            new.cdist_soft_dtw(X, Y, gamma),
+            old_cdist,
+            rtol=1e-06
+        )
+
+        # Cdist normalized X Y
+        with pytest.deprecated_call():
+            old_cdist_normalized = old.cdist_soft_dtw_normalized(X, Y, gamma, compute_with_backend=True)
+        np.testing.assert_allclose(
+            new.cdist_soft_dtw_normalized(X, Y, gamma),
+            old_cdist_normalized,
+            rtol=1e-06
+        )
+
+        # Cdist X
+        with pytest.deprecated_call():
+            old_cdist = old.cdist_soft_dtw(X, gamma=gamma, compute_with_backend=True)
+        np.testing.assert_allclose(
+            new.cdist_soft_dtw(X, gamma=gamma),
+            old_cdist,
+            rtol=1e-06
+        )
+
+        # Cdist normalized X
+        with pytest.deprecated_call():
+            old_cdist_normalized = old.cdist_soft_dtw_normalized(X, gamma=gamma, compute_with_backend=True)
+        np.testing.assert_allclose(
+            new.cdist_soft_dtw_normalized(X, gamma=gamma),
+            old_cdist_normalized,
+            rtol=1e-06
+        )
+
+        # # Cdist variable length
+        # X[1, -1, :] = np.nan
+        # Y[-1, -2, :] = np.nan
+        # with pytest.deprecated_call():
+        #     old_cdist = old.cdist_soft_dtw(X, gamma=gamma)
+        # np.testing.assert_allclose(
+        #     new.cdist_soft_dtw(X, gamma=gamma),
+        #     old_cdist
+        # )
+        #
+        # # Cdist normalized variable length
+        # with pytest.deprecated_call():
+        #     old_cdist_normalized = old.cdist_soft_dtw_normalized(X, gamma=gamma)
+        # np.testing.assert_allclose(
+        #     new.cdist_soft_dtw_normalized(X, gamma=gamma),
+        #     old_cdist_normalized
+        # )
