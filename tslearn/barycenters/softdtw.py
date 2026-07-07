@@ -39,7 +39,7 @@ def _acc_softdtw_func(
     use_parallel = n_jobs not in [None, 1]
 
     if use_parallel:
-        for obj_tmp, G_tmp in Parallel(n_jobs=n_jobs, prefer="threads", return_as="generator_unordered")(
+        for obj_tmp, G_tmp in Parallel(n_jobs=n_jobs, prefer="threads", return_as="generator")(
             delayed(_softdtw_func)(
                 Z,
                 X[i],
