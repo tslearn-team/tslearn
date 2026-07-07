@@ -199,8 +199,7 @@ def softdtw_barycenter(
     else:
         barycenter = init
 
-    if 'global_constraint' in metric_params:
-        metric_params['global_constraint'] = GLOBAL_CONSTRAINT_CODE[metric_params['global_constraint']]
+    metric_params['global_constraint'] = GLOBAL_CONSTRAINT_CODE[metric_params.get('global_constraint')]
 
     if max_iter > 0:
         X_ = [_to_time_series(d, True, backend) for d in X_]
