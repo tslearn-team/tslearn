@@ -1317,21 +1317,3 @@ def test_softdtw_migration():
             old_cdist_normalized,
             rtol=1e-06
         )
-
-        # # Cdist variable length
-        # X[1, -1, :] = np.nan
-        # Y[-1, -2, :] = np.nan
-        # with pytest.deprecated_call():
-        #     old_cdist = old.cdist_soft_dtw(X, gamma=gamma)
-        # np.testing.assert_allclose(
-        #     new.cdist_soft_dtw(X, gamma=gamma),
-        #     old_cdist
-        # )
-        #
-        # # Cdist normalized variable length
-        # with pytest.deprecated_call():
-        #     old_cdist_normalized = old.cdist_soft_dtw_normalized(X, gamma=gamma)
-        # np.testing.assert_allclose(
-        #     new.cdist_soft_dtw_normalized(X, gamma=gamma),
-        #     old_cdist_normalized
-        # )
