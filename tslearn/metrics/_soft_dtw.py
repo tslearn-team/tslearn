@@ -50,7 +50,7 @@ def soft_dtw(
 
     Soft-DTW was originally presented in [1]_ and is
     discussed in more details in our
-    :ref:`user-guide page on DTW and its variants<dtw>`.
+    :ref:`user-guide page on DTW and its variants<dtw-softdtw>`.
 
     Soft-DTW is computed as:
 
@@ -158,7 +158,7 @@ def soft_dtw(
     --------
     soft_dtw_normalized: Computes the normalized similarity score for Soft-DTW
     soft_dtw_alignment: Computes both the similarity score and
-    the alignment matrix and for Soft-DTW
+        the alignment matrix and for Soft-DTW
     cdist_soft_dtw : Cross similarity matrix between time series datasets
     cdist_soft_dtw_normalized : Cross similarity matrix between time series
         datasets using a normalized version of Soft-DTW
@@ -211,7 +211,7 @@ def soft_dtw_normalized(
 
     Soft-DTW was originally presented in [1]_ and is
     discussed in more details in our
-    :ref:`user-guide page on DTW and its variants<dtw>`.
+    :ref:`user-guide page on DTW and its variants<dtw-softdtw>`.
 
     Soft-DTW is computed as:
 
@@ -306,7 +306,7 @@ def soft_dtw_normalized(
     --------
     soft_dtw : Computes the similarity score for Soft-DTW
     soft_dtw_alignment: Computes both the similarity score and
-    the alignment matrix and for Soft-DTW
+        the alignment matrix and for Soft-DTW
     cdist_soft_dtw : Cross similarity matrix between time series datasets
     cdist_soft_dtw_normalized : Cross similarity matrix between time series
         datasets using a normalized version of Soft-DTW
@@ -513,7 +513,7 @@ def soft_dtw_alignment(
 
     Soft-DTW was originally presented in [1]_ and is
     discussed in more details in our
-    :ref:`user-guide page on DTW and its variants<dtw>`.
+    :ref:`user-guide page on DTW and its variants<dtw-softdtw>`.
 
     Soft-DTW is computed as:
 
@@ -740,7 +740,7 @@ def cdist_soft_dtw(
 
     Soft-DTW was originally presented in [1]_ and is
     discussed in more details in our
-    :ref:`user-guide page on DTW and its variants<dtw>`.
+    :ref:`user-guide page on DTW and its variants<dtw-softdtw>`.
 
     Soft-DTW is computed as:
 
@@ -860,7 +860,7 @@ def cdist_soft_dtw(
     soft_dtw : Computes the similarity score for Soft-DTW
     soft_dtw_normalized: Computes the normalized similarity score for Soft-DTW
     soft_dtw_alignment: Computes both the similarity score and
-    the alignment matrix and for Soft-DTW
+        the alignment matrix and for Soft-DTW
     cdist_soft_dtw_normalized : Cross similarity matrix between time series
         datasets using a normalized version of Soft-DTW
 
@@ -946,7 +946,7 @@ def cdist_soft_dtw_normalized(
 
     Soft-DTW was originally presented in [1]_ and is
     discussed in more details in our
-    :ref:`user-guide page on DTW and its variants<dtw>`.
+    :ref:`user-guide page on DTW and its variants<dtw-softdtw>`.
 
     Soft-DTW is computed as:
 
@@ -1078,7 +1078,7 @@ def cdist_soft_dtw_normalized(
     soft_dtw : Computes the similarity score for Soft-DTW
     soft_dtw_normalized: Computes the normalized similarity score for Soft-DTW
     soft_dtw_alignment: Computes both the similarity score and
-    the alignment matrix and for Soft-DTW
+        the alignment matrix and for Soft-DTW
     cdist_soft_dtw : Cross similarity matrix between time series datasets
 
     References
