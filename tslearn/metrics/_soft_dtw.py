@@ -105,7 +105,7 @@ def soft_dtw(
         constraint, a `RuntimeWarning` is raised and no global constraint is
         used.
 
-    be : Backend object or string or None default(None)
+    be : Backend object or string or None (default: None)
         Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
         the NumPy backend is used.
         If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
@@ -278,7 +278,7 @@ def soft_dtw_normalized(
         constraint, a `RuntimeWarning` is raised and no global constraint is
         used.
 
-    be : Backend object or string or None
+    be : Backend object or string or None (default: None)
         Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
         the NumPy backend is used.
         If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
@@ -568,7 +568,7 @@ def soft_dtw_alignment(
         constraint, a `RuntimeWarning` is raised and no global constraint is
         used.
 
-    be : Backend object or string or None
+    be : Backend object or string or None (default: None)
         Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
         the NumPy backend is used.
         If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
@@ -812,7 +812,7 @@ def cdist_soft_dtw(
         `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`__
         for more details.
 
-    be : Backend object or string or None
+    be : Backend object or string or None (default: None)
         Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
         the NumPy backend is used.
         If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
@@ -1031,7 +1031,7 @@ def cdist_soft_dtw_normalized(
         `Glossary <https://joblib.readthedocs.io/en/latest/parallel.html#parallel-reference-documentation>`__
         for more details.
 
-    be : Backend object or string or None
+    be : Backend object or string or None (default: None)
         Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
         the NumPy backend is used.
         If `be` is an instance of the class `PyTorchBackend` or the string `"pytorch"`,
