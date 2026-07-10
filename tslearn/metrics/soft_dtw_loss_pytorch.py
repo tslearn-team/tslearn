@@ -6,18 +6,21 @@ https://github.com/Maghoumi/pytorch-softdtw-cuda/blob/master/soft_dtw_cuda.py
 
 import numpy as np
 
-from .soft_dtw_fast import _njit_soft_dtw_batch, _njit_soft_dtw_grad_batch
+from numba import njit, prange
 
 try:
     import torch
-    from torch.autograd import Function
 
-    HAS_TORCH = True
 except ImportError:
-    HAS_TORCH = False
+    torch = None
 
 
-if not HAS_TORCH:
+from tslearn.metrics import GLOBAL_CONSTRAINT_CODE
+from tslearn.metrics._masks import _njit_compute_mask
+from tslearn.metrics._soft_dtw import _njit_accumulated_matrix_from_distance_matrix, _njit_soft_dtw_grad
+
+
+if torch is None:
 
     class SoftDTWLossPyTorch:
         def __init__(self):
@@ -27,12 +30,19 @@ if not HAS_TORCH:
 
 else:
 
-    class _SoftDTWLossPyTorch(Function):
+    class _SoftDTWLossPyTorch(torch.autograd.Function):
         """The Soft-DTW loss function."""
 
         @staticmethod
-        def forward(ctx, D, gamma):
-            """
+        def forward(
+            ctx,
+            D,
+            gamma,
+            global_constraint=None,
+            sakoe_chiba_radius=None,
+            itakura_max_slope=None
+        ):
+            r"""
             Parameters
             ----------
             ctx : context
@@ -41,6 +51,32 @@ else:
             gamma : float
                 Regularization parameter.
                 Lower is less smoothed (closer to true DTW).
+            global_constraint : {0, 1, 2} (default: 0)
+                Global constraint to restrict admissible paths for DTW:
+                - "itakura" if 1
+                - "sakoe_chiba" if 2
+                - no constraint otherwise
+            sakoe_chiba_radius : int or None (default: None)
+                Radius to be used for Sakoe-Chiba band global constraint.
+                The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [1]_,
+                it controls how far in time we can go in order to match a given
+                point from one time series to a point in another time series.
+                If None and `global_constraint` is set to 2 (sakoe-chiba), a radius of
+                1 is used.
+                If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+                `global_constraint` is used to infer which constraint to use among the
+                two. In this case, if `global_constraint` corresponds to no global
+                constraint, a `RuntimeWarning` is raised and no global constraint is
+                used.
+            itakura_max_slope : float or None (default: None)
+                Maximum slope for the Itakura parallelogram constraint.
+                If None and `global_constraint` is set to 1 (itakura), a maximum slope
+                of 2. is used.
+                If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+                `global_constraint` is used to infer which constraint to use among the
+                two. In this case, if `global_constraint` corresponds to no global
+                constraint, a `RuntimeWarning` is raised and no global constraint is
+                used.
 
             Returns
             -------
@@ -49,28 +85,29 @@ else:
             """
             dev = D.device
             dtype = D.dtype
-            b, m, n = torch.Tensor.size(D)
+            _, m, n = D.shape
+            mask = _njit_compute_mask(m, n, global_constraint, sakoe_chiba_radius, itakura_max_slope)
+            D[:, ~mask] = torch.inf
             D_ = D.detach().cpu().numpy()
-            R_ = np.zeros((b, m + 2, n + 2), dtype=np.float64)
-            _njit_soft_dtw_batch(D_, R_, gamma)
+            R_ = _njit_soft_dtw_batch(D_, gamma, mask)
             gamma_tensor = torch.Tensor([gamma]).to(dev).type(dtype)
             R = torch.Tensor(R_).to(dev).type(dtype)
-            ctx.save_for_backward(D, R, gamma_tensor)
-            return R[:, -2, -2]
+            ctx.save_for_backward(D, R,gamma_tensor)
+            return R[:, -1, -1]
 
         @staticmethod
         def backward(ctx, grad_output):
+            """Backward pass."""
             dev = grad_output.device
             dtype = grad_output.dtype
             D, R, gamma_tensor = ctx.saved_tensors
-            b, m, n = torch.Tensor.size(D)
             D_ = D.detach().cpu().numpy()
             R_ = R.detach().cpu().numpy()
-            E_ = np.zeros((b, m + 2, n + 2), dtype=np.float64)
             gamma = gamma_tensor.item()
-            _njit_soft_dtw_grad_batch(D_, R_, E_, gamma)
-            E = torch.Tensor(E_[:, 1 : m + 1, 1 : n + 1]).to(dev).type(dtype)
-            return grad_output.view(-1, 1, 1).expand_as(E) * E, None, None
+            E_ = _njit_soft_dtw_grad_batch(D_, R_, gamma)
+            E = torch.Tensor(E_).to(dev).type(dtype)
+            return grad_output.reshape(-1).to(dtype=E.dtype).view(-1, 1, 1) * E, None, None, None, None
+
 
     class SoftDTWLossPyTorch(torch.nn.Module):
         r"""Soft-DTW loss function in PyTorch.
@@ -132,6 +169,29 @@ else:
             It should support PyTorch automatic differentiation.
             Optional, default: None
             If None, the squared Euclidean distance is used.
+        global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
+            Global constraint to restrict admissible paths for DTW.
+        sakoe_chiba_radius : int or None (default: None)
+            Radius to be used for Sakoe-Chiba band global constraint.
+            The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [1]_,
+            it controls how far in time we can go in order to match a given
+            point from one time series to a point in another time series.
+            If None and `global_constraint` is set to "sakoe_chiba", a radius of
+            1 is used.
+            If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+            `global_constraint` is used to infer which constraint to use among the
+            two. In this case, if `global_constraint` corresponds to no global
+            constraint, a `RuntimeWarning` is raised and no global constraint is
+            used.
+        itakura_max_slope : float or None (default: None)
+            Maximum slope for the Itakura parallelogram constraint.
+            If None and `global_constraint` is set to "itakura", a maximum slope
+            of 2. is used.
+            If both `sakoe_chiba_radius` and `itakura_max_slope` are set,
+            `global_constraint` is used to infer which constraint to use among the
+            two. In this case, if `global_constraint` corresponds to no global
+            constraint, a `RuntimeWarning` is raised and no global constraint is
+            used.
 
         Examples
         --------
@@ -149,7 +209,7 @@ else:
         >>> print(x.grad)
         tensor([[[  0.0000,  -0.5000],
                  [ -1.0000,  -1.5000],
-                 [ -2.0000,  -2.5000]],
+                 [ -2.0000,  -2.5001]],
         <BLANKLINE>
                 [[ -3.0000,  -3.5000],
                  [ -4.0000,  -4.5000],
@@ -179,14 +239,25 @@ else:
             International Conference on Artificial Intelligence and Statistics, 2021.
         """
 
-        def __init__(self, gamma=1.0, normalize=False, dist_func=None):
-            super(SoftDTWLossPyTorch, self).__init__()
+        def __init__(
+            self,
+            gamma=1.0,
+            normalize=False,
+            dist_func=None,
+            global_constraint=None,
+            sakoe_chiba_radius=None,
+            itakura_max_slope=None,
+        ):
+            super().__init__()
             self.gamma = gamma
             self.normalize = normalize
             if dist_func is not None:
                 self.dist_func = dist_func
             else:
-                self.dist_func = SoftDTWLossPyTorch._euclidean_squared_dist
+                self.dist_func = self._euclidean_squared_dist
+            self.global_constraint = global_constraint
+            self.sakoe_chiba_radius = sakoe_chiba_radius
+            self.itakura_max_slope = itakura_max_slope
 
         @staticmethod
         def _euclidean_squared_dist(x, y):
@@ -231,12 +302,52 @@ else:
             assert bx == by
             assert dx == dy
             d_xy = self.dist_func(x, y)
-            loss_xy = _SoftDTWLossPyTorch.apply(d_xy, self.gamma)
+            loss_xy = _SoftDTWLossPyTorch.apply(
+                d_xy,
+                self.gamma,
+                GLOBAL_CONSTRAINT_CODE[self.global_constraint],
+                self.sakoe_chiba_radius,
+                self.itakura_max_slope
+            )
             if self.normalize:
                 d_xx = self.dist_func(x, x)
                 d_yy = self.dist_func(y, y)
-                loss_xx = _SoftDTWLossPyTorch.apply(d_xx, self.gamma)
-                loss_yy = _SoftDTWLossPyTorch.apply(d_yy, self.gamma)
+                loss_xx = _SoftDTWLossPyTorch.apply(
+                    d_xx,
+                    self.gamma,
+                    GLOBAL_CONSTRAINT_CODE[self.global_constraint],
+                    self.sakoe_chiba_radius,
+                    self.itakura_max_slope
+                )
+                loss_yy = _SoftDTWLossPyTorch.apply(
+                    d_yy,
+                    self.gamma,
+                    GLOBAL_CONSTRAINT_CODE[self.global_constraint],
+                    self.sakoe_chiba_radius,
+                    self.itakura_max_slope
+                )
                 return loss_xy - 1 / 2 * (loss_xx + loss_yy)
             else:
                 return loss_xy
+
+
+@njit(parallel=True)
+def _njit_soft_dtw_batch(
+    D,
+    gamma,
+    mask
+):
+    b, m, n = D.shape
+    R = np.empty((b, m, n),dtype=D.dtype)
+    for i in prange(b):
+        _njit_accumulated_matrix_from_distance_matrix(D[i], mask, gamma, out=R[i])
+    return R
+
+
+@njit(parallel=True)
+def _njit_soft_dtw_grad_batch(D, R, gamma):
+    b, m, n = D.shape
+    E = np.zeros((b, m, n), dtype=D.dtype)
+    for i in prange(b):
+        _njit_soft_dtw_grad(D[i], R[i], gamma, out=E[i])
+    return E

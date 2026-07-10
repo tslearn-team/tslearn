@@ -384,22 +384,28 @@ else:
 
 
 @njit(nogil=True)
-def _njit_accumulated_matrix_from_distance_matrix(D, mask, gamma):
+def _njit_accumulated_matrix_from_distance_matrix(D, mask, gamma, out=None):
     l1, l2 = D.shape
-    cum_sum = numpy.full((l1 + 1, l2 + 1), numpy.inf)
-    cum_sum[0, 0] = 0.0
+    if out is not None:
+        cum_sum = out
+        out[...] = numpy.inf
+    else:
+        cum_sum = numpy.full((l1, l2), numpy.inf, dtype=D.dtype)
 
     for i in range(l1):
         for j in range(l2):
             if mask[i, j]:
-                cum_sum[i + 1, j + 1] = D[i, j]
-                cum_sum[i + 1, j + 1] += _njit_softmin3(
-                    cum_sum[i, j + 1],
-                    cum_sum[i + 1, j],
-                    cum_sum[i, j],
-                    gamma
-                )
-    return cum_sum[1:, 1:]
+                cum_sum[i, j] = D[i, j]
+                if (i + j) != 0:
+                    cum_sum[i, j] += _njit_softmin3(
+                        cum_sum[i - 1, j] if i != 0 else numpy.inf,
+                        cum_sum[i, j - 1] if j != 0 else numpy.inf,
+                        cum_sum[i - 1, j - 1] if i*j != 0 else numpy.inf,
+                        gamma
+                    )
+
+    return cum_sum
+
 
 if torch is not None:
 
@@ -683,35 +689,39 @@ def soft_dtw_alignment(
 
 def __make_soft_dtw_grad(backend):
 
-    def _soft_dtw_grad_generic(D, R, gamma):
+    def _soft_dtw_grad_generic(D, R, gamma, out=None):
         m, n = D.shape
-
-        D = backend.vstack((D, backend.zeros((1, n))))
-        D = backend.hstack((D, backend.zeros((m + 1, 1))))
-        R = backend.vstack((backend.full((1, n), backend.inf), R))
-        R = backend.hstack((backend.full((m + 1, 1), backend.inf), R))
-        R = backend.vstack((R, backend.full((1, n + 1), -backend.inf)))
-        R = backend.hstack((R, backend.full((m + 2, 1), -backend.inf)))
-        R[0, 0] = R[0, n + 1] = R[m + 1, 0] = 0
-        R[m + 1, n + 1] = R[m, n]
-
-        E = backend.zeros((m + 2, n + 2), dtype=D.dtype)
-        E[m + 1, n + 1] = 1
+        if out is not None:
+            E = out
+        else:
+            E = backend.empty((m, n), dtype=D.dtype)
+        E[-1, -1] = 1
 
         for j in range(n, 0, -1):  # ranges from n to 1
             for i in range(m, 0, -1):  # ranges from m to 1
-                a = backend.exp((R[i + 1, j] - R[i, j] - D[i, j - 1]) / gamma)
-                b = backend.exp((R[i, j + 1] - R[i, j] - D[i - 1, j]) / gamma)
-                c = backend.exp((R[i + 1, j + 1] - R[i, j] - D[i, j]) / gamma)
+                if j == n and i == m:
+                    continue
+                r_i_j_minus_1 = R[i, j - 1] if i != m else -backend.inf
+                r_i_minus_1_j = R[i - 1, j] if j != n else -backend.inf
+                r_i_j = R[i, j] if i != m and j != n else -backend.inf
+                d_i_j_minus_1 = D[i, j - 1] if i != m else 0
+                d_i_minus_1_j = D[i - 1, j] if j != n else 0
+                d_i_j = D[i, j] if i != m and j != n else 0
+                a = backend.exp((r_i_j_minus_1 - R[i - 1, j - 1] - d_i_j_minus_1) / gamma)
+                b = backend.exp((r_i_minus_1_j - R[i - 1, j - 1] - d_i_minus_1_j) / gamma)
+                c = backend.exp((r_i_j - R[i - 1, j - 1] - d_i_j) / gamma)
                 if backend.isnan(a):
                     a = 0
                 if backend.isnan(b):
                     b = 0
                 if backend.isnan(c):
                     c = 0
-                E[i, j] = E[i + 1, j] * a + E[i, j + 1] * b + E[i + 1, j + 1] * c
+                e_i_j_minus_1 = E[i, j - 1] if i != m else 0
+                e_i_minus_1_j = E[i - 1, j] if j != n else 0
+                e_i_j = E[i, j] if i != m and j != n else 0
+                E[i - 1, j - 1] = e_i_j_minus_1 * a + e_i_minus_1_j * b + e_i_j * c
 
-        return E[1:-1, 1:-1]
+        return E
 
     if backend is numpy:
         return njit(nogil=True)(_soft_dtw_grad_generic)

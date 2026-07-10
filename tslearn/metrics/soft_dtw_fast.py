@@ -11,7 +11,7 @@ from tslearn.backend.backend import instantiate_backend
 DBL_MAX = np.finfo("double").max
 
 
-@njit(fastmath=True)
+@njit(nogil=True)
 def _njit_softmin3(a, b, c, gamma):
     r"""Compute softmin of 3 input variables with parameter gamma.
 
