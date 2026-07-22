@@ -11,7 +11,7 @@ from sklearn.utils import check_random_state
 
 from tslearn.backend import instantiate_backend
 from tslearn.backend.pytorch_backend import HAS_TORCH
-from tslearn.utils import  to_time_series, to_time_series_dataset
+from tslearn.utils import to_time_series, to_time_series_dataset
 from tslearn.utils.utils import _to_time_series
 
 from .utils import _cdist_generic
