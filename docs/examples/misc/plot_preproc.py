@@ -9,11 +9,11 @@ import matplotlib.pyplot as plt
 #############################
 # Imputer
 # ---------------------------
-# The :class:`tslearn.preprocessing.TimeSeriesImputer` class can be used to replace missing values (Nans)
+# The :class:`.TimeSeriesImputer` class can be used to replace missing values (Nans)
 # within a multi-variate variable-length dataset before feeding estimators.
 #
 # There are several available imputation methods (linear, mean, constant...)
-# deal with each dimension independently.
+# dealing with each dimension independently.
 #
 # .. note::
 #
@@ -52,13 +52,13 @@ plt.show()
 # -------------------------
 # Feature scaling is an important preprocessing step for many machine learning algorithms.
 # Because time series are two-dimensionnal, the scaling axis matters in both
-# :class:`tslearn.preprocessing.TimeSeriesScalerMinMax` and :class:`tslearn.preprocessing.TimeSeriesScalerMeanVariance`.
+# :class:`.TimeSeriesScalerMinMax` and :class:`.TimeSeriesScalerMeanVariance`.
 #
 # Scaling each time series of a dataset independently is a common practice that somehow keeps
-# the shapes unchanged. In this case, no data is persisted between fit and transform.
+# the shapes unchanged. In this case, no data is persisted between `fit` and `transform`.
 #
 # Nevertheless, when the magnitude of the signal is important, scaling can be performed dataset wise,
-# and data computed on the training set propagated to scale test data.
+# and scaling parameters computed on the training set are persisted to scale the test data.
 
 import calendar
 
@@ -101,7 +101,7 @@ visu(dataset, "Data")
 ######################################
 #
 # Scaling per timeseries keeps the shapes of the time series at the expense of amplitude standardization
-#
+# as shown in the example below.
 
 from tslearn.preprocessing import TimeSeriesScalerMinMax
 scaled = TimeSeriesScalerMinMax(per_timeseries=True).fit_transform(dataset)
@@ -119,7 +119,7 @@ visu(scaled, "Data scaled dataset wise")
 #############################
 # Feature synchronizer
 # --------------------
-# :class:`tslearn.preprocessing.TimeSeriesFeatureSynchronizer` is a preprocessing step dealing with
+# :class:`.TimeSeriesFeatureSynchronizer` is a preprocessing step dealing with
 # features acquired at different sampling rates or desynchronized timestamps.
 
 def plot_(dataset, timestamps=None, title=None, xlim=None):
