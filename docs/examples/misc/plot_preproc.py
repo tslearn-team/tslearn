@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 #
 # .. note::
 #
-#     Tslearn pads with Nans in all dimensions when the dataset contains variable-length time series.
+#     ``tslearn`` pads with Nans in all dimensions when the dataset contains variable-length time series.
 #     In that case, imputation should not affect the padding, hence the `keep_trailing_nans` parameter.
 #     Use it to adjust the imputation behavior depending on your inputs.
 
@@ -51,11 +51,11 @@ plt.show()
 # Scalers
 # -------------------------
 # Feature scaling is an important preprocessing step for many machine learning algorithms.
-# Because time series are two-dimensionnal, the scaling axis matters in both
+# Because time series are two-dimensional, the scaling axis matters in both
 # :class:`.TimeSeriesScalerMinMax` and :class:`.TimeSeriesScalerMeanVariance`.
 #
 # Scaling each time series of a dataset independently is a common practice that somehow keeps
-# the shapes unchanged. In this case, no data is persisted between `fit` and `transform`.
+# the shapes unchanged. In this case, no data is persisted between ``fit`` and ``transform``.
 #
 # Nevertheless, when the magnitude of the signal is important, scaling can be performed dataset wise,
 # and scaling parameters computed on the training set are persisted to scale the test data.
