@@ -108,6 +108,7 @@ local_examples/
 tmp-tslearn-test.txt
 
 # Documentation
+docs/contributing.rst
 docs/_build/
 docs/auto_examples/
 docs/examples/misc/ks_trained.hdf5

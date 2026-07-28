@@ -38,7 +38,7 @@ GitHub, clone, and develop on a branch. Steps:
       $ cd tslearn
 
 3. Create a ``my-feature`` branch to hold your development changes.
-   Always use a ``my-feature`` branch. It's good practice to never work on the ``master`` branch::
+   Always use a ``my-feature`` branch. It's good practice to never work on the ``main`` branch::
 
      $ git checkout -b my-feature
 

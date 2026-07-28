@@ -15,6 +15,7 @@
 import os
 import subprocess
 import sys
+import shutil
 import tomllib
 import warnings
 
@@ -30,6 +31,11 @@ rtd_version = os.environ.get('READTHEDOCS_VERSION', 'local')
 
 import tslearn
 
+
+shutil.copyfile(
+    os.path.join(os.path.dirname(__file__), "..", "CONTRIBUTING.rst"),
+    os.path.join(os.path.dirname(__file__), "contributing.rst")
+)
 
 # -- General configuration ------------------------------------------------
 
