@@ -11,7 +11,9 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ## [Towards v0.10.0]
 
-# Nothing new yet
+### Removed
+
+* Support for sklearn version 1.4 is dropped
 
 ## [v0.9.0]
 
