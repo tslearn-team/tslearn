@@ -196,14 +196,14 @@ jobs:
     vmImage: 'ubuntu-latest'
   strategy:
     matrix:
-      sklearn1_4:
-        skLearnVersion: '1.4.0'
       sklearn1_5:
         skLearnVersion: '1.5.0'
       sklearn1_6:
         skLearnVersion: '1.6.0'
       sklearn1_7:
         skLearnVersion: '1.7.0'
+      sklearn1_8:
+        skLearnVersion: '1.8.0'
   variables:
     OMP_NUM_THREADS: '2'
     NUMBA_NUM_THREADS: '2'
