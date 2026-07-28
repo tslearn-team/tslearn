@@ -1,5 +1,6 @@
 """Soft-DTW toolbox"""
 import math
+import warnings
 
 import numpy as np
 
