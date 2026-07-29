@@ -11,9 +11,18 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ## [Towards v0.10.0]
 
+### Added
+
+* soft-dtw related tools now support Itakura and Sakoe-Chiba global constraints. ([#189](https://github.com/tslearn-team/tslearn/issues/189))
+* Multithreading support added to `cdist_soft_dtw` and `softdtw_barycenter`. ([#310](https://github.com/tslearn-team/tslearn/issues/310)) 
+
 ### Removed
 
 * Support for sklearn version 1.4 is dropped
+
+### Changed
+
+* soft-dtw API is now consistent with other metrics regarding parameters names and backend management.
 
 ## [v0.9.0]
 
