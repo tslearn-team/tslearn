@@ -1,5 +1,6 @@
 """Soft-DTW toolbox"""
 import math
+import warnings
 
 import numpy as np
 
@@ -181,6 +182,12 @@ def soft_dtw(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False):
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
        Time-Series," ICML 2017.
     """  # noqa: E501
+
+    warnings.warn(
+        "This method is deprecated, use tslearn.metrics.soft_dtw instead.",
+        DeprecationWarning
+    )
+
     be = instantiate_backend(be, ts1, ts2)
     ts1 = be.array(ts1)
     ts2 = be.array(ts2)
@@ -297,6 +304,12 @@ def soft_dtw_alignment(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False)
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
        Time-Series," ICML 2017.
     """  # noqa: E501
+
+    warnings.warn(
+        "This method is deprecated, use tslearn.metrics.soft_dtw_alignment instead.",
+        DeprecationWarning
+    )
+
     be = instantiate_backend(be, ts1, ts2)
     ts1 = be.array(ts1)
     ts2 = be.array(ts2)
@@ -415,6 +428,12 @@ def cdist_soft_dtw(dataset1, dataset2=None, gamma=1.0, be=None, compute_with_bac
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
        Time-Series," ICML 2017.
     """  # noqa: E501
+
+    warnings.warn(
+        "This method is deprecated, use tslearn.metrics.cdist_soft_dtw instead.",
+        DeprecationWarning
+    )
+
     be = instantiate_backend(be, dataset1, dataset2)
     dataset1 = to_time_series_dataset(dataset1, be=be)
     if dataset2 is not None:
@@ -573,6 +592,12 @@ def cdist_soft_dtw_normalized(dataset1, dataset2=None, gamma=1.0, be=None, compu
     .. [1] M. Cuturi, M. Blondel "Soft-DTW: a Differentiable Loss Function for
        Time-Series," ICML 2017.
     """  # noqa: E501
+
+    warnings.warn(
+        "This method is deprecated, use tslearn.metrics.cdist_soft_dtw_normalized instead.",
+        DeprecationWarning
+    )
+
     be = instantiate_backend(be, dataset1, dataset2)
     dataset1 = to_time_series_dataset(dataset1, be=be)
     if dataset2 is not None:
