@@ -91,6 +91,14 @@ def get_estimators(type_filter='all'):
     # only keep those that are from tslearn
     all_classes = filter(lambda c: not is_sklearn(c), all_classes)
 
+    # tslearn.foundation estimators wrap an externally provided pre-trained
+    # model, so they cannot be instantiated without arguments, which is what
+    # the common checks below rely on. They are covered by tests/test_foundation.py.
+    all_classes = filter(
+        lambda c: not inspect.getmodule(c).__name__.startswith('tslearn.foundation'),
+        all_classes
+    )
+
     # Now filter out the estimators that are not of the specified type
     filters = {
         'all': [ClassifierMixin, RegressorMixin,
