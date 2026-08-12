@@ -26,6 +26,10 @@ References
   Universal Forecasting. arXiv:2510.15821, 2025.
 """
 
+# Author: Romain Tavenard
+# License: BSD 3 clause
+# sphinx_gallery_thumbnail_number = 2
+
 ##############################################################################
 # Data
 # ----
