@@ -41,11 +41,9 @@ class LinearProbeClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
           :class:`sklearn.linear_model.LogisticRegression` is used. Any
           scikit-learn classifier can be passed instead; note that using a
           non-linear one makes the resulting accuracy an estimate of predictive
-          performance rather than of linear separability. Frozen
-          representations sometimes have a very small variance, in which case
-          the default regularization is too strong; passing
-          ``make_pipeline(StandardScaler(), LogisticRegression())`` is then
-          usually enough to fix it.
+          performance rather than of linear separability. Frozen representations 
+          sometimes have a very small variance, in which case prepending a
+          :class:`sklearn.preprocessing.StandardScaler` to the head helps.
         context_length : int or None (default: None)
           When set, only the last ``context_length`` timestamps of each series
           are fed to the model.
@@ -101,7 +99,9 @@ class LinearProbeClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
 
     Examples
     --------
-    >>> model = LinearProbeClassifier(backbone, layer=-2)  # doctest: +SKIP
+    >>> from chronos import Chronos2Pipeline  # doctest: +SKIP
+    >>> pipeline = Chronos2Pipeline.from_pretrained("amazon/chronos-2")  # doctest: +SKIP
+    >>> model = LinearProbeClassifier(pipeline.model, layer=-2)  # doctest: +SKIP
     >>> model.fit(X_train, y_train).score(X_test, y_test)  # doctest: +SKIP
     0.93
 

@@ -607,7 +607,9 @@ class LinearProbeForecaster(_BaseFoundationForecaster):
 
     Examples
     --------
-    >>> model = LinearProbeForecaster(backbone, horizon=24)  # doctest: +SKIP
+    >>> from chronos import Chronos2Pipeline  # doctest: +SKIP
+    >>> pipeline = Chronos2Pipeline.from_pretrained("amazon/chronos-2")  # doctest: +SKIP
+    >>> model = LinearProbeForecaster(pipeline.model, horizon=24)  # doctest: +SKIP
     >>> model.fit(X_train).predict(X_test, n=24).shape  # doctest: +SKIP
     (10, 24, 1)
 

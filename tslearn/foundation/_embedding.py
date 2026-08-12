@@ -291,8 +291,9 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
 
     Examples
     --------
-    >>> import torch  # doctest: +SKIP
-    >>> embedder = TimeSeriesFoundationEmbedder(model, layer=-2)  # doctest: +SKIP
+    >>> from chronos import Chronos2Pipeline  # doctest: +SKIP
+    >>> pipeline = Chronos2Pipeline.from_pretrained("amazon/chronos-2")  # doctest: +SKIP
+    >>> embedder = TimeSeriesFoundationEmbedder(pipeline.model, layer=-2)  # doctest: +SKIP
     >>> embedder.fit_transform(X).shape  # doctest: +SKIP
     (10, 512)
 
