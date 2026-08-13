@@ -128,7 +128,7 @@ print(f"{y_zero_shot.shape=}")
 #   forecasting.
 # * ``tokens`` restricts which tokens take part in that aggregation. Chronos-2
 #   appends a register token and a forecast token after its context tokens, and
-#   neither represents the input series, so ``tokens=(0, -2)`` focues on the 
+#   neither represents the input series, so ``tokens=(0, -2)`` focuses on the 
 #   slice 0:-2 and keeps the average clean.
 #
 # .. image:: /_static/img/foundation_tokens.svg
