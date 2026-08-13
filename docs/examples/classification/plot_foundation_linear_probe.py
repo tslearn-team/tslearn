@@ -5,16 +5,15 @@ Linear probing a pre-trained model for classification
 Time series foundation models are pre-trained for forecasting, yet the
 representations they build along the way carry a lot of information about the
 shape of a series, which makes them useful for other tasks as well. Linear
-probing [1]_ is the standard way to measure that: the pre-trained model is kept
-frozen and used as a feature extractor, and a plain linear classifier is fitted
+probing [1]_ is a cheap way to implement that principle: the pre-trained model 
+is kept frozen and used as a feature extractor, and a plain classifier is fitted
 on top of its representations. Because the head is linear and the backbone is
 never updated, the accuracy reached tells us how linearly separable the classes
 already are in the representation space.
 
 This example applies :class:`~tslearn.foundation.LinearProbeClassifier` to a
-UCR dataset, using Chronos-2 [2]_ as the frozen backbone, and compares it to
-tslearn's classical baselines. Running it requires the ``chronos-forecasting``
-package::
+UCR dataset, using Chronos-2 [2]_ as the frozen backbone. 
+Running it requires the ``chronos-forecasting`` package::
 
     pip install "chronos-forecasting>=2.0"
 

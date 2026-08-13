@@ -158,8 +158,7 @@ print(f"{probe.n_windows_} training windows, "
 # The head fitted on top of the frozen representations defaults to a
 # :class:`sklearn.linear_model.RidgeCV`, which picks its regularization
 # strength by cross-validation. Any scikit-learn regressor can be passed
-# instead through the ``probe`` parameter, for instance to control the
-# regularization path explicitly.
+# instead through the ``probe`` parameter.
 
 ##############################################################################
 # Comparison
