@@ -241,4 +241,4 @@ for layer in [-1, -2, -4]:
         results[(layer, pooling)] = mae(X_test, model.predict(X_train))
 
 for (layer, pooling), score in sorted(results.items(), key=lambda kv: kv[1]):
-    print(f"layer={str(layer):>4}, pooling={pooling:>4}: MAE = {score:.4f}")
+    print(f"layer={str(layer):>5}, pooling={pooling:>4}: MAE = {score:.4f}")
