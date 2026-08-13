@@ -19,18 +19,14 @@ from ._embedding import (
 
 
 class LinearProbeClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
-    """Classify time series with a linear head on a frozen pre-trained model.
+    """Classify time series with a head on a frozen pre-trained model.
 
-    The pre-trained model is used as a frozen feature extractor and a linear
-    classifier is fitted on the resulting representations. This is the standard
-    protocol used to assess how much class information a pre-trained model has
-    learnt [1]_: because the head is linear and the backbone is frozen, the
-    accuracy it reaches measures how linearly separable the classes already are
-    in the representation space.
-
-    It is also a practical classifier in its own right, as it needs no
-    backpropagation through the pre-trained model and therefore trains in
-    seconds even on models counting hundreds of millions of parameters.
+    The pre-trained model is used as a frozen feature extractor and a
+    classifier is fitted on the resulting representations.
+    
+    Linear probing keeps the pre-trained model entirely frozen and only fits a
+    map from its representations to the class predictions. Compared to fine-tuning, 
+    it leaves the pre-trained weights untouched, which makes it much cheaper.
 
     Parameters
     ----------
@@ -39,45 +35,50 @@ class LinearProbeClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
         probe : sklearn estimator or None (default: None)
           The head fitted on top of the frozen representations. When None, a
           :class:`sklearn.linear_model.LogisticRegression` is used. Any
-          scikit-learn classifier can be passed instead; note that using a
-          non-linear one makes the resulting accuracy an estimate of predictive
-          performance rather than of linear separability. Frozen representations 
-          sometimes have a very small variance, in which case prepending a
-          :class:`sklearn.preprocessing.StandardScaler` to the head helps.
+          scikit-learn classifier can be passed instead.
+          Frozen representations sometimes have a very small
+          variance, in which case prepending a
+          :class:`sklearn.preprocessing.StandardScaler` to the head might help.
         context_length : int or None (default: None)
           When set, only the last ``context_length`` timestamps of each series
           are fed to the model.
         layer : int or None (default: None)
-          Layer to probe. When None, the model's output hidden state is used.
-          When an integer, a forward hook is placed on the corresponding block
-          of the model's layer stack. Intermediate layers often carry more
-          class information than the last ones, which tend to specialize
-          towards the pre-training objective, so this is worth tuning.
+          Layer to probe, see
+          :class:`~tslearn.foundation.TimeSeriesFoundationEmbedder`.
         layers_path : str or None (default: None)
-          Dotted path to the stack of layers, e.g. ``"encoder.block"``. When
-          None, the stack is auto-detected.
+          Dotted path to the stack of layers, see
+          :class:`~tslearn.foundation.TimeSeriesFoundationEmbedder`.
         pooling : {"mean", "max", "cls", "last", "flatten"} (default: "mean")
-          How token representations are aggregated into one vector per series.
-          A probe needs a flat feature matrix, so ``pooling=None`` is not
-          accepted here.
+          How token representations are aggregated, see
+          :class:`~tslearn.foundation.TimeSeriesFoundationEmbedder` and
+          note that ``pooling=None`` is not accepted here.
+          Default is mean pooling, but if the pre-trained model outputs a CLS
+          token, it should be better to set ``cls_index`` and use ``"cls"``
+          as a pooling strategy.
         tokens : slice, (start, stop) pair or None (default: None)
           Which tokens to keep before pooling, see
           :class:`~tslearn.foundation.TimeSeriesFoundationEmbedder`. Restricting
-          the average to the tokens that actually represent the series, e.g.
+          the average to the tokens that actually represent the context, e.g.
           ``tokens=(0, -2)`` for Chronos-2, avoids diluting it with class or
           forecast tokens.
         cls_index : int (default: 0)
           Index of the token selected when ``pooling="cls"``.
         input_layout : {"univariate", "channels_last", "channels_first"} (default: "univariate")
-          How multivariate series are handed over to the model.
+          How the context is laid out when handed over to the model.
+          ``"univariate"`` forecasts every channel of every series
+          independently. The other two layouts feed
+          a ``(n_ts, sz, d)`` or ``(n_ts, d, sz)`` array respectively, for
+          models that are natively multivariate.
         input_name : str or None (default: None)
           Name of the ``forward`` argument receiving the context values.
         model_kwargs : dict or None (default: None)
           Extra keyword arguments passed to every ``forward`` call.
         batch_size : int (default: 32)
-          Number of series embedded at once.
+          Number of series embedded at once, see
+          :class:`~tslearn.foundation.TimeSeriesFoundationEmbedder`.
         device : str or None (default: None)
-          Device on which inference is run.
+          Device on which inference is run, see
+          :class:`~tslearn.foundation.TimeSeriesFoundationEmbedder`.
         verbose : int (default: 0)
           When positive, prints progress information.
 
@@ -86,7 +87,7 @@ class LinearProbeClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
         embedder_ : TimeSeriesFoundationEmbedder
           The frozen feature extractor.
         probe_ : sklearn estimator
-          The fitted linear head.
+          The fitted head.
         classes_ : array of shape=(n_classes,)
           Class labels known to the classifier.
         n_features_in_ : int
@@ -104,12 +105,6 @@ class LinearProbeClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
     >>> model = LinearProbeClassifier(pipeline.model, layer=-2)  # doctest: +SKIP
     >>> model.fit(X_train, y_train).score(X_test, y_test)  # doctest: +SKIP
     0.93
-
-    References
-    ----------
-    .. [1] G. Alain and Y. Bengio. Understanding intermediate layers using
-      linear classifier probes. ICLR Workshop, 2017.
-
     """
 
     def __init__(
@@ -177,7 +172,7 @@ class LinearProbeClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
         return to_time_series_dataset(X)
 
     def fit(self, X, y):
-        """Fit a linear classifier on top of the frozen pre-trained model.
+        """Fit a classifier on top of the frozen pre-trained model.
 
         Parameters
         ----------

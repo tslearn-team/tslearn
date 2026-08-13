@@ -35,8 +35,6 @@ References
 # ----
 #
 # We use a set of sine waves with varying frequencies, phases and noise levels.
-# Using synthetic data keeps the example self-contained, and lets us check that
-# the models pick up a periodic structure that a short-context model would miss.
 
 import numpy as np
 
@@ -71,9 +69,9 @@ print(f"{X_train.shape=}, {X_test.shape=}")
 # tslearn estimator, whose ``predict`` method returns an array of shape
 # ``(n_ts, n, d)`` like every other forecaster of the library.
 #
-# Calling ``fit`` is not needed here. Doing so is allowed, so that the
-# estimator can be dropped into scikit-learn tooling that expects it, but it
-# does not learn anything and emits a warning to that effect.
+# Calling ``fit`` is not needed here since the purpose of a 
+# :class:`~tslearn.foundation.ZeroShotForecaster` is to reuse a pre-trained 
+# model without any training.
 
 from chronos import Chronos2Pipeline
 
@@ -88,10 +86,9 @@ print(f"{y_zero_shot.shape=}")
 ##############################################################################
 # ``horizon_axis`` says which axis of the model's output holds the forecast
 # horizon. There is no shared convention across implementations, Chronos-2
-# alone returning ``(n_series, n_quantiles, horizon)`` from ``predict`` and
-# ``(n_series, horizon, n_quantiles)`` from ``predict_quantiles``, so stating
-# it is the reliable option. Left to its default of ``"auto"``, the estimator
-# infers it from the returned shape and warns when the shape is ambiguous.
+# returns ``(n_series, n_quantiles, horizon)`` from ``predict`` so ``-1`` is 
+# used. Left to its default of ``"auto"``, the estimator would
+# infer it from the returned shape.
 #
 # The remaining axes are understood as holding quantile levels or sample paths
 # and are reduced to a point forecast according to the ``quantile`` parameter,
@@ -111,8 +108,8 @@ print(f"{y_zero_shot.shape=}")
 # matters because every window has to go through the pre-trained model once.
 #
 # The probing estimator needs the model itself rather than the inference
-# pipeline, since it reads hidden states rather than forecasts. Two options
-# drive which representations are read:
+# pipeline, since it reads hidden states rather than forecasts. Three options
+# drive which representations are used:
 #
 # * ``layer`` selects the block to probe: an integer places a forward hook on
 #   the corresponding block, so ``layer=-2`` probes the penultimate one. The
@@ -123,12 +120,18 @@ print(f"{y_zero_shot.shape=}")
 #   only, so an explicit layer is required here.
 # * ``pooling`` says how the token representations are aggregated into a single
 #   vector. Chronos-2 emits one token per patch of the context, plus a register
-#   token, so both averaging (``pooling="mean"``) and picking that single token
-#   (``pooling="cls"``) are sensible.
+#   token and a forecast token, so both averaging (``pooling="mean"``) and 
+#   picking that forecast token (``pooling="cls"``) are sensible.
 # * ``tokens`` restricts which tokens take part in that aggregation. Chronos-2
 #   appends a register token and a forecast token after its context tokens, and
 #   neither represents the input series, so ``tokens=(0, -2)`` keeps the average
 #   clean.
+#
+# .. image:: /_static/img/foundation_tokens.svg
+#    :width: 700
+#    :align: center
+#    :alt: Chronos-2 appends a register token and a forecast token after its
+#      context tokens; tokens=(0, -2) keeps only the context tokens.
 
 from tslearn.foundation import LinearProbeForecaster
 

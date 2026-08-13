@@ -674,15 +674,6 @@ def test_zero_shot_forecaster():
     )
 
 
-def test_zero_shot_forecaster_no_warning_when_silenced():
-    X = _dataset(n_ts=3, sz=32, d=1)
-    import warnings
-
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
-        ZeroShotForecaster(_DummyPipeline(), warn_on_fit=False).fit(X)
-
-
 def test_zero_shot_forecaster_multivariate():
     X = _dataset(n_ts=5, sz=32, d=3)
     predicted = ZeroShotForecaster(_DummyPipeline()).predict(X, n=4)
@@ -880,13 +871,6 @@ def test_zero_shot_forecaster_errors():
         ZeroShotForecaster(object()).predict(X, n=1)
     with pytest.raises(ValueError, match="input_layout"):
         ZeroShotForecaster(_DummyPipeline(), input_layout="bogus").predict(X)
-
-
-def test_zero_shot_forecaster_feature_mismatch_after_fit():
-    X = _dataset(n_ts=4, sz=32, d=1)
-    model = ZeroShotForecaster(_DummyPipeline(), warn_on_fit=False).fit(X)
-    with pytest.raises(ValueError, match="features"):
-        model.predict(_dataset(n_ts=4, sz=32, d=2), n=2)
 
 
 def test_zero_shot_forecaster_skips_methods_without_a_horizon_argument():

@@ -194,8 +194,9 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
     * ``model`` is a :class:`torch.nn.Module`;
     * its ``forward`` method accepts the raw context values through one
       argument (auto-detected among common names, see ``input_name``);
-    * it returns, or internally computes, hidden states of shape
-      ``(batch, n_tokens, dim)``.
+    * it returns hidden states of shape
+      ``(batch, n_tokens, dim)`` if ``pooling=None`` and ``(batch, dim)``
+      otherwise.
 
     Parameters
     ----------
@@ -226,7 +227,7 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
 
           ``None``, for which the string ``"none"`` is accepted as an alias,
           applies no pooling at all: :meth:`transform` then returns a time
-          series dataset of shape ``(n_ts, n_tokens, d * dim)`` rather than a
+          series dataset of shape ``(n_ts, n_tokens, dim)`` rather than a
           flat feature matrix, which turns this estimator into a time series to
           time series transform. Combined with ``tokens``, this is a way to
           obtain one representation per timestep, or per patch of timesteps,
@@ -238,37 +239,29 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
           not represent the input series, such as class, register or forecast
           tokens; excluding them is usually what one wants, both to build clean
           per-timestep representations and to avoid polluting an average.
-          Chronos-2, for instance, emits its context tokens first, so
-          ``tokens=(0, -2)`` drops its trailing register and forecast tokens.
           When None, all tokens are kept. This parameter does not affect
-          ``pooling="cls"``, whose whole purpose is to reach a token that
-          ``tokens`` would typically exclude.
+          ``pooling="cls"``.
         cls_index : int (default: 0)
-          Index of the token to select when ``pooling="cls"``, applied to the
-          model's full token sequence, before any ``tokens`` selection. Note
-          that not all models place their class token first: Chronos-2, for
-          instance, inserts a register token between the context and forecast
-          tokens.
+          Index of the token to select when ``pooling="cls"``.
         input_layout : {"univariate", "channels_last", "channels_first"} (default: "univariate")
-          How multivariate series are handed over to the model.
-          ``"univariate"`` embeds every channel independently, as a
-          ``(n_ts * d, sz)`` array, and concatenates the resulting per-channel
-          embeddings, which is what most time series foundation models expect.
-          The other two layouts feed a ``(n_ts, sz, d)`` or ``(n_ts, d, sz)``
-          array respectively, for models that are natively multivariate.
+          How the context is laid out when handed over to the model.
+          ``"univariate"`` forecasts every channel of every series
+          independently. The other two layouts feed
+          a ``(n_ts, sz, d)`` or ``(n_ts, d, sz)`` array respectively, for
+          models that are natively multivariate.
         context_length : int or None (default: None)
           When set, only the last ``context_length`` timestamps of each series
           are fed to the model.
         input_name : str or None (default: None)
-          Name of the ``forward`` argument receiving the context values. When
-          None, it is auto-detected among common names.
+          Name of the ``forward`` argument receiving the context values.
         model_kwargs : dict or None (default: None)
           Extra keyword arguments passed to every ``forward`` call.
         batch_size : int (default: 32)
-          Number of series embedded at once.
+          Number of series embedded at once, see
+          :class:`~tslearn.foundation.TimeSeriesFoundationEmbedder`.
         device : str or None (default: None)
-          Device on which inference is run, e.g. ``"cuda"``. When None, the
-          device the model already lives on is used.
+          Device on which inference is run, see
+          :class:`~tslearn.foundation.TimeSeriesFoundationEmbedder`.
         verbose : int (default: 0)
           When positive, prints progress information.
 

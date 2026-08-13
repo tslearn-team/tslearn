@@ -269,8 +269,7 @@ class ZeroShotForecaster(_BaseFoundationForecaster):
         input_layout : {"univariate", "channels_last", "channels_first"} (default: "univariate")
           How the context is laid out when handed over to the model.
           ``"univariate"`` forecasts every channel of every series
-          independently and feeds a ``(n_ts * d, sz)`` array, which is what
-          most time series foundation models expect. The other two layouts feed
+          independently. The other two layouts feed
           a ``(n_ts, sz, d)`` or ``(n_ts, d, sz)`` array respectively, for
           models that are natively multivariate.
         context_length : int or None (default: None)
@@ -278,11 +277,8 @@ class ZeroShotForecaster(_BaseFoundationForecaster):
           are used as context.
         horizon_axis : int or "auto" (default: "auto")
           Which axis of the array returned by the model holds the forecast
-          horizon, axis 0 being the series. There is no shared convention here:
-          Chronos-2 returns ``(n_series, n_quantiles, horizon)`` while its own
-          ``predict_quantiles`` returns ``(n_series, horizon, n_quantiles)``,
-          so setting this explicitly, e.g. ``horizon_axis=-1``, is the reliable
-          option. When ``"auto"``, the axis is inferred from the returned
+          horizon, axis 0 being the series. 
+          When ``"auto"``, the axis is inferred from the returned
           shape, preferring an axis whose size is exactly the horizon and, among
           those, the last one. A warning is raised if the shape leaves the
           choice ambiguous, which happens when the model returns as many
@@ -293,26 +289,16 @@ class ZeroShotForecaster(_BaseFoundationForecaster):
           Probabilistic models return several quantiles or sample paths; this
           is the quantile used to derive a point forecast from them. When None,
           the mean is used instead. Note that the quantile is taken over the
-          values the model returned, without assuming which level each of them
-          corresponds to, since that information is not exposed in any
-          standard way. For a model returning evenly spread quantile levels,
-          the default therefore recovers the median forecast, up to any
-          quantile crossing.
+          values the model returned.
         model_kwargs : dict or None (default: None)
           Extra keyword arguments passed to the model's forecasting method.
-        warn_on_fit : bool (default: True)
-          Whether calling :meth:`fit` should emit a warning reminding that
-          nothing is being learnt.
 
     Attributes
     ----------
-        n_features_in_ : int
-          Number of features (channels) of the series seen during fit.
         context_format_ : str
           How the batch of contexts ended up being presented to the model,
           among ``"2d"``, ``"3d"`` and ``"list"``. Set after the first call to
-          :meth:`predict` with the ``"univariate"`` layout, as implementations
-          disagree on this and the accepted one is discovered by trial.
+          :meth:`predict` with the ``"univariate"`` layout.
 
     Notes
     -----
@@ -331,11 +317,6 @@ class ZeroShotForecaster(_BaseFoundationForecaster):
     >>> model.predict(X, n=24).shape  # doctest: +SKIP
     (10, 24, 1)
 
-    References
-    ----------
-    .. [1] A. F. Ansari, L. Stella, C. Turkmen, et al. Chronos: Learning the
-      Language of Time Series. Transactions on Machine Learning Research, 2024.
-
     """
 
     def __init__(
@@ -347,7 +328,6 @@ class ZeroShotForecaster(_BaseFoundationForecaster):
         horizon_axis="auto",
         quantile=0.5,
         model_kwargs=None,
-        warn_on_fit=True,
     ):
         self.model = model
         self.predict_fn = predict_fn
@@ -356,7 +336,6 @@ class ZeroShotForecaster(_BaseFoundationForecaster):
         self.horizon_axis = horizon_axis
         self.quantile = quantile
         self.model_kwargs = model_kwargs
-        self.warn_on_fit = warn_on_fit
 
     def _resolve_predict_fn(self):
         """Build a ``(context, horizon) -> forecast`` callable from the model."""
@@ -444,17 +423,12 @@ class ZeroShotForecaster(_BaseFoundationForecaster):
         """
         self._check_layout()
         X = self._check_input(X)
-        if self.warn_on_fit:
-            warnings.warn(
-                "ZeroShotForecaster.fit does not train anything: the wrapped "
-                "model is used as-is for zero-shot forecasting. Use "
-                "LinearProbeForecaster to fit a head on top of it, or pass "
-                "warn_on_fit=False to silence this warning.",
-                UserWarning,
-                stacklevel=2,
-            )
-        self.n_features_in_ = X.shape[2]
-        self._is_fitted_ = True
+        warnings.warn(
+            "ZeroShotForecaster.fit does not train anything: the wrapped "
+            "model is used as-is for zero-shot forecasting.",
+            UserWarning,
+            stacklevel=2,
+        )
         return self
 
     def predict(self, X, n=1):
@@ -482,11 +456,6 @@ class ZeroShotForecaster(_BaseFoundationForecaster):
         if n < 1:
             raise ValueError(f"`n` must be a positive integer, got {n}.")
         X = self._check_input(X)
-        if getattr(self, "n_features_in_", X.shape[2]) != X.shape[2]:
-            raise ValueError(
-                f"Series with {self.n_features_in_} features were expected, got "
-                f"{X.shape[2]}."
-            )
         if self.context_length is not None:
             X = X[:, -self.context_length :]
 
@@ -523,13 +492,13 @@ class ZeroShotForecaster(_BaseFoundationForecaster):
 
 
 class LinearProbeForecaster(_BaseFoundationForecaster):
-    """Forecast by fitting a linear head on a frozen pre-trained model.
+    """Forecast by fitting a head on a frozen pre-trained model.
 
     Linear probing keeps the pre-trained model entirely frozen and only fits a
     linear map from its representations to the quantity of interest. Compared
     to zero-shot use, it adapts the model to the data at hand at a very small
     computational cost, and compared to fine-tuning, it leaves the pre-trained
-    weights untouched, which makes it both cheap and hard to overfit.
+    weights untouched, which makes it much cheaper.
 
     Training pairs are cut out of the provided series with a sliding window:
     the ``context_length`` timestamps preceding a cut point are embedded, and
@@ -543,17 +512,15 @@ class LinearProbeForecaster(_BaseFoundationForecaster):
           The head fitted on top of the frozen representations. When None, a
           :class:`sklearn.linear_model.RidgeCV` is used, which selects its
           regularization strength by cross-validation and admits a closed-form
-          solution. Any multi-output capable regressor can be passed instead;
-          note that using a non-linear one makes the name "probe" a misnomer,
-          and the resulting scores no longer measure linear separability of the
-          representations. Frozen representations sometimes have a very small
+          solution. Any multi-output capable regressor can be passed instead. 
+          Frozen representations sometimes have a very small
           variance, in which case prepending a
-          :class:`sklearn.preprocessing.StandardScaler` to the head helps.
+          :class:`sklearn.preprocessing.StandardScaler` to the head might help.
         context_length : int (default: 128)
           Number of timestamps fed to the pre-trained model.
         horizon : int (default: 1)
-          Number of timestamps forecasted at once. This is fixed at fit time,
-          as one linear head is fitted for the whole horizon.
+          Number of timestamps forecasted at once. This cannot be changed after 
+          fit time, as one linear head is fitted for the whole horizon.
         stride : int (default: 1)
           Step between two consecutive training windows. Larger values yield
           fewer, less redundant training pairs and a faster fit.
@@ -565,9 +532,8 @@ class LinearProbeForecaster(_BaseFoundationForecaster):
           :class:`~tslearn.foundation.TimeSeriesFoundationEmbedder`.
         pooling : {"mean", "max", "cls", "last", "flatten"} (default: "mean")
           How token representations are aggregated, see
-          :class:`~tslearn.foundation.TimeSeriesFoundationEmbedder`. Unlike
-          that class, a probe needs a flat feature matrix, so ``pooling=None``
-          is not accepted here.
+          :class:`~tslearn.foundation.TimeSeriesFoundationEmbedder` and
+          note that ``pooling=None`` is not accepted here.
         tokens : slice, (start, stop) pair or None (default: None)
           Which tokens to keep before pooling, see
           :class:`~tslearn.foundation.TimeSeriesFoundationEmbedder`. Restricting
@@ -578,14 +544,20 @@ class LinearProbeForecaster(_BaseFoundationForecaster):
           Index of the token selected when ``pooling="cls"``.
         input_layout : {"univariate", "channels_last", "channels_first"} (default: "univariate")
           How the context is laid out when handed over to the model.
+          ``"univariate"`` forecasts every channel of every series
+          independently. The other two layouts feed
+          a ``(n_ts, sz, d)`` or ``(n_ts, d, sz)`` array respectively, for
+          models that are natively multivariate.
         input_name : str or None (default: None)
           Name of the ``forward`` argument receiving the context values.
         model_kwargs : dict or None (default: None)
           Extra keyword arguments passed to every ``forward`` call.
         batch_size : int (default: 32)
-          Number of series embedded at once.
+          Number of series embedded at once, see
+          :class:`~tslearn.foundation.TimeSeriesFoundationEmbedder`.
         device : str or None (default: None)
-          Device on which inference is run.
+          Device on which inference is run, see
+          :class:`~tslearn.foundation.TimeSeriesFoundationEmbedder`.
         verbose : int (default: 0)
           When positive, prints progress information.
 
@@ -594,7 +566,7 @@ class LinearProbeForecaster(_BaseFoundationForecaster):
         embedder_ : TimeSeriesFoundationEmbedder
           The frozen feature extractor.
         probe_ : sklearn estimator
-          The fitted linear head.
+          The fitted head.
         n_features_in_ : int
           Number of features (channels) of the series seen during fit.
         n_windows_ : int
@@ -611,6 +583,7 @@ class LinearProbeForecaster(_BaseFoundationForecaster):
     >>> pipeline = Chronos2Pipeline.from_pretrained("amazon/chronos-2")  # doctest: +SKIP
     >>> model = LinearProbeForecaster(pipeline.model, horizon=24)  # doctest: +SKIP
     >>> model.fit(X_train)  # doctest: +SKIP
+    ...
     >>> model.predict(X_test).shape  # doctest: +SKIP
     (10, 24, 1)
     >>> model.predict(X_test, n=12).shape  # doctest: +SKIP
@@ -618,7 +591,8 @@ class LinearProbeForecaster(_BaseFoundationForecaster):
     >>> model.predict(X_test, n=36)  # doctest: +SKIP
     Traceback (most recent call last):
     ...
-    ValueError: This estimator was fitted for a horizon of 24, so `n` must lie in [1, 24], got 36. Refit with a larger `horizon` to forecast further ahead.
+    ValueError: This estimator was fitted for a horizon of 24, so `n` must lie in [1, 24], got 36. 
+    Refit with a larger `horizon` to forecast further ahead.
 
     References
     ----------
@@ -721,7 +695,7 @@ class LinearProbeForecaster(_BaseFoundationForecaster):
                 )
 
     def fit(self, X, y=None):
-        """Fit a linear head on top of the frozen pre-trained model.
+        """Fit the probe on top of the frozen pre-trained model.
 
         Parameters
         ----------
@@ -751,7 +725,8 @@ class LinearProbeForecaster(_BaseFoundationForecaster):
         return self
 
     def predict(self, X, n=None):
-        """Forecast ``horizon`` timestamps ahead of the given series.
+        """Forecast ``horizon`` (or ``n``, if set) timestamps ahead of the 
+        given series.
 
         Parameters
         ----------
