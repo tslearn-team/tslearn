@@ -306,8 +306,8 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
 
     References
     ----------
-    .. [1] A. Kolesnikov, L. Beyer, X. Zhai, et al. Big Transfer (BiT): General
-      Visual Representation Learning. ECCV, 2020.
+    .. [1] G. Alain and Y. Bengio. Understanding intermediate layers using
+      linear classifier probes. ICLR Workshop, 2017.
 
     """
 
