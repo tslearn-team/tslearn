@@ -48,21 +48,22 @@ class LinearProbeClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
         layers_path : str or None (default: None)
           Dotted path to the stack of layers, see
           :class:`~tslearn.foundation.TimeSeriesFoundationEmbedder`.
-        pooling : {"mean", "max", "cls", "last", "flatten"} (default: "mean")
+        pooling : {"mean", "max", "token", "last", "flatten"} (default: "mean")
           How token representations are aggregated, see
           :class:`~tslearn.foundation.TimeSeriesFoundationEmbedder` and
           note that ``pooling=None`` is not accepted here.
-          Default is mean pooling, but if the pre-trained model outputs a CLS
-          token, it should be better to set ``cls_index`` and use ``"cls"``
-          as a pooling strategy.
+          Default is mean pooling, but if the pre-trained model outputs a
+          class token, it should be better to set ``token_index`` 
+          to this token's index and use ``"token"`` as a pooling strategy.
         tokens : slice, (start, stop) pair or None (default: None)
           Which tokens to keep before pooling, see
           :class:`~tslearn.foundation.TimeSeriesFoundationEmbedder`. Restricting
           the average to the tokens that actually represent the context, e.g.
           ``tokens=(0, -2)`` for Chronos-2, avoids diluting it with class or
           forecast tokens.
-        cls_index : int (default: 0)
-          Index of the token selected when ``pooling="cls"``.
+        token_index : int (default: 0)
+          Index of the token selected when ``pooling="token"``, see
+          :class:`~tslearn.foundation.TimeSeriesFoundationEmbedder`.
         input_layout : {"univariate", "channels_last", "channels_first"} (default: "univariate")
           How the context is laid out when handed over to the model.
           ``"univariate"`` forecasts every channel of every series
@@ -116,7 +117,7 @@ class LinearProbeClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
         layers_path=None,
         pooling="mean",
         tokens=None,
-        cls_index=0,
+        token_index=0,
         input_layout="univariate",
         input_name=None,
         model_kwargs=None,
@@ -131,7 +132,7 @@ class LinearProbeClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
         self.layers_path = layers_path
         self.pooling = pooling
         self.tokens = tokens
-        self.cls_index = cls_index
+        self.token_index = token_index
         self.input_layout = input_layout
         self.input_name = input_name
         self.model_kwargs = model_kwargs
@@ -146,7 +147,7 @@ class LinearProbeClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
             layers_path=self.layers_path,
             pooling=self.pooling,
             tokens=self.tokens,
-            cls_index=self.cls_index,
+            token_index=self.token_index,
             input_layout=self.input_layout,
             context_length=self.context_length,
             input_name=self.input_name,

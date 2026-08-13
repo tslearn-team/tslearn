@@ -120,12 +120,16 @@ print(f"{y_zero_shot.shape=}")
 #   only, so an explicit layer is required here.
 # * ``pooling`` says how the token representations are aggregated into a single
 #   vector. Chronos-2 emits one token per patch of the context, plus a register
-#   token and a forecast token, so both averaging (``pooling="mean"``) and 
-#   picking that forecast token (``pooling="cls"``) are sensible.
+#   token and a forecast token, so both averaging (``pooling="mean"``) and
+#   picking a single token (``pooling="token"``) are sensible. 
+#   Chronos-2's forecast token is a natural choice
+#   here: ``token_index=-1`` reads it directly, rather than averaging over
+#   representations that were never meant to summarize the series for
+#   forecasting.
 # * ``tokens`` restricts which tokens take part in that aggregation. Chronos-2
 #   appends a register token and a forecast token after its context tokens, and
-#   neither represents the input series, so ``tokens=(0, -2)`` keeps the average
-#   clean.
+#   neither represents the input series, so ``tokens=(0, -2)`` focues on the 
+#   slice 0:-2 and keeps the average clean.
 #
 # .. image:: /_static/img/foundation_tokens.svg
 #    :width: 700
@@ -223,7 +227,7 @@ plt.show()
 
 results = {}
 for layer in [-1, -2, -4]:
-    for pooling in ["mean", "cls"]:
+    for pooling in ["mean", "token"]:
         model = LinearProbeForecaster(
             pipeline.model,
             context_length=context_length,
@@ -231,8 +235,8 @@ for layer in [-1, -2, -4]:
             stride=48,
             layer=layer,
             pooling=pooling,
-            # Chronos-2 appends its register token after the context tokens
-            cls_index=-2,
+            # Chronos-2's forecast token is its last one
+            token_index=-1,
             tokens=(0, -2),
         ).fit(X_train)
         results[(layer, pooling)] = mae(X_test, model.predict(X_train))

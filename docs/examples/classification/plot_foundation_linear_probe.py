@@ -98,7 +98,7 @@ print(f"Test accuracy: {clf.score(X_test, y_test):.3f}")
 # token plays in a text encoder.
 
 n_layers = len(pipeline.model.encoder.block)
-poolings = ["mean", "max", "cls"]
+poolings = ["mean", "max", "token"]
 # Every other layer is enough to see the trend, and halves the build time
 layers = sorted({*range(0, n_layers, 2), n_layers - 1})
 
@@ -110,7 +110,7 @@ for layer in layers:
             layer=layer,
             pooling=pooling,
             # Chronos-2 places its register token after the context tokens
-            cls_index=-2 if pooling == "cls" else 0,
+            token_index=-2 if pooling == "token" else 0,
             tokens=(0, -2),
         ).fit(X_train, y_train)
         accuracies[layer, pooling] = model.score(X_test, y_test)

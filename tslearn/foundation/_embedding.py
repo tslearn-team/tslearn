@@ -40,7 +40,7 @@ CANDIDATE_HIDDEN_STATE_NAMES = (
 #: Supported ways of aggregating token representations. ``None``, for which
 #: ``"none"`` is accepted as an alias, keeps them all and turns the estimator
 #: into a time series to time series transform.
-POOLINGS = ("mean", "max", "cls", "last", "flatten", "none", None)
+POOLINGS = ("mean", "max", "token", "last", "flatten", "none", None)
 
 #: Supported layouts for the array handed over to the wrapped model.
 LAYOUTS = ("univariate", "channels_last", "channels_first")
@@ -217,11 +217,13 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
           ``"encoder.block"``. Only used when ``layer`` is an integer. When
           None, the stack is auto-detected as the longest list of identical
           sub-modules.
-        pooling : {"mean", "max", "cls", "last", "flatten", None} (default: "mean")
+        pooling : {"mean", "max", "token", "last", "flatten", None} (default: "mean")
           How to aggregate the ``n_tokens`` representations of a series into a
-          single vector. ``"cls"`` selects the single token at index
-          ``cls_index``, which is how models exposing a class (or register)
-          token are usually probed. ``"last"`` selects the last token and
+          single vector. ``"token"`` selects the single token at index
+          ``token_index``, which is how one reaches a token that carries a
+          meaning of its own, such as a class token for
+          classification, or a forecast token for forecasting.
+          ``"last"`` selects the last token and
           ``"flatten"`` concatenates them all, which yields a much larger, and
           context-length dependent, feature vector.
 
@@ -240,9 +242,9 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
           tokens; excluding them is usually what one wants, both to build clean
           per-timestep representations and to avoid polluting an average.
           When None, all tokens are kept. This parameter does not affect
-          ``pooling="cls"``.
-        cls_index : int (default: 0)
-          Index of the token to select when ``pooling="cls"``.
+          ``pooling="token"``.
+        token_index : int (default: 0)
+          Index of the token to select when ``pooling="token"``.
         input_layout : {"univariate", "channels_last", "channels_first"} (default: "univariate")
           How the context is laid out when handed over to the model.
           ``"univariate"`` forecasts every channel of every series
@@ -311,7 +313,7 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
         layers_path=None,
         pooling="mean",
         tokens=None,
-        cls_index=0,
+        token_index=0,
         input_layout="univariate",
         context_length=None,
         input_name=None,
@@ -325,7 +327,7 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
         self.layers_path = layers_path
         self.pooling = pooling
         self.tokens = tokens
-        self.cls_index = cls_index
+        self.token_index = token_index
         self.input_layout = input_layout
         self.context_length = context_length
         self.input_name = input_name
@@ -443,16 +445,16 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
             )
         pooling = _normalize_pooling(self.pooling)
 
-        # The class token is deliberately read before any token selection, as
-        # it is usually one of the tokens `tokens` is meant to filter out.
-        if pooling == "cls":
+        # The selected token is deliberately read before any token selection,
+        # as it is usually one of the tokens `tokens` is meant to filter out.
+        if pooling == "token":
             n_tokens = hidden_states.shape[1]
-            if not -n_tokens <= self.cls_index < n_tokens:
+            if not -n_tokens <= self.token_index < n_tokens:
                 raise ValueError(
-                    f"`cls_index={self.cls_index}` is out of range: the model "
-                    f"produced {n_tokens} tokens."
+                    f"`token_index={self.token_index}` is out of range: the "
+                    f"model produced {n_tokens} tokens."
                 )
-            return hidden_states[:, self.cls_index]
+            return hidden_states[:, self.token_index]
 
         hidden_states = hidden_states[:, _token_slice(self.tokens)]
         if hidden_states.shape[1] == 0:

@@ -65,7 +65,7 @@ class _DummyBackbone(torch.nn.Module):
     """A patch-based encoder taking univariate series, like Chronos-2.
 
     A register token is appended after the context tokens, so that the
-    ``pooling="cls"`` code path can be exercised on a non-zero ``cls_index``.
+    ``pooling="token"`` code path can be exercised on a non-zero ``token_index``.
     """
 
     def __init__(self, n_layers=3, d_model=D_MODEL, patch_size=PATCH_SIZE, seed=0):
@@ -166,7 +166,7 @@ def test_embedder_channel_stacking_is_order_preserving():
     )
 
 
-@pytest.mark.parametrize("pooling", ["mean", "max", "cls", "last", "flatten"])
+@pytest.mark.parametrize("pooling", ["mean", "max", "token", "last", "flatten"])
 def test_embedder_poolings(pooling):
     X = _dataset(n_ts=4, sz=32, d=1)
     embedder = TimeSeriesFoundationEmbedder(_DummyBackbone(), pooling=pooling)
@@ -235,13 +235,13 @@ def test_embedder_token_selection():
     )
     assert not np.allclose(without_register, over_everything)
 
-    # ... but not to "cls", which is meant to reach an excluded token
+    # ... but not to "token", which is meant to reach an excluded token
     np.testing.assert_allclose(
         TimeSeriesFoundationEmbedder(
-            backbone, pooling="cls", cls_index=-1, tokens=(0, -1)
+            backbone, pooling="token", token_index=-1, tokens=(0, -1)
         ).fit_transform(X),
         TimeSeriesFoundationEmbedder(
-            backbone, pooling="cls", cls_index=-1
+            backbone, pooling="token", token_index=-1
         ).fit_transform(X),
     )
 
@@ -305,12 +305,12 @@ def test_probes_accept_token_selection():
     assert model.predict(X_fc).shape == (6, 2, 1)
 
 
-def test_embedder_cls_index_selects_the_register_token():
+def test_embedder_token_index_selects_the_register_token():
     X = _dataset(n_ts=3, sz=32, d=1)
     # The register token is appended last and does not depend on the input, so
     # selecting it must yield identical embeddings for all series.
     embeddings = TimeSeriesFoundationEmbedder(
-        _DummyBackbone(), pooling="cls", cls_index=-1, layer=0
+        _DummyBackbone(), pooling="token", token_index=-1, layer=0
     ).fit_transform(X)
     np.testing.assert_allclose(
         embeddings, np.repeat(embeddings[:1], 3, axis=0), rtol=1e-5, atol=1e-6
@@ -318,7 +318,7 @@ def test_embedder_cls_index_selects_the_register_token():
 
     # Whereas a context token does depend on the input
     embeddings = TimeSeriesFoundationEmbedder(
-        _DummyBackbone(), pooling="cls", cls_index=0, layer=0
+        _DummyBackbone(), pooling="token", token_index=0, layer=0
     ).fit_transform(X)
     assert not np.allclose(embeddings, embeddings[:1])
 
@@ -390,9 +390,9 @@ def test_embedder_errors():
         TimeSeriesFoundationEmbedder(_DummyPipeline()).fit(X)
     with pytest.raises(ValueError, match="out of range"):
         TimeSeriesFoundationEmbedder(_DummyBackbone(n_layers=3), layer=7).fit(X)
-    with pytest.raises(ValueError, match="cls_index"):
+    with pytest.raises(ValueError, match="token_index"):
         TimeSeriesFoundationEmbedder(
-            _DummyBackbone(), pooling="cls", cls_index=999
+            _DummyBackbone(), pooling="token", token_index=999
         ).fit(X)
     with pytest.raises(ValueError, match="features"):
         TimeSeriesFoundationEmbedder(_DummyBackbone()).fit(X).transform(
@@ -1213,7 +1213,7 @@ def test_linear_probe_classifier_no_decision_function():
 def test_linear_probe_classifier_layer_and_pooling():
     X, y = _classification_dataset()
     for layer in (0, 1, None):
-        for pooling in ("mean", "max", "cls"):
+        for pooling in ("mean", "max", "token"):
             model = LinearProbeClassifier(
                 _DummyBackbone(), layer=layer, pooling=pooling
             ).fit(X, y)
