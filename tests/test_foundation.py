@@ -11,6 +11,7 @@ import pytest
 
 from sklearn.base import clone
 from sklearn.linear_model import Ridge
+from sklearn.naive_bayes import GaussianNB
 from sklearn.pipeline import make_pipeline
 from sklearn.svm import LinearSVC
 
@@ -409,6 +410,249 @@ def test_embedder_in_a_sklearn_pipeline():
     assert clone(pipeline) is not pipeline
 
 
+def test_embedder_channels_first_layout():
+    X = _dataset(n_ts=4, sz=32, d=3)
+    seen = {}
+
+    class _ChannelsFirstBackbone(torch.nn.Module):
+        """Expects a (batch, d, sz) input, like some ``transformers`` models."""
+
+        def __init__(self):
+            super().__init__()
+            self.linear = torch.nn.Linear(32, D_MODEL)
+
+        def forward(self, series):
+            seen["shape"] = tuple(series.shape)
+            return _Output(self.linear(series))
+
+    embedder = TimeSeriesFoundationEmbedder(
+        _ChannelsFirstBackbone(), input_layout="channels_first", pooling="mean"
+    )
+    embeddings = embedder.fit_transform(X)
+    assert seen["shape"] == (4, 3, 32)
+    assert embeddings.shape == (4, D_MODEL)
+
+
+def test_embedder_layers_path_with_numeric_segment():
+    X = _dataset(n_ts=3, sz=32, d=1)
+
+    class _WrappedBackbone(torch.nn.Module):
+        """Nests the encoder in a top-level ``ModuleList``, as some models do,
+        requiring a numeric index to reach the stack of layers."""
+
+        def __init__(self, n_layers=3, d_model=D_MODEL, patch_size=PATCH_SIZE, seed=0):
+            super().__init__()
+            torch.manual_seed(seed)
+            self.patch_size = patch_size
+            self.embedding = torch.nn.Linear(patch_size, d_model)
+            self.register_token = torch.nn.Parameter(torch.randn(1, 1, d_model))
+            self.stages = torch.nn.ModuleList([_Encoder(n_layers, d_model)])
+
+        def forward(self, context):
+            batch_size, sz = context.shape
+            n_patches = sz // self.patch_size
+            patches = context[:, : n_patches * self.patch_size]
+            patches = patches.reshape(batch_size, n_patches, self.patch_size)
+            hidden_states = self.embedding(patches)
+            register = self.register_token.expand(batch_size, -1, -1)
+            hidden_states = torch.cat([hidden_states, register], dim=1)
+            return _Output(self.stages[0](hidden_states))
+
+    backbone = _WrappedBackbone()
+    embeddings = TimeSeriesFoundationEmbedder(
+        backbone, layer=1, layers_path="stages.0.block"
+    ).fit_transform(X)
+    assert embeddings.shape == (3, D_MODEL)
+
+    with pytest.raises(AttributeError, match="Could not resolve"):
+        TimeSeriesFoundationEmbedder(
+            backbone, layer=0, layers_path="stages.0.bogus"
+        ).fit(X)
+
+
+def test_embedder_autodetect_layers_failure():
+    X = _dataset(n_ts=3, sz=32, d=1)
+
+    class _NoLayerStack(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.linear = torch.nn.Linear(32, D_MODEL)
+
+        def forward(self, x):
+            return _Output(self.linear(x).unsqueeze(1))
+
+    with pytest.raises(ValueError, match="Could not automatically locate"):
+        TimeSeriesFoundationEmbedder(_NoLayerStack(), layer=0).fit(X)
+
+
+def test_embedder_accepts_dict_model_outputs():
+    X = _dataset(n_ts=3, sz=32, d=1)
+
+    class _DictOutputBackbone(torch.nn.Module):
+        """Returns a plain dict, as some pipelines do instead of a ModelOutput."""
+
+        def __init__(self):
+            super().__init__()
+            self.linear = torch.nn.Linear(32, D_MODEL)
+
+        def forward(self, x):
+            return {"hidden_states": self.linear(x).unsqueeze(1)}
+
+    embeddings = TimeSeriesFoundationEmbedder(_DictOutputBackbone()).fit_transform(X)
+    assert embeddings.shape == (3, D_MODEL)
+
+
+def test_embedder_accepts_hidden_states_tuple_attribute():
+    X = _dataset(n_ts=3, sz=32, d=1)
+
+    class _LayerStackOutput:
+        """Stands in for a ``transformers`` output exposing all-layer states."""
+
+        def __init__(self, layers):
+            self.hidden_states = layers
+
+    class _AllLayersBackbone(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            torch.manual_seed(0)
+            self.linear = torch.nn.Linear(32, D_MODEL)
+
+        def forward(self, x):
+            hidden = self.linear(x).unsqueeze(1)
+            return _LayerStackOutput((hidden, 2 * hidden))
+
+    backbone = _AllLayersBackbone()
+    embeddings = TimeSeriesFoundationEmbedder(backbone).fit_transform(X)
+    with torch.no_grad():
+        raw = backbone.linear(torch.as_tensor(X[:, :, 0], dtype=torch.float32))
+    # Only the last element of the `hidden_states` tuple is read, matching
+    # transformers' convention that it holds one tensor per layer
+    np.testing.assert_allclose(embeddings, 2 * raw.numpy(), rtol=1e-5, atol=1e-6)
+
+
+def test_embedder_accepts_plain_tuple_outputs():
+    X = _dataset(n_ts=3, sz=32, d=1)
+
+    class _PlainTupleBackbone(torch.nn.Module):
+        """Returns a raw tuple, with no ``ModelOutput`` wrapper at all."""
+
+        def __init__(self):
+            super().__init__()
+            self.linear = torch.nn.Linear(32, D_MODEL)
+
+        def forward(self, x):
+            hidden = self.linear(x)
+            # The 3d sequence of hidden states must be preferred over the
+            # pooled 2d tensor that precedes it in the tuple
+            return (hidden, hidden.unsqueeze(1))
+
+    embeddings = TimeSeriesFoundationEmbedder(_PlainTupleBackbone()).fit_transform(X)
+    assert embeddings.shape == (3, D_MODEL)
+
+
+def test_embedder_plain_tuple_falls_back_to_any_tensor():
+    X = _dataset(n_ts=3, sz=32, d=1)
+
+    class _NoSequenceBackbone(torch.nn.Module):
+        """Returns an already-pooled 2d tensor wrapped in a 1-tuple."""
+
+        def __init__(self):
+            super().__init__()
+            self.linear = torch.nn.Linear(32, D_MODEL)
+
+        def forward(self, x):
+            return (self.linear(x),)
+
+    embeddings = TimeSeriesFoundationEmbedder(_NoSequenceBackbone()).fit_transform(X)
+    assert embeddings.shape == (3, D_MODEL)
+
+
+def test_embedder_rejects_unrecognized_model_output():
+    X = _dataset(n_ts=3, sz=32, d=1)
+
+    class _BogusOutputBackbone(torch.nn.Module):
+        def forward(self, x):
+            return "not a tensor"
+
+    with pytest.raises(TypeError, match="Could not extract a hidden state"):
+        TimeSeriesFoundationEmbedder(_BogusOutputBackbone()).fit(X)
+
+
+def test_embedder_rejects_invalid_hidden_state_rank():
+    X = _dataset(n_ts=3, sz=32, d=1)
+
+    class _WeirdRankBackbone(torch.nn.Module):
+        def forward(self, x):
+            return x[:, None, None, :]  # 4d, not a valid hidden-state rank
+
+    with pytest.raises(ValueError, match="Expected hidden states of shape"):
+        TimeSeriesFoundationEmbedder(_WeirdRankBackbone()).fit(X)
+
+
+def test_embedder_explicit_device():
+    X = _dataset(n_ts=3, sz=32, d=1)
+    embeddings = TimeSeriesFoundationEmbedder(
+        _DummyBackbone(), device="cpu"
+    ).fit_transform(X)
+    assert embeddings.shape == (3, D_MODEL)
+
+
+def test_embedder_explicit_input_name():
+    X = _dataset(n_ts=3, sz=32, d=1)
+
+    class _NamedArgBackbone(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.linear = torch.nn.Linear(32, D_MODEL)
+
+        def forward(self, my_custom_arg):
+            return _Output(self.linear(my_custom_arg).unsqueeze(1))
+
+    embedder = TimeSeriesFoundationEmbedder(
+        _NamedArgBackbone(), input_name="my_custom_arg"
+    )
+    embeddings = embedder.fit_transform(X)
+    assert embeddings.shape == (3, D_MODEL)
+
+
+def test_embedder_resolves_input_name_by_position_when_unrecognized():
+    X = _dataset(n_ts=3, sz=32, d=1)
+
+    class _PositionalArgBackbone(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.linear = torch.nn.Linear(32, D_MODEL)
+
+        # `data` is not one of CANDIDATE_INPUT_NAMES, forcing the fallback to
+        # the first positional parameter of `forward`
+        def forward(self, data):
+            return _Output(self.linear(data).unsqueeze(1))
+
+    embedder = TimeSeriesFoundationEmbedder(_PositionalArgBackbone())
+    embeddings = embedder.fit_transform(X)
+    assert embedder._input_name_ == "data"
+    assert embeddings.shape == (3, D_MODEL)
+
+
+def test_embedder_verbose_prints_progress(capsys):
+    X = _dataset(n_ts=5, sz=32, d=1)
+    TimeSeriesFoundationEmbedder(
+        _DummyBackbone(), batch_size=2, verbose=1
+    ).fit_transform(X)
+    captured = capsys.readouterr()
+    assert "Embedded 5/5 series" in captured.out
+
+
+def test_embedder_flatten_pooling_warns_on_length_mismatch():
+    X_fit = _dataset(n_ts=3, sz=32, d=1)
+    X_other = _dataset(n_ts=3, sz=48, d=1, seed=1)
+    embedder = TimeSeriesFoundationEmbedder(
+        _DummyBackbone(), pooling="flatten"
+    ).fit(X_fit)
+    with pytest.warns(UserWarning, match="pooling='flatten' produces context-length"):
+        embedder.transform(X_other)
+
+
 # ---------------------------------------------------------------------------
 # ZeroShotForecaster
 # ---------------------------------------------------------------------------
@@ -638,6 +882,211 @@ def test_zero_shot_forecaster_errors():
         ZeroShotForecaster(_DummyPipeline(), input_layout="bogus").predict(X)
 
 
+def test_zero_shot_forecaster_feature_mismatch_after_fit():
+    X = _dataset(n_ts=4, sz=32, d=1)
+    model = ZeroShotForecaster(_DummyPipeline(), warn_on_fit=False).fit(X)
+    with pytest.raises(ValueError, match="features"):
+        model.predict(_dataset(n_ts=4, sz=32, d=2), n=2)
+
+
+def test_zero_shot_forecaster_skips_methods_without_a_horizon_argument():
+    X = _dataset(n_ts=4, sz=32, d=1)
+    calls = []
+
+    class _PartialModel:
+        """Exposes a `predict` with no forecast-horizon argument, which must
+        be skipped in favor of `forecast`."""
+
+        def predict(self, inputs):
+            calls.append("predict")
+            raise AssertionError("predict should never be called")
+
+        def forecast(self, inputs, prediction_length=1):
+            calls.append("forecast")
+            n_rows = len(inputs)
+            return np.zeros((n_rows, prediction_length))
+
+    predicted = ZeroShotForecaster(_PartialModel()).predict(X, n=3)
+    assert predicted.shape == (4, 3, 1)
+    assert calls == ["forecast"]
+
+
+def test_zero_shot_forecaster_accepts_object_attribute_output():
+    X = _dataset(n_ts=4, sz=32, d=1)
+
+    class _AttributeOutput:
+        """Stands in for an output object exposing the forecast as an attribute."""
+
+        def __init__(self, mean):
+            self.mean = mean
+
+    class _ObjectOutputModel:
+        def predict(self, inputs, prediction_length=1):
+            n_rows = len(inputs)
+            return _AttributeOutput(np.zeros((n_rows, prediction_length)))
+
+    predicted = ZeroShotForecaster(_ObjectOutputModel()).predict(X, n=3)
+    assert predicted.shape == (4, 3, 1)
+
+
+def test_zero_shot_forecaster_univariate_row_mismatch_error():
+    X = _dataset(n_ts=4, sz=32, d=1)
+
+    class _WrongRowCountModel:
+        def predict(self, inputs, prediction_length=1):
+            return np.zeros((len(inputs) - 1, prediction_length))
+
+    with pytest.raises(
+        ValueError, match="forecasts for 3 series while 4 were provided"
+    ):
+        ZeroShotForecaster(_WrongRowCountModel()).predict(X, n=2)
+
+
+def test_zero_shot_forecaster_univariate_forecast_too_short_error():
+    X = _dataset(n_ts=4, sz=32, d=1)
+
+    class _TooShortModel:
+        def predict(self, inputs, prediction_length=1):
+            n_rows = len(inputs)
+            return np.zeros((n_rows, prediction_length - 1))  # one step short
+
+    with pytest.raises(ValueError, match="shorter than the requested horizon"):
+        ZeroShotForecaster(_TooShortModel()).predict(X, n=3)
+
+
+def test_zero_shot_forecaster_accepts_dict_output():
+    X = _dataset(n_ts=4, sz=32, d=1)
+
+    class _DictOutputModel:
+        """Returns a plain dict, as some pipelines do instead of a ModelOutput."""
+
+        def predict(self, inputs, prediction_length=1):
+            n_rows = len(inputs)
+            return {"predictions": np.zeros((n_rows, prediction_length))}
+
+    predicted = ZeroShotForecaster(_DictOutputModel()).predict(X, n=3)
+    assert predicted.shape == (4, 3, 1)
+
+
+def test_zero_shot_forecaster_empty_output_error():
+    X = _dataset(n_ts=4, sz=32, d=1)
+
+    class _EmptyOutputModel:
+        def predict(self, inputs, prediction_length=1):
+            return []
+
+    with pytest.raises(ValueError, match="empty forecast"):
+        ZeroShotForecaster(_EmptyOutputModel()).predict(X, n=3)
+
+
+def test_zero_shot_forecaster_heterogeneous_output_keeps_first_entry():
+    X = _dataset(n_ts=4, sz=32, d=1)
+
+    class _HeterogeneousOutputModel:
+        """Returns (forecast, extra_diagnostics), as some pipelines do."""
+
+        def predict(self, inputs, prediction_length=1):
+            n_rows = len(inputs)
+            forecast = np.zeros((n_rows, prediction_length))
+            diagnostics = np.zeros((n_rows, 2))  # a different shape
+            return (forecast, diagnostics)
+
+    predicted = ZeroShotForecaster(_HeterogeneousOutputModel()).predict(X, n=3)
+    assert predicted.shape == (4, 3, 1)
+
+
+def test_zero_shot_forecaster_horizon_axis_prefers_smallest_longer_axis():
+    X = _dataset(n_ts=4, sz=32, d=1)
+
+    class _PaddedForecastModel:
+        """Pads the forecast length to a fixed block size larger than asked,
+        with no axis exactly matching the horizon."""
+
+        def predict(self, inputs, prediction_length=1):
+            n_rows = len(inputs)
+            n_samples = 3  # sample paths, always shorter than the horizon here
+            padded_length = prediction_length + 5
+            return np.zeros((n_rows, n_samples, padded_length))
+
+    predicted = ZeroShotForecaster(_PaddedForecastModel()).predict(X, n=4)
+    np.testing.assert_allclose(predicted, np.zeros((4, 4, 1)))
+
+
+def test_zero_shot_forecaster_horizon_axis_cannot_be_identified():
+    X = _dataset(n_ts=4, sz=32, d=1)
+
+    class _TooShortEverywhereModel:
+        def predict(self, inputs, prediction_length=1):
+            n_rows = len(inputs)
+            return np.zeros((n_rows, 2, 2))
+
+    with pytest.raises(
+        ValueError, match="Could not identify the forecast horizon axis"
+    ):
+        ZeroShotForecaster(_TooShortEverywhereModel()).predict(X, n=4)
+
+
+def test_zero_shot_forecaster_natively_multivariate_channels_last():
+    X = _dataset(n_ts=4, sz=32, d=3)
+
+    class _NativelyMultivariateModel:
+        """Returns per-channel forecasts directly, given a (n_ts, sz, d) input."""
+
+        def predict(self, inputs, prediction_length=1):
+            inputs = np.asarray(inputs)
+            last = inputs[:, -1, :]  # (n_ts, d)
+            return np.repeat(last[:, None, :], prediction_length, axis=1)
+
+    predicted = ZeroShotForecaster(
+        _NativelyMultivariateModel(), input_layout="channels_last"
+    ).predict(X, n=4)
+    assert predicted.shape == (4, 4, 3)
+    np.testing.assert_allclose(predicted, np.repeat(X[:, -1:], 4, axis=1))
+
+
+def test_zero_shot_forecaster_natively_multivariate_channels_first():
+    X = _dataset(n_ts=4, sz=32, d=3)
+
+    class _ChannelsFirstModel:
+        """Expects a (n_ts, d, sz) input and returns (n_ts, d, horizon)."""
+
+        def predict(self, inputs, prediction_length=1):
+            inputs = np.asarray(inputs)
+            last = inputs[:, :, -1]  # (n_ts, d)
+            return np.repeat(last[:, :, None], prediction_length, axis=2)
+
+    predicted = ZeroShotForecaster(
+        _ChannelsFirstModel(), input_layout="channels_first"
+    ).predict(X, n=4)
+    assert predicted.shape == (4, 4, 3)
+    np.testing.assert_allclose(predicted, np.repeat(X[:, -1:], 4, axis=1))
+
+
+def test_zero_shot_forecaster_natively_multivariate_errors():
+    X = _dataset(n_ts=4, sz=32, d=3)
+
+    class _WrongBatchModel:
+        def predict(self, inputs, prediction_length=1):
+            return np.zeros((len(inputs) - 1, prediction_length, 3))
+
+    with pytest.raises(
+        ValueError, match="forecasts for 3 series while 4 were provided"
+    ):
+        ZeroShotForecaster(
+            _WrongBatchModel(), input_layout="channels_last"
+        ).predict(X, n=2)
+
+    class _WrongChannelsModel:
+        def predict(self, inputs, prediction_length=1):
+            n_rows = len(inputs)
+            return np.zeros((n_rows, prediction_length, 5))  # wrong d
+
+    with pytest.raises(ValueError, match="Expected forecasts of shape"):
+        ZeroShotForecaster(
+            _WrongChannelsModel(), input_layout="channels_last"
+        ).predict(X, n=2)
+
+
 # ---------------------------------------------------------------------------
 # LinearProbeForecaster
 # ---------------------------------------------------------------------------
@@ -766,6 +1215,15 @@ def test_linear_probe_classifier_accepts_any_probe():
     with pytest.raises(AttributeError, match="predict_proba"):
         model.predict_proba(X)
     assert model.decision_function(X).shape == (len(y),)
+
+
+def test_linear_probe_classifier_no_decision_function():
+    X, y = _classification_dataset()
+    model = LinearProbeClassifier(_DummyBackbone(), probe=GaussianNB()).fit(X, y)
+    assert isinstance(model.probe_, GaussianNB)
+    with pytest.raises(AttributeError, match="decision_function"):
+        model.decision_function(X)
+    assert model.predict_proba(X).shape == (len(y), 2)
 
 
 def test_linear_probe_classifier_layer_and_pooling():

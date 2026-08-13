@@ -610,8 +610,15 @@ class LinearProbeForecaster(_BaseFoundationForecaster):
     >>> from chronos import Chronos2Pipeline  # doctest: +SKIP
     >>> pipeline = Chronos2Pipeline.from_pretrained("amazon/chronos-2")  # doctest: +SKIP
     >>> model = LinearProbeForecaster(pipeline.model, horizon=24)  # doctest: +SKIP
-    >>> model.fit(X_train).predict(X_test, n=24).shape  # doctest: +SKIP
+    >>> model.fit(X_train)  # doctest: +SKIP
+    >>> model.predict(X_test).shape  # doctest: +SKIP
     (10, 24, 1)
+    >>> model.predict(X_test, n=12).shape  # doctest: +SKIP
+    (10, 12, 1)
+    >>> model.predict(X_test, n=36)  # doctest: +SKIP
+    Traceback (most recent call last):
+    ...
+    ValueError: This estimator was fitted for a horizon of 24, so `n` must lie in [1, 24], got 36. Refit with a larger `horizon` to forecast further ahead.
 
     References
     ----------
