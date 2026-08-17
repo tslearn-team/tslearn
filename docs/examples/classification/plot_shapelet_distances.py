@@ -27,7 +27,6 @@ os.environ["KERAS_BACKEND"] = "torch"
 
 from keras.optimizers import Adam
 import numpy
-from matplotlib import cm
 import matplotlib.pyplot as plt
 
 from tslearn.datasets import CachedDatasets
@@ -62,7 +61,7 @@ distances = shp_clf.transform(X_train).reshape((-1, 2))
 weights, biases = shp_clf.get_weights('classification')
 
 # Create a grid for our two shapelets on the left and distances on the right
-viridis = cm.get_cmap('viridis', 4)
+viridis = plt.get_cmap('viridis', 4)
 fig = plt.figure(constrained_layout=True)
 gs = fig.add_gridspec(3, 9)
 fig_ax1 = fig.add_subplot(gs[0, :2])
