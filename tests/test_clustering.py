@@ -327,12 +327,23 @@ def test_silhouette_samples():
     for metric in [None, "dtw", "euclidean", "softdtw", dtw, "precomputed"]:
         for bad_kw in [{"sample_size": 10}, {"random_state": 0}]:
             with pytest.raises(TypeError):
-                if metric == "precomputed":
-                    silhouette_samples(cdist_dtw(X), labels,
-                                       metric=metric, **bad_kw)
-                else:
-                    silhouette_samples(X, labels, metric=metric, **bad_kw)
+                silhouette_samples(X, labels, metric=metric, **bad_kw)
+    # explicit None is a no-op (not rejected)
+    silhouette_samples(X, labels, metric="dtw", sample_size=None,
+                       random_state=None)
+    # metric_params are forwarded to a callable metric
 
+    def sakoe_dtw(x, y, sakoe_chiba_radius=0):
+        if sakoe_chiba_radius == 0:
+            return dtw(x, y)
+        from tslearn.metrics import dtw as _dtw
+        return _dtw(x, y, sakoe_chiba_radius=sakoe_chiba_radius)
+
+    constrained = silhouette_samples(
+        X, labels, metric=sakoe_dtw,
+        metric_params={"sakoe_chiba_radius": 3})
+    unconstrained = silhouette_samples(X, labels, metric=sakoe_dtw)
+    assert not np.allclose(constrained, unconstrained)
 
 def test_dbscan():
     # Basic clustering

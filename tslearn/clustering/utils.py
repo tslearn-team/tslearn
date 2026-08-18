@@ -259,8 +259,8 @@ def silhouette_samples(X, labels, metric=None, metric_params=None,
         for more details.
 
     verbose : int (default: 0)
-        If nonzero, print information about the inertia while learning
-        the model and joblib progress messages are printed.
+        If nonzero, joblib progress messages are printed during the
+        cross-distance matrix computation (only used by the dtw branch).
 
     **kwds : optional keyword parameters
         Any further parameters are passed directly to the distance function,
@@ -314,11 +314,19 @@ def silhouette_samples(X, labels, metric=None, metric_params=None,
     # doctest: +ELLIPSIS
     0.13383800...
     """
-    if "sample_size" in kwds or "random_state" in kwds:
+    if kwds.get("sample_size") is not None or \
+            kwds.get("random_state") is not None:
         raise TypeError(
             "silhouette_samples does not support the 'sample_size' or "
             "'random_state' parameters (see sklearn.metrics.silhouette_samples)"
         )
+    # Explicit None for these keys is a no-op, matching sklearn semantics
+    kwds = {k: v for k, v in kwds.items()
+            if k not in ("sample_size", "random_state")}
+    if metric == "precomputed":
+        return sklearn_silhouette_samples(X=X,
+                                          labels=labels,
+                                          metric="precomputed")
     be = instantiate_backend(X)
     if metric_params is None:
         metric_params_ = {}
@@ -328,9 +336,7 @@ def silhouette_samples(X, labels, metric=None, metric_params=None,
         metric_params_[k] = kwds[k]
     if "n_jobs" in metric_params_.keys():
         del metric_params_["n_jobs"]
-    if metric == "precomputed":
-        sklearn_X = X
-    elif metric == "dtw" or metric is None:
+    if metric == "dtw" or metric is None:
         X = to_time_series_dataset(X, be=be)
         sklearn_X = _cdist_dtw(
             X,
@@ -340,7 +346,7 @@ def silhouette_samples(X, labels, metric=None, metric_params=None,
             **metric_params_
         )
     elif metric == "softdtw":
-        X = to_time_series_dataset(X)
+        X = to_time_series_dataset(X, be=be)
         sklearn_X = _cdist_soft_dtw_normalized(X, be=be, **metric_params_)
     elif metric == "euclidean":
         X_ = to_time_series_dataset(X, be=be)
@@ -352,14 +358,15 @@ def silhouette_samples(X, labels, metric=None, metric_params=None,
         X_flat = X_.reshape((n, -1))
 
         def sklearn_metric(x, y):
-            return metric(
+            return be.to_numpy(metric(
                 _to_time_series(x.reshape(sz, d),
                                 remove_nans=True,
                                 backend=be),
                 _to_time_series(y.reshape(sz, d),
                                 remove_nans=True,
-                                backend=be)
-            )
+                                backend=be),
+                **metric_params_
+            ))
         sklearn_X = cdist(X_flat, X_flat, metric=sklearn_metric)
     return sklearn_silhouette_samples(X=sklearn_X,
                                       labels=labels,
