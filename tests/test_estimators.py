@@ -184,7 +184,9 @@ try:
             "check_sample_weight_equivalence_on_dense_data": "zero sample_weight is not equivalent to removing samples",
         },
         'SymbolicAggregateApproximation': {"check_transformer_preserve_dtypes": "Forces int transform"},
-        'OneD_SymbolicAggregateApproximation': {"check_transformer_preserve_dtypes": "Forces int transform"}
+        'OneD_SymbolicAggregateApproximation': {"check_transformer_preserve_dtypes": "Forces int transform"},
+        'TimeSeriesScalerMeanVariance': {'check_dict_unchanged': 'Normalization data stored on transform'},
+        'TimeSeriesScalerMinMax': {'check_dict_unchanged': 'Normalization data stored on transform'},
     }
 
     def get_expected_fails(estimator):
