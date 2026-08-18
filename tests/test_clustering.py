@@ -17,7 +17,8 @@ from tslearn.clustering import (
 from tslearn.clustering.utils import (
     _check_full_length,
     _check_no_empty_cluster,
-    silhouette_score
+    silhouette_score,
+    silhouette_samples
 )
 from tslearn.generators import random_walks
 from tslearn.metrics import cdist_dtw, cdist_soft_dtw, dtw
@@ -301,6 +302,36 @@ def test_silhouette():
         0.17953934,
         rel_tol=1e-07
     )
+
+
+def test_silhouette_samples():
+    np.random.seed(0)
+    X = random_walks(n_ts=20, sz=16, d=1)
+    labels = np.random.randint(2, size=20)
+    for metric, expected in [
+        ("dtw", 0.13383800),
+        (dtw, 0.13383800),
+        ("precomputed", 0.13383800),
+        ("euclidean", 0.09126917),
+        ("softdtw", 0.17953934)
+    ]:
+        if metric == "precomputed":
+            samples = silhouette_samples(cdist_dtw(X), labels,
+                                         metric="precomputed")
+        else:
+            samples = silhouette_samples(X, labels, metric=metric)
+        assert samples.shape == (20,)
+        assert np.all((samples >= -1.) & (samples <= 1.))
+        assert math.isclose(float(np.mean(samples)), expected, rel_tol=1e-07)
+    # sample_size / random_state are rejected for every metric branch
+    for metric in [None, "dtw", "euclidean", "softdtw", dtw, "precomputed"]:
+        for bad_kw in [{"sample_size": 10}, {"random_state": 0}]:
+            with pytest.raises(TypeError):
+                if metric == "precomputed":
+                    silhouette_samples(cdist_dtw(X), labels,
+                                       metric=metric, **bad_kw)
+                else:
+                    silhouette_samples(X, labels, metric=metric, **bad_kw)
 
 
 def test_dbscan():
