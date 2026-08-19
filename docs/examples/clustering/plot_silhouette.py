@@ -43,8 +43,7 @@ X_train = TimeSeriesScalerMeanVariance().fit_transform(X_train[:50])
 X_train = TimeSeriesResampler(sz=40).fit_transform(X_train)
 
 # k-means clustering with DTW
-km = TimeSeriesKMeans(n_clusters=3, metric="dtw", verbose=True,
-                      random_state=seed)
+km = TimeSeriesKMeans(n_clusters=3, metric="dtw", random_state=seed)
 y_pred = km.fit_predict(X_train)
 
 # Per-sample and mean silhouette coefficients
@@ -61,17 +60,17 @@ for yi in range(3):
     y_upper = y_lower + cluster_samples.shape[0]
     plt.fill_betweenx(numpy.arange(y_lower, y_upper),
                       0., cluster_samples,
-                      alpha=.7,
-                      label="Cluster %d" % (yi + 1))
-    plt.text(-0.1, y_lower + 0.5 * cluster_samples.shape[0],
-             "Cluster %d" % (yi + 1))
-    y_lower = y_upper + 10
+                      alpha=.7)
+    plt.text(-0.03, y_lower + 0.5 * cluster_samples.shape[0],
+             "%d" % (yi + 1))
+    y_lower = y_upper + 5
 
 plt.axvline(x=score, color="red", linestyle="--",
             label="Mean silhouette score")
 plt.xlabel("Silhouette coefficient values")
-plt.ylabel("Time series (ordered by cluster)")
+plt.ylabel("Cluster label")
 plt.title("Silhouette plot for $k$-means (DTW) on the Trace dataset")
 plt.legend(loc="best")
+plt.yticks([])
 plt.tight_layout()
 plt.show()
