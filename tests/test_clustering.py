@@ -331,6 +331,18 @@ def test_silhouette_samples():
     # explicit None is a no-op (not rejected)
     silhouette_samples(X, labels, metric="dtw", sample_size=None,
                        random_state=None)
+    # metric kwargs passed directly via **kwds are forwarded to the metric
+    constrained = silhouette_samples(X, labels, metric="dtw",
+                                     global_constraint="sakoe_chiba",
+                                     sakoe_chiba_radius=2)
+    unconstrained = silhouette_samples(X, labels, metric="dtw")
+    assert not np.allclose(constrained, unconstrained)
+    # n_jobs inside metric_params is stripped and handled by the n_jobs arg
+    samples_njobs = silhouette_samples(X, labels, metric="dtw",
+                                       metric_params={"n_jobs": 1})
+    assert samples_njobs.shape == (20,)
+    assert math.isclose(float(np.mean(samples_njobs)), 0.13383800,
+                        rel_tol=1e-07)
     # metric_params are forwarded to a callable metric
 
     def sakoe_dtw(x, y, sakoe_chiba_radius=0):
@@ -344,6 +356,7 @@ def test_silhouette_samples():
         metric_params={"sakoe_chiba_radius": 3})
     unconstrained = silhouette_samples(X, labels, metric=sakoe_dtw)
     assert not np.allclose(constrained, unconstrained)
+
 
 def test_dbscan():
     # Basic clustering
