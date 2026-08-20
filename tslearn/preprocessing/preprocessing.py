@@ -140,9 +140,6 @@ class TimeSeriesResampler(TimeSeriesMixin, TransformerMixin, BaseEstimator):
 
 class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
     """Scaler for time series datasets.
-    When `per_timeseries` is False, scales features based on computation led on the fitted data,
-    so that their span in given dimensions is between ``min`` and ``max`` where ``value_range=(min, max)``.
-    The transformation is stateless otherwise, dealing with each timeseries individually.
 
     Parameters
     ----------
@@ -150,22 +147,23 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         The minimum and maximum value for the output time series.
     per_timeseries : bool (default: True)
         Wether the scaling should be performed per time series.
+        When `per_timeseries` is False, scales features based on computation led on the fitted data,
+        so that their span in given dimensions is between ``min`` and ``max`` where ``value_range=(min, max)``.
+        The transformation is stateless otherwise, dealing with each timeseries individually.
     per_feature : bool (default: True)
         Wether the scaling should be performed per feature.
         Meaningless for univariate timeseries.
 
     Attributes
     ----------
-    min_ : array-like of shape=(n_ts or 1, 1, d or 1)
+    min_ : array-like of shape=(1, 1, d or 1)
         The miminum value(s) seen in data and used for normalization.
-        When `per_timeseries` is False, the input data is the fitted data. Otherwise,
-        each time series is scaled independently, the input data being the transformed time series.
-        The shape depends on the `per_timeseries` and `per_feature` parameters.
-    max_ : array-like of shape=(n_ts or 1, 1, d or 1)
+        Only available when `per_timeseries` is False.
+        The shape depends on the `per_feature` parameters.
+    max_ : array-like of shape=(1, 1, d or 1)
         The maximum value(s) seen in data and used for normalization.
-        When `per_timeseries` is False, the input data is the fitted data. Otherwise,
-        each time series is scaled independently, the input data being the transformed time series.
-        The shape depends on the `per_timeseries` and `per_feature` parameters.
+        Only available when `per_timeseries` is False.
+        The shape depends on the `per_feature` parameters.
 
     Notes
     -----
@@ -223,8 +221,8 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
             del self.max_
 
         if not self.per_timeseries:
-            self.min_, self.max_ = self._process(X_)
-
+            min_, max_ = self._process(X_)
+            self.min_, self.max_ = min_.reshape((-1,)), max_.reshape((-1,))
         return self
 
     def fit_transform(self, X, y=None, **kwargs):
@@ -267,7 +265,7 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        numpy.ndarray
+        array-like of shape (n_ts, sz, d)
             Rescaled time series dataset.
         """
         if self.value_range[0] >= self.value_range[1]:
@@ -279,36 +277,48 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         X_ = to_time_series_dataset(X_)
         X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, check_n_features_only=True, extend=False)
 
-        if self.per_timeseries:
-            self.min_, self.max_ = self._process(X_)
+        min_, max_ = (self._process(X_)
+                      if self.per_timeseries else (self.min_.reshape(1, 1, -1), self.max_.reshape(1, 1, -1)))
 
-        range_t = self.max_ - self.min_
+        range_t = max_ - min_
         range_t[range_t == 0.] = 1.
-        nomin = (X_ - self.min_) * (self.value_range[1] - self.value_range[0])
+        nomin = (X_ - min_) * (self.value_range[1] - self.value_range[0])
         X_ = nomin / range_t + self.value_range[0]
         return X_
 
     def inverse_transform(self, X):
-        if not (hasattr(self, 'min_') and hasattr(self, 'max_')) :
-            raise RuntimeError("Unable to retrieve scaling data to perform inverse operation."
-                               " Please check that `transform` has been performed.")
+        """
+        Undo the scaling of X based on fitted data.
+        Only available when per_timeseries is False, raises RuntimeError otherwise.
 
+        Parameters
+        ----------
+        X : array-like of shape (n_ts, sz, d)
+            Input dataset.
+
+        Returns
+        -------
+        array-like of shape (n_ts, sz, d)
+            Transformed dataset.
+        """
         check_is_fitted(self, '_X_fit_dims')
+        if self.per_timeseries:
+            raise RuntimeError("Cannot inverse per timeseries scaling.")
+
         X_ = check_array(X, allow_nd=True, force_all_finite=False)
         X_ = to_time_series_dataset(X_)
         X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, check_n_features_only=True, extend=False)
 
+        min_, max_ = self.min_.reshape(1, 1, -1), self.max_.reshape(1, 1, -1)
+
         X_ -= self.value_range[0]
-        X_ *= (self.max_ - self.min_) / (self.value_range[1] - self.value_range[0])
-        X_ += self.min_
+        X_ *= (max_ - min_) / (self.value_range[1] - self.value_range[0])
+        X_ += min_
         return X_
 
     def _more_tags(self):
         tags = super()._more_tags()
         tags.update({'allow_nan': True, ALLOW_VARIABLE_LENGTH: True})
-        tags["_xfail_checks"].update({
-            "check_dict_unchanged": "Normalization data stored on transform",
-        })
         return tags
 
     def __sklearn_tags__(self):
@@ -320,9 +330,6 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
 
 class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstimator):
     """Scaler for time series datasets.
-    When `per_timeseries` is False, scales features based on computation led on the fitted data,
-    so that their mean (resp. standard deviation) in given dimensions is mu (resp. std).
-    The transformation is stateless otherwise, dealing with each timeseries individually.
 
     Parameters
     ----------
@@ -332,23 +339,24 @@ class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstima
         Standard deviation of the output time series.
     per_timeseries : bool (default: True)
         Whether the scaling should be performed per time series.
+        When `per_timeseries` is False, scales features based on computation led on the fitted data,
+        so that their mean (resp. standard deviation) in given dimensions is mu (resp. std).
+        The transformation is stateless otherwise, dealing with each timeseries individually.
     per_feature : bool (default: True)
         Whether the scaling should be performed per feature.
         Meaningless for univariate timeseries.
 
     Attributes
     ----------
-    mean_ : array-like of shape=(n_ts or 1, 1, d or 1)
+    mean_ : array-like of shape=(1, 1, d or 1)
         The mean value(s) seen in input data and used for normalization.
-        When `per_timeseries` is False, the input data is the fitted data. Otherwise,
-        each time series is scaled independently, the input data being the transformed time series.
-        The shape depends on the `per_timeseries` and `per_feature` parameters.
+        Only available when `per_timeseries` is False.
+        The shape depends on the `per_feature` parameters.
 
-    std_ : array-like of shape=(n_ts or 1, 1, d or 1)
-        The standard deviation value(s) seen in input data and used for normalization.
-        When `per_timeseries` is False, the input data is the fitted data. Otherwise,
-        each time series is scaled independently, the input data being the transformed time series.
-        The shape depends on the `per_timeseries` and `per_feature` parameters.
+    std_ : array-like of shape=(1, 1, d or 1)
+        The standard deviation values seen in input data and used for normalization.
+        Only available when `per_timeseries` is False.
+        The shape depends on the `per_feature` parameters.
 
     Notes
     -----
@@ -460,33 +468,46 @@ class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstima
         X_ = to_time_series_dataset(X_)
         X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, check_n_features_only=True, extend=False)
 
-        if self.per_timeseries:
-            self.mean_, self.std_ = self._process(X_)
+        mean_, std_ = self._process(X_) if self.per_timeseries else (self.mean_.reshape(1, 1, -1),
+                                                                     self.std_.reshape(1, 1, -1))
 
-        X_ = (X_ - self.mean_) * self.std / self.std_ + self.mu
+        X_ = (X_ - mean_) * self.std / std_ + self.mu
         return X_
 
-    def inverse_transform(self, X, y=None):
-        if not (hasattr(self, 'mean_') and hasattr(self, 'std_')) :
-            raise RuntimeError("Unable to retrieve scaling data to perform inverse operation."
-                               " Please check that `transform` has been performed.")
+    def inverse_transform(self, X):
+        """
+        Undo the scaling of X based on fitted data.
+        Only available when per_timeseries is False, raises RuntimeError otherwise.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_ts, sz, d)
+            Input dataset.
+
+        Returns
+        -------
+        array-like of shape (n_ts, sz, d)
+            Transformed dataset.
+        """
 
         check_is_fitted(self, '_X_fit_dims')
+        if self.per_timeseries:
+            raise RuntimeError("Cannot inverse per timeseries scaling.")
+
         X_ = check_array(X, allow_nd=True, force_all_finite=False)
         X_ = to_time_series_dataset(X_)
         X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, check_n_features_only=True, extend=False)
 
+        mean_, std_ = self.mean_.reshape(1, 1, -1), self.std_.reshape(1, 1, -1)
+
         X_ += self.mu
-        X_ *= self.std_ / self.std
-        X_ += self.mean_
+        X_ *= std_ / self.std
+        X_ += mean_
         return X_
 
     def _more_tags(self):
         tags = super()._more_tags()
         tags.update({'allow_nan': True, ALLOW_VARIABLE_LENGTH: True})
-        tags["_xfail_checks"].update({
-            "check_dict_unchanged": "Normalization data stored on transform",
-        })
         return tags
 
     def __sklearn_tags__(self):

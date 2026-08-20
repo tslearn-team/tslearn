@@ -58,12 +58,12 @@ def test_scaler_inverse_transform(scaler, per_timeseries, per_feature):
     X = random_walks(10, 10, 2, mu=1, random_state=0)
 
     estimator = scaler(per_timeseries=per_timeseries, per_feature=per_feature)
-    estimator.fit(X)
+    transformed = estimator.fit_transform(X)
     if per_timeseries:
         with pytest.raises(RuntimeError):
             estimator.inverse_transform(X)
-    transformed = estimator.transform(X)
-    np.testing.assert_array_almost_equal(
+    else:
+        np.testing.assert_array_almost_equal(
         estimator.inverse_transform(transformed),
         X
     )
