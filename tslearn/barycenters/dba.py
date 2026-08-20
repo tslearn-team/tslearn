@@ -500,6 +500,9 @@ def dtw_barycenter_averaging(
     DBA was originally presented in [1]_.
     This implementation is based on an idea from [2]_ (Majorize-Minimize Mean
     Algorithm).
+    By default, the initial barycenter is the pointwise mean of ``X``.
+    Petitjean's standalone ``DBA.py`` instead starts from an approximate
+    medoid, so set ``init_barycenter`` explicitly when comparing results.
 
     Parameters
     ----------
