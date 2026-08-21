@@ -348,8 +348,8 @@ def test_silhouette_samples():
     def sakoe_dtw(x, y, sakoe_chiba_radius=0):
         if sakoe_chiba_radius == 0:
             return dtw(x, y)
-        from tslearn.metrics import dtw as _dtw
-        return _dtw(x, y, sakoe_chiba_radius=sakoe_chiba_radius)
+        return dtw(x, y, global_constraint="sakoe_chiba",
+                   sakoe_chiba_radius=sakoe_chiba_radius)
 
     constrained = silhouette_samples(
         X, labels, metric=sakoe_dtw,
@@ -376,7 +376,7 @@ def test_silhouette_samples_softdtw_njobs_verbose(monkeypatch):
         return dist
 
     monkeypatch.setattr(
-        "tslearn.clustering.utils._cdist_soft_dtw_normalized",
+        "tslearn.clustering.utils.cdist_soft_dtw_normalized",
         spy_cdist_soft_dtw_normalized)
     silhouette_samples(X, labels, metric="softdtw", n_jobs=2, verbose=1)
     assert captured.get("n_jobs") == 2

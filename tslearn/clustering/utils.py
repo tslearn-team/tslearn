@@ -7,7 +7,8 @@ import numpy
 
 from tslearn.backend import instantiate_backend
 from tslearn.bases import TimeSeriesMixin
-from tslearn.metrics import _cdist_dtw, _cdist_soft_dtw_normalized
+from tslearn.metrics import (_cdist_dtw, _cdist_soft_dtw_normalized,
+                            cdist_soft_dtw_normalized)
 from tslearn.preprocessing import TimeSeriesResampler
 from tslearn.utils import to_time_series_dataset
 from tslearn.utils.utils import _to_time_series
@@ -323,7 +324,7 @@ def silhouette_samples(X, labels, metric=None, metric_params=None,
             "silhouette_samples does not support the 'sample_size' or "
             "'random_state' parameters (see sklearn.metrics.silhouette_samples)"
         )
-    # Explicit None for these keys is a no-op, matching sklearn semantics
+    # Explicit None is a no-op, matching sklearn semantics
     kwds = {k: v for k, v in kwds.items()
             if k not in ("sample_size", "random_state")}
     if metric == "precomputed":
@@ -351,10 +352,9 @@ def silhouette_samples(X, labels, metric=None, metric_params=None,
             **metric_params_
         )
     elif metric == "softdtw":
-        X = to_time_series_dataset(X, be=be)
-        sklearn_X = _cdist_soft_dtw_normalized(X, be=be, n_jobs=n_jobs,
-                                               verbose=verbose,
-                                               **metric_params_)
+        sklearn_X = cdist_soft_dtw_normalized(X, n_jobs=n_jobs,
+                                              verbose=verbose, be=be,
+                                              **metric_params_)
     elif metric == "euclidean":
         X_ = to_time_series_dataset(X, be=be)
         X_ = X_.reshape((X_.shape[0], -1))

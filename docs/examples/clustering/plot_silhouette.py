@@ -26,8 +26,7 @@ may have been assigned to the wrong cluster.
 import numpy
 import matplotlib.pyplot as plt
 
-from tslearn.clustering import TimeSeriesKMeans, silhouette_score, \
-    silhouette_samples
+from tslearn.clustering import TimeSeriesKMeans, silhouette_samples
 from tslearn.datasets import CachedDatasets
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance, \
     TimeSeriesResampler
@@ -48,7 +47,8 @@ y_pred = km.fit_predict(X_train)
 
 # Per-sample and mean silhouette coefficients
 samples = silhouette_samples(X_train, y_pred, metric="dtw")
-score = silhouette_score(X_train, y_pred, metric="dtw")
+# The mean of the per-sample values is the silhouette score
+score = float(numpy.mean(samples))
 
 print("Mean silhouette score: {:.4f}".format(score))
 
