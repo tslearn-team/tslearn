@@ -188,7 +188,13 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
         )
     elif metric == "softdtw":
         X = to_time_series_dataset(X)
-        sklearn_X = _cdist_soft_dtw_normalized(X, be=be, **metric_params_)
+        sklearn_X = _cdist_soft_dtw_normalized(
+            X,
+            n_jobs=n_jobs,
+            verbose=verbose,
+            be=be,
+            **metric_params_
+        )
     elif metric == "euclidean":
         X_ = to_time_series_dataset(X, be=be)
         X_ = X_.reshape((X_.shape[0], -1))
