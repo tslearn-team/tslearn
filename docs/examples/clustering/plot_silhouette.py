@@ -20,7 +20,7 @@ may have been assigned to the wrong cluster.
   Applied Mathematics 20: 53-65, 1987.
 """
 
-# Author: Romain Tavenard
+# Author: Som Samantray
 # License: BSD 3 clause
 
 import numpy
