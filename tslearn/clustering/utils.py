@@ -1,11 +1,14 @@
 """Clustering related toolbox."""
 from sklearn.metrics.cluster import silhouette_score as sklearn_silhouette
+from sklearn.metrics.cluster import silhouette_samples as \
+    sklearn_silhouette_samples
 from scipy.spatial.distance import cdist
 import numpy
 
 from tslearn.backend import instantiate_backend
 from tslearn.bases import TimeSeriesMixin
-from tslearn.metrics import _cdist_dtw, _cdist_soft_dtw_normalized
+from tslearn.metrics import (_cdist_dtw, _cdist_soft_dtw_normalized,
+                            cdist_soft_dtw_normalized)
 from tslearn.preprocessing import TimeSeriesResampler
 from tslearn.utils import to_time_series_dataset
 from tslearn.utils.utils import _to_time_series
@@ -213,6 +216,168 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
                               sample_size=sample_size,
                               random_state=random_state,
                               **kwds)
+
+
+def silhouette_samples(X, labels, metric=None, metric_params=None,
+                       n_jobs=None, verbose=0, **kwds):
+    """Compute the Silhouette Coefficient for each sample (cf.  [1]_ and
+    [2]_).
+
+    Read more in the `scikit-learn documentation
+    <http://scikit-learn.org/stable/modules/clustering.html\
+    #silhouette-coefficient>`_.
+
+    Parameters
+    ----------
+    X : array [n_ts, n_ts] if metric == "precomputed", or, \
+             [n_ts, sz, d] otherwise
+        Array of pairwise distances between time series, or a time series
+        dataset.
+    labels : array, shape = [n_ts]
+         Predicted labels for each time series.
+    metric : string, callable or None (default: None)
+        The metric to use when calculating distance between time series.
+        Should be one of {'dtw', 'softdtw', 'euclidean'} or a callable distance
+        function or None.
+        If 'softdtw' is passed, a normalized version of Soft-DTW is used that
+        is defined as `sdtw_(x,y) := sdtw(x,y) - 1/2(sdtw(x,x)+sdtw(y,y))`.
+        If X is the distance array itself, use ``metric="precomputed"``.
+        If None, dtw is used.
+    metric_params : dict or None (default: None)
+        Parameter values for the chosen metric.
+        For metrics that accept parallelization of the cross-distance matrix
+        computations, `n_jobs` key passed in `metric_params` is overridden by
+        the `n_jobs` argument.
+        Similarly, `verbose` key passed in `metric_params` is overridden by
+        the `verbose` argument.
+
+    n_jobs : int or None, optional (default=None)
+        The number of jobs to run in parallel for cross-distance matrix
+        computations.
+        Ignored if the cross-distance matrix cannot be computed using
+        parallelization.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See scikit-learns'
+        `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`_
+        for more details.
+
+    verbose : int (default: 0)
+        If nonzero, joblib progress messages are printed during the
+        cross-distance matrix computation (only used by the dtw and softdtw
+        branches).
+
+    **kwds : optional keyword parameters
+        Any further parameters are passed directly to the distance function,
+        just as for the `metric_params` parameter.
+        Note that, unlike :func:`tslearn.clustering.silhouette_score`,
+        ``sample_size`` and ``random_state`` are not supported (they are
+        rejected with a ``TypeError`` if provided).
+
+    Returns
+    -------
+    silhouette : array, shape = [n_ts]
+        Silhouette Coefficient for each sample.
+
+    References
+    ----------
+    .. [1] `Peter J. Rousseeuw (1987). "Silhouettes: a Graphical Aid to the
+       Interpretation and Validation of Cluster Analysis". Computational
+       and Applied Mathematics 20: 53-65.
+       <http://www.sciencedirect.com/science/article/pii/0377042787901257>`_
+    .. [2] `Wikipedia entry on the Silhouette Coefficient
+           <https://en.wikipedia.org/wiki/Silhouette_(clustering)>`_
+
+    Examples
+    --------
+    >>> from tslearn.generators import random_walks
+    >>> from tslearn.metrics import cdist_dtw
+    >>> from tslearn.metrics import dtw
+    >>> numpy.random.seed(0)
+    >>> X = random_walks(n_ts=20, sz=16, d=1)
+    >>> labels = numpy.random.randint(2, size=20)
+    >>> float(numpy.mean(silhouette_samples(X, labels, metric="dtw"))) \
+    # doctest: +ELLIPSIS
+    0.13383800...
+    >>> float(numpy.mean(silhouette_samples(X, labels,
+    ...                                     metric="euclidean"))) \
+    # doctest: +ELLIPSIS
+    0.09126917...
+    >>> float(numpy.mean(silhouette_samples(X, labels,
+    ...                                     metric="softdtw"))) \
+    # doctest: +ELLIPSIS
+    0.17953934...
+    >>> float(numpy.mean(silhouette_samples(X, labels, metric="softdtw",
+    ...                                     metric_params={"gamma": 2.}))) \
+    # doctest: +ELLIPSIS
+    0.17591060...
+    >>> float(numpy.mean(silhouette_samples(cdist_dtw(X), labels,
+    ...                                     metric="precomputed"))) \
+    # doctest: +ELLIPSIS
+    0.13383800...
+    >>> float(numpy.mean(silhouette_samples(X, labels, metric=dtw))) \
+    # doctest: +ELLIPSIS
+    0.13383800...
+    """
+    if kwds.get("sample_size") is not None or \
+            kwds.get("random_state") is not None:
+        raise TypeError(
+            "silhouette_samples does not support the 'sample_size' or "
+            "'random_state' parameters (see sklearn.metrics.silhouette_samples)"
+        )
+    # Explicit None is a no-op, matching sklearn semantics
+    kwds = {k: v for k, v in kwds.items()
+            if k not in ("sample_size", "random_state")}
+    if metric == "precomputed":
+        return sklearn_silhouette_samples(X=X,
+                                          labels=labels,
+                                          metric="precomputed")
+    be = instantiate_backend(X)
+    if metric_params is None:
+        metric_params_ = {}
+    else:
+        metric_params_ = metric_params.copy()
+    for k in kwds.keys():
+        metric_params_[k] = kwds[k]
+    if "n_jobs" in metric_params_.keys():
+        del metric_params_["n_jobs"]
+    if "verbose" in metric_params_.keys():
+        del metric_params_["verbose"]
+    if metric == "dtw" or metric is None:
+        X = to_time_series_dataset(X, be=be)
+        sklearn_X = _cdist_dtw(
+            X,
+            n_jobs=n_jobs,
+            verbose=verbose,
+            be=be,
+            **metric_params_
+        )
+    elif metric == "softdtw":
+        sklearn_X = cdist_soft_dtw_normalized(X, n_jobs=n_jobs,
+                                              verbose=verbose, be=be,
+                                              **metric_params_)
+    elif metric == "euclidean":
+        X_ = to_time_series_dataset(X, be=be)
+        X_ = X_.reshape((X_.shape[0], -1))
+        sklearn_X = cdist(X_, X_, metric="euclidean")
+    else:
+        X_ = to_time_series_dataset(X, be=be)
+        n, sz, d = X_.shape
+        X_flat = X_.reshape((n, -1))
+
+        def sklearn_metric(x, y):
+            return be.to_numpy(metric(
+                _to_time_series(x.reshape(sz, d),
+                                remove_nans=True,
+                                backend=be),
+                _to_time_series(y.reshape(sz, d),
+                                remove_nans=True,
+                                backend=be),
+                **metric_params_
+            ))
+        sklearn_X = cdist(X_flat, X_flat, metric=sklearn_metric)
+    return sklearn_silhouette_samples(X=sklearn_X,
+                                      labels=labels,
+                                      metric="precomputed")
 
 
 def _check_initial_guess(init, n_clusters):

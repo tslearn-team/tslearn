@@ -23,5 +23,6 @@ tslearn.clustering
       :template: function.rst
 
       silhouette_score
+      silhouette_samples
    
    
