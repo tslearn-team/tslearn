@@ -76,7 +76,12 @@ class KNeighborsTimeSeriesMixin(TimeSeriesMixin):
         elif self._ts_metric == "ctw":
             X_ = _cdist_ctw(X, other_X, **metric_params)
         elif self._ts_metric == "softdtw":
-            X_ = _cdist_soft_dtw(X, other_X, **metric_params)
+            X_ = _cdist_soft_dtw(
+                X,
+                other_X,
+                n_jobs=self.n_jobs,
+                **metric_params
+            )
         elif self._ts_metric == "sax":
             X = self._sax_preprocess(X, **metric_params)
             X_ = _cdist_sax(
@@ -84,7 +89,8 @@ class KNeighborsTimeSeriesMixin(TimeSeriesMixin):
                 self._sax.breakpoints_avg_,
                 self._sax._X_fit_dims_[1],
                 other_X,
-                n_jobs=self.n_jobs)
+                n_jobs=self.n_jobs
+            )
         elif self._ts_metric == "frechet":
             X_ = _cdist_frechet(
                 X,
