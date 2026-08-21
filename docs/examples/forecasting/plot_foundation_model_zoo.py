@@ -71,7 +71,7 @@ References
 
 import numpy as np
 
-from tslearn.preprocessing import TimeSeriesScalerMeanVariance
+from tslearn.utils import to_time_series_dataset
 
 rng = np.random.RandomState(0)
 
@@ -84,7 +84,7 @@ phases = rng.uniform(0, 2 * np.pi, size=n_ts)
 full_series = np.sin(
     2 * np.pi * t[None, :] / periods[:, None] + phases[:, None]
 ) + 0.1 * rng.randn(n_ts, sz + horizon)
-full_series = TimeSeriesScalerMeanVariance().fit_transform(full_series)
+full_series = to_time_series_dataset(full_series)
 
 X_train, X_test = full_series[:, :sz], full_series[:, sz:]
 
@@ -118,11 +118,20 @@ X_train, X_test = full_series[:, :sz], full_series[:, sz:]
 # * its ``forward`` takes a raw ``context`` and exposes an encoder made of a
 #   plain stack of T5 blocks, at ``encoder.block``, with no register or
 #   forecast token to filter out, so probing needs no ``tokens`` argument.
+#
+# As with Chronos-2, the raw series are passed to
+# :class:`~tslearn.foundation.ZeroShotForecaster` unscaled, since it wraps
+# the full pipeline. The linear probe, on the other hand, reads
+# ``pipeline.model`` directly and so needs scaling restored explicitly through
+# a :class:`~sklearn.pipeline.Pipeline`, as detailed in the
+# :doc:`plot_foundation_forecasting` example.
 
 import torch
 from chronos import BaseChronosPipeline
+from sklearn.pipeline import Pipeline
 
 from tslearn.foundation import LinearProbeForecaster, ZeroShotForecaster
+from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 
 pipeline = BaseChronosPipeline.from_pretrained(
     "amazon/chronos-bolt-small", device_map="cpu"
@@ -137,7 +146,7 @@ zero_shot = ZeroShotForecaster(
 )
 y_zero_shot = zero_shot.predict(X_train, n=horizon)
 
-probe = LinearProbeForecaster(
+forecaster = LinearProbeForecaster(
     pipeline.model,
     context_length=context_length,
     horizon=horizon,
@@ -146,8 +155,14 @@ probe = LinearProbeForecaster(
     layers_path="encoder.block",
     pooling="mean",
 )
+scaler = TimeSeriesScalerMeanVariance(per_timeseries=False)
+probe = Pipeline([("scale", scaler), ("probe", forecaster)])
 probe.fit(X_train)
-y_probe = probe.predict(X_train)
+
+# The scaler also normalizes the training targets, so forecasts come out on
+# that scale and are put back in the original units, using the ``mean_`` and
+# ``std_`` the scaler computed when it was fitted, before comparison.
+y_probe = probe.predict(X_train) * scaler.std_ + scaler.mean_
 
 from tslearn.metrics.performance import mae
 
@@ -325,18 +340,25 @@ plt.show()
 # representations that :class:`~tslearn.foundation.LinearProbeForecaster`
 # expects.
 #
+# As with the linear probes above, ``model`` is the bare backbone rather than
+# a pipeline, so scaling has to be restored the same way, through a
+# :class:`~sklearn.pipeline.Pipeline`.
+#
 # .. code-block:: python
 #
 #     from momentfm import MOMENTPipeline
+#     from sklearn.pipeline import Pipeline
 #
 #     from tslearn.foundation import LinearProbeForecaster
+#     from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 #
 #     model = MOMENTPipeline.from_pretrained(
 #         "AutonLab/MOMENT-1-small", model_kwargs={"task_name": "embedding"}
 #     )
 #     model.init()
 #
-#     probe = LinearProbeForecaster(
+#     scaler = TimeSeriesScalerMeanVariance(per_timeseries=False)
+#     probe = Pipeline([("scale", scaler), ("probe", LinearProbeForecaster(
 #         model,
 #         context_length=512,
 #         horizon=horizon,
@@ -345,9 +367,9 @@ plt.show()
 #         layers_path="encoder.block",
 #         pooling="mean",
 #         input_layout="channels_first",
-#     )
+#     ))])
 #     probe.fit(X_train)
-#     y_probe = probe.predict(X_train)
+#     y_probe = probe.predict(X_train) * scaler.std_ + scaler.mean_
 #
 # ``input_layout="channels_first"`` matters here: MOMENT's ``forward``
 # expects an explicit channel axis (``x_enc`` of shape
@@ -395,11 +417,18 @@ plt.show()
 #     y_zero_shot = zero_shot.predict(X_train, n=horizon)
 #
 # Being decoder-only, its natural pooling is ``"last"``, the representation
-# of the final context token, which has attended to every earlier one:
+# of the final context token, which has attended to every earlier one. Here
+# too, ``model`` is the bare backbone rather than a normalizing pipeline, so
+# scaling is restored through a :class:`~sklearn.pipeline.Pipeline`:
 #
 # .. code-block:: python
 #
-#     probe = LinearProbeForecaster(
+#     from sklearn.pipeline import Pipeline
+#
+#     from tslearn.preprocessing import TimeSeriesScalerMeanVariance
+#
+#     scaler = TimeSeriesScalerMeanVariance(per_timeseries=False)
+#     probe = Pipeline([("scale", scaler), ("probe", LinearProbeForecaster(
 #         model,
 #         context_length=context_length,
 #         horizon=horizon,
@@ -407,6 +436,6 @@ plt.show()
 #         layer=-1,
 #         layers_path="model.layers",
 #         pooling="last",
-#     )
+#     ))])
 #     probe.fit(X_train)
-#     y_probe = probe.predict(X_train)
+#     y_probe = probe.predict(X_train) * scaler.std_ + scaler.mean_

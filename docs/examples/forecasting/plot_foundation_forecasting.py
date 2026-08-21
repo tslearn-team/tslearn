@@ -38,7 +38,7 @@ References
 
 import numpy as np
 
-from tslearn.preprocessing import TimeSeriesScalerMeanVariance
+from tslearn.utils import to_time_series_dataset
 
 rng = np.random.RandomState(0)
 
@@ -54,7 +54,7 @@ full_series = (
     + trends[:, None] * t[None, :]
     + 0.1 * rng.randn(n_ts, sz + horizon)
 )
-full_series = TimeSeriesScalerMeanVariance().fit_transform(full_series)
+full_series = to_time_series_dataset(full_series)
 
 X_train, X_test = full_series[:, :sz], full_series[:, sz:]
 print(f"{X_train.shape=}, {X_test.shape=}")
@@ -69,9 +69,14 @@ print(f"{X_train.shape=}, {X_test.shape=}")
 # tslearn estimator, whose ``predict`` method returns an array of shape
 # ``(n_ts, n, d)`` like every other forecaster of the library.
 #
-# Calling ``fit`` is not needed here since the purpose of a 
-# :class:`~tslearn.foundation.ZeroShotForecaster` is to reuse a pre-trained 
+# Calling ``fit`` is not needed here since the purpose of a
+# :class:`~tslearn.foundation.ZeroShotForecaster` is to reuse a pre-trained
 # model without any training.
+#
+# Note that the raw series are passed as they are, with no prior scaling:
+# :class:`~tslearn.foundation.ZeroShotForecaster` wraps Chronos-2's full
+# inference pipeline, which normalizes every context internally before
+# forecasting.
 
 from chronos import Chronos2Pipeline
 
@@ -108,8 +113,14 @@ print(f"{y_zero_shot.shape=}")
 # matters because every window has to go through the pre-trained model once.
 #
 # The probing estimator needs the model itself rather than the inference
-# pipeline, since it reads hidden states rather than forecasts. Three options
-# drive which representations are used:
+# pipeline, since it reads hidden states rather than forecasts. This means it
+# bypasses the normalization the pipeline applies internally, unlike
+# :class:`~tslearn.foundation.ZeroShotForecaster` above, so it has to be
+# restored explicitly, by placing a
+# :class:`~tslearn.preprocessing.TimeSeriesScalerMeanVariance` ahead of it in
+# a :class:`~sklearn.pipeline.Pipeline`.
+#
+# Three options drive which representations are used:
 #
 # * ``layer`` selects the block to probe: an integer places a forward hook on
 #   the corresponding block, so ``layer=-2`` probes the penultimate one. The
@@ -137,9 +148,12 @@ print(f"{y_zero_shot.shape=}")
 #    :alt: Chronos-2 appends a register token and a forecast token after its
 #      context tokens; tokens=(0, -2) keeps only the context tokens.
 
-from tslearn.foundation import LinearProbeForecaster
+from sklearn.pipeline import Pipeline
 
-probe = LinearProbeForecaster(
+from tslearn.foundation import LinearProbeForecaster
+from tslearn.preprocessing import TimeSeriesScalerMeanVariance
+
+forecaster = LinearProbeForecaster(
     pipeline.model,
     context_length=context_length,
     horizon=horizon,
@@ -148,17 +162,25 @@ probe = LinearProbeForecaster(
     pooling="mean",
     tokens=(0, -2),
 )
+scaler = TimeSeriesScalerMeanVariance(per_timeseries=False)
+probe = Pipeline([("scale", scaler), ("probe", forecaster)])
 probe.fit(X_train)
-y_probe = probe.predict(X_train)
 
-print(f"{probe.n_windows_} training windows, "
-      f"{probe.embedder_.embedding_size_}-dimensional embeddings")
+print(f"{forecaster.n_windows_} training windows, "
+      f"{forecaster.embedder_.embedding_size_}-dimensional embeddings")
 
 ##############################################################################
 # The head fitted on top of the frozen representations defaults to a
 # :class:`sklearn.linear_model.RidgeCV`, which picks its regularization
 # strength by cross-validation. Any scikit-learn regressor can be passed
 # instead through the ``probe`` parameter.
+#
+# The scaler also normalizes the training targets, since they are cut from
+# the same series as the context, so the forecasts come out on that
+# normalized scale. They are put back in the original units using the
+# ``mean_`` and ``std_`` the scaler computed when it was fitted.
+
+y_probe = probe.predict(X_train) * scaler.std_ + scaler.mean_
 
 ##############################################################################
 # Comparison
@@ -227,18 +249,22 @@ plt.show()
 results = {}
 for layer in [-1, -2, -4]:
     for pooling in ["mean", "token"]:
-        model = LinearProbeForecaster(
-            pipeline.model,
-            context_length=context_length,
-            horizon=horizon,
-            stride=48,
-            layer=layer,
-            pooling=pooling,
-            # Chronos-2's forecast token is its last one
-            token_index=-1,
-            tokens=(0, -2),
-        ).fit(X_train)
-        results[(layer, pooling)] = mae(X_test, model.predict(X_train))
+        model = Pipeline([
+            ("scale", scaler),
+            ("probe", LinearProbeForecaster(
+                pipeline.model,
+                context_length=context_length,
+                horizon=horizon,
+                stride=48,
+                layer=layer,
+                pooling=pooling,
+                # Chronos-2's forecast token is its last one
+                token_index=-1,
+                tokens=(0, -2),
+            )),
+        ]).fit(X_train)
+        y = model.predict(X_train) * scaler.std_ + scaler.mean_
+        results[(layer, pooling)] = mae(X_test, y)
 
 for (layer, pooling), score in sorted(results.items(), key=lambda kv: kv[1]):
     print(f"layer={str(layer):>5}, pooling={pooling:>4}: MAE = {score:.4f}")
