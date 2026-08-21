@@ -231,6 +231,22 @@ def test_lcss():
             np.testing.assert_equal(sim, 1.0)
 
 
+def test_lcss_sakoe_chiba_constraint():
+    # A Sakoe-Chiba band must actually restrict the matched pairs. The two
+    # matches giving 0.5 sit two steps off the diagonal, so a radius-1 band
+    # forbids one of them and the similarity drops to 0.25.
+    s1 = [2.0, 0.0, 2.0, 0.0]
+    s2 = [0.0, 0.0, 1.0, 1.0]
+    for be in backends:
+        sim = tslearn.metrics.lcss(s1, s2, eps=0, be=be)
+        np.testing.assert_equal(sim, 0.5)
+
+        sim = tslearn.metrics.lcss(
+            s1, s2, eps=0, global_constraint="sakoe_chiba", sakoe_chiba_radius=1, be=be
+        )
+        np.testing.assert_equal(sim, 0.25)
+
+
 def test_lcss_path():
     for be in backends:
         for array_type in array_types:

@@ -24,6 +24,10 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 * soft-dtw API is now consistent with other metrics regarding parameters names and backend management.
 
+### Fixed
+
+* `lcss` and `lcss_path_from_metric` now respect the `global_constraint` / Sakoe-Chiba / Itakura band, which was previously ignored. ([#526](https://github.com/tslearn-team/tslearn/issues/526))
+
 ## [v0.9.0]
 
 ### Added
