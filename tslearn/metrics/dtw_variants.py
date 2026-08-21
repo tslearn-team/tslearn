@@ -971,7 +971,7 @@ def njit_lcss_accumulated_matrix(s1, s2, eps, mask):
 
     for i in range(1, l1 + 1):
         for j in range(1, l2 + 1):
-            if numpy.isfinite(mask[i - 1, j - 1]):
+            if mask[i - 1, j - 1]:
                 if numpy.sqrt(_njit_local_squared_dist(s1[i - 1], s2[j - 1])) <= eps:
                     acc_cost_mat[i][j] = 1 + acc_cost_mat[i - 1][j - 1]
                 else:
@@ -1566,7 +1566,7 @@ def njit_lcss_accumulated_matrix_from_dist_matrix(dist_matrix, eps, mask):
 
     for i in range(1, l1 + 1):
         for j in range(1, l2 + 1):
-            if numpy.isfinite(mask[i - 1, j - 1]):
+            if mask[i - 1, j - 1]:
                 if dist_matrix[i - 1, j - 1] <= eps:
                     acc_cost_mat[i][j] = 1 + acc_cost_mat[i - 1][j - 1]
                 else:
