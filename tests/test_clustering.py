@@ -236,6 +236,83 @@ def test_kmeans():
     np.testing.assert_equal(set(preds), set(range(4)))
 
 
+def test_kmeans_sample_weight():
+    """Test sample weights for Euclidean TimeSeriesKMeans."""
+    X = to_time_series_dataset([
+        [0.0, 0.0],
+        [10.0, 10.0],
+        [20.0, 20.0],
+    ])
+
+    sample_weight = np.array([1.0, 1.0, 10.0])
+
+    km = TimeSeriesKMeans(
+        n_clusters=1,
+        metric="euclidean",
+        max_iter=5,
+        random_state=0,
+    ).fit(X, sample_weight=sample_weight)
+
+    expected_center = np.average(
+        X,
+        axis=0,
+        weights=sample_weight,
+    )
+
+    np.testing.assert_allclose(
+        km.cluster_centers_[0],
+        expected_center,
+    )
+
+    # Check weighted inertia
+    distances = cdist(
+        X.reshape((3, -1)),
+        km.cluster_centers_.reshape((1, -1)),
+    ).ravel()
+
+    expected_inertia = np.average(
+        distances ** 2,
+        weights=sample_weight,
+    )
+
+    np.testing.assert_allclose(
+        km.inertia_,
+        expected_inertia,
+    )
+
+def test_kmeans_sample_weight_uniform():
+    """Uniform sample weights should give the same result as no weights."""
+    rng = np.random.RandomState(0)
+    X = rng.randn(15, 10, 3)
+
+    km = TimeSeriesKMeans(
+        n_clusters=3,
+        metric="euclidean",
+        max_iter=5,
+        random_state=0,
+    ).fit(X)
+
+    km_weighted = TimeSeriesKMeans(
+        n_clusters=3,
+        metric="euclidean",
+        max_iter=5,
+        random_state=0,
+    ).fit(X, sample_weight=np.ones(X.shape[0]))
+
+    np.testing.assert_allclose(
+        km.cluster_centers_,
+        km_weighted.cluster_centers_,
+    )
+    np.testing.assert_equal(
+        km.labels_,
+        km_weighted.labels_,
+    )
+    np.testing.assert_allclose(
+        km.inertia_,
+        km_weighted.inertia_,
+    )
+
+
 def test_kshape():
     n, sz, d = 15, 10, 3
     rng = np.random.RandomState(0)
