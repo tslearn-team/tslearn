@@ -247,6 +247,8 @@ def silhouette_samples(X, labels, metric=None, metric_params=None,
         For metrics that accept parallelization of the cross-distance matrix
         computations, `n_jobs` key passed in `metric_params` is overridden by
         the `n_jobs` argument.
+        Similarly, `verbose` key passed in `metric_params` is overridden by
+        the `verbose` argument.
 
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel for cross-distance matrix
@@ -260,7 +262,8 @@ def silhouette_samples(X, labels, metric=None, metric_params=None,
 
     verbose : int (default: 0)
         If nonzero, joblib progress messages are printed during the
-        cross-distance matrix computation (only used by the dtw branch).
+        cross-distance matrix computation (only used by the dtw and softdtw
+        branches).
 
     **kwds : optional keyword parameters
         Any further parameters are passed directly to the distance function,
@@ -336,6 +339,8 @@ def silhouette_samples(X, labels, metric=None, metric_params=None,
         metric_params_[k] = kwds[k]
     if "n_jobs" in metric_params_.keys():
         del metric_params_["n_jobs"]
+    if "verbose" in metric_params_.keys():
+        del metric_params_["verbose"]
     if metric == "dtw" or metric is None:
         X = to_time_series_dataset(X, be=be)
         sklearn_X = _cdist_dtw(
@@ -347,7 +352,9 @@ def silhouette_samples(X, labels, metric=None, metric_params=None,
         )
     elif metric == "softdtw":
         X = to_time_series_dataset(X, be=be)
-        sklearn_X = _cdist_soft_dtw_normalized(X, be=be, **metric_params_)
+        sklearn_X = _cdist_soft_dtw_normalized(X, be=be, n_jobs=n_jobs,
+                                               verbose=verbose,
+                                               **metric_params_)
     elif metric == "euclidean":
         X_ = to_time_series_dataset(X, be=be)
         X_ = X_.reshape((X_.shape[0], -1))

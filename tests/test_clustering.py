@@ -358,6 +358,35 @@ def test_silhouette_samples():
     assert not np.allclose(constrained, unconstrained)
 
 
+def test_silhouette_samples_softdtw_njobs_verbose(monkeypatch):
+    np.random.seed(0)
+    X = random_walks(n_ts=20, sz=16, d=1)
+    labels = np.random.randint(2, size=20)
+    # Prove the softdtw branch forwards n_jobs/verbose to the metric
+    captured = {}
+
+    def spy_cdist_soft_dtw_normalized(dataset1, dataset2=None, **kwargs):
+        captured.update(kwargs)
+        dist = cdist_soft_dtw(dataset1, dataset2,
+                              gamma=kwargs.get("gamma", 1.0))
+        # Mirror _cdist_soft_dtw_normalized: subtract half the self-distances
+        d_ii = np.diag(dist)
+        dist = dist - 0.5 * (d_ii[:, None] + d_ii[None, :])
+        np.fill_diagonal(dist, 0.)
+        return dist
+
+    monkeypatch.setattr(
+        "tslearn.clustering.utils._cdist_soft_dtw_normalized",
+        spy_cdist_soft_dtw_normalized)
+    silhouette_samples(X, labels, metric="softdtw", n_jobs=2, verbose=1)
+    assert captured.get("n_jobs") == 2
+    assert captured.get("verbose") == 1
+    # metric_params verbose is stripped so it cannot collide with the
+    # explicit verbose argument
+    silhouette_samples(X, labels, metric="softdtw",
+                       metric_params={"verbose": 1})
+
+
 def test_dbscan():
     # Basic clustering
     X = np.vstack((
