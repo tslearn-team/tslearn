@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 220"
+     font-family="DejaVu Sans, Arial, sans-serif">
+  <title>Token layout of a patch-based foundation model, such as Chronos-2</title>
+
+  <!-- index labels -->
+  <g font-size="13" fill="#666666" text-anchor="middle">
+    <text x="92" y="42">0</text>
+    <text x="210" y="42">1</text>
+    <text x="388" y="42">N-1</text>
+    <text x="516" y="42">-2</text>
+    <text x="654" y="42">-1</text>
+  </g>
+
+  <!-- context tokens -->
+  <g stroke="#3B6FA0" stroke-width="1.5">
+    <rect x="40" y="54" width="104" height="64" rx="8" fill="#E8F0FB"/>
+    <rect x="158" y="54" width="104" height="64" rx="8" fill="#E8F0FB"/>
+    <rect x="336" y="54" width="104" height="64" rx="8" fill="#E8F0FB"/>
+  </g>
+  <text x="299" y="94" font-size="22" fill="#666666" text-anchor="middle">&#8230;</text>
+
+  <g font-size="14" font-weight="600" fill="#1a1a1a" text-anchor="middle">
+    <text x="92" y="90">Token 1</text>
+    <text x="210" y="90">Token 2</text>
+    <text x="388" y="90">Token N</text>
+  </g>
+
+  <!-- register and forecast tokens -->
+  <rect x="454" y="54" width="124" height="64" rx="8" fill="#FBEEDD" stroke="#C97A2B" stroke-width="1.5"/>
+  <rect x="592" y="54" width="124" height="64" rx="8" fill="#FBE4E4" stroke="#C0392B" stroke-width="1.5"/>
+  <g font-size="14" font-weight="600" fill="#1a1a1a" text-anchor="middle">
+    <text x="516" y="83">Register</text>
+    <text x="516" y="100">token</text>
+    <text x="654" y="83">Forecast</text>
+    <text x="654" y="100">token</text>
+  </g>
+
+  <!-- bracket under kept context tokens -->
+  <path d="M 40 126 L 40 148 L 440 148 L 440 126"
+        fill="none" stroke="#3B6FA0" stroke-width="1.5"/>
+  <g text-anchor="middle">
+    <text x="240" y="168" font-family="DejaVu Sans Mono, monospace" font-size="13" fill="#1a1a1a">tokens=(0, -2)</text>
+    <text x="240" y="186" font-size="12" fill="#666666">kept, and averaged over</text>
+  </g>
+
+  <!-- bracket under excluded register/forecast tokens -->
+  <path d="M 454 126 L 454 148 L 716 148 L 716 126"
+        fill="none" stroke="#999999" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <g text-anchor="middle">
+    <text x="585" y="168" font-size="13" fill="#1a1a1a">excluded</text>
+    <text x="585" y="186" font-size="12" fill="#666666">do not represent the series</text>
+  </g>
+</svg>
