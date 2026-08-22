@@ -7,7 +7,7 @@ only assumes that a model exposes a forecasting method, or a PyTorch
 ``forward``, following one of a handful of widespread conventions (see
 :class:`~tslearn.foundation.ZeroShotForecaster` and
 :class:`~tslearn.foundation.LinearProbeForecaster`). This example surveys
-seven models currently considered state of the art for time series
+seven models for time series
 forecasting, and shows, for each of them, what it takes to plug it in as a
 :class:`~tslearn.foundation.ZeroShotForecaster`, a
 :class:`~tslearn.foundation.LinearProbeForecaster`, or both. The smallest
