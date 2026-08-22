@@ -87,8 +87,12 @@ This estimate is made available in ``tslearn`` through
     sigma = sigma_gak(X)
     k_01 = gak(X[0], X[1], sigma=sigma)
 
-Note however that, on long time series, this estimate can lead to numerical
-overflows, which smaller values can avoid.
+``gak`` and ``cdist_gak`` are normalized in log space, so they stay accurate
+whatever the length of the time series. The unnormalized kernel
+:math:`k(\mathbf{x}, \mathbf{y})` returned by ``unnormalized_gak``, however,
+sums over every possible alignment and therefore leaves the range of a 64-bit
+float for time series longer than about 405 samples, in which case ``inf`` is
+returned.
 
 Finally, the unnormalized GAK is related to :ref:`softDTW <dtw-softdtw>` [3]_ through the
 following formula:
