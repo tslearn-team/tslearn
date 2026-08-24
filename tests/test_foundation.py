@@ -11,7 +11,6 @@ import pytest
 
 from sklearn.base import clone
 from sklearn.linear_model import Ridge
-from sklearn.naive_bayes import GaussianNB
 from sklearn.pipeline import make_pipeline
 from sklearn.svm import LinearSVC
 
@@ -20,7 +19,6 @@ from tslearn.generators import random_walks
 torch = pytest.importorskip("torch")
 
 from tslearn.foundation import (  # noqa: E402
-    LinearProbeClassifier,
     LinearProbeForecaster,
     TimeSeriesFoundationEmbedder,
     ZeroShotForecaster,
@@ -283,10 +281,8 @@ def test_embedder_token_selection_errors():
 
 
 def test_probes_reject_unpooled_representations():
-    X, y = _classification_dataset()
+    X = _dataset(n_ts=4, sz=32, d=1)
     for pooling in (None, "none"):
-        with pytest.raises(ValueError, match="pooling=None"):
-            LinearProbeClassifier(_DummyBackbone(), pooling=pooling).fit(X, y)
         with pytest.raises(ValueError, match="pooling=None"):
             LinearProbeForecaster(
                 _DummyBackbone(), pooling=pooling, context_length=16, horizon=2
@@ -294,10 +290,6 @@ def test_probes_reject_unpooled_representations():
 
 
 def test_probes_accept_token_selection():
-    X, y = _classification_dataset()
-    model = LinearProbeClassifier(_DummyBackbone(), tokens=(0, -1)).fit(X, y)
-    assert model.predict(X).shape == (len(y),)
-
     X_fc = _dataset(n_ts=6, sz=48, d=1)
     model = LinearProbeForecaster(
         _DummyBackbone(), context_length=16, horizon=2, stride=8, tokens=(0, -1)
@@ -1156,94 +1148,11 @@ def test_linear_probe_forecaster_fit_predict():
     np.testing.assert_allclose(model.fit_predict(X, n=2), model.predict(X, n=2))
 
 
-# ---------------------------------------------------------------------------
-# LinearProbeClassifier
-# ---------------------------------------------------------------------------
-
-
-def _classification_dataset(n_per_class=15, sz=32, seed=0):
-    rng = np.random.RandomState(seed)
-    t = np.linspace(0, 4 * np.pi, sz)
-    sines = np.sin(t)[None, :] + 0.1 * rng.randn(n_per_class, sz)
-    lines = np.linspace(-1, 1, sz)[None, :] + 0.1 * rng.randn(n_per_class, sz)
-    X = np.concatenate([sines, lines])[:, :, None]
-    y = np.array(["sine"] * n_per_class + ["line"] * n_per_class)
-    return X, y
-
-
-def test_linear_probe_classifier():
-    X, y = _classification_dataset()
-    model = LinearProbeClassifier(_DummyBackbone()).fit(X, y)
-
-    assert set(model.classes_) == {"sine", "line"}
-    assert model.predict(X).shape == (len(y),)
-    assert model.predict_proba(X).shape == (len(y), 2)
-    assert model.decision_function(X).shape == (len(y),)
-    np.testing.assert_allclose(model.predict_proba(X).sum(axis=1), 1.0)
-    # These two classes are easily separable
-    assert model.score(X, y) > 0.9
-
-
-def test_linear_probe_classifier_multivariate():
-    X, y = _classification_dataset()
-    X = np.concatenate([X, X[::-1]], axis=2)
-    model = LinearProbeClassifier(_DummyBackbone()).fit(X, y)
-    assert model.embedder_.embedding_size_ == 2 * D_MODEL
-    assert model.predict(X).shape == (len(y),)
-
-
-def test_linear_probe_classifier_accepts_any_probe():
-    X, y = _classification_dataset()
-    model = LinearProbeClassifier(_DummyBackbone(), probe=LinearSVC()).fit(X, y)
-    assert isinstance(model.probe_, LinearSVC)
-    with pytest.raises(AttributeError, match="predict_proba"):
-        model.predict_proba(X)
-    assert model.decision_function(X).shape == (len(y),)
-
-
-def test_linear_probe_classifier_no_decision_function():
-    X, y = _classification_dataset()
-    model = LinearProbeClassifier(_DummyBackbone(), probe=GaussianNB()).fit(X, y)
-    assert isinstance(model.probe_, GaussianNB)
-    with pytest.raises(AttributeError, match="decision_function"):
-        model.decision_function(X)
-    assert model.predict_proba(X).shape == (len(y), 2)
-
-
-def test_linear_probe_classifier_layer_and_pooling():
-    X, y = _classification_dataset()
-    for layer in (0, 1, None):
-        for pooling in ("mean", "max", "token"):
-            model = LinearProbeClassifier(
-                _DummyBackbone(), layer=layer, pooling=pooling
-            ).fit(X, y)
-            assert model.predict(X).shape == (len(y),)
-
-
-def test_linear_probe_classifier_transform():
-    X, y = _classification_dataset()
-    model = LinearProbeClassifier(_DummyBackbone()).fit(X, y)
-    assert model.transform(X).shape == (len(y), D_MODEL)
-
-
-def test_linear_probe_classifier_errors():
-    X, y = _classification_dataset()
-    with pytest.raises(ValueError, match="inconsistent numbers of samples"):
-        LinearProbeClassifier(_DummyBackbone()).fit(X, y[:-1])
-    with pytest.raises(ValueError, match="input_layout"):
-        LinearProbeClassifier(_DummyBackbone(), input_layout="bogus").fit(X, y)
-
-    model = LinearProbeClassifier(_DummyBackbone()).fit(X, y)
-    with pytest.raises(ValueError, match="features"):
-        model.predict(np.concatenate([X, X], axis=2))
-
-
 def test_estimators_are_clonable():
     for estimator in (
         TimeSeriesFoundationEmbedder(_DummyBackbone()),
         ZeroShotForecaster(_DummyPipeline()),
         LinearProbeForecaster(_DummyBackbone()),
-        LinearProbeClassifier(_DummyBackbone()),
     ):
         cloned = clone(estimator)
         assert cloned is not estimator

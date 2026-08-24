@@ -11,9 +11,10 @@ on top of its representations. Because the head is linear and the backbone is
 never updated, the accuracy reached tells us how linearly separable the classes
 already are in the representation space.
 
-This example applies :class:`~tslearn.foundation.LinearProbeClassifier` to a
-UCR dataset, using Chronos-2 [2]_ as the frozen backbone. 
-Running it requires the ``chronos-forecasting`` package::
+This example applies that idea to a UCR dataset, composing
+:class:`~tslearn.foundation.TimeSeriesFoundationEmbedder` with a classifier
+inside a :class:`~sklearn.pipeline.Pipeline`, and using Chronos-2 [2]_ as the
+frozen backbone. Running it requires the ``chronos-forecasting`` package::
 
     pip install "chronos-forecasting>=2.0"
 
@@ -54,22 +55,27 @@ print(f"{X_train.shape=}, {X_test.shape=}, {len(np.unique(y_train))} classes")
 # Probing the pre-trained model
 # -----------------------------
 #
-# The classifier only needs the pre-trained model and, since Chronos-2 returns
+# The embedder only needs the pre-trained model and, since Chronos-2 returns
 # forecasts rather than hidden states, an explicit layer to read
 # representations from. A forward hook is placed on the selected block, so no
-# modification of the model is needed.
+# modification of the model is needed. Being a regular scikit-learn
+# transformer, it composes with a classifier inside a
+# :class:`~sklearn.pipeline.Pipeline`, which is what "linear probing" amounts
+# to here.
 #
 # Fitting is fast: each series goes through the model exactly once, and the
 # only thing actually trained is a logistic regression over a few hundred
 # features.
 
 from chronos import Chronos2Pipeline
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
 
-from tslearn.foundation import LinearProbeClassifier
+from tslearn.foundation import TimeSeriesFoundationEmbedder
 
 pipeline = Chronos2Pipeline.from_pretrained("autogluon/chronos-2-small")
 
-clf = LinearProbeClassifier(
+embedder = TimeSeriesFoundationEmbedder(
     pipeline.model,
     layer=-2,
     pooling="mean",
@@ -77,9 +83,10 @@ clf = LinearProbeClassifier(
     # tokens; neither represents the series, so they are left out of the average
     tokens=(0, -2),
 )
+clf = Pipeline([("embed", embedder), ("classify", LogisticRegression(max_iter=1000))])
 clf.fit(X_train, y_train)
 
-print(f"Embedding size: {clf.embedder_.embedding_size_}")
+print(f"Embedding size: {embedder.embedding_size_}")
 print(f"Test accuracy: {clf.score(X_test, y_test):.3f}")
 
 ##############################################################################
@@ -104,14 +111,17 @@ layers = sorted({*range(0, n_layers, 2), n_layers - 1})
 accuracies = {}
 for layer in layers:
     for pooling in poolings:
-        model = LinearProbeClassifier(
-            pipeline.model,
-            layer=layer,
-            pooling=pooling,
-            # Chronos-2 places its register token after the context tokens
-            token_index=-2 if pooling == "token" else 0,
-            tokens=(0, -2),
-        ).fit(X_train, y_train)
+        model = Pipeline([
+            ("embed", TimeSeriesFoundationEmbedder(
+                pipeline.model,
+                layer=layer,
+                pooling=pooling,
+                # Chronos-2 places its register token after the context tokens
+                token_index=-2 if pooling == "token" else 0,
+                tokens=(0, -2),
+            )),
+            ("classify", LogisticRegression(max_iter=1000)),
+        ]).fit(X_train, y_train)
         accuracies[layer, pooling] = model.score(X_test, y_test)
 
 header = "layer  " + "  ".join(f"{pooling:>6}" for pooling in poolings)
@@ -142,22 +152,23 @@ plt.show()
 # Using the representations elsewhere
 # -----------------------------------
 #
-# The feature extractor can also be used on its own, through
-# :class:`~tslearn.foundation.TimeSeriesFoundationEmbedder`. Being a regular
-# scikit-learn transformer, it composes with the rest of the ecosystem: here we
-# project the frozen representations of the test set onto two dimensions to see
-# whether the classes separate.
+# :class:`~tslearn.foundation.TimeSeriesFoundationEmbedder` is a regular
+# scikit-learn transformer, so it composes with the rest of the ecosystem the
+# same way it did with the classifier above: here it is chained with a
+# :class:`~sklearn.decomposition.PCA` inside a
+# :class:`~sklearn.pipeline.Pipeline`, to project the frozen representations
+# of the test set onto two dimensions and see whether the classes separate.
 
 from sklearn.decomposition import PCA
 
-from tslearn.foundation import TimeSeriesFoundationEmbedder
-
 best_layer, best_pooling = max(accuracies, key=accuracies.get)
-embedder = TimeSeriesFoundationEmbedder(
-    pipeline.model, layer=best_layer, tokens=(0, -2)
-)
-embeddings = embedder.fit_transform(X_test)
-projected = PCA(n_components=2).fit_transform(embeddings)
+projector = Pipeline([
+    ("embed", TimeSeriesFoundationEmbedder(
+        pipeline.model, layer=best_layer, tokens=(0, -2)
+    )),
+    ("pca", PCA(n_components=2)),
+])
+projected = projector.fit_transform(X_test)
 
 fig, ax = plt.subplots(figsize=(6, 5), layout="constrained")
 for label in np.unique(y_test):
@@ -187,7 +198,6 @@ plt.show()
 
 from tslearn.clustering import TimeSeriesKMeans
 
-from sklearn.pipeline import Pipeline
 from sklearn.metrics import adjusted_rand_score
 
 embedder = TimeSeriesFoundationEmbedder(

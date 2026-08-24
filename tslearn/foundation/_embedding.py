@@ -184,9 +184,9 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
     This transformer runs a (typically pre-trained) PyTorch model in inference
     mode and pools its hidden states into a single vector per time series. It
     is the building block used by
-    :class:`~tslearn.foundation.LinearProbeForecaster` and
-    :class:`~tslearn.foundation.LinearProbeClassifier`, and can also be used on
-    its own, for instance inside a :class:`sklearn.pipeline.Pipeline`.
+    :class:`~tslearn.foundation.LinearProbeForecaster`, and can also be used on
+    its own, for instance inside a :class:`sklearn.pipeline.Pipeline` ahead of
+    a classifier, to implement linear probing for classification.
 
     The transformer is deliberately agnostic to any particular model
     implementation. It only assumes that:

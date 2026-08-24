@@ -13,7 +13,6 @@ tslearn.foundation
    
       ZeroShotForecaster
       LinearProbeForecaster
-      LinearProbeClassifier
       TimeSeriesFoundationEmbedder
 
    

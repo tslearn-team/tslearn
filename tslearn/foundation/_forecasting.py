@@ -576,7 +576,9 @@ class LinearProbeForecaster(_BaseFoundationForecaster):
     See Also
     --------
         ZeroShotForecaster: Use a pre-trained model without any training.
-        LinearProbeClassifier: Linear probing for time series classification.
+        TimeSeriesFoundationEmbedder: The underlying feature extractor, which
+          can be composed with a classifier through a
+          :class:`sklearn.pipeline.Pipeline` to build a linear probe model for classification, if needed.
 
     Examples
     --------
