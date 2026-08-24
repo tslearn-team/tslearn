@@ -2,8 +2,15 @@ import numpy as np
 
 import pytest
 
+from sklearn.base import clone
+
 from tslearn.generators import random_walks
-from tslearn.forecasting import VARIMA, AutoVARIMA
+from tslearn.forecasting import VARIMA, AutoVARIMA, ScaledForecaster
+from tslearn.preprocessing import (
+    TimeSeriesScalerMeanVariance,
+    TimeSeriesScalerMinMax,
+    TimeSeriesResampler,
+)
 
 
 def test_VARIMA():
@@ -208,3 +215,54 @@ def test_verbosity(capteesys):
     AutoVARIMA(max_d=0, max_iter=2, verbose=1).fit(data)
     captured = capteesys.readouterr()
     assert "Default d for non stationarity 0 is used." in captured.out
+
+
+@pytest.mark.parametrize(
+    "scaler",
+    [
+        None,
+        TimeSeriesScalerMeanVariance(per_timeseries=False),
+        TimeSeriesScalerMinMax(per_timeseries=False),
+    ]
+)
+def test_scaled_forecaster_matches_manual_scaling(scaler):
+    data = random_walks(n_ts=5, sz=20, d=2, random_state=0) * 100 + 500
+
+    pipeline = ScaledForecaster(VARIMA(1, 0, 0), scaler=scaler).fit(data)
+    predicted = pipeline.predict(n=3)
+    assert predicted.shape == (5, 3, 2)
+
+    reference_scaler = clone(pipeline.scaler_)
+    scaled_data = reference_scaler.fit_transform(data)
+    reference_predicted = VARIMA(1, 0, 0).fit(scaled_data).predict(n=3)
+    np.testing.assert_allclose(
+        predicted,
+        reference_scaler.inverse_transform(reference_predicted)
+    )
+
+
+def test_scaled_forecaster_fit_predict():
+    data = random_walks(n_ts=3, sz=20, d=1, random_state=0) * 10 + 50
+    pipeline = ScaledForecaster(VARIMA(1, 0, 0))
+    np.testing.assert_allclose(
+        pipeline.fit_predict(data, n=3),
+        pipeline.fit(data).predict(n=3)
+    )
+
+
+def test_scaled_forecaster_rejects_per_timeseries_scaler():
+    data = random_walks(n_ts=3, sz=20, random_state=0)
+    with pytest.raises(ValueError):
+        ScaledForecaster(
+            VARIMA(1, 0, 0),
+            scaler=TimeSeriesScalerMeanVariance(per_timeseries=True)
+        ).fit(data)
+
+
+def test_scaled_forecaster_rejects_scaler_without_inverse_transform():
+    data = random_walks(n_ts=3, sz=20, random_state=0)
+    with pytest.raises(ValueError):
+        ScaledForecaster(
+            VARIMA(1, 0, 0),
+            scaler=TimeSeriesResampler(sz=20)
+        ).fit(data)

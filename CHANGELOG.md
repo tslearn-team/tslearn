@@ -17,6 +17,9 @@ Changelogs for this project are recorded in this file since v0.2.0.
 * Multithreading support added to `cdist_soft_dtw` and `softdtw_barycenter`. ([#310](https://github.com/tslearn-team/tslearn/issues/310)) 
 * `TimeSeriesScalerMinMax` and `TimeSeriesScalerMeanVariance` now offer an inverse_transform method 
 to reverse the normalization. ([#697](https://github.com/tslearn-team/tslearn/issues/697))
+* `tslearn.forecasting.ScaledForecaster` wraps a forecaster so that it is fitted on scaled data and 
+its predictions are un-scaled back, using any `tslearn.preprocessing` scaler fitted with 
+`per_timeseries=False`. ([#708](https://github.com/tslearn-team/tslearn/issues/708))
 
 ### Removed
 
