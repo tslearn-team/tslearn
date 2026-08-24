@@ -15,17 +15,9 @@ class ScaledForecaster(TimeSeriesMixin, BaseEstimator):
     A pattern often seen in forecasting is to scale each series before
     handing it over to a model, and to un-scale the model's predictions
     using the statistics computed by the scaler, so that the forecaster
-    itself only ever sees normalized data. This cannot be expressed with a
-    plain :class:`sklearn.pipeline.Pipeline`, since the last step there
-    only ever calls ``predict``, never ``inverse_transform``. This estimator
-    fills that gap for the ``fit(X) / predict(X=None, n=1)`` forecasters of
-    :mod:`tslearn.forecasting`.
-
-    Both scaling modes offered by :mod:`tslearn.preprocessing` scalers are
-    supported. When ``scaler.per_timeseries`` is False, one scaler is fitted
-    on the whole training set and its statistics are reused, unchanged, at
-    predict time. When it is True (the default for tslearn scalers), each
-    series is scaled with its own statistics instead.
+    itself only ever sees normalized data. This estimator
+    acts as a pipeline and fills that gap for :mod:`tslearn.forecasting` forecasters.
+    .
 
     Parameters
     ----------
