@@ -2,10 +2,10 @@ import numpy as np
 
 import pytest
 
+from tslearn.generators import random_walks
 from tslearn.preprocessing import (TimeSeriesScalerMeanVariance,
                                    TimeSeriesScalerMinMax,
                                    TimeSeriesImputer)
-
 from tslearn.utils import to_time_series_dataset, to_time_series
 
 
@@ -17,6 +17,11 @@ def test_single_value_ts_no_nan():
 
     minmax_scaler = TimeSeriesScalerMinMax()
     assert np.sum(np.isnan(minmax_scaler.fit_transform(X))) == 0
+
+
+def test_min_max_scaler_range():
+    with pytest.raises(ValueError):
+        TimeSeriesScalerMinMax((1., 0.)).fit_transform([[1, 2, 3]])
 
 
 def test_min_max_scaler_variable_length():
@@ -39,6 +44,30 @@ def test_min_max_scaler_variable_length():
         transformed,
         np.array([[[0], [0.5], [1]]])
     )
+
+
+@pytest.mark.parametrize(
+    "scaler",
+    [TimeSeriesScalerMinMax, TimeSeriesScalerMeanVariance]
+)
+@pytest.mark.parametrize(
+    "per_timeseries, per_feature",
+    [(True, True), (True, False), (False, True), (False, False)]
+)
+def test_scaler_inverse_transform(scaler, per_timeseries, per_feature):
+    X = random_walks(10, 10, 2, mu=1, random_state=0)
+
+    estimator = scaler(per_timeseries=per_timeseries, per_feature=per_feature)
+    transformed = estimator.fit_transform(X)
+    if per_timeseries:
+        with pytest.raises(RuntimeError):
+            estimator.inverse_transform(X)
+    else:
+        np.testing.assert_array_almost_equal(
+        estimator.inverse_transform(transformed),
+        X
+    )
+
 
 def test_min_max_scaler_modes():
     univariate_dataset = [
