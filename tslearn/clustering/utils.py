@@ -270,8 +270,11 @@ def silhouette_samples(X, labels, metric=None, metric_params=None,
         Any further parameters are passed directly to the distance function,
         just as for the `metric_params` parameter.
         Note that, unlike :func:`tslearn.clustering.silhouette_score`,
-        ``sample_size`` and ``random_state`` are not supported (they are
-        rejected with a ``TypeError`` if provided).
+        ``sample_size`` and ``random_state`` have no effect here: sklearn's
+        per-sample ``silhouette_samples`` has no subsampling, so these are
+        simply forwarded to the distance function like any other keyword,
+        mirroring sklearn's own ``silhouette_score``/``silhouette_samples``
+        pair.
 
     Returns
     -------
@@ -318,15 +321,6 @@ def silhouette_samples(X, labels, metric=None, metric_params=None,
     # doctest: +ELLIPSIS
     0.13383800...
     """
-    if kwds.get("sample_size") is not None or \
-            kwds.get("random_state") is not None:
-        raise TypeError(
-            "silhouette_samples does not support the 'sample_size' or "
-            "'random_state' parameters (see sklearn.metrics.silhouette_samples)"
-        )
-    # Explicit None is a no-op, matching sklearn semantics
-    kwds = {k: v for k, v in kwds.items()
-            if k not in ("sample_size", "random_state")}
     if metric == "precomputed":
         return sklearn_silhouette_samples(X=X,
                                           labels=labels,

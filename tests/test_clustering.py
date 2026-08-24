@@ -323,13 +323,30 @@ def test_silhouette_samples():
         assert samples.shape == (20,)
         assert np.all((samples >= -1.) & (samples <= 1.))
         assert math.isclose(float(np.mean(samples)), expected, rel_tol=1e-07)
-    # sample_size / random_state are rejected for every metric branch
-    for metric in [None, "dtw", "euclidean", "softdtw", dtw, "precomputed"]:
+    # sample_size / random_state are not special-cased here (unlike
+    # silhouette_score): they are forwarded like any other kwarg, mirroring
+    # sklearn's own silhouette_score/silhouette_samples pair. For metrics
+    # whose cross-distance function has a fixed signature (dtw, softdtw, a
+    # callable), an unsupported kwarg raises naturally from that call.
+    for metric in ["dtw", "softdtw", dtw]:
         for bad_kw in [{"sample_size": 10}, {"random_state": 0}]:
             with pytest.raises(TypeError):
                 silhouette_samples(X, labels, metric=metric, **bad_kw)
-    # explicit None is a no-op (not rejected)
-    silhouette_samples(X, labels, metric="dtw", sample_size=None,
+    # euclidean/precomputed ignore metric_params entirely, so an unsupported
+    # kwarg there is a silent no-op, same as passing one to sklearn's own
+    # silhouette_samples with metric="precomputed" or "euclidean"
+    silhouette_samples(X, labels, metric="euclidean", sample_size=10)
+    silhouette_samples(cdist_dtw(X), labels, metric="precomputed",
+                       random_state=0)
+    # unlike silhouette_score, an explicit None value is not special-cased
+    # either: it is forwarded like any other value and still raises for
+    # dtw/softdtw/a callable, since the underlying call has no such
+    # parameter regardless of its value
+    with pytest.raises(TypeError):
+        silhouette_samples(X, labels, metric="dtw", sample_size=None,
+                           random_state=None)
+    # ...but is a no-op for euclidean/precomputed, same as any other value
+    silhouette_samples(X, labels, metric="euclidean", sample_size=None,
                        random_state=None)
     # metric kwargs passed directly via **kwds are forwarded to the metric
     constrained = silhouette_samples(X, labels, metric="dtw",
