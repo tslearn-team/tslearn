@@ -6,7 +6,7 @@ algorithms.
 details.
 """
 from .kshape import KShape
-from .utils import (EmptyClusterError, silhouette_score,
+from .utils import (EmptyClusterError, silhouette_score, silhouette_samples,
                     TimeSeriesCentroidBasedClusteringMixin)
 from .kmeans import (TimeSeriesKMeans, KernelKMeans)
 from .dbscan import TimeSeriesDBSCAN
@@ -18,6 +18,7 @@ __all__ = [
     "KShape",
     "EmptyClusterError",
     "silhouette_score",
+    "silhouette_samples",
     "TimeSeriesCentroidBasedClusteringMixin",
     "TimeSeriesKMeans",
     "KernelKMeans",

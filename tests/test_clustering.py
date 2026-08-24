@@ -17,7 +17,8 @@ from tslearn.clustering import (
 from tslearn.clustering.utils import (
     _check_full_length,
     _check_no_empty_cluster,
-    silhouette_score
+    silhouette_score,
+    silhouette_samples
 )
 from tslearn.generators import random_walks
 from tslearn.metrics import cdist_dtw, cdist_soft_dtw, dtw
@@ -301,6 +302,106 @@ def test_silhouette():
         0.17953934,
         rel_tol=1e-07
     )
+
+
+def test_silhouette_samples():
+    np.random.seed(0)
+    X = random_walks(n_ts=20, sz=16, d=1)
+    labels = np.random.randint(2, size=20)
+    for metric, expected in [
+        ("dtw", 0.13383800),
+        (dtw, 0.13383800),
+        ("precomputed", 0.13383800),
+        ("euclidean", 0.09126917),
+        ("softdtw", 0.17953934)
+    ]:
+        if metric == "precomputed":
+            samples = silhouette_samples(cdist_dtw(X), labels,
+                                         metric="precomputed")
+        else:
+            samples = silhouette_samples(X, labels, metric=metric)
+        assert samples.shape == (20,)
+        assert np.all((samples >= -1.) & (samples <= 1.))
+        assert math.isclose(float(np.mean(samples)), expected, rel_tol=1e-07)
+    # sample_size / random_state are not special-cased here (unlike
+    # silhouette_score): they are forwarded like any other kwarg, mirroring
+    # sklearn's own silhouette_score/silhouette_samples pair. For metrics
+    # whose cross-distance function has a fixed signature (dtw, softdtw, a
+    # callable), an unsupported kwarg raises naturally from that call.
+    for metric in ["dtw", "softdtw", dtw]:
+        for bad_kw in [{"sample_size": 10}, {"random_state": 0}]:
+            with pytest.raises(TypeError):
+                silhouette_samples(X, labels, metric=metric, **bad_kw)
+    # euclidean/precomputed ignore metric_params entirely, so an unsupported
+    # kwarg there is a silent no-op, same as passing one to sklearn's own
+    # silhouette_samples with metric="precomputed" or "euclidean"
+    silhouette_samples(X, labels, metric="euclidean", sample_size=10)
+    silhouette_samples(cdist_dtw(X), labels, metric="precomputed",
+                       random_state=0)
+    # unlike silhouette_score, an explicit None value is not special-cased
+    # either: it is forwarded like any other value and still raises for
+    # dtw/softdtw/a callable, since the underlying call has no such
+    # parameter regardless of its value
+    with pytest.raises(TypeError):
+        silhouette_samples(X, labels, metric="dtw", sample_size=None,
+                           random_state=None)
+    # ...but is a no-op for euclidean/precomputed, same as any other value
+    silhouette_samples(X, labels, metric="euclidean", sample_size=None,
+                       random_state=None)
+    # metric kwargs passed directly via **kwds are forwarded to the metric
+    constrained = silhouette_samples(X, labels, metric="dtw",
+                                     global_constraint="sakoe_chiba",
+                                     sakoe_chiba_radius=2)
+    unconstrained = silhouette_samples(X, labels, metric="dtw")
+    assert not np.allclose(constrained, unconstrained)
+    # n_jobs inside metric_params is stripped and handled by the n_jobs arg
+    samples_njobs = silhouette_samples(X, labels, metric="dtw",
+                                       metric_params={"n_jobs": 1})
+    assert samples_njobs.shape == (20,)
+    assert math.isclose(float(np.mean(samples_njobs)), 0.13383800,
+                        rel_tol=1e-07)
+    # metric_params are forwarded to a callable metric
+
+    def sakoe_dtw(x, y, sakoe_chiba_radius=0):
+        if sakoe_chiba_radius == 0:
+            return dtw(x, y)
+        return dtw(x, y, global_constraint="sakoe_chiba",
+                   sakoe_chiba_radius=sakoe_chiba_radius)
+
+    constrained = silhouette_samples(
+        X, labels, metric=sakoe_dtw,
+        metric_params={"sakoe_chiba_radius": 3})
+    unconstrained = silhouette_samples(X, labels, metric=sakoe_dtw)
+    assert not np.allclose(constrained, unconstrained)
+
+
+def test_silhouette_samples_softdtw_njobs_verbose(monkeypatch):
+    np.random.seed(0)
+    X = random_walks(n_ts=20, sz=16, d=1)
+    labels = np.random.randint(2, size=20)
+    # Prove the softdtw branch forwards n_jobs/verbose to the metric
+    captured = {}
+
+    def spy_cdist_soft_dtw_normalized(dataset1, dataset2=None, **kwargs):
+        captured.update(kwargs)
+        dist = cdist_soft_dtw(dataset1, dataset2,
+                              gamma=kwargs.get("gamma", 1.0))
+        # Mirror _cdist_soft_dtw_normalized: subtract half the self-distances
+        d_ii = np.diag(dist)
+        dist = dist - 0.5 * (d_ii[:, None] + d_ii[None, :])
+        np.fill_diagonal(dist, 0.)
+        return dist
+
+    monkeypatch.setattr(
+        "tslearn.clustering.utils.cdist_soft_dtw_normalized",
+        spy_cdist_soft_dtw_normalized)
+    silhouette_samples(X, labels, metric="softdtw", n_jobs=2, verbose=1)
+    assert captured.get("n_jobs") == 2
+    assert captured.get("verbose") == 1
+    # metric_params verbose is stripped so it cannot collide with the
+    # explicit verbose argument
+    silhouette_samples(X, labels, metric="softdtw",
+                       metric_params={"verbose": 1})
 
 
 def test_dbscan():
