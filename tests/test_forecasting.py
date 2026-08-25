@@ -5,7 +5,7 @@ import pytest
 from sklearn.base import clone
 
 from tslearn.generators import random_walks
-from tslearn.forecasting import VARIMA, AutoVARIMA, ScaledForecaster
+from tslearn.forecasting import VARIMA, AutoVARIMA, ScaledForecastingPipeline
 from tslearn.preprocessing import (
     TimeSeriesScalerMeanVariance,
     TimeSeriesScalerMinMax,
@@ -227,8 +227,8 @@ def test_verbosity(capteesys):
 def test_scaled_forecaster_global_matches_manual_scaling(scaler):
     data = random_walks(n_ts=5, sz=20, d=2, random_state=0) * 100 + 500
 
-    pipeline = ScaledForecaster(VARIMA(1, 0, 0), scaler=scaler).fit(data)
-    assert pipeline.per_series_ is False
+    pipeline = ScaledForecastingPipeline(VARIMA(1, 0, 0), scaler=scaler).fit(data)
+    assert pipeline.per_timeseries_ is False
     predicted = pipeline.predict(n=3)
     assert predicted.shape == (5, 3, 2)
 
@@ -253,8 +253,8 @@ def test_scaled_forecaster_per_series_matches_manual_scaling(scaler):
     # scaling is meant for.
     data = data * np.array([1, 100, 0.01, 10, 1000]).reshape(5, 1, 1)
 
-    pipeline = ScaledForecaster(VARIMA(1, 0, 0), scaler=scaler).fit(data)
-    assert pipeline.per_series_ is True
+    pipeline = ScaledForecastingPipeline(VARIMA(1, 0, 0), scaler=scaler).fit(data)
+    assert pipeline.per_timeseries_ is True
     assert len(pipeline.scalers_) == 5
     predicted = pipeline.predict(n=3)
     assert predicted.shape == (5, 3, 2)
@@ -278,7 +278,7 @@ def test_scaled_forecaster_per_series_matches_manual_scaling(scaler):
 def test_scaled_forecaster_per_series_predict_uses_fresh_statistics():
     data = random_walks(n_ts=3, sz=20, d=1, random_state=0)
     data = data * np.array([1, 100, 0.01]).reshape(3, 1, 1)
-    pipeline = ScaledForecaster(VARIMA(1, 0, 0)).fit(data)
+    pipeline = ScaledForecastingPipeline(VARIMA(1, 0, 0)).fit(data)
 
     new_data = random_walks(n_ts=3, sz=15, d=1, random_state=1)
     new_data = new_data * np.array([5, 2, 50]).reshape(3, 1, 1) + 3
@@ -297,7 +297,7 @@ def test_scaled_forecaster_per_series_predict_uses_fresh_statistics():
 
 def test_scaled_forecaster_fit_predict():
     data = random_walks(n_ts=3, sz=20, d=1, random_state=0) * 10 + 50
-    pipeline = ScaledForecaster(VARIMA(1, 0, 0))
+    pipeline = ScaledForecastingPipeline(VARIMA(1, 0, 0))
     np.testing.assert_allclose(
         pipeline.fit_predict(data, n=3),
         pipeline.fit(data).predict(n=3)
@@ -307,7 +307,7 @@ def test_scaled_forecaster_fit_predict():
 def test_scaled_forecaster_rejects_scaler_without_inverse_transform():
     data = random_walks(n_ts=3, sz=20, random_state=0)
     with pytest.raises(ValueError):
-        ScaledForecaster(
+        ScaledForecastingPipeline(
             VARIMA(1, 0, 0),
             scaler=TimeSeriesResampler(sz=20)
         ).fit(data)

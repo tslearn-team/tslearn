@@ -9,7 +9,7 @@ from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.utils import check_array, to_time_series_dataset
 
 
-class ScaledForecaster(TimeSeriesMixin, BaseEstimator):
+class ScaledForecastingPipeline(TimeSeriesMixin, BaseEstimator):
     """Scale a series, forecast, and un-scale the forecast.
 
     A pattern often seen in forecasting is to scale each series before
@@ -17,13 +17,12 @@ class ScaledForecaster(TimeSeriesMixin, BaseEstimator):
     using the statistics computed by the scaler, so that the forecaster
     itself only ever sees normalized data. This estimator
     acts as a pipeline and fills that gap for :mod:`tslearn.forecasting` forecasters.
-    .
 
     Parameters
     ----------
         forecaster : estimator
           A tslearn forecaster, exposing ``fit(X, y=None)`` and
-          ``predict(X=None, n=1)``, trained on the scaled data.
+          ``predict(X=None, n=1)``, that will be trained on the scaled data.
         scaler : transformer or None (default: None)
           A scaler exposing ``fit``, ``transform`` and ``inverse_transform``,
           such as the ones in :mod:`tslearn.preprocessing`. When None, a
@@ -33,12 +32,12 @@ class ScaledForecaster(TimeSeriesMixin, BaseEstimator):
 
     Attributes
     ----------
-        per_series_ : bool
+        per_timeseries_ : bool
           Whether scaling is performed independently per series (mirrors
           ``scaler.per_timeseries``, defaulting to False when the scaler
           does not have such a parameter).
         scalers_ : list of transformers
-          The fitted scaler(s): a single one when ``per_series_`` is False,
+          The fitted scaler(s): a single one when ``per_timeseries_`` is False,
           one per training series otherwise.
         forecaster_ : estimator
           The forecaster, fitted on scaled data.
@@ -48,7 +47,7 @@ class ScaledForecaster(TimeSeriesMixin, BaseEstimator):
     >>> from tslearn.forecasting import VARIMA
     >>> from tslearn.generators import random_walks
     >>> X = random_walks(n_ts=2, sz=20, d=1, random_state=0)
-    >>> model = ScaledForecaster(VARIMA(1, 0, 0)).fit(X)
+    >>> model = ScaledForecastingPipeline(VARIMA(1, 0, 0)).fit(X)
     >>> model.predict(n=3).shape
     (2, 3, 1)
 
@@ -86,7 +85,7 @@ class ScaledForecaster(TimeSeriesMixin, BaseEstimator):
         return scaler, per_series
 
     def _fit_scalers(self, X):
-        if not self.per_series_:
+        if not self.per_timeseries_:
             return [clone(self._scaler_template_).fit(X)]
         return [
             clone(self._scaler_template_).fit(X[i : i + 1])
@@ -94,7 +93,7 @@ class ScaledForecaster(TimeSeriesMixin, BaseEstimator):
         ]
 
     def _transform(self, scalers, X):
-        if not self.per_series_:
+        if not self.per_timeseries_:
             return scalers[0].transform(X)
         be = instantiate_backend(X)
         return be.vstack(
@@ -102,7 +101,7 @@ class ScaledForecaster(TimeSeriesMixin, BaseEstimator):
         )
 
     def _inverse_transform(self, scalers, forecast):
-        if not self.per_series_:
+        if not self.per_timeseries_:
             return scalers[0].inverse_transform(forecast)
         be = instantiate_backend(forecast)
         return be.vstack(
@@ -129,7 +128,7 @@ class ScaledForecaster(TimeSeriesMixin, BaseEstimator):
         X = check_array(X, allow_nd=True, force_all_finite=False)
         X = to_time_series_dataset(X)
 
-        self._scaler_template_, self.per_series_ = self._resolve_scaler()
+        self._scaler_template_, self.per_timeseries_ = self._resolve_scaler()
         self.scalers_ = self._fit_scalers(X)
         X_scaled = self._transform(self.scalers_, X)
 
@@ -162,7 +161,7 @@ class ScaledForecaster(TimeSeriesMixin, BaseEstimator):
             X = to_time_series_dataset(X)
             scalers = (
                 self.scalers_
-                if not self.per_series_
+                if not self.per_timeseries_
                 else self._fit_scalers(X)
             )
             X_scaled = self._transform(scalers, X)

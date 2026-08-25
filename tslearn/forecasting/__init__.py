@@ -5,6 +5,6 @@ algorithms.
 """
 
 from ._arima import VARIMA, AutoVARIMA
-from ._pipeline import ScaledForecaster
+from ._pipeline import ScaledForecastingPipeline
 
-__all__ = ["VARIMA", "AutoVARIMA", "ScaledForecaster"]
+__all__ = ["VARIMA", "AutoVARIMA", "ScaledForecastingPipeline"]

@@ -13,4 +13,4 @@ tslearn.forecasting
    
       VARIMA
       AutoVARIMA
-      ScaledForecaster
+      ScaledForecastingPipeline
