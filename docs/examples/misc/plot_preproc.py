@@ -73,7 +73,7 @@ dataset = to_time_series_dataset([
     [24, 24, 24, 23, 21, 20, 19, 19, 20, 21, 22, 23]
 ])
 cities = [
-    ("Groninguen", "N", "C"),
+    ("Groningen", "N", "C"),
     ("Shenzen", "N", "H"),
     ("Punta Arenas", "S", "C"),
     ("Rio", "S", "H")
@@ -96,7 +96,7 @@ def visu(data, title):
         plt.title(title)
     plt.show()
 
-visu(dataset, "Data")
+visu(dataset, "Raw data")
 
 ######################################
 #
