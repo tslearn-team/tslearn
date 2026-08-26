@@ -103,8 +103,9 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
     metric_params : dict or None (default: None)
         Parameter values for the chosen metric.
         For metrics that accept parallelization of the cross-distance matrix
-        computations, `n_jobs` key passed in `metric_params` is overridden by
-        the `n_jobs` argument.
+        computations, `n_jobs` and `verbose` keys passed in `metric_params`
+        are overridden by the corresponding function arguments. The `be` key
+        is ignored because the backend is inferred from `X`.
 
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel for cross-distance matrix
@@ -129,6 +130,7 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
     **kwds : optional keyword parameters
         Any further parameters are passed directly to the distance function,
         just as for the `metric_params` parameter.
+        The `be` keyword is ignored because the backend is inferred from `X`.
 
     Returns
     -------
@@ -174,10 +176,10 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
         metric_params_ = {}
     else:
         metric_params_ = metric_params.copy()
-    for k in kwds.keys():
-        metric_params_[k] = kwds[k]
-    if "n_jobs" in metric_params_.keys():
-        del metric_params_["n_jobs"]
+    kwds.pop("be", None)
+    metric_params_.update(kwds)
+    for k in ("be", "n_jobs", "verbose"):
+        metric_params_.pop(k, None)
     if metric == "precomputed":
         sklearn_X = X
     elif metric == "dtw" or metric is None:
@@ -252,10 +254,9 @@ def silhouette_samples(X, labels, metric=None, metric_params=None,
     metric_params : dict or None (default: None)
         Parameter values for the chosen metric.
         For metrics that accept parallelization of the cross-distance matrix
-        computations, `n_jobs` key passed in `metric_params` is overridden by
-        the `n_jobs` argument.
-        Similarly, `verbose` key passed in `metric_params` is overridden by
-        the `verbose` argument.
+        computations, `n_jobs` and `verbose` keys passed in `metric_params`
+        are overridden by the corresponding function arguments. The `be` key
+        is ignored because the backend is inferred from `X`.
 
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel for cross-distance matrix
@@ -275,6 +276,7 @@ def silhouette_samples(X, labels, metric=None, metric_params=None,
     **kwds : optional keyword parameters
         Any further parameters are passed directly to the distance function,
         just as for the `metric_params` parameter.
+        The `be` keyword is ignored because the backend is inferred from `X`.
         Note that, unlike :func:`tslearn.clustering.silhouette_score`,
         ``sample_size`` and ``random_state`` have no effect here: sklearn's
         per-sample ``silhouette_samples`` has no subsampling, so these are
@@ -336,12 +338,10 @@ def silhouette_samples(X, labels, metric=None, metric_params=None,
         metric_params_ = {}
     else:
         metric_params_ = metric_params.copy()
-    for k in kwds.keys():
-        metric_params_[k] = kwds[k]
-    if "n_jobs" in metric_params_.keys():
-        del metric_params_["n_jobs"]
-    if "verbose" in metric_params_.keys():
-        del metric_params_["verbose"]
+    kwds.pop("be", None)
+    metric_params_.update(kwds)
+    for k in ("be", "n_jobs", "verbose"):
+        metric_params_.pop(k, None)
     if metric == "dtw" or metric is None:
         X = to_time_series_dataset(X, be=be)
         sklearn_X = _cdist_dtw(

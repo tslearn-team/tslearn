@@ -404,6 +404,46 @@ def test_silhouette_samples_softdtw_njobs_verbose(monkeypatch):
                        metric_params={"verbose": 1})
 
 
+@pytest.mark.parametrize("silhouette_func",
+                         [silhouette_score, silhouette_samples])
+@pytest.mark.parametrize(
+    "metric_params, extra_kwds",
+    [
+        ({"be": "ignored", "n_jobs": -1, "verbose": 99}, {}),
+        (None, {"be": "ignored"}),
+    ],
+    ids=["metric-params", "direct-keyword"]
+)
+def test_silhouette_controlled_metric_params_are_not_forwarded(
+        monkeypatch, silhouette_func, metric_params, extra_kwds):
+    X = np.arange(8, dtype=float).reshape(4, 2, 1)
+    labels = np.array([0, 0, 1, 1])
+    distances = np.array([
+        [0., 1., 5., 6.],
+        [1., 0., 4., 5.],
+        [5., 4., 0., 1.],
+        [6., 5., 1., 0.],
+    ])
+    captured = {}
+
+    def fake_cdist_dtw(dataset1, dataset2=None, *, n_jobs=None, verbose=0,
+                       be=None, **forwarded_params):
+        captured.update(n_jobs=n_jobs, verbose=verbose, be=be,
+                        forwarded_params=forwarded_params)
+        return distances
+
+    monkeypatch.setattr("tslearn.clustering.utils._cdist_dtw",
+                        fake_cdist_dtw)
+
+    silhouette_func(X, labels, metric="dtw", metric_params=metric_params,
+                    n_jobs=2, verbose=3, **extra_kwds)
+
+    assert captured["n_jobs"] == 2
+    assert captured["verbose"] == 3
+    assert captured["be"] != "ignored"
+    assert captured["forwarded_params"] == {}
+
+
 def test_dbscan():
     # Basic clustering
     X = np.vstack((
