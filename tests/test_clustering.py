@@ -338,6 +338,13 @@ def test_silhouette_samples():
     silhouette_samples(X, labels, metric="euclidean", sample_size=10)
     silhouette_samples(cdist_dtw(X), labels, metric="precomputed",
                        random_state=0)
+    # metric_params/n_jobs/verbose are likewise a no-op for precomputed, and
+    # do not change the result (now documented on the function's docstring)
+    baseline = silhouette_samples(cdist_dtw(X), labels, metric="precomputed")
+    ignored = silhouette_samples(cdist_dtw(X), labels, metric="precomputed",
+                                 metric_params={"gamma": 2.}, n_jobs=2,
+                                 verbose=1)
+    np.testing.assert_array_equal(baseline, ignored)
     # unlike silhouette_score, an explicit None value is not special-cased
     # either: it is forwarded like any other value and still raises for
     # dtw/softdtw/a callable, since the underlying call has no such
