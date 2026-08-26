@@ -256,12 +256,16 @@ def silhouette_samples(X, labels, metric=None, metric_params=None,
         the `n_jobs` argument.
         Similarly, `verbose` key passed in `metric_params` is overridden by
         the `verbose` argument.
+        Ignored when ``metric="precomputed"``, since no distance function is
+        called in that case: this mirrors scikit-learn's own
+        ``silhouette_samples``, which likewise ignores extra keyword
+        parameters for a precomputed distance matrix.
 
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel for cross-distance matrix
         computations.
         Ignored if the cross-distance matrix cannot be computed using
-        parallelization.
+        parallelization, and when ``metric="precomputed"``.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors. See scikit-learns'
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`_
@@ -270,11 +274,12 @@ def silhouette_samples(X, labels, metric=None, metric_params=None,
     verbose : int (default: 0)
         If nonzero, joblib progress messages are printed during the
         cross-distance matrix computation (only used by the dtw and softdtw
-        branches).
+        branches). Ignored when ``metric="precomputed"``.
 
     **kwds : optional keyword parameters
         Any further parameters are passed directly to the distance function,
-        just as for the `metric_params` parameter.
+        just as for the `metric_params` parameter. Ignored when
+        ``metric="precomputed"``, for the same reason as `metric_params`.
         Note that, unlike :func:`tslearn.clustering.silhouette_score`,
         ``sample_size`` and ``random_state`` have no effect here: sklearn's
         per-sample ``silhouette_samples`` has no subsampling, so these are
@@ -328,6 +333,9 @@ def silhouette_samples(X, labels, metric=None, metric_params=None,
     0.13383800...
     """
     if metric == "precomputed":
+        # metric_params/n_jobs/verbose/**kwds are intentionally ignored here:
+        # no distance function is called on a precomputed matrix, matching
+        # sklearn's own silhouette_samples(metric="precomputed") behavior.
         return sklearn_silhouette_samples(X=X,
                                           labels=labels,
                                           metric="precomputed")
