@@ -178,6 +178,10 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
         metric_params_[k] = kwds[k]
     if "n_jobs" in metric_params_.keys():
         del metric_params_["n_jobs"]
+    if "verbose" in metric_params_.keys():
+        del metric_params_["verbose"]
+    if "be" in metric_params_.keys():
+        del metric_params_["be"]
     if metric == "precomputed":
         sklearn_X = X
     elif metric == "dtw" or metric is None:
@@ -342,6 +346,8 @@ def silhouette_samples(X, labels, metric=None, metric_params=None,
         del metric_params_["n_jobs"]
     if "verbose" in metric_params_.keys():
         del metric_params_["verbose"]
+    if "be" in metric_params_.keys():
+        del metric_params_["be"]
     if metric == "dtw" or metric is None:
         X = to_time_series_dataset(X, be=be)
         sklearn_X = _cdist_dtw(

@@ -375,6 +375,26 @@ def test_silhouette_samples():
     assert not np.allclose(constrained, unconstrained)
 
 
+def test_silhouette_pinned_kwargs_not_forwarded():
+    # Regression test: `be` (and `verbose` in silhouette_score) are pinned by
+    # the call sites, so forwarding them through metric_params/**kwds used to
+    # raise "got multiple values for keyword argument 'be'". They must be
+    # stripped like n_jobs, since the backend is fixed by instantiate_backend.
+    np.random.seed(0)
+    X = random_walks(n_ts=12, sz=16, d=1)
+    labels = np.random.randint(2, size=12)
+
+    score = silhouette_score(X, labels, metric="dtw",
+                             metric_params={"be": "numpy"})
+    samples = silhouette_samples(X, labels, metric="dtw",
+                                 metric_params={"be": "numpy"})
+    assert math.isclose(float(score),
+                        float(np.mean(samples)),
+                        rel_tol=1e-07)
+    assert samples.shape == (12,)
+    assert silhouette_score(X, labels, metric="dtw", be="numpy") is not None
+
+
 def test_silhouette_samples_softdtw_njobs_verbose(monkeypatch):
     np.random.seed(0)
     X = random_walks(n_ts=20, sz=16, d=1)
