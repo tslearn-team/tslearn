@@ -393,6 +393,10 @@ def test_silhouette_pinned_kwargs_not_forwarded():
                         rel_tol=1e-07)
     assert samples.shape == (12,)
     assert silhouette_score(X, labels, metric="dtw", be="numpy") is not None
+    # verbose is pinned by silhouette_score's call sites too; passing it
+    # through metric_params must be stripped, not forwarded
+    assert silhouette_score(X, labels, metric="dtw",
+                            metric_params={"verbose": 1}) is not None
 
 
 def test_silhouette_samples_softdtw_njobs_verbose(monkeypatch):
