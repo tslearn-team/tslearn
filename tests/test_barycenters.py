@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 import tslearn.barycenters
 from tslearn.utils import to_time_series
@@ -173,3 +174,44 @@ def test_softdtw_barycenter():
     time_series[-1, -2:, :] = np.nan
     sdtw_bar = tslearn.barycenters.softdtw_barycenter(time_series, max_iter=5)
     assert sdtw_bar.shape == (sz, d)
+
+
+@pytest.mark.parametrize(
+    "time_series",
+    [
+        np.array([[[1 + 2j], [3 + 4j]], [[2 + 5j], [4 + 7j]]]),
+        np.array([[[1 + 0j], [3 + 0j]], [[2 + 0j], [4 + 0j]]]),
+        [[[1 + 2j], [3 + 4j]], [[2 + 5j], [4 + 7j]]],
+    ],
+    ids=["array", "zero-imag-array", "list"],
+)
+@pytest.mark.parametrize("max_iter", [0, 1])
+def test_softdtw_barycenter_rejects_complex_input(time_series, max_iter):
+    with pytest.raises(ValueError, match="Complex-valued"):
+        tslearn.barycenters.softdtw_barycenter(time_series, max_iter=max_iter)
+
+
+@pytest.mark.parametrize(
+    "init",
+    [
+        np.array([[1 + 2j], [3 + 4j]]),
+        np.array([[1 + 0j], [3 + 0j]]),
+        [[1 + 2j], [3 + 4j]],
+    ],
+    ids=["array", "zero-imag-array", "list"],
+)
+@pytest.mark.parametrize("max_iter", [0, 1])
+def test_softdtw_barycenter_rejects_complex_init(init, max_iter):
+    time_series = np.array([[[1.], [3.]], [[2.], [4.]]])
+    with pytest.raises(ValueError, match="Complex-valued"):
+        tslearn.barycenters.softdtw_barycenter(
+            time_series, init=init, max_iter=max_iter
+        )
+
+
+def test_softdtw_barycenter_preserves_real_ragged_input():
+    time_series = [[0., 1.], [0., 1., 2.]]
+    barycenter = tslearn.barycenters.softdtw_barycenter(
+        time_series, max_iter=0
+    )
+    np.testing.assert_allclose(barycenter, [[0.], [0.75], [1.5]])
