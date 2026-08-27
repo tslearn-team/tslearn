@@ -215,3 +215,52 @@ def test_softdtw_barycenter_preserves_real_ragged_input():
         time_series, max_iter=0
     )
     np.testing.assert_allclose(barycenter, [[0.], [0.75], [1.5]])
+
+
+def test_softdtw_barycenter_rejects_complex_object_array():
+    time_series = np.empty(2, dtype=object)
+    time_series[:] = [
+        np.array([[1 + 2j], [3 + 4j]]),
+        np.array([[2 + 5j], [4 + 7j]]),
+    ]
+
+    with pytest.raises(ValueError, match="Complex-valued"):
+        tslearn.barycenters.softdtw_barycenter(time_series, max_iter=0)
+
+
+def test_softdtw_barycenter_accepts_real_ragged_object_array():
+    time_series = np.empty(2, dtype=object)
+    time_series[:] = [np.array([0., 1.]), np.array([0., 1., 2.])]
+
+    barycenter = tslearn.barycenters.softdtw_barycenter(
+        time_series, max_iter=0
+    )
+    np.testing.assert_allclose(barycenter, [[0.], [0.75], [1.5]])
+
+
+def test_softdtw_barycenter_rejects_complex_torch_input_and_init():
+    torch = pytest.importorskip("torch")
+    time_series = torch.tensor([[[1.], [3.]], [[2.], [4.]]])
+
+    with pytest.raises(ValueError, match="Complex-valued"):
+        tslearn.barycenters.softdtw_barycenter(
+            time_series.to(torch.complex64), max_iter=0
+        )
+
+    with pytest.raises(ValueError, match="Complex-valued"):
+        tslearn.barycenters.softdtw_barycenter(
+            time_series,
+            init=torch.tensor([[1 + 0j], [3 + 0j]]),
+            max_iter=0,
+        )
+
+
+def test_softdtw_barycenter_accepts_real_torch_input_and_init():
+    torch = pytest.importorskip("torch")
+    time_series = torch.tensor([[[1.], [3.]], [[2.], [4.]]])
+    init = torch.tensor([[1.], [3.]])
+
+    barycenter = tslearn.barycenters.softdtw_barycenter(
+        time_series, init=init, max_iter=0
+    )
+    torch.testing.assert_close(barycenter, init)
