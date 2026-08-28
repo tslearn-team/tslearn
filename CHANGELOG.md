@@ -28,6 +28,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 ### Fixed
 
 * `lcss` and `lcss_path_from_metric` now respect the `global_constraint` / Sakoe-Chiba / Itakura band, which was previously ignored. ([#526](https://github.com/tslearn-team/tslearn/issues/526))
+* Fixed double scaling in `OneD_SymbolicAggregateApproximation`. ([#722](https://github.com/tslearn-team/tslearn/issues/722))
 
 ## [v0.9.0]
 
