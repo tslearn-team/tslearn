@@ -1306,3 +1306,21 @@ def test_softdtw_migration():
             old_cdist_normalized,
             rtol=1e-06
         )
+
+
+def test_cdist_frechet_honours_global_constraint():
+    # `cdist_frechet` must apply the constraint the same way scalar `frechet` does.
+    rng = np.random.RandomState(0)
+    dataset1 = rng.randn(3, 10, 1)
+    dataset2 = rng.randn(2, 10, 1)
+
+    expected = np.array([[
+        tslearn.metrics.frechet(ts1, ts2, global_constraint="sakoe_chiba",
+                                sakoe_chiba_radius=1)
+        for ts2 in dataset2
+    ] for ts1 in dataset1])
+    actual = tslearn.metrics.cdist_frechet(dataset1, dataset2,
+                                           global_constraint="sakoe_chiba",
+                                           sakoe_chiba_radius=1)
+
+    np.testing.assert_allclose(actual, expected)
