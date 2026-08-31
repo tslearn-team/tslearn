@@ -31,6 +31,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 * `gak` and `cdist_gak` no longer return `NaN` for time series longer than about 405 samples. They are now normalized in log space, and the Global Alignment Kernel recursion falls back to a log-space accumulation when its value leaves the range of a 64-bit float. This also fixes `TimeSeriesSVC` / `TimeSeriesSVR` and `KernelKMeans` with `kernel="gak"` on long time series. ([#450](https://github.com/tslearn-team/tslearn/issues/450))
 * Fixed double scaling in `OneD_SymbolicAggregateApproximation`. ([#722](https://github.com/tslearn-team/tslearn/issues/722))
 * `cdist_frechet` now respects `global_constraint`, which was previously ignored. ([#726](https://github.com/tslearn-team/tslearn/issues/726))
+* `TimeSeriesSVR` now passes `epsilon` on to the underlying `sklearn.svm.SVR`, which was previously ignored so the epsilon-tube width was always the sklearn default. ([#727](https://github.com/tslearn-team/tslearn/issues/727))
 
 ## [v0.9.0]
 
