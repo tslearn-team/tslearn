@@ -81,3 +81,24 @@ def test_attributes():
         for attr in ['coef_', 'support_', 'support_vectors_',
                      'dual_coef_', 'coef_', 'intercept_']:
             assert hasattr(linear_model, attr)
+
+
+def test_svr_epsilon_is_used():
+    # TimeSeriesSVR accepted and documented `epsilon` but never passed it on
+    # to the underlying sklearn SVR, so the epsilon-tube width was stuck at
+    # the sklearn default whatever the user asked for.
+    n, sz, d = 40, 20, 1
+    rng = np.random.RandomState(0)
+    time_series = rng.randn(n, sz, d)
+    targets = time_series[:, :, 0].mean(axis=1) * 5.
+
+    # `linear` keeps the fit deterministic (gak's gamma="auto" subsamples).
+    small = TimeSeriesSVR(kernel="linear", epsilon=0.1).fit(time_series, targets)
+    large = TimeSeriesSVR(kernel="linear", epsilon=5.).fit(time_series, targets)
+
+    assert small.svm_estimator_.epsilon == 0.1
+    assert large.svm_estimator_.epsilon == 5.
+
+    # A tube that wide leaves no point outside it, hence no support vector.
+    assert len(small.svm_estimator_.support_) > 0
+    assert len(large.svm_estimator_.support_) == 0
