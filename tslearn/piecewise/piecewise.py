@@ -687,15 +687,15 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         return X_slopes
 
     def _transform(self, X, y=None):
-        X = self._scale(X)
         n_ts, sz_raw, d = X.shape
         X_1d_sax = numpy.empty((n_ts, self.n_segments, 2 * d), dtype=int)
 
         # Average
+        # `SymbolicAggregateApproximation._transform` scales `X` itself.
         X_1d_sax_avg = SymbolicAggregateApproximation._transform(self, X)
 
         # Slope
-        X_slopes = self._get_slopes(X)
+        X_slopes = self._get_slopes(self._scale(X))
         X_1d_sax_slope = _paa_to_symbols(X_slopes, self.breakpoints_slope_)
 
         X_1d_sax[:, :, :d] = X_1d_sax_avg
