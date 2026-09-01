@@ -11,6 +11,9 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "30 3 * * 0"  # weekly, downloads are too heavy to run nightly
+  push:
+    branches:
+      - "foundation-module"
 
 jobs:
   test_foundation_zoo:
