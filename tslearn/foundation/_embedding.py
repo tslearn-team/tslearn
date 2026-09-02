@@ -13,7 +13,7 @@ from tslearn.utils import check_array, to_time_series_dataset
 
 try:
     import torch
-except ImportError:  # pragma: no cover
+except ImportError:
     torch = None
 
 
@@ -50,17 +50,6 @@ def _normalize_pooling(pooling):
     return None if pooling == "none" else pooling
 
 
-def _check_probe_pooling(pooling):
-    """Reject the poolings that do not yield a flat feature matrix."""
-    if _normalize_pooling(pooling) is None:
-        raise ValueError(
-            "A linear probe needs one feature vector per series, so "
-            "`pooling=None` is not supported here. Use another pooling, or "
-            "TimeSeriesFoundationEmbedder directly if you want to keep one "
-            "representation per token."
-        )
-
-
 def _token_slice(tokens):
     """Turn the ``tokens`` parameter into a slice over the token axis."""
     if tokens is None:
@@ -87,21 +76,12 @@ def _layout_to_model_input(X, layout):
     """
     n_ts, sz, d = X.shape
     if layout == "univariate":
-        return np.ascontiguousarray(np.swapaxes(X, 1, 2)).reshape(n_ts * d, sz)
+        return torch.swapaxes(X, 1, 2).reshape(n_ts * d, sz).contiguous()
     if layout == "channels_first":
-        return np.ascontiguousarray(np.swapaxes(X, 1, 2))
+        return torch.swapaxes(X, 1, 2).contiguous()
     if layout == "channels_last":
-        return np.ascontiguousarray(X)
-    raise ValueError(f"`input_layout` must be one of {LAYOUTS}, got '{layout}'.")
-
-
-def _require_torch():
-    if torch is None:  # pragma: no cover
-        raise ImportError(
-            "PyTorch is required by the tslearn.foundation module. "
-            "Install it with `pip install torch`."
-        )
-
+        return X.contiguous()
+    raise ValueError(f"`input_layout` must be one of {LAYOUTS}, got '{layout}'.")  # pragma: no cover
 
 def _resolve_attribute_path(model, path):
     """Return the sub-module of ``model`` designated by a dotted ``path``."""
@@ -127,28 +107,26 @@ def _autodetect_layers(model):
     encoder/decoder blocks are declared in essentially every implementation
     published on the Hugging Face Hub.
     """
-    _require_torch()
-    best_path, best_modules = None, None
-    for path, module in model.named_modules():
+    best_modules = None
+    for module in model.modules():
         if not isinstance(module, torch.nn.ModuleList) or len(module) < 2:
             continue
         types = {type(block) for block in module}
         if len(types) > 1:
             continue
         if best_modules is None or len(module) > len(best_modules):
-            best_path, best_modules = path, module
+            best_modules = module
     if best_modules is None:
         raise ValueError(
             "Could not automatically locate the stack of layers of the provided "
             "model. Pass an explicit `layers_path` (e.g. 'encoder.block') to "
             "select the layers to probe."
         )
-    return best_path, best_modules
+    return best_modules
 
 
 def _as_tensor(output):
     """Extract the hidden state tensor out of an arbitrary module output."""
-    _require_torch()
     if isinstance(output, torch.Tensor):
         return output
     for name in CANDIDATE_HIDDEN_STATE_NAMES:
@@ -251,19 +229,12 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
           independently. The other two layouts feed
           a ``(n_ts, sz, d)`` or ``(n_ts, d, sz)`` array respectively, for
           models that are natively multivariate.
-        context_length : int or None (default: None)
-          When set, only the last ``context_length`` timestamps of each series
-          are fed to the model.
         input_name : str or None (default: None)
           Name of the ``forward`` argument receiving the context values.
         model_kwargs : dict or None (default: None)
           Extra keyword arguments passed to every ``forward`` call.
         batch_size : int (default: 32)
-          Number of series embedded at once, see
-          :class:`~tslearn.foundation.TimeSeriesFoundationEmbedder`.
-        device : str or None (default: None)
-          Device on which inference is run, see
-          :class:`~tslearn.foundation.TimeSeriesFoundationEmbedder`.
+          Number of series embedded at once.
         verbose : int (default: 0)
           When positive, prints progress information.
 
@@ -286,9 +257,9 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
 
     Examples
     --------
-    >>> from chronos import Chronos2Pipeline  # doctest: +SKIP
-    >>> pipeline = Chronos2Pipeline.from_pretrained("amazon/chronos-2")  # doctest: +SKIP
-    >>> embedder = TimeSeriesFoundationEmbedder(pipeline.model, layer=-2)  # doctest: +SKIP
+    >>> from chronos import Chronos2Model  # doctest: +SKIP
+    >>> model = Chronos2Model.from_pretrained("amazon/chronos-2")  # doctest: +SKIP
+    >>> embedder = TimeSeriesFoundationEmbedder(model, layer=-2)  # doctest: +SKIP
     >>> embedder.fit_transform(X).shape  # doctest: +SKIP
     (10, 512)
 
@@ -315,13 +286,16 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
         tokens=None,
         token_index=0,
         input_layout="univariate",
-        context_length=None,
         input_name=None,
         model_kwargs=None,
         batch_size=32,
         device=None,
         verbose=0,
     ):
+        if torch is None:
+            raise ValueError(
+                "Could not use TimeSeriesFoundationEmbedder since torch is not installed"
+            )
         self.model = model
         self.layer = layer
         self.layers_path = layers_path
@@ -329,7 +303,6 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
         self.tokens = tokens
         self.token_index = token_index
         self.input_layout = input_layout
-        self.context_length = context_length
         self.input_name = input_name
         self.model_kwargs = model_kwargs
         self.batch_size = batch_size
@@ -341,13 +314,11 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
             raise ValueError(
                 f"`pooling` must be one of {POOLINGS}, got '{self.pooling}'."
             )
-        _token_slice(self.tokens)
         if self.input_layout not in LAYOUTS:
             raise ValueError(
                 f"`input_layout` must be one of {LAYOUTS}, got "
                 f"'{self.input_layout}'."
             )
-        _require_torch()
         if not isinstance(self.model, torch.nn.Module):
             raise TypeError(
                 "`model` must be a torch.nn.Module, got "
@@ -357,40 +328,43 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
 
     @property
     def _device(self):
-        if self.device is not None:
-            return torch.device(self.device)
         try:
             return next(self.model.parameters()).device
-        except StopIteration:  # pragma: no cover
+        except StopIteration:
             return torch.device("cpu")
+
+    @property
+    def _dtype(self):
+        try:
+            return next(self.model.parameters()).dtype
+        except StopIteration:
+            return torch.get_default_dtype()
 
     def _resolve_input_name(self):
         if self.input_name is not None:
             return self.input_name
-        try:
-            signature = inspect.signature(self.model.forward)
-        except (TypeError, ValueError):  # pragma: no cover
-            return CANDIDATE_INPUT_NAMES[0]
-        parameters = signature.parameters
+
+        parameters = inspect.signature(self.model.forward).parameters
+        # First found among candidates
         for name in CANDIDATE_INPUT_NAMES:
             if name in parameters:
                 return name
+        # First found among signature parameters
         for name, parameter in parameters.items():
-            if name == "self":
-                continue
             if parameter.kind in (
                 parameter.POSITIONAL_ONLY,
                 parameter.POSITIONAL_OR_KEYWORD,
             ):
                 return name
-        raise ValueError(  # pragma: no cover
+
+        raise RuntimeError(
             "Could not determine which argument of the model's `forward` method "
             "should receive the time series. Pass an explicit `input_name`."
         )
 
     def _resolve_layers(self):
         if self.layers_path is not None:
-            return self.layers_path, _resolve_attribute_path(
+            return _resolve_attribute_path(
                 self.model, self.layers_path
             )
         return _autodetect_layers(self.model)
@@ -399,14 +373,15 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
         """Run the model on a batch and return hidden states of shape
         (batch, n_tokens, dim)."""
         kwargs = dict(self.model_kwargs or {})
-        kwargs[self._input_name_] = batch
+        if self._input_name:
+            kwargs[self._input_name] = batch
 
         if self.layer is None:
             with torch.no_grad():
                 output = self.model(**kwargs)
             return _as_tensor(output)
 
-        _, layers = self._resolve_layers()
+        layers = self._resolve_layers()
         try:
             layer_module = layers[self.layer]
         except IndexError:
@@ -427,7 +402,7 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
         finally:
             handle.remove()
 
-        if "hidden_states" not in captured:  # pragma: no cover
+        if "hidden_states" not in captured:
             raise RuntimeError(
                 "The forward hook was never triggered; the selected layer does "
                 "not seem to take part in the model's forward pass."
@@ -474,14 +449,7 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
 
     def _check_input(self, X):
         X = check_array(X, allow_nd=True, force_all_finite=True)
-        X = to_time_series_dataset(X)
-        if self.context_length is not None:
-            if X.shape[1] < self.context_length:
-                raise ValueError(
-                    f"Series of length at least context_length="
-                    f"{self.context_length} are required, got {X.shape[1]}."
-                )
-            X = X[:, -self.context_length :]
+        X = to_time_series_dataset(X, dtype=self._dtype, be="torch")
         return X
 
     def _embed(self, X):
@@ -494,18 +462,16 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
         flat = _layout_to_model_input(X, self.input_layout)
 
         embeddings = []
-        device = self._device
         for start in range(0, flat.shape[0], self.batch_size):
-            chunk = flat[start : start + self.batch_size]
-            batch = torch.as_tensor(np.asarray(chunk, dtype=np.float32), device=device)
+            batch = flat[start : start + self.batch_size].to(self._device)
             hidden_states = self._forward_hidden_states(batch)
-            embeddings.append(self._pool(hidden_states).to(torch.float32).cpu().numpy())
+            embeddings.append(self._pool(hidden_states).to(torch.float32))
             if self.verbose:
                 print(
                     f"Embedded {min(start + self.batch_size, flat.shape[0])}"
                     f"/{flat.shape[0]} series"
                 )
-        embeddings = np.concatenate(embeddings, axis=0)
+        embeddings = torch.concatenate(embeddings, axis=0)
 
         if self.input_layout == "univariate":
             if embeddings.ndim == 3:
@@ -514,7 +480,7 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
                 # side by side, as in any other tslearn time series dataset.
                 n_tokens, dim = embeddings.shape[1:]
                 embeddings = embeddings.reshape(n_ts, d, n_tokens, dim)
-                embeddings = np.swapaxes(embeddings, 1, 2)
+                embeddings = torch.swapaxes(embeddings, 1, 2)
                 embeddings = embeddings.reshape(n_ts, n_tokens, d * dim)
             else:
                 # Concatenate the per-channel embeddings of a same series
@@ -538,14 +504,18 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
         """
         self._validate_params_()
         X = self._check_input(X)
+
         self.model.eval()
-        self._input_name_ = self._resolve_input_name()
+        self._input_name = self._resolve_input_name()
+
         self.n_features_in_ = X.shape[2]
         self._sz_fit_ = X.shape[1]
+
         # A single series is enough to know the shape of the representations
         embedded = self._embed(X[:1])
         self.embedding_size_ = embedded.shape[-1]
         self.n_tokens_ = embedded.shape[1] if embedded.ndim == 3 else None
+
         return self
 
     def transform(self, X):
@@ -599,6 +569,5 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
         tags.target_tags.required = False
-        tags.non_deterministic = False
         tags.input_tags.allow_nan = False
         return tags

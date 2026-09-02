@@ -14,10 +14,12 @@ from sklearn.linear_model import Ridge
 from sklearn.pipeline import make_pipeline
 from sklearn.svm import LinearSVC
 
+try:
+    import torch
+except ImportError:
+    torch = None
+
 from tslearn.generators import random_walks
-
-torch = pytest.importorskip("torch")
-
 from tslearn.foundation import (  # noqa: E402
     LinearProbeForecaster,
     TimeSeriesFoundationEmbedder,
@@ -29,107 +31,118 @@ PATCH_SIZE = 4
 D_MODEL = 8
 
 
-class _Block(torch.nn.Module):
-    """A single, deliberately simple, encoder block."""
-
-    def __init__(self, d_model=D_MODEL):
-        super().__init__()
-        self.linear = torch.nn.Linear(d_model, d_model)
-
-    def forward(self, hidden_states):
-        return hidden_states + torch.tanh(self.linear(hidden_states))
-
-
-class _Encoder(torch.nn.Module):
-    def __init__(self, n_layers=3, d_model=D_MODEL):
-        super().__init__()
-        self.block = torch.nn.ModuleList([_Block(d_model) for _ in range(n_layers)])
-        self.final_layer_norm = torch.nn.LayerNorm(d_model)
-
-    def forward(self, hidden_states):
-        for block in self.block:
-            hidden_states = block(hidden_states)
-        return self.final_layer_norm(hidden_states)
+@pytest.mark.skipif(torch is not None, reason="PyTorch is installed")
+def test_no_torch():
+    with pytest.raises(ValueError, match="torch is not installed"):
+        TimeSeriesFoundationEmbedder("whatever")
+    with pytest.raises(ValueError, match="torch is not installed"):
+        LinearProbeForecaster("whatever")
+    with pytest.raises(ValueError, match="torch is not installed"):
+        ZeroShotForecaster("whatever")
 
 
-class _Output:
-    """Stands in for a ``transformers`` ``ModelOutput``."""
+if torch:
+    class _Block(torch.nn.Module):
+        """A single, deliberately simple, encoder block."""
 
-    def __init__(self, last_hidden_state):
-        self.last_hidden_state = last_hidden_state
+        def __init__(self, d_model=D_MODEL):
+            super().__init__()
+            self.linear = torch.nn.Linear(d_model, d_model)
 
-
-class _DummyBackbone(torch.nn.Module):
-    """A patch-based encoder taking univariate series, like Chronos-2.
-
-    A register token is appended after the context tokens, so that the
-    ``pooling="token"`` code path can be exercised on a non-zero ``token_index``.
-    """
-
-    def __init__(self, n_layers=3, d_model=D_MODEL, patch_size=PATCH_SIZE, seed=0):
-        super().__init__()
-        # Seeded so that results do not depend on which test ran before
-        torch.manual_seed(seed)
-        self.patch_size = patch_size
-        self.embedding = torch.nn.Linear(patch_size, d_model)
-        self.register_token = torch.nn.Parameter(torch.randn(1, 1, d_model))
-        self.encoder = _Encoder(n_layers, d_model)
-
-    def forward(self, context):
-        batch_size, sz = context.shape
-        n_patches = sz // self.patch_size
-        patches = context[:, : n_patches * self.patch_size]
-        patches = patches.reshape(batch_size, n_patches, self.patch_size)
-        hidden_states = self.embedding(patches)
-        register = self.register_token.expand(batch_size, -1, -1)
-        hidden_states = torch.cat([hidden_states, register], dim=1)
-        return _Output(self.encoder(hidden_states))
+        def forward(self, hidden_states):
+            return hidden_states + torch.tanh(self.linear(hidden_states))
 
 
-class _MultivariateBackbone(torch.nn.Module):
-    """An encoder taking (batch, sz, d) arrays, like ``transformers`` models."""
+    class _Encoder(torch.nn.Module):
+        def __init__(self, n_layers=3, d_model=D_MODEL):
+            super().__init__()
+            self.block = torch.nn.ModuleList([_Block(d_model) for _ in range(n_layers)])
+            self.final_layer_norm = torch.nn.LayerNorm(d_model)
 
-    def __init__(self, n_channels, d_model=D_MODEL, seed=0):
-        super().__init__()
-        torch.manual_seed(seed)
-        self.embedding = torch.nn.Linear(n_channels, d_model)
-        self.encoder = _Encoder(2, d_model)
-
-    def forward(self, past_values):
-        return _Output(self.encoder(self.embedding(past_values)))
-
-
-class _DummyPipeline:
-    """A zero-shot forecaster mimicking ``Chronos2Pipeline``.
-
-    It returns one tensor per series, of shape
-    ``(n_variates, prediction_length, n_quantiles)``.
-    """
-
-    n_quantiles = 9
-
-    def predict(self, inputs, prediction_length=1, batch_size=256):
-        inputs = np.asarray(inputs, dtype=np.float64)
-        # Naive forecast: repeat the last observed value
-        last = inputs[:, -1]
-        quantile_offsets = np.linspace(-1.0, 1.0, self.n_quantiles)
-        forecast = (
-            last[:, None, None]
-            + np.zeros((1, prediction_length, 1))
-            + quantile_offsets[None, None, :]
-        )
-        return [torch.as_tensor(row[None]) for row in forecast]
+        def forward(self, hidden_states):
+            for block in self.block:
+                hidden_states = block(hidden_states)
+            return self.final_layer_norm(hidden_states)
 
 
-def _dataset(n_ts=6, sz=32, d=1, seed=0):
-    return random_walks(n_ts=n_ts, sz=sz, d=d, random_state=seed)
+    class _Output:
+        """Stands in for a ``transformers`` ``ModelOutput``."""
+
+        def __init__(self, last_hidden_state):
+            self.last_hidden_state = last_hidden_state
+
+
+    class _DummyBackbone(torch.nn.Module):
+        """A patch-based encoder taking univariate series, like Chronos-2.
+
+        A register token is appended after the context tokens, so that the
+        ``pooling="token"`` code path can be exercised on a non-zero ``token_index``.
+        """
+
+        def __init__(self, n_layers=3, d_model=D_MODEL, patch_size=PATCH_SIZE, seed=0):
+            super().__init__()
+            # Seeded so that results do not depend on which test ran before
+            torch.manual_seed(seed)
+            self.patch_size = patch_size
+            self.embedding = torch.nn.Linear(patch_size, d_model)
+            self.register_token = torch.nn.Parameter(torch.randn(1, 1, d_model))
+            self.encoder = _Encoder(n_layers, d_model)
+
+        def forward(self, context):
+            batch_size, sz = context.shape
+            n_patches = sz // self.patch_size
+            patches = context[:, : n_patches * self.patch_size]
+            patches = patches.reshape(batch_size, n_patches, self.patch_size)
+            hidden_states = self.embedding(patches)
+            register = self.register_token.expand(batch_size, -1, -1)
+            hidden_states = torch.cat([hidden_states, register], dim=1)
+            return _Output(self.encoder(hidden_states))
+
+
+    class _MultivariateBackbone(torch.nn.Module):
+        """An encoder taking (batch, sz, d) arrays, like ``transformers`` models."""
+
+        def __init__(self, n_channels, d_model=D_MODEL, seed=0):
+            super().__init__()
+            torch.manual_seed(seed)
+            self.embedding = torch.nn.Linear(n_channels, d_model)
+            self.encoder = _Encoder(2, d_model)
+
+        def forward(self, past_values):
+            return _Output(self.encoder(self.embedding(past_values)))
+
+
+    class _DummyPipeline:
+        """A zero-shot forecaster mimicking ``Chronos2Pipeline``.
+
+        It returns one tensor per series, of shape
+        ``(n_variates, prediction_length, n_quantiles)``.
+        """
+
+        n_quantiles = 9
+
+        def predict(self, inputs, prediction_length=1, batch_size=256):
+            inputs = np.asarray(inputs, dtype=np.float64)
+            # Naive forecast: repeat the last observed value
+            last = inputs[:, -1]
+            quantile_offsets = np.linspace(-1.0, 1.0, self.n_quantiles)
+            forecast = (
+                last[:, None, None]
+                + np.zeros((1, prediction_length, 1))
+                + quantile_offsets[None, None, :]
+            )
+            return [torch.as_tensor(row[None]) for row in forecast]
+
+
+    def _dataset(n_ts=6, sz=32, d=1, seed=0):
+        return random_walks(n_ts=n_ts, sz=sz, d=d, random_state=seed)
 
 
 # ---------------------------------------------------------------------------
 # TimeSeriesFoundationEmbedder
 # ---------------------------------------------------------------------------
 
-
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_embedder_shapes_and_layouts():
     X = _dataset(n_ts=5, sz=32, d=1)
     embedder = TimeSeriesFoundationEmbedder(_DummyBackbone())
@@ -149,6 +162,7 @@ def test_embedder_shapes_and_layouts():
     assert embedder.fit_transform(X_multi).shape == (5, D_MODEL)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_embedder_channel_stacking_is_order_preserving():
     # The embedding of a multivariate series must be the concatenation of the
     # embeddings of its channels, in channel order.
@@ -164,6 +178,7 @@ def test_embedder_channel_stacking_is_order_preserving():
     )
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 @pytest.mark.parametrize("pooling", ["mean", "max", "token", "last", "flatten"])
 def test_embedder_poolings(pooling):
     X = _dataset(n_ts=4, sz=32, d=1)
@@ -175,6 +190,7 @@ def test_embedder_poolings(pooling):
     assert embedder.n_tokens_ is None
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 @pytest.mark.parametrize("pooling", [None, "none"])
 def test_embedder_without_pooling_is_a_series_to_series_transform(pooling):
     X = _dataset(n_ts=4, sz=32, d=1)
@@ -195,6 +211,7 @@ def test_embedder_without_pooling_is_a_series_to_series_transform(pooling):
     assert labels.shape == (4,)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_embedder_token_selection():
     X = _dataset(n_ts=4, sz=32, d=1)
     n_context = 32 // PATCH_SIZE  # tokens that represent the series
@@ -244,6 +261,7 @@ def test_embedder_token_selection():
     )
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_embedder_token_selection_multivariate():
     X = _dataset(n_ts=4, sz=32, d=3)
     n_context = 32 // PATCH_SIZE
@@ -270,6 +288,7 @@ def test_embedder_token_selection_multivariate():
         )
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_embedder_token_selection_errors():
     X = _dataset(n_ts=4, sz=32, d=1)
     with pytest.raises(ValueError, match="`tokens` must be"):
@@ -280,6 +299,7 @@ def test_embedder_token_selection_errors():
         TimeSeriesFoundationEmbedder(_DummyBackbone(), tokens=(0, 0)).fit(X)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_probes_reject_unpooled_representations():
     X = _dataset(n_ts=4, sz=32, d=1)
     for pooling in (None, "none"):
@@ -289,6 +309,7 @@ def test_probes_reject_unpooled_representations():
             ).fit(X)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_probes_accept_token_selection():
     X_fc = _dataset(n_ts=6, sz=48, d=1)
     model = LinearProbeForecaster(
@@ -297,6 +318,7 @@ def test_probes_accept_token_selection():
     assert model.predict(X_fc).shape == (6, 2, 1)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_embedder_token_index_selects_the_register_token():
     X = _dataset(n_ts=3, sz=32, d=1)
     # The register token is appended last and does not depend on the input, so
@@ -315,6 +337,7 @@ def test_embedder_token_index_selects_the_register_token():
     assert not np.allclose(embeddings, embeddings[:1])
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_embedder_layer_selection():
     X = _dataset(n_ts=4, sz=32, d=1)
     backbone = _DummyBackbone(n_layers=3)
@@ -346,6 +369,7 @@ def test_embedder_layer_selection():
     )
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_embedder_leaves_the_model_frozen():
     X = _dataset(n_ts=4, sz=32, d=1)
     backbone = _DummyBackbone()
@@ -356,22 +380,7 @@ def test_embedder_leaves_the_model_frozen():
         torch.testing.assert_close(parameter.detach(), reference)
 
 
-def test_embedder_context_length_truncation():
-    X = _dataset(n_ts=4, sz=64, d=1)
-    embedder = TimeSeriesFoundationEmbedder(_DummyBackbone(), context_length=32)
-    np.testing.assert_allclose(
-        embedder.fit_transform(X),
-        TimeSeriesFoundationEmbedder(embedder.model).fit_transform(X[:, -32:]),
-        rtol=1e-5,
-        atol=1e-6,
-    )
-
-    with pytest.raises(ValueError, match="context_length"):
-        TimeSeriesFoundationEmbedder(
-            _DummyBackbone(), context_length=128
-        ).fit_transform(X)
-
-
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_embedder_errors():
     X = _dataset(n_ts=4, sz=32, d=1)
     with pytest.raises(ValueError, match="pooling"):
@@ -390,8 +399,24 @@ def test_embedder_errors():
         TimeSeriesFoundationEmbedder(_DummyBackbone()).fit(X).transform(
             _dataset(n_ts=4, sz=32, d=2)
         )
+    with pytest.raises(RuntimeError, match="Could not determine which argument"):
+        class _InvalidForwardBackbone(torch.nn.Module):
+            def forward(self, *args, **kwargs): pass
+        TimeSeriesFoundationEmbedder(_InvalidForwardBackbone()).fit(X)
+    with pytest.raises(RuntimeError, match="forward hook was never triggered"):
+        class _InvalidLayerBackbone(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.linears = torch.nn.ModuleList([
+                    torch.nn.Linear(32, 32),
+                    torch.nn.Linear(D_MODEL, D_MODEL)
+                ])
+            def forward(self, data):
+                self.linears[0](data)
+        TimeSeriesFoundationEmbedder(_InvalidLayerBackbone(), layer=1).fit(X)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_embedder_in_a_sklearn_pipeline():
     X = _dataset(n_ts=20, sz=32, d=1)
     y = np.arange(20) % 2
@@ -402,6 +427,7 @@ def test_embedder_in_a_sklearn_pipeline():
     assert clone(pipeline) is not pipeline
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_embedder_channels_first_layout():
     X = _dataset(n_ts=4, sz=32, d=3)
     seen = {}
@@ -425,6 +451,7 @@ def test_embedder_channels_first_layout():
     assert embeddings.shape == (4, D_MODEL)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_embedder_layers_path_with_numeric_segment():
     X = _dataset(n_ts=3, sz=32, d=1)
 
@@ -462,6 +489,7 @@ def test_embedder_layers_path_with_numeric_segment():
         ).fit(X)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_embedder_autodetect_layers_failure():
     X = _dataset(n_ts=3, sz=32, d=1)
 
@@ -470,13 +498,26 @@ def test_embedder_autodetect_layers_failure():
             super().__init__()
             self.linear = torch.nn.Linear(32, D_MODEL)
 
-        def forward(self, x):
-            return _Output(self.linear(x).unsqueeze(1))
+        def forward(self, x): pass
 
     with pytest.raises(ValueError, match="Could not automatically locate"):
         TimeSeriesFoundationEmbedder(_NoLayerStack(), layer=0).fit(X)
 
+    class _HeterogeneousLayersBackbone(torch.nn.Module):
+        def __init__(self, d_model=D_MODEL):
+            super().__init__()
+            self.bloc = torch.nn.ModuleList([
+                torch.nn.Linear(d_model, d_model),
+                torch.nn.LayerNorm(d_model)
+            ])
 
+        def forward(self, x): pass
+
+    with pytest.raises(ValueError, match="Could not automatically locate"):
+        TimeSeriesFoundationEmbedder(_HeterogeneousLayersBackbone(), layer=0).fit(X)
+
+
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_embedder_accepts_dict_model_outputs():
     X = _dataset(n_ts=3, sz=32, d=1)
 
@@ -494,6 +535,7 @@ def test_embedder_accepts_dict_model_outputs():
     assert embeddings.shape == (3, D_MODEL)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_embedder_accepts_hidden_states_tuple_attribute():
     X = _dataset(n_ts=3, sz=32, d=1)
 
@@ -522,6 +564,7 @@ def test_embedder_accepts_hidden_states_tuple_attribute():
     np.testing.assert_allclose(embeddings, 2 * raw.numpy(), rtol=1e-5, atol=1e-6)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_embedder_accepts_plain_tuple_outputs():
     X = _dataset(n_ts=3, sz=32, d=1)
 
@@ -542,6 +585,7 @@ def test_embedder_accepts_plain_tuple_outputs():
     assert embeddings.shape == (3, D_MODEL)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_embedder_plain_tuple_falls_back_to_any_tensor():
     X = _dataset(n_ts=3, sz=32, d=1)
 
@@ -559,6 +603,7 @@ def test_embedder_plain_tuple_falls_back_to_any_tensor():
     assert embeddings.shape == (3, D_MODEL)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_embedder_rejects_unrecognized_model_output():
     X = _dataset(n_ts=3, sz=32, d=1)
 
@@ -570,17 +615,19 @@ def test_embedder_rejects_unrecognized_model_output():
         TimeSeriesFoundationEmbedder(_BogusOutputBackbone()).fit(X)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_embedder_rejects_invalid_hidden_state_rank():
     X = _dataset(n_ts=3, sz=32, d=1)
 
     class _WeirdRankBackbone(torch.nn.Module):
         def forward(self, x):
-            return x[:, None, None, :]  # 4d, not a valid hidden-state rank
+            return torch.tensor(x[:, None, None, :])  # 4d, not a valid hidden-state rank
 
     with pytest.raises(ValueError, match="Expected hidden states of shape"):
         TimeSeriesFoundationEmbedder(_WeirdRankBackbone()).fit(X)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_embedder_explicit_device():
     X = _dataset(n_ts=3, sz=32, d=1)
     embeddings = TimeSeriesFoundationEmbedder(
@@ -589,6 +636,7 @@ def test_embedder_explicit_device():
     assert embeddings.shape == (3, D_MODEL)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_embedder_explicit_input_name():
     X = _dataset(n_ts=3, sz=32, d=1)
 
@@ -607,6 +655,7 @@ def test_embedder_explicit_input_name():
     assert embeddings.shape == (3, D_MODEL)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_embedder_resolves_input_name_by_position_when_unrecognized():
     X = _dataset(n_ts=3, sz=32, d=1)
 
@@ -622,10 +671,11 @@ def test_embedder_resolves_input_name_by_position_when_unrecognized():
 
     embedder = TimeSeriesFoundationEmbedder(_PositionalArgBackbone())
     embeddings = embedder.fit_transform(X)
-    assert embedder._input_name_ == "data"
+    assert embedder._input_name == "data"
     assert embeddings.shape == (3, D_MODEL)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_embedder_verbose_prints_progress(capsys):
     X = _dataset(n_ts=5, sz=32, d=1)
     TimeSeriesFoundationEmbedder(
@@ -635,6 +685,7 @@ def test_embedder_verbose_prints_progress(capsys):
     assert "Embedded 5/5 series" in captured.out
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_embedder_flatten_pooling_warns_on_length_mismatch():
     X_fit = _dataset(n_ts=3, sz=32, d=1)
     X_other = _dataset(n_ts=3, sz=48, d=1, seed=1)
@@ -650,6 +701,7 @@ def test_embedder_flatten_pooling_warns_on_length_mismatch():
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_zero_shot_forecaster():
     X = _dataset(n_ts=5, sz=32, d=1)
     model = ZeroShotForecaster(_DummyPipeline())
@@ -666,6 +718,7 @@ def test_zero_shot_forecaster():
     )
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_zero_shot_forecaster_multivariate():
     X = _dataset(n_ts=5, sz=32, d=3)
     predicted = ZeroShotForecaster(_DummyPipeline()).predict(X, n=4)
@@ -676,6 +729,7 @@ def test_zero_shot_forecaster_multivariate():
     )
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_zero_shot_forecaster_quantile_selection():
     X = _dataset(n_ts=3, sz=32, d=1)
     low = ZeroShotForecaster(_DummyPipeline(), quantile=0.1).predict(X, n=3)
@@ -683,6 +737,7 @@ def test_zero_shot_forecaster_quantile_selection():
     assert np.all(low < high)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_zero_shot_forecaster_custom_predict_fn():
     X = _dataset(n_ts=4, sz=32, d=1)
 
@@ -694,6 +749,7 @@ def test_zero_shot_forecaster_custom_predict_fn():
     np.testing.assert_array_equal(predicted, np.zeros((4, 5, 1)))
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_zero_shot_forecaster_context_length():
     X = _dataset(n_ts=4, sz=64, d=1)
     seen = {}
@@ -708,6 +764,7 @@ def test_zero_shot_forecaster_context_length():
     assert seen["shape"] == (4, 16)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_zero_shot_forecaster_negotiates_the_context_format():
     X = _dataset(n_ts=4, sz=32, d=1)
 
@@ -747,6 +804,7 @@ def test_zero_shot_forecaster_negotiates_the_context_format():
         ZeroShotForecaster(_RejectsEverything()).predict(X, n=3)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_zero_shot_forecaster_explicit_horizon_axis():
     X = _dataset(n_ts=4, sz=32, d=1)
 
@@ -788,6 +846,7 @@ def test_zero_shot_forecaster_explicit_horizon_axis():
         ZeroShotForecaster(_HorizonLast(), horizon_axis="last").predict(X, n=3)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_zero_shot_forecaster_explicit_horizon_axis_lifts_ambiguity():
     X = _dataset(n_ts=4, sz=32, d=1)
 
@@ -808,6 +867,7 @@ def test_zero_shot_forecaster_explicit_horizon_axis_lifts_ambiguity():
     )
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_zero_shot_forecaster_warns_on_ambiguous_output_shape():
     X = _dataset(n_ts=4, sz=32, d=1)
 
@@ -829,6 +889,7 @@ def test_zero_shot_forecaster_warns_on_ambiguous_output_shape():
         assert ZeroShotForecaster(_Ambiguous()).predict(X, n=1).shape == (4, 1, 1)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_zero_shot_forecaster_reduces_quantiles_to_a_point_forecast():
     X = _dataset(n_ts=4, sz=32, d=1)
 
@@ -853,6 +914,7 @@ def test_zero_shot_forecaster_reduces_quantiles_to_a_point_forecast():
     )
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_zero_shot_forecaster_errors():
     X = _dataset(n_ts=4, sz=32, d=1)
     with pytest.raises(ValueError, match="`X` is required"):
@@ -865,6 +927,7 @@ def test_zero_shot_forecaster_errors():
         ZeroShotForecaster(_DummyPipeline(), input_layout="bogus").predict(X)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_zero_shot_forecaster_skips_methods_without_a_horizon_argument():
     X = _dataset(n_ts=4, sz=32, d=1)
     calls = []
@@ -887,6 +950,7 @@ def test_zero_shot_forecaster_skips_methods_without_a_horizon_argument():
     assert calls == ["forecast"]
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_zero_shot_forecaster_accepts_object_attribute_output():
     X = _dataset(n_ts=4, sz=32, d=1)
 
@@ -905,6 +969,7 @@ def test_zero_shot_forecaster_accepts_object_attribute_output():
     assert predicted.shape == (4, 3, 1)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_zero_shot_forecaster_univariate_row_mismatch_error():
     X = _dataset(n_ts=4, sz=32, d=1)
 
@@ -918,6 +983,7 @@ def test_zero_shot_forecaster_univariate_row_mismatch_error():
         ZeroShotForecaster(_WrongRowCountModel()).predict(X, n=2)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_zero_shot_forecaster_univariate_forecast_too_short_error():
     X = _dataset(n_ts=4, sz=32, d=1)
 
@@ -930,6 +996,7 @@ def test_zero_shot_forecaster_univariate_forecast_too_short_error():
         ZeroShotForecaster(_TooShortModel()).predict(X, n=3)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_zero_shot_forecaster_accepts_dict_output():
     X = _dataset(n_ts=4, sz=32, d=1)
 
@@ -944,6 +1011,7 @@ def test_zero_shot_forecaster_accepts_dict_output():
     assert predicted.shape == (4, 3, 1)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_zero_shot_forecaster_empty_output_error():
     X = _dataset(n_ts=4, sz=32, d=1)
 
@@ -955,6 +1023,7 @@ def test_zero_shot_forecaster_empty_output_error():
         ZeroShotForecaster(_EmptyOutputModel()).predict(X, n=3)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_zero_shot_forecaster_heterogeneous_output_keeps_first_entry():
     X = _dataset(n_ts=4, sz=32, d=1)
 
@@ -971,6 +1040,7 @@ def test_zero_shot_forecaster_heterogeneous_output_keeps_first_entry():
     assert predicted.shape == (4, 3, 1)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_zero_shot_forecaster_horizon_axis_prefers_smallest_longer_axis():
     X = _dataset(n_ts=4, sz=32, d=1)
 
@@ -988,6 +1058,7 @@ def test_zero_shot_forecaster_horizon_axis_prefers_smallest_longer_axis():
     np.testing.assert_allclose(predicted, np.zeros((4, 4, 1)))
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_zero_shot_forecaster_horizon_axis_cannot_be_identified():
     X = _dataset(n_ts=4, sz=32, d=1)
 
@@ -1002,6 +1073,7 @@ def test_zero_shot_forecaster_horizon_axis_cannot_be_identified():
         ZeroShotForecaster(_TooShortEverywhereModel()).predict(X, n=4)
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_zero_shot_forecaster_natively_multivariate_channels_last():
     X = _dataset(n_ts=4, sz=32, d=3)
 
@@ -1020,6 +1092,7 @@ def test_zero_shot_forecaster_natively_multivariate_channels_last():
     np.testing.assert_allclose(predicted, np.repeat(X[:, -1:], 4, axis=1))
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_zero_shot_forecaster_natively_multivariate_channels_first():
     X = _dataset(n_ts=4, sz=32, d=3)
 
@@ -1038,6 +1111,7 @@ def test_zero_shot_forecaster_natively_multivariate_channels_first():
     np.testing.assert_allclose(predicted, np.repeat(X[:, -1:], 4, axis=1))
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_zero_shot_forecaster_natively_multivariate_errors():
     X = _dataset(n_ts=4, sz=32, d=3)
 
@@ -1068,6 +1142,7 @@ def test_zero_shot_forecaster_natively_multivariate_errors():
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_linear_probe_forecaster():
     X = _dataset(n_ts=8, sz=64, d=1)
     model = LinearProbeForecaster(
@@ -1082,6 +1157,7 @@ def test_linear_probe_forecaster():
     np.testing.assert_allclose(model.predict(X, n=2), predicted[:, :2])
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_linear_probe_forecaster_multivariate():
     X = _dataset(n_ts=6, sz=48, d=2)
     model = LinearProbeForecaster(
@@ -1091,6 +1167,7 @@ def test_linear_probe_forecaster_multivariate():
     assert model.embedder_.embedding_size_ == 2 * D_MODEL
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_linear_probe_forecaster_learns_something():
     # On a dataset of pure sine waves with varying phases, a probe on top of a
     # frozen encoder should do clearly better than forecasting the last value.
@@ -1105,6 +1182,7 @@ def test_linear_probe_forecaster_learns_something():
     assert model.score(X[30:]) > 0.5
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_linear_probe_forecaster_accepts_any_probe():
     X = _dataset(n_ts=6, sz=48, d=1)
     model = LinearProbeForecaster(
@@ -1120,6 +1198,7 @@ def test_linear_probe_forecaster_accepts_any_probe():
     assert not hasattr(model.probe, "coef_")
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_linear_probe_forecaster_errors():
     X = _dataset(n_ts=4, sz=48, d=1)
     with pytest.raises(ValueError, match="context_length \\+ horizon"):
@@ -1140,6 +1219,7 @@ def test_linear_probe_forecaster_errors():
         model.predict(_dataset(n_ts=4, sz=48, d=3))
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_linear_probe_forecaster_fit_predict():
     X = _dataset(n_ts=6, sz=48, d=1)
     model = LinearProbeForecaster(
@@ -1148,6 +1228,7 @@ def test_linear_probe_forecaster_fit_predict():
     np.testing.assert_allclose(model.fit_predict(X, n=2), model.predict(X, n=2))
 
 
+@pytest.mark.skipif(torch is None, reason="PyTorch not installed")
 def test_estimators_are_clonable():
     for estimator in (
         TimeSeriesFoundationEmbedder(_DummyBackbone()),

@@ -15,14 +15,13 @@ from tslearn.utils import check_array, to_time_series_dataset
 from ._embedding import (
     LAYOUTS,
     TimeSeriesFoundationEmbedder,
-    _check_probe_pooling,
     _layout_to_model_input,
-    _require_torch,
+    _normalize_pooling,
 )
 
 try:
     import torch
-except ImportError:  # pragma: no cover
+except ImportError:
     torch = None
 
 
@@ -111,6 +110,17 @@ def _unwrap_forecast(output):
     return _to_numpy(output)
 
 
+def _check_probe_pooling(pooling):
+    """Reject the poolings that do not yield a flat feature matrix."""
+    if _normalize_pooling(pooling) is None:
+        raise ValueError(
+            "A linear probe needs one feature vector per series, so "
+            "`pooling=None` is not supported here. Use another pooling, or "
+            "TimeSeriesFoundationEmbedder directly if you want to keep one "
+            "representation per token."
+        )
+
+
 def _resolve_horizon_axis(shape, horizon, horizon_axis):
     """Locate the axis of a forecast array that holds the forecast horizon."""
     ndim = len(shape)
@@ -197,7 +207,7 @@ class _BaseFoundationForecaster(TimeSeriesMixin, BaseEstimator):
 
     def _check_input(self, X):
         X = check_array(X, allow_nd=True, force_all_finite=True)
-        return to_time_series_dataset(X)
+        return to_time_series_dataset(X, be="torch")
 
     def _check_layout(self):
         if self.input_layout not in LAYOUTS:
@@ -329,6 +339,11 @@ class ZeroShotForecaster(_BaseFoundationForecaster):
         quantile=0.5,
         model_kwargs=None,
     ):
+        if torch is None:
+            raise ValueError(
+                "Could not use ZeroShotForecaster since torch is not installed"
+            )
+
         self.model = model
         self.predict_fn = predict_fn
         self.input_layout = input_layout
@@ -623,6 +638,11 @@ class LinearProbeForecaster(_BaseFoundationForecaster):
         device=None,
         verbose=0,
     ):
+        if torch is None:
+            raise ValueError(
+                "Could not use LinearProbeForecaster since torch is not installed"
+            )
+
         self.model = model
         self.probe = probe
         self.context_length = context_length
@@ -649,7 +669,6 @@ class LinearProbeForecaster(_BaseFoundationForecaster):
             tokens=self.tokens,
             token_index=self.token_index,
             input_layout=self.input_layout,
-            context_length=None,
             input_name=self.input_name,
             model_kwargs=self.model_kwargs,
             batch_size=self.batch_size,
@@ -713,7 +732,6 @@ class LinearProbeForecaster(_BaseFoundationForecaster):
 
         """
         self._validate_params_()
-        _require_torch()
         X = self._check_input(X)
         contexts, targets = self._make_windows(X)
 

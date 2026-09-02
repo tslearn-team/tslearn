@@ -38,7 +38,6 @@ def _data():
 
 
 def test_chronos_bolt():
-    torch = pytest.importorskip("torch")
     chronos = pytest.importorskip("chronos")
 
     from tslearn.foundation import LinearProbeForecaster, ZeroShotForecaster
@@ -47,13 +46,7 @@ def test_chronos_bolt():
         "amazon/chronos-bolt-small", device_map="cpu"
     )
 
-    zero_shot = ZeroShotForecaster(
-        pipeline,
-        predict_fn=lambda model, context, horizon: model.predict(
-            torch.as_tensor(context, dtype=torch.float32), prediction_length=horizon
-        ),
-        horizon_axis=-1,
-    )
+    zero_shot = ZeroShotForecaster(pipeline)
     X = _data()
     y_zero_shot = zero_shot.predict(X, n=HORIZON)
     assert y_zero_shot.shape == (N_TS, HORIZON, 1)
@@ -73,7 +66,7 @@ def test_chronos_bolt():
 
 
 def test_timesfm():
-    torch = pytest.importorskip("torch")
+    pytest.importorskip("torch")
     timesfm = pytest.importorskip("timesfm")
 
     from tslearn.foundation import ZeroShotForecaster
@@ -100,7 +93,6 @@ def test_timesfm():
 
 
 def test_moirai():
-    torch = pytest.importorskip("torch")
     pytest.importorskip("uni2ts")
     from uni2ts.model.moirai import MoiraiForecast, MoiraiModule
 
@@ -133,7 +125,6 @@ def test_moirai():
 
 
 def test_ttm():
-    torch = pytest.importorskip("torch")
     pytest.importorskip("tsfm_public")
     from tsfm_public.models.tinytimemixer import TinyTimeMixerForPrediction
 
@@ -159,7 +150,6 @@ def test_ttm():
 
 
 def test_moment():
-    pytest.importorskip("torch")
     pytest.importorskip("momentfm")
     from momentfm import MOMENTPipeline
 
@@ -197,7 +187,6 @@ def test_time_moe():
     )
 
     def predict_fn(model, context, horizon):
-        context = torch.as_tensor(context, dtype=torch.float32)
         out = model.generate(input_ids=context, max_new_tokens=horizon)
         return out[:, -horizon:]
 

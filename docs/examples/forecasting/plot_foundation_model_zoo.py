@@ -137,13 +137,7 @@ pipeline = BaseChronosPipeline.from_pretrained(
     "amazon/chronos-bolt-small", device_map="cpu"
 )
 
-zero_shot = ZeroShotForecaster(
-    pipeline,
-    predict_fn=lambda model, context, horizon: model.predict(
-        torch.as_tensor(context, dtype=torch.float32), prediction_length=horizon
-    ),
-    horizon_axis=-1,
-)
+zero_shot = ZeroShotForecaster(pipeline)
 y_zero_shot = zero_shot.predict(X_train, n=horizon)
 
 forecaster = LinearProbeForecaster(
