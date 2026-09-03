@@ -30,17 +30,16 @@ jobs:
               python -m pip install "timesfm[torch]"
           - name: moirai
             deps: |
-              python -m pip install "uni2ts @ git+https://github.com/SalesforceAIResearch/uni2ts.git"
+              python -m pip install uni2ts
           - name: ttm
             deps: |
-              python -m pip install "granite-tsfm[notebooks] @ git+https://github.com/ibm-granite/granite-tsfm.git@v0.2.22"
-              python -m pip install "transformers==4.44.2"
+              python -m pip install granite-tsfm
           - name: moment
             deps: |
               python -m pip install momentfm
           - name: time_moe
             deps: |
-              python -m pip install "transformers==4.40.0"
+              python -m pip install "transformers==4.40.1"
     env:
       TSLEARN_RUN_FOUNDATION_ZOO: "1"
     steps:

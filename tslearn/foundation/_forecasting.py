@@ -207,7 +207,7 @@ class _BaseFoundationForecaster(TimeSeriesMixin, BaseEstimator):
 
     def _check_input(self, X):
         X = check_array(X, allow_nd=True, force_all_finite=True)
-        return to_time_series_dataset(X, be="torch")
+        return to_time_series_dataset(X, self._dtype, be="torch")
 
     def _check_layout(self):
         if self.input_layout not in LAYOUTS:
@@ -352,6 +352,13 @@ class ZeroShotForecaster(_BaseFoundationForecaster):
         self.quantile = quantile
         self.model_kwargs = model_kwargs
 
+    @property
+    def _dtype(self):
+        try:
+            return next(self.model.parameters()).dtype
+        except (StopIteration, AttributeError):
+            return torch.get_default_dtype()
+
     def _resolve_predict_fn(self):
         """Build a ``(context, horizon) -> forecast`` callable from the model."""
         if self.predict_fn is not None:
@@ -436,8 +443,6 @@ class ZeroShotForecaster(_BaseFoundationForecaster):
                 The estimator, ready to be used for prediction
 
         """
-        self._check_layout()
-        X = self._check_input(X)
         warnings.warn(
             "ZeroShotForecaster.fit does not train anything: the wrapped "
             "model is used as-is for zero-shot forecasting.",
@@ -659,6 +664,13 @@ class LinearProbeForecaster(_BaseFoundationForecaster):
         self.batch_size = batch_size
         self.device = device
         self.verbose = verbose
+
+    @property
+    def _dtype(self):
+        try:
+            return next(self.model.parameters()).dtype
+        except StopIteration:
+            return torch.get_default_dtype()
 
     def _make_embedder(self):
         return TimeSeriesFoundationEmbedder(

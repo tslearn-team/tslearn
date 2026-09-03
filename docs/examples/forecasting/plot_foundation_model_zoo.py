@@ -109,15 +109,10 @@ X_train, X_test = full_series[:, :sz], full_series[:, sz:]
 #
 #     pip install "chronos-forecasting>=2.0"
 #
-# Two details set it apart from Chronos-2:
-#
-# * its ``predict`` method requires a :class:`torch.Tensor`, not a NumPy
-#   array, so the auto-detected calling convention of
-#   :class:`~tslearn.foundation.ZeroShotForecaster` does not apply and an
-#   explicit ``predict_fn`` is needed;
-# * its ``forward`` takes a raw ``context`` and exposes an encoder made of a
-#   plain stack of T5 blocks, at ``encoder.block``, with no register or
-#   forecast token to filter out, so probing needs no ``tokens`` argument.
+# A details set it apart from Chronos-2: its ``forward`` takes a raw
+# ``context`` and exposes an encoder made of a
+# plain stack of T5 blocks, at ``encoder.block``, with no register or
+# forecast token to filter out, so probing needs no ``tokens`` argument.
 #
 # As with Chronos-2, the raw series are passed to
 # :class:`~tslearn.foundation.ZeroShotForecaster` unscaled, since it wraps
@@ -259,7 +254,7 @@ plt.show()
 #     )
 #
 #     def predict_fn(model, context, horizon):
-#         past_target = torch.as_tensor(context, dtype=torch.float32).unsqueeze(-1)
+#         past_target = context.unsqueeze(-1)
 #         past_observed = torch.ones_like(past_target, dtype=torch.bool)
 #         past_is_pad = torch.zeros(past_target.shape[:2], dtype=torch.bool)
 #         return model(past_target, past_observed, past_is_pad, num_samples=20)
@@ -303,7 +298,7 @@ plt.show()
 #     )
 #
 #     def predict_fn(model, context, horizon):
-#         past_values = torch.as_tensor(context, dtype=torch.float32).unsqueeze(-1)
+#         past_values = context.unsqueeze(-1)
 #         return model(past_values=past_values).prediction_outputs
 #
 #     zero_shot = ZeroShotForecaster(
@@ -354,7 +349,7 @@ plt.show()
 #     scaler = TimeSeriesScalerMeanVariance(per_timeseries=False)
 #     probe = Pipeline([("scale", scaler), ("probe", LinearProbeForecaster(
 #         model,
-#         context_length=512,
+#         context_length=context_length,
 #         horizon=horizon,
 #         stride=32,
 #         layer=-1,
@@ -403,7 +398,6 @@ plt.show()
 # .. code-block:: python
 #
 #     def predict_fn(model, context, horizon):
-#         context = torch.as_tensor(context, dtype=torch.float32)
 #         out = model.generate(input_ids=context, max_new_tokens=horizon)
 #         return out[:, -horizon:]
 #

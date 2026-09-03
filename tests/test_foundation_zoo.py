@@ -29,15 +29,16 @@ pytestmark = pytest.mark.skipif(
     reason="Set TSLEARN_RUN_FOUNDATION_ZOO=1 to run tests that download "
     "real pre-trained models from the Hugging Face Hub.",
 )
+torch = pytest.importorskip("torch", reason="torch not installed")
 
-N_TS, SZ, CONTEXT_LENGTH, HORIZON = 5, 200, 64, 12
-
-
-def _data():
-    return random_walks(n_ts=N_TS, sz=SZ, random_state=0).astype(np.float32)
+N_TS, SZ, D, CONTEXT_LENGTH, HORIZON = 5, 200, 1, 64, 12
 
 
-def test_chronos_bolt():
+@pytest.mark.parametrize("data", [
+    random_walks(n_ts=N_TS, sz=SZ, random_state=0).astype(np.float64),
+    torch.rand(N_TS, SZ, D, dtype=torch.float64),
+])
+def test_chronos_bolt(data):
     chronos = pytest.importorskip("chronos")
 
     from tslearn.foundation import LinearProbeForecaster, ZeroShotForecaster
@@ -47,8 +48,7 @@ def test_chronos_bolt():
     )
 
     zero_shot = ZeroShotForecaster(pipeline)
-    X = _data()
-    y_zero_shot = zero_shot.predict(X, n=HORIZON)
+    y_zero_shot = zero_shot.predict(data, n=HORIZON)
     assert y_zero_shot.shape == (N_TS, HORIZON, 1)
 
     probe = LinearProbeForecaster(
@@ -60,13 +60,16 @@ def test_chronos_bolt():
         layers_path="encoder.block",
         pooling="mean",
     )
-    probe.fit(X)
-    y_probe = probe.predict(X)
+    probe.fit(data)
+    y_probe = probe.predict(data)
     assert y_probe.shape == (N_TS, HORIZON, 1)
 
 
-def test_timesfm():
-    pytest.importorskip("torch")
+@pytest.mark.parametrize("data", [
+    random_walks(n_ts=N_TS, sz=SZ, random_state=0),
+    torch.rand(N_TS, SZ, D, dtype=torch.float64),
+])
+def test_timesfm(data):
     timesfm = pytest.importorskip("timesfm")
 
     from tslearn.foundation import ZeroShotForecaster
@@ -87,12 +90,15 @@ def test_timesfm():
         )[0],
         context_length=CONTEXT_LENGTH,
     )
-    X = _data()
-    y_zero_shot = zero_shot.predict(X, n=HORIZON)
+    y_zero_shot = zero_shot.predict(data, n=HORIZON)
     assert y_zero_shot.shape == (N_TS, HORIZON, 1)
 
 
-def test_moirai():
+@pytest.mark.parametrize("data", [
+    random_walks(n_ts=N_TS, sz=SZ, random_state=0),
+    torch.rand(N_TS, SZ, D, dtype=torch.float64),
+])
+def test_moirai(data):
     pytest.importorskip("uni2ts")
     from uni2ts.model.moirai import MoiraiForecast, MoiraiModule
 
@@ -110,7 +116,7 @@ def test_moirai():
     )
 
     def predict_fn(model, context, horizon):
-        past_target = torch.as_tensor(context, dtype=torch.float32).unsqueeze(-1)
+        past_target = context.unsqueeze(-1)
         past_observed = torch.ones_like(past_target, dtype=torch.bool)
         past_is_pad = torch.zeros(past_target.shape[:2], dtype=torch.bool)
         with torch.no_grad():
@@ -119,12 +125,15 @@ def test_moirai():
     zero_shot = ZeroShotForecaster(
         forecast_model, predict_fn=predict_fn, context_length=CONTEXT_LENGTH
     )
-    X = _data()
-    y_zero_shot = zero_shot.predict(X, n=HORIZON)
+    y_zero_shot = zero_shot.predict(data, n=HORIZON)
     assert y_zero_shot.shape == (N_TS, HORIZON, 1)
 
 
-def test_ttm():
+@pytest.mark.parametrize("data", [
+    random_walks(n_ts=N_TS, sz=SZ, random_state=0),
+    torch.rand(N_TS, SZ, D, dtype=torch.float64),
+])
+def test_ttm(data):
     pytest.importorskip("tsfm_public")
     from tsfm_public.models.tinytimemixer import TinyTimeMixerForPrediction
 
@@ -135,7 +144,7 @@ def test_ttm():
     )
 
     def predict_fn(model, context, horizon):
-        past_values = torch.as_tensor(context, dtype=torch.float32).unsqueeze(-1)
+        past_values = context.unsqueeze(-1)
         with torch.no_grad():
             return model(past_values=past_values).prediction_outputs
 
@@ -149,7 +158,11 @@ def test_ttm():
     assert y_zero_shot.shape == (N_TS, model.config.prediction_length, 1)
 
 
-def test_moment():
+@pytest.mark.parametrize("data", [
+    random_walks(n_ts=N_TS, sz=SZ, random_state=0),
+    torch.rand(N_TS, SZ, D, dtype=torch.float64),
+])
+def test_moment(data):
     pytest.importorskip("momentfm")
     from momentfm import MOMENTPipeline
 
@@ -162,7 +175,7 @@ def test_moment():
 
     probe = LinearProbeForecaster(
         model,
-        context_length=512,
+        context_length=CONTEXT_LENGTH,
         horizon=HORIZON,
         stride=32,
         layer=-1,
@@ -170,14 +183,16 @@ def test_moment():
         pooling="mean",
         input_layout="channels_first",
     )
-    X = random_walks(n_ts=N_TS, sz=700, random_state=0).astype(np.float32)
-    probe.fit(X)
-    y_probe = probe.predict(X)
+    probe.fit(data)
+    y_probe = probe.predict(data)
     assert y_probe.shape == (N_TS, HORIZON, 1)
 
 
-def test_time_moe():
-    torch = pytest.importorskip("torch")
+@pytest.mark.parametrize("data", [
+    random_walks(n_ts=N_TS, sz=SZ, random_state=0),
+    torch.rand(N_TS, SZ, D, dtype=torch.float64),
+])
+def test_time_moe(data):
     transformers = pytest.importorskip("transformers")
 
     from tslearn.foundation import LinearProbeForecaster, ZeroShotForecaster
@@ -191,8 +206,7 @@ def test_time_moe():
         return out[:, -horizon:]
 
     zero_shot = ZeroShotForecaster(model, predict_fn=predict_fn)
-    X = _data()
-    y_zero_shot = zero_shot.predict(X, n=HORIZON)
+    y_zero_shot = zero_shot.predict(data, n=HORIZON)
     assert y_zero_shot.shape == (N_TS, HORIZON, 1)
 
     probe = LinearProbeForecaster(
@@ -204,6 +218,6 @@ def test_time_moe():
         layers_path="model.layers",
         pooling="last",
     )
-    probe.fit(X)
-    y_probe = probe.predict(X)
+    probe.fit(data)
+    y_probe = probe.predict(data)
     assert y_probe.shape == (N_TS, HORIZON, 1)
