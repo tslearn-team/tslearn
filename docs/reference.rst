@@ -16,6 +16,7 @@ The complete ``tslearn`` project is automatically documented for every module.
    datasets
    early_classification
    forecasting
+   foundation
    generators
    matrix_profile
    metrics
