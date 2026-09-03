@@ -936,7 +936,7 @@ def test_zero_shot_forecaster_skips_methods_without_a_horizon_argument():
         """Exposes a `predict` with no forecast-horizon argument, which must
         be skipped in favor of `forecast`."""
 
-        def predict(self, inputs):
+        def predict(self, inputs):  # pragma: no cover
             calls.append("predict")
             raise AssertionError("predict should never be called")
 

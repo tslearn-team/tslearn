@@ -81,3 +81,6 @@ testpaths = [
     "tests",
     "tslearn"
 ]
+
+[tool.coverage.run]
+omit = ["tests/test_foundation_zoo.py"]
