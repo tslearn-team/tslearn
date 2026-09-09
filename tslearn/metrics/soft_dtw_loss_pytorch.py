@@ -51,7 +51,7 @@ else:
             gamma : float
                 Regularization parameter.
                 Lower is less smoothed (closer to true DTW).
-            global_constraint : {0, 1, 2} (default: 0)
+            global_constraint : {0, 1, 2} or None (default: None)
                 Global constraint to restrict admissible paths for DTW:
                 - "itakura" if 1
                 - "sakoe_chiba" if 2
