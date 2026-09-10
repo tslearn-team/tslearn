@@ -38,7 +38,7 @@ else:
             ctx,
             D,
             gamma,
-            global_constraint=None,
+            global_constraint=0,
             sakoe_chiba_radius=None,
             itakura_max_slope=None
         ):
@@ -51,7 +51,7 @@ else:
             gamma : float
                 Regularization parameter.
                 Lower is less smoothed (closer to true DTW).
-            global_constraint : {0, 1, 2} or None (default: None)
+            global_constraint : {0, 1, 2} (default: 0)
                 Global constraint to restrict admissible paths for DTW:
                 - "itakura" if 1
                 - "sakoe_chiba" if 2
