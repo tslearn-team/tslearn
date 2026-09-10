@@ -528,8 +528,8 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
 
         Returns
         -------
-            array of shape=(n_ts, embedding_size_), or
-            (n_ts, n_tokens_, embedding_size_) when ``pooling`` is None
+            array of shape=(n_ts, `embedding_size_`), or
+            (n_ts, `n_tokens_`, `embedding_size_`) when ``pooling`` is None
               Frozen representations of the input series.
 
         """
@@ -559,8 +559,8 @@ class TimeSeriesFoundationEmbedder(TimeSeriesMixin, TransformerMixin, BaseEstima
 
         Returns
         -------
-            array of shape=(n_ts, embedding_size_), or
-            (n_ts, n_tokens_, embedding_size_) when ``pooling`` is None
+            array of shape=(n_ts, ``embedding_size_``), or
+            (n_ts, ``n_tokens_``, ``embedding_size_``) when ``pooling`` is None
               Frozen representations of the input series.
 
         """
