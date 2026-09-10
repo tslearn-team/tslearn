@@ -24,6 +24,8 @@ Changelogs for this project are recorded in this file since v0.2.0.
   probing for classification. Requires PyTorch.
 * soft-dtw related tools now support Itakura and Sakoe-Chiba global constraints. ([#189](https://github.com/tslearn-team/tslearn/issues/189))
 * Multithreading support added to `cdist_soft_dtw` and `softdtw_barycenter`. ([#310](https://github.com/tslearn-team/tslearn/issues/310)) 
+* `TimeSeriesScalerMinMax` and `TimeSeriesScalerMeanVariance` now offer an inverse_transform method 
+to reverse the normalization. ([#697](https://github.com/tslearn-team/tslearn/issues/697))
 * Added `tslearn.clustering.silhouette_samples` to compute per-sample silhouette coefficients with time-series metrics. ([#451](https://github.com/tslearn-team/tslearn/issues/451))
 
 ### Removed
