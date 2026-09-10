@@ -36,7 +36,7 @@ jobs:
               python -m pip install granite-tsfm
           - name: moment
             deps: |
-              python -m pip install momentfm
+              python -m pip install "momentfm @ git+https://github.com/moment-timeseries-foundation-model/moment.git"
           - name: time_moe
             deps: |
               python -m pip install "transformers==4.40.1"
