@@ -42,8 +42,10 @@ changelog = "https://github.com/tslearn-team/tslearn/CHANGELOG.md"
 
 [project.optional-dependencies]
 pytorch = ['torch']
+# Re-use of pre-trained models through the tslearn.foundation module
+foundation = ['torch']
 tests = [
-    "pytest", 
+    "pytest",
     "h5py"
 ]
 docs = [
@@ -54,6 +56,9 @@ docs = [
     "numpydoc",
     "matplotlib",
     "pypandoc",
+    # Used by the tslearn.foundation examples of the gallery
+    "torch",
+    "chronos-forecasting>=2.0",
 ]
 all_features = [
     "torch",
@@ -76,3 +81,6 @@ testpaths = [
     "tests",
     "tslearn"
 ]
+
+[tool.coverage.run]
+omit = ["tests/test_foundation_zoo.py"]

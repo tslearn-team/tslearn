@@ -118,6 +118,8 @@ def dtw_barycenter_averaging_petitjean(
 
     init_barycenter : array or None (default: None)
         Initial barycenter to start from for the optimization process.
+        If None, the initial barycenter is the pointwise mean of ``X``
+        linearly interpolated to target barycenter size.
 
     max_iter : int (default: 30)
         Number of iterations of the Expectation-Maximization optimization
@@ -513,6 +515,8 @@ def dtw_barycenter_averaging(
 
     init_barycenter : array or None (default: None)
         Initial barycenter to start from for the optimization process.
+        If None, the initial barycenter is the pointwise mean of ``X``
+        linearly interpolated to target barycenter size.
 
     max_iter : int (default: 30)
         Number of iterations of the Expectation-Maximization optimization
@@ -648,6 +652,8 @@ def dtw_barycenter_averaging_one_init(
 
     init_barycenter : array or None (default: None)
         Initial barycenter to start from for the optimization process.
+        If None, the initial barycenter is the pointwise mean of ``X``
+        linearly interpolated to target barycenter size.
 
     max_iter : int (default: 30)
         Number of iterations of the Expectation-Maximization optimization
@@ -769,6 +775,8 @@ def dtw_barycenter_averaging_subgradient(
 
     init_barycenter : array or None (default: None)
         Initial barycenter to start from for the optimization process.
+        If None, the initial barycenter is the pointwise mean of ``X``
+        linearly interpolated to target barycenter size.
 
     max_iter : int (default: 30)
         Number of iterations of the Expectation-Maximization optimization

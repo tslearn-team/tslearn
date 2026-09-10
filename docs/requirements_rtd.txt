@@ -4,10 +4,16 @@
 #
 #    pip-compile --extra=docs --output-file=docs/requirements_rtd.txt
 #
+accelerate==1.14.0
+    # via chronos-forecasting
 accessible-pygments==0.0.5
     # via pydata-sphinx-theme
 alabaster==1.0.0
     # via sphinx
+annotated-doc==0.0.5
+    # via typer
+anyio==4.14.2
+    # via httpx
 babel==2.18.0
     # via
     #   pydata-sphinx-theme
@@ -15,9 +21,16 @@ babel==2.18.0
 beautifulsoup4==4.14.3
     # via pydata-sphinx-theme
 certifi==2026.2.25
-    # via requests
+    # via
+    #   httpcore
+    #   httpx
+    #   requests
 charset-normalizer==3.4.7
     # via requests
+chronos-forecasting==2.3.1
+    # via tslearn (pyproject.toml)
+click==8.4.2
+    # via huggingface-hub
 contourpy==1.3.3
     # via matplotlib
 cycler==0.12.1
@@ -26,14 +39,42 @@ docutils==0.22.4
     # via
     #   pydata-sphinx-theme
     #   sphinx
+einops==0.8.2
+    # via chronos-forecasting
+filelock==3.32.2
+    # via
+    #   huggingface-hub
+    #   torch
 fonttools==4.62.1
     # via matplotlib
+fsspec==2026.7.0
+    # via
+    #   huggingface-hub
+    #   torch
+h11==0.16.0
+    # via httpcore
+hf-xet==1.6.0
+    # via huggingface-hub
+httpcore==1.0.9
+    # via httpx
+httpx==0.28.1
+    # via huggingface-hub
+huggingface-hub==1.27.0
+    # via
+    #   accelerate
+    #   tokenizers
+    #   transformers
 idna==3.15
-    # via requests
+    # via
+    #   anyio
+    #   httpx
+    #   requests
 imagesize==2.0.0
     # via sphinx
 jinja2==3.1.6
-    # via sphinx
+    # via
+    #   sphinx
+    #   torch
 joblib==1.5.3
     # via
     #   scikit-learn
@@ -42,53 +83,98 @@ kiwisolver==1.5.0
     # via matplotlib
 llvmlite==0.47.0
     # via numba
+markdown-it-py==4.2.0
+    # via rich
 markupsafe==3.0.3
     # via jinja2
 matplotlib==3.10.8
     # via tslearn (pyproject.toml)
+mdurl==0.1.2
+    # via markdown-it-py
+mpmath==1.3.0
+    # via sympy
+networkx==3.6.1
+    # via torch
 numba==0.65.0
     # via tslearn (pyproject.toml)
 numpy==2.4.4
     # via
+    #   accelerate
+    #   chronos-forecasting
     #   contourpy
     #   matplotlib
     #   numba
+    #   pandas
+    #   patsy
     #   scikit-learn
     #   scipy
+    #   statsmodels
+    #   transformers
     #   tslearn (pyproject.toml)
 numpydoc==1.10.0
     # via tslearn (pyproject.toml)
 packaging==26.1
     # via
+    #   accelerate
+    #   huggingface-hub
     #   matplotlib
     #   sphinx
+    #   statsmodels
+    #   transformers
+pandas==3.0.5
+    # via
+    #   chronos-forecasting
+    #   statsmodels
+patsy==1.0.2
+    # via statsmodels
 pillow==12.3.0
     # via
     #   matplotlib
     #   sphinx-gallery
+psutil==7.2.2
+    # via accelerate
 pydata-sphinx-theme==0.17.0
     # via tslearn (pyproject.toml)
 pygments==2.20.0
     # via
     #   accessible-pygments
     #   pydata-sphinx-theme
+    #   rich
     #   sphinx
 pypandoc==1.17
     # via tslearn (pyproject.toml)
 pyparsing==3.3.2
     # via matplotlib
 python-dateutil==2.9.0.post0
-    # via matplotlib
+    # via
+    #   matplotlib
+    #   pandas
+pyyaml==6.0.3
+    # via
+    #   accelerate
+    #   huggingface-hub
+    #   transformers
+regex==2026.7.19
+    # via transformers
 requests==2.33.1
     # via sphinx
+rich==15.0.0
+    # via typer
 roman-numerals==4.1.0
     # via sphinx
+safetensors==0.8.0
+    # via
+    #   accelerate
+    #   transformers
 scikit-learn==1.8.0
     # via tslearn (pyproject.toml)
 scipy==1.17.1
     # via
     #   scikit-learn
+    #   statsmodels
     #   tslearn (pyproject.toml)
+shellingham==1.5.4
+    # via typer
 six==1.17.0
     # via python-dateutil
 snowballstemmer==3.0.1
@@ -118,11 +204,36 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
+statsmodels==0.14.6
+    # via tslearn (pyproject.toml)
+sympy==1.14.0
+    # via torch
 threadpoolctl==3.6.0
     # via scikit-learn
+tokenizers==0.22.2
+    # via transformers
+torch==2.13.0
+    # via
+    #   accelerate
+    #   chronos-forecasting
+    #   tslearn (pyproject.toml)
+tqdm==4.70.0
+    # via
+    #   huggingface-hub
+    #   transformers
+transformers==5.15.0
+    # via chronos-forecasting
+typer==0.27.1
+    # via transformers
 typing-extensions==4.15.0
     # via
+    #   anyio
     #   beautifulsoup4
+    #   huggingface-hub
     #   pydata-sphinx-theme
+    #   torch
 urllib3==2.7.0
     # via requests
+
+# The following packages are considered to be unsafe in a requirements file:
+# setuptools

@@ -798,7 +798,7 @@ def _cdist_frechet(
         verbose=verbose,
         be=be,
         compute_diagonal=False,
-        global_constraint=global_constraint,
+        global_constraint=GLOBAL_CONSTRAINT_CODE[global_constraint],
         sakoe_chiba_radius=sakoe_chiba_radius,
         itakura_max_slope=itakura_max_slope,
     )
