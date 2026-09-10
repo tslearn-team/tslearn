@@ -13,6 +13,15 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ### Added
 
+* New `tslearn.foundation` module to re-use pre-trained time series models, such as
+  the ones published on the Hugging Face Hub, behind the usual tslearn API. It provides
+  `ZeroShotForecaster`, `LinearProbeForecaster` and the underlying
+  `TimeSeriesFoundationEmbedder` feature extractor, which allows one to choose
+  the probed layer, the tokens taken into account and the pooling applied to their
+  representations. With `pooling=None`, the latter acts as a time series to time series
+  transform, returning one representation per token, and being a regular scikit-learn
+  transformer, it composes with a `sklearn.pipeline.Pipeline` for tasks such as linear
+  probing for classification. Requires PyTorch.
 * soft-dtw related tools now support Itakura and Sakoe-Chiba global constraints. ([#189](https://github.com/tslearn-team/tslearn/issues/189))
 * Multithreading support added to `cdist_soft_dtw` and `softdtw_barycenter`. ([#310](https://github.com/tslearn-team/tslearn/issues/310)) 
 * Added `tslearn.clustering.silhouette_samples` to compute per-sample silhouette coefficients with time-series metrics. ([#451](https://github.com/tslearn-team/tslearn/issues/451))
