@@ -93,3 +93,20 @@ def test_sax_scale():
     np.testing.assert_array_almost_equal(X, X_scale_unscale)
 
     knn_sax.predict(X)
+
+
+def test_1dsax_scale_matches_sax_average():
+    # With scale=True the average symbols of 1d-SAX must match those of SAX:
+    # both scale the series once, using the same fitted mean and std.
+    n, sz, d = 4, 12, 1
+    rng = np.random.RandomState(0)
+    X = rng.randn(n, sz, d) * 5 + 10
+
+    sax = SymbolicAggregateApproximation(n_segments=4, alphabet_size_avg=5,
+                                         scale=True)
+    one_d_sax = OneD_SymbolicAggregateApproximation(n_segments=4,
+                                                    alphabet_size_avg=5,
+                                                    alphabet_size_slope=5,
+                                                    scale=True)
+    np.testing.assert_array_equal(sax.fit_transform(X),
+                                  one_d_sax.fit_transform(X)[:, :, :d])

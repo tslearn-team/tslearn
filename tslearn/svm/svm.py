@@ -585,7 +585,7 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin, BaseEstimator):
         self.svm_estimator_ = SVR(
             C=self.C, kernel=self.estimator_kernel_, degree=self.degree,
             gamma=self.gamma_, coef0=self.coef0, shrinking=self.shrinking,
-            tol=self.tol, cache_size=self.cache_size,
+            tol=self.tol, epsilon=self.epsilon, cache_size=self.cache_size,
             verbose=self.verbose, max_iter=self.max_iter
         )
         self.svm_estimator_.fit(sklearn_X, y, sample_weight=sample_weight)

@@ -166,13 +166,16 @@ def gak(s1, s2, sigma=1.0, be=None):
     s1 = to_time_series(s1, remove_nans=True, be=be)
     s2 = to_time_series(s2, remove_nans=True, be=be)
 
-    denom = be.sqrt(
-        _unnormalized_gak(s1, s1, sigma=sigma, backend=be)
-    ) * be.sqrt(
-        _unnormalized_gak(s2, s2, sigma=sigma, backend=be)
+    # Normalizing in log space keeps the ratio representable even when the
+    # unnormalized values themselves overflow (see issue #450).
+    log_denom = 0.5 * (
+        _log_unnormalized_gak(s1, s1, sigma=sigma, backend=be)
+        + _log_unnormalized_gak(s2, s2, sigma=sigma, backend=be)
     )
 
-    return _unnormalized_gak(s1, s2, sigma=sigma, backend=be) / denom
+    return be.exp(
+        _log_unnormalized_gak(s1, s2, sigma=sigma, backend=be) - log_denom
+    )
 
 
 def unnormalized_gak(s1, s2, sigma=1.0, be=None):
@@ -213,6 +216,14 @@ def unnormalized_gak(s1, s2, sigma=1.0, be=None):
     float
         Kernel value
 
+    Notes
+    -----
+    The unnormalized kernel sums over every possible alignment between the two
+    series, so it grows extremely fast with their length and leaves the range
+    of a 64-bit float for time series longer than about 405 samples, in which
+    case `inf` is returned. Use :func:`gak`, whose normalization is computed in
+    log space, when a value is needed for long time series.
+
     Examples
     --------
     >>> unnormalized_gak([1, 2, 3],
@@ -244,14 +255,44 @@ def unnormalized_gak(s1, s2, sigma=1.0, be=None):
     return _unnormalized_gak(s1, s2, sigma, be)
 
 
+def _log_gram_matrix(s1, s2, sigma, backend):
+    log_gram = -backend.cdist(s1, s2, "sqeuclidean") / (2 * sigma * sigma)
+    log_gram -= backend.log(2 - backend.exp(log_gram))
+    return log_gram
+
+
 def _unnormalized_gak(s1, s2, sigma, backend):
-    gram = -backend.cdist(s1, s2, "sqeuclidean") / (2 * sigma * sigma)
-    gram -= backend.log(2 - backend.exp(gram))
-    gram = backend.exp(gram)
+    gram = backend.exp(_log_gram_matrix(s1, s2, sigma, backend))
     if backend.is_numpy:
         return _njit_gak_from_gram_matrix(gram)
     else:
         return _gak_from_gram_matrix(gram)
+
+
+def _log_unnormalized_gak(s1, s2, sigma, backend):
+    """Compute the natural logarithm of the unnormalized GAK value.
+
+    The unnormalized kernel sums over every alignment path, so it grows like
+    the central Delannoy numbers (:math:`\\approx (3 + 2\\sqrt{2})^{sz}`) and
+    leaves the range of a 64-bit float for time series longer than about 405
+    samples. The recursion is therefore evaluated in linear space first, which
+    is cheaper, and only re-run in log space when that result is not usable.
+    """
+    log_gram = _log_gram_matrix(s1, s2, sigma, backend)
+    if backend.is_numpy:
+        gak_from_gram = _njit_gak_from_gram_matrix
+        log_gak_from_gram = _njit_log_gak_from_gram_matrix
+    else:
+        gak_from_gram = _gak_from_gram_matrix
+        log_gak_from_gram = _log_gak_from_gram_matrix
+
+    value = gak_from_gram(backend.exp(log_gram))
+    if 0.0 < value < backend.inf:
+        return backend.log(value)
+
+    # The value has overflowed to `inf` (or underflowed to 0): redo the
+    # recursion in log space, where it stays representable.
+    return log_gak_from_gram(log_gram)
 
 
 def __make_gak_from_gram_matrix(backend):
@@ -284,6 +325,65 @@ if HAS_TORCH:
     _gak_from_gram_matrix = __make_gak_from_gram_matrix(instantiate_backend("torch"))
 else:
     _gak_from_gram_matrix = _njit_gak_from_gram_matrix
+
+
+def __make_log_gak_from_gram_matrix(backend):
+
+    def _log_gak_from_gram_matrix_generic(
+        log_gram
+    ):
+
+        sz1, sz2 = log_gram.shape
+        neg_inf = -backend.inf
+
+        cum_sum = backend.full(
+            (sz1 + 1, sz2 + 1), neg_inf, dtype=log_gram.dtype
+        )
+        cum_sum[0, 0] = 0.0
+
+        for i in range(sz1):
+            for j in range(sz2):
+                # log-sum-exp of the three predecessors, factoring out their
+                # maximum so that the exponentials stay in [0, 1].
+                top = cum_sum[i, j + 1]
+                left = cum_sum[i + 1, j]
+                diag = cum_sum[i, j]
+
+                max_pred = top
+                if left > max_pred:
+                    max_pred = left
+                if diag > max_pred:
+                    max_pred = diag
+
+                if max_pred == neg_inf:
+                    # Every path reaching this cell has zero weight.
+                    continue
+
+                cum_sum[i + 1, j + 1] = (
+                    max_pred
+                    + backend.log(
+                        backend.exp(top - max_pred)
+                        + backend.exp(left - max_pred)
+                        + backend.exp(diag - max_pred)
+                    )
+                    + log_gram[i, j]
+                )
+
+        return cum_sum[-1, -1]
+
+    if backend is numpy:
+        return njit(nogil=True)(_log_gak_from_gram_matrix_generic)
+    else:
+        return _log_gak_from_gram_matrix_generic
+
+
+_njit_log_gak_from_gram_matrix = __make_log_gak_from_gram_matrix(numpy)
+if HAS_TORCH:
+    _log_gak_from_gram_matrix = __make_log_gak_from_gram_matrix(
+        instantiate_backend("torch")
+    )
+else:
+    _log_gak_from_gram_matrix = _njit_log_gak_from_gram_matrix
 
 
 def cdist_gak(
@@ -387,8 +487,8 @@ def _cdist_gak(
     if be is None:
        be = instantiate_backend(dataset1, dataset2)
 
-    unnormalized_matrix = _cdist_generic(
-       dist_fun=_unnormalized_gak,
+    log_unnormalized_matrix = _cdist_generic(
+       dist_fun=_log_unnormalized_gak,
        dataset1=dataset1,
        dataset2=dataset2,
        n_jobs=n_jobs,
@@ -400,11 +500,13 @@ def _cdist_gak(
        sigma = sigma
     )
     if dataset2 is None:
-       diagonal = be.diag(be.sqrt(1.0 / be.diag(unnormalized_matrix)))
-       diagonal_left = diagonal_right = diagonal
+       log_diagonal_left = be.diag(log_unnormalized_matrix)
+       log_diagonal_right = log_diagonal_left
     else:
-       diagonal_left = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
-           delayed(_unnormalized_gak)(
+       log_diagonal_left = Parallel(
+           n_jobs=n_jobs, prefer="threads", verbose=verbose
+       )(
+           delayed(_log_unnormalized_gak)(
                _to_time_series(dataset1[i], remove_nans=True, backend=be),
                _to_time_series(dataset1[i], remove_nans=True, backend=be),
                sigma=sigma,
@@ -412,8 +514,10 @@ def _cdist_gak(
            )
            for i in range(len(dataset1))
        )
-       diagonal_right = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
-           delayed(_unnormalized_gak)(
+       log_diagonal_right = Parallel(
+           n_jobs=n_jobs, prefer="threads", verbose=verbose
+       )(
+           delayed(_log_unnormalized_gak)(
                _to_time_series(dataset2[j], remove_nans=True, backend=be),
                _to_time_series(dataset2[j], remove_nans=True, backend=be),
                sigma=sigma,
@@ -421,7 +525,13 @@ def _cdist_gak(
            )
            for j in range(len(dataset2))
        )
-       diagonal_left = be.diag(1.0 / be.sqrt(diagonal_left))
-       diagonal_right = be.diag(1.0 / be.sqrt(diagonal_right))
+       log_diagonal_left = be.array(log_diagonal_left)
+       log_diagonal_right = be.array(log_diagonal_right)
 
-    return diagonal_left @ unnormalized_matrix @ diagonal_right
+    # Normalize in log space so that the result stays finite even when the
+    # unnormalized kernel values overflow (see issue #450).
+    return be.exp(
+       log_unnormalized_matrix
+       - 0.5 * log_diagonal_left[:, None]
+       - 0.5 * log_diagonal_right[None, :]
+    )
