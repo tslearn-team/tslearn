@@ -54,6 +54,7 @@ CANDIDATE_FORECAST_NAMES = (
     "predictions",
     "sequences",
     "mean",
+    "forecast" # timesfm3
 )
 
 
@@ -381,7 +382,7 @@ class ZeroShotForecaster(_BaseFoundationForecaster):
             if horizon_name is None:
                 continue
 
-            def call(context, horizon, method=method, horizon_name=horizon_name):
+            def call(context, horizon):
                 kwargs = dict(self.model_kwargs or {})
                 kwargs[horizon_name] = horizon
                 return method(context, **kwargs)
@@ -669,7 +670,7 @@ class LinearProbeForecaster(_BaseFoundationForecaster):
     def _dtype(self):
         try:
             return next(self.model.parameters()).dtype
-        except StopIteration:
+        except StopIteration:  # pragma: no cover
             return torch.get_default_dtype()
 
     def _make_embedder(self):

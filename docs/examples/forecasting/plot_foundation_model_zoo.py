@@ -191,24 +191,14 @@ plt.show()
 #
 # .. code-block:: python
 #
-#     import timesfm
-#
+#     import timesfm3
 #     from tslearn.foundation import ZeroShotForecaster
 #
-#     model = timesfm.TimesFM_2p5_200M_torch.from_pretrained(
-#         "google/timesfm-2.5-200m-pytorch"
+#     model = timesfm3.TimesFM3Forecaster.from_pretrained(
+#         "google/timesfm-3.0-pytorch"
 #     )
-#     model.compile(timesfm.ForecastConfig(
-#         max_context=context_length, max_horizon=horizon, normalize_inputs=True
-#     ))
 #
-#     zero_shot = ZeroShotForecaster(
-#         model,
-#         predict_fn=lambda model, context, horizon: model.forecast(
-#             horizon=horizon, inputs=list(context)
-#         )[0],
-#         context_length=context_length,
-#     )
+#     zero_shot = ZeroShotForecaster(model)
 #     y_zero_shot = zero_shot.predict(X_train, n=horizon)
 #
 # TimesFM's own module (``model.model``) does not lend itself to linear
@@ -225,7 +215,7 @@ plt.show()
 # Moirai [4]_ is a masked-encoder model, natively multivariate and trained
 # across many frequencies at once::
 #
-#     pip install "uni2ts @ git+https://github.com/SalesforceAIResearch/uni2ts.git"
+#     pip install uni2ts
 #
 # The forecasting horizon, and the number of sample paths drawn from the
 # predictive distribution, are baked into the model at construction time
@@ -278,7 +268,7 @@ plt.show()
 # model in this list: it is a light-weight MLP-Mixer, which is also why it
 # is small enough to not need a dedicated "small" checkpoint::
 #
-#     pip install "granite-tsfm[notebooks] @ git+https://github.com/ibm-granite/granite-tsfm.git@v0.2.22"
+#     pip install granite-tsfm
 #
 # Its context length and horizon are fixed by the checkpoint (512 and 96 for
 # ``granite-timeseries-ttm-r2``) rather than adjustable at call time, and,

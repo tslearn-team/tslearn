@@ -18,8 +18,6 @@ the claim, made there, that each recipe actually works.
 
 import os
 
-import numpy as np
-
 import pytest
 
 from tslearn.generators import random_walks
@@ -35,7 +33,7 @@ N_TS, SZ, D, CONTEXT_LENGTH, HORIZON = 5, 200, 1, 64, 12
 
 
 @pytest.mark.parametrize("data", [
-    random_walks(n_ts=N_TS, sz=SZ, random_state=0).astype(np.float64),
+    random_walks(n_ts=N_TS, sz=SZ, random_state=0),
     torch.rand(N_TS, SZ, D, dtype=torch.float64),
 ])
 def test_chronos_bolt(data):
@@ -69,27 +67,16 @@ def test_chronos_bolt(data):
     random_walks(n_ts=N_TS, sz=SZ, random_state=0),
     torch.rand(N_TS, SZ, D, dtype=torch.float64),
 ])
-def test_timesfm(data):
-    timesfm = pytest.importorskip("timesfm")
+def test_timesfm3(data):
 
+    import timesfm3
     from tslearn.foundation import ZeroShotForecaster
 
-    model = timesfm.TimesFM_2p5_200M_torch.from_pretrained(
-        "google/timesfm-2.5-200m-pytorch"
-    )
-    model.compile(
-        timesfm.ForecastConfig(
-            max_context=CONTEXT_LENGTH, max_horizon=HORIZON, normalize_inputs=True
-        )
+    model = timesfm3.TimesFM3Forecaster.from_pretrained(
+        "google/timesfm-3.0-pytorch"
     )
 
-    zero_shot = ZeroShotForecaster(
-        model,
-        predict_fn=lambda model, context, horizon: model.forecast(
-            horizon=horizon, inputs=list(context)
-        )[0],
-        context_length=CONTEXT_LENGTH,
-    )
+    zero_shot = ZeroShotForecaster(model)
     y_zero_shot = zero_shot.predict(data, n=HORIZON)
     assert y_zero_shot.shape == (N_TS, HORIZON, 1)
 
@@ -151,10 +138,7 @@ def test_ttm(data):
     zero_shot = ZeroShotForecaster(
         model, predict_fn=predict_fn, context_length=model.config.context_length
     )
-    X = random_walks(
-        n_ts=N_TS, sz=model.config.context_length + 50, random_state=0
-    ).astype(np.float32)
-    y_zero_shot = zero_shot.predict(X, n=model.config.prediction_length)
+    y_zero_shot = zero_shot.predict(data, n=model.config.prediction_length)
     assert y_zero_shot.shape == (N_TS, model.config.prediction_length, 1)
 
 
