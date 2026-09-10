@@ -99,7 +99,7 @@ def ctw_path(
         two. In this case, if `global_constraint` corresponds to no global
         constraint, a `RuntimeWarning` is raised and no global constraint is
         used.
-    verbose : bool (default: True)
+    verbose : bool (default: False)
         If True, scores are printed at each iteration of the algorithm.
     be : Backend object or string or None
         Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
@@ -252,7 +252,7 @@ def ctw(
         two. In this case, if `global_constraint` corresponds to no global
         constraint, a `RuntimeWarning` is raised and no global constraint is
         used.
-    verbose : bool (default: True)
+    verbose : bool (default: False)
         If True, scores are printed at each iteration of the algorithm.
     be : Backend object or string or None
         Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,

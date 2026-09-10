@@ -38,7 +38,7 @@ else:
             ctx,
             D,
             gamma,
-            global_constraint=None,
+            global_constraint=0,
             sakoe_chiba_radius=None,
             itakura_max_slope=None
         ):
