@@ -43,6 +43,7 @@ to reverse the normalization. ([#697](https://github.com/tslearn-team/tslearn/is
 * Fixed double scaling in `OneD_SymbolicAggregateApproximation`. ([#722](https://github.com/tslearn-team/tslearn/issues/722))
 * `cdist_frechet` now respects `global_constraint`, which was previously ignored. ([#726](https://github.com/tslearn-team/tslearn/issues/726))
 * `TimeSeriesSVR` now passes `epsilon` on to the underlying `sklearn.svm.SVR`, which was previously ignored so the epsilon-tube width was always the sklearn default. ([#727](https://github.com/tslearn-team/tslearn/issues/727))
+* `ctw` / `ctw_path` now iterate until the alignment path is stable. The loop used to compare the current path with itself and always stop after the first DTW, so the returned score was the identity-projection DTW and disagreed with the returned path. Canonical projections are rescaled to unit covariance before DTW, matching the CTW paper, which also stops period-2 path cycles. ([#728](https://github.com/tslearn-team/tslearn/issues/728))
 
 ## [v0.9.0]
 
