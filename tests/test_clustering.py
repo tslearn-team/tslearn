@@ -332,12 +332,12 @@ def test_silhouette_samples():
         for bad_kw in [{"sample_size": 10}, {"random_state": 0}]:
             with pytest.raises(TypeError):
                 silhouette_samples(X, labels, metric=metric, **bad_kw)
-    # euclidean/precomputed ignore metric_params entirely, so an unsupported
-    # kwarg there is a silent no-op, same as passing one to sklearn's own
-    # silhouette_samples with metric="precomputed" or "euclidean"
+    # euclidean ignores unsupported kwargs, matching sklearn's own
+    # silhouette_samples with metric="euclidean".
     silhouette_samples(X, labels, metric="euclidean", sample_size=10)
-    silhouette_samples(cdist_dtw(X), labels, metric="precomputed",
-                       random_state=0)
+    with pytest.raises(TypeError):
+        silhouette_samples(cdist_dtw(X), labels, metric="precomputed",
+                           random_state=0)
     # unlike silhouette_score, an explicit None value is not special-cased
     # either: it is forwarded like any other value and still raises for
     # dtw/softdtw/a callable, since the underlying call has no such
@@ -345,9 +345,20 @@ def test_silhouette_samples():
     with pytest.raises(TypeError):
         silhouette_samples(X, labels, metric="dtw", sample_size=None,
                            random_state=None)
-    # ...but is a no-op for euclidean/precomputed, same as any other value
+    # ...but is a no-op for euclidean, same as any other value
     silhouette_samples(X, labels, metric="euclidean", sample_size=None,
                        random_state=None)
+    with pytest.raises(TypeError):
+        silhouette_samples(cdist_dtw(X), labels, metric="precomputed",
+                           sample_size=None, random_state=None)
+    for bad_kw in [
+        {"metric_params": {}},
+        {"n_jobs": 1},
+        {"verbose": 1},
+    ]:
+        with pytest.raises(TypeError):
+            silhouette_samples(cdist_dtw(X), labels, metric="precomputed",
+                               **bad_kw)
     # metric kwargs passed directly via **kwds are forwarded to the metric
     constrained = silhouette_samples(X, labels, metric="dtw",
                                      global_constraint="sakoe_chiba",
