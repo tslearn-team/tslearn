@@ -639,14 +639,15 @@ class TimeSeriesKMeans(
             del metric_params["n_jobs"]
         return metric_params
 
-    def _fit_one_init(self, X, x_squared_norms, rs):
+    def _fit_one_init(self, X, x_squared_norms, rs, sample_weight):
         metric_params = self._get_metric_params()
         n_ts, sz, d = X.shape
         if hasattr(self.init, "__array__"):
             self.cluster_centers_ = self.init.copy()
         elif isinstance(self.init, str) and self.init == "k-means++":
             if self.metric == "euclidean":
-                sample_weight = _check_sample_weight(None, X, dtype=X.dtype)
+                # sample_weight = _check_sample_weight(None, X, dtype=X.dtype)
+                sample_weight = self.sample_weight_
                 self.cluster_centers_ = _kmeans_plusplus(
                     X.reshape((n_ts, -1)),
                     self.n_clusters,
@@ -697,7 +698,8 @@ class TimeSeriesKMeans(
             self._assign(X)
             if self.verbose:
                 print("%.3f" % self.inertia_, end=" --> ")
-            self._update_centroids(X)
+
+            self._update_centroids(X, sample_weight)
 
             if numpy.abs(old_inertia - self.inertia_) < self.tol:
                 break
@@ -752,36 +754,49 @@ class TimeSeriesKMeans(
             else:
                 inertia_dists = dists
             self.inertia_ = _compute_inertia(
-                inertia_dists, self.labels_, self._squared_inertia
+                inertia_dists,
+                self.labels_,
+                self._squared_inertia,
+                sample_weight=self.sample_weight_,
             )
         return matched_labels
 
-    def _update_centroids(self, X):
+    def _update_centroids(self, X,sample_weight):
         metric_params = self._get_metric_params()
         for k in range(self.n_clusters):
+            mask = self.labels_ == k
+            X_k = X[mask]
+            weights_k = sample_weight[mask]
+
             if self.metric == "dtw":
                 self.cluster_centers_[k] = dtw_barycenter_averaging_petitjean(
-                    X=X[self.labels_ == k],
+                    X=X_k,
                     barycenter_size=None,
                     init_barycenter=self.cluster_centers_[k],
                     metric_params=metric_params,
                     verbose=False,
-                    n_jobs=self.n_jobs
+                    n_jobs=self.n_jobs,
+                    weights=weights_k,
                 )
+
             elif self.metric == "softdtw":
                 self.cluster_centers_[k] = softdtw_barycenter(
-                    X=X[self.labels_ == k],
+                    X=X_k,
                     max_iter=self.max_iter_barycenter,
                     init=self.cluster_centers_[k],
+                    weights=weights_k,
                     n_jobs=self.n_jobs,
                     **metric_params
                 )
-            else:
-                # Euclidean
-                self.cluster_centers_[k] = numpy.average(X[self.labels_ == k],
-                                                         axis=0)
 
-    def fit(self, X, y=None):
+            else:
+                self.cluster_centers_[k] = numpy.average(
+                    X_k,
+                    axis=0,
+                    weights=weights_k,
+                )
+
+    def fit(self, X, y=None, sample_weight=None):
         """Compute k-means clustering.
 
         Parameters
@@ -791,6 +806,10 @@ class TimeSeriesKMeans(
 
         y
             Ignored
+
+        sample_weight : array-like of shape=(n_ts, ) or None (default: None)
+            Weights to be given to time series in the learning process. By
+            default, all time series weights are equal.
         """
 
         X = check_array(
@@ -819,6 +838,8 @@ class TimeSeriesKMeans(
         max_attempts = max(self.n_init, 10)
 
         X_ = to_time_series_dataset(X)
+        sample_weight = _check_sample_weight(sample_weight, X_)
+        self.sample_weight_ = sample_weight
         rs = check_random_state(self.random_state)
 
         if (
@@ -843,7 +864,7 @@ class TimeSeriesKMeans(
                 if self.verbose and self.n_init > 1:
                     print("Init %d" % (n_successful + 1))
                 n_attempts += 1
-                self._fit_one_init(X_, x_squared_norms, rs)
+                self._fit_one_init(X_, x_squared_norms, rs, sample_weight)
                 if self.inertia_ < min_inertia:
                     best_correct_centroids = self.cluster_centers_.copy()
                     min_inertia = self.inertia_
