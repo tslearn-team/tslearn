@@ -127,9 +127,14 @@ def test_ctw():
                 assert backend.belongs_to_backend(dist)
 
             path, cca, dist = tslearn.metrics.ctw_path(
-                cast([1, 2, 3], array_type), cast([1.0, 2.0, 2.0, 3.0, 4.0], array_type), be=be
+                cast([1, 2, 3], array_type), cast([1.0, 2.0, 2.0, 3.0, 4.0], array_type),
+                max_iter=1, be=be
             )
             np.testing.assert_allclose(dist, 1.0)
+            path, cca, dist = tslearn.metrics.ctw_path(
+                cast([1, 2, 3], array_type), cast([1.0, 2.0, 2.0, 3.0, 4.0], array_type), be=be
+            )
+            np.testing.assert_allclose(dist, 0.751955, atol=1e-5)
             if not backend.is_numpy:
                 assert backend.belongs_to_backend(dist)
 
@@ -147,7 +152,7 @@ def test_ctw():
 
             # cdist_dtw
             dists = tslearn.metrics.cdist_ctw(cast([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], array_type), be=be)
-            np.testing.assert_allclose(dists, [[0.0, 1.0], [1.0, 0.0]])
+            np.testing.assert_allclose(dists, [[0.0, 0.751955], [0.751955, 0.0]], atol=1e-5)
             assert backend.belongs_to_backend(dists)
 
             dists = tslearn.metrics.cdist_ctw(
@@ -155,9 +160,52 @@ def test_ctw():
                 [[1, 2, 3], [2, 3, 4, 5]], be=be  # The second dataset can not be cast to array because of its shape
             )
             np.testing.assert_allclose(
-                dists, [[0.0, 2.44949], [1.0, 1.414214]], atol=1e-5
+                dists, [[0.0, 0.751955], [0.670046, 0.939336]], atol=1e-5
             )
             assert backend.belongs_to_backend(dists)
+
+
+def test_ctw_path_iterates_until_alignment_stabilizes():
+    """Non-regression test for
+    https://github.com/tslearn-team/tslearn/issues/728
+
+    The loop compared the current path with itself, so it always broke
+    after the first DTW. The score stayed at the identity-projection DTW
+    and disagreed with the path / CCA actually returned.
+    """
+    rng = np.random.RandomState(0)
+    s1 = rng.randn(20, 3)
+    s2 = rng.randn(24, 3) @ np.linalg.qr(rng.randn(3, 3))[0]
+    dtw_score = tslearn.metrics.dtw(s1, s2)
+
+    np.testing.assert_allclose(
+        tslearn.metrics.ctw(s1, s2, max_iter=1), dtw_score
+    )
+
+    path, cca, score = tslearn.metrics.ctw_path(s1, s2)
+    seq1_tr, seq2_tr = cca.transform(s1, s2)
+    path_from_cca, score_from_cca = tslearn.metrics.dtw_path(seq1_tr, seq2_tr)
+    np.testing.assert_allclose(score, score_from_cca)
+    np.testing.assert_equal(path, path_from_cca)
+
+    assert not np.isclose(score, dtw_score)
+    np.testing.assert_allclose(
+        tslearn.metrics.ctw(s1, s2, max_iter=5),
+        tslearn.metrics.ctw(s1, s2, max_iter=100),
+    )
+
+    # The counter-example from PR 579 used to cycle with period 2 once
+    # the self-comparison was fixed, because sklearn.CCA leaves the two
+    # views on different scales. After rescaling to unit covariance the
+    # path is stable and the score no longer depends on the parity of
+    # max_iter.
+    x = [[1, 1], [3, 4], [126, 126]]
+    y = [[1, 1.0], [3.0, 3], [4.0, 4], [2.0, 2], [0, 0], [127, 127]]
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        dist_2 = tslearn.metrics.ctw(x, y, max_iter=2)
+        dist_3 = tslearn.metrics.ctw(x, y, max_iter=3)
+    np.testing.assert_allclose(dist_2, dist_3)
 
 
 def test_ldtw():
