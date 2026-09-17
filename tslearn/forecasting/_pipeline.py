@@ -132,11 +132,11 @@ class ScaledForecastingPipeline(TimeSeriesMixin, BaseEstimator):
         self.scalers_ = self._fit_scalers(X)
         X_scaled = self._transform(self.scalers_, X)
 
-        self.forecaster_ = clone(self.forecaster)
+        self.forecaster_ = self.forecaster
         self.forecaster_.fit(X_scaled)
         return self
 
-    def predict(self, X=None, n=1):
+    def predict(self, X=None, n=None):
         """Forecast ``n`` timestamps ahead, on the original data scale.
 
         Parameters
@@ -144,8 +144,12 @@ class ScaledForecastingPipeline(TimeSeriesMixin, BaseEstimator):
             X : array-like of shape=(n_ts, sz, d) or None (default: None)
               Time series dataset to forecast. If None, the data passed at
               fit time is forecasted instead.
-            n : int (default: 1)
-              The number of timestamps to forecast, a.k.a. the horizon.
+            n : int or None (default: None)
+              The number of timestamps to forecast, a.k.a. the horizon. When
+              None, ``forecaster``'s own default kicks in instead -- 1 for
+              most forecasters, but the whole fitted horizon for
+              :class:`~tslearn.foundation.LinearProbeForecaster`, which
+              computes it in a single shot regardless of ``n``.
 
         Returns
         -------
@@ -165,10 +169,11 @@ class ScaledForecastingPipeline(TimeSeriesMixin, BaseEstimator):
                 else self._fit_scalers(X)
             )
             X_scaled = self._transform(scalers, X)
-        forecast_scaled = self.forecaster_.predict(X_scaled, n=n)
+        predict_kwargs = {} if n is None else {"n": n}
+        forecast_scaled = self.forecaster_.predict(X_scaled, **predict_kwargs)
         return self._inverse_transform(scalers, forecast_scaled)
 
-    def fit_predict(self, X, y=None, n=1):
+    def fit_predict(self, X, y=None, n=None):
         """Fit the estimator and forecast ``n`` timestamps for the given data.
 
         Parameters
@@ -176,8 +181,9 @@ class ScaledForecastingPipeline(TimeSeriesMixin, BaseEstimator):
             X : array-like of shape=(n_ts, sz, d)
                 Time series dataset.
             y : Ignored
-            n : int (default: 1)
-                The number of timestamps to forecast, a.k.a. the horizon.
+            n : int or None (default: None)
+                The number of timestamps to forecast, a.k.a. the horizon. See
+                :meth:`predict`.
 
         Returns
         -------

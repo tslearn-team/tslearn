@@ -304,6 +304,16 @@ def test_scaled_forecaster_fit_predict():
     )
 
 
+def test_scaled_forecaster_predict_defaults_to_wrapped_forecaster_default():
+    # With no `n` given, ScaledForecastingPipeline should not impose its own
+    # default, but let the wrapped forecaster's own default (n=1 for VARIMA)
+    # kick in transparently.
+    data = random_walks(n_ts=3, sz=20, d=1, random_state=0) * 10 + 50
+    pipeline = ScaledForecastingPipeline(VARIMA(1, 0, 0)).fit(data)
+    assert pipeline.predict().shape == (3, 1, 1)
+    assert ScaledForecastingPipeline(VARIMA(1, 0, 0)).fit_predict(data).shape == (3, 1, 1)
+
+
 def test_scaled_forecaster_rejects_scaler_without_inverse_transform():
     data = random_walks(n_ts=3, sz=20, random_state=0)
     with pytest.raises(ValueError):

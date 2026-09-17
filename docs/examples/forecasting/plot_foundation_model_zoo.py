@@ -118,14 +118,13 @@ X_train, X_test = full_series[:, :sz], full_series[:, sz:]
 # :class:`~tslearn.foundation.ZeroShotForecaster` unscaled, since it wraps
 # the full pipeline. The linear probe, on the other hand, reads
 # ``pipeline.model`` directly and so needs scaling restored explicitly through
-# a :class:`~sklearn.pipeline.Pipeline`, as detailed in the
+# a :class:`~tslearn.forecasting.ScaledForecastingPipeline`, as detailed in the
 # :doc:`plot_foundation_forecasting` example.
 
-import torch
 from chronos import BaseChronosPipeline
-from sklearn.pipeline import Pipeline
 
 from tslearn.foundation import LinearProbeForecaster, ZeroShotForecaster
+from tslearn.forecasting import ScaledForecastingPipeline
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 
 pipeline = BaseChronosPipeline.from_pretrained(
@@ -144,14 +143,13 @@ forecaster = LinearProbeForecaster(
     layers_path="encoder.block",
     pooling="mean",
 )
-scaler = TimeSeriesScalerMeanVariance(per_timeseries=False)
-probe = Pipeline([("scale", scaler), ("probe", forecaster)])
+probe = ScaledForecastingPipeline(
+    forecaster, scaler=TimeSeriesScalerMeanVariance(per_timeseries=True)
+)
 probe.fit(X_train)
 
-# The scaler also normalizes the training targets, so forecasts come out on
-# that scale and are put back in the original units, using the ``mean_`` and
-# ``std_`` the scaler computed when it was fitted, before comparison.
-y_probe = probe.predict(X_train) * scaler.std_ + scaler.mean_
+# Forecasts come back already un-scaled to the original units.
+y_probe = probe.predict(X_train, n=horizon)
 
 from tslearn.metrics.performance import mae
 
@@ -320,15 +318,15 @@ plt.show()
 # expects.
 #
 # As with the linear probes above, ``model`` is the bare backbone rather than
-# a pipeline, so scaling has to be restored the same way, through a
-# :class:`~sklearn.pipeline.Pipeline`.
+# a normalizing pipeline, so scaling has to be restored the same way, through
+# a :class:`~tslearn.forecasting.ScaledForecastingPipeline`.
 #
 # .. code-block:: python
 #
 #     from momentfm import MOMENTPipeline
-#     from sklearn.pipeline import Pipeline
 #
 #     from tslearn.foundation import LinearProbeForecaster
+#     from tslearn.forecasting import ScaledForecastingPipeline
 #     from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 #
 #     model = MOMENTPipeline.from_pretrained(
@@ -336,19 +334,21 @@ plt.show()
 #     )
 #     model.init()
 #
-#     scaler = TimeSeriesScalerMeanVariance(per_timeseries=False)
-#     probe = Pipeline([("scale", scaler), ("probe", LinearProbeForecaster(
-#         model,
-#         context_length=context_length,
-#         horizon=horizon,
-#         stride=32,
-#         layer=-1,
-#         layers_path="encoder.block",
-#         pooling="mean",
-#         input_layout="channels_first",
-#     ))])
+#     probe = ScaledForecastingPipeline(
+#         LinearProbeForecaster(
+#             model,
+#             context_length=context_length,
+#             horizon=horizon,
+#             stride=32,
+#             layer=-1,
+#             layers_path="encoder.block",
+#             pooling="mean",
+#             input_layout="channels_first",
+#         ),
+#         scaler=TimeSeriesScalerMeanVariance(per_timeseries=True),
+#     )
 #     probe.fit(X_train)
-#     y_probe = probe.predict(X_train) * scaler.std_ + scaler.mean_
+#     y_probe = probe.predict(X_train, n=horizon)
 #
 # ``input_layout="channels_first"`` matters here: MOMENT's ``forward``
 # expects an explicit channel axis (``x_enc`` of shape
@@ -397,23 +397,25 @@ plt.show()
 # Being decoder-only, its natural pooling is ``"last"``, the representation
 # of the final context token, which has attended to every earlier one. Here
 # too, ``model`` is the bare backbone rather than a normalizing pipeline, so
-# scaling is restored through a :class:`~sklearn.pipeline.Pipeline`:
+# scaling is restored through a
+# :class:`~tslearn.forecasting.ScaledForecastingPipeline`:
 #
 # .. code-block:: python
 #
-#     from sklearn.pipeline import Pipeline
-#
+#     from tslearn.forecasting import ScaledForecastingPipeline
 #     from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 #
-#     scaler = TimeSeriesScalerMeanVariance(per_timeseries=False)
-#     probe = Pipeline([("scale", scaler), ("probe", LinearProbeForecaster(
-#         model,
-#         context_length=context_length,
-#         horizon=horizon,
-#         stride=8,
-#         layer=-1,
-#         layers_path="model.layers",
-#         pooling="last",
-#     ))])
+#     probe = ScaledForecastingPipeline(
+#         LinearProbeForecaster(
+#             model,
+#             context_length=context_length,
+#             horizon=horizon,
+#             stride=8,
+#             layer=-1,
+#             layers_path="model.layers",
+#             pooling="last",
+#         ),
+#         scaler=TimeSeriesScalerMeanVariance(per_timeseries=True),
+#     )
 #     probe.fit(X_train)
-#     y_probe = probe.predict(X_train) * scaler.std_ + scaler.mean_
+#     y_probe = probe.predict(X_train, n=horizon)
