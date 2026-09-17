@@ -116,9 +116,11 @@ print(f"{y_zero_shot.shape=}")
 # pipeline, since it reads hidden states rather than forecasts. This means it
 # bypasses the normalization the pipeline applies internally, unlike
 # :class:`~tslearn.foundation.ZeroShotForecaster` above, so it has to be
-# restored explicitly, by placing a
-# :class:`~tslearn.preprocessing.TimeSeriesScalerMeanVariance` ahead of it in
-# a :class:`~sklearn.pipeline.Pipeline`.
+# restored explicitly, by wrapping it in a
+# :class:`~tslearn.forecasting.ScaledForecastingPipeline`, together with a
+# :class:`~tslearn.preprocessing.TimeSeriesScalerMeanVariance`: the context is
+# scaled before the forecaster sees it, and its forecasts are un-scaled back
+# using the very statistics the scaler computed when it was fitted.
 #
 # Three options drive which representations are used:
 #
@@ -148,9 +150,8 @@ print(f"{y_zero_shot.shape=}")
 #    :alt: Chronos-2 appends a register token and a forecast token after its
 #      context tokens; tokens=(0, -2) keeps only the context tokens.
 
-from sklearn.pipeline import Pipeline
-
 from tslearn.foundation import LinearProbeForecaster
+from tslearn.forecasting import ScaledForecastingPipeline
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 
 forecaster = LinearProbeForecaster(
@@ -162,8 +163,8 @@ forecaster = LinearProbeForecaster(
     pooling="mean",
     tokens=(0, -2),
 )
-scaler = TimeSeriesScalerMeanVariance(per_timeseries=False)
-probe = Pipeline([("scale", scaler), ("probe", forecaster)])
+scaler = TimeSeriesScalerMeanVariance(per_timeseries=True)
+probe = ScaledForecastingPipeline(forecaster, scaler=scaler)
 probe.fit(X_train)
 
 print(f"{forecaster.n_windows_} training windows, "
@@ -175,12 +176,12 @@ print(f"{forecaster.n_windows_} training windows, "
 # strength by cross-validation. Any scikit-learn regressor can be passed
 # instead through the ``probe`` parameter.
 #
-# The scaler also normalizes the training targets, since they are cut from
-# the same series as the context, so the forecasts come out on that
-# normalized scale. They are put back in the original units using the
-# ``mean_`` and ``std_`` the scaler computed when it was fitted.
+# :class:`~tslearn.forecasting.ScaledForecastingPipeline` fits the forecaster
+# in place -- like the final step of a :class:`sklearn.pipeline.Pipeline` --
+# so ``forecaster`` above is the very object that got fitted, and its
+# ``predict`` already returns forecasts un-scaled back to the original units.
 
-y_probe = probe.predict(X_train) * scaler.std_ + scaler.mean_
+y_probe = probe.predict(X_train, n=horizon)
 
 ##############################################################################
 # Comparison
@@ -249,9 +250,8 @@ plt.show()
 results = {}
 for layer in [-1, -2, -4]:
     for pooling in ["mean", "token"]:
-        model = Pipeline([
-            ("scale", scaler),
-            ("probe", LinearProbeForecaster(
+        model = ScaledForecastingPipeline(
+            LinearProbeForecaster(
                 pipeline.model,
                 context_length=context_length,
                 horizon=horizon,
@@ -261,9 +261,10 @@ for layer in [-1, -2, -4]:
                 # Chronos-2's forecast token is its last one
                 token_index=-1,
                 tokens=(0, -2),
-            )),
-        ]).fit(X_train)
-        y = model.predict(X_train) * scaler.std_ + scaler.mean_
+            ),
+            scaler=scaler,
+        ).fit(X_train)
+        y = model.predict(X_train, n=horizon)
         results[(layer, pooling)] = mae(X_test, y)
 
 for (layer, pooling), score in sorted(results.items(), key=lambda kv: kv[1]):
