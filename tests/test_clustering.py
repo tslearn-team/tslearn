@@ -462,7 +462,7 @@ def test_dbscan():
         db.fit(X)
 
     # Test TSlearn metrics
-    metrics = ['dtw', 'ctw', 'frechet']
+    metrics = ['dtw', 'frechet']
     for metric in metrics:
         db.set_params(metric=metric)
         db.fit(X)

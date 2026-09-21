@@ -28,7 +28,7 @@ class TimeSeriesDBSCAN(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPa
     min_ts : int (default: 5)
         The number of time series (including itself) in a neighborhood for a time series
         to be considered as a core point.
-    metric: {'dtw', 'ctw', 'frechet', 'euclidean', 'precomputed'} (default: 'dtw')
+    metric: {'dtw', 'frechet', 'euclidean', 'precomputed'} (default: 'dtw')
         Metric to be used for similarity measure between time series.
     metric_params : dict (default: None)
         Additional keyword arguments to pass to the metric function.
@@ -79,8 +79,7 @@ class TimeSeriesDBSCAN(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPa
     37
     """
 
-    VALID_METRICS = {"dtw", "ctw", "frechet",
-                     "softdtw_normalized", "euclidean", "precomputed"}
+    VALID_METRICS = {"dtw", "frechet", "softdtw_normalized", "euclidean", "precomputed"}
 
     def __init__(
             self,

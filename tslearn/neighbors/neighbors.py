@@ -10,7 +10,6 @@ from tslearn.bases import BaseModelPackage, TimeSeriesMixin
 from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from tslearn.metrics import (
     _cdist_dtw,
-    _cdist_ctw,
     _cdist_soft_dtw,
     _cdist_sax,
     _cdist_frechet,
@@ -73,8 +72,6 @@ class KNeighborsTimeSeriesMixin(TimeSeriesMixin):
                 other_X,
                 n_jobs=self.n_jobs,
                 **metric_params)
-        elif self._ts_metric == "ctw":
-            X_ = _cdist_ctw(X, other_X, **metric_params)
         elif self._ts_metric == "softdtw":
             X_ = _cdist_soft_dtw(
                 X,
@@ -249,7 +246,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin,
     n_neighbors : int (default: 5)
         Number of nearest neighbors to be considered for the decision.
 
-    metric : {'dtw', 'softdtw', 'ctw', 'euclidean', 'sqeuclidean', \
+    metric : {'dtw', 'softdtw', 'euclidean', 'sqeuclidean', \
               'cityblock',  'sax'} (default: 'dtw')
         Metric to be used at the core of the nearest neighbor procedure.
         DTW and SAX are described in more detail in :mod:`tslearn.metrics`.
@@ -396,8 +393,6 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin,
                     verbose=self.verbose,
                     **metric_params
                 )
-            elif self._ts_metric == "ctw":
-                X_ = _cdist_ctw(X, self._ts_fit, **metric_params)
             elif self._ts_metric == "softdtw":
                 X_ = _cdist_soft_dtw(X, self._ts_fit, **metric_params)
             elif self._ts_metric == "frechet":
