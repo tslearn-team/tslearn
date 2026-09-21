@@ -18,12 +18,6 @@ def test_k_neighbors_timeseries():
         [0, 13, 7, 12, 3]
     )
 
-    model = KNeighborsTimeSeries(metric='ctw')
-    np.testing.assert_equal(
-        model.fit(X).kneighbors(X, return_distance=False)[0],
-        [0, 13, 7, 12, 3]
-    )
-
     model = KNeighborsTimeSeries(metric='softdtw')
     np.testing.assert_equal(
         model.fit(X).kneighbors(X, return_distance=False)[0],
@@ -76,13 +70,6 @@ def test_k_neighbors_classifier():
     y_pred_dtw = model_dtw.fit(X, y).predict(X)
 
     np.testing.assert_equal(y_pred_dtw, y_pred_softdtw)
-
-    model_ctw = KNeighborsTimeSeriesClassifier(
-        n_neighbors=3,
-        metric="ctw"
-    )
-    # Just testing that things run, nothing smart here :(
-    model_ctw.fit(X, y).predict(X)
 
     model_sax = KNeighborsTimeSeriesClassifier(
         n_neighbors=3,

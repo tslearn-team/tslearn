@@ -27,8 +27,6 @@ tslearn.metrics
       cdist_soft_dtw
       cdist_soft_dtw_normalized
       cdist_frechet
-      ctw
-      ctw_path
       dtw
       dtw_path
       dtw_path_from_metric
