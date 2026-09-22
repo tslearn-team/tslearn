@@ -71,6 +71,7 @@ from .softdtw_variants import (
 from .soft_dtw_loss_pytorch import SoftDTWLossPyTorch
 from .cycc import cdist_normalized_cc, y_shifted_sbd_vec
 
+import tslearn.metrics.performance
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
