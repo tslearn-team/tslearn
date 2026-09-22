@@ -37,6 +37,7 @@ its predictions are un-scaled back, using any `tslearn.preprocessing` scaler. ([
 ### Changed
 
 * soft-dtw API is now consistent with other metrics regarding parameters names and backend management.
+* `tslearn` classes and functions can be used with top level import.  
 
 ### Fixed
 
