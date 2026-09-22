@@ -175,9 +175,20 @@ def ctw_path(
         Wx, Wy = _get_warp_matrices(current_path, be=be)
 
         cca.fit(Wx @ s1, Wy @ s2)
+        # CTW constrains each projected warped view to unit covariance
+        # (Zhou & de la Torre, NIPS 2009). sklearn.CCA does not, so rescale
+        # the canonical axes before DTW.
+        warped1, warped2 = cca.transform(Wx @ s1, Wy @ s2)
+        x_std = np.std(warped1, axis=0)
+        y_std = np.std(warped2, axis=0)
+        x_std = np.where(x_std == 0.0, 1.0, x_std)
+        y_std = np.where(y_std == 0.0, 1.0, y_std)
+        cca.x_rotations_ = cca.x_rotations_ / x_std
+        cca.y_rotations_ = cca.y_rotations_ / y_std
         seq1_tr, seq2_tr = cca.transform(s1, s2)
 
-        current_path, score_match = dtw_path(
+        prev_path = current_path
+        current_path, current_score = dtw_path(
             seq1_tr,
             seq2_tr,
             global_constraint=global_constraint,
@@ -186,13 +197,11 @@ def ctw_path(
             be=be,
         )
 
-        if np.array_equal(current_path, current_path):
-            break
-
-        current_score = score_match
-
         if verbose:
             print("Iteration {}, score={}".format(it + 1, current_score))
+
+        if np.array_equal(prev_path, current_path):
+            break
 
     return current_path, cca, current_score
 
@@ -389,12 +398,12 @@ def cdist_ctw(
     Examples
     --------
     >>> cdist_ctw([[1, 2, 2, 3], [1., 2., 3., 4.]])
-    array([[0., 1.],
-           [1., 0.]])
+    array([[0.       , 0.7519551],
+           [0.7519551, 0.       ]])
     >>> cdist_ctw([[1, 2, 2, 3], [1., 2., 3., 4.]],
     ...           [[[1, 1], [2, 2], [3, 3]], [[2, 2], [3, 3], [4, 4], [5, 5]]])
-    array([[0.        , 2.44948974],
-           [1.        , 1.41421356]])
+    array([[0.        , 0.7519551 ],
+           [0.67004592, 0.93933644]])
 
     See Also
     --------
