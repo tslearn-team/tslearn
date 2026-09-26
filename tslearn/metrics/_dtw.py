@@ -406,6 +406,48 @@ def __make_dtw(backend):
 
 
 _njit_dtw = __make_dtw(numpy)
+
+
+@njit(nogil=True)
+def _njit_dtw_sakoe_band(
+    s1, s2, global_constraint=2, sakoe_chiba_radius=None,
+    itakura_max_slope=None,
+):
+    """Compute the same Sakoe-Chiba DTW recurrence without a dense mask."""
+    l1, l2 = s1.shape[0], s2.shape[0]
+    if l1 == 0 or l2 == 0 or global_constraint != 2:
+        return _njit_dtw(
+            s1, s2, global_constraint, sakoe_chiba_radius, itakura_max_slope
+        )
+    radius = 1 if sakoe_chiba_radius is None else sakoe_chiba_radius
+    if radius < 0:
+        return _njit_dtw(
+            s1, s2, global_constraint, sakoe_chiba_radius, itakura_max_slope
+        )
+    previous = numpy.full(l2 + 1, numpy.inf)
+    current = numpy.full(l2 + 1, numpy.inf)
+    previous[0] = 0.0
+    for i in range(l1):
+        current[:] = numpy.inf
+        if l1 > l2:
+            lower = max(0, i - (l1 - l2 + radius))
+            upper = min(l2 - 1, i + radius)
+        else:
+            lower = max(0, i - radius)
+            upper = min(l2 - 1, i + l2 - l1 + radius)
+        for j in range(lower, upper + 1):
+            dist = 0.0
+            for di in range(s1[i].shape[0]):
+                diff = s1[i][di] - s2[j][di]
+                dist += diff * diff
+            current[j + 1] = dist
+            current[j + 1] += min(
+                previous[j + 1], current[j], previous[j]
+            )
+        previous, current = current, previous
+    return numpy.sqrt(previous[l2])
+
+
 if torch is not None:
     _dtw = __make_dtw(instantiate_backend("torch"))
 else:
@@ -779,6 +821,20 @@ def _cdist_dtw(
     if be is None:
         be = instantiate_backend(dataset1, dataset2)
     dtw_ = _njit_dtw if be.is_numpy else _dtw
+    # Group NumPy DTW cross pairs into bounded Joblib tasks; preserve the
+    # original dispatch for serial, self-distance, and other backends.
+    group_cross_distances = (
+        be.is_numpy and dataset2 is not None and n_jobs not in (None, 1)
+        and len(dataset1) * len(dataset2) >= 1024
+    )
+    if (
+        group_cross_distances and global_constraint == "sakoe_chiba"
+        and (
+            sakoe_chiba_radius is None
+            or type(sakoe_chiba_radius) is int and sakoe_chiba_radius >= 0
+        )
+    ):
+        dtw_ = _njit_dtw_sakoe_band
     return _cdist_generic(
         dist_fun=dtw_,
         dataset1=dataset1,
@@ -787,6 +843,8 @@ def _cdist_dtw(
         verbose=verbose,
         be=be,
         compute_diagonal=False,
+        reuse_cross_queries=group_cross_distances,
+        distance_block_size=128 if group_cross_distances else 1,
         global_constraint=GLOBAL_CONSTRAINT_CODE[global_constraint],
         sakoe_chiba_radius=sakoe_chiba_radius,
         itakura_max_slope=itakura_max_slope,

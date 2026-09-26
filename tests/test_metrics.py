@@ -1324,3 +1324,51 @@ def test_cdist_frechet_honours_global_constraint():
                                            sakoe_chiba_radius=1)
 
     np.testing.assert_allclose(actual, expected)
+
+
+@pytest.mark.parametrize("radius", [None, 0, 2, 12])
+def test_parallel_cdist_dtw_sakoe_rectangular_blocks(radius):
+    """Parallel cross distances agree with scalar DTW across query blocks."""
+    rng = np.random.RandomState(407)
+    # 8 * 129 activates the parallel cross path; 129 splits query rows
+    # across 128-pair task boundaries. Time slicing keeps non-unit strides.
+    queries = rng.randn(8, 12, 2)[:, ::2, :]
+    training = rng.randn(129, 10, 2)[:, ::2, :]
+    assert not queries.flags.c_contiguous
+    assert not training.flags.c_contiguous
+    expected = np.array([
+        [tslearn.metrics.dtw(
+            query, series, global_constraint="sakoe_chiba",
+            sakoe_chiba_radius=radius, be="numpy"
+        ) for series in training]
+        for query in queries
+    ])
+    actual = tslearn.metrics.cdist_dtw(
+        queries, training, global_constraint="sakoe_chiba",
+        sakoe_chiba_radius=radius, n_jobs=2, be="numpy"
+    )
+    assert actual.shape == (8, 129)
+    np.testing.assert_array_equal(actual, expected)
+
+
+def test_parallel_cdist_dtw_sakoe_trimmed_fallback():
+    """Mixed trailing-NaN lengths retain the scalar public DTW result."""
+    rng = np.random.RandomState(408)
+    queries = rng.randn(8, 6, 1)
+    training = rng.randn(129, 7, 1)
+    queries[::2, -1, :] = np.nan
+    training[::3, -2:, :] = np.nan
+    training[1::3, -1, :] = np.nan
+    expected = np.array([
+        [tslearn.metrics.dtw(
+            query, series, global_constraint="sakoe_chiba",
+            sakoe_chiba_radius=1, be="numpy"
+        ) for series in training]
+        for query in queries
+    ])
+    actual = tslearn.metrics.cdist_dtw(
+        queries, training, global_constraint="sakoe_chiba",
+        sakoe_chiba_radius=1, n_jobs=2, be="numpy"
+    )
+    assert actual.shape == (8, 129)
+    np.testing.assert_array_equal(actual, expected)

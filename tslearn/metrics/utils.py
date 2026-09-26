@@ -54,6 +54,11 @@ else:
     _compute_path = _njit_compute_path
 
 
+def _distance_block(dist_fun, pairs, args, kwargs):
+    """Evaluate a bounded, ordered group of NumPy DTW cross distances."""
+    return [dist_fun(left, right, *args, **kwargs) for left, right in pairs]
+
+
 def _cdist_generic(
     dist_fun,
     dataset1,
@@ -64,6 +69,9 @@ def _cdist_generic(
     compute_diagonal=True,
     dtype=float,
     *args,
+    parallel_batch_size="auto",
+    reuse_cross_queries=False,
+    distance_block_size=1,
     **kwargs
 ):
     """Compute cross-similarity matrix with joblib parallelization for a given
@@ -111,6 +119,15 @@ def _cdist_generic(
     compute_diagonal : bool (default: True)
         Whether diagonal terms should be computed or assumed to be 0 in the
         self-similarity case. Used only if `dataset2` is `None`.
+
+    parallel_batch_size : int or "auto" (default="auto")
+        Internal joblib batch size for parallel cross-similarity tasks.
+
+    reuse_cross_queries : bool (default=False)
+        Internal NumPy DTW cross-distance query reuse.
+
+    distance_block_size : int (default=1)
+        Internal number of NumPy DTW cross distances per Joblib task.
 
     *args and **kwargs :
         Optional additional parameters to be passed to the similarity function.
@@ -164,16 +181,48 @@ def _cdist_generic(
         n_ts_2 = len(dataset2)
 
         if use_parallel:
-            cdists = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
-                delayed(dist_fun)(
-                    _to_time_series(dataset1[i], True, be),
-                    _to_time_series(dataset2[j], True, be),
-                    *args,
-                    **kwargs
-                )
-                for i in range(n_ts_1)
-                for j in range(n_ts_2)
-            )
+            if distance_block_size > 1 and reuse_cross_queries and be.is_numpy:
+                # Bound retained query views and Joblib dispatch per block.
+                def cross_blocks():
+                    block = []
+                    for i in range(n_ts_1):
+                        query = _to_time_series(dataset1[i], True, be)
+                        for j in range(n_ts_2):
+                            block.append((
+                                query, _to_time_series(dataset2[j], True, be)
+                            ))
+                            if len(block) == distance_block_size:
+                                yield delayed(_distance_block)(
+                                    dist_fun, tuple(block), args, kwargs
+                                )
+                                block.clear()
+                    if block:
+                        yield delayed(_distance_block)(
+                            dist_fun, tuple(block), args, kwargs
+                        )
+
+                blocks = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose,
+                                  batch_size="auto")(cross_blocks())
+                cdists = [distance for block in blocks for distance in block]
+            else:
+                # Preserve the original per-pair path for other metrics/backends.
+                def cross_tasks():
+                    for i in range(n_ts_1):
+                        query = (
+                            _to_time_series(dataset1[i], True, be)
+                            if reuse_cross_queries and be.is_numpy else None
+                        )
+                        for j in range(n_ts_2):
+                            yield delayed(dist_fun)(
+                                (query if query is not None
+                                 else _to_time_series(dataset1[i], True, be)),
+                                _to_time_series(dataset2[j], True, be),
+                                *args,
+                                **kwargs
+                            )
+
+                cdists = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose,
+                                  batch_size=parallel_batch_size)(cross_tasks())
         else:
             cdists = [
                 dist_fun(
