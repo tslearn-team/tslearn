@@ -41,6 +41,7 @@ its predictions are un-scaled back, using any `tslearn.preprocessing` scaler. ([
 
 ### Fixed
 
+* `TimeSeriesScalerMeanVariance.inverse_transform` added `mu` instead of subtracting it. A series `[0, 2]` scaled with `mu=5` came back as `[10, 12]`.
 * `lcss` and `lcss_path_from_metric` now respect the `global_constraint` / Sakoe-Chiba / Itakura band, which was previously ignored. ([#526](https://github.com/tslearn-team/tslearn/issues/526))
 * `gak` and `cdist_gak` no longer return `NaN` for time series longer than about 405 samples. They are now normalized in log space, and the Global Alignment Kernel recursion falls back to a log-space accumulation when its value leaves the range of a 64-bit float. This also fixes `TimeSeriesSVC` / `TimeSeriesSVR` and `KernelKMeans` with `kernel="gak"` on long time series. ([#450](https://github.com/tslearn-team/tslearn/issues/450))
 * Fixed double scaling in `OneD_SymbolicAggregateApproximation`. ([#722](https://github.com/tslearn-team/tslearn/issues/722))
