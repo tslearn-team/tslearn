@@ -133,7 +133,13 @@ def _cdist_generic(
         )
 
         if use_parallel:
-            cdists = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
+            n_computes = n_ts_1 * (n_ts_1 + 1) / 2 if compute_diagonal else n_ts_1 * (n_ts_1 + 1) / 2
+            batch_size = int(n_computes // n_jobs)
+            cdists = Parallel(n_jobs=n_jobs,
+                              prefer="threads",
+                              verbose=verbose,
+                              pre_dispatch="all",
+                              batch_size=batch_size)(
                 delayed(dist_fun)(
                     _to_time_series(dataset1[i], True, be),
                     _to_time_series(dataset1[j], True, be),
@@ -164,7 +170,12 @@ def _cdist_generic(
         n_ts_2 = len(dataset2)
 
         if use_parallel:
-            cdists = Parallel(n_jobs=n_jobs, prefer="threads", verbose=verbose)(
+            batch_size = int(n_ts_1 * n_ts_2 // n_jobs)
+            cdists = Parallel(n_jobs=n_jobs,
+                              prefer="threads",
+                              verbose=verbose,
+                              pre_dispatch="all",
+                              batch_size=batch_size)(
                 delayed(dist_fun)(
                     _to_time_series(dataset1[i], True, be),
                     _to_time_series(dataset2[j], True, be),
