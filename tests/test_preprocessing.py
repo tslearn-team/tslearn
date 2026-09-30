@@ -429,6 +429,13 @@ def test_imputer():
     ])
     np.testing.assert_array_almost_equal(transformed, expected)
 
+    # A feature with no observed value is left unchanged
+    transformed = imputer.fit_transform(
+        [[[1, np.nan], [np.nan, np.nan], [3, np.nan]]]
+    )
+    expected = np.array([[[1, np.nan], [2, np.nan], [3, np.nan]]])
+    np.testing.assert_array_equal(transformed, expected)
+
     multivariate_dataset = [
         [[1, np.nan], [2, 3], [2, np.nan]],
         [[3, 4], [np.nan, 5], [np.nan, np.nan]],
