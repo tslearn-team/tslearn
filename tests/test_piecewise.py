@@ -3,6 +3,7 @@ import numpy as np
 from tslearn.piecewise import OneD_SymbolicAggregateApproximation, \
     SymbolicAggregateApproximation, PiecewiseAggregateApproximation
 from tslearn.neighbors import KNeighborsTimeSeriesClassifier
+from tslearn.utils import to_time_series_dataset
 from sklearn.exceptions import NotFittedError
 from sklearn.base import clone
 
@@ -65,6 +66,34 @@ def test_1dsax():
             sax1d_est.distance(X[0], X[1]),
             sax1d_est.distance_1d_sax(sax1d[0], sax1d[1])
         )
+
+
+def test_piecewise_distance_variable_length():
+    # distance() should work with two series of different lengths, the same
+    # way transform() already does on a NaN-padded dataset
+    rng = np.random.RandomState(0)
+    ts1, ts2 = rng.randn(12), rng.randn(9)
+    X = to_time_series_dataset([ts1, ts2])
+
+    paa = PiecewiseAggregateApproximation(n_segments=3)
+    paa_repr = paa.fit_transform(X)
+    np.testing.assert_allclose(paa.distance(ts1, ts2),
+                               paa.distance_paa(paa_repr[0], paa_repr[1]))
+
+    sax = SymbolicAggregateApproximation(n_segments=3, alphabet_size_avg=4)
+    sax_repr = sax.fit_transform(X)
+    np.testing.assert_allclose(sax.distance(ts1, ts2),
+                               sax.distance_sax(sax_repr[0], sax_repr[1]))
+
+    sax1d = OneD_SymbolicAggregateApproximation(n_segments=3,
+                                                alphabet_size_avg=4,
+                                                alphabet_size_slope=3,
+                                                sigma_l=1.)
+    sax1d_repr = sax1d.fit_transform(X)
+    np.testing.assert_allclose(
+        sax1d.distance(ts1, ts2),
+        sax1d.distance_1d_sax(sax1d_repr[0], sax1d_repr[1])
+    )
 
 
 def test_sax_scale():

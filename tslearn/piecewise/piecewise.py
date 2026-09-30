@@ -8,7 +8,7 @@ from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from tslearn.metrics.cysax import (cydist_sax, cyslopes, cydist_1d_sax,
                                    inv_transform_1d_sax, inv_transform_sax,
                                    inv_transform_paa)
-from tslearn.utils import check_dims, check_array
+from tslearn.utils import check_dims, check_array, to_time_series_dataset
 from tslearn.utils.utils import _ts_size
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -232,7 +232,7 @@ class PiecewiseAggregateApproximation(TimeSeriesMixin,
         .. [1] E. Keogh & M. Pazzani. Scaling up dynamic time warping for
            datamining applications. SIGKDD 2000, pp. 285--289.
         """
-        paa = self.transform([ts1, ts2])
+        paa = self.transform(to_time_series_dataset([ts1, ts2]))
         return self.distance_paa(paa[0], paa[1])
 
     def inverse_transform(self, X):
@@ -479,7 +479,7 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
            symbolic representation of time series. Data Mining and Knowledge
            Discovery, 2007. vol. 15(107)
         """
-        sax = self.transform([ts1, ts2])
+        sax = self.transform(to_time_series_dataset([ts1, ts2]))
         return self.distance_sax(sax[0], sax[1])
 
     def inverse_transform(self, X):
@@ -761,7 +761,7 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         .. [1] S. Malinowski, T. Guyet, R. Quiniou, R. Tavenard. 1d-SAX: a
            Novel Symbolic Representation for Time Series. IDA 2013.
         """
-        sax1d = self.transform([ts1, ts2])
+        sax1d = self.transform(to_time_series_dataset([ts1, ts2]))
         return self.distance_1d_sax(sax1d[0], sax1d[1])
 
     def inverse_transform(self, X):
