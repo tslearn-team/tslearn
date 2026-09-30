@@ -69,6 +69,14 @@ def test_scaler_inverse_transform(scaler, per_timeseries, per_feature):
     )
 
 
+def test_mean_variance_inverse_nonzero_mu():
+    X = np.array([[[0.], [2.]]])
+    estimator = TimeSeriesScalerMeanVariance(mu=5.0, std=1.0, per_timeseries=False)
+    transformed = estimator.fit_transform(X)
+    np.testing.assert_array_almost_equal(transformed, np.array([[[4.], [6.]]]))
+    np.testing.assert_array_almost_equal(estimator.inverse_transform(transformed), X)
+
+
 def test_min_max_scaler_modes():
     univariate_dataset = [
         [1, 2, 3],

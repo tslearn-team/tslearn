@@ -500,7 +500,7 @@ class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstima
 
         mean_, std_ = self.mean_.reshape(1, 1, -1), self.std_.reshape(1, 1, -1)
 
-        X_ += self.mu
+        X_ -= self.mu
         X_ *= std_ / self.std
         X_ += mean_
         return X_
