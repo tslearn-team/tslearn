@@ -77,6 +77,48 @@ def test_mean_variance_inverse_nonzero_mu():
     np.testing.assert_array_almost_equal(estimator.inverse_transform(transformed), X)
 
 
+@pytest.mark.parametrize("dtype", [np.float32, np.float64])
+@pytest.mark.parametrize("value_range", [(0., 1.), (-2., 3.), (1., 2.)])
+@pytest.mark.parametrize(
+    "mode, per_feature, minimum, span",
+    [("constant_feature", True, [3., 1.], [1., 4.]),
+     ("constant_global", False, [3.], [1.]),
+     ("varying_feature", True, [0., 1.], [4., 4.]),
+     ("varying_global", False, [0.], [5.])]
+)
+def test_minmax_inverse_fitted_ranges(
+    dtype, value_range, mode, per_feature, minimum, span
+):
+    training = np.array([[[0., 1.], [1., 2.], [np.nan, np.nan]],
+                        [[2., 3.], [3., 4.], [4., 5.]]], dtype=dtype)
+    if mode == "constant_feature":
+        training[:, :, 0] = np.where(np.isnan(training[:, :, 0]), np.nan, 3.)
+    elif mode == "constant_global":
+        training = np.where(np.isnan(training), np.nan, dtype(3.))
+    queries = np.array([[[4., 2.], [np.nan, 5.], [1., np.nan], [2., 3.]]],
+                       dtype=dtype)
+    original_training, original_queries = training.copy(), queries.copy()
+    scaler = TimeSeriesScalerMinMax(
+        value_range=value_range,
+        per_timeseries=False,
+        per_feature=per_feature
+    ).fit(training)
+    # Explicit fitted-data references include unit span for a constant feature.
+    low, high = value_range
+    expected_scaled = ((queries - np.array(minimum)) / np.array(span)
+                       * (high - low) + low)
+    scaled_copy = expected_scaled.copy()
+    np.testing.assert_allclose(scaler.inverse_transform(expected_scaled),
+                               queries, rtol=1e-6, atol=1e-6)
+    scaled = scaler.transform(queries)
+    np.testing.assert_allclose(scaled, expected_scaled, rtol=1e-6, atol=1e-6)
+    np.testing.assert_allclose(scaler.inverse_transform(scaled), queries,
+                               rtol=1e-6, atol=1e-6)
+    np.testing.assert_array_equal(expected_scaled, scaled_copy)
+    np.testing.assert_array_equal(training, original_training)
+    np.testing.assert_array_equal(queries, original_queries)
+
+
 def test_min_max_scaler_modes():
     univariate_dataset = [
         [1, 2, 3],
