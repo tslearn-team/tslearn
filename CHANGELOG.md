@@ -29,6 +29,7 @@ to reverse the normalization. ([#697](https://github.com/tslearn-team/tslearn/is
 * `tslearn.forecasting.ScaledForecastingPipeline` wraps a forecaster so that it is fitted on scaled data and 
 its predictions are un-scaled back, using any `tslearn.preprocessing` scaler. ([#708](https://github.com/tslearn-team/tslearn/issues/708))
 * Added `tslearn.clustering.silhouette_samples` to compute per-sample silhouette coefficients with time-series metrics. ([#451](https://github.com/tslearn-team/tslearn/issues/451))
+* `SymbolicAggregateApproximation` and `OneD_SymbolicAggregateApproximation` can now handle variable lengths
 
 ### Removed
 
