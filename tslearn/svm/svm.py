@@ -128,6 +128,10 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin, BaseEstimator):
 
     gamma : float, optional (default='auto')
         Kernel coefficient for 'gak', 'rbf', 'poly' and 'sigmoid'.
+        For 'gak' kernel, :math:`\\gamma = 2 \\sigma^2` and
+        :math:`\\sigma = \\sqrt{\\gamma / 2}`, where :math:`\\sigma` is the
+        bandwidth of the Global Alignment kernel (see our
+        :ref:`user guide <kernel>`).
         For 'gak' kernel, a `RuntimeError` is raised at fit time when value is
         close to 0 and therefore not compatible with 'gak' kernel.
 
@@ -431,6 +435,10 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin, BaseEstimator):
 
     gamma : float, optional (default='auto')
         Kernel coefficient for 'gak', 'rbf', 'poly' and 'sigmoid'.
+        For 'gak' kernel, :math:`\\gamma = 2 \\sigma^2` and
+        :math:`\\sigma = \\sqrt{\\gamma / 2}`, where :math:`\\sigma` is the
+        bandwidth of the Global Alignment kernel (see our
+        :ref:`user guide <kernel>`).
         For 'gak' kernel, a `RuntimeError` is raised at fit time when value is
         close to 0 and therefore not compatible with 'gak' kernel.
 

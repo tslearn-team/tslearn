@@ -133,6 +133,26 @@ step longer since it then relies on an expensive five-fold cross-validation;
 inconsistent with the scores provided by ``decision_function`` and the
 predicted class output by ``predict``.
 
+For ``kernel="gak"``, :class:`tslearn.svm.TimeSeriesSVC` and
+:class:`tslearn.svm.TimeSeriesSVR` interpret ``gamma`` as a bandwidth-squared
+scale, :math:`\gamma = 2 \sigma^2` (equivalently
+:math:`\sigma = \sqrt{\gamma / 2}`), rather than the inverse-width coefficient
+used by an RBF kernel.
+``gamma="auto"`` sets this value with
+:ref:`fun-tslearn.metrics.gamma_soft_dtw` on the training series and the
+estimator's ``random_state``, and the fitted value is reused at prediction
+time.
+That call follows the median-distance heuristic of [1]_ described above and
+returns :math:`2 \sigma^2`.
+It is a heuristic rather than a guaranteed optimum, and it depends on the
+scale of the input for both univariate and multivariate series.
+A positive numeric value selected using validation or cross-validation can
+replace it.
+Arbitrary grids, and the same grid on differently scaled inputs, need not
+perform comparably.
+If the candidates are multiples of the automatic estimate, compute that
+estimate separately within each training fold so held-out series do not leak
+into the bandwidth.
 
 
 .. minigallery:: tslearn.metrics.gak tslearn.metrics.cdist_gak tslearn.svm.TimeSeriesSVC tslearn.svm.TimeSeriesSVR tslearn.clustering.KernelKMeans
