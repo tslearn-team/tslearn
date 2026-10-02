@@ -71,10 +71,6 @@ class PiecewiseAggregateApproximation(TimeSeriesMixin,
     n_segments : int (default: 1)
         Number of PAA segments to compute
 
-    Notes
-    -----
-        This method requires a dataset of equal-sized time series.
-
     Examples
     --------
     >>> paa = PiecewiseAggregateApproximation(n_segments=3)
@@ -296,10 +292,6 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
     ----------
     breakpoints_avg_ : numpy.ndarray of shape (alphabet_size - 1, )
         List of breakpoints used to generate SAX symbols
-
-    Notes
-    -----
-        This method requires a dataset of equal-sized time series.
 
     Examples
     --------
@@ -562,10 +554,6 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
     breakpoints_slope_ : numpy.ndarray of shape (alphabet_size_slope - 1, )
         List of breakpoints used to generate SAX symbols for slopes.
 
-    Notes
-    -----
-        This method requires a dataset of equal-sized time series.
-
     Examples
     --------
     >>> one_d_sax = OneD_SymbolicAggregateApproximation(n_segments=3,
@@ -602,7 +590,6 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
             [ 0.33724488]]])
     >>> one_d_sax.fit(data).sigma_l
     1.0
-
 
     References
     ----------
@@ -679,11 +666,12 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
     def _get_slopes(self, X):
         n_ts, sz, d = X.shape
         X_slopes = numpy.empty((n_ts, self.n_segments, d))
-        sz_segment = sz // self.n_segments
-        for i_seg in range(self.n_segments):
-            start = i_seg * sz_segment
-            end = start + sz_segment
-            X_slopes[:, i_seg, :] = cyslopes(X[:, start:end, :], start)
+        for i_ts in range(n_ts):
+            sz_segment = _ts_size(X[i_ts]) // self.n_segments
+            for i_seg in range(self.n_segments):
+                start = i_seg * sz_segment
+                end = start + sz_segment
+                X_slopes[i_ts, i_seg, :] = cyslopes(X[i_ts, start:end, :])
         return X_slopes
 
     def _transform(self, X, y=None):

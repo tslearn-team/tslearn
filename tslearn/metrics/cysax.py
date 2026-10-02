@@ -103,32 +103,20 @@ def inv_transform_sax(dataset_sax, breakpoints_middle_, original_size):
     return dataset_out
 
 
-@njit(parallel=True, fastmath=True)
-def cyslopes(dataset, t0):
+def cyslopes(segment):
     """Compute slopes.
 
     Parameters
     ----------
-    dataset : array-like, shape=(n_ts, sz, d), dtype=float64
-    t0 : int32
+    segment : array-like, shape=(sz, d), dtype=float64
 
     Returns
     -------
-    dataset_out : array-like, shape=(n_ts, d), dtype=float64
+    slopes : array-like, shape=(d), dtype=float64
     """
-    n_ts, sz, d = dataset.shape
-    dataset_out = np.empty((n_ts, d))
-    vec_t = np.arange(t0, t0 + sz).reshape((-1, 1))
-    for i in prange(n_ts):
-        for di in range(d):
-            with objmode(dataset_out_i_di="float64"):
-                dataset_out_i_di = (
-                    LinearRegression()
-                    .fit(vec_t, dataset[i, :, di])
-                    .coef_[0]
-                )
-            dataset_out[i, di] = dataset_out_i_di
-    return dataset_out
+    sz, d = segment.shape
+    vec_t = np.arange(sz).reshape((-1, 1))
+    return LinearRegression().fit(vec_t, segment).coef_.reshape(-1)
 
 
 @njit(parallel=True, fastmath=True)
