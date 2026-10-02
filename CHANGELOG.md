@@ -47,6 +47,7 @@ its predictions are un-scaled back, using any `tslearn.preprocessing` scaler. ([
 * Fixed double scaling in `OneD_SymbolicAggregateApproximation`. ([#722](https://github.com/tslearn-team/tslearn/issues/722))
 * `cdist_frechet` now respects `global_constraint`, which was previously ignored. ([#726](https://github.com/tslearn-team/tslearn/issues/726))
 * `TimeSeriesSVR` now passes `epsilon` on to the underlying `sklearn.svm.SVR`, which was previously ignored so the epsilon-tube width was always the sklearn default. ([#727](https://github.com/tslearn-team/tslearn/issues/727))
+* `TimeSeriesImputer(method="linear")` no longer raises `ValueError` when a feature of a time series has no observed value. Such features are now left unchanged, as for the other imputation methods.
 
 ## [v0.9.0]
 

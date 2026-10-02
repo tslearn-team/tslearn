@@ -639,6 +639,9 @@ class TimeSeriesImputer(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         for di in range(ts.shape[-1]):
             ts_di = ts[:, di]
             mask = numpy.isnan(ts_di)
+            if mask.all():
+                # No observed value to interpolate from: left unchanged
+                continue
             ts_di[mask] = numpy.interp(
                 numpy.nonzero(mask)[0],
                 numpy.nonzero(~mask)[0],
