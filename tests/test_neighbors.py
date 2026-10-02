@@ -118,3 +118,28 @@ def test_k_neighbors_classifier():
 
     # First column will contain zeroes
     np.testing.assert_array_less(sax_dist[:, 1:], euc_dist[:, 1:])
+
+
+@pytest.mark.parametrize("duplicates", [False, True])
+@pytest.mark.parametrize("n_neighbors", [1, 4, 6])
+def test_kneighbors_excludes_self(duplicates, n_neighbors):
+    metric = "euclidean"
+    values = np.array([0., 0., 0., 2., 2., 3.] if duplicates
+                      else [0., 3., 1., 8., 7., 2.])
+    X = np.repeat(values[:, None, None], 3, axis=1)
+    original = X.copy()
+    model = KNeighborsTimeSeries(n_neighbors=n_neighbors, metric=metric).fit(X)
+    distances, indices = model.kneighbors()
+    count = min(n_neighbors, len(X) - 1)
+    assert indices.shape == (len(X), count)
+    assert np.all(indices != np.arange(len(X))[:, None])
+    reference = np.sqrt(3) * np.abs(values[:, None] - values[None, :])
+    np.fill_diagonal(reference, np.inf)
+    np.testing.assert_allclose(
+        distances, np.sort(reference, axis=1)[:, :count])
+    np.testing.assert_equal(indices, model.kneighbors(return_distance=False))
+    assert model.metric == metric
+    np.testing.assert_equal(X, original)
+    # An explicit training query keeps the existing self-including semantics.
+    explicit_distances, _ = model.kneighbors(X)
+    np.testing.assert_allclose(explicit_distances[:, 0], 0)
