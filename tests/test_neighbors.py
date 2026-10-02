@@ -18,10 +18,11 @@ def test_k_neighbors_timeseries():
         [0, 13, 7, 12, 3]
     )
 
+    # Distinct from DTW now that CTW actually runs CCA (#728).
     model = KNeighborsTimeSeries(metric='ctw')
     np.testing.assert_equal(
         model.fit(X).kneighbors(X, return_distance=False)[0],
-        [0, 13, 7, 12, 3]
+        [0, 6, 12, 7, 2]
     )
 
     model = KNeighborsTimeSeries(metric='softdtw')
