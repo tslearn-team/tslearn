@@ -168,6 +168,8 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
     Notes
     -----
         NaNs within a time series are ignored when calculating min and max.
+        A constant fitted feature uses a unit range for scaling and inverse
+        scaling, so values in later datasets can still round-trip.
 
     Examples
     --------
@@ -190,6 +192,10 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
     <BLANKLINE>
            [[1.5 , 1.75],
             [1.75, 2.  ]]])
+    >>> scaler = TimeSeriesScalerMinMax(per_timeseries=False).fit([[3., 3.]])
+    >>> scaler.inverse_transform(scaler.transform([[4., 1.]]))
+    array([[[4.],
+            [1.]]])
     """
     def __init__(self, value_range=(0., 1.), per_timeseries=True, per_feature=True):
         self.value_range = value_range
@@ -311,8 +317,11 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
 
         min_, max_ = self.min_.reshape(1, 1, -1), self.max_.reshape(1, 1, -1)
 
+        range_t = max_ - min_
+        range_t[range_t == 0.] = 1.
+
         X_ -= self.value_range[0]
-        X_ *= (max_ - min_) / (self.value_range[1] - self.value_range[0])
+        X_ *= range_t / (self.value_range[1] - self.value_range[0])
         X_ += min_
         return X_
 

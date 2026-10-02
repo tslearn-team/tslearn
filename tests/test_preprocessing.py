@@ -77,6 +77,16 @@ def test_mean_variance_inverse_nonzero_mu():
     np.testing.assert_array_almost_equal(estimator.inverse_transform(transformed), X)
 
 
+def test_min_max_scaler_constant_inverse():
+    X = np.array([[[3., 1.], [3., 2.]], [[3., 3.], [3., 4.]]])
+    query = np.array([[[4., 2.], [1., 5.]]])
+    estimator = TimeSeriesScalerMinMax(per_timeseries=False).fit(X)
+    np.testing.assert_array_almost_equal(
+        estimator.inverse_transform(estimator.transform(query)),
+        query
+    )
+
+
 def test_min_max_scaler_modes():
     univariate_dataset = [
         [1, 2, 3],
