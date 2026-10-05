@@ -197,7 +197,7 @@ class MatrixProfile(TimeSeriesMixin,
                             band_width, dtype=bool) &
                         ~np.tri(n_segments, n_segments,
                                 -(band_width + 1), dtype=bool))
-                dists[band] = np.inf
+                dists[band | np.isnan(dists)] = np.inf
                 X_transformed[i_ts] = dists.min(axis=1, keepdims=True)
 
         else:
