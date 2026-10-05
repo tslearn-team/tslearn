@@ -98,6 +98,83 @@ def test_scaler_empty_list(scaler, method):
 
 
 @pytest.mark.parametrize(
+    "scaler", [TimeSeriesScalerMinMax, TimeSeriesScalerMeanVariance]
+)
+@pytest.mark.parametrize("method, per_timeseries", [
+    ("fit", True), ("fit", False), ("transform", True),
+    ("transform", False), ("inverse_transform", False)
+])
+@pytest.mark.parametrize("per_feature", [True, False])
+@pytest.mark.parametrize("reverse", [True, False])
+@pytest.mark.parametrize("lengths", [(2, 2), (2, 3)])
+def test_scaler_mixed_features(scaler, method, per_timeseries, per_feature,
+                               reverse, lengths):
+    X = [np.arange(lengths[0] * 2).reshape(-1, 2),
+         np.arange(lengths[1]).reshape(-1, 1)]
+    if reverse:
+        X.reverse()
+    estimator = scaler(per_timeseries=per_timeseries,
+                       per_feature=per_feature).fit([[[1., 10.], [3., 20.]]])
+    with pytest.raises(ValueError, match="same number of features"):
+        getattr(estimator, method)(X)
+
+
+@pytest.mark.parametrize(
+    "scaler", [TimeSeriesScalerMinMax, TimeSeriesScalerMeanVariance]
+)
+@pytest.mark.parametrize("method", ["fit", "transform", "inverse_transform"])
+@pytest.mark.parametrize("reverse", [True, False])
+def test_scaler_empty_series(scaler, method, reverse):
+    X = [np.empty((0, 2)), np.array([[1., 10.], [3., 20.]])]
+    if reverse:
+        X.reverse()
+    estimator = scaler(per_timeseries=False).fit([[[1., 10.], [3., 20.]]])
+    with pytest.raises(ValueError):
+        getattr(estimator, method)(X)
+
+
+@pytest.mark.parametrize(
+    "scaler", [TimeSeriesScalerMinMax, TimeSeriesScalerMeanVariance]
+)
+@pytest.mark.parametrize("method, per_timeseries", [
+    ("fit", True), ("fit", False), ("transform", True),
+    ("transform", False), ("inverse_transform", False)
+])
+@pytest.mark.parametrize("per_feature", [True, False])
+def test_scaler_array_protocol(scaler, method, per_timeseries, per_feature):
+    class ArrayProtocolDataset:
+        def __array__(self, dtype=None, copy=None):
+            array = np.asarray(X, dtype=dtype)
+            return array.copy() if copy else array
+
+    X = np.array([[[1., 10.], [3., 20.]], [[5., 30.], [7., 40.]]])
+    params = dict(per_timeseries=per_timeseries, per_feature=per_feature)
+    estimator = scaler(**params).fit(X)
+    reference = scaler(**params).fit(X)
+    if method == "fit":
+        np.testing.assert_allclose(
+            estimator.fit(ArrayProtocolDataset()).transform(X),
+            reference.transform(X)
+        )
+    else:
+        np.testing.assert_allclose(
+            getattr(estimator, method)(ArrayProtocolDataset()),
+            getattr(reference, method)(X)
+        )
+
+
+@pytest.mark.parametrize(
+    "scaler", [TimeSeriesScalerMinMax, TimeSeriesScalerMeanVariance]
+)
+@pytest.mark.parametrize("method", ["fit", "transform", "inverse_transform"])
+@pytest.mark.parametrize("X", [None, 1, 1., np.float64(1), np.array(1)])
+def test_scaler_scalar_input(scaler, method, X):
+    estimator = scaler(per_timeseries=False).fit([[1., 3.]])
+    with pytest.raises(ValueError):
+        getattr(estimator, method)(X)
+
+
+@pytest.mark.parametrize(
     "scaler",
     [TimeSeriesScalerMinMax, TimeSeriesScalerMeanVariance]
 )
