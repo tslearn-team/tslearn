@@ -47,6 +47,57 @@ def test_min_max_scaler_variable_length():
 
 
 @pytest.mark.parametrize(
+    "scaler", [TimeSeriesScalerMinMax, TimeSeriesScalerMeanVariance]
+)
+@pytest.mark.parametrize("per_timeseries", [True, False])
+@pytest.mark.parametrize("per_feature", [True, False])
+@pytest.mark.parametrize("n_features", [1, 2])
+def test_scaler_ragged_input(scaler, per_timeseries, per_feature, n_features):
+    X = [np.array([[1., 10.], [3., 20.]])[:, :n_features],
+         np.array([[5., 30.], [7., 40.], [9., 50.]])[:, :n_features]]
+    query = [np.array([[2., 15.]])[:, :n_features],
+             np.array([[4., 25.], [6., 35.], [8., 45.]])[:, :n_features]]
+    X_padded = to_time_series_dataset(X)
+    query_padded = to_time_series_dataset(query)
+    params = dict(per_timeseries=per_timeseries, per_feature=per_feature)
+    reference = scaler(**params)
+    expected = reference.fit_transform(X_padded)
+
+    estimator = scaler(**params)
+    np.testing.assert_allclose(estimator.fit_transform(X), expected)
+    np.testing.assert_allclose(
+        estimator.transform(query), reference.transform(query_padded)
+    )
+    for original, ts in zip(X, estimator.transform(X)):
+        np.testing.assert_array_equal(np.isnan(ts[len(original):]), True)
+
+
+@pytest.mark.parametrize(
+    "scaler", [TimeSeriesScalerMinMax, TimeSeriesScalerMeanVariance]
+)
+@pytest.mark.parametrize("per_feature", [True, False])
+@pytest.mark.parametrize("n_features", [1, 2])
+def test_scaler_inverse_ragged_input(scaler, per_feature, n_features):
+    X = [np.array([[1., 10.], [3., 20.]])[:, :n_features],
+         np.array([[5., 30.], [7., 40.], [9., 50.]])[:, :n_features]]
+    X_padded = to_time_series_dataset(X)
+    estimator = scaler(per_timeseries=False, per_feature=per_feature)
+    transformed = estimator.fit_transform(X_padded)
+    ragged = [ts[:len(original)] for original, ts in zip(X, transformed)]
+    np.testing.assert_allclose(estimator.inverse_transform(ragged), X_padded)
+
+
+@pytest.mark.parametrize(
+    "scaler", [TimeSeriesScalerMinMax, TimeSeriesScalerMeanVariance]
+)
+@pytest.mark.parametrize("method", ["fit", "transform", "inverse_transform"])
+def test_scaler_empty_list(scaler, method):
+    estimator = scaler(per_timeseries=False).fit([[1., 3.]])
+    with pytest.raises(ValueError):
+        getattr(estimator, method)([])
+
+
+@pytest.mark.parametrize(
     "scaler",
     [TimeSeriesScalerMinMax, TimeSeriesScalerMeanVariance]
 )

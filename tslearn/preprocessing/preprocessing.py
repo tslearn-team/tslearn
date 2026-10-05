@@ -168,6 +168,7 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
     Notes
     -----
         NaNs within a time series are ignored when calculating min and max.
+        Ragged lists of time series are padded with NaNs before scaling.
         A constant fitted feature uses a unit range for scaling and inverse
         scaling, so values in later datasets can still round-trip.
 
@@ -196,6 +197,14 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
     >>> scaler.inverse_transform(scaler.transform([[4., 1.]]))
     array([[[4.],
             [1.]]])
+    >>> TimeSeriesScalerMinMax().fit_transform([[1, 3], [5, 7, 9]])
+    array([[[0. ],
+            [1. ],
+            [nan]],
+    <BLANKLINE>
+           [[0. ],
+            [0.5],
+            [1. ]]])
     """
     def __init__(self, value_range=(0., 1.), per_timeseries=True, per_feature=True):
         self.value_range = value_range
@@ -215,8 +224,8 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         -------
         self
         """
-        X_ = check_array(X, allow_nd=True, force_all_finite=False)
-        X_ = to_time_series_dataset(X_)
+        X_ = check_variable_length_input(X)
+        X_ = check_array(X_, allow_nd=True, force_all_finite=False)
         self._X_fit_dims = X_.shape
         self.n_features_in_ = self._X_fit_dims[-1]
 
@@ -279,8 +288,8 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
                              " than maximum. Got %s." % str(self.value_range))
 
         check_is_fitted(self, '_X_fit_dims')
-        X_ = check_array(X, allow_nd=True, force_all_finite=False)
-        X_ = to_time_series_dataset(X_)
+        X_ = check_variable_length_input(X)
+        X_ = check_array(X_, allow_nd=True, force_all_finite=False)
         X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, check_n_features_only=True, extend=False)
 
         min_, max_ = (self._process(X_)
@@ -311,8 +320,8 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         if self.per_timeseries:
             raise RuntimeError("Cannot inverse per timeseries scaling.")
 
-        X_ = check_array(X, allow_nd=True, force_all_finite=False)
-        X_ = to_time_series_dataset(X_)
+        X_ = check_variable_length_input(X)
+        X_ = check_array(X_, allow_nd=True, force_all_finite=False)
         X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, check_n_features_only=True, extend=False)
 
         min_, max_ = self.min_.reshape(1, 1, -1), self.max_.reshape(1, 1, -1)
@@ -370,6 +379,7 @@ class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstima
     Notes
     -----
         NaNs within a time series are ignored when calculating mu and std.
+        Ragged lists of time series are padded with NaNs before scaling.
 
     Examples
     --------
@@ -411,8 +421,8 @@ class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstima
         -------
         self
         """
-        X_ = check_array(X, allow_nd=True, force_all_finite=False)
-        X_ = to_time_series_dataset(X_)
+        X_ = check_variable_length_input(X)
+        X_ = check_array(X_, allow_nd=True, force_all_finite=False)
         self._X_fit_dims = X_.shape
         self.n_features_in_ = self._X_fit_dims[-1]
 
@@ -473,8 +483,8 @@ class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstima
         """
 
         check_is_fitted(self, '_X_fit_dims')
-        X_ = check_array(X, allow_nd=True, force_all_finite=False)
-        X_ = to_time_series_dataset(X_)
+        X_ = check_variable_length_input(X)
+        X_ = check_array(X_, allow_nd=True, force_all_finite=False)
         X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, check_n_features_only=True, extend=False)
 
         mean_, std_ = self._process(X_) if self.per_timeseries else (self.mean_.reshape(1, 1, -1),
@@ -503,8 +513,8 @@ class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstima
         if self.per_timeseries:
             raise RuntimeError("Cannot inverse per timeseries scaling.")
 
-        X_ = check_array(X, allow_nd=True, force_all_finite=False)
-        X_ = to_time_series_dataset(X_)
+        X_ = check_variable_length_input(X)
+        X_ = check_array(X_, allow_nd=True, force_all_finite=False)
         X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, check_n_features_only=True, extend=False)
 
         mean_, std_ = self.mean_.reshape(1, 1, -1), self.std_.reshape(1, 1, -1)
