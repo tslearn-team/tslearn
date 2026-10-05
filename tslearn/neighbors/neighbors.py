@@ -401,7 +401,13 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin,
             elif self._ts_metric == "ctw":
                 X_ = _cdist_ctw(X, self._ts_fit, **metric_params)
             elif self._ts_metric == "softdtw":
-                X_ = _cdist_soft_dtw(X, self._ts_fit, **metric_params)
+                X_ = _cdist_soft_dtw(
+                    X,
+                    self._ts_fit,
+                    n_jobs=self.n_jobs,
+                    verbose=self.verbose,
+                    **metric_params
+                )
             elif self._ts_metric == "frechet":
                 X_ = _cdist_frechet(
                     X,
