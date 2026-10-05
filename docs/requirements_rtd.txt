@@ -232,7 +232,7 @@ typing-extensions==4.15.0
     #   huggingface-hub
     #   pydata-sphinx-theme
     #   torch
-urllib3==2.7.0
+urllib3==2.8.0
     # via requests
 
 # The following packages are considered to be unsafe in a requirements file:
