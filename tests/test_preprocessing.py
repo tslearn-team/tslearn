@@ -1,12 +1,64 @@
 import numpy as np
 
 import pytest
+from sklearn.pipeline import Pipeline
 
 from tslearn.generators import random_walks
 from tslearn.preprocessing import (TimeSeriesScalerMeanVariance,
                                    TimeSeriesScalerMinMax,
-                                   TimeSeriesImputer)
+                                   TimeSeriesImputer,
+                                   TimeSeriesResampler,
+                                   TimeSeriesFeatureSynchronizer)
 from tslearn.utils import to_time_series_dataset, to_time_series
+
+
+class SequenceOnlyDataset:
+    """A sequence that supports integer indexing without __iter__."""
+    def __init__(self, data):
+        self.data = data
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, index):
+        return self.data[index]
+
+
+@pytest.mark.parametrize("preprocessor", [
+    TimeSeriesImputer, TimeSeriesResampler, TimeSeriesFeatureSynchronizer
+])
+@pytest.mark.parametrize("method", ["fit", "fit_transform", "transform"])
+@pytest.mark.parametrize("n_features", [1, 2])
+def test_preprocessor_sequence_protocol(preprocessor, method, n_features):
+    X = [np.array([[1., 10.], [3., 30.]])[:, :n_features],
+         np.array([[2., 20.], [4., 40.], [6., 60.]])[:, :n_features]]
+    wrapped = SequenceOnlyDataset(X)
+    assert not hasattr(wrapped, "__iter__")
+    estimator, reference = preprocessor().fit(X), preprocessor().fit(X)
+    if method == "fit":
+        actual = estimator.fit(wrapped).transform(wrapped)
+        expected = reference.transform(X)
+    else:
+        actual = getattr(estimator, method)(wrapped)
+        expected = getattr(reference, method)(X)
+    np.testing.assert_allclose(actual, expected)
+
+
+@pytest.mark.parametrize("preprocessor", [
+    TimeSeriesImputer, TimeSeriesResampler, TimeSeriesFeatureSynchronizer
+])
+@pytest.mark.parametrize("n_features", [1, 2])
+def test_preprocessor_sequence_protocol_pipeline(preprocessor, n_features):
+    X = [np.array([[1., 10.], [3., 30.]])[:, :n_features],
+         np.array([[2., 20.], [4., 40.], [6., 60.]])[:, :n_features]]
+    estimator = Pipeline([("preprocess", preprocessor()),
+                          ("resample", TimeSeriesResampler(sz=4))])
+    reference = Pipeline([("preprocess", preprocessor()),
+                          ("resample", TimeSeriesResampler(sz=4))])
+    np.testing.assert_allclose(
+        estimator.fit_transform(SequenceOnlyDataset(X)),
+        reference.fit_transform(X)
+    )
 
 
 def test_single_value_ts_no_nan():
