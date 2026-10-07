@@ -11,6 +11,7 @@ from tslearn.preprocessing import (
     TimeSeriesScalerMinMax,
     TimeSeriesResampler,
 )
+from tslearn.utils import to_time_series_dataset
 
 
 def test_VARIMA():
@@ -274,6 +275,33 @@ def test_scaled_forecaster_per_series_matches_manual_scaling(scaler):
         [s.transform(data[i:i + 1]) for i, s in enumerate(scalers)], axis=0
     )
     reference_predicted_scaled = VARIMA(1, 0, 0).fit(scaled_data).predict(n=3)
+    reference_predicted = np.concatenate(
+        [
+            s.inverse_transform(reference_predicted_scaled[i:i + 1])
+            for i, s in enumerate(scalers)
+        ],
+        axis=0,
+    )
+    np.testing.assert_allclose(predicted, reference_predicted)
+
+
+def test_scaled_forecaster_per_series_variable_length():
+    data = random_walks(n_ts=3, sz=20, d=1, random_state=0)
+    data = data * np.array([1, 100, 0.01]).reshape(3, 1, 1)
+    data[0, 12:] = np.nan
+
+    pipeline = ScaledForecastingPipeline(VARIMA(1, 0, 0)).fit(data)
+    predicted = pipeline.predict(n=2)
+    assert predicted.shape == (3, 2, 1)
+    np.testing.assert_allclose(pipeline.predict(data, n=2), predicted)
+
+    scalers = [
+        clone(pipeline._scaler_template_).fit(data[i:i + 1]) for i in range(3)
+    ]
+    scaled_data = to_time_series_dataset(
+        [s.transform(data[i:i + 1])[0] for i, s in enumerate(scalers)]
+    )
+    reference_predicted_scaled = VARIMA(1, 0, 0).fit(scaled_data).predict(n=2)
     reference_predicted = np.concatenate(
         [
             s.inverse_transform(reference_predicted_scaled[i:i + 1])
