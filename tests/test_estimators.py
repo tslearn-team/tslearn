@@ -185,6 +185,9 @@ try:
         'KernelKMeans': {
             "check_sample_weight_equivalence_on_dense_data": "Currently not supported due to clusters initialization",
         },
+        'TimeSeriesKMeans': {
+            "check_sample_weight_equivalence_on_dense_data": "Currently not supported due to clusters initialization",
+        },
         'TimeSeriesSVC': {
             "check_sample_weight_equivalence_on_dense_data": "zero sample_weight is not equivalent to removing samples",
         },

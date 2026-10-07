@@ -51,9 +51,9 @@ def _check_full_length(centroids):
     return resampler.fit_transform(centroids)
 
 
-def _compute_inertia(distances, assignments, squared=True):
-    """Derive inertia (average of squared distances) from pre-computed
-    distances and assignments.
+def _compute_inertia(distances, assignments, squared=True, sample_weight=None):
+    """Derive inertia (average of squared distances, weighted by
+    ``sample_weight`` if given) from pre-computed distances and assignments.
 
     Examples
     --------
@@ -61,13 +61,14 @@ def _compute_inertia(distances, assignments, squared=True):
     >>> assign = numpy.array([2, 0])
     >>> float(_compute_inertia(dists, assign))
     0.125
+    >>> float(_compute_inertia(dists, assign, sample_weight=[3., 1.]))
+    0.1875
     """
     n_ts = distances.shape[0]
+    dists = distances[numpy.arange(n_ts), assignments]
     if squared:
-        return numpy.sum(distances[numpy.arange(n_ts),
-                                   assignments] ** 2) / n_ts
-    else:
-        return numpy.sum(distances[numpy.arange(n_ts), assignments]) / n_ts
+        dists = dists ** 2
+    return numpy.average(dists, weights=sample_weight)
 
 
 def silhouette_score(X, labels, metric=None, sample_size=None,
