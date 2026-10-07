@@ -96,8 +96,11 @@ class ScaledForecastingPipeline(TimeSeriesMixin, BaseEstimator):
         if not self.per_timeseries_:
             return scalers[0].transform(X)
         be = instantiate_backend(X)
-        return be.vstack(
-            [scaler.transform(X[i : i + 1]) for i, scaler in enumerate(scalers)]
+        # transforming one series drops its trailing NaN padding, so the
+        # scaled series are padded back to a common length
+        return to_time_series_dataset(
+            [scaler.transform(X[i : i + 1])[0] for i, scaler in enumerate(scalers)],
+            be=be,
         )
 
     def _inverse_transform(self, scalers, forecast):
