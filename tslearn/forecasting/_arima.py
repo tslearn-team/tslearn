@@ -339,9 +339,11 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         return _loss(X, intercept, ar_coeffs, ma_coeffs)
 
     def _undifference(self, initial_values, prediction):
+        # x_t = (d-th difference of x_t) - sum_{k=1..d} (-1)^k C(d, k) x_{t-k},
+        # where initial_values[:, -d:] holds x_{t-d}, ..., x_{t-1}
         _ = np.array(
             [
-                (-(1 ** (j + 1))) * scipy.special.binom(j + 1, self.d)
+                (-1) ** (self.d - j) * scipy.special.binom(self.d, j)
                 for j in range(self.d)
             ]
         )
