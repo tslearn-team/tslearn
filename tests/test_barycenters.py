@@ -161,7 +161,8 @@ def test_dba_subgradient_weights():
 
     # A zero weight does not make the barycenter NaN
     bar = tslearn.barycenters.dtw_barycenter_averaging_subgradient(
-        time_series, weights=np.array([1, 0, 1, 1, 1, 1.]), random_state=0
+        time_series, weights=np.array([1, 0, 1, 1, 1, 1.]), random_state=0,
+        verbose=True
     )
     assert np.all(np.isfinite(bar))
 
