@@ -77,6 +77,8 @@ class KShape(TimeSeriesCentroidBasedClusteringMixin,
     Notes
     -----
         This method requires a dataset of equal-sized time series.
+        The time series must be z-normalized, for example with
+        :class:`~tslearn.preprocessing.TimeSeriesScalerMeanVariance`.
 
     Examples
     --------
