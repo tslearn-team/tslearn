@@ -78,6 +78,7 @@ else:
             self.median = _torch.median
             self.min = _torch.min
             self.nan = _torch.nan
+            self.nanmean = _torch.nanmean
             self.pairwise_euclidean_distances = _torch.cdist
             self.reshape = _torch.reshape
             self.round = _torch.round

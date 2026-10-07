@@ -66,6 +66,7 @@ class NumPyBackend(object):
         self.median = _np.median
         self.min = _np.min
         self.nan = _np.nan
+        self.nanmean = _np.nanmean
         self.pairwise_distances = pairwise_distances
         self.pairwise_euclidean_distances = euclidean_distances
         self.pdist = pdist

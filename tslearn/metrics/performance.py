@@ -2,9 +2,6 @@
 The :mod:`tslearn.metrics.performance` module delivers time-series specific performance metrics .
 
 """
-
-import numpy
-
 from sklearn import metrics as skmetrics
 
 from tslearn.backend import instantiate_backend
@@ -204,22 +201,22 @@ def mase(
     """
 
     train_data = to_time_series_dataset(train_data)
-    train_data = instantiate_backend(train_data).to_numpy(train_data)
 
     mae_ = mae(y_true, y_pred, ts_weights, timestamps_weights, "raw_values")
+    be = instantiate_backend(mae_)
 
     # Each feature is scaled by its own naive forecast error, ignoring the
     # NaN padding of variable length time series
     naive_errors = abs(
         train_data[:, :-seasonal_period] - train_data[:, seasonal_period:]
     )
-    scale = numpy.nanmean(naive_errors, axis=(0, 1))
+    scale = be.nanmean(naive_errors, axis=(0, 1))
     res = mae_ / scale
 
     if isinstance(multioutput, str):
         if multioutput == "uniform_average":
             res = res.mean()
     else:
-        multioutput = numpy.asarray(multioutput)
+        multioutput = be.asarray(multioutput, dtype=res.dtype)
         res = multioutput @ res / multioutput.sum()
     return res
