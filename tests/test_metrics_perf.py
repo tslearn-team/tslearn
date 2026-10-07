@@ -179,6 +179,24 @@ def test_mase():
     mase_ = performance.mase(y_pred, y_true, y_train, seasonal_period=1, multioutput="raw_values")
     np.testing.assert_allclose(mase_, [9/13, 9/13])
 
+    # Each feature is scaled by its own in-sample naive forecast error
+    y_train = [[[0, 0], [1, 100], [2, 200], [3, 300]]]
+    mase_ = performance.mase(y_pred, y_true, y_train, multioutput="raw_values")
+    np.testing.assert_allclose(mase_, [1, 1/100])
+    mase_ = performance.mase(y_pred, y_true, y_train)
+    np.testing.assert_allclose(mase_, (1 + 1/100) / 2)
+    mase_ = performance.mase(y_pred, y_true, y_train, multioutput=[1, 0])
+    np.testing.assert_allclose(mase_, 1)
+    mase_ = performance.mase(
+        y_pred, y_true, y_train, multioutput=np.array([0, 1])
+    )
+    np.testing.assert_allclose(mase_, 1/100)
+
+    # NaN padding of variable length training series is ignored
+    y_train = [[1, 2, 3, 4], [1, 2]]
+    mase_ = performance.mase(y_pred, y_true, y_train)
+    np.testing.assert_allclose(mase_, 1)
+
     y_train = [0] * 10
     with pytest.warns(RuntimeWarning, match="divide by zero"):
         mase_ = performance.mase(y_pred, y_true, y_train)
