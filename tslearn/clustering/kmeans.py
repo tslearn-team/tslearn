@@ -960,9 +960,10 @@ class TimeSeriesKMeans(
             "allow_nan": self.metric != "euclidean",
             ALLOW_VARIABLE_LENGTH: self.metric != "euclidean"}
         )
+        sample_weight_failure_msg = "Not supported due to clusters initialization"
         tags["_xfail_checks"].update({
-            "check_sample_weight_equivalence_on_dense_data":
-                "Not supported due to clusters initialization",
+            "check_sample_weight_equivalence_on_dense_data": sample_weight_failure_msg,
+            "check_sample_weights_invariance": sample_weight_failure_msg,
         })
         return tags
 
