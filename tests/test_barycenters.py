@@ -141,6 +141,32 @@ def test_dba():
     )
 
 
+def test_dba_subgradient_weights():
+    # Two groups of series around 0 and around 1: the weighted barycenter
+    # should move towards the group with the larger weights, as with
+    # dtw_barycenter_averaging
+    rng = np.random.RandomState(0)
+    time_series = np.concatenate(
+        [np.zeros((3, 10, 1)), np.ones((3, 10, 1))]
+    ) + rng.normal(0, 0.01, (6, 10, 1))
+    for weights in ([10, 10, 10, 1, 1, 1], [1, 1, 1, 10, 10, 10]):
+        weights = np.array(weights, dtype=float)
+        bar = tslearn.barycenters.dtw_barycenter_averaging_subgradient(
+            time_series, weights=weights, max_iter=50, random_state=0
+        )
+        bar_mm = tslearn.barycenters.dtw_barycenter_averaging(
+            time_series, weights=weights, max_iter=50
+        )
+        np.testing.assert_allclose(bar.mean(), bar_mm.mean(), atol=0.05)
+
+    # A zero weight does not make the barycenter NaN
+    bar = tslearn.barycenters.dtw_barycenter_averaging_subgradient(
+        time_series, weights=np.array([1, 0, 1, 1, 1, 1.]), random_state=0,
+        verbose=True
+    )
+    assert np.all(np.isfinite(bar))
+
+
 def test_softdtw_barycenter():
     n, sz, d = 15, 10, 3
     rng = np.random.RandomState(0)

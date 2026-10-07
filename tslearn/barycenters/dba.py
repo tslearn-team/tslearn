@@ -864,23 +864,29 @@ def dtw_barycenter_averaging_subgradient(
     n = X_.shape[0]
     for it in range(max_iter):
         shuffled_indices = rng.permutation(n)
+        cost = 0.
         for idx in shuffled_indices:
             Xi = X_[idx:idx+1]
             wi = weights[idx:idx+1]
-            list_p_k, cost = _mm_assignment(Xi, barycenter, weights,
-                                            metric_params)
+            list_p_k, cost_i = _mm_assignment(Xi, barycenter, numpy.ones(1),
+                                              metric_params)
+            # Weighted cost over the epoch, used for the stopping criterion
+            cost += wi[0] * cost_i / weights.sum()
             list_diag_v_k, list_w_k = _subgradient_valence_warping(
                 list_p_k,
                 barycenter_size,
                 wi
             )
-            if verbose:
-                print("[DBA] epoch %d, cost: %.3f" % (it + 1, cost))
+            # Each step uses a single series, so its weight is scaled by
+            # n / weights.sum() rather than normalized away
             barycenter = _subgradient_update_barycenter(Xi, list_diag_v_k,
-                                                        list_w_k, wi.sum(),
+                                                        list_w_k,
+                                                        weights.sum() / n,
                                                         barycenter, eta)
             if it == 0:
                 eta -= (initial_step_size - final_step_size) / n
+        if verbose:
+            print("[DBA] epoch %d, cost: %.3f" % (it + 1, cost))
         if abs(cost_prev - cost) < tol:
             break
         elif cost_prev < cost:
