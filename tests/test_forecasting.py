@@ -121,6 +121,15 @@ def test_VARIMA():
         expected
     )
 
+    # Higher order differencing: the d-th difference of t**d is constant, so
+    # VARIMA(0, d, 0) with constant should continue the polynomial exactly
+    t = np.arange(10, dtype=float)
+    for d in (2, 3):
+        data = (t ** d).reshape(1, -1, 1)
+        predicted = VARIMA(0, d, 0).fit(data).predict(n=3)
+        expected = (np.arange(10, 13, dtype=float) ** d).reshape(1, -1, 1)
+        np.testing.assert_almost_equal(predicted, expected)
+
     # MA X(t) = e(t) + 0.9e(t-1)
     rng = np.random.RandomState(0)
     noise = rng.normal(size=(2, 100, 2))
