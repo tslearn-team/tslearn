@@ -49,6 +49,7 @@ its predictions are un-scaled back, using any `tslearn.preprocessing` scaler. ([
 * `TimeSeriesSVR` now passes `epsilon` on to the underlying `sklearn.svm.SVR`, which was previously ignored so the epsilon-tube width was always the sklearn default. ([#727](https://github.com/tslearn-team/tslearn/issues/727))
 * `TimeSeriesImputer(method="linear")` no longer raises `ValueError` when a feature of a time series has no observed value. Such features are now left unchanged, as for the other imputation methods.
 * `PiecewiseAggregateApproximation.distance`, `SymbolicAggregateApproximation.distance` and `OneD_SymbolicAggregateApproximation.distance` now accept two time series of different lengths, instead of failing on the ragged input. ([#738](https://github.com/tslearn-team/tslearn/issues/738))
+* `MatrixProfile` with the default `implementation="numpy"` no longer returns an all-`NaN` profile for a time series that contains `NaN` values, such as the padding of a shorter series in a variable length dataset. Subsequences containing `NaN` are now treated as infinitely far away, as with `implementation="stump"`, so the rest of the profile matches the one of the unpadded series. ([#753](https://github.com/tslearn-team/tslearn/issues/753))
 
 ## [v0.9.0]
 
