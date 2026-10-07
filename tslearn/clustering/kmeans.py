@@ -646,12 +646,11 @@ class TimeSeriesKMeans(
             self.cluster_centers_ = self.init.copy()
         elif isinstance(self.init, str) and self.init == "k-means++":
             if self.metric == "euclidean":
-                sample_weight = _check_sample_weight(None, X, dtype=X.dtype)
                 self.cluster_centers_ = _kmeans_plusplus(
                     X.reshape((n_ts, -1)),
                     self.n_clusters,
                     x_squared_norms=x_squared_norms,
-                    sample_weight=sample_weight,
+                    sample_weight=self._sample_weight,
                     random_state=rs,
                 )[0].reshape((-1, sz, d))
             else:
@@ -752,18 +751,27 @@ class TimeSeriesKMeans(
             else:
                 inertia_dists = dists
             self.inertia_ = _compute_inertia(
-                inertia_dists, self.labels_, self._squared_inertia
+                inertia_dists,
+                self.labels_,
+                self._squared_inertia,
+                sample_weight=self._sample_weight,
             )
         return matched_labels
 
     def _update_centroids(self, X):
         metric_params = self._get_metric_params()
         for k in range(self.n_clusters):
+            weights = self._sample_weight[self.labels_ == k]
+            if weights.sum() == 0:
+                raise EmptyClusterError(
+                    "Cluster %d only contains time series with zero weight" % k
+                )
             if self.metric == "dtw":
                 self.cluster_centers_[k] = dtw_barycenter_averaging_petitjean(
                     X=X[self.labels_ == k],
                     barycenter_size=None,
                     init_barycenter=self.cluster_centers_[k],
+                    weights=weights,
                     metric_params=metric_params,
                     verbose=False,
                     n_jobs=self.n_jobs
@@ -773,15 +781,17 @@ class TimeSeriesKMeans(
                     X=X[self.labels_ == k],
                     max_iter=self.max_iter_barycenter,
                     init=self.cluster_centers_[k],
+                    weights=weights,
                     n_jobs=self.n_jobs,
                     **metric_params
                 )
             else:
                 # Euclidean
-                self.cluster_centers_[k] = numpy.average(X[self.labels_ == k],
-                                                         axis=0)
+                self.cluster_centers_[k] = numpy.average(
+                    X[self.labels_ == k], axis=0, weights=weights
+                )
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, sample_weight=None):
         """Compute k-means clustering.
 
         Parameters
@@ -791,6 +801,10 @@ class TimeSeriesKMeans(
 
         y
             Ignored
+
+        sample_weight : array-like of shape=(n_ts, ) or None (default: None)
+            Weights given to the time series in the barycenter computations
+            and in the inertia. By default, all time series weights are equal.
         """
 
         X = check_array(
@@ -819,6 +833,7 @@ class TimeSeriesKMeans(
         max_attempts = max(self.n_init, 10)
 
         X_ = to_time_series_dataset(X)
+        self._sample_weight = _check_sample_weight(sample_weight, X_)
         rs = check_random_state(self.random_state)
 
         if (
@@ -855,7 +870,7 @@ class TimeSeriesKMeans(
         self._post_fit(X_, best_correct_centroids, min_inertia)
         return self
 
-    def fit_predict(self, X, y=None):
+    def fit_predict(self, X, y=None, sample_weight=None):
         """Fit k-means clustering using X and then predict the closest cluster
         each time series in X belongs to.
 
@@ -870,13 +885,17 @@ class TimeSeriesKMeans(
         y
             Ignored
 
+        sample_weight : array-like of shape=(n_ts, ) or None (default: None)
+            Weights given to the time series in the barycenter computations
+            and in the inertia. By default, all time series weights are equal.
+
         Returns
         -------
         labels : array of shape=(n_ts, )
             Index of the cluster each sample belongs to.
         """
         X = check_array(X, allow_nd=True, force_all_finite="allow-nan")
-        return self.fit(X, y).labels_
+        return self.fit(X, y, sample_weight=sample_weight).labels_
 
     def predict(self, X):
         """Predict the closest cluster each time series in X belongs to.
@@ -941,6 +960,11 @@ class TimeSeriesKMeans(
             "allow_nan": self.metric != "euclidean",
             ALLOW_VARIABLE_LENGTH: self.metric != "euclidean"}
         )
+        sample_weight_failure_msg = "Not supported due to clusters initialization"
+        tags["_xfail_checks"].update({
+            "check_sample_weight_equivalence_on_dense_data": sample_weight_failure_msg,
+            "check_sample_weights_invariance": sample_weight_failure_msg,
+        })
         return tags
 
     def __sklearn_tags__(self):
