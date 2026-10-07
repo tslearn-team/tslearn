@@ -564,6 +564,64 @@ def test_gak_log_and_linear_recursions_agree():
         )
 
 
+def test_gak_log_recursion_pytorch():
+    # The PyTorch recursions are plain Python loops, far too slow to reach
+    # the overflow regime in CI, so check them directly on small inputs.
+    pytest.importorskip('torch')
+    from tslearn.metrics._gak import (
+        _gak_from_gram_matrix,
+        _log_gak_from_gram_matrix,
+        _njit_log_gak_from_gram_matrix,
+    )
+
+    rng = np.random.RandomState(0)
+    for sz1, sz2 in [(1, 1), (1, 7), (7, 1), (5, 5), (30, 20)]:
+        log_gram = -np.abs(rng.randn(sz1, sz2))
+        expected = _njit_log_gak_from_gram_matrix(log_gram)
+        np.testing.assert_allclose(
+            _log_gak_from_gram_matrix(torch.tensor(log_gram)).item(),
+            expected,
+            rtol=1e-10,
+        )
+        np.testing.assert_allclose(
+            np.log(_gak_from_gram_matrix(torch.tensor(np.exp(log_gram))).item()),
+            expected,
+            rtol=1e-10,
+        )
+
+
+def test_gak_log_space_fallback():
+    # When every gram entry underflows to 0, the linear recursion returns 0
+    # and the log-space one must take over. Unlike overflow, this happens on
+    # short series, which makes the fallback cheap to exercise on every
+    # backend.
+    from tslearn.metrics._gak import (
+        _log_gram_matrix,
+        _log_unnormalized_gak,
+        _njit_log_gak_from_gram_matrix,
+    )
+
+    rng = np.random.RandomState(0)
+    s1 = rng.randn(6, 2)
+    s2 = rng.randn(4, 2) + 100.0
+    expected = _njit_log_gak_from_gram_matrix(
+        _log_gram_matrix(s1, s2, 1.0, instantiate_backend("numpy"))
+    )
+    assert np.isfinite(expected)
+
+    for be in backends:
+        backend = instantiate_backend(be, "numpy")
+        log_value = _log_unnormalized_gak(
+            backend.array(s1), backend.array(s2), sigma=1.0, backend=backend
+        )
+        np.testing.assert_allclose(float(log_value), expected, rtol=1e-10)
+
+        dataset = backend.array(np.stack([s1[:4], s2]))
+        matrix = tslearn.metrics.cdist_gak(dataset, sigma=1.0, be=be)
+        assert backend.belongs_to_backend(matrix)
+        np.testing.assert_allclose(cast(matrix, "numpy"), np.eye(2))
+
+
 def test_gak_long_time_series():
     # Non-regression test for
     # https://github.com/tslearn-team/tslearn/issues/450
