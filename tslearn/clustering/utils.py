@@ -1,4 +1,7 @@
 """Clustering related toolbox."""
+import warnings
+
+from sklearn.exceptions import ConvergenceWarning
 from sklearn.metrics.cluster import silhouette_score as sklearn_silhouette
 from sklearn.metrics.cluster import silhouette_samples as \
     sklearn_silhouette_samples
@@ -389,12 +392,34 @@ def _check_initial_guess(init, n_clusters):
 
 class TimeSeriesCentroidBasedClusteringMixin(TimeSeriesMixin):
     """Mixin class for centroid-based clustering of time series."""
+    def __sklearn_is_fitted__(self):
+        # ``cluster_centers_`` is reset to None when every initialization
+        # failed (see ``_post_fit``), in which case the model must not be
+        # considered fitted even though the attribute exists.
+        return getattr(self, "cluster_centers_", None) is not None
+
     def _post_fit(self, X_fitted, centroids, inertia):
         if numpy.isfinite(inertia) and (centroids is not None):
             self.cluster_centers_ = centroids
             self._assign(X_fitted)
             self._X_fit = X_fitted
             self.inertia_ = inertia
+            self.n_features_in_ = X_fitted.shape[-1]
         else:
+            # Every initialization raised EmptyClusterError: discard the
+            # attributes left over from the last failed attempt so that the
+            # model does not look fitted.
+            self.labels_ = None
+            self.cluster_centers_ = None
+            self.inertia_ = numpy.inf
+            self.n_iter_ = 0
             self._X_fit = None
-        self.n_features_in_ = X_fitted.shape[-1]
+            warnings.warn(
+                "All initializations of %s led to at least one empty "
+                "cluster, so no valid clustering could be found. The model "
+                "is left unfitted (labels_ and cluster_centers_ are None, "
+                "and predict will raise NotFittedError). Consider "
+                "decreasing n_clusters or increasing n_init."
+                % type(self).__name__,
+                ConvergenceWarning
+            )

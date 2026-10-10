@@ -291,8 +291,7 @@ class KShape(TimeSeriesCentroidBasedClusteringMixin,
             Index of the cluster each sample belongs to.
         """
         X = check_array(X, allow_nd=True)
-        check_is_fitted(self,
-                        ['cluster_centers_', 'norms_', 'norms_centroids_'])
+        check_is_fitted(self)
 
         X_ = check_dims(X, X_fit_dims=self.cluster_centers_.shape)
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
