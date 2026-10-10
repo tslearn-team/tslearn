@@ -29,17 +29,16 @@ class KNeighborsTimeSeriesMixin(TimeSeriesMixin):
     """Mixin for k-neighbors searches on Time Series."""
 
     def _sax_preprocess(self, X, n_segments=10, alphabet_size_avg=4,
-                        scale=False):
+                        scale=False, fit=False):
         # Now SAX-transform the time series
-        if not hasattr(self, '_sax') or self._sax is None:
+        if fit or not hasattr(self, '_sax') or self._sax is None:
             self._sax = SymbolicAggregateApproximation(
                 n_segments=n_segments,
                 alphabet_size_avg=alphabet_size_avg,
                 scale=scale
             )
-        X_sax = self._sax.fit_transform(X)
-
-        return X_sax
+            return self._sax.fit_transform(X)
+        return self._sax.transform(X)
 
     def _get_metric_params(self):
         if self.metric_params is None:
@@ -472,6 +471,9 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         are overridden by the `n_jobs` and `verbose` arguments.
         For 'sax' metric, these are hyper-parameters to be passed at the 
         creation of the `SymbolicAggregateApproximation` object.
+        With ``scale=True``, normalization is fitted on the training data
+        and reused for every query. Models saved before this fitted SAX state
+        was included in serialization need to be refitted to preserve it.
 
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel for cross-distance matrix
@@ -539,7 +541,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         return True
 
     def _get_model_params(self):
-        return {
+        params = {
             '_X_fit': self._X_fit,
             '_ts_fit': self._ts_fit,
             '_d': self._d,
@@ -549,6 +551,28 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             '_fit_X': self._fit_X,
             '_fit_method': self._fit_method
         }
+        if self.metric == 'sax' and hasattr(self, '_sax'):
+            params.update({
+                '_sax_' + key: value
+                for key, value in self._sax._get_model_params().items()
+            })
+        return params
+
+    @staticmethod
+    def _organize_model(cls, model):
+        model_params = model['model_params']
+        sax_params = {
+            key[len('_sax_'):]: model_params.pop(key)
+            for key in list(model_params) if key.startswith('_sax_')
+        }
+        inst = BaseModelPackage._organize_model(cls, model)
+        if sax_params:
+            sax_hyper_params = dict(n_segments=10, alphabet_size_avg=4)
+            sax_hyper_params.update(inst._get_metric_params())
+            inst._sax = SymbolicAggregateApproximation(**sax_hyper_params)
+            for key, value in sax_params.items():
+                setattr(inst._sax, key, value)
+        return inst
 
     def fit(self, X, y):
         """Fit the model using X as training data and y as target values
@@ -579,9 +603,10 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
             if self._ts_metric == 'sax':
                 if self.metric_params is not None:
                     self._ts_fit = self._sax_preprocess(X,
+                                                        fit=True,
                                                         **self.metric_params)
                 else:
-                    self._ts_fit = self._sax_preprocess(X)
+                    self._ts_fit = self._sax_preprocess(X, fit=True)
 
             self._d = X.shape[2]
             self._X_fit = numpy.zeros((self._ts_fit.shape[0],
