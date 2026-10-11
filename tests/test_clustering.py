@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 from scipy.spatial.distance import cdist
+from sklearn.exceptions import ConvergenceWarning, NotFittedError
 
 from tslearn.clustering import (
     EmptyClusterError,
@@ -143,10 +144,13 @@ def test_kmeans():
     np.testing.assert_allclose(km_sdtw.labels_, dists.argmin(axis=1))
     np.testing.assert_allclose(km_sdtw.labels_, km_sdtw.predict(time_series))
 
-    km_nofit = TimeSeriesKMeans(n_clusters=101,
-                                verbose=False,
-                                random_state=rng).fit(time_series)
+    with pytest.warns(ConvergenceWarning, match="empty cluster"):
+        km_nofit = TimeSeriesKMeans(n_clusters=101,
+                                    verbose=False,
+                                    random_state=rng).fit(time_series)
     assert(km_nofit._X_fit is None)
+    assert km_nofit.labels_ is None
+    assert km_nofit.cluster_centers_ is None
 
     with pytest.raises(ValueError):
         KShape(n_clusters=101, verbose=False, init="random").fit(time_series)
@@ -197,6 +201,13 @@ def test_kmeans():
                                     [1., 2., 2., 3., 4.],
                                     [3., 2., 1.]])
     sizes_all_same_bary = [barys.shape[1]] * n_clusters
+    # Three groups of series, each one close to one of the initial
+    # barycenters, so that no cluster ends up empty
+    time_series = np.concatenate([
+        np.linspace(1., 3., sz) + .1 * rng.randn(5, sz),
+        np.linspace(1., 4., sz) + .1 * rng.randn(5, sz),
+        np.linspace(3., 1., sz) + .1 * rng.randn(5, sz)
+    ])[:, :, None]
     # If Euclidean is used, barycenters size should be that of the input series
     km_euc = TimeSeriesKMeans(n_clusters=3,
                               metric="euclidean",
@@ -271,6 +282,49 @@ def test_kshape():
     assert all(kshape.labels_[0] == kshape.labels_[:10])
     assert all(kshape.labels_[10] == kshape.labels_[10:])
     assert kshape.labels_[0] != kshape.labels_[10]
+
+
+@pytest.mark.parametrize("estimator_class", [KShape, TimeSeriesKMeans])
+def test_all_inits_empty_cluster(estimator_class):
+    # 12 identical series cannot be split into 2 non-empty clusters, so every
+    # initialization raises EmptyClusterError. The model must then be left in
+    # an unfitted state instead of exposing attributes from a failed attempt.
+    n, sz = 12, 20
+    X = np.tile(np.sin(np.linspace(0, 2 * np.pi, sz)), (n, 1))[:, :, None]
+    X = TimeSeriesScalerMeanVariance().fit_transform(X)
+
+    model = estimator_class(n_clusters=2, n_init=8, random_state=0)
+    with pytest.warns(ConvergenceWarning, match="empty cluster"):
+        model.fit(X)
+
+    assert model._X_fit is None
+    assert model.labels_ is None
+    assert model.cluster_centers_ is None
+    assert model.inertia_ == np.inf
+    assert model.n_iter_ == 0
+    assert not hasattr(model, "n_features_in_")
+
+    with pytest.raises(NotFittedError):
+        model.predict(X)
+    if hasattr(model, "transform"):
+        with pytest.raises(NotFittedError):
+            model.transform(X)
+
+    model = estimator_class(n_clusters=2, n_init=8, random_state=0)
+    with pytest.warns(ConvergenceWarning, match="empty cluster"):
+        labels = model.fit_predict(X)
+    assert labels is None
+
+    # A regular fit on the same model instance recovers a fitted state
+    rng = np.random.RandomState(0)
+    X_ok = TimeSeriesScalerMeanVariance().fit_transform(rng.randn(n, sz, 1))
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", ConvergenceWarning)
+        model.fit(X_ok)
+    assert model.labels_ is not None
+    assert model.cluster_centers_ is not None
+    assert model.n_features_in_ == 1
+    np.testing.assert_array_equal(model.predict(X_ok), model.labels_)
 
 
 def test_silhouette():

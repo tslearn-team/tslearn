@@ -896,7 +896,7 @@ class TimeSeriesKMeans(
             allow_nd=True,
             force_all_finite="allow-nan" if self.metric != "euclidean" else True
         )
-        check_is_fitted(self, "cluster_centers_")
+        check_is_fitted(self)
         X = check_dims(
             X,
             X_fit_dims=self.cluster_centers_.shape,
@@ -926,7 +926,7 @@ class TimeSeriesKMeans(
             allow_nd=True,
             force_all_finite="allow-nan" if self.metric != "euclidean" else True
         )
-        check_is_fitted(self, "cluster_centers_")
+        check_is_fitted(self)
         X = check_dims(
             X,
             X_fit_dims=self.cluster_centers_.shape,
