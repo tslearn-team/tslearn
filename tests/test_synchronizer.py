@@ -192,3 +192,33 @@ def test_feature_synchronizer_timestamp_precision_nonfinite_values(values):
     )
     expected = np.interp(queries, points, values)
     np.testing.assert_array_equal(actual[0, :, 1], expected)
+
+
+@pytest.mark.parametrize("reference_feature_index", [0, 1])
+@pytest.mark.parametrize("method", ["fit_transform", "transform"])
+@pytest.mark.parametrize("values", [
+    [np.inf, 1., 2.], [-np.inf, 1., 2.], [np.nan, 1., 2.],
+    [-1e308, 1e308, 2.],
+])
+def test_feature_synchronizer_nonfinite_near_endpoint(
+    reference_feature_index, method, values
+):
+    # The -1 ns query is inside a 10**17 ns interval, even though its
+    # fraction from the left endpoint rounds to one in float64.
+    data = np.stack([np.arange(3, dtype=float), values], axis=-1)[None]
+    ticks = np.array([[[-10**17, -10**17],
+                       [-1, 0], [10**17, 10**17]]], dtype="int64")
+    queries = ticks[0, :, 0].astype(float)
+    points = ticks[0, :, 1].astype(float)
+    expected = np.interp(queries, points, values)
+    if reference_feature_index == 1:
+        data = data[..., ::-1]
+        ticks = ticks[..., ::-1]
+    synchronizer = TimeSeriesFeatureSynchronizer(reference_feature_index)
+    if method == "transform":
+        synchronizer.fit(data)
+    actual = getattr(synchronizer, method)(
+        data, timestamps=ticks.astype("datetime64[ns]")
+    )
+    np.testing.assert_array_equal(actual[0, :, 1 - reference_feature_index],
+                                  expected)

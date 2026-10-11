@@ -40,9 +40,13 @@ def _interp_datetime64(x, xp, fp):
     # Preserve np.interp's behavior for nonfinite values and overflowing
     # value differences, including equal infinities and internal NaNs.
     for index in np.flatnonzero(~np.isfinite(delta)):
+        # These queries are strictly interior even if their ratio rounds
+        # to one. Keep nonfinite interpolation from selecting an endpoint.
+        fraction = min(
+            float(distance[index] / width[index]), np.nextafter(1., 0.)
+        )
         values[index] = np.interp(
-            float(distance[index] / width[index]),
-            [0., 1.], fp[left[index]:left[index] + 2]
+            fraction, [0., 1.], fp[left[index]:left[index] + 2]
         )
     result[inside] = values
     return result
