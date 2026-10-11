@@ -9,6 +9,27 @@ from tslearn.utils import check_variable_length_input, check_dims
 from tslearn.utils.utils import _ts_size
 
 
+def _interp_datetime64(x, xp, fp):
+    """Interpolate datetime64 points without rounding absolute timestamps."""
+    if xp.size < 2:
+        return np.interp(x.astype("float64"), xp.astype("float64"), fp)
+
+    ticks = xp.astype("int64")
+    query_ticks = x.astype("int64")
+    right = np.searchsorted(ticks, query_ticks, side="right")
+    inside = (right > 0) & (right < ticks.size)
+    positions = np.clip(right, 0, ticks.size - 1).astype("float64")
+    left = right[inside] - 1
+
+    # Python integers also handle spans wider than an int64 timedelta.
+    numerator = query_ticks[inside].astype(object) - ticks[left].astype(object)
+    denominator = (
+        ticks[left + 1].astype(object) - ticks[left].astype(object)
+    )
+    positions[inside] = left + (numerator / denominator).astype("float64")
+    return np.interp(positions, np.arange(ticks.size), fp)
+
+
 class TimeSeriesFeatureSynchronizer(
     TimeSeriesMixin,
     TransformerMixin,
@@ -81,6 +102,8 @@ class TimeSeriesFeatureSynchronizer(
         When timestamps are not provided, constant sampling periods are assumed for all features and identical
         start and stop timestamps are assumed for all features of a given times series.
         When timestamps are provided, features are synchronized on the temporal grid of the reference feature.
+        High-resolution datetime64 values use integer timestamps and local
+        fractional positions, rather than absolute floating coordinates.
 
         Parameters
         ----------
@@ -124,10 +147,12 @@ class TimeSeriesFeatureSynchronizer(
         for ts_index, ts in enumerate(X_):
 
             if timestamps is not None:
+                interpolation = _interp_datetime64
                 evaluation_coordinates = (
                     timestamps[ts_index, :ref_sizes[ts_index], self.reference_feature_index]
-                ).astype("float64")
+                )
             else:
+                interpolation = np.interp
                 evaluation_coordinates = np.linspace(0, 1, ref_sizes[ts_index])
 
             for feature_index in range(ts.shape[-1]):
@@ -135,11 +160,11 @@ class TimeSeriesFeatureSynchronizer(
                 if timestamps is not None:
                     data_points_coordinates = (
                             timestamps[ts_index, :feature_size, feature_index]
-                    ).astype("float64")
+                    )
                 else:
                     data_points_coordinates = np.linspace(0, 1, feature_size)
 
-                ts[:ref_sizes[ts_index], feature_index] = np.interp(
+                ts[:ref_sizes[ts_index], feature_index] = interpolation(
                     evaluation_coordinates,
                     data_points_coordinates,
                     ts[:feature_size, feature_index]
