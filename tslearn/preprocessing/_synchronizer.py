@@ -17,17 +17,35 @@ def _interp_datetime64(x, xp, fp):
     ticks = xp.astype("int64")
     query_ticks = x.astype("int64")
     right = np.searchsorted(ticks, query_ticks, side="right")
-    inside = (right > 0) & (right < ticks.size)
-    positions = np.clip(right, 0, ticks.size - 1).astype("float64")
-    left = right[inside] - 1
-
-    # Python integers also handle spans wider than an int64 timedelta.
-    numerator = query_ticks[inside].astype(object) - ticks[left].astype(object)
-    denominator = (
-        ticks[left + 1].astype(object) - ticks[left].astype(object)
+    left = np.clip(right - 1, 0, ticks.size - 1)
+    result = fp[left].copy()
+    inside = (
+        (right > 0) & (right < ticks.size) & (query_ticks != ticks[left])
     )
-    positions[inside] = left + (numerator / denominator).astype("float64")
-    return np.interp(positions, np.arange(ticks.size), fp)
+    left = left[inside]
+
+    # Subtract before converting to float, using Python integers to avoid
+    # overflowing when timestamps cover a wide range.
+    distance = query_ticks[inside].astype(object) - ticks[left].astype(object)
+    width = ticks[left + 1].astype(object) - ticks[left].astype(object)
+    remaining = width - distance
+    near_left = distance <= remaining
+    weight = (np.where(near_left, distance, remaining) / width).astype(float)
+    start = np.where(near_left, fp[left], fp[left + 1])
+    end = np.where(near_left, fp[left + 1], fp[left])
+    with np.errstate(invalid="ignore", over="ignore"):
+        delta = end - start
+        values = start + weight * delta
+
+    # Preserve np.interp's behavior for nonfinite values and overflowing
+    # value differences, including equal infinities and internal NaNs.
+    for index in np.flatnonzero(~np.isfinite(delta)):
+        values[index] = np.interp(
+            float(distance[index] / width[index]),
+            [0., 1.], fp[left[index]:left[index] + 2]
+        )
+    result[inside] = values
+    return result
 
 
 class TimeSeriesFeatureSynchronizer(
@@ -103,7 +121,7 @@ class TimeSeriesFeatureSynchronizer(
         start and stop timestamps are assumed for all features of a given times series.
         When timestamps are provided, features are synchronized on the temporal grid of the reference feature.
         High-resolution datetime64 values use integer timestamps and local
-        fractional positions, rather than absolute floating coordinates.
+        interval weights, rather than absolute floating coordinates.
 
         Parameters
         ----------

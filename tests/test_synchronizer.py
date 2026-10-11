@@ -145,3 +145,50 @@ def test_feature_synchronizer_fine_interval_after_wide_span():
     )
     expected = [[[1., 0.], [2., 1.], [3., 15.], [4., 20.]]]
     np.testing.assert_allclose(actual, expected, rtol=1e-15, atol=1e-15)
+
+
+@pytest.mark.parametrize("reference_feature_index", [0, 1])
+@pytest.mark.parametrize("near_left", [False, True])
+@pytest.mark.parametrize("method", ["fit_transform", "transform"])
+def test_feature_synchronizer_timestamp_precision_unequal_intervals(
+    reference_feature_index, near_left, method
+):
+    # A 1 ns displacement in a 10**16 ns interval contributes 1e-10.
+    # Adding its fractional position to a float knot index would lose it.
+    query = 1 if near_left else -1
+    values = [0., 0., 1e6] if near_left else [1e6, 0., 0.]
+    data = np.stack([np.arange(3, dtype=float), values], axis=-1)[None]
+    ticks = np.array([[[-10**16, -10**16],
+                       [query, 0], [10**16, 10**16]]])
+    expected = np.array([[[0., values[0]], [1., 1e-10], [2., values[2]]]])
+    if reference_feature_index == 1:
+        data = data[..., ::-1]
+        ticks = ticks[..., ::-1]
+        expected = expected[..., ::-1]
+    timestamps = ticks.astype("datetime64[ns]")
+    synchronizer = TimeSeriesFeatureSynchronizer(reference_feature_index)
+    if method == "transform":
+        synchronizer.fit(data)
+    actual = getattr(synchronizer, method)(data, timestamps=timestamps)
+    np.testing.assert_allclose(actual, expected, rtol=1e-15, atol=0)
+
+
+@pytest.mark.parametrize("values", [
+    [np.inf, np.inf], [np.inf, 1.], [1., np.inf], [-np.inf, np.inf],
+    [-1e308, 1e308], [1., np.nan, 3.],
+])
+def test_feature_synchronizer_timestamp_precision_nonfinite_values(values):
+    # Keep the existing np.interp behavior for supported nonfinite inputs
+    # and finite data whose value difference overflows.
+    size = len(values)
+    queries = np.arange(size) * 2 + 1
+    points = np.arange(size) * 4
+    data = np.stack([np.arange(size, dtype=float), values], axis=-1)[None]
+    timestamps = np.stack([queries, points], axis=-1)[None].astype(
+        "datetime64[ns]"
+    )
+    actual = TimeSeriesFeatureSynchronizer().fit_transform(
+        data, timestamps=timestamps
+    )
+    expected = np.interp(queries, points, values)
+    np.testing.assert_array_equal(actual[0, :, 1], expected)
