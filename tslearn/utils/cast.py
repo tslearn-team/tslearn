@@ -394,15 +394,15 @@ def from_sktime_dataset(X):
     max_sz = -1
     for dim_name in ordered_data_dimensions:
         for i in range(n):
-            if X[dim_name][i].size > max_sz:
-                max_sz = X[dim_name][i].size
+            if X[dim_name].iloc[i].size > max_sz:
+                max_sz = X[dim_name].iloc[i].size
 
     tslearn_arr = numpy.empty((n, max_sz, d))
     tslearn_arr[:] = numpy.nan
     for di in range(d):
         for i in range(n):
-            sz = X["dim_%d" % di][i].size
-            tslearn_arr[i, :sz, di] = X["dim_%d" % di][i].values.copy()
+            sz = X["dim_%d" % di].iloc[i].size
+            tslearn_arr[i, :sz, di] = X["dim_%d" % di].iloc[i].values.copy()
     return tslearn_arr
 
 
