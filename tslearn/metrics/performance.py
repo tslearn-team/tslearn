@@ -8,6 +8,17 @@ from tslearn.backend import instantiate_backend
 from tslearn.utils import to_time_series_dataset
 
 
+def _check_regression_inputs(y_true, y_pred):
+    y_true = to_time_series_dataset(y_true)
+    y_pred = to_time_series_dataset(y_pred)
+    if y_true.shape != y_pred.shape:
+        raise ValueError(
+            "y_true and y_pred must have the same shape, "
+            f"got {tuple(y_true.shape)} and {tuple(y_pred.shape)}."
+        )
+    return y_true, y_pred
+
+
 def mae(
     y_true,
     y_pred,
@@ -26,7 +37,9 @@ def mae(
     y_true: array like, shape (n_ts, sz, d)
         Target dataset of ground_truth values
     y_pred: array like, shape (n_ts, sz, d)
-        Estimated dataset of predicted values
+        Estimated dataset of predicted values.
+        Must have the same shape as ``y_true`` after conversion to a
+        time series dataset.
     ts_weights: array like, shape (n_ts,) or None (default: None)
         Weights to apply to the time-series in the datasets if non-uniform.
         Use none for uniform weights.
@@ -51,8 +64,7 @@ def mae(
 
     """
 
-    y_true = to_time_series_dataset(y_true)
-    y_pred = to_time_series_dataset(y_pred)
+    y_true, y_pred = _check_regression_inputs(y_true, y_pred)
 
     n_ts, sz, d = y_true.shape
 
@@ -97,7 +109,9 @@ def mse(
     y_true: array like, shape (n_ts, sz, d)
         Target dataset of ground_truth values
     y_pred: array like, shape (n_ts, sz, d)
-        Estimated dataset of predicted values
+        Estimated dataset of predicted values.
+        Must have the same shape as ``y_true`` after conversion to a
+        time series dataset.
     ts_weights: array like, shape (n_ts,) or None (default: None)
         Weights to apply to the time-series in the datasets if non-uniform.
         Use none for uniform weights.
@@ -121,8 +135,7 @@ def mse(
         Otherwise, the average of each feature is returned.
 
     """
-    y_true = to_time_series_dataset(y_true)
-    y_pred = to_time_series_dataset(y_pred)
+    y_true, y_pred = _check_regression_inputs(y_true, y_pred)
 
     n_ts, sz, d = y_true.shape
 
@@ -171,7 +184,9 @@ def mase(
     y_true: array like, shape (n_ts, sz, d)
         Target dataset of ground_truth values
     y_pred: array like, shape (n_ts, sz, d)
-        Estimated dataset of predicted values
+        Estimated dataset of predicted values.
+        Must have the same shape as ``y_true`` after conversion to a
+        time series dataset.
     train_data: array like
         the in-sample dataset, used to compute the scaling factor
     seasonal_period: int (default: 1)
