@@ -8,7 +8,7 @@ from tslearn.backend import instantiate_backend
 from tslearn.utils import to_time_series_dataset
 
 
-def _check_regression_inputs(y_true, y_pred):
+def _check_inputs(y_true, y_pred):
     y_true = to_time_series_dataset(y_true)
     y_pred = to_time_series_dataset(y_pred)
     if y_true.shape != y_pred.shape:
@@ -64,7 +64,7 @@ def mae(
 
     """
 
-    y_true, y_pred = _check_regression_inputs(y_true, y_pred)
+    y_true, y_pred = _check_inputs(y_true, y_pred)
 
     n_ts, sz, d = y_true.shape
 
@@ -135,7 +135,7 @@ def mse(
         Otherwise, the average of each feature is returned.
 
     """
-    y_true, y_pred = _check_regression_inputs(y_true, y_pred)
+    y_true, y_pred = _check_inputs(y_true, y_pred)
 
     n_ts, sz, d = y_true.shape
 
