@@ -387,6 +387,9 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin,
 
             metric_params = self._get_metric_params()
             check_is_fitted(self, '_ts_fit')
+            query_is_train = X is None
+            if query_is_train:
+                X = self._ts_fit
             X = check_array(X, allow_nd=True, force_all_finite=False)
             X = check_dims(X, X_fit_dims=self._ts_fit.shape, extend=True,
                            check_n_features_only=True)
@@ -419,6 +422,9 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin,
             else:
                 raise ValueError("Invalid metric recorded: %s" %
                                  self._ts_metric)
+            if query_is_train:
+                self._X_fit = X_
+                X_ = None
             pred = KNeighborsTimeSeriesMixin.kneighbors(
                 self,
                 X=X_,

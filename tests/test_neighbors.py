@@ -143,3 +143,31 @@ def test_kneighbors_excludes_self(duplicates, n_neighbors):
     # An explicit training query keeps the existing self-including semantics.
     explicit_distances, _ = model.kneighbors(X)
     np.testing.assert_allclose(explicit_distances[:, 0], 0)
+
+
+@pytest.mark.parametrize("metric", ["dtw", "ctw", "softdtw", "frechet"])
+@pytest.mark.parametrize("duplicates", [False, True])
+@pytest.mark.parametrize("n_neighbors", [1, 4, 6])
+def test_time_series_kneighbors_excludes_self(metric, duplicates, n_neighbors):
+    rng = np.random.RandomState(0)
+    X = rng.randn(6, 8, 1)
+    if duplicates:
+        X[1] = X[0]
+    model = KNeighborsTimeSeries(n_neighbors=n_neighbors, metric=metric).fit(X)
+    original = model._ts_fit.copy()
+    all_distances, all_indices = model.kneighbors(X, n_neighbors=len(X))
+    reference = np.empty((len(X), len(X)))
+    np.put_along_axis(reference, all_indices, all_distances, axis=1)
+    np.fill_diagonal(reference, np.inf)
+
+    distances, indices = model.kneighbors()
+    count = min(n_neighbors, len(X) - 1)
+    assert indices.shape == (len(X), count)
+    assert np.all(indices != np.arange(len(X))[:, None])
+    np.testing.assert_allclose(
+        distances, np.sort(reference, axis=1)[:, :count])
+    np.testing.assert_equal(indices, model.kneighbors(return_distance=False))
+    assert model.metric == metric
+    np.testing.assert_equal(model._ts_fit, original)
+    np.testing.assert_equal(model.kneighbors(X, n_neighbors=len(X)),
+                            (all_distances, all_indices))
