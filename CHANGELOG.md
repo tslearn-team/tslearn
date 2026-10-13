@@ -51,6 +51,7 @@ its predictions are un-scaled back, using any `tslearn.preprocessing` scaler. ([
 * `TimeSeriesImputer(method="linear")` no longer raises `ValueError` when a feature of a time series has no observed value. Such features are now left unchanged, as for the other imputation methods.
 * `PiecewiseAggregateApproximation.distance`, `SymbolicAggregateApproximation.distance` and `OneD_SymbolicAggregateApproximation.distance` now accept two time series of different lengths, instead of failing on the ragged input. ([#738](https://github.com/tslearn-team/tslearn/issues/738))
 * `VARIMA` and `AutoVARIMA` forecasts with a differencing order `d` of 2 or more are now integrated back correctly. They were previously integrated as if `d` were 1.
+* Performance metrics now check inputs shape consistency ([#771](https://github.com/tslearn-team/tslearn/issues/771))
 
 ## [v0.9.0]
 
