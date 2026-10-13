@@ -159,7 +159,7 @@ def cydist_1d_sax(
 
     for t in prange(sz):
         t0 = t * seg_sz
-        t_middle = float(t0) + 0.5 * seg_sz
+        t_middle = float(t0) + 0.5 * (seg_sz - 1)
         for di in range(d):
             avg1 = breakpoints_avg_middle_[sax1[t, di]]
             avg2 = breakpoints_avg_middle_[sax2[t, di]]
