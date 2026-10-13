@@ -9,6 +9,49 @@ from tslearn.utils import check_variable_length_input, check_dims
 from tslearn.utils.utils import _ts_size
 
 
+def _interp_datetime64(x, xp, fp):
+    """Interpolate datetime64 points without rounding absolute timestamps."""
+    if xp.size < 2:
+        return np.interp(x.astype("float64"), xp.astype("float64"), fp)
+
+    ticks = xp.astype("int64")
+    query_ticks = x.astype("int64")
+    right = np.searchsorted(ticks, query_ticks, side="right")
+    left = np.clip(right - 1, 0, ticks.size - 1)
+    result = fp[left].copy()
+    inside = (
+        (right > 0) & (right < ticks.size) & (query_ticks != ticks[left])
+    )
+    left = left[inside]
+
+    # Subtract before converting to float, using Python integers to avoid
+    # overflowing when timestamps cover a wide range.
+    distance = query_ticks[inside].astype(object) - ticks[left].astype(object)
+    width = ticks[left + 1].astype(object) - ticks[left].astype(object)
+    remaining = width - distance
+    near_left = distance <= remaining
+    weight = (np.where(near_left, distance, remaining) / width).astype(float)
+    start = np.where(near_left, fp[left], fp[left + 1])
+    end = np.where(near_left, fp[left + 1], fp[left])
+    with np.errstate(invalid="ignore", over="ignore"):
+        delta = end - start
+        values = start + weight * delta
+
+    # Preserve np.interp's behavior for nonfinite values and overflowing
+    # value differences, including equal infinities and internal NaNs.
+    for index in np.flatnonzero(~np.isfinite(delta)):
+        # These queries are strictly interior even if their ratio rounds
+        # to one. Keep nonfinite interpolation from selecting an endpoint.
+        fraction = min(
+            float(distance[index] / width[index]), np.nextafter(1., 0.)
+        )
+        values[index] = np.interp(
+            fraction, [0., 1.], fp[left[index]:left[index] + 2]
+        )
+    result[inside] = values
+    return result
+
+
 class TimeSeriesFeatureSynchronizer(
     TimeSeriesMixin,
     TransformerMixin,
@@ -81,6 +124,8 @@ class TimeSeriesFeatureSynchronizer(
         When timestamps are not provided, constant sampling periods are assumed for all features and identical
         start and stop timestamps are assumed for all features of a given times series.
         When timestamps are provided, features are synchronized on the temporal grid of the reference feature.
+        High-resolution datetime64 values use integer timestamps and local
+        interval weights, rather than absolute floating coordinates.
 
         Parameters
         ----------
@@ -124,10 +169,12 @@ class TimeSeriesFeatureSynchronizer(
         for ts_index, ts in enumerate(X_):
 
             if timestamps is not None:
+                interpolation = _interp_datetime64
                 evaluation_coordinates = (
                     timestamps[ts_index, :ref_sizes[ts_index], self.reference_feature_index]
-                ).astype("float64")
+                )
             else:
+                interpolation = np.interp
                 evaluation_coordinates = np.linspace(0, 1, ref_sizes[ts_index])
 
             for feature_index in range(ts.shape[-1]):
@@ -135,11 +182,11 @@ class TimeSeriesFeatureSynchronizer(
                 if timestamps is not None:
                     data_points_coordinates = (
                             timestamps[ts_index, :feature_size, feature_index]
-                    ).astype("float64")
+                    )
                 else:
                     data_points_coordinates = np.linspace(0, 1, feature_size)
 
-                ts[:ref_sizes[ts_index], feature_index] = np.interp(
+                ts[:ref_sizes[ts_index], feature_index] = interpolation(
                     evaluation_coordinates,
                     data_points_coordinates,
                     ts[:feature_size, feature_index]
