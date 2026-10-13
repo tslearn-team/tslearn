@@ -52,6 +52,7 @@ its predictions are un-scaled back, using any `tslearn.preprocessing` scaler. ([
 * `PiecewiseAggregateApproximation.distance`, `SymbolicAggregateApproximation.distance` and `OneD_SymbolicAggregateApproximation.distance` now accept two time series of different lengths, instead of failing on the ragged input. ([#738](https://github.com/tslearn-team/tslearn/issues/738))
 * `VARIMA` and `AutoVARIMA` forecasts with a differencing order `d` of 2 or more are now integrated back correctly. They were previously integrated as if `d` were 1.
 * Performance metrics now check inputs shape consistency ([#771](https://github.com/tslearn-team/tslearn/issues/771))
+* `VARIMA` and `AutoVARIMA` forecasts are now correct for multivariate series, which previously applied the transpose of the fitted autoregressive matrices. `ma_coeffs_[k]` is now the lag `k + 1` term, in the same order as `ar_coeffs_`. ([#762](https://github.com/tslearn-team/tslearn/issues/762))
 
 ## [v0.9.0]
 
