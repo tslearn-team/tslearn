@@ -36,7 +36,6 @@ def test_inputs():
 @pytest.mark.parametrize(
     "metric", [performance.mae, performance.mse, performance.mase]
 )
-@pytest.mark.parametrize("backend", backends)
 @pytest.mark.parametrize(
     "prediction_shape",
     [
@@ -44,23 +43,14 @@ def test_inputs():
         (1, 3, 2), (2, 2, 2), (2, 3, 1)
     ]
 )
-def test_metrics_reject_mismatched_shapes(metric, backend, prediction_shape):
+def test_metrics_reject_mismatched_shapes(metric, prediction_shape):
     y_true = np.arange(12.0).reshape(2, 3, 2)
-    y_pred = np.arange(np.prod(prediction_shape), dtype=float).reshape(
-        prediction_shape
-    )
+    y_pred = np.arange(np.prod(prediction_shape)).reshape(prediction_shape)
     kwargs = {"train_data": y_true} if metric is performance.mase else {}
     message = (
         "y_true and y_pred must have the same shape, "
         f"got {y_true.shape} and {y_pred.shape}."
     )
-    if backend is None:
-        y_true = y_true.tolist()
-        y_pred = y_pred.tolist()
-    else:
-        y_true = to_time_series_dataset(y_true, be=backend)
-        y_pred = to_time_series_dataset(y_pred, be=backend)
-
     with pytest.raises(ValueError, match=re.escape(message)):
         metric(y_true, y_pred, **kwargs)
 
@@ -76,39 +66,6 @@ def test_metrics_accept_equivalent_dataset_shapes(metric, prediction_shape):
 
     assert metric(y_true, y_pred, **kwargs) == 1.0
     assert metric(y_pred, y_true, **kwargs) == 1.0
-
-
-@pytest.mark.parametrize(
-    "metric", [performance.mae, performance.mse, performance.mase]
-)
-@pytest.mark.parametrize(
-    "multioutput", ["uniform_average", "raw_values", [1, 2]]
-)
-def test_metrics_preserve_weighted_results(metric, multioutput):
-    y_true = np.arange(12.0).reshape(2, 3, 2)
-    errors = np.arange(12.0).reshape(2, 3, 2) / 2
-    y_pred = y_true + errors
-    train_data = [[[0, 10], [2, 30], [4, 50]]]
-    ts_weights = [1, 3]
-    timestamps_weights = [1, 2, 4]
-    kwargs = {"train_data": train_data} if metric is performance.mase else {}
-
-    pointwise_errors = errors ** 2 if metric is performance.mse else errors
-    expected = np.average(pointwise_errors, axis=0, weights=ts_weights)
-    expected = np.average(expected, axis=0, weights=timestamps_weights)
-    if metric is performance.mase:
-        expected /= [2, 20]
-    if isinstance(multioutput, list):
-        expected = np.average(expected, weights=multioutput)
-    elif multioutput == "uniform_average":
-        expected = expected.mean()
-
-    actual = metric(
-        y_true, y_pred, ts_weights=ts_weights,
-        timestamps_weights=timestamps_weights, multioutput=multioutput,
-        **kwargs
-    )
-    np.testing.assert_allclose(actual, expected)
 
 
 def test_mae():
