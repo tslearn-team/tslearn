@@ -119,3 +119,37 @@ def test_check_equal_size():
     assert tslearn.utils.check_equal_size([])
     assert tslearn.utils.check_equal_size([[0], [0]])
     assert not tslearn.utils.check_equal_size([[0], [0, 0]])
+
+
+@pytest.mark.parametrize("index_kind", [
+    "default", "offset", "permuted", "duplicate", "string", "datetime", "multi"
+])
+@pytest.mark.parametrize("n_features", [1, 2])
+@pytest.mark.parametrize("dtype", [np.float32, np.float64])
+def test_from_sktime_dataset_instance_index(index_kind, n_features, dtype):
+    pd = pytest.importorskip("pandas")
+    dataset = tslearn.utils.to_time_series_dataset([
+        np.arange(3 * n_features).reshape(3, n_features),
+        np.arange(2 * n_features).reshape(2, n_features) + 10,
+        np.arange(4 * n_features).reshape(4, n_features) + 20,
+    ], dtype=dtype)
+    frame = tslearn.utils.to_sktime_dataset(dataset)
+    frame = frame.iloc[:, ::-1]
+    indexes = {
+        "default": [0, 1, 2],
+        "offset": [10, 20, 30],
+        "permuted": [1, 2, 0],
+        "duplicate": [0, 0, 1],
+        "string": ["first", "second", "third"],
+        "datetime": pd.date_range("2026-01-01", periods=3),
+        "multi": pd.MultiIndex.from_tuples([("a", 0), ("b", 1), ("a", 2)]),
+    }
+    frame.index = indexes[index_kind]
+    frame["label"] = ["a", "b", "c"]
+    original = frame.copy(deep=True)
+
+    converted = tslearn.utils.from_sktime_dataset(frame)
+
+    assert converted.shape == dataset.shape
+    assert_allclose(converted, dataset)
+    pd.testing.assert_frame_equal(frame, original)
