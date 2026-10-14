@@ -1,6 +1,6 @@
 import numpy
-
-from scipy.spatial.distance import cdist as scipy_cdist
+import numpy as np
+from sklearn.exceptions import NotFittedError
 
 from sklearn.neighbors import (KNeighborsClassifier, NearestNeighbors,
                                KNeighborsRegressor)
@@ -28,18 +28,39 @@ from tslearn.utils import (
 class KNeighborsTimeSeriesMixin(TimeSeriesMixin):
     """Mixin for k-neighbors searches on Time Series."""
 
-    def _sax_preprocess(self, X, n_segments=10, alphabet_size_avg=4,
-                        scale=False):
-        # Now SAX-transform the time series
-        if not hasattr(self, '_sax') or self._sax is None:
-            self._sax = SymbolicAggregateApproximation(
-                n_segments=n_segments,
-                alphabet_size_avg=alphabet_size_avg,
-                scale=scale
-            )
-        X_sax = self._sax.fit_transform(X)
+    def _fit_(self, X, y):
+        X = check_array(X,
+                        allow_nd=True,
+                        force_all_finite="allow-nan" if self.metric in TSLEARN_VALID_METRICS else True)
+        X = to_time_series_dataset(X)
+        X = check_dims(X)
+        self._X_fit_dims_ = X.shape
+        if self.metric in TSLEARN_VALID_METRICS:
+            # Allow nans
+            with self._patch_attribute("metric", "nan_euclidean"):
+                super().fit(to_sklearn_dataset(X), y)
+                self.effective_metric_ = self.metric
+        else:
+            super().fit(to_sklearn_dataset(X), y)
+        self.n_features_in_ = self._X_fit_dims_[-1]
 
-        return X_sax
+        return self
+
+    def _is_fitted(self):
+        try:
+            check_is_fitted(self)
+        except NotFittedError:
+            return False
+        return True
+
+    def _sax_preprocess(self, X, n_segments=10, alphabet_size_avg=4, scale=False):
+            if not hasattr(self, '_sax') or self._sax is None:
+                self._sax = SymbolicAggregateApproximation(
+                    n_segments=n_segments,
+                    alphabet_size_avg=alphabet_size_avg,
+                    scale=scale
+                ).fit(X)
+            return self._sax.transform(X), self._sax.breakpoints_avg_
 
     def _get_metric_params(self):
         if self.metric_params is None:
@@ -56,43 +77,42 @@ class KNeighborsTimeSeriesMixin(TimeSeriesMixin):
         return metric_params
 
     def _precompute_cross_dist(self, X, other_X=None):
-        if other_X is None:
-            other_X = self._ts_fit
-
-        self._ts_metric = self.metric
-        self.metric = "precomputed"
 
         metric_params = self._get_metric_params()
 
-        X = check_array(X, allow_nd=True, force_all_finite=False)
-        X = to_time_series_dataset(X)
-
-        if self._ts_metric == "dtw":
-            X_ = _cdist_dtw(
-                X,
-                other_X,
-                n_jobs=self.n_jobs,
-                **metric_params)
-        elif self._ts_metric == "ctw":
-            X_ = _cdist_ctw(X, other_X, **metric_params)
-        elif self._ts_metric == "softdtw":
-            X_ = _cdist_soft_dtw(
+        if self.metric == "dtw":
+            return _cdist_dtw(
                 X,
                 other_X,
                 n_jobs=self.n_jobs,
                 **metric_params
             )
-        elif self._ts_metric == "sax":
-            X = self._sax_preprocess(X, **metric_params)
-            X_ = _cdist_sax(
+        elif self.metric == "ctw":
+            return _cdist_ctw(
                 X,
-                self._sax.breakpoints_avg_,
-                self._sax._X_fit_dims_[1],
                 other_X,
+                **metric_params)
+        elif self.metric == "softdtw":
+            return _cdist_soft_dtw(
+                X,
+                other_X,
+                n_jobs=self.n_jobs,
+                **metric_params
+            )
+        elif self.metric == "sax":
+            X_sax, breakpoint_avg = self._sax_preprocess(X, **metric_params)
+            other_X_sax = None
+            if other_X is not None:
+                other_X_sax, _ = self._sax_preprocess(other_X, **metric_params)
+            return _cdist_sax(
+                X_sax,
+                breakpoint_avg,
+                X.shape[1],
+                other_X_sax,
                 n_jobs=self.n_jobs
             )
-        elif self._ts_metric == "frechet":
-            X_ = _cdist_frechet(
+        elif self.metric == "frechet":
+            return _cdist_frechet(
                 X,
                 other_X,
                 n_jobs=self.n_jobs,
@@ -100,9 +120,7 @@ class KNeighborsTimeSeriesMixin(TimeSeriesMixin):
             )
         else:
             raise ValueError("Invalid metric recorded: %s" %
-                             self._ts_metric)
-
-        return X_
+                             self.metric)
 
     def kneighbors(self, X=None, n_neighbors=None, return_distance=True):
         """Finds the K-neighbors of a point.
@@ -129,39 +147,23 @@ class KNeighborsTimeSeriesMixin(TimeSeriesMixin):
         ind : array
             Indices of the nearest points in the population matrix.
         """
-        self_neighbors = False
+
+        if self.metric not in TSLEARN_VALID_METRICS:
+            X = to_sklearn_dataset(X) if X is not None else X
+            with self._patch_attribute("n_features_in_", self._X_fit_dims_[1] * self._X_fit_dims_[2]):
+                return super().kneighbors(X, n_neighbors, return_distance)
+
+        self_neighbors = X is None
+
         if n_neighbors is None:
             n_neighbors = self.n_neighbors
-        if X is None:
-            X = self._X_fit
-            self_neighbors = True
-        if self.metric == "precomputed":
-            full_dist_matrix = X
-        else:
 
-            if X.ndim == 2:  # sklearn-format case
-                X = X.reshape((X.shape[0], -1, self._d))
-                fit_X = self._X_fit.reshape((self._X_fit.shape[0],
-                                             -1,
-                                             self._d))
-            elif hasattr(self, '_ts_fit') and self._ts_fit is not None:
-                fit_X = self._ts_fit
-            else:
-                fit_X = self._X_fit
+        if self._X_fit_dims_[0] <  n_neighbors + int(self_neighbors):
+            raise ValueError(f"Expected n_neighbors <{'' if self_neighbors else '='} number of fitted TS")
 
-            if self.metric in TSLEARN_VALID_METRICS:
-                full_dist_matrix = self._precompute_cross_dist(X,
-                                                               other_X=fit_X)
-            elif self.metric in ["euclidean", "sqeuclidean", "cityblock"]:
-                full_dist_matrix = scipy_cdist(X.reshape((X.shape[0], -1)),
-                                               fit_X.reshape((fit_X.shape[0],
-                                                              -1)),
-                                               metric=self.metric)
-            else:
-                raise ValueError("Unrecognized time series metric string: %s "
-                                 "(should be one of 'dtw', 'softdtw', "
-                                 "'frechet', 'sax', 'euclidean', 'sqeuclidean'"
-                                 " or 'cityblock')" % self.metric)
+        fitted = self._fit_X.reshape(self._X_fit_dims_)
+
+        full_dist_matrix = self._precompute_cross_dist(fitted, X).T
 
         # Code similar to sklearn (sklearn/neighbors/base.py), to make sure
         # that TimeSeriesKNeighbor~(metric='euclidean') has the same results as
@@ -175,37 +177,47 @@ class KNeighborsTimeSeriesMixin(TimeSeriesMixin):
         if self_neighbors:
             keep = ind != numpy.arange(ind.shape[0])[:, None]
             ind = ind[keep].reshape(ind.shape[0], -1)
-        if n_neighbors > ind.shape[1]:
-            n_neighbors = ind.shape[1]
         ind = ind[:, :n_neighbors]
 
-        n_ts = X.shape[0]
-        sample_range = numpy.arange(n_ts)[:, None]
+        sample_range = numpy.arange(full_dist_matrix.shape[0])[:, None]
         # Sort the `kbin` nearest neighbors according to distance
         ind = ind[
             sample_range, numpy.argsort(full_dist_matrix[sample_range, ind])]
-        dist = full_dist_matrix[sample_range, ind]
-
-        if hasattr(self, '_ts_metric'):
-            self.metric = self._ts_metric
 
         if return_distance:
+            dist = full_dist_matrix[sample_range, ind]
             return dist, ind
         else:
             return ind
 
+    def _get_model_params(self):
+        params = super()._get_model_params()
+        params.update({"_X_fit_dims_": numpy.array(self._X_fit_dims_)})
+        params["_fit_X"] = self._fit_X
+        params["_fit_method"] = self._fit_method
+        if hasattr(self, "_y"):
+            params["_y"] = self._y
+        return params
+
+    @staticmethod
+    def _organize_model(cls, model):
+        inst = super()._organize_model(cls, model)
+        if not hasattr(inst, "effective_metric_params_"):
+            inst.effective_metric_params_ = {}
+        return inst
+
     def _more_tags(self):
         tags = super()._more_tags()
         tags.update({
-            'allow_nan': True,
-            ALLOW_VARIABLE_LENGTH: True}
+            'allow_nan': self.metric in (TSLEARN_VALID_METRICS + ["nan_euclidean"]),
+            ALLOW_VARIABLE_LENGTH: self.metric in TSLEARN_VALID_METRICS}
         )
         return tags
 
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
-        tags.input_tags.allow_nan = True
-        tags.allow_variable_length = True
+        tags.input_tags.allow_nan = self.metric in (TSLEARN_VALID_METRICS + ["nan_euclidean"])
+        tags.allow_variable_length = self.metric in TSLEARN_VALID_METRICS
         return tags
 
 
@@ -222,23 +234,22 @@ def _predict_generic(caller, X, predict_func):
     array, shape = (n_ts, ) or (n_ts, dim_y)
         Returns the result of predict_func 
     """
-    if caller.metric in TSLEARN_VALID_METRICS:
-        check_is_fitted(caller, '_ts_fit')
-        X = check_array(X, allow_nd=True, force_all_finite=False)
+    check_is_fitted(caller)
+
+    if X is not None:
+        X = check_array(
+            X,
+            allow_nd=True,
+            force_all_finite="allow-nan" if caller.metric in TSLEARN_VALID_METRICS else True
+        )
         X = to_time_series_dataset(X)
-        X = check_dims(X, X_fit_dims=caller._ts_fit.shape, extend=True,
-                        check_n_features_only=True)
-        X_ = caller._precompute_cross_dist(X)
-        pred = predict_func(X_)
-        caller.metric = caller._ts_metric
-        return pred
-    else:
-        check_is_fitted(caller, '_X_fit')
-        X = check_array(X, allow_nd=True)
-        X = to_time_series_dataset(X)
-        X_ = to_sklearn_dataset(X)
-        X_ = check_dims(X_, X_fit_dims=caller._X_fit.shape, extend=False)
-        return predict_func(X_)
+        X = check_dims(
+            X,
+            X_fit_dims=caller._X_fit_dims_,
+            extend=True,
+            check_n_features_only=caller.metric in TSLEARN_VALID_METRICS
+        )
+    return predict_func(X)
 
 
 class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin,
@@ -252,7 +263,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin,
         Number of nearest neighbors to be considered for the decision.
 
     metric : {'dtw', 'softdtw', 'ctw', 'euclidean', 'sqeuclidean', \
-              'cityblock',  'sax'} (default: 'dtw')
+              'cityblock', 'sax'} (default: 'dtw')
         Metric to be used at the core of the nearest neighbor procedure.
         DTW and SAX are described in more detail in :mod:`tslearn.metrics`.
         When SAX is provided as a metric, the data is expected to be
@@ -313,20 +324,6 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin,
         self.n_jobs = n_jobs
         self.verbose = verbose
 
-    def _is_fitted(self):
-        if self.metric in TSLEARN_VALID_METRICS:
-            check_is_fitted(self, '_ts_fit')
-        else:
-            check_is_fitted(self, '_X_fit')
-
-        return True
-
-    def _get_model_params(self):
-        if self.metric in TSLEARN_VALID_METRICS:
-            return {'_ts_fit': self._ts_fit}
-        else:
-            return {'_X_fit': self._X_fit}
-
     def fit(self, X, y=None):
         """Fit the model using X as training data
 
@@ -335,26 +332,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin,
         X : array-like, shape (n_ts, sz, d)
             Training data.
         """
-        if self.metric in TSLEARN_VALID_METRICS:
-            self._ts_metric = self.metric
-            self.metric = "precomputed"
-
-        X = check_array(X,
-                        allow_nd=True,
-                        force_all_finite=(self.metric != "precomputed"))
-        X = to_time_series_dataset(X)
-        X = check_dims(X)
-        if self.metric == "precomputed" and hasattr(self, '_ts_metric'):
-            self._ts_fit = X
-            self._d = X.shape[2]
-            self._X_fit = numpy.zeros((self._ts_fit.shape[0],
-                                       self._ts_fit.shape[0]))
-        else:
-            self._X_fit, self._d = to_sklearn_dataset(X, return_dim=True)
-        super().fit(self._X_fit, y)
-        if hasattr(self, '_ts_metric'):
-            self.metric = self._ts_metric
-        return self
+        return super()._fit_(X, y)
 
     def kneighbors(self, X=None, n_neighbors=None, return_distance=True):
         """Finds the K-neighbors of a point.
@@ -364,13 +342,13 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin,
         Parameters
         ----------
         X : array-like, shape (n_ts, sz, d)
-            The query time series.
-            If not provided, neighbors of each indexed point are returned.
-            In this case, the query point is not considered its own neighbor.
-        n_neighbors : int
+            The query time series dataset.
+            If not provided, neighbors of each indexed TS are returned.
+            In this case, the query TS is not considered its own neighbor.
+        n_neighbors : int or None (default: None)
             Number of neighbors to get (default is the value passed to the
             constructor).
-        return_distance : boolean, optional. Defaults to True.
+        return_distance : boolean (default: True).
             If False, distances will not be returned
 
         Returns
@@ -381,65 +359,83 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin,
         ind : array
             Indices of the nearest points in the population matrix.
         """
-        if self.metric in TSLEARN_VALID_METRICS:
-            self._ts_metric = self.metric
-            self.metric = "precomputed"
+        check_is_fitted(self)
 
-            metric_params = self._get_metric_params()
-            check_is_fitted(self, '_ts_fit')
-            X = check_array(X, allow_nd=True, force_all_finite=False)
-            X = check_dims(X, X_fit_dims=self._ts_fit.shape, extend=True,
-                           check_n_features_only=True)
-            if self._ts_metric == "dtw":
-                X_ = _cdist_dtw(
-                    X,
-                    self._ts_fit,
-                    n_jobs=self.n_jobs,
-                    verbose=self.verbose,
-                    **metric_params
-                )
-            elif self._ts_metric == "ctw":
-                X_ = _cdist_ctw(X, self._ts_fit, **metric_params)
-            elif self._ts_metric == "softdtw":
-                X_ = _cdist_soft_dtw(
-                    X,
-                    self._ts_fit,
-                    n_jobs=self.n_jobs,
-                    verbose=self.verbose,
-                    **metric_params
-                )
-            elif self._ts_metric == "frechet":
-                X_ = _cdist_frechet(
-                    X,
-                    self._ts_fit,
-                    n_jobs=self.n_jobs,
-                    verbose=self.verbose,
-                    **metric_params
-                )
-            else:
-                raise ValueError("Invalid metric recorded: %s" %
-                                 self._ts_metric)
-            pred = KNeighborsTimeSeriesMixin.kneighbors(
-                self,
-                X=X_,
-                n_neighbors=n_neighbors,
-                return_distance=return_distance)
-            self.metric = self._ts_metric
-            return pred
-        else:
-            check_is_fitted(self, '_X_fit')
+        if X is not None:
+            X = check_array(X, allow_nd=True, force_all_finite=self.metric in TSLEARN_VALID_METRICS)
+            X = check_dims(
+                X,
+                X_fit_dims=tuple(self._X_fit_dims_),
+                extend=True,
+                check_n_features_only=self.metric in TSLEARN_VALID_METRICS
+            )
+        return KNeighborsTimeSeriesMixin.kneighbors(
+            self,
+            X=X,
+            n_neighbors=n_neighbors,
+            return_distance=return_distance
+        )
+
+    def radius_neighbors(
+        self, X=None, radius=1, return_distance=True, sort_results=False
+    ):
+        """
+        Find the neighbors within a given radius of a point or points.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_ts, sz, d)
+            The query time series dataset.
+            If not provided, neighbors of each indexed TS are returned.
+            In this case, the query TS is not considered its own neighbor.
+
+        radius : float (default: 1.0).
+            Limiting distance of neighbors to return.
+
+        return_distance : boolean (default: True).
+            If False, distances will not be returned
+
+        sort_results : boolean (default: False).
+            If True, the distances and indices will be sorted by increasing distances before being returned.
+            If False, the results may not be sorted.
+            If return_distance=False, setting sort_results=True will result in an error.
+
+        Returns
+        -------
+            dist : ndarray of shape (n_ts,) of arrays
+                Array representing the distance to each TS, only present if return_distance=True
+            ind : ndarray of shape (n_ts,) of arrays
+                Indices of the TS that lie within `radius`
+        """
+        check_is_fitted(self)
+
+        if self.metric=="softdtw":
+            raise ValueError("Not implemented for softdtw")
+
+        if X is not None:
+            X = check_array(X, allow_nd=True, force_all_finite=self.metric in TSLEARN_VALID_METRICS)
+            X = check_dims(
+                X,
+                X_fit_dims=tuple(self._X_fit_dims_),
+                extend=True,
+                check_n_features_only=self.metric in TSLEARN_VALID_METRICS
+            )
+        if self.metric in TSLEARN_VALID_METRICS:
+            fitted = self._fit_X.reshape(self._X_fit_dims_)
+            full_dist_matrix = self._precompute_cross_dist(fitted, X).T
             if X is None:
-                X_ = None
-            else:
-                X = check_array(X, allow_nd=True)
-                X = to_time_series_dataset(X)
-                X_ = to_sklearn_dataset(X)
-                X_ = check_dims(X_, X_fit_dims=self._X_fit.shape, extend=False)
-            return KNeighborsTimeSeriesMixin.kneighbors(
-                self,
-                X=X_,
-                n_neighbors=n_neighbors,
-                return_distance=return_distance)
+                # Ensure not a neighbor of itself
+                full_dist_matrix[np.diag_indices_from(full_dist_matrix)] = radius + int(radius >= 0)
+            with self._patch_attribute("metric", "precomputed"):
+                with self._patch_attribute("effective_metric_", "precomputed"):
+                    return super().radius_neighbors(
+                        full_dist_matrix, radius, return_distance, sort_results
+                    )
+
+        else:
+            X = to_sklearn_dataset(X) if X is not None else X
+            with self._patch_attribute("n_features_in_", self._X_fit_dims_[1] * self._X_fit_dims_[2]):
+                return super().radius_neighbors(X, radius, return_distance, sort_results)
 
 
 class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
@@ -534,22 +530,6 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         self.n_jobs = n_jobs
         self.verbose = verbose
 
-    def _is_fitted(self):
-        check_is_fitted(self, '_ts_fit')
-        return True
-
-    def _get_model_params(self):
-        return {
-            '_X_fit': self._X_fit,
-            '_ts_fit': self._ts_fit,
-            '_d': self._d,
-            'classes_': self.classes_,
-            '_y': self._y,
-            'outputs_2d_': self.outputs_2d_,
-            '_fit_X': self._fit_X,
-            '_fit_method': self._fit_method
-        }
-
     def fit(self, X, y):
         """Fit the model using X as training data and y as target values
 
@@ -565,34 +545,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         KNeighborsTimeSeriesClassifier
             The fitted estimator
         """
-        if self.metric in TSLEARN_VALID_METRICS:
-            self._ts_metric = self.metric
-            self.metric = "precomputed"
-
-        X = check_array(X,
-                        allow_nd=True,
-                        force_all_finite=(self.metric != "precomputed"))
-        X = to_time_series_dataset(X)
-        X = check_dims(X)
-        if self.metric == "precomputed" and hasattr(self, '_ts_metric'):
-            self._ts_fit = X
-            if self._ts_metric == 'sax':
-                if self.metric_params is not None:
-                    self._ts_fit = self._sax_preprocess(X,
-                                                        **self.metric_params)
-                else:
-                    self._ts_fit = self._sax_preprocess(X)
-
-            self._d = X.shape[2]
-            self._X_fit = numpy.zeros((self._ts_fit.shape[0],
-                                       self._ts_fit.shape[0]))
-        else:
-            self._X_fit, self._d = to_sklearn_dataset(X, return_dim=True)
-        super().fit(self._X_fit, y)
-        self.n_features_in_ = self._d
-        if hasattr(self, '_ts_metric'):
-            self.metric = self._ts_metric
-        return self
+        return super()._fit_(X, y)
 
     def predict(self, X):
         """Predict the class labels for the provided data
@@ -726,27 +679,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         KNeighborsTimeSeriesRegressor
             The fitted estimator
         """
-        if self.metric in TSLEARN_VALID_METRICS:
-            self._ts_metric = self.metric
-            self.metric = "precomputed"
-
-        X = check_array(X,
-                        allow_nd=True,
-                        force_all_finite=(self.metric != "precomputed"))
-        X = to_time_series_dataset(X)
-        X = check_dims(X)
-        if self.metric == "precomputed" and hasattr(self, '_ts_metric'):
-            self._ts_fit = X
-            self._d = X.shape[2]
-            self._X_fit = numpy.zeros((self._ts_fit.shape[0],
-                                       self._ts_fit.shape[0]))
-        else:
-            self._X_fit, self._d = to_sklearn_dataset(X, return_dim=True)
-        super().fit(self._X_fit, y)
-        self.n_features_in_ = self._d
-        if hasattr(self, '_ts_metric'):
-            self.metric = self._ts_metric
-        return self
+        return super()._fit_(X, y)
 
     def predict(self, X):
         """Predict the target for the provided data
@@ -762,3 +695,4 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
             Array of predicted targets
         """
         return _predict_generic(self, X, super().predict)
+
