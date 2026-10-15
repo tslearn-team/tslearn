@@ -237,6 +237,44 @@ def test_kmeans():
     np.testing.assert_equal(set(preds), set(range(4)))
 
 
+@pytest.mark.parametrize("metric", ["euclidean", "dtw", "softdtw"])
+def test_kmeans_sample_weight(metric):
+    rng = np.random.RandomState(0)
+    X = np.concatenate(
+        [rng.normal(0, 0.1, (5, 10, 1)), rng.normal(3, 0.1, (5, 10, 1))]
+    )
+
+    # Unit weights give the same result as no weights
+    km = TimeSeriesKMeans(n_clusters=2, metric=metric, max_iter=5, random_state=0)
+    km_unit = TimeSeriesKMeans(
+        n_clusters=2, metric=metric, max_iter=5, random_state=0
+    ).fit(X, sample_weight=np.ones(10))
+    km.fit(X)
+    np.testing.assert_allclose(km.cluster_centers_, km_unit.cluster_centers_)
+    np.testing.assert_allclose(km.inertia_, km_unit.inertia_)
+
+    # With a fixed initialization, an integer weight is the same as repeating
+    # the time series
+    sample_weight = np.ones(10)
+    sample_weight[0] = 5
+    km_weighted = TimeSeriesKMeans(
+        n_clusters=2, metric=metric, max_iter=5, init=X[[0, 5]]
+    ).fit(X, sample_weight=sample_weight)
+    X_repeated = np.concatenate([X, np.repeat(X[:1], 4, axis=0)])
+    km_repeated = TimeSeriesKMeans(
+        n_clusters=2, metric=metric, max_iter=5, init=X[[0, 5]]
+    ).fit(X_repeated)
+    np.testing.assert_allclose(
+        km_weighted.cluster_centers_, km_repeated.cluster_centers_, atol=1e-6
+    )
+    np.testing.assert_allclose(km_weighted.inertia_, km_repeated.inertia_)
+
+    labels = TimeSeriesKMeans(
+        n_clusters=2, metric=metric, max_iter=5, init=X[[0, 5]]
+    ).fit_predict(X, sample_weight=sample_weight)
+    np.testing.assert_array_equal(labels, km_weighted.labels_)
+
+
 def test_kshape():
     n, sz, d = 15, 10, 3
     rng = np.random.RandomState(0)
