@@ -53,7 +53,7 @@ its predictions are un-scaled back, using any `tslearn.preprocessing` scaler. ([
 * `VARIMA` and `AutoVARIMA` forecasts with a differencing order `d` of 2 or more are now integrated back correctly. They were previously integrated as if `d` were 1.
 * Performance metrics now check inputs shape consistency ([#771](https://github.com/tslearn-team/tslearn/issues/771))
 * `VARIMA` and `AutoVARIMA` forecasts are now correct for multivariate series, which previously applied the transpose of the fitted autoregressive matrices. `ma_coeffs_[k]` is now the lag `k + 1` term, in the same order as `ar_coeffs_`. ([#762](https://github.com/tslearn-team/tslearn/issues/762))
-* `NonMyopicEarlyClassifier` now normalizes the confusion matrices stored in `pyhatyck_` over the predicted classes, so that they hold the documented probabilities of predicting `y_hat` given the true class `y` and the cluster. They were previously normalized over the true classes, which gave wrong expected misclassification costs and therefore wrong prediction times.
+* `NonMyopicEarlyClassifier` now normalizes the confusion matrices stored in `pyhatyck_` over the predicted classes, so that they hold the documented probabilities of predicting `y_hat` given the true class `y` and the cluster. They were previously normalized over the true classes, which gave wrong expected misclassification costs and therefore wrong prediction times. ([#778](https://github.com/tslearn-team/tslearn/issues/778))
 
 ## [v0.9.0]
 
