@@ -200,7 +200,7 @@ class NonMyopicEarlyClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
                                                    labels=label_set)
                     # normalize parameter seems to be quite recent in sklearn,
                     # so let's do it ourselves
-                    normalizer = conf_matrix.sum(axis=0, keepdims=True)
+                    normalizer = conf_matrix.sum(axis=1, keepdims=True)
                     normalizer[normalizer == 0] = 1  # Avoid divide by 0
                     conf_matrix = conf_matrix / normalizer
 
