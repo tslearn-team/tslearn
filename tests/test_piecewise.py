@@ -1,4 +1,6 @@
 import numpy as np
+import pytest
+from scipy.stats import norm
 
 from tslearn.piecewise import OneD_SymbolicAggregateApproximation, \
     SymbolicAggregateApproximation, PiecewiseAggregateApproximation
@@ -139,3 +141,52 @@ def test_1dsax_scale_matches_sax_average():
                                                     scale=True)
     np.testing.assert_array_equal(sax.fit_transform(X),
                                   one_d_sax.fit_transform(X)[:, :, :d])
+
+
+@pytest.mark.parametrize("segment_size", [1, 2, 3, 4])
+@pytest.mark.parametrize("n_segments", [1, 3])
+@pytest.mark.parametrize("n_features", [1, 2])
+@pytest.mark.parametrize("average_pair", [(1, 1), (0, 2)])
+@pytest.mark.parametrize("slope_pair", [(0, 2), (1, 1)])
+def test_1dsax_distance_segment_center(segment_size, n_segments, n_features,
+                                       average_pair, slope_pair):
+    original_size = segment_size * n_segments
+    sax = OneD_SymbolicAggregateApproximation(
+        n_segments=n_segments, alphabet_size_avg=3,
+        alphabet_size_slope=3, sigma_l=1.5
+    ).fit(np.zeros((2, original_size, n_features)))
+    symbols = np.empty((2, n_segments, 2 * n_features), dtype=int)
+    for i in range(2):
+        symbols[i, :, :n_features] = average_pair[i]
+        symbols[i, :, n_features:] = slope_pair[i]
+
+    # The discrete segment has mean time (L - 1) / 2, so the cross term
+    # vanishes and the squared distance separates into mean and slope terms.
+    medians = norm.ppf([1. / 6, 1. / 2, 5. / 6])
+    delta_avg = medians[average_pair[0]] - medians[average_pair[1]]
+    delta_slope = 1.5 * (medians[slope_pair[0]] - medians[slope_pair[1]])
+    expected_sq = n_segments * n_features * (
+        segment_size * delta_avg ** 2
+        + segment_size * (segment_size ** 2 - 1) / 12 * delta_slope ** 2
+    )
+    expected = np.sqrt(expected_sq)
+    np.testing.assert_allclose(
+        sax.distance_1d_sax(symbols[0], symbols[1]), expected
+    )
+    reconstructed = sax.inverse_transform(symbols)
+    np.testing.assert_allclose(
+        np.linalg.norm(reconstructed[0] - reconstructed[1]), expected
+    )
+
+
+def test_1dsax_distance_opposite_trends():
+    X = np.array([[[0.], [1.], [2.], [3.], [4.], [5.]],
+                  [[6.], [5.], [4.], [3.], [2.], [1.]]])
+    sax = OneD_SymbolicAggregateApproximation(
+        n_segments=2, alphabet_size_avg=3,
+        alphabet_size_slope=3, sigma_l=1.
+    )
+    symbols = sax.fit_transform(X)
+    reconstructed = sax.inverse_transform(symbols)
+    expected = np.linalg.norm(reconstructed[0] - reconstructed[1])
+    np.testing.assert_allclose(sax.distance(X[0], X[1]), expected)
