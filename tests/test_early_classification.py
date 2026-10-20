@@ -1,6 +1,3 @@
-import warnings
-from warnings import catch_warnings
-
 import numpy as np
 
 import pytest
