@@ -5,6 +5,7 @@ PWD=$SLICES_PWD
 PROJECT_NAME='p16-programia'
 TSLEARN_REPO_URL='https://github.com/tslearn-team/tslearn.git'
 
+set -e
 
 JOB_ID=$(gpulab-cli --cert $CERT -p $PWD submit --project=$PROJECT_NAME <<EOF
 {
@@ -26,3 +27,18 @@ JOB_ID=$(gpulab-cli --cert $CERT -p $PWD submit --project=$PROJECT_NAME <<EOF
 EOF
 )
 echo $JOB_ID
+
+while ! gpulab-cli --cert $CERT -p $PWD jobs $JOB_ID | grep -E "FAILED|FINISHED|CANCELLED"
+do
+sleep 5
+done
+
+STATUS=$(gpulab-cli --cert $CERT -p $PWD jobs $JOB_ID)
+echo $STATUS
+
+if $STATUS | grep -E "FAILED|CANCELLED"
+ then
+  exit 0
+else
+  exit 1
+fi
