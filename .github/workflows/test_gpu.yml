@@ -29,4 +29,4 @@ jobs:
           SLICES_PEM: ${{ secrets.SLICES_PEM }}
         run: |
           echo "$SLICES_PEM" > slices.pem
-          test_gpu.sh slices.pem
+          ./.github/scripts/test_gpu.sh slices.pem
