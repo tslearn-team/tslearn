@@ -101,7 +101,7 @@ def _varma_next(X, residuals, ar_coeffs, ma_coeffs, intercept):
         ar_forecast += np.dot(X[:, n_samples - k - 1], ar_coeffs[k])
     ma_forecast = np.zeros((n_ts, n_features_in))
     for k in range(ma_coeffs.shape[0]):
-        ma_forecast += np.dot(residuals[:, k], ma_coeffs[k])
+        ma_forecast += np.dot(residuals[:, -k - 1], ma_coeffs[k])
 
     intercept = np.zeros(n_features_in) if intercept.shape[0] == 0 else intercept
 
@@ -296,7 +296,7 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         ma_start_params = compute_var(self.q, residuals)[1]
 
         return np.concatenate(
-            (constant_params, ar_start_params.T.ravel(), ma_start_params.T.ravel())
+            (constant_params, ar_start_params.ravel(), ma_start_params.ravel())
         )
 
     def _unravel_params(self, params, n_features_in=None):
