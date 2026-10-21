@@ -883,7 +883,7 @@ def dtw_barycenter_averaging_subgradient(
                                                             barycenter, eta)
                 if it == 0:
                     eta -= (initial_step_size - final_step_size) * wi[0]/ weights.sum()
-        _, cost = _mm_assignment(X, barycenter, weights, metric_params)
+        _, cost = _mm_assignment(X_, barycenter, weights, metric_params)
         if verbose:
             print("[DBA] epoch %d, cost: %.3f" % (it + 1, cost))
         if cost < best_cost:
