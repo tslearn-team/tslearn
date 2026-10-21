@@ -1,0 +1,32 @@
+name: Test GPU
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "test_gpu"
+jobs:
+  test_gpu:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install imecilabt-gpulab-cli
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install imecilabt-gpulab-cli
+        shell: bash
+
+      - name: Launch job
+        env:
+          SLICES_PWD: ${{ secrets.SLICES_PWD }}
+          SLICES_PEM: ${{ secrets.SLICES_PEM }}
+        run: |
+          echo "$SLICES_PEM" > slices.pem
+          test_gpu.sh slices.pem
