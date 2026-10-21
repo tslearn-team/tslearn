@@ -135,3 +135,37 @@ def test_NonMyopicEarlyClassifier_misclassification_probabilities():
     ).fit(dataset, y)
     np.testing.assert_allclose(model.pyhatyck_[:, 0, 0, 1], 1.0)
     np.testing.assert_allclose(model.pyhatyck_[:, 0, 1], 0.0)
+
+
+def test_NonMyopicEarlyClassifier_common_start():
+    # All series (hence all cluster centers) share the same first
+    # timestamps: no cluster should be preferred instead of producing NaN
+    # cluster probabilities, which made predictions occur at min_t.
+    dataset = to_time_series_dataset(
+        [
+            [0, 1, 2, 3, 4, 5],
+            [0, 1, 2, 3, 4, 5],
+            [0, 1, 2, 3, 4, 5],
+            [0, 1, 2, 2, 1, 0],
+            [0, 1, 2, 2, 1, 0],
+            [0, 1, 2, 2, 1, 0],
+            [0, -1, -2, -2, -1, 0],
+            [0, -1, -2, -2, -1, 0],
+        ]
+    )
+    y = [0, 0, 0, 1, 1, 1, 0, 0]
+    model = NonMyopicEarlyClassifier(
+        n_clusters=3,
+        lamb=1000.0,
+        cost_time_parameter=0.1,
+        random_state=0,
+    ).fit(dataset, y)
+
+    np.testing.assert_allclose(
+        model.get_cluster_probas(dataset[0, :1]), np.full(3, 1.0 / 3)
+    )
+    assert np.all(np.isfinite(model._expected_costs(dataset[0, :1])))
+
+    preds, pred_times = model.predict_class_and_earliness(dataset)
+    np.testing.assert_array_equal(preds, y)
+    np.testing.assert_array_equal(pred_times, [4, 4, 4, 4, 4, 4, 2, 2])
