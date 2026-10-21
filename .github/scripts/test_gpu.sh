@@ -36,7 +36,7 @@ done
 STATUS=$(gpulab-cli --cert $CERT -p $PWD jobs $JOB_ID)
 echo $STATUS
 
-if $STATUS | grep -E "FAILED|CANCELLED"
+if grep -E "FAILED|CANCELLED" <<< $STATUS
  then
   exit 0
 else
