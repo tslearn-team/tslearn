@@ -454,18 +454,6 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
         self._compute_dist(K, dist)
         return dist.argmin(axis=1)
 
-    def _more_tags(self):
-        tags = super()._more_tags()
-        sample_weight_failure_msg = "Not supported due to clusters initialization"
-        tags.update({
-            "allow_nan": True,
-            ALLOW_VARIABLE_LENGTH: True,
-        })
-        tags["_xfail_checks"].update({
-            "check_sample_weight_equivalence_on_dense_data": sample_weight_failure_msg,
-        })
-        return tags
-
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
         tags.input_tags.allow_nan = True
@@ -934,14 +922,6 @@ class TimeSeriesKMeans(
             check_n_features_only=(self.metric != "euclidean"),
         )
         return self._transform(X)
-
-    def _more_tags(self):
-        tags = super()._more_tags()
-        tags.update({
-            "allow_nan": self.metric != "euclidean",
-            ALLOW_VARIABLE_LENGTH: self.metric != "euclidean"}
-        )
-        return tags
 
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()

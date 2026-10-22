@@ -62,9 +62,6 @@ class TimeSeriesMixin(object):
         finally:
             setattr(self, attribute_name, orig)
 
-    def _more_tags(self):
-        return copy.deepcopy(_DEFAULT_TAGS)
-
     def __sklearn_tags__(self):
         tags_orig = super().__sklearn_tags__()
         as_dict = {

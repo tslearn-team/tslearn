@@ -457,13 +457,6 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         tags.input_tags.allow_nan = True
         return tags
 
-    def _more_tags(self):  # pragma: no cover
-        tags = super()._more_tags()
-        tags.update(
-            {"requires_y": False, "allow_nan": True, ALLOW_VARIABLE_LENGTH: True}
-        )
-        return tags
-
 
 class AutoVARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
     """Automatically selects the best Vector Autoregressive Integrated Moving Average (VARIMA) model
@@ -795,11 +788,4 @@ class AutoVARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         tags.target_tags.required = False
         tags.allow_variable_length = True
         tags.input_tags.allow_nan = True
-        return tags
-
-    def _more_tags(self):  # pragma: no cover
-        tags = super()._more_tags()
-        tags.update(
-            {"requires_y": False, "allow_nan": True, ALLOW_VARIABLE_LENGTH: True}
-        )
         return tags

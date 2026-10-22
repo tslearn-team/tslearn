@@ -997,11 +997,6 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
         check_is_fitted(self, 'model_')
         raise NotImplementedError("LearningShapelet is not HDF5 serializable")
 
-    def _more_tags(self):
-        tags = super()._more_tags()
-        tags.update({'allow_nan': True, 'allow_variable_length': True})
-        return tags
-
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
         tags.input_tags.allow_nan = True

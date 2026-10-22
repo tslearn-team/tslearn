@@ -211,14 +211,6 @@ class TimeSeriesDBSCAN(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPa
         self.fit(X)
         return self.labels_
 
-    def _more_tags(self):
-        tags = super()._more_tags()
-        tags.update({
-            "allow_nan": self.metric in VARIABLE_LENGTH_METRICS,
-            ALLOW_VARIABLE_LENGTH: self.metric in VARIABLE_LENGTH_METRICS}
-        )
-        return tags
-
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
         tags.input_tags.allow_nan = self.metric in VARIABLE_LENGTH_METRICS
