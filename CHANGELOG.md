@@ -11,7 +11,9 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ## [Towards v0.11.0]
 
-* Nothing new yet
+### Fixed
+
+* `NonMyopicEarlyClassifier.get_cluster_probas` now returns uniform cluster probabilities, instead of `NaN`, when the incoming time series is at distance 0 from every cluster center (for instance when all training series start with the same values). The `NaN` expected costs previously made `predict`, `predict_proba` and `early_predict` decide at the earliest possible time. ([#781](https://github.com/tslearn-team/tslearn/issues/781))
 
 ## [v0.10.0]
 
