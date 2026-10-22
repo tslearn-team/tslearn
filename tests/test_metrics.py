@@ -1,5 +1,4 @@
 import random
-import warnings
 
 import numpy as np
 
@@ -111,53 +110,6 @@ def test_dtw():
             )
             np.testing.assert_array_equal(dists, parallel_dists)
             assert backend.belongs_to_backend(parallel_dists)
-
-
-def test_ctw():
-    for be in backends:
-        for array_type in array_types:
-            backend = instantiate_backend(be, array_type)
-            # ctw_path
-            path, cca, dist = tslearn.metrics.ctw_path(
-                cast([1, 2, 3], array_type), cast([1.0, 2.0, 2.0, 3.0], array_type), be=be
-            )
-            np.testing.assert_equal(path, [(0, 0), (1, 1), (1, 2), (2, 3)])
-            np.testing.assert_allclose(dist, 0.0)
-            if not backend.is_numpy:
-                assert backend.belongs_to_backend(dist)
-
-            path, cca, dist = tslearn.metrics.ctw_path(
-                cast([1, 2, 3], array_type), cast([1.0, 2.0, 2.0, 3.0, 4.0], array_type), be=be
-            )
-            np.testing.assert_allclose(dist, 1.0)
-            if not backend.is_numpy:
-                assert backend.belongs_to_backend(dist)
-
-            # dtw
-            n1, n2, d1, d2 = 15, 10, 3, 1
-            rng = np.random.RandomState(0)
-            x = cast(rng.randn(n1, d1), array_type)
-            y = cast(rng.randn(n2, d2), array_type)
-            np.testing.assert_allclose(
-                tslearn.metrics.ctw(x, y, be=be), tslearn.metrics.ctw(y, x, be=be)
-            )
-            np.testing.assert_allclose(
-                tslearn.metrics.ctw(x, y, be=be), tslearn.metrics.ctw_path(x, y, be=be)[-1]
-            )
-
-            # cdist_dtw
-            dists = tslearn.metrics.cdist_ctw(cast([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], array_type), be=be)
-            np.testing.assert_allclose(dists, [[0.0, 1.0], [1.0, 0.0]])
-            assert backend.belongs_to_backend(dists)
-
-            dists = tslearn.metrics.cdist_ctw(
-                cast([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], array_type),
-                [[1, 2, 3], [2, 3, 4, 5]], be=be  # The second dataset can not be cast to array because of its shape
-            )
-            np.testing.assert_allclose(
-                dists, [[0.0, 2.44949], [1.0, 1.414214]], atol=1e-5
-            )
-            assert backend.belongs_to_backend(dists)
 
 
 def test_ldtw():

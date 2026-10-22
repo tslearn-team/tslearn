@@ -11,12 +11,6 @@ from ._masks import (
     itakura_mask,
     sakoe_chiba_mask
 )
-from .ctw import (
-    ctw,
-    ctw_path,
-    cdist_ctw,
-    _cdist_ctw
-)
 from ._dtw import(
     dtw,
     dtw_path,
@@ -75,14 +69,13 @@ import tslearn.metrics.performance
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
-TSLEARN_VALID_METRICS = ["ctw", "dtw", "gak", "sax", "softdtw",
+TSLEARN_VALID_METRICS = ["dtw", "gak", "sax", "softdtw",
                          "softdtw_normalized", "lcss", "frechet"]
-VARIABLE_LENGTH_METRICS = ["ctw", "dtw", "gak", "sax", "softdtw",
+VARIABLE_LENGTH_METRICS = ["dtw", "gak", "sax", "softdtw",
                            "softdtw_normalized", "lcss", "frechet"]
 
 
 METRIC_TO_FUNCTION = {
-    "ctw": _cdist_ctw,
     "dtw": _cdist_dtw,
     "gak": _cdist_gak,
     "sax": _cdist_sax,
@@ -116,9 +109,6 @@ __all__ = [
     "lcss",
     "lcss_path",
     "lcss_path_from_metric",
-    "ctw_path",
-    "ctw",
-    "cdist_ctw",
     "cdist_sax",
     "cdist_soft_dtw",
     "cdist_soft_dtw_normalized",
