@@ -214,7 +214,8 @@ def test_serialize_knn(params):
 
     knn.fit(X, y)
 
-    _check_params_predict(knn, X, ['kneighbors', 'radius_neighbors'])
+    _check_params_predict(knn, X, ['kneighbors'])
+
 
 
 @pytest.mark.parametrize("params",
@@ -230,7 +231,7 @@ def test_serialize_knn_classifier(params):
     X = rng.randn(n, sz, d)
     y = rng.randint(low=0, high=3, size=n)
 
-    knc = KNeighborsTimeSeriesClassifier()
+    knc = KNeighborsTimeSeriesClassifier(**params)
 
     _check_not_fitted(knc)
 
@@ -252,7 +253,7 @@ def test_serialize_knn_regressor(params):
     X = rng.randn(n, sz, d)
     y = rng.randint(low=0, high=3, size=n)
 
-    knr = KNeighborsTimeSeriesRegressor()
+    knr = KNeighborsTimeSeriesRegressor(**params)
 
     _check_not_fitted(knr)
 

@@ -245,7 +245,7 @@ def _predict_generic(caller, X, predict_func):
         X = to_time_series_dataset(X)
         X = check_dims(
             X,
-            X_fit_dims=caller._X_fit_dims_,
+            X_fit_dims=tuple(caller._X_fit_dims_),
             extend=True,
             check_n_features_only=caller.metric in TSLEARN_VALID_METRICS
         )
