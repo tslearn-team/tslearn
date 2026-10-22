@@ -1,9 +1,8 @@
-import warnings
-from warnings import catch_warnings
-
 import numpy as np
 
 import pytest
+
+from sklearn.base import BaseEstimator, ClassifierMixin
 
 from tslearn.early_classification import NonMyopicEarlyClassifier
 from tslearn.neighbors import KNeighborsTimeSeriesClassifier
@@ -100,3 +99,39 @@ def test_NonMyopicEarlyClassifier():
     # Check iteration raises after n_samples + 1
     with pytest.raises(ValueError):
         gen.send([[[1]]])
+
+
+class _AlwaysOneClassifier(ClassifierMixin, BaseEstimator):
+    def fit(self, X, y):
+        self.classes_ = np.array([0, 1])
+        return self
+
+    def predict(self, X):
+        return np.ones(len(X), dtype=int)
+
+
+def test_NonMyopicEarlyClassifier_misclassification_probabilities():
+    # pyhatyck_[t, k, y, y_hat] is P(y_hat | y, c_k) for y != y_hat, so it
+    # must be normalized over the predicted classes for each true class.
+    dataset = to_time_series_dataset(
+        [
+            [1, 2, 3, 4, 5, 6],
+            [1, 2, 3, 4, 5, 6],
+            [1, 2, 3, 4, 5, 6],
+            [1, 2, 3, 3, 2, 1],
+            [1, 2, 3, 3, 2, 1],
+            [1, 2, 3, 3, 2, 1],
+            [3, 2, 1, 1, 2, 3],
+            [3, 2, 1, 1, 2, 3],
+        ]
+    )
+    y = [0, 0, 0, 1, 1, 1, 0, 0]
+    # This classifier predicts class 1 for every series: class 0 series are
+    # always misclassified and class 1 series never are.
+    model = NonMyopicEarlyClassifier(
+        n_clusters=1,
+        base_classifier=_AlwaysOneClassifier(),
+        random_state=0,
+    ).fit(dataset, y)
+    np.testing.assert_allclose(model.pyhatyck_[:, 0, 0, 1], 1.0)
+    np.testing.assert_allclose(model.pyhatyck_[:, 0, 1], 0.0)

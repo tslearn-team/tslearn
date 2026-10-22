@@ -9,7 +9,11 @@ and this project adheres to
 Changelogs for this project are recorded in this file since v0.2.0.
 
 
-## [Towards v0.10.0]
+## [Towards v0.11.0]
+
+* Nothing new yet
+
+## [v0.10.0]
 
 ### Added
 
@@ -42,6 +46,8 @@ its predictions are un-scaled back, using any `tslearn.preprocessing` scaler. ([
 
 ### Fixed
 
+* Correct the discrete segment center in 1d-SAX distances, preserving the
+  representative average when the slope is nonzero.
 * `mase` now scales each feature by its own in-sample naive forecast error, so that `multioutput="uniform_average"` and array-like `multioutput` aggregate the per-feature values returned with `multioutput="raw_values"` (a NumPy array `multioutput` previously raised `ValueError`). The NaN padding of variable length `train_data` is now ignored instead of making the result `NaN`.
 * `lcss` and `lcss_path_from_metric` now respect the `global_constraint` / Sakoe-Chiba / Itakura band, which was previously ignored. ([#526](https://github.com/tslearn-team/tslearn/issues/526))
 * `gak` and `cdist_gak` no longer return `NaN` for time series longer than about 405 samples. They are now normalized in log space, and the Global Alignment Kernel recursion falls back to a log-space accumulation when its value leaves the range of a 64-bit float. This also fixes `TimeSeriesSVC` / `TimeSeriesSVR` and `KernelKMeans` with `kernel="gak"` on long time series. ([#450](https://github.com/tslearn-team/tslearn/issues/450))
@@ -51,7 +57,10 @@ its predictions are un-scaled back, using any `tslearn.preprocessing` scaler. ([
 * `TimeSeriesImputer(method="linear")` no longer raises `ValueError` when a feature of a time series has no observed value. Such features are now left unchanged, as for the other imputation methods.
 * `PiecewiseAggregateApproximation.distance`, `SymbolicAggregateApproximation.distance` and `OneD_SymbolicAggregateApproximation.distance` now accept two time series of different lengths, instead of failing on the ragged input. ([#738](https://github.com/tslearn-team/tslearn/issues/738))
 * `VARIMA` and `AutoVARIMA` forecasts with a differencing order `d` of 2 or more are now integrated back correctly. They were previously integrated as if `d` were 1.
+* `dtw_barycenter_averaging_subgradient` now takes `weights` into account (they cancelled out in each update step), no longer returns NaN when a weight is 0, and stops based on the weighted cost over the whole epoch. ([#764](https://github.com/tslearn-team/tslearn/issues/764))
+* Performance metrics now check inputs shape consistency ([#771](https://github.com/tslearn-team/tslearn/issues/771))
 * `VARIMA` and `AutoVARIMA` forecasts are now correct for multivariate series, which previously applied the transpose of the fitted autoregressive matrices. `ma_coeffs_[k]` is now the lag `k + 1` term, in the same order as `ar_coeffs_`. ([#762](https://github.com/tslearn-team/tslearn/issues/762))
+* `NonMyopicEarlyClassifier` now normalizes the confusion matrices stored in `pyhatyck_` over the predicted classes, so that they hold the documented probabilities of predicting `y_hat` given the true class `y` and the cluster. They were previously normalized over the true classes, which gave wrong expected misclassification costs and therefore wrong prediction times. ([#778](https://github.com/tslearn-team/tslearn/issues/778))
 
 ## [v0.9.0]
 

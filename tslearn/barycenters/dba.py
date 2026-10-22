@@ -791,8 +791,8 @@ def dtw_barycenter_averaging_subgradient(
         Default value is the one suggested in [2]_.
 
     tol : float (default: 1e-5)
-        Tolerance to use for early stopping: if the decrease in cost is lower
-        than this value, the
+        Tolerance to use for early stopping: if the absolute change in cost
+        is lower than this value, the
         Expectation-Maximization procedure stops.
 
     random_state : int, RandomState instance or None, optional (default=None)
@@ -859,34 +859,36 @@ def dtw_barycenter_averaging_subgradient(
             be=backend
         )
         barycenter_size = barycenter.shape[0]
-    cost_prev, cost = numpy.inf, numpy.inf
     eta = initial_step_size
     n = X_.shape[0]
+    best_barycenter = barycenter
+    best_cost = numpy.inf
     for it in range(max_iter):
         shuffled_indices = rng.permutation(n)
         for idx in shuffled_indices:
-            Xi = X_[idx:idx+1]
-            wi = weights[idx:idx+1]
-            list_p_k, cost = _mm_assignment(Xi, barycenter, weights,
-                                            metric_params)
-            list_diag_v_k, list_w_k = _subgradient_valence_warping(
-                list_p_k,
-                barycenter_size,
-                wi
-            )
-            if verbose:
-                print("[DBA] epoch %d, cost: %.3f" % (it + 1, cost))
-            barycenter = _subgradient_update_barycenter(Xi, list_diag_v_k,
-                                                        list_w_k, wi.sum(),
-                                                        barycenter, eta)
-            if it == 0:
-                eta -= (initial_step_size - final_step_size) / n
-        if abs(cost_prev - cost) < tol:
+            wi = weights[idx:idx + 1]
+            if wi[0]:
+                Xi = X_[idx:idx+1]
+                list_p_k, _ = _mm_assignment(Xi, barycenter, numpy.ones(1),
+                                                metric_params)
+                list_diag_v_k, list_w_k = _subgradient_valence_warping(
+                    list_p_k,
+                    barycenter_size,
+                    wi
+                )
+                # Each step uses a single series, so its weight is scaled by
+                # n / weights.sum() rather than normalized away
+                barycenter = _subgradient_update_barycenter(Xi, list_diag_v_k,
+                                                            list_w_k, weights.sum() / n,
+                                                            barycenter, eta)
+                if it == 0:
+                    eta -= (initial_step_size - final_step_size) * wi[0]/ weights.sum()
+        _, cost = _mm_assignment(X_, barycenter, weights, metric_params)
+        if verbose:
+            print("[DBA] epoch %d, cost: %.3f" % (it + 1, cost))
+        if cost < best_cost:
+            best_barycenter = barycenter
+        if abs(best_cost - cost) < tol:
             break
-        elif cost_prev < cost:
-            warnings.warn("DBA loss is increasing while it should not be. "
-                          "Stopping optimization.", ConvergenceWarning)
-            break
-        else:
-            cost_prev = cost
-    return barycenter
+        best_cost = min(cost, best_cost)
+    return best_barycenter
