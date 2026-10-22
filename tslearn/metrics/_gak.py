@@ -113,7 +113,7 @@ def gak(s1, s2, sigma=1.0, be=None):
         k(\mathbf{x}, \mathbf{y}) =
             \sum_{\pi \in \mathcal{A}(\mathbf{x}, \mathbf{y})}
                 \prod_{i=1}^{ | \pi | }
-                    \exp \left( - \frac{ \left\| x_{\pi_1(i)} - y_{\pi_2{j}} \right\|^2}{2 \sigma^2} \right)
+                    \exp \left( - \frac{ \left\| x_{\pi_1(i)} - y_{\pi_2(i)} \right\|^2}{2 \sigma^2} \right)
 
     It is not required that both time series share the same size, but they must
     be the same dimension. GAK was originally presented in [1]_.
@@ -187,7 +187,7 @@ def unnormalized_gak(s1, s2, sigma=1.0, be=None):
         k(\mathbf{x}, \mathbf{y}) =
             \sum_{\pi \in \mathcal{A}(\mathbf{x}, \mathbf{y})}
                 \prod_{i=1}^{ | \pi | }
-                    \exp \left( - \frac{ \left\| x_{\pi_1(i)} - y_{\pi_2{j}} \right\|^2}{2 \sigma^2} \right)
+                    \exp \left( - \frac{ \left\| x_{\pi_1(i)} - y_{\pi_2(i)} \right\|^2}{2 \sigma^2} \right)
 
     It is not required that both time series share the same size, but they must
     be the same dimension. GAK was originally presented in [1]_.
