@@ -38,7 +38,7 @@ echo $STATUS
 
 if grep -E "FAILED|CANCELLED" <<< $STATUS
  then
-  exit 0
-else
   exit 1
+else
+  exit 0
 fi
