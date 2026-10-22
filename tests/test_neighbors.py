@@ -129,7 +129,7 @@ def test_kneighbors_sax():
     np.testing.assert_equal(model.kneighbors(X[2:]), np.array([[[0.]], [[2]]]))
 
     # Check fit reinitialize sax
-    X = X * 10
+    X = X + 10
     model.fit(X)
     np.testing.assert_equal(model.kneighbors(return_distance=False), np.array([[2], [2], [0]]))
     np.testing.assert_equal(model.kneighbors(X[:1]), np.array([[[0.]], [[0]]]))

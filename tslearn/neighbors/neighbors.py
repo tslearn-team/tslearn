@@ -42,6 +42,7 @@ class KNeighborsTimeSeriesMixin(TimeSeriesMixin):
                 self.effective_metric_ = self.metric
         else:
             super().fit(to_sklearn_dataset(X), y)
+        self._sax = None
         self.n_features_in_ = self._X_fit_dims_[-1]
 
         return self
@@ -54,13 +55,13 @@ class KNeighborsTimeSeriesMixin(TimeSeriesMixin):
         return True
 
     def _sax_preprocess(self, X, n_segments=10, alphabet_size_avg=4, scale=False):
-            if not hasattr(self, '_sax') or self._sax is None:
-                self._sax = SymbolicAggregateApproximation(
-                    n_segments=n_segments,
-                    alphabet_size_avg=alphabet_size_avg,
-                    scale=scale
-                ).fit(X)
-            return self._sax.transform(X), self._sax.breakpoints_avg_
+        if getattr(self, '_sax', None) is None:
+            self._sax = SymbolicAggregateApproximation(
+                n_segments=n_segments,
+                alphabet_size_avg=alphabet_size_avg,
+                scale=scale
+            ).fit(X)
+        return self._sax.transform(X), self._sax.breakpoints_avg_
 
     def _get_metric_params(self):
         if self.metric_params is None:
@@ -307,7 +308,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin,
     array([[0.]])
     >>> print(ind)
     [[0]]
-    >>> knn2 = KNeighborsTimeSeries(n_neighbors=10,
+    >>> knn2 = KNeighborsTimeSeries(n_neighbors=2,
     ...                             metric="euclidean").fit(time_series)
     >>> print(knn2.kneighbors(return_distance=False))
     [[2 1]
@@ -695,4 +696,3 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
             Array of predicted targets
         """
         return _predict_generic(self, X, super().predict)
-
