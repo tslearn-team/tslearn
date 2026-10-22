@@ -14,7 +14,7 @@ authors = [
 ]
 readme = "README.md"
 dynamic = ["version"]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "BSD-2-Clause"
 license-files = ["LICENSE"]
 classifiers=[

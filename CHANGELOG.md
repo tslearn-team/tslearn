@@ -14,6 +14,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 ### Removed
 
 * Support for sklearn version 1.5 is dropped
+* Support for Python versions 3.10 is dropped
 
 ## [v0.10.0]
 
