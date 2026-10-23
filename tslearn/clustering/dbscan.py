@@ -5,14 +5,13 @@ import copy
 import numpy as np
 
 from sklearn.base import BaseEstimator, ClusterMixin
+from sklearn.cluster._dbscan_inner import dbscan_inner
+from sklearn.neighbors import NearestNeighbors
 from sklearn.utils.validation import check_is_fitted
 
 from tslearn.bases import TimeSeriesMixin, BaseModelPackage
 from tslearn.metrics import TSLEARN_VALID_METRICS, METRIC_TO_FUNCTION, VARIABLE_LENGTH_METRICS
 from tslearn.utils import check_array, to_time_series_dataset, check_dims, to_sklearn_dataset
-from tslearn.neighbors import KNeighborsTimeSeries
-
-from sklearn.cluster._dbscan_inner import dbscan_inner
 
 
 class TimeSeriesDBSCAN(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackage):
@@ -138,12 +137,11 @@ class TimeSeriesDBSCAN(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPa
         # Force the use of n_job attribute in underlying model
         model_metric_params = self._get_metric_params()
         model_n_jobs = model_metric_params.pop("n_jobs", None)
-        neighbors_model = KNeighborsTimeSeries(
-            metric=self.metric,
-            metric_params=model_metric_params,
+        neighbors_model = NearestNeighbors(
+            metric=self.metric if self.metric not in TSLEARN_VALID_METRICS else "precomputed",
+            radius=self.eps,
             n_jobs=model_n_jobs,
         )
-        neighbors_model.fit(X)
 
         if self.metric in TSLEARN_VALID_METRICS:
             # Get metric function and filter parameters accordingly
@@ -156,13 +154,14 @@ class TimeSeriesDBSCAN(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPa
                 X,
                 **metric_params
             )
-            with neighbors_model._patch_attribute("metric", "precomputed"):
-                neighborhoods = neighbors_model.radius_neighbors(
-                    distance_matrix,
-                    radius=self.eps,
-                    return_distance=False
-                )
+            neighbors_model.fit(distance_matrix)
+            neighborhoods = neighbors_model.radius_neighbors(
+                distance_matrix,
+                radius=self.eps,
+                return_distance=False
+            )
         else:
+            neighbors_model.fit(to_sklearn_dataset(X))
             neighborhoods = neighbors_model.radius_neighbors(
                 to_sklearn_dataset(X),
                 radius=self.eps,
