@@ -7,7 +7,6 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.utils.validation import check_is_fitted
 
 from tslearn.bases import TimeSeriesMixin
-from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from tslearn.utils import (
     check_variable_length_input,
     to_time_series_dataset,

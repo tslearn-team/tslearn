@@ -1,3 +1,5 @@
+"""Base classes for `tslearn` estimators."""
+
 import copy
 from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
@@ -26,6 +28,8 @@ from sklearn.utils import Tags
 
 @dataclass
 class TsLearnTags(Tags):
+    """Estimator tags"""
+
     allow_variable_length: bool = False
 
     def __init__(self, **kwargs):
@@ -46,6 +50,7 @@ _DEFAULT_TAGS = {
 
 
 class TimeSeriesMixin(object):
+    """Base estimator class"""
 
     @contextmanager
     def _patch_attribute(self, attribute_name, value):
@@ -68,6 +73,7 @@ class TimeSeriesMixin(object):
 
 
 class BaseModelPackage(object):
+    """Serialization/deserialization interface."""
     __metaclass__ = ABCMeta
 
     @abstractmethod
@@ -149,9 +155,9 @@ class BaseModelPackage(object):
             param = model_params[k]
 
             if isinstance(param, np.ndarray):
-                model_params[k] = param.tolist()  # for json support
+                model_params[k] = param.tolist()
             elif isinstance(param, list) and isinstance(param[0], np.ndarray):
-                model_params[k] = [p.tolist() for p in param]  # json support
+                model_params[k] = [p.tolist() for p in param]
             else:
                 model_params[k] = param
         return model_params
@@ -180,7 +186,7 @@ class BaseModelPackage(object):
         """
 
         model_params = model.pop('model_params')
-        hyper_params = model.pop('hyper_params')  # hyper-params
+        hyper_params = model.pop('hyper_params')
 
         # instantiate with hyper-parameters
         inst = cls(**hyper_params)

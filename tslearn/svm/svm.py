@@ -7,7 +7,6 @@ from sklearn.base import ClassifierMixin, RegressorMixin, BaseEstimator
 from sklearn.utils.validation import check_is_fitted
 import numpy
 
-from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from ..metrics import _cdist_gak, gamma_soft_dtw, VARIABLE_LENGTH_METRICS
 from ..utils import to_time_series_dataset, check_array, check_dims, check_X_y, to_sklearn_dataset
 from ..bases import TimeSeriesMixin

@@ -4,7 +4,6 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.utils.validation import check_is_fitted
 
 from tslearn.bases import BaseModelPackage, TimeSeriesMixin
-from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from tslearn.metrics.cysax import (cydist_sax, cyslopes, cydist_1d_sax,
                                    inv_transform_1d_sax, inv_transform_sax,
                                    inv_transform_paa)

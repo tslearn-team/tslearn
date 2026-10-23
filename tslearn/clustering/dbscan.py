@@ -8,7 +8,6 @@ from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.utils.validation import check_is_fitted
 
 from tslearn.bases import TimeSeriesMixin, BaseModelPackage
-from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from tslearn.metrics import TSLEARN_VALID_METRICS, METRIC_TO_FUNCTION, VARIABLE_LENGTH_METRICS
 from tslearn.utils import check_array, to_time_series_dataset, check_dims, to_sklearn_dataset
 from tslearn.neighbors import KNeighborsTimeSeries

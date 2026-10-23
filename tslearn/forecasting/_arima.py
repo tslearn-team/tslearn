@@ -13,7 +13,6 @@ from statsmodels.tools.sm_exceptions import InterpolationWarning
 from statsmodels.tsa.stattools import kpss
 
 from tslearn.bases import TimeSeriesMixin, BaseModelPackage
-from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from tslearn.utils import check_array, to_time_series_dataset, check_dims
 from tslearn.utils.utils import _ts_size
 

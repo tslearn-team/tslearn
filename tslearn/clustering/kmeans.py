@@ -15,7 +15,6 @@ from tslearn.barycenters import (
     softdtw_barycenter,
 )
 from tslearn.bases import BaseModelPackage, TimeSeriesMixin
-from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from tslearn.metrics import (
     _cdist_dtw,
     _cdist_gak,
