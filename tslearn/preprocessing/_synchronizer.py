@@ -166,11 +166,6 @@ class TimeSeriesFeatureSynchronizer(
         """
         return self.fit(X, y).transform(X, y,  **transform_params)
 
-    def _more_tags(self):
-        tags = super()._more_tags()
-        tags.update({'allow_nan': True, ALLOW_VARIABLE_LENGTH: True})
-        return tags
-
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
         tags.input_tags.allow_nan = True

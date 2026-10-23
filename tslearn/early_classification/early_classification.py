@@ -768,14 +768,6 @@ class NonMyopicEarlyClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
 
         return np.array(pred), np.array(time_prediction)
 
-    def _more_tags(self):
-        # Because some of the data validation checks rely on datasets that are
-        # too small to pass here (only 1 item in one of the clusters, hence no
-        # stratified split possible)
-        more_tags = super()._more_tags()
-        more_tags.update({"no_validation": True})
-        return more_tags
-
     def __sklearn_tags__(self):
         # Because some of the data validation checks rely on datasets that are
         # too small to pass here (only 1 item in one of the clusters, hence no

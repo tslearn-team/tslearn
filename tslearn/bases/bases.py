@@ -22,21 +22,16 @@ else:
 from sklearn.exceptions import NotFittedError
 
 
-try:
-    from sklearn.utils import Tags
+from sklearn.utils import Tags
 
-    @dataclass
-    class TsLearnTags(Tags):
-        allow_variable_length: bool = False
+@dataclass
+class TsLearnTags(Tags):
+    allow_variable_length: bool = False
 
-        def __init__(self, **kwargs):
-            super().__init__(**kwargs)
-            self.input_tags.sparse = False
-            self.input_tags.three_d_array = True
-
-except ImportError:
-    # sklearn < 1.6
-    TsLearnTags = dict
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.input_tags.sparse = False
+        self.input_tags.three_d_array = True
 
 
 ALLOW_VARIABLE_LENGTH = 'allow_variable_length'
@@ -61,9 +56,6 @@ class TimeSeriesMixin(object):
             yield
         finally:
             setattr(self, attribute_name, orig)
-
-    def _more_tags(self):
-        return copy.deepcopy(_DEFAULT_TAGS)
 
     def __sklearn_tags__(self):
         tags_orig = super().__sklearn_tags__()
