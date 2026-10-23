@@ -41,7 +41,7 @@ docutils==0.22.4
     #   sphinx
 einops==0.8.2
     # via chronos-forecasting
-filelock==3.32.2
+filelock==4.2.1
     # via
     #   huggingface-hub
     #   torch
