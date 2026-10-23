@@ -207,14 +207,6 @@ class KNeighborsTimeSeriesMixin(TimeSeriesMixin):
             inst.effective_metric_params_ = {}
         return inst
 
-    def _more_tags(self):
-        tags = super()._more_tags()
-        tags.update({
-            'allow_nan': self.metric in (TSLEARN_VALID_METRICS + ["nan_euclidean"]),
-            ALLOW_VARIABLE_LENGTH: self.metric in TSLEARN_VALID_METRICS}
-        )
-        return tags
-
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
         tags.input_tags.allow_nan = self.metric in (TSLEARN_VALID_METRICS + ["nan_euclidean"])
