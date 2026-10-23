@@ -88,18 +88,6 @@ class TimeSeriesSVMMixin(TimeSeriesMixin):
 
         return sklearn_X, y, nb_features
 
-    def _more_tags(self):
-        tags = super()._more_tags()
-        sample_weight_failure_msg = "zero sample_weight is not equivalent to removing samples"
-        tags.update({
-            "allow_nan": False,
-            ALLOW_VARIABLE_LENGTH: True,
-        })
-        tags["_xfail_checks"].update({
-            "check_sample_weights_invariance": sample_weight_failure_msg,
-        })
-        return tags
-
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
         tags.input_tags.allow_nan = False

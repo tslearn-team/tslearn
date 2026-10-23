@@ -143,15 +143,6 @@ def _configure(estimator, check):
             from tslearn.shapelets.shapelets import _kmeans_init_shapelets
             _kmeans_init_shapelets.__defaults__ = (1,)
 
-            with suppress(AttributeError):
-                # _get_tags removed in sklearn 1.7
-                get_tags_orig = estimator._get_tags
-                def get_tags_poor_score():
-                    tags = get_tags_orig()
-                    tags.update({"poor_score": True})
-                    return tags
-                estimator._get_tags = get_tags_poor_score
-
             sklearn_tags_orig = estimator.__sklearn_tags__
             def sklearn_tags_poor_score():
                 tags = sklearn_tags_orig()
@@ -174,46 +165,37 @@ def patch_check(check):
     return  check
 
 
-try:
+BASE_EXPECTED_XFAIL_CHECKS = {
+    "check_estimators_pickle": "'Pickling is currently NOT tested!'"
+}
 
-    # sklearn 1.6 + with new tags
-    BASE_EXPECTED_XFAIL_CHECKS = {
-        "check_estimators_pickle": "'Pickling is currently NOT tested!'"
-    }
+PER_ESTIMATOR_XFAIL_CHECKS = {
+    'KernelKMeans': {
+        "check_sample_weight_equivalence_on_dense_data": "Currently not supported due to clusters initialization",
+    },
+    'TimeSeriesSVC': {
+        "check_sample_weight_equivalence_on_dense_data": "zero sample_weight is not equivalent to removing samples",
+    },
+    'TimeSeriesSVR': {
+        "check_sample_weight_equivalence_on_dense_data": "zero sample_weight is not equivalent to removing samples",
+    },
+    'SymbolicAggregateApproximation': {"check_transformer_preserve_dtypes": "Forces int transform"},
+    'OneD_SymbolicAggregateApproximation': {"check_transformer_preserve_dtypes": "Forces int transform"}
+}
 
-    PER_ESTIMATOR_XFAIL_CHECKS = {
-        'KernelKMeans': {
-            "check_sample_weight_equivalence_on_dense_data": "Currently not supported due to clusters initialization",
-        },
-        'TimeSeriesSVC': {
-            "check_sample_weight_equivalence_on_dense_data": "zero sample_weight is not equivalent to removing samples",
-        },
-        'TimeSeriesSVR': {
-            "check_sample_weight_equivalence_on_dense_data": "zero sample_weight is not equivalent to removing samples",
-        },
-        'SymbolicAggregateApproximation': {"check_transformer_preserve_dtypes": "Forces int transform"},
-        'OneD_SymbolicAggregateApproximation': {"check_transformer_preserve_dtypes": "Forces int transform"}
-    }
 
-    def get_expected_fails(estimator):
-        # Compute expected fails for a given estimator
-        expected_fails = PER_ESTIMATOR_XFAIL_CHECKS.get(estimator.__class__.__name__, {})
-        expected_fails.update(BASE_EXPECTED_XFAIL_CHECKS)
-        return expected_fails
+def get_expected_fails(estimator):
+    # Compute expected fails for a given estimator
+    expected_fails = PER_ESTIMATOR_XFAIL_CHECKS.get(estimator.__class__.__name__, {})
+    expected_fails.update(BASE_EXPECTED_XFAIL_CHECKS)
+    return expected_fails
 
-    @parametrize_with_checks(
-        get_estimators('all'),
-        expected_failed_checks=get_expected_fails
-    )
-    def test_all_estimators(estimator, check):
-        actual_check = patch_check(check)
-        with _configure(estimator, actual_check):
-            actual_check(estimator)
 
-except TypeError:
-    # sklearn < 1.6, parametrize has only one parameter and uses old tags
-    @parametrize_with_checks(get_estimators('all'))
-    def test_all_estimators(estimator, check):
-        actual_check = patch_check(check)
-        with _configure(estimator, actual_check):
-            actual_check(estimator)
+@parametrize_with_checks(
+    get_estimators('all'),
+    expected_failed_checks=get_expected_fails
+)
+def test_all_estimators(estimator, check):
+    actual_check = patch_check(check)
+    with _configure(estimator, actual_check):
+        actual_check(estimator)

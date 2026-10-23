@@ -251,11 +251,6 @@ class MatrixProfile(TimeSeriesMixin,
         X = check_dims(X)
         return self._fit(X)._transform(X)
 
-    def _more_tags(self):
-        tags = super()._more_tags()
-        tags.update({'allow_nan': True, 'allow_variable_length': True})
-        return tags
-
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
         tags.input_tags.allow_nan = True
