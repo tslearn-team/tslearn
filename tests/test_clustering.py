@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 from scipy.spatial.distance import cdist
+from sklearn.exceptions import ConvergenceWarning, NotFittedError
 
 from tslearn.clustering import (
     EmptyClusterError,
@@ -63,11 +64,13 @@ def test_kernel_kmeans():
                           random_state=rng).fit(time_series)
     np.testing.assert_allclose(gak_km.labels_, gak_km.predict(time_series))
 
-    gak_km = KernelKMeans(n_clusters=101,
-                          verbose=False,
-                          max_iter=5,
-                          random_state=rng).fit(time_series)
+    with pytest.warns(ConvergenceWarning, match="empty cluster"):
+        gak_km = KernelKMeans(n_clusters=101,
+                              verbose=False,
+                              max_iter=5,
+                              random_state=rng).fit(time_series)
     assert gak_km._X_fit is None
+    assert gak_km.labels_ is None
 
     with pytest.raises(RuntimeError):
         KernelKMeans(n_clusters=101,
@@ -83,6 +86,41 @@ def test_kernel_kmeans():
                           max_iter=5,
                           random_state=rng).fit(time_series)
     assert gak_km.sigma_gak_ is None
+
+
+def test_kernel_kmeans_all_inits_empty_cluster():
+    # 15 time series with only 3 distinct values cannot be split into 4
+    # non-empty clusters, so every initialization raises EmptyClusterError.
+    # The model must then be left in an unfitted state instead of exposing
+    # the labels of a failed attempt.
+    X = np.repeat([0., 1., 5.], 5)[:, None, None]
+
+    model = KernelKMeans(n_clusters=4, kernel="rbf", random_state=0)
+    with pytest.warns(ConvergenceWarning, match="empty cluster"):
+        model.fit(X)
+
+    assert model._X_fit is None
+    assert model.labels_ is None
+    assert model.inertia_ == np.inf
+    assert model.n_iter_ == 0
+    assert not hasattr(model, "n_features_in_")
+
+    with pytest.raises(NotFittedError):
+        model.predict(X)
+
+    model = KernelKMeans(n_clusters=4, kernel="rbf", random_state=0)
+    with pytest.warns(ConvergenceWarning, match="empty cluster"):
+        labels = model.fit_predict(X)
+    assert labels is None
+
+    # A regular fit on the same model instance recovers a fitted state
+    model.set_params(n_clusters=3)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", ConvergenceWarning)
+        model.fit(X)
+    assert model.labels_ is not None
+    assert model.n_features_in_ == 1
+    np.testing.assert_array_equal(model.predict(X), model.labels_)
 
 
 def test_kmeans():
