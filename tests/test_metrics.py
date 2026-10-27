@@ -246,6 +246,112 @@ def test_lcss_sakoe_chiba_constraint():
         )
         np.testing.assert_equal(sim, 0.25)
 
+    # A radius-0 band only allows matches on the diagonal. The last pair does
+    # not match, which must not discard the two matches before it.
+    s1 = [0.0, 0.0, 5.0]
+    s2 = [0.0, 0.0, 0.0]
+    for be in backends:
+        sim = tslearn.metrics.lcss(
+            s1, s2, eps=1, global_constraint="sakoe_chiba",
+            sakoe_chiba_radius=0, be=be
+        )
+        np.testing.assert_equal(sim, 2 / 3)
+
+
+def test_lcss_itakura_constraint():
+    # The Itakura parallelogram narrows to a single cell at each corner. The
+    # band only restricts which pairs may be matched, so a mismatch between the
+    # last samples must not discard the five matches found before them.
+    s1 = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+    s2 = [0.0, 1.0, 2.0, 3.0, 4.0, 9.0]
+    kwargs = {"eps": 1, "global_constraint": "itakura"}
+    for be in backends:
+        sim = tslearn.metrics.lcss(s1, s2, be=be, **kwargs)
+        np.testing.assert_equal(sim, 5 / 6)
+
+        for path, sim in [
+            tslearn.metrics.lcss_path(s1, s2, be=be, **kwargs),
+            tslearn.metrics.lcss_path_from_metric(s1, s2, be=be, **kwargs),
+        ]:
+            np.testing.assert_equal(sim, 5 / 6)
+            # Without the band, (5, 4) would be matched instead of (4, 4)
+            np.testing.assert_equal(
+                path, [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4)]
+            )
+
+
+def _reference_lcss(s1, s2, eps, mask):
+    # Cell-by-cell LCSS in which only the pairs inside the band may be matched,
+    # while L[i, j] = max(L[i - 1, j], L[i, j - 1]) applies to every cell
+    # (Vlachos et al., 2002).
+    sz1, sz2 = s1.shape[0], s2.shape[0]
+    acc = np.zeros((sz1 + 1, sz2 + 1), dtype=int)
+    for i in range(1, sz1 + 1):
+        for j in range(1, sz2 + 1):
+            dist = np.sqrt(np.sum((s1[i - 1] - s2[j - 1]) ** 2))
+            if mask[i - 1, j - 1] and dist <= eps:
+                acc[i, j] = acc[i - 1, j - 1] + 1
+            else:
+                acc[i, j] = max(acc[i - 1, j], acc[i, j - 1])
+    return acc[sz1, sz2] / min(sz1, sz2)
+
+
+def test_lcss_global_constraint_restricts_matches_only():
+    # Holding the cells outside of the band at 0 instead, as tslearn 0.10 did,
+    # gives the reference values without a band and for a Sakoe-Chiba radius
+    # of 1 or more, but not for a radius of 0 or for the Itakura
+    # parallelogram, in which some cells of the band can only be reached
+    # diagonally.
+    constraints = [
+        {},
+        {"global_constraint": "sakoe_chiba", "sakoe_chiba_radius": 0},
+        {"global_constraint": "sakoe_chiba", "sakoe_chiba_radius": 1},
+        {"global_constraint": "sakoe_chiba", "sakoe_chiba_radius": 3},
+        {"global_constraint": "itakura", "itakura_max_slope": 2.0},
+        {"global_constraint": "itakura", "itakura_max_slope": 3.0},
+    ]
+    eps = 1.0
+    rng = np.random.RandomState(0)
+    for sz1, sz2, d in [(12, 12, 1), (12, 15, 1), (15, 12, 2)]:
+        for _ in range(4):
+            s1 = rng.randn(sz1, d)
+            s2 = rng.randn(sz2, d)
+            for kwargs in constraints:
+                mask = tslearn.metrics.compute_mask(
+                    s1,
+                    s2,
+                    tslearn.metrics.GLOBAL_CONSTRAINT_CODE[
+                        kwargs.get("global_constraint")
+                    ],
+                    kwargs.get("sakoe_chiba_radius"),
+                    kwargs.get("itakura_max_slope"),
+                )
+                sim_ref = _reference_lcss(s1, s2, eps, mask)
+                for be in backends:
+                    sim = tslearn.metrics.lcss(
+                        s1, s2, eps=eps, be=be, **kwargs
+                    )
+                    np.testing.assert_equal(sim, sim_ref)
+
+                    path, sim = tslearn.metrics.lcss_path(
+                        s1, s2, eps=eps, be=be, **kwargs
+                    )
+                    np.testing.assert_equal(sim, sim_ref)
+                    # The path is a common subsequence of matching pairs
+                    # inside the band, as long as the similarity says.
+                    assert len(path) == round(sim_ref * min(sz1, sz2))
+                    for k, (i, j) in enumerate(path):
+                        assert mask[i, j]
+                        assert np.sqrt(np.sum((s1[i] - s2[j]) ** 2)) <= eps
+                        if k > 0:
+                            assert i > path[k - 1][0] and j > path[k - 1][1]
+
+                    path_bis, sim = tslearn.metrics.lcss_path_from_metric(
+                        s1, s2, eps=eps, be=be, **kwargs
+                    )
+                    np.testing.assert_equal(sim, sim_ref)
+                    np.testing.assert_equal(path_bis, path)
+
 
 def test_lcss_path():
     for be in backends:
