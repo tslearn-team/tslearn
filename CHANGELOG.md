@@ -13,10 +13,8 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ### Fixed
 
-* `dtw_barycenter_averaging_subgradient` now returns the best (lowest-cost) barycenter found
-  across iterations instead of the one from the last iteration. The best barycenter was kept by
-  reference and overwritten by later in-place updates, so a non-monotonic run (e.g. with a large
-  step size) could return a much worse result.
+* Radius neighbor queries with time-series metrics now exclude the query itself
+  for large or infinite radii, while retaining identical other time series.
 
 ### Removed
 
