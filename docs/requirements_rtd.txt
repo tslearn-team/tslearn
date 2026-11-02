@@ -127,7 +127,7 @@ pandas==3.0.5
     #   statsmodels
 patsy==1.0.2
     # via statsmodels
-pillow==12.3.0
+pillow==13.0.0
     # via
     #   matplotlib
     #   sphinx-gallery
