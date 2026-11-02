@@ -277,7 +277,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin,
         Ignored if the cross-distance matrix cannot be computed using
         parallelization.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
-        ``-1`` means using all processors. See scikit-learns'
+        ``-1`` means using all processors. See scikit-learn's
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`__
         for more details.
 
@@ -467,7 +467,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         Ignored if the cross-distance matrix cannot be computed using
         parallelization.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
-        ``-1`` means using all processors. See scikit-learns'
+        ``-1`` means using all processors. See scikit-learn's
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`__
         for more details.
 
@@ -607,7 +607,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         Ignored if the cross-distance matrix cannot be computed using
         parallelization.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
-        ``-1`` means using all processors. See scikit-learns'
+        ``-1`` means using all processors. See scikit-learn's
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`__
         for more details.
 
