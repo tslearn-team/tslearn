@@ -353,7 +353,11 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin,
         check_is_fitted(self)
 
         if X is not None:
-            X = check_array(X, allow_nd=True, force_all_finite=self.metric in TSLEARN_VALID_METRICS)
+            X = check_array(
+                X,
+                allow_nd=True,
+                force_all_finite="allow-nan" if self.metric in TSLEARN_VALID_METRICS else True
+            )
             X = check_dims(
                 X,
                 X_fit_dims=tuple(self._X_fit_dims_),
@@ -404,7 +408,11 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin,
             raise ValueError("Not implemented for softdtw")
 
         if X is not None:
-            X = check_array(X, allow_nd=True, force_all_finite=self.metric in TSLEARN_VALID_METRICS)
+            X = check_array(
+                X,
+                allow_nd=True,
+                force_all_finite="allow-nan" if self.metric in TSLEARN_VALID_METRICS else True
+            )
             X = check_dims(
                 X,
                 X_fit_dims=tuple(self._X_fit_dims_),
@@ -416,9 +424,10 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin,
             full_dist_matrix = self._precompute_cross_dist(fitted, X).T
             with self._patch_attribute("metric", "precomputed"):
                 with self._patch_attribute("effective_metric_", "precomputed"):
-                    results = super().radius_neighbors(
-                        full_dist_matrix, radius, return_distance, sort_results
-                    )
+                    with self._patch_attribute("effective_metric_params_", {"ensure_all_finite": False}):
+                        results = super().radius_neighbors(
+                            full_dist_matrix, radius, return_distance, sort_results
+                        )
             if X is None:
                 # Exclude by row identity, even for unbounded radii or ties.
                 if return_distance:
