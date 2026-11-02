@@ -861,7 +861,11 @@ def dtw_barycenter_averaging_subgradient(
         barycenter_size = barycenter.shape[0]
     eta = initial_step_size
     n = X_.shape[0]
-    best_barycenter = barycenter
+    # Copy, as `_subgradient_update_barycenter` updates the barycenter in
+    # place: without this the saved best would alias `barycenter` and be
+    # overwritten by later updates, so a non-monotonic run would return the
+    # last (possibly much worse) barycenter instead of the best one.
+    best_barycenter = barycenter.copy()
     best_cost = numpy.inf
     for it in range(max_iter):
         shuffled_indices = rng.permutation(n)
@@ -887,7 +891,7 @@ def dtw_barycenter_averaging_subgradient(
         if verbose:
             print("[DBA] epoch %d, cost: %.3f" % (it + 1, cost))
         if cost < best_cost:
-            best_barycenter = barycenter
+            best_barycenter = barycenter.copy()
         if abs(best_cost - cost) < tol:
             break
         best_cost = min(cost, best_cost)

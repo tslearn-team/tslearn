@@ -167,6 +167,26 @@ def test_dba_subgradient_weights():
     assert np.all(np.isfinite(bar))
 
 
+def test_dba_subgradient_returns_best_barycenter():
+    # With a large, barely-decreasing step size the subgradient cost becomes
+    # non-monotonic: it reaches a good barycenter and then the later iterations
+    # diverge. Since the best barycenter is from before the divergence, running
+    # more (diverging) iterations must not change the returned barycenter.
+    # Comparing two runs on the same machine avoids any platform-dependent
+    # floating-point differences in the exact barycenter.
+    rng = np.random.RandomState(1)
+    time_series = rng.randn(8, 20, 1)
+    kwargs = dict(initial_step_size=1.0, final_step_size=0.9, tol=0,
+                  random_state=1)
+    bar_short = tslearn.barycenters.dtw_barycenter_averaging_subgradient(
+        time_series, max_iter=60, **kwargs
+    )
+    bar_long = tslearn.barycenters.dtw_barycenter_averaging_subgradient(
+        time_series, max_iter=80, **kwargs
+    )
+    np.testing.assert_allclose(bar_short, bar_long)
+
+
 def test_softdtw_barycenter():
     n, sz, d = 15, 10, 3
     rng = np.random.RandomState(0)
