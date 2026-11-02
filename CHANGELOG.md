@@ -11,6 +11,11 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ## [Towards v0.11.0]
 
+### Fixed
+
+* Radius neighbor queries with time-series metrics now exclude the query itself
+  for large or infinite radii, while retaining identical other time series.
+
 ### Removed
 
 * Support for sklearn version 1.5 is dropped

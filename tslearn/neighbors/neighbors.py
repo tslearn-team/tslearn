@@ -1,5 +1,4 @@
 import numpy
-import numpy as np
 from sklearn.exceptions import NotFittedError
 
 from sklearn.neighbors import (KNeighborsClassifier, NearestNeighbors,
@@ -415,14 +414,23 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin,
         if self.metric in TSLEARN_VALID_METRICS:
             fitted = self._fit_X.reshape(self._X_fit_dims_)
             full_dist_matrix = self._precompute_cross_dist(fitted, X).T
-            if X is None:
-                # Ensure not a neighbor of itself
-                full_dist_matrix[np.diag_indices_from(full_dist_matrix)] = radius + int(radius >= 0)
             with self._patch_attribute("metric", "precomputed"):
                 with self._patch_attribute("effective_metric_", "precomputed"):
-                    return super().radius_neighbors(
+                    results = super().radius_neighbors(
                         full_dist_matrix, radius, return_distance, sort_results
                     )
+            if X is None:
+                # Exclude by row identity, even for unbounded radii or ties.
+                if return_distance:
+                    distances, indices = results
+                else:
+                    indices = results
+                for i, neighbors in enumerate(indices):
+                    keep = neighbors != i
+                    indices[i] = neighbors[keep]
+                    if return_distance:
+                        distances[i] = distances[i][keep]
+            return results
 
         else:
             X = to_sklearn_dataset(X) if X is not None else X
