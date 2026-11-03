@@ -21,6 +21,33 @@ from .utils import _set_weights
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
+def _contains_complex_values(data, backend):
+    """Check for complex values without converting ragged inputs."""
+    if data is None:
+        return False
+    if isinstance(data, (list, tuple)):
+        return any(_contains_complex_values(value, backend) for value in data)
+
+    is_complex = getattr(data, "is_complex", None)
+    if callable(is_complex):
+        return bool(is_complex())
+
+    dtype = getattr(data, "dtype", None)
+    kind = getattr(dtype, "kind", None)
+    if kind == "c" or getattr(dtype, "is_complex", False):
+        return True
+    if kind == "O":
+        return any(
+            _contains_complex_values(value, backend) for value in data.flat
+        )
+    if kind is not None:
+        return False
+    if dtype is None:
+        return isinstance(data, complex)
+
+    return bool(backend.any(backend.iscomplex(data)))
+
+
 def _acc_softdtw_func(
     Z,
     X,
@@ -165,6 +192,11 @@ def softdtw_barycenter(
             if provided or `sz` otherwise
         Soft-DTW barycenter of the provided time series dataset.
 
+    Raises
+    ------
+    ValueError
+        If `X` or `init` contains complex-valued time series.
+
     Examples
     --------
     >>> time_series = [[1, 2, 3, 4], [1, 2, 4, 5]]
@@ -187,6 +219,14 @@ def softdtw_barycenter(
        Time-Series," ICML 2017.
     """
     backend = instantiate_backend(X)
+    if (
+        _contains_complex_values(X, backend)
+        or _contains_complex_values(init, backend)
+    ):
+        raise ValueError(
+            "Complex-valued time series are not supported by "
+            "softdtw_barycenter."
+        )
     X_ = to_time_series_dataset(X, be=backend)
 
     weights = _set_weights(weights, X_.shape[0])
