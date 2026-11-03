@@ -50,13 +50,33 @@ def check_variable_length_input(X):
         The converted and validated array.
     """
     if getattr(X, "shape", None) is None:
-        if isinstance(X, NotAnArray):
+        if isinstance(X, NotAnArray) or hasattr(X, "__array__"):
             X = check_array(X, allow_nd=True, force_all_finite=False)
         else:
-            # Check each time series when X can be of variable length before
-            # to_time_series_dataset processing
-            for ts in X:
-                check_array([ts], allow_nd=True, force_all_finite=False)
+            try:
+                iterator = iter(X)
+            except TypeError:
+                X = check_array(X, allow_nd=True, force_all_finite=False)
+            else:
+                # Check each time series before padding a variable-length
+                # dataset, including __getitem__-only sequences.
+                n_features = None
+                for ts in iterator:
+                    ts = check_array(
+                        [ts], allow_nd=True, force_all_finite=False
+                    )
+                    if ts.shape[1] == 0:
+                        raise ValueError(
+                            "Time series must contain at least one sample."
+                        )
+                    ts_features = ts.shape[-1] if ts.ndim > 2 else 1
+                    if n_features is None:
+                        n_features = ts_features
+                    elif ts_features != n_features:
+                        raise ValueError(
+                            "Time series must have the same number "
+                            "of features."
+                        )
     else:
         X = check_array(X, allow_nd=True, force_all_finite=False)
     return to_time_series_dataset(X)
