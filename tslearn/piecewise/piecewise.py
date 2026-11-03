@@ -4,7 +4,6 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.utils.validation import check_is_fitted
 
 from tslearn.bases import BaseModelPackage, TimeSeriesMixin
-from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from tslearn.metrics.cysax import (cydist_sax, cyslopes, cydist_1d_sax,
                                    inv_transform_1d_sax, inv_transform_sax,
                                    inv_transform_paa)
@@ -254,14 +253,6 @@ class PiecewiseAggregateApproximation(TimeSeriesMixin,
         X = check_dims(X)
         return inv_transform_paa(X, original_size=self._X_fit_dims_[1])
 
-    def _more_tags(self):
-        tags = super()._more_tags()
-        tags.update({
-            'allow_nan': True,
-            ALLOW_VARIABLE_LENGTH: True,
-        })
-        return tags
-
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
         tags.input_tags.allow_nan = True
@@ -506,13 +497,6 @@ class SymbolicAggregateApproximation(PiecewiseAggregateApproximation):
                 original_size=self._X_fit_dims_[1]
         )
         return self._unscale(X_orig)
-
-    def _more_tags(self):
-        tags = super()._more_tags()
-        tags['_xfail_checks'].update({
-            "check_transformer_preserve_dtypes" : "Forces int transform"
-        })
-        return tags
 
     def __sklearn_tags__(self):
         # Needed for check_estimator_tags_renamed
@@ -789,13 +773,6 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
                 original_size=self._X_fit_dims_[1]
         )
         return self._unscale(X_orig)
-
-    def _more_tags(self):
-        tags = super()._more_tags()
-        tags['_xfail_checks'].update({
-            "check_transformer_preserve_dtypes" : "Forces int transform"
-        })
-        return tags
 
     def __sklearn_tags__(self):
         # Needed for check_estimator_tags_renamed

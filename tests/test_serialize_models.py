@@ -9,8 +9,11 @@ from sklearn.exceptions import NotFittedError
 
 from tslearn import hdftools
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
-from tslearn.neighbors import KNeighborsTimeSeries, \
-    KNeighborsTimeSeriesClassifier
+from tslearn.neighbors import (
+    KNeighborsTimeSeries,
+    KNeighborsTimeSeriesClassifier,
+    KNeighborsTimeSeriesRegressor
+)
 from tslearn.clustering import KShape, TimeSeriesKMeans, \
     KernelKMeans
 from tslearn.generators import random_walks
@@ -190,7 +193,14 @@ def test_serialize_kshape():
     _check_params_predict(ks_seeded, X, ['predict'])
 
 
-def test_serialize_knn():
+@pytest.mark.parametrize("params",
+    [{"metric": "euclidean"},
+     {"metric": "dtw", "metric_params": {"sakoe_chiba_radius": 2}},
+     {"metric": "softdtw", "metric_params": {"gamma_sdtw": 0.2}},
+     {"metric": "sax", "metric_params": {"n_segments": 5,
+                                         "alphabet_size_avg" :3,
+                                         "scale": True}}])
+def test_serialize_knn(params):
     n, sz, d = 15, 10, 3
     rng = numpy.random.RandomState(0)
     X = rng.randn(n, sz, d)
@@ -198,7 +208,7 @@ def test_serialize_knn():
 
     n_neighbors = 3
 
-    knn = KNeighborsTimeSeries(n_neighbors=n_neighbors)
+    knn = KNeighborsTimeSeries(n_neighbors=n_neighbors, **params)
 
     _check_not_fitted(knn)
 
@@ -207,19 +217,49 @@ def test_serialize_knn():
     _check_params_predict(knn, X, ['kneighbors'])
 
 
-def test_serialize_knn_classifier():
+
+@pytest.mark.parametrize("params",
+    [{"metric": "euclidean"},
+     {"metric": "dtw", "metric_params": {"sakoe_chiba_radius": 2}},
+     {"metric": "softdtw", "metric_params": {"gamma": 0.2}},
+     {"metric": "sax", "metric_params": {"n_segments": 5,
+                                         "alphabet_size_avg" :3,
+                                         "scale": True}}])
+def test_serialize_knn_classifier(params):
     n, sz, d = 15, 10, 3
     rng = numpy.random.RandomState(0)
     X = rng.randn(n, sz, d)
     y = rng.randint(low=0, high=3, size=n)
 
-    knc = KNeighborsTimeSeriesClassifier()
+    knc = KNeighborsTimeSeriesClassifier(**params)
 
     _check_not_fitted(knc)
 
     knc.fit(X, y)
 
     _check_params_predict(knc, X, ['predict'])
+
+
+@pytest.mark.parametrize("params",
+    [{"metric": "euclidean"},
+     {"metric": "dtw", "metric_params": {"sakoe_chiba_radius": 2}},
+     {"metric": "softdtw", "metric_params": {"gamma": 0.2}},
+     {"metric": "sax", "metric_params": {"n_segments": 5,
+                                         "alphabet_size_avg" :3,
+                                         "scale": True}}])
+def test_serialize_knn_regressor(params):
+    n, sz, d = 15, 10, 3
+    rng = numpy.random.RandomState(0)
+    X = rng.randn(n, sz, d)
+    y = rng.randint(low=0, high=3, size=n)
+
+    knr = KNeighborsTimeSeriesRegressor(**params)
+
+    _check_not_fitted(knr)
+
+    knr.fit(X, y)
+
+    _check_params_predict(knr, X, ['predict'])
 
 
 def _get_random_walk():
