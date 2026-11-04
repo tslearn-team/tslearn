@@ -810,7 +810,7 @@ def cdist_soft_dtw(
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
-        ``-1`` means using all processors. See scikit-learns'
+        ``-1`` means using all processors. See scikit-learn's
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`__
         for more details.
 
@@ -1029,7 +1029,7 @@ def cdist_soft_dtw_normalized(
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
-        ``-1`` means using all processors. See scikit-learns'
+        ``-1`` means using all processors. See scikit-learn's
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`__
         for more details.
 

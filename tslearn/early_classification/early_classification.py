@@ -279,7 +279,12 @@ class NonMyopicEarlyClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
         diffs = Xi[np.newaxis, :] - self.cluster_.cluster_centers_[:, :len(Xi)]
         distances_clusters = np.linalg.norm(diffs, axis=(1, 2))
         average_distance = np.mean(distances_clusters)
-        delta_k = 1. - distances_clusters / average_distance
+        if average_distance > 0.:
+            delta_k = 1. - distances_clusters / average_distance
+        else:
+            # Xi matches every cluster center, so that no cluster is closer
+            # than the others
+            delta_k = np.zeros_like(distances_clusters)
         s_k = 1. / (1. + np.exp(-self.lamb * delta_k))
         return s_k / s_k.sum()
 

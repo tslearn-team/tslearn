@@ -3,7 +3,7 @@ from numpy.testing import assert_allclose, assert_array_less
 from sklearn.model_selection import cross_val_score, KFold
 
 from tslearn.clustering import KernelKMeans, TimeSeriesKMeans
-from tslearn.neighbors import KNeighborsTimeSeriesClassifier
+from tslearn.neighbors import KNeighborsTimeSeries, KNeighborsTimeSeriesClassifier
 from tslearn.piecewise import (
     PiecewiseAggregateApproximation,
     SymbolicAggregateApproximation,
@@ -22,6 +22,19 @@ __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
 def test_variable_length_knn():
+    X_train = to_time_series_dataset([[1, 2, 3, 4],
+                                      [3, 3, 2, 0, 1],
+                                      [1, 2, 2, 4, 5, 6]])
+    X_query = to_time_series_dataset([[1, 2, 3],
+                                      [0, 1, 2, 3, 4]])
+    model = KNeighborsTimeSeries(n_neighbors=1, metric="dtw").fit(X_train)
+    dist, ind = model.kneighbors(X_query)
+    np.testing.assert_allclose(dist, np.array([[1.], [1.]]))
+    np.testing.assert_equal(ind, np.array([[0], [0]]))
+    assert len(model.radius_neighbors(X_query, radius=3.0)[1]) == 2
+
+
+def test_variable_length_knn_clf():
     X = to_time_series_dataset([[1, 2, 3, 4],
                                 [1, 2, 3],
                                 [9, 8, 7, 6, 5, 2],

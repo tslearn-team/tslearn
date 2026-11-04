@@ -1,5 +1,4 @@
 import numpy
-import numpy as np
 from sklearn.exceptions import NotFittedError
 
 from sklearn.neighbors import (KNeighborsClassifier, NearestNeighbors,
@@ -277,7 +276,7 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin,
         Ignored if the cross-distance matrix cannot be computed using
         parallelization.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
-        ``-1`` means using all processors. See scikit-learns'
+        ``-1`` means using all processors. See scikit-learn's
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`__
         for more details.
 
@@ -354,7 +353,11 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin,
         check_is_fitted(self)
 
         if X is not None:
-            X = check_array(X, allow_nd=True, force_all_finite=self.metric in TSLEARN_VALID_METRICS)
+            X = check_array(
+                X,
+                allow_nd=True,
+                force_all_finite="allow-nan" if self.metric in TSLEARN_VALID_METRICS else True
+            )
             X = check_dims(
                 X,
                 X_fit_dims=tuple(self._X_fit_dims_),
@@ -405,7 +408,11 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin,
             raise ValueError("Not implemented for softdtw")
 
         if X is not None:
-            X = check_array(X, allow_nd=True, force_all_finite=self.metric in TSLEARN_VALID_METRICS)
+            X = check_array(
+                X,
+                allow_nd=True,
+                force_all_finite="allow-nan" if self.metric in TSLEARN_VALID_METRICS else True
+            )
             X = check_dims(
                 X,
                 X_fit_dims=tuple(self._X_fit_dims_),
@@ -415,14 +422,24 @@ class KNeighborsTimeSeries(KNeighborsTimeSeriesMixin,
         if self.metric in TSLEARN_VALID_METRICS:
             fitted = self._fit_X.reshape(self._X_fit_dims_)
             full_dist_matrix = self._precompute_cross_dist(fitted, X).T
-            if X is None:
-                # Ensure not a neighbor of itself
-                full_dist_matrix[np.diag_indices_from(full_dist_matrix)] = radius + int(radius >= 0)
             with self._patch_attribute("metric", "precomputed"):
                 with self._patch_attribute("effective_metric_", "precomputed"):
-                    return super().radius_neighbors(
-                        full_dist_matrix, radius, return_distance, sort_results
-                    )
+                    with self._patch_attribute("effective_metric_params_", {"ensure_all_finite": False}):
+                        results = super().radius_neighbors(
+                            full_dist_matrix, radius, return_distance, sort_results
+                        )
+            if X is None:
+                # Exclude by row identity, even for unbounded radii or ties.
+                if return_distance:
+                    distances, indices = results
+                else:
+                    indices = results
+                for i, neighbors in enumerate(indices):
+                    keep = neighbors != i
+                    indices[i] = neighbors[keep]
+                    if return_distance:
+                        distances[i] = distances[i][keep]
+            return results
 
         else:
             X = to_sklearn_dataset(X) if X is not None else X
@@ -467,7 +484,7 @@ class KNeighborsTimeSeriesClassifier(KNeighborsTimeSeriesMixin,
         Ignored if the cross-distance matrix cannot be computed using
         parallelization.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
-        ``-1`` means using all processors. See scikit-learns'
+        ``-1`` means using all processors. See scikit-learn's
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`__
         for more details.
 
@@ -607,7 +624,7 @@ class KNeighborsTimeSeriesRegressor(KNeighborsTimeSeriesMixin,
         Ignored if the cross-distance matrix cannot be computed using
         parallelization.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
-        ``-1`` means using all processors. See scikit-learns'
+        ``-1`` means using all processors. See scikit-learn's
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`__
         for more details.
 
