@@ -15,6 +15,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 * Preserve autograd for custom distances in `SoftDTWLossPyTorch` by avoiding
   in-place edits of their pairwise distance matrices.
+* `NonMyopicEarlyClassifier.get_cluster_probas` now returns uniform cluster probabilities, instead of `NaN`, when the incoming time series is at distance 0 from every cluster center (for instance when all training series start with the same values). The `NaN` expected costs previously made `predict`, `predict_proba` and `early_predict` decide at the earliest possible time. ([#781](https://github.com/tslearn-team/tslearn/issues/781))
 * `dtw_barycenter_averaging_subgradient` now returns the best (lowest-cost) barycenter found
   across iterations instead of the one from the last iteration. The best barycenter was kept by
   reference and overwritten by later in-place updates, so a non-monotonic run (e.g. with a large
