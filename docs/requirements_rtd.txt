@@ -20,7 +20,7 @@ babel==2.18.0
     #   sphinx
 beautifulsoup4==4.14.3
     # via pydata-sphinx-theme
-certifi==2026.2.25
+certifi==2026.10.18
     # via
     #   httpcore
     #   httpx
@@ -41,7 +41,7 @@ docutils==0.22.4
     #   sphinx
 einops==0.8.2
     # via chronos-forecasting
-filelock==3.32.2
+filelock==4.2.1
     # via
     #   huggingface-hub
     #   torch
@@ -127,7 +127,7 @@ pandas==3.0.5
     #   statsmodels
 patsy==1.0.2
     # via statsmodels
-pillow==12.3.0
+pillow==13.0.0
     # via
     #   matplotlib
     #   sphinx-gallery
