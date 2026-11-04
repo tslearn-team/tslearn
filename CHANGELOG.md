@@ -13,6 +13,8 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ### Fixed
 
+* Preserve autograd for custom distances in `SoftDTWLossPyTorch` by avoiding
+  in-place edits of their pairwise distance matrices.
 * `dtw_barycenter_averaging_subgradient` now returns the best (lowest-cost) barycenter found
   across iterations instead of the one from the last iteration. The best barycenter was kept by
   reference and overwritten by later in-place updates, so a non-monotonic run (e.g. with a large
