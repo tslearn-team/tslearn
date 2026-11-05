@@ -5,6 +5,32 @@ import pytest
 from tslearn.preprocessing import TimeSeriesFeatureSynchronizer
 
 
+@pytest.mark.parametrize("reference_feature_index", [0, 1])
+@pytest.mark.parametrize("method", ["fit_transform", "transform"])
+def test_feature_synchronizer_array_like_timestamps(
+    reference_feature_index, method
+):
+    data = np.array([[[1., 2.], [2., 4.], [9., np.nan]]])
+    timestamps = np.array([[
+        ["2025-01-01", "2025-01-02"],
+        ["2025-01-03", "2025-01-07"],
+        ["2025-01-10", "NaT"],
+    ]], dtype="datetime64[D]")
+    # Retain NumPy datetime scalars: ndarray.tolist() returns Python dates.
+    nested_timestamps = [[list(sample) for sample in ts] for ts in timestamps]
+    data_before = data.copy()
+    timestamps_before = timestamps.copy()
+    synchronizer = TimeSeriesFeatureSynchronizer(reference_feature_index)
+    if method == "transform":
+        synchronizer.fit(data)
+    expected = getattr(synchronizer, method)(data, timestamps=timestamps)
+    actual = getattr(synchronizer, method)(data, timestamps=nested_timestamps)
+    np.testing.assert_array_equal(actual, expected)
+    np.testing.assert_array_equal(data, data_before)
+    np.testing.assert_array_equal(timestamps, timestamps_before)
+    np.testing.assert_array_equal(nested_timestamps, timestamps_before)
+
+
 def test_TimeSeriesFeatureSynchronizer():
     synchronizer = TimeSeriesFeatureSynchronizer()
 
