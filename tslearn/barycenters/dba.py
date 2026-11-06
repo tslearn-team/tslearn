@@ -12,6 +12,7 @@ from sklearn.utils import check_random_state
 
 from tslearn.backend import instantiate_backend
 from tslearn.barycenters.utils import _set_weights
+from tslearn.metrics import GLOBAL_CONSTRAINT_CODE
 from tslearn.metrics._dtw import _njit_dtw_path
 from tslearn.utils import to_time_series_dataset, to_time_series
 from tslearn.utils.utils import _to_time_series
@@ -196,6 +197,9 @@ def dtw_barycenter_averaging_petitjean(
        Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
     """
     backend = instantiate_backend("numpy")
+    if metric_params is not None and "global_constraint" in metric_params:
+        metric_params = metric_params.copy()
+        metric_params["global_constraint"] = GLOBAL_CONSTRAINT_CODE[metric_params.get("global_constraint")]
 
     X_ = to_time_series_dataset(X, be=backend)
     if barycenter_size is None:
@@ -704,6 +708,9 @@ def dtw_barycenter_averaging_one_init(
        Pattern Recognition, 74, 340-358.
     """
     backend = instantiate_backend("numpy")
+    if metric_params is not None:
+        metric_params = metric_params.copy()
+        metric_params["global_constraint"] = GLOBAL_CONSTRAINT_CODE[metric_params.get("global_constraint")]
 
     X_ = to_time_series_dataset(X, be=backend)
     if barycenter_size is None:
@@ -845,6 +852,9 @@ def dtw_barycenter_averaging_subgradient(
     """
     rng = check_random_state(random_state)
     backend = instantiate_backend("numpy")
+    if metric_params is not None:
+        metric_params = metric_params.copy()
+        metric_params["global_constraint"] = GLOBAL_CONSTRAINT_CODE[metric_params.get("global_constraint")]
 
     X_ = to_time_series_dataset(X, be=backend)
     if barycenter_size is None:
