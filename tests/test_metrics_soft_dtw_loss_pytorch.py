@@ -60,3 +60,12 @@ def test_no_torch():
     with pytest.raises(ValueError,
                        match="Could not use SoftDTWLossPyTorch since torch is not installed"):
         tslearn.metrics.SoftDTWLossPyTorch()
+
+
+def test_soft_dtw_loss_pytorch_precision():
+    torch = pytest.importorskip("torch")
+
+    for dtype, eps in [(torch.float64, 1e-06), (torch.float32, 1e-03)]:
+        x = torch.tensor([[[0.1], [0.6], [-0.3]]], dtype=dtype, requires_grad=True)
+        y = torch.tensor([[[0.2], [-0.5], [0.4], [0.1]]], dtype=dtype, requires_grad=True)
+        assert torch.autograd.gradcheck(tslearn.metrics.SoftDTWLossPyTorch(), (x, y), eps=eps)
