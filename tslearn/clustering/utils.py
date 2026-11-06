@@ -330,6 +330,18 @@ def silhouette_samples(X, labels, metric=None, metric_params=None,
     0.13383800...
     """
     if metric == "precomputed":
+        if metric_params is not None:
+            raise TypeError("metric_params has no effect when "
+                            "metric='precomputed'")
+        if n_jobs is not None:
+            raise TypeError("n_jobs has no effect when metric='precomputed'")
+        if verbose != 0:
+            raise TypeError("verbose has no effect when "
+                            "metric='precomputed'")
+        if kwds:
+            unexpected = next(iter(kwds))
+            raise TypeError("silhouette_samples() got an unexpected keyword "
+                            "argument '%s'" % unexpected)
         return sklearn_silhouette_samples(X=X,
                                           labels=labels,
                                           metric="precomputed")
