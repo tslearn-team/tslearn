@@ -1,5 +1,7 @@
 import numpy as np
 
+import pytest
+
 import tslearn.barycenters
 from tslearn.utils import to_time_series
 
@@ -139,6 +141,62 @@ def test_dba():
         ),
         time_series.reshape(sz, d)
     )
+
+
+@pytest.mark.parametrize(
+    'metric_params',
+    [{"global_constraint": "sakoe_chiba",
+      "sakoe_chiba_radius": 0,},
+     {"sakoe_chiba_radius": 0}
+    ]
+)
+def test_dba_global_constraint(metric_params):
+    x = np.array([
+        [[0.], [0.], [0.], [1.], [0.]],
+        [[0.], [1.], [0.], [0.], [0.]],
+    ])
+    actual = tslearn.barycenters.dtw_barycenter_averaging_petitjean(
+        x,
+        init_barycenter=x[0],
+        metric_params=metric_params,
+    )
+    np.testing.assert_allclose(actual, x.mean(axis=0))
+    actual = tslearn.barycenters.dtw_barycenter_averaging(
+        x,
+        init_barycenter=x[0],
+        metric_params=metric_params
+    )
+    np.testing.assert_allclose(actual, x.mean(axis=0))
+    actual = tslearn.barycenters.dtw_barycenter_averaging_subgradient(
+        x,
+        init_barycenter=x[0],
+        metric_params=metric_params,
+        initial_step_size=0.25,
+        final_step_size=0.25,
+        random_state=1
+    )
+    np.testing.assert_allclose(actual, x.mean(axis=0))
+    actual = tslearn.barycenters.dtw_barycenter_averaging_petitjean(
+        x,
+        init_barycenter=x[0],
+        metric_params=metric_params,
+    )
+    np.testing.assert_allclose(actual, x.mean(axis=0))
+    actual = tslearn.barycenters.dtw_barycenter_averaging(
+        x,
+        init_barycenter=x[0],
+        metric_params=metric_params,
+    )
+    np.testing.assert_allclose(actual, x.mean(axis=0))
+    actual = tslearn.barycenters.dtw_barycenter_averaging_subgradient(
+        x,
+        init_barycenter=x[0],
+        metric_params=metric_params,
+        initial_step_size=0.25,
+        final_step_size=0.25,
+        random_state=1
+    )
+    np.testing.assert_allclose(actual, x.mean(axis=0))
 
 
 def test_dba_subgradient_weights():

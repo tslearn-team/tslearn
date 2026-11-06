@@ -61,8 +61,6 @@ class NonMyopicEarlyClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
     pyck_ : array like of shape (__n_classes, n_cluster)
         Contains the probabilities of being of true class y given a cluster ck
 
-    X_fit_dims : tuple of the same shape as the training dataset
-
 
     Examples
     --------
