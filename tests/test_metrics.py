@@ -546,22 +546,54 @@ def test_masks():
             )
 
 
-def test_gak_log_and_linear_recursions_agree():
-    # The log-space recursion is only used when the linear one overflows, so
-    # check that both give the same answer on inputs where both are valid.
+@pytest.mark.parametrize("be", backends)
+def test_gak_log_and_linear_recursions_agree(be):
+    # Check agreement on inputs where the linear result is representable.
     from tslearn.metrics._gak import (
+        _gak_from_gram_matrix,
+        _log_gak_from_gram_matrix,
         _njit_gak_from_gram_matrix,
         _njit_log_gak_from_gram_matrix,
     )
 
+    backend = instantiate_backend(be)
+    linear = (
+        _njit_gak_from_gram_matrix if backend.is_numpy
+        else _gak_from_gram_matrix
+    )
+    logarithmic = (
+        _njit_log_gak_from_gram_matrix if backend.is_numpy
+        else _log_gak_from_gram_matrix
+    )
     rng = np.random.RandomState(0)
     for sz1, sz2 in [(1, 1), (1, 7), (7, 1), (5, 5), (30, 20)]:
-        log_gram = -np.abs(rng.randn(sz1, sz2))
+        log_gram = backend.array(
+            -np.abs(rng.randn(sz1, sz2)), dtype=backend.float64
+        )
         np.testing.assert_allclose(
-            _njit_log_gak_from_gram_matrix(log_gram),
-            np.log(_njit_gak_from_gram_matrix(np.exp(log_gram))),
+            logarithmic(log_gram),
+            backend.log(linear(backend.exp(log_gram))),
             rtol=1e-10,
         )
+
+
+@pytest.mark.parametrize("be", backends)
+@pytest.mark.parametrize("shape", [(1, 7), (7, 1)])
+@pytest.mark.parametrize("log_weight", [-1000.0, -np.inf])
+def test_gak_log_recursion_underflow(be, shape, log_weight):
+    from tslearn.metrics._gak import (
+        _log_gak_from_gram_matrix,
+        _njit_log_gak_from_gram_matrix,
+    )
+
+    backend = instantiate_backend(be)
+    logarithmic = (
+        _njit_log_gak_from_gram_matrix if backend.is_numpy
+        else _log_gak_from_gram_matrix
+    )
+    log_gram = backend.array(np.full(shape, log_weight), dtype=backend.float64)
+    # A single row or column has exactly one alignment path.
+    np.testing.assert_allclose(logarithmic(log_gram), 7 * log_weight)
 
 
 def test_gak_long_time_series():

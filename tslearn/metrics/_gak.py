@@ -256,6 +256,15 @@ def unnormalized_gak(s1, s2, sigma=1.0, be=None):
 
 
 def _log_gram_matrix(s1, s2, sigma, backend):
+    if backend.is_numpy:
+        log_gram = backend.cdist(s1, s2, "sqeuclidean")
+        numpy.negative(log_gram, out=log_gram)
+        log_gram /= 2 * sigma * sigma
+        correction = numpy.exp(log_gram)
+        numpy.subtract(2, correction, out=correction)
+        numpy.log(correction, out=correction)
+        log_gram -= correction
+        return log_gram
     log_gram = -backend.cdist(s1, s2, "sqeuclidean") / (2 * sigma * sigma)
     log_gram -= backend.log(2 - backend.exp(log_gram))
     return log_gram
@@ -275,13 +284,29 @@ def _log_unnormalized_gak(s1, s2, sigma, backend):
     The unnormalized kernel sums over every alignment path, so it grows like
     the central Delannoy numbers (:math:`\\approx (3 + 2\\sqrt{2})^{sz}`) and
     leaves the range of a 64-bit float for time series longer than about 405
-    samples. The recursion is therefore evaluated in linear space first, which
-    is cheaper, and only re-run in log space when that result is not usable.
+    samples. Use linear space first unless a lower bound proves overflow,
+    and fall back to log space whenever the linear result is not usable.
     """
     log_gram = _log_gram_matrix(s1, s2, sigma, backend)
     if backend.is_numpy:
         gak_from_gram = _njit_gak_from_gram_matrix
         log_gak_from_gram = _njit_log_gak_from_gram_matrix
+        n, m = log_gram.shape
+        log_max = math.log(numpy.finfo(log_gram.dtype).max)
+        # The Delannoy upper bound rules out overflow for short series.
+        if n and m and (n + m - 2) * math.log(1 + math.sqrt(2)) > log_max:
+            # Count just paths with k diagonal steps. Every path has at most
+            # n + m - 1 cells, each weighted by at least exp(min(log_gram)).
+            # This lower bound proves overflow without a linear recurrence.
+            k = min(n - 1, m - 1) // 2
+            log_paths = (
+                math.lgamma(n + m - 1 - k)
+                - math.lgamma(n - k)
+                - math.lgamma(m - k)
+                - math.lgamma(k + 1)
+            )
+            if log_paths + (n + m - 1) * log_gram.min() > log_max:
+                return log_gak_from_gram(log_gram)
     else:
         gak_from_gram = _gak_from_gram_matrix
         log_gak_from_gram = _log_gak_from_gram_matrix
@@ -296,6 +321,23 @@ def _log_unnormalized_gak(s1, s2, sigma, backend):
 
 
 def __make_gak_from_gram_matrix(backend):
+
+    if backend is numpy:
+        @njit(nogil=True)
+        def _gak_from_gram_matrix_rolling(gram):
+            sz1, sz2 = gram.shape
+            row = numpy.zeros(sz2 + 1, dtype=gram.dtype)
+            row[0] = 1.0
+            for i in range(sz1):
+                diag = row[0]
+                row[0] = 0.0
+                for j in range(sz2):
+                    top = row[j + 1]
+                    row[j + 1] = (top + row[j] + diag) * gram[i, j]
+                    diag = top
+            return row[-1]
+
+        return _gak_from_gram_matrix_rolling
 
     def _gak_from_gram_matrix_generic(
         gram
@@ -328,6 +370,105 @@ else:
 
 
 def __make_log_gak_from_gram_matrix(backend):
+
+    if backend is numpy:
+        @njit(nogil=True)
+        def _log_gak_from_gram_matrix_rolling(log_gram, gram):
+            sz1, sz2 = log_gram.shape
+            neg_inf = -numpy.inf
+            if gram.size:
+                # Scale cell (i, j) by r ** (i + j), where 2*r + r*r = 1.
+                # For weights <= 1 the recurrence is then a convex sum:
+                # intermediates stay bounded without per-cell logarithms.
+                scale = numpy.sqrt(2.0) - 1.0
+                scale_squared = scale * scale
+                row = numpy.zeros(sz2 + 1, dtype=log_gram.dtype)
+                row[0] = 1.0
+                safe = True
+                floor = numpy.finfo(log_gram.dtype).tiny
+                # The unweighted scaled recurrence is at least
+                # scale ** (max(i, j) + 1) for one-based cell indices.
+                # Every path uses at most sz1 + sz2 - 1 weights, so this
+                # bound proves that every intermediate stays normal.
+                lower_bound = (
+                    (sz1 + sz2 - 1) * numpy.min(log_gram)
+                    + (max(sz1, sz2) + 1) * numpy.log(scale)
+                )
+                if lower_bound > numpy.log(floor) + numpy.log(2.0):
+                    gram *= scale
+                    for i in range(sz1):
+                        diag = row[0]
+                        row[0] = 0.0
+                        left = 0.0
+                        for j in range(sz2):
+                            top = row[j + 1]
+                            value = (top + left + diag * scale) * gram[i, j]
+                            row[j + 1] = value
+                            left = value
+                            diag = top
+                    return numpy.log(row[-1]) - (sz1 + sz2) * numpy.log(scale)
+                for i in range(sz1):
+                    diag = row[0]
+                    row[0] = 0.0
+                    left = 0.0
+                    for j in range(sz2):
+                        top = row[j + 1]
+                        value = (
+                            (top + left) * scale + diag * scale_squared
+                        ) * gram[i, j]
+                        # Discard this attempt if scaling enters the
+                        # subnormal range, where relative accuracy degrades.
+                        if value < floor:
+                            safe = False
+                            break
+                        row[j + 1] = value
+                        left = value
+                        diag = top
+                    if not safe:
+                        break
+                if safe:
+                    return numpy.log(row[-1]) - (sz1 + sz2) * numpy.log(scale)
+
+            row = numpy.full(sz2 + 1, neg_inf, dtype=log_gram.dtype)
+            row[0] = 0.0
+            for i in range(sz1):
+                diag = row[0]
+                row[0] = neg_inf
+                for j in range(sz2):
+                    top = row[j + 1]
+                    left = row[j]
+                    # One predecessor contributes exp(0) = 1 exactly.
+                    max_pred = top
+                    other = left
+                    if left > max_pred:
+                        max_pred = left
+                        other = top
+                    if diag > max_pred:
+                        max_pred, diag = diag, max_pred
+                    if max_pred == neg_inf:
+                        row[j + 1] = neg_inf
+                    else:
+                        row[j + 1] = (
+                            max_pred
+                            + numpy.log(
+                                1.0 + numpy.exp(other - max_pred)
+                                + numpy.exp(diag - max_pred)
+                            )
+                            + log_gram[i, j]
+                        )
+                    diag = top
+            return row[-1]
+
+        def _log_gak_from_gram_matrix_numpy(log_gram):
+            # NumPy evaluates the independent exponentials in vectorized loops.
+            # Keep the dependent recurrence compiled, using its private buffer.
+            if log_gram.size and numpy.max(log_gram) <= 0.0:
+                gram = numpy.exp(log_gram)
+            else:
+                gram = numpy.empty((0, 0), dtype=log_gram.dtype)
+            return _log_gak_from_gram_matrix_rolling(log_gram, gram)
+
+        return _log_gak_from_gram_matrix_numpy
 
     def _log_gak_from_gram_matrix_generic(
         log_gram
