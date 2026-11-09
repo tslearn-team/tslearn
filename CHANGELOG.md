@@ -24,6 +24,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
   across iterations instead of the one from the last iteration. The best barycenter was kept by
   reference and overwritten by later in-place updates, so a non-monotonic run (e.g. with a large
   step size) could return a much worse result.
+* Preserve float64 precision of costs and gradients in `SoftDTWLossPyTorch`.
 * BDA computation methods now take into account explicit global constraint during centroid updates ([#803](https://github.com/tslearn-team/tslearn/issues/803))
 
 ### Removed

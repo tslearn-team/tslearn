@@ -95,8 +95,8 @@ else:
                 )
             D_ = D.detach().cpu().numpy()
             R_ = _njit_soft_dtw_batch(D_, gamma, mask)
-            gamma_tensor = torch.Tensor([gamma]).to(dev).type(dtype)
-            R = torch.Tensor(R_).to(dev).type(dtype)
+            gamma_tensor = torch.as_tensor([gamma], device=dev, dtype=dtype)
+            R = torch.as_tensor(R_, device=dev, dtype=dtype)
             ctx.save_for_backward(D, R,gamma_tensor)
             return R[:, -1, -1]
 
@@ -110,7 +110,7 @@ else:
             R_ = R.detach().cpu().numpy()
             gamma = gamma_tensor.item()
             E_ = _njit_soft_dtw_grad_batch(D_, R_, gamma)
-            E = torch.Tensor(E_).to(dev).type(dtype)
+            E = torch.as_tensor(E_, device=dev, dtype=dtype)
             return grad_output.reshape(-1).to(dtype=E.dtype).view(-1, 1, 1) * E, None, None, None, None
 
 
