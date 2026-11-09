@@ -158,9 +158,6 @@ else:
         This divergence has the advantage of being minimized for :math:`X = Y`
         and being exactly 0 in that case.
 
-        Accumulated costs and alignment gradients retain the input floating-point
-        dtype when converted between NumPy and PyTorch, including float64.
-
         Parameters
         ----------
         gamma : float
