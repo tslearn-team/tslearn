@@ -193,9 +193,6 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin, BaseEstimator):
     support_ : array-like, shape = [n_SV]
         Indices of support vectors.
 
-    n_support_ : array-like, dtype=int32, shape = [n_class]
-        Number of support vectors for each class.
-
     support_vectors_ : list of arrays of shape [n_SV, sz, d]
         List of support vectors in tslearn dataset format, one array per class
 
