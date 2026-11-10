@@ -273,6 +273,20 @@ def test_kshape():
     assert kshape.labels_[0] != kshape.labels_[10]
 
 
+def test_kshape_unnormalized_input():
+    # predict z-normalizes its input, so fit must too, or labels_ disagrees
+    # with predict on the training data
+    rng = np.random.RandomState(0)
+    X = rng.randn(15, 30, 1).cumsum(axis=1)
+
+    ks = KShape(n_clusters=3, random_state=0).fit(X)
+    np.testing.assert_array_equal(ks.labels_, ks.predict(X))
+
+    X_norm = TimeSeriesScalerMeanVariance().fit_transform(X)
+    ks_norm = KShape(n_clusters=3, random_state=0).fit(X_norm)
+    np.testing.assert_array_equal(ks.labels_, ks_norm.labels_)
+
+
 def test_silhouette():
     np.random.seed(0)
     X = random_walks(n_ts=20, sz=16, d=1)

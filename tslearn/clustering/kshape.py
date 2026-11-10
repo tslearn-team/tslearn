@@ -78,6 +78,9 @@ class KShape(TimeSeriesCentroidBasedClusteringMixin,
     -----
         This method requires a dataset of equal-sized time series.
 
+        Time series are z-normalized before clustering, in both ``fit`` and
+        ``predict``.
+
     Examples
     --------
     >>> from tslearn.generators import random_walks
@@ -150,9 +153,11 @@ class KShape(TimeSeriesCentroidBasedClusteringMixin,
         self.norms_centroids_ = numpy.linalg.norm(self.cluster_centers_,
                                                   axis=(1, 2))
 
-    def _cross_dists(self, X):
+    def _cross_dists(self, X, norms=None):
+        if norms is None:
+            norms = self.norms_
         return 1. - cdist_normalized_cc(X, self.cluster_centers_,
-                                        norms1=self.norms_,
+                                        norms1=norms,
                                         norms2=self.norms_centroids_,
                                         self_similarity=False)
 
@@ -225,6 +230,7 @@ class KShape(TimeSeriesCentroidBasedClusteringMixin,
         self.n_iter_ = 0
 
         X_ = to_time_series_dataset(X)
+        X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
         self._X_fit = X_
         self.norms_ = numpy.linalg.norm(X_, axis=(1, 2))
 
@@ -296,5 +302,5 @@ class KShape(TimeSeriesCentroidBasedClusteringMixin,
 
         X_ = check_dims(X, X_fit_dims=self.cluster_centers_.shape)
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
-        dists = self._cross_dists(X_)
+        dists = self._cross_dists(X_, norms=numpy.linalg.norm(X_, axis=(1, 2)))
         return dists.argmin(axis=1)
