@@ -19,7 +19,6 @@ import matplotlib.pyplot as plt
 
 from tslearn.clustering import KShape
 from tslearn.datasets import CachedDatasets
-from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 
 numpy.random.seed(0)
 X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")
@@ -27,11 +26,9 @@ X_train, y_train, X_test, y_test = CachedDatasets().load_dataset("Trace")
 X_train = X_train[y_train < 4]
 X_train = X_train[:50]
 numpy.random.shuffle(X_train)
-# For this method to operate properly, prior scaling is required
-X_train = TimeSeriesScalerMeanVariance().fit_transform(X_train)
 sz = X_train.shape[1]
 
-# kShape clustering
+# kShape clustering, KShape z-normalizes the time series itself
 init=numpy.array([X_train[44], X_train[47], X_train[0]])
 ks = KShape(n_clusters=3, verbose=True, init=init)
 y_pred = ks.fit_predict(X_train)
