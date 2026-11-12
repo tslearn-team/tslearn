@@ -279,12 +279,9 @@ def test_kshape():
     n, sz, d = 15, 10, 3
     rng = np.random.RandomState(0)
     time_series = rng.randn(n, sz, d)
-    time_series = TimeSeriesScalerMeanVariance().fit_transform(time_series)
 
     ks = KShape(n_clusters=3, n_init=1, verbose=False,
                 random_state=rng).fit(time_series)
-    dists = ks._cross_dists(time_series)
-    np.testing.assert_allclose(ks.labels_, dists.argmin(axis=1))
     np.testing.assert_allclose(ks.labels_, ks.predict(time_series))
 
     with pytest.raises(ValueError):
@@ -304,11 +301,24 @@ def test_kshape():
         np.repeat(X2, 10, axis=0),
     ))
 
-    X = TimeSeriesScalerMeanVariance().fit_transform(X)
     kshape = KShape(n_clusters=2, n_init=5, random_state=rng).fit(X)
     assert all(kshape.labels_[0] == kshape.labels_[:10])
     assert all(kshape.labels_[10] == kshape.labels_[10:])
     assert kshape.labels_[0] != kshape.labels_[10]
+
+
+def test_kshape_unnormalized_input():
+    # predict z-normalizes its input, so fit must too, or labels_ disagrees
+    # with predict on the training data
+    rng = np.random.RandomState(0)
+    X = rng.randn(15, 30, 1).cumsum(axis=1)
+
+    ks = KShape(n_clusters=3, random_state=0).fit(X)
+    np.testing.assert_array_equal(ks.labels_, ks.predict(X))
+
+    X_norm = TimeSeriesScalerMeanVariance().fit_transform(X)
+    ks_norm = KShape(n_clusters=3, random_state=0).fit(X_norm)
+    np.testing.assert_array_equal(ks.labels_, ks_norm.labels_)
 
 
 def test_silhouette():

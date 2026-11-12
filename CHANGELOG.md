@@ -26,6 +26,8 @@ Changelogs for this project are recorded in this file since v0.2.0.
   step size) could return a much worse result.
 * Preserve float64 precision of costs and gradients in `SoftDTWLossPyTorch`.
 * BDA computation methods now take into account explicit global constraint during centroid updates ([#803](https://github.com/tslearn-team/tslearn/issues/803))
+* `KShape.fit` now z-normalizes its input, as `predict` already did, so `labels_` matches `predict`
+  on the training data when that data was not z-normalized beforehand ([#806](https://github.com/tslearn-team/tslearn/issues/806))
 
 ### Removed
 
