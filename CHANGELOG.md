@@ -26,15 +26,12 @@ Changelogs for this project are recorded in this file since v0.2.0.
   step size) could return a much worse result.
 * Preserve float64 precision of costs and gradients in `SoftDTWLossPyTorch`.
 * BDA computation methods now take into account explicit global constraint during centroid updates ([#803](https://github.com/tslearn-team/tslearn/issues/803))
-
+* `KernelKMeans` no longer keeps the `labels_` of a failed attempt when every initialization leads to an empty cluster. The model is now left unfitted (`labels_` is `None` and `predict` raises `NotFittedError`) and a `ConvergenceWarning` is emitted. ([#788](https://github.com/tslearn-team/tslearn/issues/788))
+* 
 ### Removed
 
 * Support for sklearn version 1.5 is dropped
 * Support for Python versions 3.10 is dropped
-
-### Fixed
-
-* `KernelKMeans` no longer keeps the `labels_` of a failed attempt when every initialization leads to an empty cluster. The model is now left unfitted (`labels_` is `None` and `predict` raises `NotFittedError`) and a `ConvergenceWarning` is emitted. ([#788](https://github.com/tslearn-team/tslearn/issues/788))
 
 ## [v0.10.0]
 
