@@ -104,7 +104,7 @@ def test_variable_length_piecewise():
                     to_time_series_dataset([
                         [-0.5, 1.5],
                         [2, -1],
-                        [2.5, 0.5],
+                        [2.5, 0.],
                         [0, 1/3],
                     ]))
 
@@ -113,7 +113,7 @@ def test_variable_length_piecewise():
                     to_time_series_dataset([
                         [0, 2],
                         [2, 0],
-                        [2, 2],
+                        [2, 1],
                         [1, 1],
                     ]))
 
@@ -122,7 +122,7 @@ def test_variable_length_piecewise():
                     to_time_series_dataset([
                         [[0, 2], [2, 2]],
                         [[2, 0], [0, 0]],
-                        [[2, 0], [2, 0]],
+                        [[2, 0], [1, 0]],
                         [[1, 0], [1, 1]]
                     ]))
 
