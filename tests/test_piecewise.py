@@ -47,6 +47,20 @@ def test_paa_length_not_multiple_of_n_segments():
     )
 
 
+def test_sax_inverse_transform_length_not_multiple_of_n_segments():
+    # 19 time steps in 10 segments: the first segment has 1 time step, the
+    # others 2, and each time step takes the value of its segment's symbol
+    rng = np.random.RandomState(0)
+    X = rng.randn(2, 19, 1)
+    sax = SymbolicAggregateApproximation(n_segments=10,
+                                         alphabet_size_avg=5).fit(X)
+    X_sax = sax.transform(X)
+    expected = np.repeat(sax.breakpoints_avg_middle_[X_sax[..., 0]],
+                         [1] + [2] * 9, axis=1)
+    np.testing.assert_allclose(sax.inverse_transform(X_sax)[..., 0],
+                               expected)
+
+
 @pytest.mark.parametrize("sz, n_segments", [(19, 10), (60, 16), (150, 64)])
 def test_piecewise_distances_lower_bound_euclidean(sz, n_segments):
     rng = np.random.RandomState(0)
