@@ -224,7 +224,6 @@ class KShape(TimeSeriesCentroidBasedClusteringMixin,
         self.n_iter_ = 0
 
         X_ = to_time_series_dataset(X)
-        self._X_fit = X_
         self.norms_ = numpy.linalg.norm(X_, axis=(1, 2))
 
         _check_initial_guess(self.init, self.n_clusters)

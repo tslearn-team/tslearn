@@ -402,7 +402,6 @@ class TimeSeriesCentroidBasedClusteringMixin(TimeSeriesMixin):
         if numpy.isfinite(inertia) and (centroids is not None):
             self.cluster_centers_ = centroids
             self._assign(X_fitted)
-            self._X_fit = X_fitted
             self.inertia_ = inertia
             self.n_features_in_ = X_fitted.shape[-1]
         else:
@@ -413,7 +412,6 @@ class TimeSeriesCentroidBasedClusteringMixin(TimeSeriesMixin):
             self.cluster_centers_ = None
             self.inertia_ = numpy.inf
             self.n_iter_ = 0
-            self._X_fit = None
             warnings.warn(
                 "All initializations of %s led to at least one empty "
                 "cluster, so no valid clustering could be found. The model "

@@ -798,7 +798,6 @@ class TimeSeriesKMeans(
         self.labels_ = None
         self.inertia_ = numpy.inf
         self.cluster_centers_ = None
-        self._X_fit = None
         self._squared_inertia = True
 
         self.n_iter_ = 0

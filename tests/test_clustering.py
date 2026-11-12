@@ -148,7 +148,6 @@ def test_kmeans():
         km_nofit = TimeSeriesKMeans(n_clusters=101,
                                     verbose=False,
                                     random_state=rng).fit(time_series)
-    assert(km_nofit._X_fit is None)
     assert km_nofit.labels_ is None
     assert km_nofit.cluster_centers_ is None
 
@@ -297,7 +296,6 @@ def test_all_inits_empty_cluster(estimator_class):
     with pytest.warns(ConvergenceWarning, match="empty cluster"):
         model.fit(X)
 
-    assert model._X_fit is None
     assert model.labels_ is None
     assert model.cluster_centers_ is None
     assert model.inertia_ == np.inf
