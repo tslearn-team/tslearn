@@ -1,10 +1,13 @@
 """K-means related clustering for time series."""
+import warnings
+
 import numpy
 
 from scipy.spatial.distance import cdist
 
 from sklearn.base import ClusterMixin, TransformerMixin, BaseEstimator
 from sklearn.cluster._kmeans import _kmeans_plusplus
+from sklearn.exceptions import ConvergenceWarning
 from sklearn.metrics.pairwise import pairwise_kernels
 from sklearn.utils import check_random_state
 from sklearn.utils.validation import _check_sample_weight
@@ -248,6 +251,12 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
         check_is_fitted(self, "_X_fit")
         return True
 
+    def __sklearn_is_fitted__(self):
+        # ``_X_fit`` is None when every initialization failed (see ``fit``),
+        # in which case the model must not be considered fitted even though
+        # the attribute exists.
+        return getattr(self, "_X_fit", None) is not None
+
     def _get_model_params(self):
         params = super()._get_model_params()
         params.update({"_X_fit": self._X_fit})
@@ -384,6 +393,21 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
             self.inertia_ = min_inertia
             self._X_fit = X
             self.n_features_in_ = X.shape[-1]
+        else:
+            # Every initialization raised EmptyClusterError: discard the
+            # attributes left over from the last failed attempt so that the
+            # model does not look fitted.
+            self.labels_ = None
+            self.inertia_ = numpy.inf
+            warnings.warn(
+                "All initializations of %s led to at least one empty "
+                "cluster, so no valid clustering could be found. The model "
+                "is left unfitted (labels_ is None, and predict will raise "
+                "NotFittedError). Consider decreasing n_clusters or "
+                "increasing n_init."
+                % type(self).__name__,
+                ConvergenceWarning
+            )
         return self
 
     def _compute_dist(self, K, dist):
@@ -445,7 +469,7 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
             Index of the cluster each sample belongs to.
         """
         X = check_array(X, allow_nd=True, force_all_finite=False)
-        check_is_fitted(self, "_X_fit")
+        check_is_fitted(self)
         X = check_dims(X, X_fit_dims=self._X_fit.shape, check_n_features_only=True)
         K = self._get_kernel(X, self._X_fit)
         n_samples = X.shape[0]
