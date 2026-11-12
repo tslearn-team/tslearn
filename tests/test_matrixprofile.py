@@ -22,3 +22,22 @@ def test_consistent_with_stumpy():
 
     np.testing.assert_allclose(X_tr.ravel(), X_tr_stumpy)
     np.testing.assert_allclose(X_tr, X_tr_stumpy_wrap)
+
+
+@pytest.mark.parametrize("scale", [True, False])
+def test_variable_length(scale):
+    from tslearn.matrix_profile import MatrixProfile
+    from tslearn.utils import to_time_series_dataset
+
+    rng = np.random.RandomState(0)
+    short_ts = rng.randn(15, 1)
+    long_ts = rng.randn(20, 1)
+    X = to_time_series_dataset([short_ts, long_ts])
+
+    mp = MatrixProfile(subsequence_length=4, scale=scale)
+    X_tr = mp.fit_transform(X)
+
+    assert X_tr.shape == (2, 17, 1)
+    np.testing.assert_allclose(X_tr[0, :12], mp.fit_transform([short_ts])[0])
+    np.testing.assert_array_equal(X_tr[0, 12:], np.inf)
+    np.testing.assert_allclose(X_tr[1], mp.fit_transform([long_ts])[0])
