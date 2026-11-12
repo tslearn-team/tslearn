@@ -112,8 +112,7 @@ class KShape(TimeSeriesCentroidBasedClusteringMixin,
         bool
         """
 
-        check_is_fitted(self,
-                        ['cluster_centers_', 'norms_', 'norms_centroids_'])
+        check_is_fitted(self)
         return True
 
     def _shape_extraction(self, X, k):

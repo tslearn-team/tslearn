@@ -614,7 +614,7 @@ class TimeSeriesKMeans(
         self.init = init
 
     def _is_fitted(self):
-        check_is_fitted(self, ["cluster_centers_"])
+        check_is_fitted(self)
         return True
 
     def _get_metric_params(self):
