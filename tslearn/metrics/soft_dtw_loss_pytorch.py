@@ -52,7 +52,7 @@ else:
                 Regularization parameter.
                 Lower is less smoothed (closer to true DTW).
             global_constraint : {0, 1, 2} (default: 0)
-                Global constraint to restrict admissible paths for DTW:
+                Global constraint to restrict admissible paths for soft-DTW:
                 - "itakura" if 1
                 - "sakoe_chiba" if 2
                 - no constraint otherwise
@@ -87,11 +87,16 @@ else:
             dtype = D.dtype
             _, m, n = D.shape
             mask = _njit_compute_mask(m, n, global_constraint, sakoe_chiba_radius, itakura_max_slope)
-            D[:, ~mask] = torch.inf
+            if not np.all(mask):
+                # Out-of-place operation for backward pass
+                D = D.masked_fill(
+                    torch.as_tensor(~mask, device=dev),
+                    torch.inf
+                )
             D_ = D.detach().cpu().numpy()
             R_ = _njit_soft_dtw_batch(D_, gamma, mask)
-            gamma_tensor = torch.Tensor([gamma]).to(dev).type(dtype)
-            R = torch.Tensor(R_).to(dev).type(dtype)
+            gamma_tensor = torch.as_tensor([gamma], device=dev, dtype=dtype)
+            R = torch.as_tensor(R_, device=dev, dtype=dtype)
             ctx.save_for_backward(D, R,gamma_tensor)
             return R[:, -1, -1]
 
@@ -105,7 +110,7 @@ else:
             R_ = R.detach().cpu().numpy()
             gamma = gamma_tensor.item()
             E_ = _njit_soft_dtw_grad_batch(D_, R_, gamma)
-            E = torch.Tensor(E_).to(dev).type(dtype)
+            E = torch.as_tensor(E_, device=dev, dtype=dtype)
             return grad_output.reshape(-1).to(dtype=E.dtype).view(-1, 1, 1) * E, None, None, None, None
 
 
@@ -170,7 +175,7 @@ else:
             Optional, default: None
             If None, the squared Euclidean distance is used.
         global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
-            Global constraint to restrict admissible paths for DTW.
+            Global constraint to restrict admissible paths for soft-DTW.
         sakoe_chiba_radius : int or None (default: None)
             Radius to be used for Sakoe-Chiba band global constraint.
             The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [1]_,

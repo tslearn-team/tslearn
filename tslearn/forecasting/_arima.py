@@ -13,7 +13,6 @@ from statsmodels.tools.sm_exceptions import InterpolationWarning
 from statsmodels.tsa.stattools import kpss
 
 from tslearn.bases import TimeSeriesMixin, BaseModelPackage
-from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from tslearn.utils import check_array, to_time_series_dataset, check_dims
 from tslearn.utils.utils import _ts_size
 
@@ -101,7 +100,7 @@ def _varma_next(X, residuals, ar_coeffs, ma_coeffs, intercept):
         ar_forecast += np.dot(X[:, n_samples - k - 1], ar_coeffs[k])
     ma_forecast = np.zeros((n_ts, n_features_in))
     for k in range(ma_coeffs.shape[0]):
-        ma_forecast += np.dot(residuals[:, k], ma_coeffs[k])
+        ma_forecast += np.dot(residuals[:, -k - 1], ma_coeffs[k])
 
     intercept = np.zeros(n_features_in) if intercept.shape[0] == 0 else intercept
 
@@ -296,7 +295,7 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         ma_start_params = compute_var(self.q, residuals)[1]
 
         return np.concatenate(
-            (constant_params, ar_start_params.T.ravel(), ma_start_params.T.ravel())
+            (constant_params, ar_start_params.ravel(), ma_start_params.ravel())
         )
 
     def _unravel_params(self, params, n_features_in=None):
@@ -455,13 +454,6 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         tags.target_tags.required = False
         tags.allow_variable_length = True
         tags.input_tags.allow_nan = True
-        return tags
-
-    def _more_tags(self):  # pragma: no cover
-        tags = super()._more_tags()
-        tags.update(
-            {"requires_y": False, "allow_nan": True, ALLOW_VARIABLE_LENGTH: True}
-        )
         return tags
 
 
@@ -795,11 +787,4 @@ class AutoVARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         tags.target_tags.required = False
         tags.allow_variable_length = True
         tags.input_tags.allow_nan = True
-        return tags
-
-    def _more_tags(self):  # pragma: no cover
-        tags = super()._more_tags()
-        tags.update(
-            {"requires_y": False, "allow_nan": True, ALLOW_VARIABLE_LENGTH: True}
-        )
         return tags

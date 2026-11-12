@@ -12,6 +12,7 @@ from sklearn.utils import check_random_state
 
 from tslearn.backend import instantiate_backend
 from tslearn.barycenters.utils import _set_weights
+from tslearn.metrics import GLOBAL_CONSTRAINT_CODE
 from tslearn.metrics._dtw import _njit_dtw_path
 from tslearn.utils import to_time_series_dataset, to_time_series
 from tslearn.utils.utils import _to_time_series
@@ -146,7 +147,7 @@ def dtw_barycenter_averaging_petitjean(
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
-        ``-1`` means using all processors. See scikit-learns'
+        ``-1`` means using all processors. See scikit-learn's
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`__
         for more details.
 
@@ -196,6 +197,9 @@ def dtw_barycenter_averaging_petitjean(
        Recognition, Elsevier, 2011, Vol. 44, Num. 3, pp. 678-693
     """
     backend = instantiate_backend("numpy")
+    if metric_params is not None and "global_constraint" in metric_params:
+        metric_params = metric_params.copy()
+        metric_params["global_constraint"] = GLOBAL_CONSTRAINT_CODE[metric_params.get("global_constraint")]
 
     X_ = to_time_series_dataset(X, be=backend)
     if barycenter_size is None:
@@ -258,7 +262,7 @@ def _mm_assignment(
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
-        ``-1`` means using all processors. See scikit-learns'
+        ``-1`` means using all processors. See scikit-learn's
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`__
         for more details.
 
@@ -548,7 +552,7 @@ def dtw_barycenter_averaging(
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
-        ``-1`` means using all processors. See scikit-learns'
+        ``-1`` means using all processors. See scikit-learn's
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`__
         for more details.
 
@@ -680,7 +684,7 @@ def dtw_barycenter_averaging_one_init(
     n_jobs : int or None, optional (default=None)
         The number of jobs to run in parallel.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
-        ``-1`` means using all processors. See scikit-learns'
+        ``-1`` means using all processors. See scikit-learn's
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`__
         for more details.
 
@@ -704,6 +708,9 @@ def dtw_barycenter_averaging_one_init(
        Pattern Recognition, 74, 340-358.
     """
     backend = instantiate_backend("numpy")
+    if metric_params is not None:
+        metric_params = metric_params.copy()
+        metric_params["global_constraint"] = GLOBAL_CONSTRAINT_CODE[metric_params.get("global_constraint")]
 
     X_ = to_time_series_dataset(X, be=backend)
     if barycenter_size is None:
@@ -791,8 +798,8 @@ def dtw_barycenter_averaging_subgradient(
         Default value is the one suggested in [2]_.
 
     tol : float (default: 1e-5)
-        Tolerance to use for early stopping: if the decrease in cost is lower
-        than this value, the
+        Tolerance to use for early stopping: if the absolute change in cost
+        is lower than this value, the
         Expectation-Maximization procedure stops.
 
     random_state : int, RandomState instance or None, optional (default=None)
@@ -845,6 +852,9 @@ def dtw_barycenter_averaging_subgradient(
     """
     rng = check_random_state(random_state)
     backend = instantiate_backend("numpy")
+    if metric_params is not None:
+        metric_params = metric_params.copy()
+        metric_params["global_constraint"] = GLOBAL_CONSTRAINT_CODE[metric_params.get("global_constraint")]
 
     X_ = to_time_series_dataset(X, be=backend)
     if barycenter_size is None:
@@ -859,34 +869,40 @@ def dtw_barycenter_averaging_subgradient(
             be=backend
         )
         barycenter_size = barycenter.shape[0]
-    cost_prev, cost = numpy.inf, numpy.inf
     eta = initial_step_size
     n = X_.shape[0]
+    # Copy, as `_subgradient_update_barycenter` updates the barycenter in
+    # place: without this the saved best would alias `barycenter` and be
+    # overwritten by later updates, so a non-monotonic run would return the
+    # last (possibly much worse) barycenter instead of the best one.
+    best_barycenter = barycenter.copy()
+    best_cost = numpy.inf
     for it in range(max_iter):
         shuffled_indices = rng.permutation(n)
         for idx in shuffled_indices:
-            Xi = X_[idx:idx+1]
-            wi = weights[idx:idx+1]
-            list_p_k, cost = _mm_assignment(Xi, barycenter, weights,
-                                            metric_params)
-            list_diag_v_k, list_w_k = _subgradient_valence_warping(
-                list_p_k,
-                barycenter_size,
-                wi
-            )
-            if verbose:
-                print("[DBA] epoch %d, cost: %.3f" % (it + 1, cost))
-            barycenter = _subgradient_update_barycenter(Xi, list_diag_v_k,
-                                                        list_w_k, wi.sum(),
-                                                        barycenter, eta)
-            if it == 0:
-                eta -= (initial_step_size - final_step_size) / n
-        if abs(cost_prev - cost) < tol:
+            wi = weights[idx:idx + 1]
+            if wi[0]:
+                Xi = X_[idx:idx+1]
+                list_p_k, _ = _mm_assignment(Xi, barycenter, numpy.ones(1),
+                                                metric_params)
+                list_diag_v_k, list_w_k = _subgradient_valence_warping(
+                    list_p_k,
+                    barycenter_size,
+                    wi
+                )
+                # Each step uses a single series, so its weight is scaled by
+                # n / weights.sum() rather than normalized away
+                barycenter = _subgradient_update_barycenter(Xi, list_diag_v_k,
+                                                            list_w_k, weights.sum() / n,
+                                                            barycenter, eta)
+                if it == 0:
+                    eta -= (initial_step_size - final_step_size) * wi[0]/ weights.sum()
+        _, cost = _mm_assignment(X_, barycenter, weights, metric_params)
+        if verbose:
+            print("[DBA] epoch %d, cost: %.3f" % (it + 1, cost))
+        if cost < best_cost:
+            best_barycenter = barycenter.copy()
+        if abs(best_cost - cost) < tol:
             break
-        elif cost_prev < cost:
-            warnings.warn("DBA loss is increasing while it should not be. "
-                          "Stopping optimization.", ConvergenceWarning)
-            break
-        else:
-            cost_prev = cost
-    return barycenter
+        best_cost = min(cost, best_cost)
+    return best_barycenter

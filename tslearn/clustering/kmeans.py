@@ -15,7 +15,6 @@ from tslearn.barycenters import (
     softdtw_barycenter,
 )
 from tslearn.bases import BaseModelPackage, TimeSeriesMixin
-from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from tslearn.metrics import (
     _cdist_dtw,
     _cdist_gak,
@@ -171,7 +170,7 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
         The number of jobs to run in parallel for GAK cross-similarity matrix
         computations.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
-        ``-1`` means using all processors. See scikit-learns'
+        ``-1`` means using all processors. See scikit-learn's
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`_
         for more details.
 
@@ -454,18 +453,6 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
         self._compute_dist(K, dist)
         return dist.argmin(axis=1)
 
-    def _more_tags(self):
-        tags = super()._more_tags()
-        sample_weight_failure_msg = "Not supported due to clusters initialization"
-        tags.update({
-            "allow_nan": True,
-            ALLOW_VARIABLE_LENGTH: True,
-        })
-        tags["_xfail_checks"].update({
-            "check_sample_weight_equivalence_on_dense_data": sample_weight_failure_msg,
-        })
-        return tags
-
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
         tags.input_tags.allow_nan = True
@@ -522,7 +509,7 @@ class TimeSeriesKMeans(
         Ignored if the cross-distance matrix cannot be computed using
         parallelization.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
-        ``-1`` means using all processors. See scikit-learns'
+        ``-1`` means using all processors. See scikit-learn's
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`_
         for more details.
 
@@ -934,14 +921,6 @@ class TimeSeriesKMeans(
             check_n_features_only=(self.metric != "euclidean"),
         )
         return self._transform(X)
-
-    def _more_tags(self):
-        tags = super()._more_tags()
-        tags.update({
-            "allow_nan": self.metric != "euclidean",
-            ALLOW_VARIABLE_LENGTH: self.metric != "euclidean"}
-        )
-        return tags
 
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()

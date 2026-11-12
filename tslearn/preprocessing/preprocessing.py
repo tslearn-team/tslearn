@@ -7,7 +7,6 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.utils.validation import check_is_fitted
 
 from tslearn.bases import TimeSeriesMixin
-from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from tslearn.utils import (
     check_variable_length_input,
     to_time_series_dataset,
@@ -125,11 +124,6 @@ class TimeSeriesResampler(TimeSeriesMixin, TransformerMixin, BaseEstimator):
                     X_[i, :sz, di]
                     )
         return X_out
-
-    def _more_tags(self):
-        tags = super()._more_tags()
-        tags.update({'allow_nan': True, ALLOW_VARIABLE_LENGTH: True})
-        return tags
 
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
@@ -325,11 +319,6 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         X_ += min_
         return X_
 
-    def _more_tags(self):
-        tags = super()._more_tags()
-        tags.update({'allow_nan': True, ALLOW_VARIABLE_LENGTH: True})
-        return tags
-
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
         tags.input_tags.allow_nan = True
@@ -513,11 +502,6 @@ class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstima
         X_ *= std_ / self.std
         X_ += mean_
         return X_
-
-    def _more_tags(self):
-        tags = super()._more_tags()
-        tags.update({'allow_nan': True, ALLOW_VARIABLE_LENGTH: True})
-        return tags
 
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
@@ -755,14 +739,6 @@ class TimeSeriesImputer(TimeSeriesMixin, TransformerMixin, BaseEstimator):
                 X_[ts_index] = imputer(ts)
 
         return to_time_series_dataset(X_)
-
-    def _more_tags(self):
-        tags = super()._more_tags()
-        tags.update({
-            'allow_nan': True,
-            ALLOW_VARIABLE_LENGTH: True,
-        })
-        return tags
 
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()

@@ -1,3 +1,5 @@
+import re
+
 import numpy as np
 
 import pytest
@@ -29,6 +31,41 @@ def test_inputs():
         assert performance.mse(y_true, y_pred, timestamps_weights=[1, 0, 0]) == 1
         assert performance.mse(y_true, y_pred, multioutput=[1]) == 1
         assert performance.mase(y_true, y_pred, y_true) == 1
+
+
+@pytest.mark.parametrize(
+    "metric", [performance.mae, performance.mse, performance.mase]
+)
+@pytest.mark.parametrize(
+    "prediction_shape",
+    [
+        (3, 2, 2), (2, 2, 3), (1, 6, 2), (2, 6, 1), (1, 3, 4),
+        (1, 3, 2), (2, 2, 2), (2, 3, 1)
+    ]
+)
+def test_metrics_reject_mismatched_shapes(metric, prediction_shape):
+    y_true = np.arange(12.0).reshape(2, 3, 2)
+    y_pred = np.arange(np.prod(prediction_shape)).reshape(prediction_shape)
+    kwargs = {"train_data": y_true} if metric is performance.mase else {}
+    message = (
+        "y_true and y_pred must have the same shape, "
+        f"got {y_true.shape} and {y_pred.shape}."
+    )
+    with pytest.raises(ValueError, match=re.escape(message)):
+        metric(y_true, y_pred, **kwargs)
+
+
+@pytest.mark.parametrize(
+    "metric", [performance.mae, performance.mse, performance.mase]
+)
+@pytest.mark.parametrize("prediction_shape", [(3,), (1, 3), (1, 3, 1)])
+def test_metrics_accept_equivalent_dataset_shapes(metric, prediction_shape):
+    y_true = [[[0.0], [1.0], [2.0]]]
+    y_pred = np.arange(1.0, 4.0).reshape(prediction_shape)
+    kwargs = {"train_data": y_true} if metric is performance.mase else {}
+
+    assert metric(y_true, y_pred, **kwargs) == 1.0
+    assert metric(y_pred, y_true, **kwargs) == 1.0
 
 
 def test_mae():

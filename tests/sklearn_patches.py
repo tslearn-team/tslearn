@@ -7,7 +7,7 @@ import numpy as np
 
 from sklearn.base import clone, is_regressor, is_classifier
 from sklearn.metrics import accuracy_score, adjusted_rand_score
-from sklearn.utils import shuffle
+from sklearn.utils import shuffle, get_tags
 from sklearn.utils._testing import (
     ignore_warnings,
     set_random_state,
@@ -46,14 +46,6 @@ def patch(module, name, patched):
         yield
     finally:
         setattr(module, name, orig)
-
-
-def get_tag(estimator, tag_name):
-    try:
-        from sklearn.utils import get_tags
-        return getattr(get_tags(estimator), tag_name, None)
-    except ImportError:
-        return estimator._get_tags().get(tag_name)
 
 
 @ignore_warnings(category=FutureWarning)
@@ -97,7 +89,7 @@ def check_n_features_in(name, estimator_orig):
 
 
 def check_transformer_general(name, estimator, readonly_memmap=False):
-    if get_tag(estimator, ALLOW_VARIABLE_LENGTH):
+    if get_tags(estimator).allow_variable_length:
         with raises(
             AssertionError,
             match=(
@@ -138,7 +130,7 @@ def check_clustering(name, clusterer_orig, readonly_memmap=False):
     pred = clusterer.labels_
     assert pred.shape == (n_ts,)
     assert adjusted_rand_score(pred, y) > 0.4
-    if get_tag(clusterer, "non_deterministic"): # pragma: no cover
+    if get_tags(clusterer).non_deterministic: # pragma: no cover
         return
     set_random_state(clusterer)
     with warnings.catch_warnings(record=True):
@@ -171,7 +163,6 @@ def check_clustering(name, clusterer_orig, readonly_memmap=False):
 
 @ignore_warnings(category=FutureWarning)
 def check_n_features_in_after_fitting(name, estimator_orig):
-    from sklearn.utils import get_tags
 
     # Make sure that n_features_in are checked after fitting
     tags = get_tags(estimator_orig)
@@ -297,10 +288,8 @@ def check_classifiers_train(
         X_m, y_m, X_b, y_b = create_memmap_backed_data([X_m, y_m, X_b, y_b])
 
     problems = [(X_b, y_b)]
-    if (get_tag(classifier_orig, "binary_only") or
-            getattr(
-                get_tag(classifier_orig, "classifier_tags"),
-                "multi_class", None)):
+    tags = get_tags(classifier_orig)
+    if tags.classifier_tags.multi_class:
         problems.append((X_m, y_m))
 
     for X, y in problems:
@@ -313,7 +302,7 @@ def check_classifiers_train(
 
         set_random_state(classifier)
         # raises error on malformed input for fit
-        if not get_tag(classifier_orig, "no_validation"):
+        if not tags.no_validation:
             with raises(
                 ValueError,
                 err_msg=(
@@ -334,10 +323,7 @@ def check_classifiers_train(
 
         assert y_pred.shape == (n_ts,)
         # training set performance
-        if not (get_tag(classifier_orig, "poor_score") or
-            getattr(
-                get_tag(classifier_orig, "classifier_tags"),
-                "poor_score", None)):
+        if not tags.classifier_tags.poor_score:
             assert accuracy_score(y, y_pred) > 0.83
 
         # raises error on malformed input for predict
@@ -351,7 +337,7 @@ def check_classifiers_train(
             "fit."
         )
 
-        if not get_tag(classifier_orig, "no_validation"):
+        if not tags.no_validation:
             with raises(ValueError, err_msg=msg.format(name, "predict")):
                 classifier.predict(X.T)
         if hasattr(classifier, "decision_function"):
@@ -359,10 +345,7 @@ def check_classifiers_train(
                 # decision_function agrees with predict
                 decision = classifier.decision_function(X)
                 if n_classes == 2:
-                    if (not get_tag(classifier_orig, "multioutput_only") or
-                        getattr(
-                            get_tag(classifier_orig, "target_tags"),
-                            "single_output", None)):
+                    if tags.target_tags.single_output:
                         assert decision.shape == (n_ts,)
                     else: # pragma: no cover
                         assert decision.shape == (n_ts, 1)
@@ -373,7 +356,7 @@ def check_classifiers_train(
                     assert_array_equal(np.argmax(decision, axis=1), y_pred)
 
                 # raises error on malformed input for decision_function
-                if not get_tag(classifier_orig, "no_validation"):
+                if not tags.no_validation:
                     with raises(
                         ValueError,
                         err_msg=msg.format(name, "decision_function"),
@@ -389,7 +372,7 @@ def check_classifiers_train(
             assert_array_equal(np.argmax(y_prob, axis=1), y_pred)
             # check that probas for all classes sum to one
             assert_array_almost_equal(np.sum(y_prob, axis=1), np.ones(n_ts))
-            if not get_tag(classifier_orig, "no_validation"):
+            if not tags.no_validation:
                 with raises(
                     ValueError,
                     err_msg=msg.format(name, "predict_proba"),

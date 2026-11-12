@@ -146,6 +146,26 @@ def test_VARIMA():
         model.predict(data, n=2)
     )
 
+    # Multivariate VAR: X(t) = R X(t-1) with a non-symmetric rotation matrix R.
+    # Forecasts should continue the rotation, also when fitting p = 2
+    angle = np.pi / 6
+    rotation = np.array(
+        [[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]]
+    )
+    data = np.zeros((1, 33, 2))
+    data[0, 0] = [1.0, 0.0]
+    for i in range(1, 33):
+        data[0, i] = rotation @ data[0, i - 1]
+    for p in (1, 2):
+        predicted = VARIMA(p, 0, 0).fit(data[:, :30]).predict(n=3)
+        np.testing.assert_almost_equal(predicted, data[:, 30:])
+
+    # MA X(t) = e(t) + 0.6e(t-1) - 0.3e(t-2): ma_coeffs_[k] is the lag k + 1 term
+    noise = rng.normal(size=(1, 2002, 1))
+    data = noise[:, 2:] + 0.6 * noise[:, 1:-1] - 0.3 * noise[:, :-2]
+    model = VARIMA(0, 0, 2).fit(data)
+    np.testing.assert_allclose(model.ma_coeffs_.ravel(), [0.6, -0.3], atol=0.1)
+
 
 def test_AutoVARIMA():
     rng = np.random.RandomState(0)

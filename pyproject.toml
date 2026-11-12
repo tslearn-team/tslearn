@@ -14,7 +14,7 @@ authors = [
 ]
 readme = "README.md"
 dynamic = ["version"]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "BSD-2-Clause"
 license-files = ["LICENSE"]
 classifiers=[
@@ -26,7 +26,7 @@ classifiers=[
     "Topic :: Software Development :: Libraries",
 ]
 dependencies = [
-    "scikit-learn>=1.5",
+    "scikit-learn>=1.6",
     "numpy>=1.24.3",
     "scipy>=1.10.1",
     "numba>=0.61",

@@ -1,3 +1,5 @@
+"""Base classes for `tslearn` estimators."""
+
 import copy
 from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
@@ -22,21 +24,18 @@ else:
 from sklearn.exceptions import NotFittedError
 
 
-try:
-    from sklearn.utils import Tags
+from sklearn.utils import Tags
 
-    @dataclass
-    class TsLearnTags(Tags):
-        allow_variable_length: bool = False
+@dataclass
+class TsLearnTags(Tags):
+    """Estimator tags"""
 
-        def __init__(self, **kwargs):
-            super().__init__(**kwargs)
-            self.input_tags.sparse = False
-            self.input_tags.three_d_array = True
+    allow_variable_length: bool = False
 
-except ImportError:
-    # sklearn < 1.6
-    TsLearnTags = dict
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.input_tags.sparse = False
+        self.input_tags.three_d_array = True
 
 
 ALLOW_VARIABLE_LENGTH = 'allow_variable_length'
@@ -51,6 +50,7 @@ _DEFAULT_TAGS = {
 
 
 class TimeSeriesMixin(object):
+    """Base estimator class"""
 
     @contextmanager
     def _patch_attribute(self, attribute_name, value):
@@ -61,9 +61,6 @@ class TimeSeriesMixin(object):
             yield
         finally:
             setattr(self, attribute_name, orig)
-
-    def _more_tags(self):
-        return copy.deepcopy(_DEFAULT_TAGS)
 
     def __sklearn_tags__(self):
         tags_orig = super().__sklearn_tags__()
@@ -76,6 +73,7 @@ class TimeSeriesMixin(object):
 
 
 class BaseModelPackage(object):
+    """Serialization/deserialization interface."""
     __metaclass__ = ABCMeta
 
     @abstractmethod
@@ -157,9 +155,9 @@ class BaseModelPackage(object):
             param = model_params[k]
 
             if isinstance(param, np.ndarray):
-                model_params[k] = param.tolist()  # for json support
+                model_params[k] = param.tolist()
             elif isinstance(param, list) and isinstance(param[0], np.ndarray):
-                model_params[k] = [p.tolist() for p in param]  # json support
+                model_params[k] = [p.tolist() for p in param]
             else:
                 model_params[k] = param
         return model_params
@@ -188,7 +186,7 @@ class BaseModelPackage(object):
         """
 
         model_params = model.pop('model_params')
-        hyper_params = model.pop('hyper_params')  # hyper-params
+        hyper_params = model.pop('hyper_params')
 
         # instantiate with hyper-parameters
         inst = cls(**hyper_params)

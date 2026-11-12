@@ -1,5 +1,7 @@
 import numpy as np
 
+import pytest
+
 import tslearn.barycenters
 from tslearn.utils import to_time_series
 
@@ -139,6 +141,108 @@ def test_dba():
         ),
         time_series.reshape(sz, d)
     )
+
+
+@pytest.mark.parametrize(
+    'metric_params',
+    [{"global_constraint": "sakoe_chiba",
+      "sakoe_chiba_radius": 0,},
+     {"sakoe_chiba_radius": 0}
+    ]
+)
+def test_dba_global_constraint(metric_params):
+    x = np.array([
+        [[0.], [0.], [0.], [1.], [0.]],
+        [[0.], [1.], [0.], [0.], [0.]],
+    ])
+    actual = tslearn.barycenters.dtw_barycenter_averaging_petitjean(
+        x,
+        init_barycenter=x[0],
+        metric_params=metric_params,
+    )
+    np.testing.assert_allclose(actual, x.mean(axis=0))
+    actual = tslearn.barycenters.dtw_barycenter_averaging(
+        x,
+        init_barycenter=x[0],
+        metric_params=metric_params
+    )
+    np.testing.assert_allclose(actual, x.mean(axis=0))
+    actual = tslearn.barycenters.dtw_barycenter_averaging_subgradient(
+        x,
+        init_barycenter=x[0],
+        metric_params=metric_params,
+        initial_step_size=0.25,
+        final_step_size=0.25,
+        random_state=1
+    )
+    np.testing.assert_allclose(actual, x.mean(axis=0))
+    actual = tslearn.barycenters.dtw_barycenter_averaging_petitjean(
+        x,
+        init_barycenter=x[0],
+        metric_params=metric_params,
+    )
+    np.testing.assert_allclose(actual, x.mean(axis=0))
+    actual = tslearn.barycenters.dtw_barycenter_averaging(
+        x,
+        init_barycenter=x[0],
+        metric_params=metric_params,
+    )
+    np.testing.assert_allclose(actual, x.mean(axis=0))
+    actual = tslearn.barycenters.dtw_barycenter_averaging_subgradient(
+        x,
+        init_barycenter=x[0],
+        metric_params=metric_params,
+        initial_step_size=0.25,
+        final_step_size=0.25,
+        random_state=1
+    )
+    np.testing.assert_allclose(actual, x.mean(axis=0))
+
+
+def test_dba_subgradient_weights():
+    # Two groups of series around 0 and around 1: the weighted barycenter
+    # should move towards the group with the larger weights, as with
+    # dtw_barycenter_averaging
+    rng = np.random.RandomState(0)
+    time_series = np.concatenate(
+        [np.zeros((3, 10, 1)), np.ones((3, 10, 1))]
+    ) + rng.normal(0, 0.01, (6, 10, 1))
+    for weights in ([10, 10, 10, 1, 1, 1], [1, 1, 1, 10, 10, 10]):
+        weights = np.array(weights, dtype=float)
+        bar = tslearn.barycenters.dtw_barycenter_averaging_subgradient(
+            time_series, weights=weights, max_iter=50, random_state=0
+        )
+        bar_mm = tslearn.barycenters.dtw_barycenter_averaging(
+            time_series, weights=weights, max_iter=50
+        )
+        np.testing.assert_allclose(bar.mean(), bar_mm.mean(), atol=0.05)
+
+    # A zero weight does not make the barycenter NaN
+    bar = tslearn.barycenters.dtw_barycenter_averaging_subgradient(
+        time_series, weights=np.array([1, 0, 1, 1, 1, 1.]), random_state=0,
+        verbose=True
+    )
+    assert np.all(np.isfinite(bar))
+
+
+def test_dba_subgradient_returns_best_barycenter():
+    # With a large, barely-decreasing step size the subgradient cost becomes
+    # non-monotonic: it reaches a good barycenter and then the later iterations
+    # diverge. Since the best barycenter is from before the divergence, running
+    # more (diverging) iterations must not change the returned barycenter.
+    # Comparing two runs on the same machine avoids any platform-dependent
+    # floating-point differences in the exact barycenter.
+    rng = np.random.RandomState(1)
+    time_series = rng.randn(8, 20, 1)
+    kwargs = dict(initial_step_size=1.0, final_step_size=0.9, tol=0,
+                  random_state=1)
+    bar_short = tslearn.barycenters.dtw_barycenter_averaging_subgradient(
+        time_series, max_iter=60, **kwargs
+    )
+    bar_long = tslearn.barycenters.dtw_barycenter_averaging_subgradient(
+        time_series, max_iter=80, **kwargs
+    )
+    np.testing.assert_allclose(bar_short, bar_long)
 
 
 def test_softdtw_barycenter():

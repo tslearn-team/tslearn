@@ -61,8 +61,6 @@ class NonMyopicEarlyClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
     pyck_ : array like of shape (__n_classes, n_cluster)
         Contains the probabilities of being of true class y given a cluster ck
 
-    X_fit_dims : tuple of the same shape as the training dataset
-
 
     Examples
     --------
@@ -200,7 +198,7 @@ class NonMyopicEarlyClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
                                                    labels=label_set)
                     # normalize parameter seems to be quite recent in sklearn,
                     # so let's do it ourselves
-                    normalizer = conf_matrix.sum(axis=0, keepdims=True)
+                    normalizer = conf_matrix.sum(axis=1, keepdims=True)
                     normalizer[normalizer == 0] = 1  # Avoid divide by 0
                     conf_matrix = conf_matrix / normalizer
 
@@ -279,7 +277,12 @@ class NonMyopicEarlyClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
         diffs = Xi[np.newaxis, :] - self.cluster_.cluster_centers_[:, :len(Xi)]
         distances_clusters = np.linalg.norm(diffs, axis=(1, 2))
         average_distance = np.mean(distances_clusters)
-        delta_k = 1. - distances_clusters / average_distance
+        if average_distance > 0.:
+            delta_k = 1. - distances_clusters / average_distance
+        else:
+            # Xi matches every cluster center, so that no cluster is closer
+            # than the others
+            delta_k = np.zeros_like(distances_clusters)
         s_k = 1. / (1. + np.exp(-self.lamb * delta_k))
         return s_k / s_k.sum()
 
@@ -767,14 +770,6 @@ class NonMyopicEarlyClassifier(TimeSeriesMixin, ClassifierMixin, BaseEstimator):
             time_prediction.append(np.argmin(self._expected_costs(ts)))
 
         return np.array(pred), np.array(time_prediction)
-
-    def _more_tags(self):
-        # Because some of the data validation checks rely on datasets that are
-        # too small to pass here (only 1 item in one of the clusters, hence no
-        # stratified split possible)
-        more_tags = super()._more_tags()
-        more_tags.update({"no_validation": True})
-        return more_tags
 
     def __sklearn_tags__(self):
         # Because some of the data validation checks rely on datasets that are

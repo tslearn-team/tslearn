@@ -7,7 +7,6 @@ from sklearn.base import ClassifierMixin, RegressorMixin, BaseEstimator
 from sklearn.utils.validation import check_is_fitted
 import numpy
 
-from tslearn.bases.bases import ALLOW_VARIABLE_LENGTH
 from ..metrics import _cdist_gak, gamma_soft_dtw, VARIABLE_LENGTH_METRICS
 from ..utils import to_time_series_dataset, check_array, check_dims, check_X_y, to_sklearn_dataset
 from ..bases import TimeSeriesMixin
@@ -88,18 +87,6 @@ class TimeSeriesSVMMixin(TimeSeriesMixin):
 
         return sklearn_X, y, nb_features
 
-    def _more_tags(self):
-        tags = super()._more_tags()
-        sample_weight_failure_msg = "zero sample_weight is not equivalent to removing samples"
-        tags.update({
-            "allow_nan": False,
-            ALLOW_VARIABLE_LENGTH: True,
-        })
-        tags["_xfail_checks"].update({
-            "check_sample_weights_invariance": sample_weight_failure_msg,
-        })
-        return tags
-
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
         tags.input_tags.allow_nan = False
@@ -176,7 +163,7 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin, BaseEstimator):
         The number of jobs to run in parallel for GAK cross-similarity matrix
         computations.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
-        ``-1`` means using all processors. See scikit-learns'
+        ``-1`` means using all processors. See scikit-learn's
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`_
         for more details.
 
@@ -205,9 +192,6 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin, BaseEstimator):
     ----------
     support_ : array-like, shape = [n_SV]
         Indices of support vectors.
-
-    n_support_ : array-like, dtype=int32, shape = [n_class]
-        Number of support vectors for each class.
 
     support_vectors_ : list of arrays of shape [n_SV, sz, d]
         List of support vectors in tslearn dataset format, one array per class
@@ -474,7 +458,7 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin, BaseEstimator):
         The number of jobs to run in parallel for GAK cross-similarity matrix
         computations.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
-        ``-1`` means using all processors. See scikit-learns'
+        ``-1`` means using all processors. See scikit-learn's
         `Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`_
         for more details.
 
