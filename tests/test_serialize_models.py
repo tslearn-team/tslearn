@@ -181,7 +181,7 @@ def test_serialize_kshape():
 
     _check_params_predict(ks, X, ['predict'])
 
-    seed_ixs = [numpy.random.randint(0, X.shape[0] - 1) for i in range(3)]
+    seed_ixs = [rng.randint(0, X.shape[0] - 1) for i in range(3)]
     seeds = numpy.array([X[i] for i in seed_ixs])
 
     ks_seeded = KShape(n_clusters=3, verbose=True, init=seeds)
