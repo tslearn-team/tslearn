@@ -638,7 +638,7 @@ class TimeSeriesKMeans(
         self.init = init
 
     def _is_fitted(self):
-        check_is_fitted(self, ["cluster_centers_"])
+        check_is_fitted(self)
         return True
 
     def _get_metric_params(self):
@@ -822,7 +822,6 @@ class TimeSeriesKMeans(
         self.labels_ = None
         self.inertia_ = numpy.inf
         self.cluster_centers_ = None
-        self._X_fit = None
         self._squared_inertia = True
 
         self.n_iter_ = 0
@@ -907,7 +906,7 @@ class TimeSeriesKMeans(
             allow_nd=True,
             force_all_finite="allow-nan" if self.metric != "euclidean" else True
         )
-        check_is_fitted(self, "cluster_centers_")
+        check_is_fitted(self)
         X = check_dims(
             X,
             X_fit_dims=self.cluster_centers_.shape,
@@ -937,7 +936,7 @@ class TimeSeriesKMeans(
             allow_nd=True,
             force_all_finite="allow-nan" if self.metric != "euclidean" else True
         )
-        check_is_fitted(self, "cluster_centers_")
+        check_is_fitted(self)
         X = check_dims(
             X,
             X_fit_dims=self.cluster_centers_.shape,

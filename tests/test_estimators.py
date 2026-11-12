@@ -126,6 +126,12 @@ def _configure(estimator, check):
     if hasattr(estimator, 'probability'):
         estimator.set_params(probability=True)
 
+    if estimator.__class__.__name__ == "KShape":
+        # The common checks use time series of length 2, which only have two
+        # distinct shapes once z-normalized: no more than 2 non-empty clusters
+        # can be formed, so the default n_clusters=3 would make every fit fail
+        estimator.set_params(n_clusters=2)
+
     if (estimator.__class__.__name__ in ("LearningShapelets",
                                          "TimeSeriesMLPClassifier") and
         check.func.__name__ in ['check_classifiers_classes',
