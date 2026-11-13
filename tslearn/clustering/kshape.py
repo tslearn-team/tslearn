@@ -103,18 +103,6 @@ class KShape(TimeSeriesCentroidBasedClusteringMixin,
         self.verbose = verbose
         self.init = init
 
-    def _is_fitted(self):
-        """
-        Check if the model has been fit.
-
-        Returns
-        -------
-        bool
-        """
-
-        check_is_fitted(self)
-        return True
-
     def _shape_extraction(self, X, k):
         _, sz, d = X.shape
         Xp = y_shifted_sbd_vec(self.cluster_centers_[k], X[self.labels_ == k],
