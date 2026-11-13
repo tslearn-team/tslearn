@@ -6,7 +6,7 @@ import numpy
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.utils.validation import check_is_fitted
 
-from tslearn.bases import TimeSeriesMixin
+from tslearn.bases import TimeSeriesMixin, BaseModelPackage
 from tslearn.utils import (
     check_variable_length_input,
     to_time_series_dataset,
@@ -19,7 +19,7 @@ from tslearn.utils.utils import _check_equal_size, _ts_size
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
-class TimeSeriesResampler(TimeSeriesMixin, TransformerMixin, BaseEstimator):
+class TimeSeriesResampler(TimeSeriesMixin, TransformerMixin, BaseEstimator, BaseModelPackage):
     """Resampler for time series. Resample time series so that they reach the
     target size.
 
@@ -58,8 +58,7 @@ class TimeSeriesResampler(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         self
         """
         X_ = check_variable_length_input(X)
-        self._X_fit_dims = X_.shape
-        self.n_features_in_ = self._X_fit_dims[-1]
+        self.n_features_in_ = X_.shape[-1]
         return self
 
     def _transform_unit_sz(self, X):
@@ -97,12 +96,12 @@ class TimeSeriesResampler(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         numpy.ndarray
             Resampled time series dataset.
         """
-        check_is_fitted(self, '_X_fit_dims')
+        check_is_fitted(self)
 
         X_ = check_variable_length_input(X)
         X_ = check_dims(
             X_,
-            X_fit_dims=self._X_fit_dims,
+            X_fit_dims=(0, 0, self.n_features_in_),
             extend=False,
             check_n_features_only=True
         )
@@ -132,7 +131,7 @@ class TimeSeriesResampler(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         return tags
 
 
-class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
+class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator, BaseModelPackage):
     """Scaler for time series datasets.
 
     Parameters
@@ -196,6 +195,19 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         self.per_timeseries = per_timeseries
         self.per_feature = per_feature
 
+    def _to_dict(self, output=None, hyper_parameters_only=False):
+        model = super()._to_dict(output, hyper_parameters_only)
+        hyperparams = model['hyper_params']
+        hyperparams['min'], hyperparams['max'] = hyperparams.pop('value_range')
+        return model
+
+    @staticmethod
+    def _organize_model(cls, model):
+        hyperparams = model['hyper_params']
+        hyperparams['value_range'] = (hyperparams.pop('min'),
+                                      hyperparams.pop('max'))
+        return super()._organize_model(cls, model)
+
     def fit(self, X, y=None, **kwargs):
         """Computes the min and max to be used for later scaling if `per_timeseries` is False.
         Just performs dimension checks otherwise.
@@ -211,8 +223,7 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         """
         X_ = check_array(X, allow_nd=True, force_all_finite=False)
         X_ = to_time_series_dataset(X_)
-        self._X_fit_dims = X_.shape
-        self.n_features_in_ = self._X_fit_dims[-1]
+        self.n_features_in_ = X_.shape[-1]
 
         # Reset if needed
         if hasattr(self, 'min_'):
@@ -272,10 +283,15 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
             raise ValueError("Minimum of desired range must be smaller"
                              " than maximum. Got %s." % str(self.value_range))
 
-        check_is_fitted(self, '_X_fit_dims')
+        check_is_fitted(self)
         X_ = check_array(X, allow_nd=True, force_all_finite=False)
         X_ = to_time_series_dataset(X_)
-        X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, check_n_features_only=True, extend=False)
+        X_ = check_dims(
+            X_,
+            X_fit_dims=(0, 0, self.n_features_in_),
+            check_n_features_only=True,
+            extend=False
+        )
 
         min_, max_ = (self._process(X_)
                       if self.per_timeseries else (self.min_.reshape(1, 1, -1), self.max_.reshape(1, 1, -1)))
@@ -301,13 +317,18 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         array-like of shape (n_ts, sz, d)
             Transformed dataset.
         """
-        check_is_fitted(self, '_X_fit_dims')
+        check_is_fitted(self)
         if self.per_timeseries:
             raise RuntimeError("Cannot inverse per timeseries scaling.")
 
         X_ = check_array(X, allow_nd=True, force_all_finite=False)
         X_ = to_time_series_dataset(X_)
-        X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, check_n_features_only=True, extend=False)
+        X_ = check_dims(
+            X_,
+            X_fit_dims=(0, 0, self.n_features_in_),
+            check_n_features_only=True,
+            extend=False
+        )
 
         min_, max_ = self.min_.reshape(1, 1, -1), self.max_.reshape(1, 1, -1)
 
@@ -326,7 +347,7 @@ class TimeSeriesScalerMinMax(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         return tags
 
 
-class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstimator):
+class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstimator, BaseModelPackage):
     """Scaler for time series datasets.
 
     Parameters
@@ -402,8 +423,7 @@ class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstima
         """
         X_ = check_array(X, allow_nd=True, force_all_finite=False)
         X_ = to_time_series_dataset(X_)
-        self._X_fit_dims = X_.shape
-        self.n_features_in_ = self._X_fit_dims[-1]
+        self.n_features_in_ = X_.shape[-1]
 
         # Reset if needed
         if hasattr(self, 'mean_'):
@@ -461,10 +481,15 @@ class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstima
             Rescaled time series dataset.
         """
 
-        check_is_fitted(self, '_X_fit_dims')
+        check_is_fitted(self)
         X_ = check_array(X, allow_nd=True, force_all_finite=False)
         X_ = to_time_series_dataset(X_)
-        X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, check_n_features_only=True, extend=False)
+        X_ = check_dims(
+            X_,
+            X_fit_dims=(0, 0, self.n_features_in_),
+            check_n_features_only=True,
+            extend=False
+        )
 
         mean_, std_ = self._process(X_) if self.per_timeseries else (self.mean_.reshape(1, 1, -1),
                                                                      self.std_.reshape(1, 1, -1))
@@ -488,13 +513,18 @@ class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstima
             Transformed dataset.
         """
 
-        check_is_fitted(self, '_X_fit_dims')
+        check_is_fitted(self)
         if self.per_timeseries:
             raise RuntimeError("Cannot inverse per timeseries scaling.")
 
         X_ = check_array(X, allow_nd=True, force_all_finite=False)
         X_ = to_time_series_dataset(X_)
-        X_ = check_dims(X_, X_fit_dims=self._X_fit_dims, check_n_features_only=True, extend=False)
+        X_ = check_dims(
+            X_,
+            X_fit_dims=(0, 0, self.n_features_in_),
+            check_n_features_only=True,
+            extend=False
+        )
 
         mean_, std_ = self.mean_.reshape(1, 1, -1), self.std_.reshape(1, 1, -1)
 
@@ -510,7 +540,7 @@ class TimeSeriesScalerMeanVariance(TimeSeriesMixin, TransformerMixin, BaseEstima
         return tags
 
 
-class TimeSeriesImputer(TimeSeriesMixin, TransformerMixin, BaseEstimator):
+class TimeSeriesImputer(TimeSeriesMixin, TransformerMixin, BaseEstimator, BaseModelPackage):
     """Missing value imputer for time series.
 
     Missing values (nans) are replaced according to the chosen imputation
@@ -684,8 +714,7 @@ class TimeSeriesImputer(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         self
         """
         X_ = check_variable_length_input(X)
-        self._X_fit_dims = X_.shape
-        self.n_features_in_ = self._X_fit_dims[-1]
+        self.n_features_in_ = X_.shape[-1]
         return self
 
     def fit_transform(self, X, y=None, **kwargs):
@@ -716,12 +745,12 @@ class TimeSeriesImputer(TimeSeriesMixin, TransformerMixin, BaseEstimator):
         numpy.ndarray
             Imputed time series dataset
         """
-        check_is_fitted(self, '_X_fit_dims')
+        check_is_fitted(self)
 
         X_ = check_variable_length_input(X)
         X_ = check_dims(
             X_,
-            X_fit_dims=self._X_fit_dims,
+            X_fit_dims=(0, 0, self.n_features_in_),
             extend=False,
             check_n_features_only=True
         )

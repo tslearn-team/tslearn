@@ -7,6 +7,7 @@ import pytest
 
 from sklearn.exceptions import NotFittedError
 
+import tslearn
 from tslearn import hdftools
 from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.neighbors import (
@@ -364,3 +365,21 @@ def test_serialize_shapelets():
             _check_params_predict(shp, X, ['predict'],
                                   check_params_fun=get_model_weights,
                                   formats=["hdf5"])
+
+
+@pytest.mark.parametrize(
+    "model_class",
+    [tslearn.preprocessing.TimeSeriesImputer,
+     tslearn.preprocessing.TimeSeriesScalerMeanVariance,
+     tslearn.preprocessing.TimeSeriesScalerMinMax,
+     tslearn.preprocessing.TimeSeriesResampler,
+     tslearn.preprocessing.TimeSeriesFeatureSynchronizer]
+)
+def test_serialize_preprocessing(model_class):
+    model = model_class()
+    _check_not_fitted(model)
+
+    X = _get_random_walk()
+    model.fit(X)
+
+    _check_params_predict(model, X, ['transform'])
