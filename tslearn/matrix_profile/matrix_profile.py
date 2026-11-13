@@ -194,7 +194,7 @@ class MatrixProfile(TimeSeriesMixin,
                         ~np.tri(n_segments, n_segments,
                                 -(band_width + 1), dtype=bool))
                 dists[band] = np.inf
-                X_transformed[i_ts] = np.nanmin(dists, axis=1, keepdims=True)
+                X_transformed[i_ts] = dists.min(axis=1, keepdims=True)
 
         else:
             available_implementations = ["numpy", "stump", "gpu_stump"]
@@ -252,16 +252,3 @@ class MatrixProfile(TimeSeriesMixin,
         tags.input_tags.allow_nan = True
         tags.allow_variable_length = True
         return tags
-
-
-def test_test():
-    from tslearn.matrix_profile import MatrixProfile
-    from tslearn.utils import to_time_series_dataset
-
-    rng = np.random.RandomState(0)
-    short_ts = rng.randn(15, 1)
-    long_ts = rng.randn(20, 1)
-    X = to_time_series_dataset([short_ts, long_ts])
-
-    mp = MatrixProfile(subsequence_length=4, scale=True)
-    X_tr = mp.fit_transform(X)
