@@ -1,5 +1,4 @@
 import numpy
-from sklearn.exceptions import NotFittedError
 
 from sklearn.neighbors import (KNeighborsClassifier, NearestNeighbors,
                                KNeighborsRegressor)
