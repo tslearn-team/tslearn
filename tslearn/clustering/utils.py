@@ -392,6 +392,7 @@ def _check_initial_guess(init, n_clusters):
 
 class TimeSeriesCentroidBasedClusteringMixin(TimeSeriesMixin):
     """Mixin class for centroid-based clustering of time series."""
+
     def __sklearn_is_fitted__(self):
         # ``cluster_centers_`` is reset to None when every initialization
         # failed (see ``_post_fit``), in which case the model must not be

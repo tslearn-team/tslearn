@@ -911,10 +911,6 @@ class LearningShapelets(TimeSeriesMixin, ClassifierMixin, TransformerMixin, Base
         else:
             return self.model_.get_layer(layer_name).set_weights(weights)
 
-    def _is_fitted(self):
-        check_is_fitted(self, 'model_')
-        return True
-
     def _to_dict(self, output=None, hyper_parameters_only=False):
         result = super()._to_dict(output, hyper_parameters_only)
 

@@ -126,10 +126,6 @@ class MatrixProfile(TimeSeriesMixin,
         self.scale = scale
         self.implementation = implementation
 
-    def _is_fitted(self):
-        check_is_fitted(self, '_X_fit_dims')
-        return True
-
     def _fit(self, X, y=None):
         self._X_fit_dims = X.shape
         self.n_features_in_ = X.shape[-1]
@@ -198,7 +194,7 @@ class MatrixProfile(TimeSeriesMixin,
                         ~np.tri(n_segments, n_segments,
                                 -(band_width + 1), dtype=bool))
                 dists[band] = np.inf
-                X_transformed[i_ts] = dists.min(axis=1, keepdims=True)
+                X_transformed[i_ts] = np.nanmin(dists, axis=1, keepdims=True)
 
         else:
             available_implementations = ["numpy", "stump", "gpu_stump"]
@@ -226,7 +222,7 @@ class MatrixProfile(TimeSeriesMixin,
             Matrix-Profile-Transformed dataset. `ouput_size` is equal to
             `sz - subsequence_length + 1`
         """
-        self._is_fitted()
+        check_is_fitted(self)
         X = check_array(X, allow_nd=True, force_all_finite=False)
         X = check_dims(X, X_fit_dims=self._X_fit_dims,
                        check_n_features_only=True)
@@ -256,3 +252,16 @@ class MatrixProfile(TimeSeriesMixin,
         tags.input_tags.allow_nan = True
         tags.allow_variable_length = True
         return tags
+
+
+def test_test():
+    from tslearn.matrix_profile import MatrixProfile
+    from tslearn.utils import to_time_series_dataset
+
+    rng = np.random.RandomState(0)
+    short_ts = rng.randn(15, 1)
+    long_ts = rng.randn(20, 1)
+    X = to_time_series_dataset([short_ts, long_ts])
+
+    mp = MatrixProfile(subsequence_length=4, scale=True)
+    X_tr = mp.fit_transform(X)

@@ -6,7 +6,9 @@ import numpy as np
 import pytest
 
 from scipy.spatial.distance import cdist
+
 from sklearn.exceptions import ConvergenceWarning, NotFittedError
+from sklearn.utils.validation import check_is_fitted
 
 from tslearn.clustering import (
     EmptyClusterError,
@@ -187,6 +189,8 @@ def test_kmeans():
                                     random_state=rng).fit(time_series)
     assert km_nofit.labels_ is None
     assert km_nofit.cluster_centers_ is None
+    with pytest.raises(ValueError):
+        check_is_fitted(km_nofit)
 
     with pytest.raises(ValueError):
         KShape(n_clusters=101, verbose=False, init="random").fit(time_series)
