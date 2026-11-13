@@ -111,6 +111,7 @@ class TimeSeriesFeatureSynchronizer(
             timestamps_ = check_variable_length_input(timestamps)
             if timestamps_.shape != X_.shape:
                 raise ValueError("Shape mismatch between incoming data and timestamps")
+            timestamps = np.asarray(timestamps)
             masked_timestamps = np.ma.masked_array(timestamps, mask=np.isnan(timestamps))
             if not np.ma.all(np.ma.diff(masked_timestamps, axis=1) > np.timedelta64(0)):
                 # Test that valid timestamps are increasing for all TS
