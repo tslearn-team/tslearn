@@ -1,7 +1,6 @@
 """Base classes for `tslearn` estimators."""
 
-import copy
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 from contextlib import contextmanager
 from dataclasses import dataclass, fields
 import json
@@ -9,6 +8,8 @@ import pickle
 from warnings import warn
 
 import numpy as np
+
+from sklearn.utils.validation import check_is_fitted
 
 h5py_msg = 'h5py not installed, hdf5 features will not be supported.\n'\
            'Install h5py to use hdf5 features: http://docs.h5py.org/'
@@ -21,10 +22,8 @@ else:
     from tslearn import hdftools
     HDF5_INSTALLED = True
 
-from sklearn.exceptions import NotFittedError
-
-
 from sklearn.utils import Tags
+
 
 @dataclass
 class TsLearnTags(Tags):
@@ -76,21 +75,6 @@ class BaseModelPackage(object):
     """Serialization/deserialization interface."""
     __metaclass__ = ABCMeta
 
-    @abstractmethod
-    def _is_fitted(self):
-        """
-        Implement this method in a subclass to check
-        if the model has been fit.
-
-        Usually implements a model specific call to
-        sklearn.utils.validation.check_is_fitted
-
-        Returns
-        -------
-        bool
-        """
-        pass
-
     def _get_model_params(self):
         """Get model parameters that are sufficient to recapitulate it."""
         params = {}
@@ -116,8 +100,7 @@ class BaseModelPackage(object):
             dict with relevant attributes sufficient to describe the model.
         """
 
-        if not self._is_fitted():
-            raise NotFittedError("Model must be fit before it can be packaged")
+        check_is_fitted(self)
 
         d = {'hyper_params': self.get_params(),
              'model_params': self._get_model_params()}

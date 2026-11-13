@@ -7,7 +7,6 @@ import numpy as np
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.cluster._dbscan_inner import dbscan_inner
 from sklearn.neighbors import NearestNeighbors
-from sklearn.utils.validation import check_is_fitted
 
 from tslearn.bases import TimeSeriesMixin, BaseModelPackage
 from tslearn.metrics import TSLEARN_VALID_METRICS, METRIC_TO_FUNCTION, VARIABLE_LENGTH_METRICS
@@ -93,9 +92,6 @@ class TimeSeriesDBSCAN(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPa
         self.metric = metric
         self.metric_params = metric_params
         self.n_jobs = n_jobs
-
-    def _is_fitted(self):
-        return check_is_fitted(self) or True # pragma: no cover
 
     def _get_metric_params(self):
         if self.metric_params is None:

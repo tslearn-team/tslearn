@@ -126,10 +126,6 @@ class MatrixProfile(TimeSeriesMixin,
         self.scale = scale
         self.implementation = implementation
 
-    def _is_fitted(self):
-        check_is_fitted(self, '_X_fit_dims')
-        return True
-
     def _fit(self, X, y=None):
         self._X_fit_dims = X.shape
         self.n_features_in_ = X.shape[-1]
@@ -226,7 +222,7 @@ class MatrixProfile(TimeSeriesMixin,
             Matrix-Profile-Transformed dataset. `ouput_size` is equal to
             `sz - subsequence_length + 1`
         """
-        self._is_fitted()
+        check_is_fitted(self)
         X = check_array(X, allow_nd=True, force_all_finite=False)
         X = check_dims(X, X_fit_dims=self._X_fit_dims,
                        check_n_features_only=True)

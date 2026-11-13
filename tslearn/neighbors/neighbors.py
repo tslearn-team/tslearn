@@ -45,13 +45,6 @@ class KNeighborsTimeSeriesMixin(TimeSeriesMixin):
 
         return self
 
-    def _is_fitted(self):
-        try:
-            check_is_fitted(self)
-        except NotFittedError:
-            return False
-        return True
-
     def _sax_preprocess(self, X, n_segments=10, alphabet_size_avg=4, scale=False):
         if getattr(self, '_sax', None) is None:
             self._sax = SymbolicAggregateApproximation(

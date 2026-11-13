@@ -247,10 +247,6 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
         self.verbose = verbose
         self.random_state = random_state
 
-    def _is_fitted(self):
-        check_is_fitted(self, "_X_fit")
-        return True
-
     def __sklearn_is_fitted__(self):
         # ``_X_fit`` is None when every initialization failed (see ``fit``),
         # in which case the model must not be considered fitted even though
@@ -636,10 +632,6 @@ class TimeSeriesKMeans(
         self.verbose = verbose
         self.random_state = random_state
         self.init = init
-
-    def _is_fitted(self):
-        check_is_fitted(self)
-        return True
 
     def _get_metric_params(self):
         if self.metric_params is None:
