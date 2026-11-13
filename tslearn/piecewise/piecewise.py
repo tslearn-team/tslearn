@@ -13,6 +13,10 @@ from tslearn.utils.utils import _ts_size
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
 
+def _segment_bounds(sz, n_segments):
+    return (numpy.arange(n_segments + 1) * sz) // n_segments
+
+
 def _paa_to_symbols(X_paa, breakpoints):
     """Transforms a Piecewise Aggregate Approximation representation into a
     SAX one given breakpoints.
@@ -68,7 +72,9 @@ class PiecewiseAggregateApproximation(TimeSeriesMixin,
     Parameters
     ----------
     n_segments : int (default: 1)
-        Number of PAA segments to compute
+        Number of PAA segments to compute. When the length of a time series
+        is not a multiple of ``n_segments``, segment lengths differ by at most
+        one, so that every time step is used.
 
     Examples
     --------
@@ -139,11 +145,9 @@ class PiecewiseAggregateApproximation(TimeSeriesMixin,
         n_ts, sz, d = X.shape
         X_transformed = numpy.empty((n_ts, self.n_segments, d))
         for i_ts in range(n_ts):
-            sz_segment = _ts_size(X[i_ts]) // self.n_segments
+            bounds = _segment_bounds(_ts_size(X[i_ts]), self.n_segments)
             for i_seg in range(self.n_segments):
-                start = i_seg * sz_segment
-                end = start + sz_segment
-                segment = X[i_ts, start:end, :]
+                segment = X[i_ts, bounds[i_seg]:bounds[i_seg + 1], :]
                 X_transformed[i_ts, i_seg, :] = segment.mean(axis=0)
         return X_transformed
 
@@ -204,8 +208,8 @@ class PiecewiseAggregateApproximation(TimeSeriesMixin,
            datamining applications. SIGKDD 2000, pp. 285--289.
         """
         check_is_fitted(self)
-        return (numpy.linalg.norm(paa1 - paa2) *
-                numpy.sqrt(self._X_fit_dims_[1] / self.n_segments))
+        sizes = numpy.diff(_segment_bounds(self._X_fit_dims_[1], self.n_segments))
+        return numpy.sqrt(numpy.sum(sizes[:, None] * (paa1 - paa2) ** 2))
 
     def distance(self, ts1, ts2):
         """Compute distance between PAA representations as defined in [1]_.
@@ -646,11 +650,10 @@ class OneD_SymbolicAggregateApproximation(SymbolicAggregateApproximation):
         n_ts, sz, d = X.shape
         X_slopes = numpy.empty((n_ts, self.n_segments, d))
         for i_ts in range(n_ts):
-            sz_segment = _ts_size(X[i_ts]) // self.n_segments
+            bounds = _segment_bounds(_ts_size(X[i_ts]), self.n_segments)
             for i_seg in range(self.n_segments):
-                start = i_seg * sz_segment
-                end = start + sz_segment
-                X_slopes[i_ts, i_seg, :] = cyslopes(X[i_ts, start:end, :])
+                segment = X[i_ts, bounds[i_seg]:bounds[i_seg + 1], :]
+                X_slopes[i_ts, i_seg, :] = cyslopes(segment)
         return X_slopes
 
     def _transform(self, X, y=None):

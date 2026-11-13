@@ -13,6 +13,11 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ### Fixed
 
+* `PiecewiseAggregateApproximation`, `SymbolicAggregateApproximation` and
+  `OneD_SymbolicAggregateApproximation` now use every time step when the length of a series
+  is not a multiple of `n_segments`. Segment lengths differ by at most one. Before, the last
+  `sz % n_segments` time steps were ignored, `inverse_transform` left them empty, and
+  `distance_paa` could exceed the Euclidean distance it is meant to lower bound.
 * Preserve autograd for custom distances in `SoftDTWLossPyTorch` by avoiding
   in-place edits of their pairwise distance matrices.
 * `NonMyopicEarlyClassifier.get_cluster_probas` now returns uniform cluster probabilities, instead of `NaN`,
