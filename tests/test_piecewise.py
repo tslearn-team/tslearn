@@ -1,12 +1,18 @@
 import numpy as np
+
 import pytest
+
 from scipy.stats import norm
 
-from tslearn.piecewise import OneD_SymbolicAggregateApproximation, \
-    SymbolicAggregateApproximation, PiecewiseAggregateApproximation
-from tslearn.utils import to_time_series_dataset
-from sklearn.exceptions import NotFittedError
 from sklearn.base import clone
+from sklearn.exceptions import NotFittedError
+
+from tslearn.piecewise import (
+    OneD_SymbolicAggregateApproximation,
+    SymbolicAggregateApproximation,
+    PiecewiseAggregateApproximation
+)
+from tslearn.utils import to_time_series_dataset
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
 
@@ -114,6 +120,25 @@ def test_sax_scale():
                                          sax._scale(X).reshape((-1, d)).mean())
     np.testing.assert_array_almost_equal(np.ones((d, )),
                                          sax._scale(X).reshape((-1, d)).std())
+
+
+@pytest.mark.parametrize(
+    "model_class",
+    [PiecewiseAggregateApproximation,
+     SymbolicAggregateApproximation,
+     OneD_SymbolicAggregateApproximation]
+)
+def test_fitted_inverse_transform(model_class):
+    n, sz, d = 2, 10, 3
+    rng = np.random.RandomState(0)
+    X = rng.randn(n, sz, d)
+
+    model = model_class()
+    with pytest.raises(NotFittedError):
+        model.inverse_transform(X)
+
+    transformed = model.fit_transform(X)
+    assert X.shape == model.inverse_transform(transformed).shape
 
 
 def test_1dsax_scale_matches_sax_average():
