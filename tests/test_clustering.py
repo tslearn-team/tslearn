@@ -125,6 +125,33 @@ def test_kernel_kmeans_all_inits_empty_cluster():
     np.testing.assert_array_equal(model.predict(X), model.labels_)
 
 
+@pytest.mark.parametrize("metric", ["euclidean", "dtw", "softdtw"])
+def test_kmeans_inertia_matches_centers_at_iteration_limit(metric):
+    X = np.array([0., 2., 8., 10.]).reshape(-1, 1, 1)
+    model = TimeSeriesKMeans(n_clusters=1, max_iter=1, metric=metric,
+                            init=X[:1]).fit(X)
+
+    np.testing.assert_allclose(model.cluster_centers_, [[[5.]]])
+    distances = model.transform(X)
+    assert model.inertia_ == pytest.approx(np.mean(distances[:, 0] ** 2))
+
+
+def test_kmeans_selects_restart_using_final_centers():
+    X = np.array([1., 13., 15., 20., 22., 27., 30., 42.]).reshape(-1, 1, 1)
+    params = dict(n_clusters=3, max_iter=1, init="random")
+    rng = np.random.RandomState(0)
+    candidates = [TimeSeriesKMeans(random_state=rng, **params).fit(X)
+                  for _ in range(2)]
+    candidate_scores = [np.mean(model.transform(X).min(axis=1) ** 2)
+                        for model in candidates]
+
+    selected = TimeSeriesKMeans(n_init=2, random_state=0, **params).fit(X)
+    selected_score = np.mean(selected.transform(X).min(axis=1) ** 2)
+
+    assert selected_score == pytest.approx(min(candidate_scores))
+    assert selected.inertia_ == pytest.approx(selected_score)
+
+
 def test_kmeans():
     n, sz, d = 15, 10, 3
     rng = np.random.RandomState(0)
