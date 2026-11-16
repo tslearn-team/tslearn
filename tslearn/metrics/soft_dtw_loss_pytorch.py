@@ -316,12 +316,13 @@ else:
                 if lengths is None:
                     return [width] * bx
                 lengths = torch.as_tensor(lengths)
-                if (lengths.shape != (bx,) or lengths.is_floating_point()
-                        or lengths.is_complex() or lengths.dtype == torch.bool):
+                if lengths.shape != (bx,) or lengths.dtype == torch.bool:
                     raise ValueError("Expected one integer length per series")
                 lengths = lengths.tolist()
-                if any(n < 1 or n > width for n in lengths):
-                    raise ValueError("Lengths must be between 1 and the padded sequence length")
+                if any(not isinstance(n, int) or not 1 <= n <= width for n in lengths):
+                    raise ValueError(
+                        "Lengths must be integers between 1 and the padded sequence length"
+                    )
                 return lengths
 
             groups = {}

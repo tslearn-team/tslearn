@@ -98,6 +98,11 @@ def test_soft_dtw_lengths():
     for lengths in ([0, 2], [1, 5], [2], [[1, 2]], [1., 2.], [True, False]):
         with pytest.raises(ValueError):
             loss(x, x, x_lengths=lengths)
+    empty = x[:0].requires_grad_()
+    values = loss(empty, empty, x_lengths=[], y_lengths=[])
+    assert values.shape == (0,)
+    values.sum().backward()
+    torch.testing.assert_close(empty.grad, torch.zeros_like(empty))
 
 
 def test_soft_dtw_loss_pytorch_precision():
