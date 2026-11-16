@@ -224,6 +224,11 @@ smoothing of the resulting metric (squared DTW corresponds to the limit case
     from tslearn.metrics import soft_dtw
     soft_dtw_score = soft_dtw(x, y, gamma=.1)
 
+For a right-padded batch, :class:`tslearn.metrics.SoftDTWLossPyTorch` accepts
+one length per series via ``x_lengths`` and ``y_lengths``. Padding beyond each
+length is excluded from both the alignment and its gradient. See
+:ref:`sphx_glr_auto_examples_autodiff_plot_soft_dtw_loss_for_pytorch_nn.py`
+for an example with different forecast horizons.
 
 When a strictly positive value is set for :math:`\gamma`, the corresponding
 alignment matrix corresponds to a blurred version of the DTW one:
