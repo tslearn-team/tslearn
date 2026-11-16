@@ -287,7 +287,7 @@ else:
             y = y.unsqueeze(1).expand(-1, m, n, d)
             return torch.pow(x - y, 2).sum(3)
 
-        def forward(self, x, y):
+        def forward(self, x, y, *, x_lengths=None, y_lengths=None):
             """Compute the soft-DTW value between X and Y.
 
             Parameters
@@ -296,6 +296,9 @@ else:
                 Batch of time series.
             y : Tensor, shape=[batch_size, ts_length, dim]
                 Batch of time series.
+            x_lengths, y_lengths : array-like of int, shape=[batch_size,], optional
+                Number of valid time steps in each right-padded series. If omitted
+                for either input, its full time dimension is used.
 
             Returns
             -------
@@ -306,6 +309,38 @@ else:
             by, ly, dy = y.shape
             assert bx == by
             assert dx == dy
+            if x_lengths is None and y_lengths is None:
+                return self._loss(x, y)
+
+            def lengths_for(lengths, width):
+                if lengths is None:
+                    return [width] * bx
+                lengths = torch.as_tensor(lengths)
+                if (lengths.shape != (bx,) or lengths.is_floating_point()
+                        or lengths.is_complex() or lengths.dtype == torch.bool):
+                    raise ValueError("Expected one integer length per series")
+                lengths = lengths.tolist()
+                if any(n < 1 or n > width for n in lengths):
+                    raise ValueError("Lengths must be between 1 and the padded sequence length")
+                return lengths
+
+            groups = {}
+            for i, pair in enumerate(zip(lengths_for(x_lengths, lx), lengths_for(y_lengths, ly))):
+                groups.setdefault(pair, []).append(i)
+            if not groups:
+                return self._loss(x, y)
+            if len(groups) == 1:
+                m, n = next(iter(groups))
+                return self._loss(x[:, :m], y[:, :n])
+
+            losses, order = [], []
+            for (m, n), indices in groups.items():
+                losses.append(self._loss(x[indices, :m], y[indices, :n]))
+                order.extend(indices)
+            order = torch.tensor(order, device=x.device)
+            return torch.cat(losses)[order.argsort()]
+
+        def _loss(self, x, y):
             d_xy = self.dist_func(x, y)
             loss_xy = _SoftDTWLossPyTorch.apply(
                 d_xy,
