@@ -13,6 +13,8 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ### Fixed
 
+* `VARIMA` and `AutoVARIMA` now preserve the residual history of shorter series
+  when forecasting a batch of unequal-length time series.
 * Preserve autograd for custom distances in `SoftDTWLossPyTorch` by avoiding
   in-place edits of their pairwise distance matrices.
 * `NonMyopicEarlyClassifier.get_cluster_probas` now returns uniform cluster probabilities, instead of `NaN`,

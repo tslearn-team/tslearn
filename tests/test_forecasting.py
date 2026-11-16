@@ -167,6 +167,61 @@ def test_VARIMA():
     np.testing.assert_allclose(model.ma_coeffs_.ravel(), [0.6, -0.3], atol=0.1)
 
 
+@pytest.mark.parametrize(
+    "p,d,q,seasonal_period,n_features",
+    [
+        (0, 0, 2, None, 1),
+        (1, 0, 2, None, 2),
+        (1, 1, 2, 4, 1),
+        (1, 1, 0, 4, 2),
+    ],
+)
+def test_varima_forecast_independent_of_batch_padding(
+    p, d, q, seasonal_period, n_features
+):
+    rng = np.random.default_rng(205)
+    noise = rng.normal(size=(514, n_features))
+    train = noise[2:] + 0.6 * noise[1:-1] - 0.45 * noise[:-2]
+    series = [train[5:17], train[20:49], train[100:118]]
+    model = VARIMA(p=p, d=d, q=q, seasonal_period=seasonal_period)
+    model.fit(train[None])
+
+    expected = np.concatenate([model.predict(ts[None], n=3) for ts in series])
+    actual = model.predict(to_time_series_dataset(series), n=3)
+    np.testing.assert_allclose(actual, expected, atol=1e-12)
+
+    reversed_batch = model.predict(to_time_series_dataset(series[::-1]), n=3)
+    np.testing.assert_allclose(reversed_batch, expected[::-1], atol=1e-12)
+
+
+def test_varima_ma_forecast_with_explicit_training_data():
+    rng = np.random.default_rng(205)
+    noise = rng.normal(size=502)
+    observations = noise[2:] + 0.6 * noise[1:-1] - 0.45 * noise[:-2]
+    short = observations[:9]
+    data = to_time_series_dataset([short, observations[9:]])
+    model = VARIMA(p=0, d=0, q=2).fit(data)
+
+    # Compute the innovations of the shorter series from its own start.
+    intercept = model.intercept_[0]
+    lag1, lag2 = model.ma_coeffs_[:, 0, 0]
+    innovations = np.zeros(len(short))
+    for t in range(2, len(short)):
+        innovations[t] = short[t] - intercept - (
+            lag1 * innovations[t - 1] + lag2 * innovations[t - 2]
+        )
+    expected = [
+        intercept + lag1 * innovations[-1] + lag2 * innovations[-2],
+        intercept + lag2 * innovations[-1],
+        intercept,
+    ]
+
+    cached = model.predict(n=3)[0, :, 0]
+    explicit = model.predict(data, n=3)[0, :, 0]
+    np.testing.assert_allclose(cached, expected, atol=1e-12)
+    np.testing.assert_allclose(explicit, expected, atol=1e-12)
+
+
 def test_AutoVARIMA():
     rng = np.random.RandomState(0)
     data = random_walks(n_ts=10, sz=100, std=0.1, random_state=rng)
