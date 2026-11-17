@@ -263,17 +263,12 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         return seasonal_differenced_X
 
     def _get_last_timestamps(self, X, ts_sizes):
-        n_ts, sz, n_features_in = X.shape
-        if max(self.p, self.q, self.d, self._seasonal_period):
-            # Move nans of variable length time series up front to properly select last_values
-            for i, ts in enumerate(X):
-                X[i] = np.roll(ts, sz - ts_sizes[i], axis=0)
-            n_timestamp_to_keep = self._seasonal_period + self.d + self.p
-            last_timestamps = X[:, -n_timestamp_to_keep:]
-        else:
-            # No need to keep any
-            last_timestamps = np.empty((n_ts, 0, n_features_in))
-        return last_timestamps
+        n_timestamps = self._seasonal_period + self.d + self.p
+        # Select history from each series without shifting its padding before
+        # the moving-average residuals are computed.
+        offsets = np.arange(-n_timestamps, 0)
+        last_indices = np.asarray(ts_sizes, dtype=np.intp)[:, None] + offsets
+        return X[np.arange(X.shape[0])[:, None], last_indices]
 
     def _default_params(self, X):
         params = np.vstack(

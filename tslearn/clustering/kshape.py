@@ -103,19 +103,6 @@ class KShape(TimeSeriesCentroidBasedClusteringMixin,
         self.verbose = verbose
         self.init = init
 
-    def _is_fitted(self):
-        """
-        Check if the model has been fit.
-
-        Returns
-        -------
-        bool
-        """
-
-        check_is_fitted(self,
-                        ['cluster_centers_', 'norms_', 'norms_centroids_'])
-        return True
-
     def _shape_extraction(self, X, k):
         _, sz, d = X.shape
         Xp = y_shifted_sbd_vec(self.cluster_centers_[k], X[self.labels_ == k],
@@ -225,7 +212,6 @@ class KShape(TimeSeriesCentroidBasedClusteringMixin,
         self.n_iter_ = 0
 
         X_ = to_time_series_dataset(X)
-        self._X_fit = X_
         self.norms_ = numpy.linalg.norm(X_, axis=(1, 2))
 
         _check_initial_guess(self.init, self.n_clusters)
@@ -291,8 +277,7 @@ class KShape(TimeSeriesCentroidBasedClusteringMixin,
             Index of the cluster each sample belongs to.
         """
         X = check_array(X, allow_nd=True)
-        check_is_fitted(self,
-                        ['cluster_centers_', 'norms_', 'norms_centroids_'])
+        check_is_fitted(self)
 
         X_ = check_dims(X, X_fit_dims=self.cluster_centers_.shape)
         X_ = TimeSeriesScalerMeanVariance(mu=0., std=1.).fit_transform(X_)
