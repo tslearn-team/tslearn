@@ -258,14 +258,25 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
         params.update({"_X_fit": self._X_fit})
         return params
 
+    @classmethod
+    def _byte2string(cls, model):
+        model = super()._byte2string(model)
+        hyper_params = model["hyper_params"]
+        kernel_params = hyper_params.get("kernel_params")
+        # HDF5 returns the nested automatic bandwidth setting as bytes.
+        if (
+            hyper_params.get("kernel") == "gak"
+            and isinstance(kernel_params, dict)
+        ):
+            sigma = kernel_params.get("sigma")
+            if isinstance(sigma, bytes) and sigma == b"auto":
+                kernel_params["sigma"] = "auto"
+        return model
+
     def _get_kernel_params(self):
-        if self.kernel_params is None:
-            kernel_params = {}
-        else:
-            kernel_params = self.kernel_params
-        if self.kernel == "gak":
-            if hasattr(self, "sigma_gak_"):
-                kernel_params["sigma"] = self.sigma_gak_
+        kernel_params = dict(self.kernel_params or {})
+        if self.kernel == "gak" and hasattr(self, "sigma_gak_"):
+            kernel_params["sigma"] = self.sigma_gak_
         return kernel_params
 
     def _get_kernel(self, X, Y=None):
@@ -345,18 +356,18 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
         rs = check_random_state(self.random_state)
 
         max_attempts = max(self.n_init, 10)
-        kernel_params = self._get_kernel_params()
         if self.kernel == "gak":
-            self.sigma_gak_ = kernel_params.get("sigma", 1.0)
-            if self.sigma_gak_ == "auto":
-                self.sigma_gak_ = sigma_gak(X, random_state=rs)
+            sigma = (self.kernel_params or {}).get("sigma", 1.0)
+            if sigma == "auto":
+                sigma = sigma_gak(X, random_state=rs)
         else:
-            self.sigma_gak_ = None
+            sigma = None
 
         self.labels_ = None
         self.inertia_ = None
         self.sample_weight_ = None
         self._X_fit = None
+        self.sigma_gak_ = sigma
         # n_iter_ will contain the number of iterations the most
         # successful run required.
         self.n_iter_ = 0

@@ -90,6 +90,47 @@ def test_kernel_kmeans():
     assert gak_km.sigma_gak_ is None
 
 
+def test_kernel_kmeans_refit_recomputes_auto_sigma():
+    X = np.array([[0., 0.5], [1., 1.5], [4., 4.5], [6., 6.5]])[..., None]
+    kernel_params = {"sigma": "auto"}
+    model = KernelKMeans(n_clusters=2, kernel_params=kernel_params,
+                         random_state=0)
+    model.fit(X)
+    original_sigma = model.sigma_gak_
+
+    model.fit(16 * X)
+
+    assert model.sigma_gak_ == pytest.approx(16 * original_sigma)
+    assert kernel_params == {"sigma": "auto"}
+
+    fitted_sigma = model.sigma_gak_
+    predictions = model.predict(X)
+    with pytest.raises(ValueError):
+        model.fit(np.full_like(X, np.nan))
+    check_is_fitted(model)
+    assert model.sigma_gak_ == fitted_sigma
+    np.testing.assert_array_equal(model.predict(X), predictions)
+
+
+@pytest.mark.parametrize("file_format", ["hdf5", "pickle"])
+def test_kernel_kmeans_load_with_array_configured_sigma(tmp_path, file_format):
+    if file_format == "hdf5":
+        pytest.importorskip("h5py")
+    X = np.array([[0., 0.5], [1., 1.5], [4., 4.5], [6., 6.5]])[..., None]
+    model = KernelKMeans(n_clusters=2, random_state=0,
+                         kernel_params={"sigma": 2.0}).fit(X)
+    predictions = model.predict(X)
+    sigma = np.array([2., 4.])
+    model.set_params(kernel_params={"sigma": sigma})
+
+    path = str(tmp_path / "model")
+    getattr(model, f"to_{file_format}")(path)
+    restored = getattr(KernelKMeans, f"from_{file_format}")(path)
+
+    np.testing.assert_array_equal(restored.kernel_params["sigma"], sigma)
+    np.testing.assert_array_equal(restored.predict(X), predictions)
+
+
 def test_kernel_kmeans_all_inits_empty_cluster():
     # 15 time series with only 3 distinct values cannot be split into 4
     # non-empty clusters, so every initialization raises EmptyClusterError.
