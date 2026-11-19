@@ -1,4 +1,4 @@
-from glob import glob
+import tempfile
 import os
 
 import numpy
@@ -22,28 +22,11 @@ from tslearn.piecewise import PiecewiseAggregateApproximation, \
     SymbolicAggregateApproximation, OneD_SymbolicAggregateApproximation
 
 
-tmp_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tmp')
 all_formats = ['json', 'hdf5', 'pickle']
 
 
-try:
-    os.makedirs(tmp_dir)
-except (FileExistsError, OSError):
-    pass
 
-
-def teardown_module():
-    clear_tmp()
-    os.removedirs(tmp_dir)
-
-
-def clear_tmp():
-    files = glob(os.path.join(tmp_dir, '*'))
-    for f in files:
-        os.remove(f)
-
-
-def test_hdftools():
+def test_hdftools(tmp_path):
     dtypes = [int, numpy.int8, numpy.int16, numpy.int32, numpy.int64,
               float, numpy.float32, numpy.float64]
 
@@ -53,7 +36,7 @@ def test_hdftools():
         name = numpy.dtype(dtype).name
         d[name] = (numpy.random.rand(100, 100) * 10).astype(dtype)
 
-    fname = os.path.join(tmp_dir, 'hdf_test.hdf5')
+    fname = os.path.join(tmp_path, 'hdf_test.hdf5')
 
     hdftools.save_dict(d, filename=fname, group='data')
 
@@ -65,24 +48,30 @@ def test_hdftools():
 
 def _check_not_fitted(model):
     # not serializable if not fitted
-    for fmt in all_formats:
-        with pytest.raises(NotFittedError):
-            getattr(model, "to_{}".format(fmt))(
-                os.path.join(
-                    tmp_dir, "{}.{}".format(model.__class__.__name__, fmt)
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        for fmt in all_formats:
+            with pytest.raises(NotFittedError):
+                getattr(model, "to_{}".format(fmt))(
+                    os.path.join(
+                        tmp_dir,
+                        "{}.{}".format(model.__class__.__name__, fmt)
+                    )
                 )
-            )
 
 
 def _check_params_predict(model, X, test_methods, check_params_fun=None,
-                          formats=None, exclude_hyper_params=None):
+                          formats=None, exclude_hyper_params=None, ):
     if formats is None:
         formats = all_formats
+
+    tmp_dir = tempfile.TemporaryDirectory()
+
     # serialize to all all_formats
     for fmt in formats:
         getattr(model, "to_{}".format(fmt))(
             os.path.join(
-                tmp_dir, "{}.{}".format(model.__class__.__name__, fmt)
+                tmp_dir.name,
+                "{}.{}".format(model.__class__.__name__, fmt)
             )
         )
 
@@ -91,7 +80,8 @@ def _check_params_predict(model, X, test_methods, check_params_fun=None,
     for fmt in formats:
         sm = getattr(model, "from_{}".format(fmt))(
             os.path.join(
-                tmp_dir, "{}.{}".format(model.__class__.__name__, fmt)
+                tmp_dir.name,
+                "{}.{}".format(model.__class__.__name__, fmt)
             )
         )
 
@@ -121,7 +111,7 @@ def _check_params_predict(model, X, test_methods, check_params_fun=None,
                 continue
             numpy.testing.assert_equal(getattr(model, p), getattr(sm, p))
 
-    clear_tmp()
+    tmp_dir.cleanup()
 
 
 @pytest.mark.parametrize(
