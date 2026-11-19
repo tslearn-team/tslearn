@@ -124,13 +124,20 @@ def _check_params_predict(model, X, test_methods, check_params_fun=None,
     clear_tmp()
 
 
-def test_serialize_global_alignment_kernel_kmeans():
+@pytest.mark.parametrize(
+    "kernel_params",
+    [None, {"sigma": "auto"}, {"sigma": 2.0}]
+)
+def test_serialize_global_alignment_kernel_kmeans(kernel_params):
     n, sz, d = 15, 10, 3
     rng = numpy.random.RandomState(0)
     X = rng.randn(n, sz, d)
 
-    gak_km = KernelKMeans(n_clusters=3, verbose=False,
-                          max_iter=5)
+    gak_km = KernelKMeans(
+        n_clusters=3,
+        verbose=False,
+        kernel_params=kernel_params,
+        max_iter=5)
 
     _check_not_fitted(gak_km)
 

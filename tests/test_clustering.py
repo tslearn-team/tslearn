@@ -90,6 +90,27 @@ def test_kernel_kmeans():
     assert gak_km.sigma_gak_ is None
 
 
+def test_kernel_kmeans_refit_recomputes_auto_sigma():
+    X = np.array([[0., 0.5], [1., 1.5], [4., 4.5], [6., 6.5]])[..., None]
+    kernel_params = {"sigma": "auto"}
+    model = KernelKMeans(n_clusters=2,
+                         kernel_params=kernel_params,
+                         random_state=0)
+    model.fit(X)
+    original_sigma = model.sigma_gak_
+    assert kernel_params == model.kernel_params
+
+    model.fit(16 * X)
+    fitted_sigma = model.sigma_gak_
+    assert fitted_sigma == pytest.approx(16 * original_sigma)
+
+    with pytest.raises(ValueError):
+        model.fit(np.full_like(X, np.nan))
+    with pytest.raises(NotFittedError):
+        model.predict(X)
+    assert kernel_params == model.kernel_params
+
+
 def test_kernel_kmeans_all_inits_empty_cluster():
     # 15 time series with only 3 distinct values cannot be split into 4
     # non-empty clusters, so every initialization raises EmptyClusterError.
