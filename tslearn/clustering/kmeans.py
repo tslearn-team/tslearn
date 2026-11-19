@@ -200,6 +200,11 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
     n_iter_ : int
         The number of iterations performed during fit.
 
+    sigma_gak_: float or None
+        For Global Alignment Kernel, the sigma used for computation. Either computed based on a sampling
+        of the training set when kernel_params sigma is auto, or provided or default value (1.).
+        None otherwise.
+
     Notes
     -----
         The training data are saved to disk if this model is
@@ -258,14 +263,22 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
         params.update({"_X_fit": self._X_fit})
         return params
 
+    @staticmethod
+    def _organize_model(cls, model):
+        model = super()._organize_model(cls, model)
+        if model.kernel == "gak":
+            kernel_params = model.kernel_params or {}
+            if kernel_params.get("sigma") == b'auto':
+                model.kernel_params["sigma"] = "auto"
+        return model
+
     def _get_kernel_params(self):
         if self.kernel_params is None:
             kernel_params = {}
         else:
-            kernel_params = self.kernel_params
-        if self.kernel == "gak":
-            if hasattr(self, "sigma_gak_"):
-                kernel_params["sigma"] = self.sigma_gak_
+            kernel_params = self.kernel_params.copy()
+        if self.kernel == "gak" and hasattr(self, "sigma_gak_"):
+            kernel_params["sigma"] = self.sigma_gak_
         return kernel_params
 
     def _get_kernel(self, X, Y=None):
@@ -345,13 +358,6 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
         rs = check_random_state(self.random_state)
 
         max_attempts = max(self.n_init, 10)
-        kernel_params = self._get_kernel_params()
-        if self.kernel == "gak":
-            self.sigma_gak_ = kernel_params.get("sigma", 1.0)
-            if self.sigma_gak_ == "auto":
-                self.sigma_gak_ = sigma_gak(X, random_state=rs)
-        else:
-            self.sigma_gak_ = None
 
         self.labels_ = None
         self.inertia_ = None
@@ -360,6 +366,18 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
         # n_iter_ will contain the number of iterations the most
         # successful run required.
         self.n_iter_ = 0
+
+        # Reset sigma_gak_ to ensure proper recompute
+        if hasattr(self, 'sigma_gak_'):
+            del self.sigma_gak_
+
+        kernel_params = self._get_kernel_params()
+        if self.kernel == "gak":
+            self.sigma_gak_ = kernel_params.get("sigma", 1.0)
+            if self.sigma_gak_ == "auto":
+                self.sigma_gak_ = sigma_gak(X, random_state=rs)
+        else:
+            self.sigma_gak_ = None
 
         n_samples = X.shape[0]
         K = self._get_kernel(X)
