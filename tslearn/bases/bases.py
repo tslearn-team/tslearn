@@ -181,12 +181,14 @@ class BaseModelPackage(object):
         return inst
 
     @classmethod
-    def _byte2string(cls, model):
-        for param_set in ['hyper_params', 'model_params']:
-            for k in model[param_set].keys():
-                if type(model[param_set][k]) == type(b''):
-                    model[param_set][k] = model[param_set][k].decode('utf-8')
-        return model
+    def _byte2string(cls, d):
+        for k, v in d.items():
+            if type(d[k]) == type(b''):
+                d[k] = d[k].decode('utf-8')
+            elif type(d[k]) == dict:
+                d[k] = cls._byte2string(d[k])
+        return d
+
 
     def to_hdf5(self, path):
         """
