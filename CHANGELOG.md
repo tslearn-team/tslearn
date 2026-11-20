@@ -28,6 +28,11 @@ Changelogs for this project are recorded in this file since v0.2.0.
   step size) could return a much worse result.
 * Preserve float64 precision of costs and gradients in `SoftDTWLossPyTorch`.
 * BDA computation methods now take into account explicit global constraint during centroid updates ([#803](https://github.com/tslearn-team/tslearn/issues/803))
+* `MatrixProfile` with the default `implementation="numpy"` no longer returns an all-`NaN` profile
+  for a time series that contains `NaN` values, such as the padding of a shorter series in a variable
+  length dataset. Subsequences containing `NaN` are now treated as infinitely far away, as with
+  `implementation="stump"`, so the rest of the profile matches the one of the unpadded series.
+  ([#753](https://github.com/tslearn-team/tslearn/issues/753))
 * `KShape` and `TimeSeriesKMeans` no longer keep the `labels_` and `cluster_centers_` of a failed attempt when every initialization leads to an empty cluster. The model is now left unfitted (these attributes are `None`, `predict` and `transform` raise `NotFittedError`) and a `ConvergenceWarning` is emitted. ([#740](https://github.com/tslearn-team/tslearn/issues/740))
 * `KernelKMeans` no longer keeps the `labels_` of a failed attempt when every initialization leads to an empty cluster. The model is now left unfitted (`labels_` is `None` and `predict` raises `NotFittedError`) and a `ConvergenceWarning` is emitted. ([#788](https://github.com/tslearn-team/tslearn/issues/788))
 
