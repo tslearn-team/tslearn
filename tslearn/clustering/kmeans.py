@@ -585,7 +585,8 @@ class TimeSeriesKMeans(
         centroid if those are provided as a numpy array through init parameter.
 
     inertia_ : float
-        Sum of distances of samples to their closest cluster center.
+        Mean squared distance from each sample to its assigned cluster center.
+        If ``dtw_inertia=True``, this uses DTW distances.
 
     n_iter_ : int
         The number of iterations performed during fit.
@@ -723,6 +724,9 @@ class TimeSeriesKMeans(
             if numpy.abs(old_inertia - self.inertia_) < self.tol:
                 break
             old_inertia = self.inertia_
+
+        # Compare restarts using the centers after the last update.
+        self._assign(X)
         if self.verbose:
             print("")
 
