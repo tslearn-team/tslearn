@@ -84,7 +84,7 @@ jobs:
 
 - job: 'tests_macOS_arm'
   pool:
-    vmImage: 'macos-15-arm64'
+    vmImage: 'macOS-26'
   strategy:
     matrix:
       Python311:
