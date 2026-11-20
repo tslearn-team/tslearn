@@ -1,6 +1,8 @@
 import numpy as np
 from numpy.lib.stride_tricks import as_strided
+
 from scipy.spatial.distance import pdist, squareform
+
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.utils.validation import check_is_fitted
 
@@ -148,6 +150,17 @@ class MatrixProfile(TimeSeriesMixin,
         X = check_dims(X)
         return self._fit(X)
 
+    def _get_model_params(self):
+        params = super()._get_model_params()
+        params.update({"_X_fit_dims": np.array(self._X_fit_dims)})
+        return params
+
+    @staticmethod
+    def _organize_model(cls, model):
+        inst = super()._organize_model(cls, model)
+        inst._X_fit_dims = tuple(inst._X_fit_dims)
+        return inst
+
     def _transform(self, X, y=None):
         n_ts, sz, d = X.shape
 
@@ -219,7 +232,7 @@ class MatrixProfile(TimeSeriesMixin,
         Returns
         -------
         numpy.ndarray of shape (n_ts, output_size, 1)
-            Matrix-Profile-Transformed dataset. `ouput_size` is equal to
+            Matrix-Profile-Transformed dataset. `output_size` is equal to
             `sz - subsequence_length + 1`
         """
         check_is_fitted(self)

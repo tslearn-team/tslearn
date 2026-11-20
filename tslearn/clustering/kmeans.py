@@ -263,15 +263,6 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
         params.update({"_X_fit": self._X_fit})
         return params
 
-    @staticmethod
-    def _organize_model(cls, model):
-        model = super()._organize_model(cls, model)
-        if model.kernel == "gak":
-            kernel_params = model.kernel_params or {}
-            if kernel_params.get("sigma") == b'auto':
-                model.kernel_params["sigma"] = "auto"
-        return model
-
     def _get_kernel_params(self):
         if self.kernel_params is None:
             kernel_params = {}
