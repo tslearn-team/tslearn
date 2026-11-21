@@ -12,6 +12,7 @@ from tslearn.piecewise import (
     SymbolicAggregateApproximation,
     PiecewiseAggregateApproximation
 )
+from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.utils import to_time_series_dataset
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -30,6 +31,51 @@ def test_paa():
     paa_repr = paa_est.fit_transform(X)
     np.testing.assert_allclose(paa_est.distance(X[0], X[1]),
                                paa_est.distance_paa(paa_repr[0], paa_repr[1]))
+
+
+def test_paa_length_not_multiple_of_n_segments():
+    # 19 time steps in 10 segments: segments of 1 or 2 steps that cover the
+    # whole series
+    x = np.arange(19, dtype=float).reshape(1, 19, 1)
+    paa = PiecewiseAggregateApproximation(n_segments=10).fit(x)
+    x_paa = paa.transform(x)
+    np.testing.assert_allclose(x_paa.ravel(),
+                               [0.] + [2 * i + 1.5 for i in range(9)])
+    np.testing.assert_allclose(
+        paa.inverse_transform(x_paa).ravel(),
+        [0.] + [2 * i + 1.5 for i in range(9) for _ in range(2)]
+    )
+
+
+def test_sax_inverse_transform_length_not_multiple_of_n_segments():
+    # 19 time steps in 10 segments: the first segment has 1 time step, the
+    # others 2, and each time step takes the value of its segment's symbol
+    rng = np.random.RandomState(0)
+    X = rng.randn(2, 19, 1)
+    sax = SymbolicAggregateApproximation(n_segments=10,
+                                         alphabet_size_avg=5).fit(X)
+    X_sax = sax.transform(X)
+    expected = np.repeat(sax.breakpoints_avg_middle_[X_sax[..., 0]],
+                         [1] + [2] * 9, axis=1)
+    np.testing.assert_allclose(sax.inverse_transform(X_sax)[..., 0],
+                               expected)
+
+
+@pytest.mark.parametrize("sz, n_segments", [(19, 10), (60, 16), (150, 64)])
+def test_piecewise_distances_lower_bound_euclidean(sz, n_segments):
+    rng = np.random.RandomState(0)
+    X = TimeSeriesScalerMeanVariance().fit_transform(
+        rng.randn(40, sz, 1).cumsum(axis=1)
+    )
+    paa = PiecewiseAggregateApproximation(n_segments=n_segments).fit(X)
+    sax = SymbolicAggregateApproximation(n_segments=n_segments,
+                                         alphabet_size_avg=10).fit(X)
+    X_paa = paa.transform(X)
+    X_sax = sax.transform(X)
+    for i in range(0, len(X), 2):
+        euclidean = np.linalg.norm(X[i] - X[i + 1])
+        assert paa.distance_paa(X_paa[i], X_paa[i + 1]) <= euclidean + 1e-9
+        assert sax.distance_sax(X_sax[i], X_sax[i + 1]) <= euclidean + 1e-9
 
 
 def test_sax():
