@@ -93,6 +93,34 @@ class TimeSeriesSVMMixin(TimeSeriesMixin):
         tags.allow_variable_length = True
         return tags
 
+    def fit(self, X, y, sample_weight=None):
+        """Fit the SVM model according to the given training data.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset.
+
+        y : array-like of shape=(n_ts, )
+            Time series labels.
+
+        sample_weight : array-like of shape (n_samples,), default=None
+            Per-sample weights. Rescale C per sample. Higher weights force the
+            classifier to put more emphasis on these points.
+        """
+        try:
+            sklearn_X, y, nb_features = self._preprocess_sklearn(X, y, fit_time=True)
+        except ZeroDivisionError:
+            raise RuntimeError(
+                "The{} `gamma` parameter is close to 0 and "
+                "cannot be used with gak kernel."
+                .format(" auto computed" if self.gamma == "auto" else ""))
+
+        self.svm_estimator_ = self._build_svm_estimator()
+        self.svm_estimator_.fit(sklearn_X, y, sample_weight=sample_weight)
+        self.n_features_in_ = nb_features
+        return self
+
 
 class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin, BaseEstimator):
     """Time-series specific Support Vector Classifier.
@@ -281,30 +309,8 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin, BaseEstimator):
             idx_start += self.svm_estimator_.n_support_[cl]
         return sv
 
-    def fit(self, X, y, sample_weight=None):
-        """Fit the SVM model according to the given training data.
-
-        Parameters
-        ----------
-        X : array-like of shape=(n_ts, sz, d)
-            Time series dataset.
-
-        y : array-like of shape=(n_ts, )
-            Time series labels.
-
-        sample_weight : array-like of shape (n_samples,), default=None
-            Per-sample weights. Rescale C per sample. Higher weights force the
-            classifier to put more emphasis on these points.
-        """
-        try:
-            sklearn_X, y, nb_features = self._preprocess_sklearn(X, y, fit_time=True)
-        except ZeroDivisionError:
-            raise RuntimeError(
-                "The{} `gamma` parameter is close to 0 and "
-                "cannot be used with gak kernel."
-                .format(" auto computed" if self.gamma == "auto" else ""))
-
-        self.svm_estimator_ = SVC(
+    def _build_svm_estimator(self):
+        return SVC(
             C=self.C, kernel=self.estimator_kernel_, degree=self.degree,
             gamma=self.gamma_, coef0=self.coef0, shrinking=self.shrinking,
             probability=self.probability, tol=self.tol,
@@ -313,9 +319,6 @@ class TimeSeriesSVC(TimeSeriesSVMMixin, ClassifierMixin, BaseEstimator):
             decision_function_shape=self.decision_function_shape,
             random_state=self.random_state
         )
-        self.svm_estimator_.fit(sklearn_X, y, sample_weight=sample_weight)
-        self.n_features_in_ = nb_features
-        return self
 
     def predict(self, X):
         """Predict class for a given set of time series.
@@ -551,38 +554,13 @@ class TimeSeriesSVR(TimeSeriesSVMMixin, RegressorMixin, BaseEstimator):
         check_is_fitted(self, '_X_fit')
         return self._X_fit[self.svm_estimator_.support_]
 
-    def fit(self, X, y, sample_weight=None):
-        """Fit the SVM model according to the given training data.
-
-        Parameters
-        ----------
-        X : array-like of shape=(n_ts, sz, d)
-            Time series dataset.
-
-        y : array-like of shape=(n_ts, )
-            Time series labels.
-
-        sample_weight : array-like of shape (n_samples,), default=None
-            Per-sample weights. Rescale C per sample. Higher weights force the
-            classifier to put more emphasis on these points.
-        """
-        try:
-            sklearn_X, y, nb_features = self._preprocess_sklearn(X, y, fit_time=True)
-        except ZeroDivisionError:
-            raise RuntimeError(
-                "The{} `gamma` parameter is close to 0 and "
-                "cannot be used with gak kernel."
-                .format(" auto computed" if self.gamma == "auto" else ""))
-
-        self.svm_estimator_ = SVR(
+    def _build_svm_estimator(self):
+        return SVR(
             C=self.C, kernel=self.estimator_kernel_, degree=self.degree,
             gamma=self.gamma_, coef0=self.coef0, shrinking=self.shrinking,
             tol=self.tol, epsilon=self.epsilon, cache_size=self.cache_size,
             verbose=self.verbose, max_iter=self.max_iter
         )
-        self.svm_estimator_.fit(sklearn_X, y, sample_weight=sample_weight)
-        self.n_features_in_ = nb_features
-        return self
 
     def predict(self, X):
         """Predict class for a given set of time series.
