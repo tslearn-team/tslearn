@@ -289,10 +289,11 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
                     X, Y, n_jobs=self.n_jobs, verbose=self.verbose, **kernel_params
                 )
             except ZeroDivisionError:
+                sigma_is_auto = self.kernel_params.get("sigma") == "auto"
                 raise RuntimeError(
                     "The{} `sigma` parameter is close to 0 and "
                     "cannot be used with gak kernel."
-                    .format(" auto computed" if self.kernel_params.get("sigma") == "auto" else ""))
+                    .format(" auto computed" if sigma_is_auto else ""))
 
         else:
             X_sklearn = to_sklearn_dataset(X)
@@ -448,9 +449,10 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
 
             # NB: we use a normalized kernel so k(x,x) = 1 for all x
             # (including the centroid)
-            dist[:, j] = (
-                2 - 2 * numpy.sum(sw[mask] * K[:, mask], axis=1) / sw[mask].sum()
-            )
+            cluster_weights = sw[mask]
+            mean_similarity = (numpy.sum(cluster_weights * K[:, mask], axis=1)
+                               / cluster_weights.sum())
+            dist[:, j] = 2 - 2 * mean_similarity
 
     @staticmethod
     def _compute_inertia(dist_sq):
