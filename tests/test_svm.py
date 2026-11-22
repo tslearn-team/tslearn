@@ -102,3 +102,119 @@ def test_svr_epsilon_is_used():
     # A tube that wide leaves no point outside it, hence no support vector.
     assert len(small.svm_estimator_.support_) > 0
     assert len(large.svm_estimator_.support_) == 0
+
+
+# Characterization tests for fit (issue #1): they pin down what fit does today
+# for both estimators, so moving it into TimeSeriesSVMMixin can't change it.
+
+def _dataset(n=12, sz=10, d=3, seed=0):
+    rng = np.random.RandomState(seed)
+    time_series = rng.randn(n, sz, d)
+    labels = np.array([0, 1] * (n // 2))
+    return time_series, labels
+
+
+def test_svc_fit_forwards_hyperparameters():
+    time_series, labels = _dataset()
+    model = TimeSeriesSVC(
+        C=3., kernel="linear", degree=2, gamma=.5, coef0=.25, shrinking=False,
+        probability=True, tol=1e-2, cache_size=100,
+        class_weight={0: 1., 1: 2.}, verbose=False, max_iter=10000,
+        decision_function_shape="ovo", random_state=3
+    ).fit(time_series, labels)
+
+    expected = {
+        "C": 3., "kernel": "linear", "degree": 2, "gamma": .5, "coef0": .25,
+        "shrinking": False, "probability": True, "tol": 1e-2,
+        "cache_size": 100, "class_weight": {0: 1., 1: 2.}, "verbose": False,
+        "max_iter": 10000, "decision_function_shape": "ovo", "random_state": 3
+    }
+    params = model.svm_estimator_.get_params()
+    assert {key: params[key] for key in expected} == expected
+
+
+def test_svr_fit_forwards_hyperparameters():
+    time_series, labels = _dataset()
+    model = TimeSeriesSVR(
+        C=3., kernel="linear", degree=2, gamma=.5, coef0=.25, tol=1e-2,
+        epsilon=.3, shrinking=False, cache_size=100, verbose=False,
+        max_iter=10000
+    ).fit(time_series, labels.astype(float))
+
+    expected = {
+        "C": 3., "kernel": "linear", "degree": 2, "gamma": .5, "coef0": .25,
+        "tol": 1e-2, "epsilon": .3, "shrinking": False, "cache_size": 100,
+        "verbose": False, "max_iter": 10000
+    }
+    params = model.svm_estimator_.get_params()
+    assert {key: params[key] for key in expected} == expected
+
+
+@pytest.mark.parametrize("ModelClass", [TimeSeriesSVC, TimeSeriesSVR])
+def test_fit_gak_uses_precomputed_kernel(ModelClass):
+    time_series, labels = _dataset()
+    model = ModelClass(kernel="gak", gamma=10.).fit(time_series, labels)
+
+    assert model.svm_estimator_.kernel == "precomputed"
+    assert model.svm_estimator_.gamma == 10.
+
+
+@pytest.mark.parametrize("ModelClass", [TimeSeriesSVC, TimeSeriesSVR])
+def test_fit_returns_self_and_sets_n_features_in(ModelClass):
+    time_series, labels = _dataset(d=3)
+    model = ModelClass(kernel="linear")
+
+    assert model.fit(time_series, labels) is model
+    assert model.n_features_in_ == 3
+
+
+@pytest.mark.parametrize("ModelClass", [TimeSeriesSVC, TimeSeriesSVR])
+def test_fit_zero_sample_weight_drops_the_sample(ModelClass):
+    time_series, labels = _dataset()
+    weights = np.ones(len(labels))
+    weights[:2] = 0.
+
+    weighted = ModelClass(kernel="linear").fit(
+        time_series, labels, sample_weight=weights)
+    dropped = ModelClass(kernel="linear").fit(time_series[2:], labels[2:])
+
+    np.testing.assert_allclose(weighted.predict(time_series),
+                               dropped.predict(time_series))
+
+
+@pytest.mark.parametrize("ModelClass", [TimeSeriesSVC, TimeSeriesSVR])
+def test_fit_gamma_error_messages(ModelClass):
+    time_series, labels = _dataset()
+    with pytest.raises(RuntimeError,
+                       match=r"^The `gamma` parameter is close to 0 and "
+                             r"cannot be used with gak kernel\.$"):
+        ModelClass(kernel="gak", gamma=0).fit(time_series, labels)
+
+    constant = [np.ones(3), np.ones(3)]
+    with pytest.raises(RuntimeError,
+                       match=r"^The auto computed `gamma` parameter is close "
+                             r"to 0 and cannot be used with gak kernel\.$"):
+        ModelClass(kernel="gak").fit(constant, [0, 1])
+
+
+def test_predictions_match_sklearn_on_the_same_kernel():
+    # sklearn fitted on the flattened series (linear) or on the GAK Gram
+    # matrix (gak) is an independent oracle for what fit + predict compute.
+    from sklearn.svm import SVC, SVR
+
+    time_series, labels = _dataset()
+    targets = time_series[:, :, 0].mean(axis=1)
+    flat = time_series.reshape((len(time_series), -1))
+    gram = cdist_gak(time_series, sigma=np.sqrt(10. / 2.))
+
+    for ModelClass, Sklearn, y in [(TimeSeriesSVC, SVC, labels),
+                                   (TimeSeriesSVR, SVR, targets)]:
+        ours = ModelClass(kernel="linear").fit(time_series, y)
+        ref = Sklearn(kernel="linear").fit(flat, y)
+        np.testing.assert_allclose(ours.predict(time_series),
+                                   ref.predict(flat))
+
+        ours = ModelClass(kernel="gak", gamma=10.).fit(time_series, y)
+        ref = Sklearn(kernel="precomputed").fit(gram, y)
+        np.testing.assert_allclose(ours.predict(time_series),
+                                   ref.predict(gram))
