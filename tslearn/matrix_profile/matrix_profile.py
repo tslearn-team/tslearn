@@ -66,6 +66,49 @@ def _series_to_segments(time_series, segment_size):
     return segments
 
 
+class _NumpyMatrixProfile:
+    """Pure numpy matrix profile."""
+
+    def compute(self, ts, subsequence_length, scale):
+        band_width = int(np.ceil(subsequence_length / 4))
+        segments = _series_to_segments(ts, subsequence_length)
+        if scale:
+            segments = TimeSeriesScalerMeanVariance().fit_transform(segments)
+        n_segments = segments.shape[0]
+        segments_2d = segments.reshape(
+            (-1, subsequence_length * ts.shape[1]))
+        dists = squareform(pdist(segments_2d, "euclidean"))
+        band = (np.tri(n_segments, n_segments,
+                       band_width, dtype=bool) &
+                ~np.tri(n_segments, n_segments,
+                        -(band_width + 1), dtype=bool))
+        dists[band | np.isnan(dists)] = np.inf
+        return dists.min(axis=1)
+
+
+class _StumpyMatrixProfile:
+    """Matrix profile from a stumpy function (`stump` or `gpu_stump`)."""
+
+    def __init__(self, function_name):
+        self.function_name = function_name
+
+    def compute(self, ts, subsequence_length, scale):
+        if not STUMPY_INSTALLED:
+            raise ImportError(stumpy_msg)
+        stumpy_function = getattr(stumpy, self.function_name)
+        result = stumpy_function(
+            T_A=ts[:, 0].ravel(),
+            m=subsequence_length)
+        return result[:, 0].astype(float)
+
+
+_IMPLEMENTATIONS = {
+    "numpy": _NumpyMatrixProfile(),
+    "stump": _StumpyMatrixProfile("stump"),
+    "gpu_stump": _StumpyMatrixProfile("gpu_stump"),
+}
+
+
 class MatrixProfile(TimeSeriesMixin,
                     TransformerMixin,
                     BaseEstimator,
@@ -156,54 +199,21 @@ class MatrixProfile(TimeSeriesMixin,
                                       "multi-dimensional matrix profiles "
                                       "from the stumpy library.")
 
-        output_size = sz - self.subsequence_length + 1
-        X_transformed = np.empty((n_ts, output_size, 1))
-
-        if self.implementation == "stump":
-            if not STUMPY_INSTALLED:
-                raise ImportError(stumpy_msg)
-
-            for i_ts in range(n_ts):
-                result = stumpy.stump(
-                    T_A=X[i_ts, :, 0].ravel(),
-                    m=self.subsequence_length)
-                X_transformed[i_ts, :, 0] = result[:, 0].astype(float)
-
-        elif self.implementation == "gpu_stump":
-            if not STUMPY_INSTALLED:
-                raise ImportError(stumpy_msg)
-
-            for i_ts in range(n_ts):
-                result = stumpy.gpu_stump(
-                    T_A=X[i_ts, :, 0].ravel(),
-                    m=self.subsequence_length)
-                X_transformed[i_ts, :, 0] = result[:, 0].astype(float)
-
-        elif self.implementation == "numpy":
-            scaler = TimeSeriesScalerMeanVariance()
-            band_width = int(np.ceil(self.subsequence_length / 4))
-            for i_ts in range(n_ts):
-                segments = _series_to_segments(X[i_ts], self.subsequence_length)
-                if self.scale:
-                    segments = scaler.fit_transform(segments)
-                n_segments = segments.shape[0]
-                segments_2d = segments.reshape((-1, self.subsequence_length * d))
-                dists = squareform(pdist(segments_2d, "euclidean"))
-                band = (np.tri(n_segments, n_segments,
-                            band_width, dtype=bool) &
-                        ~np.tri(n_segments, n_segments,
-                                -(band_width + 1), dtype=bool))
-                dists[band | np.isnan(dists)] = np.inf
-                X_transformed[i_ts] = dists.min(axis=1, keepdims=True)
-
-        else:
-            available_implementations = ["numpy", "stump", "gpu_stump"]
+        if self.implementation not in _IMPLEMENTATIONS:
+            available_implementations = list(_IMPLEMENTATIONS)
             raise ValueError(
                 'This "{}" matrix profile implementation is not'
                 ' recognized. Available implementations are {}.'
                 .format(self.implementation,
                         available_implementations)
             )
+        implementation = _IMPLEMENTATIONS[self.implementation]
+
+        output_size = sz - self.subsequence_length + 1
+        X_transformed = np.empty((n_ts, output_size, 1))
+        for i_ts in range(n_ts):
+            X_transformed[i_ts, :, 0] = implementation.compute(
+                X[i_ts], self.subsequence_length, self.scale)
 
         return X_transformed
 
