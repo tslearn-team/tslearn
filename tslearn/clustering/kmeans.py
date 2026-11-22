@@ -367,17 +367,7 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
         # successful run required.
         self.n_iter_ = 0
 
-        # Reset sigma_gak_ to ensure proper recompute
-        if hasattr(self, 'sigma_gak_'):
-            del self.sigma_gak_
-
-        kernel_params = self._get_kernel_params()
-        if self.kernel == "gak":
-            self.sigma_gak_ = kernel_params.get("sigma", 1.0)
-            if self.sigma_gak_ == "auto":
-                self.sigma_gak_ = sigma_gak(X, random_state=rs)
-        else:
-            self.sigma_gak_ = None
+        self._set_sigma_gak(X, rs)
 
         n_samples = X.shape[0]
         K = self._get_kernel(X)
@@ -423,6 +413,19 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
                 ConvergenceWarning
             )
         return self
+
+    def _set_sigma_gak(self, X, rs):
+        # Reset sigma_gak_ to ensure proper recompute
+        if hasattr(self, 'sigma_gak_'):
+            del self.sigma_gak_
+
+        kernel_params = self._get_kernel_params()
+        if self.kernel == "gak":
+            self.sigma_gak_ = kernel_params.get("sigma", 1.0)
+            if self.sigma_gak_ == "auto":
+                self.sigma_gak_ = sigma_gak(X, random_state=rs)
+        else:
+            self.sigma_gak_ = None
 
     def _compute_dist(self, K, dist):
         """Compute a n_samples x n_clusters distance matrix using the kernel
