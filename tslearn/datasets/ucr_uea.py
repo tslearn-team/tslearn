@@ -309,15 +309,13 @@ class UCR_UEA_datasets:
         if not self._has_files(dataset_name) or not self.use_cache:
             # completely clear the target directory first, it will be created
             # by extract_from_zip_url if it does not exist
-            try:
-                # maybe it is a normal file (not a directory) for some obscure reason
-                full_path.unlink()
-            except FileNotFoundError:
-                pass  # nothing to do here, already deleted
-            except IsADirectoryError:
-                # we then need this function to recursively remove the directory:
+            # (unlink() on a directory raises PermissionError instead of
+            # IsADirectoryError on macOS and Windows, so check the type first)
+            if full_path.is_dir():
                 shutil.rmtree(full_path, ignore_errors=True)
-            # else, actually raise the error!
+            else:
+                # maybe it is a normal file (not a directory) for some obscure reason
+                full_path.unlink(missing_ok=True)
 
             url = BASE_URL + Path(dataset_name).with_suffix(".zip").name
             success = extract_from_zip_url(url, target_dir=full_path)
