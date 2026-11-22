@@ -70,6 +70,19 @@ class _NumpyMatrixProfile:
     """Pure numpy matrix profile."""
 
     def compute(self, ts, subsequence_length, scale):
+        """Matrix profile of one time series.
+
+        Parameters
+        ----------
+        ts : array of shape (sz, 1)
+        subsequence_length : int
+        scale : bool
+            Whether to z-normalize each subsequence first.
+
+        Returns
+        -------
+        numpy.ndarray of shape (sz - subsequence_length + 1,)
+        """
         band_width = int(np.ceil(subsequence_length / 4))
         segments = _series_to_segments(ts, subsequence_length)
         if scale:
@@ -93,6 +106,8 @@ class _StumpyMatrixProfile:
         self.function_name = function_name
 
     def compute(self, ts, subsequence_length, scale):
+        """Same contract as `_NumpyMatrixProfile.compute`. `scale` is
+        ignored: stumpy z-normalizes subsequences itself."""
         if not STUMPY_INSTALLED:
             raise ImportError(stumpy_msg)
         stumpy_function = getattr(stumpy, self.function_name)
