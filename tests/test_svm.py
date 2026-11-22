@@ -104,8 +104,8 @@ def test_svr_epsilon_is_used():
     assert len(large.svm_estimator_.support_) == 0
 
 
-# Characterization tests for fit (issue #1): they pin down what fit does today
-# for both estimators, so moving it into TimeSeriesSVMMixin can't change it.
+# fit, for both estimators: what reaches the inner sklearn estimator, the
+# return value and fitted attributes, the gamma errors, and the predictions.
 
 def _dataset(n=12, sz=10, d=3, seed=0):
     rng = np.random.RandomState(seed)
