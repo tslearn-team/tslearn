@@ -34,6 +34,10 @@ Changelogs for this project are recorded in this file since v0.2.0.
   `implementation="stump"`, so the rest of the profile matches the one of the unpadded series.
   ([#753](https://github.com/tslearn-team/tslearn/issues/753))
 * `KShape` and `TimeSeriesKMeans` no longer keep the `labels_` and `cluster_centers_` of a failed attempt when every initialization leads to an empty cluster. The model is now left unfitted (these attributes are `None`, `predict` and `transform` raise `NotFittedError`) and a `ConvergenceWarning` is emitted. ([#740](https://github.com/tslearn-team/tslearn/issues/740))
+* `TimeSeriesSVC` and `TimeSeriesSVR` with `gamma="auto"` now use `1 / n_features` for kernels other than
+  `"gak"` (such as `"rbf"`, `"poly"` and `"sigmoid"`), as documented and as in scikit-learn. The GAK bandwidth
+  heuristic was used for every kernel, which gave a far too large `gamma` and, for `"rbf"`, near constant
+  predictions on unseen time series. ([#826](https://github.com/tslearn-team/tslearn/issues/826))
 * `KernelKMeans` no longer keeps the `labels_` of a failed attempt when every initialization leads to an empty cluster. The model is now left unfitted (`labels_` is `None` and `predict` raises `NotFittedError`) and a `ConvergenceWarning` is emitted. ([#788](https://github.com/tslearn-team/tslearn/issues/788))
 
 ### Removed

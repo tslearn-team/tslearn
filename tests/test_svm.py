@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 
 from sklearn.exceptions import NotFittedError
+from sklearn.svm import SVC, SVR
 
 from tslearn.metrics import cdist_gak
 from tslearn.svm import TimeSeriesSVC, TimeSeriesSVR
@@ -41,6 +42,27 @@ def test_gamma_value_svm():
         estimator = cls(kernel="gak")
         with pytest.raises(RuntimeError):
             estimator.fit(X, y)
+
+
+def test_auto_gamma_non_gak_kernels():
+    n, sz, d = 40, 10, 2
+    rng = np.random.RandomState(0)
+    time_series = rng.randn(n, sz, d)
+    labels = np.array([0, 1] * (n // 2))
+    flat = time_series.reshape((n, sz * d))
+
+    for kernel in ["rbf", "poly", "sigmoid"]:
+        clf = TimeSeriesSVC(kernel=kernel).fit(time_series, labels)
+        sklearn_clf = SVC(kernel=kernel, gamma="auto").fit(flat, labels)
+        assert clf.gamma_ == 1. / (sz * d)
+        np.testing.assert_allclose(clf.decision_function(time_series),
+                                   sklearn_clf.decision_function(flat))
+
+        reg = TimeSeriesSVR(kernel=kernel).fit(time_series, labels)
+        sklearn_reg = SVR(kernel=kernel, gamma="auto").fit(flat, labels)
+        assert reg.gamma_ == 1. / (sz * d)
+        np.testing.assert_allclose(reg.predict(time_series),
+                                   sklearn_reg.predict(flat))
 
 
 def test_gak_svm_long_time_series():
