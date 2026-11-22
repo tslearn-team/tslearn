@@ -393,26 +393,32 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
                 if self.verbose:
                     print("Resumed because of empty cluster")
         if n_successful > 0:
-            self.labels_ = best_labels
-            self.inertia_ = best_inertia
-            self._X_fit = X
-            self.n_features_in_ = X.shape[-1]
+            self._keep_best_init(X, best_labels, best_inertia)
         else:
-            # Every initialization raised EmptyClusterError: discard the
-            # attributes left over from the last failed attempt so that the
-            # model does not look fitted.
-            self.labels_ = None
-            self.inertia_ = numpy.inf
-            warnings.warn(
-                "All initializations of %s led to at least one empty "
-                "cluster, so no valid clustering could be found. The model "
-                "is left unfitted (labels_ is None, and predict will raise "
-                "NotFittedError). Consider decreasing n_clusters or "
-                "increasing n_init."
-                % type(self).__name__,
-                ConvergenceWarning
-            )
+            self._discard_failed_inits()
         return self
+
+    def _keep_best_init(self, X, best_labels, best_inertia):
+        self.labels_ = best_labels
+        self.inertia_ = best_inertia
+        self._X_fit = X
+        self.n_features_in_ = X.shape[-1]
+
+    def _discard_failed_inits(self):
+        # Every initialization raised EmptyClusterError: discard the
+        # attributes left over from the last failed attempt so that the
+        # model does not look fitted.
+        self.labels_ = None
+        self.inertia_ = numpy.inf
+        warnings.warn(
+            "All initializations of %s led to at least one empty "
+            "cluster, so no valid clustering could be found. The model "
+            "is left unfitted (labels_ is None, and predict will raise "
+            "NotFittedError). Consider decreasing n_clusters or "
+            "increasing n_init."
+            % type(self).__name__,
+            ConvergenceWarning
+        )
 
     def _set_sigma_gak(self, X, rs):
         # Reset sigma_gak_ to ensure proper recompute
