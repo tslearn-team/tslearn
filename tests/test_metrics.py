@@ -754,6 +754,78 @@ def test_lb_keogh():
             assert backend.belongs_to_backend(env_up)
 
 
+# Characterization tests for LB_Keogh (issue #2): they pin down what
+# lb_keogh and lb_envelope do today, so moving them to their own module
+# can't change it.
+
+def test_lb_keogh_with_candidate_or_precomputed_envelope():
+    # Envelope of [1, 2, 3, 2, 1] at radius 1: low [1, 1, 2, 1, 1],
+    # up [2, 3, 3, 3, 2]. A zero query is below it by 1, 1, 2, 1, 1,
+    # so LB_Keogh = sqrt(1 + 1 + 4 + 1 + 1) = sqrt(8).
+    candidate = [1, 2, 3, 2, 1]
+    query = [0, 0, 0, 0, 0]
+
+    assert tslearn.metrics.lb_keogh(
+        ts_query=query, ts_candidate=candidate, radius=1
+    ) == pytest.approx(np.sqrt(8))
+    envelope = tslearn.metrics.lb_envelope(candidate, radius=1)
+    assert tslearn.metrics.lb_keogh(
+        ts_query=query, envelope_candidate=envelope
+    ) == pytest.approx(np.sqrt(8))
+
+
+@pytest.mark.parametrize("query, expected", [
+    ([1, 2, 3, 2, 1], 0.),           # the candidate itself: inside
+    ([1.5, 2, 2.5, 2, 1.5], 0.),     # strictly inside
+    ([3, 3, 3, 3, 3], np.sqrt(2)),   # above up [2, 3, 3, 3, 2] by 1, 1
+    ([0, 3, 3, 3, 4], np.sqrt(5)),   # below low by 1, above up by 2
+])
+def test_lb_keogh_measures_only_what_leaves_the_envelope(query, expected):
+    assert tslearn.metrics.lb_keogh(
+        ts_query=query, ts_candidate=[1, 2, 3, 2, 1], radius=1
+    ) == pytest.approx(expected)
+
+
+def test_lb_keogh_rejects_multivariate_series():
+    univariate = [1, 2, 3, 2, 1]
+    multivariate = np.zeros((5, 2))
+
+    with pytest.raises(AssertionError, match="only for univariate"):
+        tslearn.metrics.lb_keogh(ts_query=multivariate,
+                                 ts_candidate=univariate)
+    with pytest.raises(AssertionError, match="only for univariate"):
+        tslearn.metrics.lb_keogh(ts_query=univariate,
+                                 ts_candidate=multivariate)
+
+
+def test_lb_envelope_radius_edge_cases():
+    for be in backends:
+        for array_type in array_types:
+            backend = instantiate_backend(be, array_type)
+            ts = cast([1, 3, 2], array_type)
+
+            # Radius 0: each bound is the series itself.
+            env_low, env_up = tslearn.metrics.lb_envelope(ts, radius=0, be=be)
+            np.testing.assert_allclose(env_low, [[1.], [3.], [2.]])
+            np.testing.assert_allclose(env_up, [[1.], [3.], [2.]])
+            assert backend.belongs_to_backend(env_low)
+            assert backend.belongs_to_backend(env_up)
+
+            # Radius beyond the length: the global min and max everywhere.
+            env_low, env_up = tslearn.metrics.lb_envelope(ts, radius=5, be=be)
+            np.testing.assert_allclose(env_low, [[1.], [1.], [1.]])
+            np.testing.assert_allclose(env_up, [[3.], [3.], [3.]])
+            assert backend.belongs_to_backend(env_low)
+            assert backend.belongs_to_backend(env_up)
+
+
+def test_lb_keogh_old_import_path():
+    from tslearn.metrics.dtw_variants import lb_envelope, lb_keogh
+
+    assert lb_keogh is tslearn.metrics.lb_keogh
+    assert lb_envelope is tslearn.metrics.lb_envelope
+
+
 def test_dtw_path_from_metric():
     for be in backends:
         for array_type in array_types:
