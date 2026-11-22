@@ -1,5 +1,8 @@
 from pathlib import Path
 
+import numpy as np
+import pytest
+
 from tslearn.datasets.ucr_uea import UCR_UEA_datasets
 from tslearn.datasets.cached import CachedDatasets
 
@@ -52,3 +55,26 @@ def test_default_data_home(require_ucr_datasets, monkeypatch, tmp_path):
     assert data_loader._data_dir == Path(tmp_path) / "tslearn" / "UCR_UEA"
     cached_dir = data_loader.list_cached_datasets()
     assert len(cached_dir) == 0
+
+
+def test_deprecated_fatal_ecg_name(tmp_path):
+    """Check that the misspelled NonInvasiveFatalECG names load the Fetal ones."""
+    name = "NonInvasiveFetalECGThorax1"
+    data_dir = tmp_path / "UCR_UEA" / name
+    data_dir.mkdir(parents=True)
+    for split in ["TRAIN", "TEST"]:
+        np.savetxt(data_dir / f"{name}_{split}.txt", [[1, 0., 1.], [2, 1., 0.]])
+
+    data_loader = UCR_UEA_datasets(root_dir=tmp_path)
+    with pytest.warns(DeprecationWarning, match=name):
+        X_train, y_train, _, _ = data_loader.load_dataset(
+            "NonInvasiveFatalECGThorax1"
+        )
+    assert X_train.shape == (2, 2, 1)
+    assert y_train.tolist() == [1, 2]
+
+
+def test_fetal_ecg_name_listed(require_ucr_datasets):
+    datasets = UCR_UEA_datasets().list_univariate_datasets()
+    assert "NonInvasiveFetalECGThorax1" in datasets
+    assert "NonInvasiveFatalECGThorax1" not in datasets
