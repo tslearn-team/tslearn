@@ -754,9 +754,8 @@ def test_lb_keogh():
             assert backend.belongs_to_backend(env_up)
 
 
-# Characterization tests for LB_Keogh (issue #2): they pin down what
-# lb_keogh and lb_envelope do today, so moving them to their own module
-# can't change it.
+# lb_keogh and lb_envelope: results for worked examples, the envelope at
+# extreme radii, input checks, and the dtw_variants import path.
 
 def test_lb_keogh_with_candidate_or_precomputed_envelope():
     # Envelope of [1, 2, 3, 2, 1] at radius 1: low [1, 1, 2, 1, 1],
