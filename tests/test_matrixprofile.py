@@ -59,6 +59,7 @@ def test_numpy_worked_example():
 def test_numpy_scaled_and_transform_after_fit():
     from tslearn.matrix_profile import MatrixProfile
 
+    # current output on main, pinned before the refactoring
     expected = [0.642486, 0.285705, 1.640169, 0.898131, 1.279547,
                 1.781965, 2.987226, 2.839433, 0.285705, 0.642486]
     mp = MatrixProfile(subsequence_length=4)
@@ -86,6 +87,7 @@ def test_gpu_stump_calls_stumpy_per_series(monkeypatch):
     def fake_gpu_stump(T_A, m):
         calls.append((T_A.copy(), m))
         n = len(T_A) - m + 1
+        # like stumpy, an object array whose column 0 is the profile
         out = np.zeros((n, 4), dtype=object)
         out[:, 0] = np.arange(n) + 10 * len(calls)
         return out
@@ -140,12 +142,13 @@ def test_implementation_is_a_plain_param():
     from sklearn.base import clone
     from tslearn.matrix_profile import MatrixProfile
 
-    mp = MatrixProfile(implementation="stump")
+    mp = MatrixProfile(subsequence_length=4, scale=False,
+                       implementation="stump")
     assert mp.get_params()["implementation"] == "stump"
     assert clone(mp).get_params()["implementation"] == "stump"
 
     mp.set_params(implementation="foo").fit([_TS])
     with pytest.raises(ValueError, match='"foo"'):
         mp.transform([_TS])
-    mp.set_params(implementation="numpy", subsequence_length=4, scale=False)
+    mp.set_params(implementation="numpy")
     np.testing.assert_allclose(mp.transform([_TS])[0, 0, 0], np.sqrt(47.))
