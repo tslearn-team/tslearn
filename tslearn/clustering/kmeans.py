@@ -384,8 +384,8 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
         sw = sample_weight if sample_weight is not None else numpy.ones(n_samples)
         self.sample_weight_ = sw
 
-        last_correct_labels = None
-        min_inertia = numpy.inf
+        best_labels = None
+        best_inertia = numpy.inf
         n_attempts = 0
         n_successful = 0
         while n_successful < self.n_init and n_attempts < max_attempts:
@@ -394,17 +394,17 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
                     print("Init %d" % (n_successful + 1))
                 n_attempts += 1
                 self._fit_one_init(K, rs)
-                if self.inertia_ < min_inertia:
-                    last_correct_labels = self.labels_
-                    min_inertia = self.inertia_
+                if self.inertia_ < best_inertia:
+                    best_labels = self.labels_
+                    best_inertia = self.inertia_
                     self.n_iter_ = self._iter
                 n_successful += 1
             except EmptyClusterError:
                 if self.verbose:
                     print("Resumed because of empty cluster")
         if n_successful > 0:
-            self.labels_ = last_correct_labels
-            self.inertia_ = min_inertia
+            self.labels_ = best_labels
+            self.inertia_ = best_inertia
             self._X_fit = X
             self.n_features_in_ = X.shape[-1]
         else:
