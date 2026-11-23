@@ -212,6 +212,53 @@ def test_kernel_kmeans_keeps_the_best_init():
     np.testing.assert_array_equal(best.predict(X), best.labels_)
 
 
+def test_kernel_kmeans_one_member_cluster():
+    X = np.array([0., .1, 5.])[:, None, None]
+    model = KernelKMeans(n_clusters=2, kernel="rbf",
+                         kernel_params={"gamma": 1.}, random_state=0)
+    model.fit(X)
+
+    labels = model.labels_
+    assert labels[0] == labels[1] != labels[2]
+    expected = _rbf_kernel_kmeans_inertia([[0., .1], [5.]], [[1., 1.], [1.]])
+    assert model.inertia_ == pytest.approx(expected, rel=1e-12)
+
+
+def test_kernel_kmeans_keeps_the_first_of_tied_inits():
+    # every run finds the same split, so all inertias are equal; with
+    # random_state=0 the later runs number the two clusters the other way
+    X = np.array([0., .1, .3, 5., 5.1])[:, None, None]
+    params = dict(n_clusters=2, kernel="rbf", kernel_params={"gamma": 1.},
+                  random_state=0)
+
+    single = KernelKMeans(**params).fit(X)
+    tied = KernelKMeans(n_init=3, **params).fit(X)
+
+    np.testing.assert_array_equal(single.labels_, [1, 1, 1, 0, 0])
+    np.testing.assert_array_equal(tied.labels_, single.labels_)
+
+
+@pytest.mark.parametrize("verbose, n_init, random_state, expected", [
+    (0, 2, 3, ""),
+    (1, 1, 3, "2.000 --> 0.000 --> \n"),
+    (1, 2, 3, "Init 1\n2.000 --> 0.000 --> \n"
+              "Init 2\nResumed because of empty cluster\n"
+              "Init 2\n3.333 --> 0.000 --> \n"),
+    # 10 attempts at most (max(n_init, 10)): 9 for the first run, 1 failing
+    (1, 2, 1, "Init 1\nResumed because of empty cluster\n" * 8
+              + "Init 1\n0.843 --> 0.000 --> \n"
+              "Init 2\nResumed because of empty cluster\n"),
+])
+def test_kernel_kmeans_verbose_output(capsys, verbose, n_init, random_state,
+                                      expected):
+    X = np.repeat([0., 1., 5.], 2)[:, None, None]
+    model = KernelKMeans(n_clusters=3, kernel="rbf", n_init=n_init,
+                         verbose=verbose, max_iter=2,
+                         random_state=random_state)
+    model.fit(X)
+    assert capsys.readouterr().out == expected
+
+
 @pytest.mark.parametrize("sigma, auto", [(0, ""), ("auto", " auto computed")])
 def test_kernel_kmeans_sigma_close_to_zero(sigma, auto):
     # constant series make the auto-computed sigma 0
