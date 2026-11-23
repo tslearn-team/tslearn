@@ -19,6 +19,7 @@ from ._masks import (
     _njit_compute_mask
 )
 from .utils import (
+    _check_same_feature_size,
     _njit_compute_path,
     _compute_path,
     _cdist_generic,
@@ -778,6 +779,8 @@ def _cdist_dtw(
 ):
     if be is None:
         be = instantiate_backend(dataset1, dataset2)
+
+    _check_same_feature_size(dataset1, dataset2)
     dtw_ = _njit_dtw if be.is_numpy else _dtw
     return _cdist_generic(
         dist_fun=dtw_,
