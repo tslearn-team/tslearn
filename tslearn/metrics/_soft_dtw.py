@@ -31,6 +31,7 @@ from ._masks import (
 )
 from .soft_dtw_fast import _njit_softmin3
 from .utils import (
+    _check_same_feature_size,
     _cdist_generic,
     _torch_accumulated_matrix,
     _torch_acc_matrix_from_dist_matrix
@@ -911,6 +912,8 @@ def _cdist_soft_dtw(
 ):
     if be is None:
         be = instantiate_backend(dataset1, dataset2)
+
+    _check_same_feature_size(dataset1, dataset2)
 
     if math.isclose(gamma, 0.0):
         return _cdist_dtw(
