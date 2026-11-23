@@ -19,6 +19,7 @@ from ._masks import (
     _compute_mask
 )
 from .utils import (
+    _check_same_feature_size,
     _cdist_generic,
     _njit_compute_path,
     _compute_path,
@@ -789,6 +790,8 @@ def _cdist_frechet(
 ):
     if be is None:
         be = instantiate_backend(dataset1, dataset2)
+
+    _check_same_feature_size(dataset1, dataset2)
     frechet_ = _njit_frechet if be.is_numpy else _frechet
     return _cdist_generic(
         dist_fun=frechet_,
