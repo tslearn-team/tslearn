@@ -712,21 +712,24 @@ class TimeSeriesKMeans(
         else:
             raise ValueError("Value %r for parameter 'init'" "is invalid" % self.init)
         self.cluster_centers_ = _check_full_length(self.cluster_centers_)
-        old_inertia = numpy.inf
+        self._assign(X)
+        if self.verbose:
+            print("%.3f" % self.inertia_, end=" --> ")
 
+        self._iter = 0
         for it in range(self.max_iter):
+            old_inertia = self.inertia_
+            self._update_centroids(X)
             self._assign(X)
+            self._iter += 1
             if self.verbose:
                 print("%.3f" % self.inertia_, end=" --> ")
-            self._update_centroids(X)
 
             if numpy.abs(old_inertia - self.inertia_) < self.tol:
                 break
-            old_inertia = self.inertia_
+
         if self.verbose:
             print("")
-
-        self._iter = it + 1
 
         return self
 
