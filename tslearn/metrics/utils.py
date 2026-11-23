@@ -54,6 +54,14 @@ else:
     _compute_path = _njit_compute_path
 
 
+def _check_same_feature_size(dataset1, dataset2):
+    """Raise an error if two datasets of time series (shape=(n_ts, sz, d)) do
+    not share the same feature size `d`. Nothing is checked if `dataset2` is
+    `None`."""
+    if dataset2 is not None and dataset1.shape[-1] != dataset2.shape[-1]:
+        raise ValueError("All input time series must have the same feature size.")
+
+
 def _cdist_generic(
     dist_fun,
     dataset1,
