@@ -402,8 +402,7 @@ class TimeSeriesCentroidBasedClusteringMixin(TimeSeriesMixin):
     def _post_fit(self, X_fitted, centroids, inertia):
         if numpy.isfinite(inertia) and (centroids is not None):
             self.cluster_centers_ = centroids
-            self._assign(X_fitted)
-            self.inertia_ = inertia
+            self._assign(X_fitted)  # updates self.labels_, self.inertia_
             self.n_features_in_ = X_fitted.shape[-1]
         else:
             # Every initialization raised EmptyClusterError: discard the

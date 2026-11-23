@@ -13,6 +13,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ### Fixed
 
+* Inertia of `TimeSeriesKMeans` now properly reflects the final centroid updates ([#832](https://github.com/tslearn-team/tslearn/issues/832))
 * `VARIMA` and `AutoVARIMA` now preserve the residual history of shorter series
   when forecasting a batch of unequal-length time series.
 * Preserve autograd for custom distances in `SoftDTWLossPyTorch` by avoiding
