@@ -1197,6 +1197,7 @@ def test_cdist_frechet_honours_global_constraint():
 
     np.testing.assert_allclose(actual, expected)
 
+
 def test_cdist_feature_size_mismatch():
     # cdist functions must reject datasets with different feature sizes,
     # as their pairwise counterparts (dtw, soft_dtw, frechet) already do.
