@@ -12,6 +12,12 @@ BASE_URL = "https://www.timeseriesclassification.com/aeon-toolkit/"
 
 SUPPORTED_EXT = ["txt", "arff"]
 
+# Deprecated dataset names, mapped to their current name.
+DEPRECATED_NAMES = {
+    "NonInvasiveFatalECGThorax1": "NonInvasiveFetalECGThorax1",
+    "NonInvasiveFatalECGThorax2": "NonInvasiveFetalECGThorax2",
+}
+
 
 def _check_root_dir(root_dir=None):
     """Get the default root directory for caching datasets, following the XDG Base
@@ -98,6 +104,8 @@ class UCR_UEA_datasets:
                                    "CinCECGtorso", "CinCECGTorso")
             in_file_string_replace(self._list_univariate_filename,
                                    "StarlightCurves", "StarLightCurves")
+            in_file_string_replace(self._list_univariate_filename,
+                                   "NonInvasiveFatalECG", "NonInvasiveFetalECG")
 
             self._baseline_scores_filename = (
                 Path(__file__).parents[1] / ".cached_datasets" /
@@ -114,8 +122,6 @@ class UCR_UEA_datasets:
             "AtrialFibrillation": "AtrialFibrilation",
             "CinCECGtorso": "CinCECGTorso",
             "MixedShapes": "MixedShapesRegularTrain",
-            "NonInvasiveFetalECGThorax1": "NonInvasiveFatalECGThorax1",
-            "NonInvasiveFetalECGThorax2": "NonInvasiveFatalECGThorax2",
             "StarlightCurves": "StarLightCurves"
         }
 
@@ -290,6 +296,13 @@ class UCR_UEA_datasets:
         >>> assert (None, None, None, None) == data_loader.load_dataset(
         ...         "DatasetThatDoesNotExist")
         """
+        if dataset_name in DEPRECATED_NAMES:
+            new_name = DEPRECATED_NAMES[dataset_name]
+            warnings.warn(f"Dataset name {dataset_name!r} is deprecated since "
+                          f"v0.11 and will be removed in v0.13, use "
+                          f"{new_name!r} instead.",
+                          category=DeprecationWarning, stacklevel=2)
+            dataset_name = new_name
         dataset_name = self._filenames.get(dataset_name, dataset_name)
         full_path = self._data_dir / dataset_name
 

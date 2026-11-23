@@ -36,6 +36,13 @@ Changelogs for this project are recorded in this file since v0.2.0.
 * `KShape` and `TimeSeriesKMeans` no longer keep the `labels_` and `cluster_centers_` of a failed attempt when every initialization leads to an empty cluster. The model is now left unfitted (these attributes are `None`, `predict` and `transform` raise `NotFittedError`) and a `ConvergenceWarning` is emitted. ([#740](https://github.com/tslearn-team/tslearn/issues/740))
 * `KernelKMeans` no longer keeps the `labels_` of a failed attempt when every initialization leads to an empty cluster. The model is now left unfitted (`labels_` is `None` and `predict` raises `NotFittedError`) and a `ConvergenceWarning` is emitted. ([#788](https://github.com/tslearn-team/tslearn/issues/788))
 
+### Deprecated
+
+* The `NonInvasiveFatalECGThorax1` and `NonInvasiveFatalECGThorax2` dataset names of
+  `UCR_UEA_datasets` are deprecated in favor of `NonInvasiveFetalECGThorax1` and
+  `NonInvasiveFetalECGThorax2`, the names used by the archive. `list_univariate_datasets`
+  now lists the latter.
+
 ### Removed
 
 * Support for sklearn version 1.5 is dropped
