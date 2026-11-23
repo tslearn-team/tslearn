@@ -12,7 +12,7 @@ from sklearn.utils.validation import check_is_fitted
 from statsmodels.tools.sm_exceptions import InterpolationWarning
 from statsmodels.tsa.stattools import kpss
 
-from tslearn.bases import TimeSeriesMixin, BaseModelPackage
+from tslearn.bases import TimeSeriesMixin
 from tslearn.utils import check_array, to_time_series_dataset, check_dims
 from tslearn.utils.utils import _ts_size
 
@@ -107,7 +107,7 @@ def _varma_next(X, residuals, ar_coeffs, ma_coeffs, intercept):
     return ar_forecast + ma_forecast + np.expand_dims(intercept, axis=0)
 
 
-class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
+class VARIMA(TimeSeriesMixin, BaseEstimator):
     """
     Vector AutoRegressive Integrated Moving Average (VARIMA) estimator [1]_.
 
@@ -452,7 +452,7 @@ class VARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
         return tags
 
 
-class AutoVARIMA(TimeSeriesMixin, BaseEstimator, BaseModelPackage):
+class AutoVARIMA(TimeSeriesMixin, BaseEstimator):
     """Automatically selects the best Vector Autoregressive Integrated Moving Average (VARIMA) model
     through Hyndman-Khandakar algorithm [1]_ [2]_.
 

@@ -25,7 +25,6 @@ from tslearn.piecewise import PiecewiseAggregateApproximation, \
 all_formats = ['json', 'hdf5', 'pickle']
 
 
-
 def test_hdftools(tmp_path):
     dtypes = [int, numpy.int8, numpy.int16, numpy.int32, numpy.int64,
               float, numpy.float32, numpy.float64]
@@ -114,6 +113,15 @@ def _check_params_predict(model, X, test_methods, check_params_fun=None,
     tmp_dir.cleanup()
 
 
+def _get_random_walk():
+    numpy.random.seed(0)
+    # Generate a random walk time series
+    n_ts, sz, d = 1, 100, 1
+    dataset = random_walks(n_ts=n_ts, sz=sz, d=d)
+    scaler = TimeSeriesScalerMeanVariance(mu=0., std=1.)
+    return scaler.fit_transform(dataset)
+
+
 @pytest.mark.parametrize(
     "kernel_params",
     [None, {"sigma": "auto"}, {"sigma": 2.0}]
@@ -145,6 +153,8 @@ def test_serialize_timeserieskmeans():
                               n_init=2,
                               metric="dtw",
                               verbose=True,
+                              metric_params={"global_constraint": "sakoe_chiba",
+                                             "sakoe_chiba_radius": 3},
                               max_iter_barycenter=10)
 
     _check_not_fitted(dba_km)
@@ -193,11 +203,15 @@ def test_serialize_kshape():
 
 @pytest.mark.parametrize("params",
     [{"metric": "euclidean"},
-     {"metric": "dtw", "metric_params": {"sakoe_chiba_radius": 2}},
-     {"metric": "softdtw", "metric_params": {"gamma_sdtw": 0.2}},
-     {"metric": "sax", "metric_params": {"n_segments": 5,
-                                         "alphabet_size_avg" :3,
-                                         "scale": True}}])
+     {"metric": "dtw",
+      "metric_params": {"global_constraint": "sakoe_chiba",
+                        "sakoe_chiba_radius": 2}},
+     {"metric": "softdtw",
+      "metric_params": {"gamma_sdtw": 0.2}},
+     {"metric": "sax",
+      "metric_params": {"n_segments": 5,
+                        "alphabet_size_avg" :3,
+                        "scale": True}}])
 def test_serialize_knn(params):
     n, sz, d = 15, 10, 3
     rng = numpy.random.RandomState(0)
@@ -215,14 +229,17 @@ def test_serialize_knn(params):
     _check_params_predict(knn, X, ['kneighbors'])
 
 
-
 @pytest.mark.parametrize("params",
     [{"metric": "euclidean"},
-     {"metric": "dtw", "metric_params": {"sakoe_chiba_radius": 2}},
-     {"metric": "softdtw", "metric_params": {"gamma": 0.2}},
-     {"metric": "sax", "metric_params": {"n_segments": 5,
-                                         "alphabet_size_avg" :3,
-                                         "scale": True}}])
+     {"metric": "dtw",
+      "metric_params": {"global_constraint": "sakoe_chiba",
+                        "sakoe_chiba_radius": 2}},
+     {"metric": "softdtw",
+      "metric_params": {"gamma": 0.2}},
+     {"metric": "sax",
+      "metric_params": {"n_segments": 5,
+                        "alphabet_size_avg" :3,
+                        "scale": True}}])
 def test_serialize_knn_classifier(params):
     n, sz, d = 15, 10, 3
     rng = numpy.random.RandomState(0)
@@ -240,11 +257,15 @@ def test_serialize_knn_classifier(params):
 
 @pytest.mark.parametrize("params",
     [{"metric": "euclidean"},
-     {"metric": "dtw", "metric_params": {"sakoe_chiba_radius": 2}},
-     {"metric": "softdtw", "metric_params": {"gamma": 0.2}},
-     {"metric": "sax", "metric_params": {"n_segments": 5,
-                                         "alphabet_size_avg" :3,
-                                         "scale": True}}])
+     {"metric": "dtw",
+      "metric_params": {"global_constraint": "sakoe_chiba",
+                        "sakoe_chiba_radius": 2}},
+     {"metric": "softdtw",
+      "metric_params": {"gamma": 0.2}},
+     {"metric": "sax",
+      "metric_params": {"n_segments": 5,
+                        "alphabet_size_avg" :3,
+                        "scale": True}}])
 def test_serialize_knn_regressor(params):
     n, sz, d = 15, 10, 3
     rng = numpy.random.RandomState(0)
@@ -258,15 +279,6 @@ def test_serialize_knn_regressor(params):
     knr.fit(X, y)
 
     _check_params_predict(knr, X, ['predict'])
-
-
-def _get_random_walk():
-    numpy.random.seed(0)
-    # Generate a random walk time series
-    n_ts, sz, d = 1, 100, 1
-    dataset = random_walks(n_ts=n_ts, sz=sz, d=d)
-    scaler = TimeSeriesScalerMeanVariance(mu=0., std=1.)
-    return scaler.fit_transform(dataset)
 
 
 def test_serialize_paa():
@@ -380,3 +392,14 @@ def test_serialize_preprocessing(model_class):
     model.fit(X)
 
     _check_params_predict(model, X, ['transform'])
+
+
+def test_serialize_matrix_profile():
+    n, sz, d = 15, 10, 1
+    rng = numpy.random.RandomState(0)
+    X = rng.randn(n, sz, d)
+
+    estimator = tslearn.matrix_profile.MatrixProfile()
+    _check_not_fitted(estimator)
+    estimator.fit(X)
+    _check_params_predict(estimator, X, ["transform"])
