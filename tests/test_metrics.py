@@ -1196,3 +1196,18 @@ def test_cdist_frechet_honours_global_constraint():
                                            sakoe_chiba_radius=1)
 
     np.testing.assert_allclose(actual, expected)
+
+def test_cdist_feature_size_mismatch():
+    # cdist functions must reject datasets with different feature sizes,
+    # as their pairwise counterparts (dtw, soft_dtw, frechet) already do.
+    rng = np.random.RandomState(0)
+    dataset1 = rng.randn(3, 5, 2)
+    dataset2 = rng.randn(2, 6, 3)
+    for cdist_fun in [
+        tslearn.metrics.cdist_dtw,
+        tslearn.metrics.cdist_soft_dtw,
+        tslearn.metrics.cdist_soft_dtw_normalized,
+        tslearn.metrics.cdist_frechet,
+    ]:
+        with pytest.raises(ValueError, match="same feature size"):
+            cdist_fun(dataset1, dataset2)
