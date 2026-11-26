@@ -36,6 +36,10 @@ Changelogs for this project are recorded in this file since v0.2.0.
   ([#753](https://github.com/tslearn-team/tslearn/issues/753))
 * `KShape` and `TimeSeriesKMeans` no longer keep the `labels_` and `cluster_centers_` of a failed attempt when every initialization leads to an empty cluster. The model is now left unfitted (these attributes are `None`, `predict` and `transform` raise `NotFittedError`) and a `ConvergenceWarning` is emitted. ([#740](https://github.com/tslearn-team/tslearn/issues/740))
 * `KernelKMeans` no longer keeps the `labels_` of a failed attempt when every initialization leads to an empty cluster. The model is now left unfitted (`labels_` is `None` and `predict` raises `NotFittedError`) and a `ConvergenceWarning` is emitted. ([#788](https://github.com/tslearn-team/tslearn/issues/788))
+* `lcss`, `lcss_path` and `lcss_path_from_metric` now use the `global_constraint` band only to restrict which pairs may be matched, as in Vlachos et al. (2002).
+  Holding the cells outside of the band at 0 made any pair whose last samples differ by more than `eps` score 0 with the Itakura parallelogram (or with a Sakoe-Chiba radius of 0 and equal lengths), and lowered the score of others.
+  Results without a constraint or with a Sakoe-Chiba radius of 1 or more are unchanged.
+  `lcss_path` no longer loops forever with a global constraint, and `lcss_path_from_metric` no longer returns pairs outside of the band.
 * `KShape.fit` now z-normalizes its input, as `predict` already did, so `labels_` matches `predict`
   on the training data when that data was not z-normalized beforehand ([#806](https://github.com/tslearn-team/tslearn/issues/806))
 

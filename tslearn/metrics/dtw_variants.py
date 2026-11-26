@@ -958,7 +958,7 @@ def njit_lcss_accumulated_matrix(s1, s2, eps, mask):
     eps : float
         Matching threshold.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have False values.
+        Mask. Pairs of indexes that may not be matched must have False values.
         
     Returns
     -------
@@ -971,13 +971,15 @@ def njit_lcss_accumulated_matrix(s1, s2, eps, mask):
 
     for i in range(1, l1 + 1):
         for j in range(1, l2 + 1):
-            if mask[i - 1, j - 1]:
-                if numpy.sqrt(_njit_local_squared_dist(s1[i - 1], s2[j - 1])) <= eps:
-                    acc_cost_mat[i][j] = 1 + acc_cost_mat[i - 1][j - 1]
-                else:
-                    acc_cost_mat[i][j] = max(
-                        acc_cost_mat[i][j - 1], acc_cost_mat[i - 1][j]
-                    )
+            if (
+                mask[i - 1, j - 1]
+                and numpy.sqrt(_njit_local_squared_dist(s1[i - 1], s2[j - 1])) <= eps
+            ):
+                acc_cost_mat[i][j] = 1 + acc_cost_mat[i - 1][j - 1]
+            else:
+                acc_cost_mat[i][j] = max(
+                    acc_cost_mat[i][j - 1], acc_cost_mat[i - 1][j]
+                )
 
     return acc_cost_mat
 
@@ -995,7 +997,7 @@ def lcss_accumulated_matrix(s1, s2, eps, mask, be=None):
     eps : float
         Matching threshold.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have False values.
+        Mask. Pairs of indexes that may not be matched must have False values.
     be : Backend object or string or None
         Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
         the NumPy backend is used.
@@ -1018,17 +1020,19 @@ def lcss_accumulated_matrix(s1, s2, eps, mask, be=None):
 
     for i in range(1, l1 + 1):
         for j in range(1, l2 + 1):
+            is_match = False
             if mask[i - 1, j - 1]:
                 if be.is_numpy:
                     squared_dist = _njit_local_squared_dist(s1[i - 1], s2[j - 1])
                 else:
                     squared_dist = _local_squared_dist(s1[i - 1], s2[j - 1], be=be)
-                if be.sqrt(squared_dist) <= eps:
-                    acc_cost_mat[i][j] = 1 + acc_cost_mat[i - 1][j - 1]
-                else:
-                    acc_cost_mat[i][j] = max(
-                        acc_cost_mat[i][j - 1], acc_cost_mat[i - 1][j]
-                    )
+                is_match = be.sqrt(squared_dist) <= eps
+            if is_match:
+                acc_cost_mat[i][j] = 1 + acc_cost_mat[i - 1][j - 1]
+            else:
+                acc_cost_mat[i][j] = max(
+                    acc_cost_mat[i][j - 1], acc_cost_mat[i - 1][j]
+                )
 
     return acc_cost_mat
 
@@ -1046,7 +1050,7 @@ def _njit_lcss(s1, s2, eps, mask):
     eps : float (default: 1.)
         Maximum matching distance threshold.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have False values.
+        Mask. Pairs of indexes that may not be matched must have False values.
 
     Returns
     -------
@@ -1072,7 +1076,7 @@ def _lcss(s1, s2, eps, mask, be=None):
     eps : float (default: 1.)
         Maximum matching distance threshold.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have False values.
+        Mask. Pairs of indexes that may not be matched must have False values.
     be : Backend object or string or None
         Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
         the NumPy backend is used.
@@ -1111,10 +1115,10 @@ def lcss(
     LCSS is computed by matching indexes that are met up until the eps
     threshold, so it leaves some points unmatched and focuses on the
     similar parts of two sequences. The matching can occur even if the
-    time indexes are different. One can set additional constraints to the
-    set of acceptable paths: the Sakoe-Chiba band which is parametrized by a
+    time indexes are different. One can restrict the pairs of indexes that
+    may be matched: the Sakoe-Chiba band which is parametrized by a
     radius or the Itakura parallelogram which is parametrized by a maximum slope.
-    Both these constraints consists in forcing paths to lie close
+    Both these constraints only allow matching indexes that lie close
     to the diagonal. To retrieve a meaningful similarity value from the
     length of the longest common subsequence, the percentage of that value
     regarding the length of the shortest time series is returned.
@@ -1129,6 +1133,9 @@ def lcss(
     Notes
     -----
     Contrary to Dynamic Time Warping and variants, an LCSS path does not need to be contiguous.
+    Following [1]_, a global constraint only restricts which pairs of indexes
+    may be matched: the longest common subsequence is the longest one among
+    the pairs that lie inside the band and are within the eps threshold.
 
     Parameters
     ----------
@@ -1139,7 +1146,8 @@ def lcss(
     eps : float (default: 1.)
         Maximum matching distance threshold.
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
-        Global constraint to restrict admissible paths for LCSS.
+        Global constraint to restrict the pairs of indexes that may be
+        matched for LCSS.
     sakoe_chiba_radius : int or None (default: None)
         Radius to be used for Sakoe-Chiba band global constraint.
         The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [1]_,
@@ -1227,7 +1235,7 @@ def _njit_return_lcss_path(s1, s2, eps, mask, acc_cost_mat, sz1, sz2):
     eps : float
         Maximum matching distance threshold.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have False values.
+        Mask. Pairs of indexes that may not be matched must have False values.
     acc_cost_mat : array-like, shape=(sz1 + 1, sz2 + 1)
         Accumulated cost matrix.
     sz1 : int
@@ -1245,14 +1253,24 @@ def _njit_return_lcss_path(s1, s2, eps, mask, acc_cost_mat, sz1, sz2):
     path = []
 
     while i > 0 and j > 0:
-        if numpy.isfinite(mask[i - 1, j - 1]):
-            if numpy.sqrt(_njit_local_squared_dist(s1[i - 1], s2[j - 1])) <= eps:
-                path.append((i - 1, j - 1))
-                i, j = (i - 1, j - 1)
-            elif acc_cost_mat[i - 1][j] > acc_cost_mat[i][j - 1]:
-                i = i - 1
-            else:
-                j = j - 1
+        if (
+            mask[i - 1, j - 1]
+            and numpy.sqrt(_njit_local_squared_dist(s1[i - 1], s2[j - 1])) <= eps
+        ):
+            path.append((i - 1, j - 1))
+            i, j = (i - 1, j - 1)
+        elif acc_cost_mat[i - 1][j] > acc_cost_mat[i][j - 1]:
+            i = i - 1
+        elif (
+            acc_cost_mat[i - 1][j] == acc_cost_mat[i][j - 1]
+            and i > 1
+            and mask[i - 2, j - 1]
+            and not (j > 1 and mask[i - 1, j - 2])
+        ):
+            # On a tie, stay inside the band if only the upper cell is in it
+            i = i - 1
+        else:
+            j = j - 1
     return path[::-1]
 
 
@@ -1268,7 +1286,7 @@ def _return_lcss_path(s1, s2, eps, mask, acc_cost_mat, sz1, sz2, be=None):
     eps : float
         Maximum matching distance threshold.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have False values.
+        Mask. Pairs of indexes that may not be matched must have False values.
     acc_cost_mat : array-like, shape=(sz1 + 1, sz2 + 1)
         Accumulated cost matrix.
     sz1 : int
@@ -1297,18 +1315,28 @@ def _return_lcss_path(s1, s2, eps, mask, acc_cost_mat, sz1, sz2, be=None):
     path = []
 
     while i > 0 and j > 0:
+        is_match = False
         if mask[i - 1, j - 1]:
             if be.is_numpy:
                 squared_dist = _njit_local_squared_dist(s1[i - 1], s2[j - 1])
             else:
                 squared_dist = _local_squared_dist(s1[i - 1], s2[j - 1])
-            if be.sqrt(squared_dist) <= eps:
-                path.append((i - 1, j - 1))
-                i, j = (i - 1, j - 1)
-            elif acc_cost_mat[i - 1][j] > acc_cost_mat[i][j - 1]:
-                i = i - 1
-            else:
-                j = j - 1
+            is_match = be.sqrt(squared_dist) <= eps
+        if is_match:
+            path.append((i - 1, j - 1))
+            i, j = (i - 1, j - 1)
+        elif acc_cost_mat[i - 1][j] > acc_cost_mat[i][j - 1]:
+            i = i - 1
+        elif (
+            acc_cost_mat[i - 1][j] == acc_cost_mat[i][j - 1]
+            and i > 1
+            and mask[i - 2, j - 1]
+            and not (j > 1 and mask[i - 1, j - 2])
+        ):
+            # On a tie, stay inside the band if only the upper cell is in it
+            i = i - 1
+        else:
+            j = j - 1
     return path[::-1]
 
 
@@ -1326,7 +1354,7 @@ def _njit_return_lcss_path_from_dist_matrix(
     eps : float
         Maximum matching distance threshold.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have False values.
+        Mask. Pairs of indexes that may not be matched must have False values.
     acc_cost_mat : array-like, shape=(sz1 + 1, sz2 + 1)
         Accumulated cost matrix.
     sz1 : int
@@ -1345,14 +1373,21 @@ def _njit_return_lcss_path_from_dist_matrix(
     path = []
 
     while i > 0 and j > 0:
-        if numpy.isfinite(mask[i - 1, j - 1]):
-            if dist_matrix[i - 1, j - 1] <= eps:
-                path.append((i - 1, j - 1))
-                i, j = (i - 1, j - 1)
-            elif acc_cost_mat[i - 1][j] > acc_cost_mat[i][j - 1]:
-                i = i - 1
-            else:
-                j = j - 1
+        if mask[i - 1, j - 1] and dist_matrix[i - 1, j - 1] <= eps:
+            path.append((i - 1, j - 1))
+            i, j = (i - 1, j - 1)
+        elif acc_cost_mat[i - 1][j] > acc_cost_mat[i][j - 1]:
+            i = i - 1
+        elif (
+            acc_cost_mat[i - 1][j] == acc_cost_mat[i][j - 1]
+            and i > 1
+            and mask[i - 2, j - 1]
+            and not (j > 1 and mask[i - 1, j - 2])
+        ):
+            # On a tie, stay inside the band if only the upper cell is in it
+            i = i - 1
+        else:
+            j = j - 1
     return path[::-1]
 
 
@@ -1369,7 +1404,7 @@ def _return_lcss_path_from_dist_matrix(
     eps : float
         Maximum matching distance threshold.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have False values.
+        Mask. Pairs of indexes that may not be matched must have False values.
     acc_cost_mat : array-like, shape=(sz1 + 1, sz2 + 1)
         Accumulated cost matrix.
     sz1 : int
@@ -1398,14 +1433,21 @@ def _return_lcss_path_from_dist_matrix(
     path = []
 
     while i > 0 and j > 0:
-        if mask[i - 1, j - 1]:
-            if dist_matrix[i - 1, j - 1] <= eps:
-                path.append((i - 1, j - 1))
-                i, j = (i - 1, j - 1)
-            elif acc_cost_mat[i - 1][j] > acc_cost_mat[i][j - 1]:
-                i = i - 1
-            else:
-                j = j - 1
+        if mask[i - 1, j - 1] and dist_matrix[i - 1, j - 1] <= eps:
+            path.append((i - 1, j - 1))
+            i, j = (i - 1, j - 1)
+        elif acc_cost_mat[i - 1][j] > acc_cost_mat[i][j - 1]:
+            i = i - 1
+        elif (
+            acc_cost_mat[i - 1][j] == acc_cost_mat[i][j - 1]
+            and i > 1
+            and mask[i - 2, j - 1]
+            and not (j > 1 and mask[i - 1, j - 2])
+        ):
+            # On a tie, stay inside the band if only the upper cell is in it
+            i = i - 1
+        else:
+            j = j - 1
     return path[::-1]
 
 
@@ -1425,11 +1467,11 @@ def lcss_path(
     LCSS is computed by matching indexes that are met up until the eps
     threshold, so it leaves some points unmatched and focuses on the
     similar parts of two sequences. The matching can occur even if the
-    time indexes are different. One can set additional constraints to
-    the set of acceptable paths: the Sakoe-Chiba band which is parametrized
+    time indexes are different. One can restrict the pairs of indexes
+    that may be matched: the Sakoe-Chiba band which is parametrized
     by a radius or the Itakura parallelogram which is parametrized by a
-    maximum slope. Both these constraints consists in forcing paths to lie
-    close to the diagonal.
+    maximum slope. Both these constraints only allow matching indexes
+    that lie close to the diagonal.
 
     To retrieve a meaningful similarity value from the length of the
     longest common subsequence, the percentage of that value regarding
@@ -1445,6 +1487,9 @@ def lcss_path(
     Notes
     -----
     Contrary to Dynamic Time Warping and variants, an LCSS path does not need to be contiguous.
+    Following [1]_, a global constraint only restricts which pairs of indexes
+    may be matched: the longest common subsequence is the longest one among
+    the pairs that lie inside the band and are within the eps threshold.
 
     Parameters
     ----------
@@ -1455,7 +1500,8 @@ def lcss_path(
     eps : float (default: 1.)
         Maximum matching distance threshold.
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
-        Global constraint to restrict admissible paths for LCSS.
+        Global constraint to restrict the pairs of indexes that may be
+        matched for LCSS.
     sakoe_chiba_radius : int or None (default: None)
         Radius to be used for Sakoe-Chiba band global constraint.
         The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [1]_,
@@ -1554,7 +1600,7 @@ def njit_lcss_accumulated_matrix_from_dist_matrix(dist_matrix, eps, mask):
     eps : float (default: 1.)
         Maximum matching distance threshold.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have False values.
+        Mask. Pairs of indexes that may not be matched must have False values.
 
     Returns
     -------
@@ -1566,13 +1612,12 @@ def njit_lcss_accumulated_matrix_from_dist_matrix(dist_matrix, eps, mask):
 
     for i in range(1, l1 + 1):
         for j in range(1, l2 + 1):
-            if mask[i - 1, j - 1]:
-                if dist_matrix[i - 1, j - 1] <= eps:
-                    acc_cost_mat[i][j] = 1 + acc_cost_mat[i - 1][j - 1]
-                else:
-                    acc_cost_mat[i][j] = max(
-                        acc_cost_mat[i][j - 1], acc_cost_mat[i - 1][j]
-                    )
+            if mask[i - 1, j - 1] and dist_matrix[i - 1, j - 1] <= eps:
+                acc_cost_mat[i][j] = 1 + acc_cost_mat[i - 1][j - 1]
+            else:
+                acc_cost_mat[i][j] = max(
+                    acc_cost_mat[i][j - 1], acc_cost_mat[i - 1][j]
+                )
 
     return acc_cost_mat
 
@@ -1588,7 +1633,7 @@ def lcss_accumulated_matrix_from_dist_matrix(dist_matrix, eps, mask, be=None):
     eps : float (default: 1.)
         Maximum matching distance threshold.
     mask : array-like, shape=(sz1, sz2)
-        Mask. Unconsidered cells must have False values.
+        Mask. Pairs of indexes that may not be matched must have False values.
     be : Backend object or string or None
         Backend. If `be` is an instance of the class `NumPyBackend` or the string `"numpy"`,
         the NumPy backend is used.
@@ -1609,13 +1654,12 @@ def lcss_accumulated_matrix_from_dist_matrix(dist_matrix, eps, mask, be=None):
 
     for i in range(1, l1 + 1):
         for j in range(1, l2 + 1):
-            if mask[i - 1, j - 1]:
-                if dist_matrix[i - 1, j - 1] <= eps:
-                    acc_cost_mat[i][j] = 1 + acc_cost_mat[i - 1][j - 1]
-                else:
-                    acc_cost_mat[i][j] = max(
-                        acc_cost_mat[i][j - 1], acc_cost_mat[i - 1][j]
-                    )
+            if mask[i - 1, j - 1] and dist_matrix[i - 1, j - 1] <= eps:
+                acc_cost_mat[i][j] = 1 + acc_cost_mat[i - 1][j - 1]
+            else:
+                acc_cost_mat[i][j] = max(
+                    acc_cost_mat[i][j - 1], acc_cost_mat[i - 1][j]
+                )
 
     return acc_cost_mat
 
@@ -1669,7 +1713,8 @@ def lcss_path_from_metric(
         arrays as input and return a value indicating the distance between
         them.
     global_constraint : {"itakura", "sakoe_chiba"} or None (default: None)
-        Global constraint to restrict admissible paths for LCSS.
+        Global constraint to restrict the pairs of indexes that may be
+        matched for LCSS.
     sakoe_chiba_radius : int or None (default: None)
         Radius to be used for Sakoe-Chiba band global constraint.
         The Sakoe-Chiba radius corresponds to the parameter :math:`\delta` mentioned in [1]_,

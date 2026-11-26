@@ -96,9 +96,11 @@ the value 1 being taken when the two time series completely match.
 Additional constraints
 ----------------------
 
-One can set additional constraints to the set of acceptable paths.
-These constraints typically consists in forcing paths to lie close to the
-diagonal.
+One can restrict the pairs of indexes that may be matched to those lying close
+to the diagonal.
+As in [1]_, such a constraint only restricts which pairs may be matched:
+the longest common subsequence is then the longest one among the pairs that lie
+inside the band and are within the :math:`\epsilon` threshold.
 
 First, the Sakoe-Chiba band is parametrized by a radius :math:`r` (number of
 off-diagonal elements to consider, also called warping window size sometimes), 
