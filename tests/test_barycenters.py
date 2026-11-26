@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 import tslearn.barycenters
-from tslearn.utils import to_time_series
+from tslearn.utils import to_time_series, to_time_series_dataset
 
 
 __author__ = 'Romain Tavenard romain.tavenard[at]univ-rennes2.fr'
@@ -197,6 +197,47 @@ def test_dba_global_constraint(metric_params):
         random_state=1
     )
     np.testing.assert_allclose(actual, x.mean(axis=0))
+
+
+@pytest.mark.parametrize(
+    "dba_function",
+    [
+        tslearn.barycenters.dtw_barycenter_averaging,
+        tslearn.barycenters.dtw_barycenter_averaging_petitjean,
+        tslearn.barycenters.dtw_barycenter_averaging_subgradient,
+    ]
+)
+def test_dba_init_barycenter_padded_with_nans(dba_function):
+    # A series taken from a variable length dataset is padded with NaNs: the
+    # padding is not part of the initial barycenter
+    rng = np.random.RandomState(1)
+    time_series = to_time_series_dataset(
+        [rng.randn(sz, 1) + 5 for sz in (11, 6, 9, 11, 7, 11)]
+    )
+    padded_init = time_series[1]
+    assert padded_init.shape[0] == 11 and np.isnan(padded_init[-1]).all()
+    init = padded_init[:6]
+
+    kwargs = {"max_iter": 5}
+    if dba_function.__name__.endswith("subgradient"):
+        kwargs["random_state"] = 0
+
+    expected = dba_function(time_series, init_barycenter=init, **kwargs)
+    actual = dba_function(time_series, init_barycenter=padded_init, **kwargs)
+    assert actual.shape == (6, 1)
+    np.testing.assert_allclose(actual, expected)
+
+
+def test_dba_init_barycenter_list():
+    time_series = [[1, 2, 3, 4], [1, 2, 4, 5]]
+    init = [[1.], [2.], [3.], [4.]]
+    actual = tslearn.barycenters.dtw_barycenter_averaging(
+        time_series, init_barycenter=init
+    )
+    expected = tslearn.barycenters.dtw_barycenter_averaging(
+        time_series, init_barycenter=np.array(init)
+    )
+    np.testing.assert_allclose(actual, expected)
 
 
 def test_dba_subgradient_weights():

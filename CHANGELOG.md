@@ -14,6 +14,9 @@ Changelogs for this project are recorded in this file since v0.2.0.
 ### Fixed
 
 * Consistent early checking of datasets feature size added in `cdist_dtw`, `cdist_soft_dtw`, `cdist_soft_dtw_normalized`, `cdist_gak` and `cdist_frechet`([#834](https://github.com/tslearn-team/tslearn/issues/834))
+* `dtw_barycenter_averaging` no longer returns `NaN` rows, `None` or a barycenter of the wrong size when `init_barycenter` is a series padded with `NaN`
+  (for instance a series of a variable length dataset): the padding is now ignored, as in `dtw_barycenter_averaging_subgradient`.
+  `init_barycenter` can also be given as a nested list.
 * Inertia of `TimeSeriesKMeans` now properly reflects the final centroid updates ([#832](https://github.com/tslearn-team/tslearn/issues/832))
 * `VARIMA` and `AutoVARIMA` now preserve the residual history of shorter series
   when forecasting a batch of unequal-length time series.

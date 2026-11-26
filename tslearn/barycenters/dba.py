@@ -208,12 +208,12 @@ def dtw_barycenter_averaging_petitjean(
     if init_barycenter is None:
         barycenter = _init_avg(X_, barycenter_size)
     else:
-        barycenter_size = init_barycenter.shape[0]
         barycenter = to_time_series(
             init_barycenter,
             remove_nans=True,
             be=backend
         )
+        barycenter_size = barycenter.shape[0]
     cost_prev, cost = numpy.inf, numpy.inf
     for it in range(max_iter):
         assign, cost = _petitjean_assignment(X_, barycenter, weights, metric_params, n_jobs)
@@ -719,12 +719,12 @@ def dtw_barycenter_averaging_one_init(
     if init_barycenter is None:
         barycenter = _init_avg(X_, barycenter_size)
     else:
-        barycenter_size = init_barycenter.shape[0]
         barycenter = to_time_series(
             init_barycenter,
             remove_nans=True,
             be=backend
         )
+        barycenter_size = barycenter.shape[0]
     cost_prev, cost = numpy.inf, numpy.inf
     for it in range(max_iter):
         list_p_k, cost = _mm_assignment(
