@@ -78,3 +78,33 @@ def test_fetal_ecg_name_listed(require_ucr_datasets):
     datasets = UCR_UEA_datasets().list_univariate_datasets()
     assert "NonInvasiveFetalECGThorax1" in datasets
     assert "NonInvasiveFatalECGThorax1" not in datasets
+
+
+def test_load_dataset_replaces_existing_dataset_dir(tmp_path, monkeypatch):
+    """A leftover dataset directory is cleared before downloading again.
+
+    ``Path.unlink`` raises ``PermissionError`` (not ``IsADirectoryError``)
+    on directories on macOS and Windows, which used to make ``load_dataset``
+    crash there instead of re-downloading.
+    """
+    import warnings
+
+    from tslearn.datasets import ucr_uea
+
+    downloads = []
+
+    def fake_extract(url, target_dir=None, verbose=False):
+        downloads.append(target_dir)
+        assert not Path(target_dir).exists()
+        return None
+
+    monkeypatch.setattr(ucr_uea, "extract_from_zip_url", fake_extract)
+    data_loader = UCR_UEA_datasets(use_cache=False, root_dir=tmp_path)
+    dataset_dir = Path(tmp_path) / "UCR_UEA" / "Trace"
+    dataset_dir.mkdir(parents=True)
+    (dataset_dir / "leftover.txt").write_text("partial download")
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        assert data_loader.load_dataset("Trace") == (None, None, None, None)
+    assert downloads == [dataset_dir]

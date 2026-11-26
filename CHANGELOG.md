@@ -15,6 +15,8 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 * Consistent early checking of datasets feature size added in `cdist_dtw`, `cdist_soft_dtw`, `cdist_soft_dtw_normalized`, `cdist_gak` and `cdist_frechet`([#834](https://github.com/tslearn-team/tslearn/issues/834))
 * Inertia of `TimeSeriesKMeans` now properly reflects the final centroid updates ([#832](https://github.com/tslearn-team/tslearn/issues/832))
+* `UCR_UEA_datasets.load_dataset` no longer raises `PermissionError` on macOS and Windows when
+  the dataset folder already exists (for instance with `use_cache=False` or after a failed download).
 * `VARIMA` and `AutoVARIMA` now preserve the residual history of shorter series
   when forecasting a batch of unequal-length time series.
 * Preserve autograd for custom distances in `SoftDTWLossPyTorch` by avoiding
