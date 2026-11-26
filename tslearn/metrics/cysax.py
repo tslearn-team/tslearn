@@ -25,12 +25,12 @@ def inv_transform_paa(dataset_paa, original_size):
         representation.
     """
     n_ts, sz, d = dataset_paa.shape
-    seg_sz = original_size // sz
     dataset_out = np.zeros((n_ts, original_size, d))
     for t in prange(sz):
-        t0 = t * seg_sz
+        t0 = t * original_size // sz
+        t1 = (t + 1) * original_size // sz
         for i_ts in range(n_ts):
-            dataset_out[i_ts, t0 : t0 + seg_sz, :] = dataset_paa[i_ts, t, :]
+            dataset_out[i_ts, t0:t1, :] = dataset_paa[i_ts, t, :]
     return dataset_out
 
 
@@ -64,12 +64,13 @@ def cydist_sax(sax1, sax2, breakpoints, original_size):
     s = 0.0
     sz, d = sax1.shape
     for t in prange(sz):
+        seg_sz = (t + 1) * original_size // sz - t * original_size // sz
         for di in range(d):
             if np.abs(sax1[t, di] - sax2[t, di]) > 1:
                 max_symbol = max(sax1[t, di], sax2[t, di])
                 min_symbol = min(sax1[t, di], sax2[t, di])
-                s += (breakpoints[max_symbol - 1] - breakpoints[min_symbol]) ** 2
-    dist_sax = np.sqrt(s * float(original_size) / sz)
+                s += seg_sz * (breakpoints[max_symbol - 1] - breakpoints[min_symbol]) ** 2
+    dist_sax = np.sqrt(s)
 
     return dist_sax
 
@@ -91,13 +92,13 @@ def inv_transform_sax(dataset_sax, breakpoints_middle_, original_size):
     dataset_out : array-like, shape=(n_ts, original_size, d), dtype=float64
     """
     n_ts, sz, d = dataset_sax.shape
-    seg_sz = original_size // sz
     dataset_out = np.zeros((n_ts, original_size, d))
 
     for i in prange(n_ts):
         for t in range(sz):
-            t0 = t * seg_sz
-            dataset_out[i, t0 : t0 + seg_sz, :] = breakpoints_middle_[
+            t0 = t * original_size // sz
+            t1 = (t + 1) * original_size // sz
+            dataset_out[i, t0:t1, :] = breakpoints_middle_[
                 dataset_sax[i, t, :]
             ]
     return dataset_out
@@ -155,17 +156,17 @@ def cydist_1d_sax(
     assert sz == sax2.shape[0] and d_1d_sax == sax2.shape[1]
     s = 0.0
     d = d_1d_sax // 2
-    seg_sz = original_size // sz
 
     for t in prange(sz):
-        t0 = t * seg_sz
-        t_middle = float(t0) + 0.5 * (seg_sz - 1)
+        t0 = t * original_size // sz
+        t1 = (t + 1) * original_size // sz
+        t_middle = float(t0) + 0.5 * (t1 - t0 - 1)
         for di in range(d):
             avg1 = breakpoints_avg_middle_[sax1[t, di]]
             avg2 = breakpoints_avg_middle_[sax2[t, di]]
             slope1 = breakpoints_slope_middle_[sax1[t, di + d]]
             slope2 = breakpoints_slope_middle_[sax2[t, di + d]]
-            for tt in range(t0, seg_sz * (t + 1)):
+            for tt in range(t0, t1):
                 s += (
                     avg1 + slope1 * (tt - t_middle) - (avg2 + slope2 * (tt - t_middle))
                 ) ** 2
@@ -196,16 +197,16 @@ def inv_transform_1d_sax(
     """
     n_ts, sz, d_1d_sax = dataset_sax.shape
     d = d_1d_sax // 2
-    seg_sz = original_size // sz
     dataset_out = np.empty((n_ts, original_size, d))
 
     for i in prange(n_ts):
         for t in range(sz):
-            t0 = t * seg_sz
-            t_middle = float(t0) + 0.5 * (seg_sz - 1)
+            t0 = t * original_size // sz
+            t1 = (t + 1) * original_size // sz
+            t_middle = float(t0) + 0.5 * (t1 - t0 - 1)
             for di in range(d):
                 avg = breakpoints_avg_middle_[dataset_sax[i, t, di]]
                 slope = breakpoints_slope_middle_[dataset_sax[i, t, di + d]]
-                for tt in range(t0, seg_sz * (t + 1)):
+                for tt in range(t0, t1):
                     dataset_out[i, tt, di] = avg + slope * (tt - t_middle)
     return dataset_out

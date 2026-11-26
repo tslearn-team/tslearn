@@ -13,6 +13,11 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ### Fixed
 
+* `PiecewiseAggregateApproximation`, `SymbolicAggregateApproximation` and
+  `OneD_SymbolicAggregateApproximation` now use every time step when the length of a series
+  is not a multiple of `n_segments`. Segment lengths differ by at most one. Before, the last
+  `sz % n_segments` time steps were ignored, `inverse_transform` left them empty, and
+  `distance_paa` could exceed the Euclidean distance it is meant to lower bound.
 * Consistent early checking of datasets feature size added in `cdist_dtw`, `cdist_soft_dtw`, `cdist_soft_dtw_normalized`, `cdist_gak` and `cdist_frechet`([#834](https://github.com/tslearn-team/tslearn/issues/834))
 * Inertia of `TimeSeriesKMeans` now properly reflects the final centroid updates ([#832](https://github.com/tslearn-team/tslearn/issues/832))
 * `VARIMA` and `AutoVARIMA` now preserve the residual history of shorter series
