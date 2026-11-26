@@ -462,6 +462,9 @@ def cdist_gak(
     dataset1 = to_time_series_dataset(dataset1, be=be)
     if dataset2 is not None:
         dataset2 = to_time_series_dataset(dataset2, be=be)
+        if dataset1.shape[-1] != dataset2.shape[-1]:
+            raise ValueError("Datasets must have the same feature size.")
+
     return _cdist_gak(
         dataset1=dataset1,
         dataset2=dataset2,

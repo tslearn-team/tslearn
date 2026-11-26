@@ -1196,3 +1196,21 @@ def test_cdist_frechet_honours_global_constraint():
                                            sakoe_chiba_radius=1)
 
     np.testing.assert_allclose(actual, expected)
+
+
+@pytest.mark.parametrize(
+    'func',
+    [tslearn.metrics.cdist_dtw,
+     tslearn.metrics.cdist_soft_dtw,
+     tslearn.metrics.cdist_soft_dtw_normalized,
+     tslearn.metrics.cdist_gak,
+     tslearn.metrics.cdist_frechet
+     ]
+)
+def test_cdist_feature_size_mismatch(func):
+    rng = np.random.RandomState(0)
+    dataset1 = rng.randn(3, 5, 2)
+    dataset2 = rng.randn(2, 6, 3)
+
+    with pytest.raises(ValueError, match="same feature size"):
+        func(dataset1, dataset2)
