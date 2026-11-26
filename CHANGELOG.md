@@ -13,7 +13,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ### Fixed
 
-* Consistent early checking of datasets feature size added in `cdist_dtw`, `cdist_soft_dtw`, `cdist_soft_dtw_normalized`, `cdist_gak`, `cdist_sax` and `cdist_frechet`([#835](https://github.com/tslearn-team/tslearn/issues/835))
+* Consistent early checking of datasets feature size added in `cdist_dtw`, `cdist_soft_dtw`, `cdist_soft_dtw_normalized`, `cdist_gak` and `cdist_frechet`([#835](https://github.com/tslearn-team/tslearn/issues/835))
 * Inertia of `TimeSeriesKMeans` now properly reflects the final centroid updates ([#832](https://github.com/tslearn-team/tslearn/issues/832))
 * `VARIMA` and `AutoVARIMA` now preserve the residual history of shorter series
   when forecasting a batch of unequal-length time series.
