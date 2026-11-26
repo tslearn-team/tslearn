@@ -62,6 +62,49 @@ def test_soft_dtw_loss_pytorch():
     torch.testing.assert_close(batch_ts_2.grad, expected_grad_ts2)
 
 
+@pytest.mark.parametrize("normalize", [False, True])
+@pytest.mark.parametrize("device", ["cpu", "cuda"])
+def test_soft_dtw_padded_pairs(normalize, device):
+    torch = pytest.importorskip("torch")
+    if device == "cuda" and not torch.cuda.is_available():
+        pytest.skip("CUDA unavailable")
+    x_lengths, y_lengths = [3, 1, 3, 4], [2, 3, 2, 4]
+    x, y = (torch.arange(32, device=device, dtype=torch.float64).reshape(4, 4, 2) / scale
+            for scale in (15, 23))
+    for i, (m, n) in enumerate(zip(x_lengths, y_lengths)):
+        x[i, m:] = torch.nan
+        y[i, n:] = torch.nan
+    x.requires_grad_()
+    y.requires_grad_()
+    loss = tslearn.metrics.SoftDTWLossPyTorch(
+        normalize=normalize, dist_func=functools.partial(torch.cdist, p=1),
+        global_constraint="sakoe_chiba", sakoe_chiba_radius=1,
+    )
+    actual = loss(x, y, x_lengths=x_lengths, y_lengths=torch.tensor(y_lengths, device=device))
+    expected = torch.cat([loss(x[i:i+1, :m], y[i:i+1, :n])
+                          for i, (m, n) in enumerate(zip(x_lengths, y_lengths))])
+    torch.testing.assert_close(actual, expected)
+    weights = torch.arange(1, 5, device=device, dtype=x.dtype)
+    for grad, reference in zip(torch.autograd.grad(actual @ weights, (x, y)),
+                               torch.autograd.grad(expected @ weights, (x, y))):
+        torch.testing.assert_close(grad, reference)
+
+
+def test_soft_dtw_lengths():
+    torch = pytest.importorskip("torch")
+    x = torch.ones(2, 4, 1)
+    loss = tslearn.metrics.SoftDTWLossPyTorch()
+    torch.testing.assert_close(loss(x, x, y_lengths=[2, 2]), loss(x, x[:, :2]))
+    for lengths in ([0, 2], [1, 5], [2], [[1, 2]], [1., 2.], [True, False]):
+        with pytest.raises(ValueError):
+            loss(x, x, x_lengths=lengths)
+    empty = x[:0].requires_grad_()
+    values = loss(empty, empty, x_lengths=[], y_lengths=[])
+    assert values.shape == (0,)
+    values.sum().backward()
+    torch.testing.assert_close(empty.grad, torch.zeros_like(empty))
+
+
 def test_soft_dtw_loss_pytorch_precision():
     torch = pytest.importorskip("torch")
 

@@ -11,6 +11,10 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ## [Towards v0.11.0]
 
+### Added
+
+* Allow per-series lengths in `SoftDTWLossPyTorch` for right-padded batches.
+
 ### Fixed
 
 * Inertia of `TimeSeriesKMeans` now properly reflects the final centroid updates ([#832](https://github.com/tslearn-team/tslearn/issues/832))

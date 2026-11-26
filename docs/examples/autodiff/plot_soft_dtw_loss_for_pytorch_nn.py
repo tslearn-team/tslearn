@@ -148,3 +148,16 @@ plt.title('Multi-step ahead forecasting using Soft-DTW loss')
 plt.plot(X_test[ts_index].ravel())
 plt.plot(np.arange(150, 275), y_pred[ts_index], 'r-')
 plt.show()
+
+##############################################################################
+# Scoring partially observed forecasts
+# ------------------------------------
+#
+# Suppose only the first 40 and 90 future observations are available for two
+# of the test series. Pass these horizons to the loss to score each forecast
+# over its observed interval, even though the model predicts 125 steps for both.
+
+horizons = [40, 90]
+forecasts = model(X_test[:2, :150, 0])
+targets = forecasts.new_tensor(X_test[:2, 150:])
+scores = model.loss(forecasts, targets, x_lengths=horizons, y_lengths=horizons)
