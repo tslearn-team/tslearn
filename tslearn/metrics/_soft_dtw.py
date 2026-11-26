@@ -884,6 +884,8 @@ def cdist_soft_dtw(
     dataset1 = to_time_series_dataset(dataset1, be=be)
     if dataset2 is not None:
         dataset2 = to_time_series_dataset(dataset2, be=be)
+        if dataset1.shape[-1] != dataset2.shape[-1]:
+            raise ValueError("Datasets must have the same feature size.")
 
     return _cdist_soft_dtw(
         dataset1=dataset1,
@@ -1101,6 +1103,8 @@ def cdist_soft_dtw_normalized(
     dataset1 = to_time_series_dataset(dataset1, be=be)
     if dataset2 is not None:
         dataset2 = to_time_series_dataset(dataset2, be=be)
+        if dataset1.shape[-1] != dataset2.shape[-1]:
+            raise ValueError("Datasets must have the same feature size.")
 
     return _cdist_soft_dtw_normalized(
         dataset1=dataset1,
