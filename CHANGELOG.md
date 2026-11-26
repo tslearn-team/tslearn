@@ -40,6 +40,8 @@ Changelogs for this project are recorded in this file since v0.2.0.
   Holding the cells outside of the band at 0 made any pair whose last samples differ by more than `eps` score 0 with the Itakura parallelogram (or with a Sakoe-Chiba radius of 0 and equal lengths), and lowered the score of others.
   Results without a constraint or with a Sakoe-Chiba radius of 1 or more are unchanged.
   `lcss_path` no longer loops forever with a global constraint, and `lcss_path_from_metric` no longer returns pairs outside of the band.
+* `KShape.fit` now z-normalizes its input, as `predict` already did, so `labels_` matches `predict`
+  on the training data when that data was not z-normalized beforehand ([#806](https://github.com/tslearn-team/tslearn/issues/806))
 
 ### Deprecated
 
