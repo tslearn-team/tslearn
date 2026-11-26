@@ -242,7 +242,7 @@ jobs:
       python --version
       python -m pip install --no-cache-dir --upgrade pip
       python -m pip install --no-cache-dir pytest-azurepipelines
-      python -m pip install --no-cache-dir coverage pytest-cov
+      python -m pip install --no-cache-dir 'coverage<7.17.5' pytest-cov
       python -m pip install --no-cache-dir .[tests]
     displayName: 'Install (basic) tslearn and dependencies for tests'
 
