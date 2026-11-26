@@ -71,6 +71,9 @@ def cdist_sax(
     dataset1 = to_time_series_dataset(dataset1, dtype=int,  be=be)
     if dataset2 is not None:
         dataset2 = to_time_series_dataset(dataset2, dtype=int, be=be)
+        if dataset1.shape[-1] != dataset2.shape[-1]:
+            raise ValueError("Datasets must have the same feature size.")
+
     return _cdist_sax(
         dataset1=dataset1,
         dataset2=dataset2,
