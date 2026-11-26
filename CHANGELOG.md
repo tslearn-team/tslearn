@@ -13,7 +13,7 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ### Fixed
 
-* Consistent early checking of datasets feature size added in `cdist_dtw`, `cdist_soft_dtw`, `cdist_soft_dtw_normalized`, `cdist_gak` and `cdist_frechet`([#835](https://github.com/tslearn-team/tslearn/issues/835))
+* Consistent early checking of datasets feature size added in `cdist_dtw`, `cdist_soft_dtw`, `cdist_soft_dtw_normalized`, `cdist_gak` and `cdist_frechet`([#834](https://github.com/tslearn-team/tslearn/issues/834))
 * `dtw_barycenter_averaging` no longer returns `NaN` rows, `None` or a barycenter of the wrong size when `init_barycenter` is a series padded with `NaN`
   (for instance a series of a variable length dataset): the padding is now ignored, as in `dtw_barycenter_averaging_subgradient`.
   `init_barycenter` can also be given as a nested list.
