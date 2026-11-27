@@ -52,10 +52,12 @@ class TimeSeriesSVMMixin(TimeSeriesMixin):
 
         if fit_time:
             self._X_fit = X
-            if self.gamma == "auto":
+            if self.gamma != "auto":
+                self.gamma_ = self.gamma
+            elif self.kernel in VARIABLE_LENGTH_METRICS:
                 self.gamma_ = gamma_soft_dtw(X, random_state=self.random_state)
             else:
-                self.gamma_ = self.gamma
+                self.gamma_ = 1. / (X.shape[1] * X.shape[2])
             self.classes_ = numpy.unique(y)
         else:
             check_is_fitted(self, ['svm_estimator_', '_X_fit'])
