@@ -470,7 +470,161 @@ def _subsequence_cost_matrix(subseq, longseq, be=None):
     return cum_sum[1:, 1:]
 
 
-def subsequence_cost_matrix(subseq, longseq, be=None):
+def _sakoe_chiba_start_radius(global_constraint, sakoe_chiba_radius):
+    """Validate the global constraint arguments of the subsequence functions.
+
+    Returns
+    -------
+    int or None
+        The radius of the band measured from the start of the match, or None
+        if no constraint is requested.
+    """
+    if global_constraint in (None, ""):
+        return None
+    if global_constraint != "sakoe_chiba":
+        raise ValueError(
+            "global_constraint must be None or 'sakoe_chiba' for subsequence "
+            "matching, got %r." % (global_constraint,)
+        )
+    if sakoe_chiba_radius is None:
+        sakoe_chiba_radius = 1
+    if int(sakoe_chiba_radius) != sakoe_chiba_radius or sakoe_chiba_radius < 0:
+        raise ValueError(
+            "sakoe_chiba_radius must be a non-negative integer, got %r."
+            % (sakoe_chiba_radius,)
+        )
+    return int(sakoe_chiba_radius)
+
+
+@njit()
+def _njit_band_table(subseq, longseq, radius, start):
+    """Accumulated costs of the paths that start at ``(0, start)`` and stay in
+    the band ``|j - start - i| <= radius``.
+
+    Cell ``(i, j)`` is stored at ``table[i, j - start - i + radius]``.
+    """
+    l1 = subseq.shape[0]
+    l2 = longseq.shape[0]
+    width = 2 * radius + 1
+    table = numpy.full((l1, width), numpy.inf)
+    table[0, radius] = _njit_local_squared_dist(subseq[0], longseq[start])
+    for i in range(1, l1):
+        for k in range(width):
+            j = start + i + k - radius
+            if j < start or j >= l2:
+                continue
+            best = table[i - 1, k]
+            if k + 1 < width and table[i - 1, k + 1] < best:
+                best = table[i - 1, k + 1]
+            if k > 0 and table[i, k - 1] < best:
+                best = table[i, k - 1]
+            table[i, k] = _njit_local_squared_dist(subseq[i], longseq[j]) + best
+    return table
+
+
+@njit()
+def _njit_band_cost_matrix(subseq, longseq, radius):
+    l1 = subseq.shape[0]
+    l2 = longseq.shape[0]
+    width = 2 * radius + 1
+    mat = numpy.full((l1, l2), numpy.inf)
+    starts = numpy.zeros(l2, dtype=numpy.int64)
+    for start in range(l2):
+        table = _njit_band_table(subseq, longseq, radius, start)
+        for i in range(l1):
+            for k in range(width):
+                j = start + i + k - radius
+                if j < start or j >= l2:
+                    continue
+                if table[i, k] < mat[i, j]:
+                    mat[i, j] = table[i, k]
+                    if i == l1 - 1:
+                        starts[j] = start
+    return mat, starts
+
+
+def _band_table(subseq, longseq, radius, start, be):
+    l1 = subseq.shape[0]
+    l2 = longseq.shape[0]
+    width = 2 * radius + 1
+    table = be.full((l1, width), be.inf)
+    table[0, radius] = _local_squared_dist(subseq[0], longseq[start], be=be)
+    for i in range(1, l1):
+        for k in range(width):
+            j = start + i + k - radius
+            if j < start or j >= l2:
+                continue
+            best = table[i - 1, k]
+            if k + 1 < width and table[i - 1, k + 1] < best:
+                best = table[i - 1, k + 1]
+            if k > 0 and table[i, k - 1] < best:
+                best = table[i, k - 1]
+            table[i, k] = _local_squared_dist(subseq[i], longseq[j], be=be) + best
+    return table
+
+
+def _band_cost_matrix(subseq, longseq, radius, be):
+    l1 = subseq.shape[0]
+    l2 = longseq.shape[0]
+    width = 2 * radius + 1
+    mat = be.full((l1, l2), be.inf)
+    starts = [0] * l2
+    for start in range(l2):
+        table = _band_table(subseq, longseq, radius, start, be)
+        for i in range(l1):
+            for k in range(width):
+                j = start + i + k - radius
+                if j < start or j >= l2:
+                    continue
+                if table[i, k] < mat[i, j]:
+                    mat[i, j] = table[i, k]
+                    if i == l1 - 1:
+                        starts[j] = start
+    return mat, starts
+
+
+def _cap_radius(radius, subseq, longseq):
+    # A band wider than the longest possible offset is the same as no band.
+    return min(radius, subseq.shape[0] + longseq.shape[0])
+
+
+def _band_cost_matrix_and_starts(subseq, longseq, radius, be):
+    radius = _cap_radius(radius, subseq, longseq)
+    if be.is_numpy:
+        return _njit_band_cost_matrix(subseq, longseq, radius)
+    return _band_cost_matrix(subseq, longseq, radius, be)
+
+
+def _band_path(subseq, longseq, radius, start, idx_path_end, be):
+    """Optimal path from ``(0, start)`` to ``(len(subseq) - 1, idx_path_end)``
+    inside the band."""
+    radius = _cap_radius(radius, subseq, longseq)
+    if be.is_numpy:
+        table = _njit_band_table(subseq, longseq, radius, int(start))
+    else:
+        table = _band_table(subseq, longseq, radius, int(start), be)
+    i = subseq.shape[0] - 1
+    j = int(idx_path_end)
+    k = j - int(start) - i + radius
+    path = [(i, j)]
+    while i != 0:
+        candidates = [
+            (table[i - 1, k], i - 1, j - 1, k),
+            (table[i - 1, k + 1] if k + 1 < table.shape[1] else be.inf, i - 1, j, k + 1),
+            (table[i, k - 1] if k > 0 else be.inf, i, j - 1, k - 1),
+        ]
+        best = candidates[0]
+        for cand in candidates[1:]:
+            if cand[0] < best[0]:
+                best = cand
+        _, i, j, k = best
+        path.append((i, j))
+    return path[::-1]
+
+
+def subsequence_cost_matrix(
+    subseq, longseq, be=None, global_constraint=None, sakoe_chiba_radius=None
+):
     """Compute the accumulated cost matrix score between a subsequence and
     a reference time series.
 
@@ -487,15 +641,34 @@ def subsequence_cost_matrix(subseq, longseq, be=None):
         the PyTorch backend is used.
         If `be` is `None`, the backend is determined by the input arrays.
         See our :ref:`dedicated user-guide page <backend>` for more information.
+    global_constraint : {"sakoe_chiba"} or None (default: None)
+        Global constraint to restrict admissible paths. If "sakoe_chiba", the
+        band is measured from the position where the match starts: if a path
+        starts at column `s` of `longseq`, only the cells `(i, j)` with
+        `|j - s - i| <= sakoe_chiba_radius` can be used. This keeps the
+        matched window close to the length of `subseq`.
+        "itakura" is not supported for subsequence matching.
+    sakoe_chiba_radius : int or None (default: None)
+        Radius to be used for the Sakoe-Chiba band. If None and
+        `global_constraint` is set to "sakoe_chiba", a radius of 1 is used.
+        Ignored if `global_constraint` is None.
 
     Returns
     -------
     mat : array-like, shape=(sz1, sz2)
-        Accumulated cost matrix.
+        Accumulated cost matrix. When a global constraint is used, cell
+        `(i, j)` holds the lowest cost over all the starting positions of the
+        paths that end in `(i, j)` and stay in the band of their own start.
+        Cells that cannot be reached are `inf`. Such a matrix cannot be passed
+        to :func:`subsequence_path` (which does not know the band): use
+        :func:`dtw_subsequence_path` to get a constrained path.
     """
     be = instantiate_backend(be, subseq, longseq)
     subseq = to_time_series(subseq, remove_nans=True, be=be)
     longseq = to_time_series(longseq, remove_nans=True, be=be)
+    radius = _sakoe_chiba_start_radius(global_constraint, sakoe_chiba_radius)
+    if radius is not None:
+        return _band_cost_matrix_and_starts(subseq, longseq, radius, be)[0]
     if be.is_numpy:
         return _njit_subsequence_cost_matrix(subseq, longseq)
     return _subsequence_cost_matrix(subseq, longseq, be=be)
@@ -651,7 +824,9 @@ def subsequence_path(acc_cost_mat, idx_path_end, be=None):
     return _subsequence_path(acc_cost_mat, idx_path_end, be=be)
 
 
-def dtw_subsequence_path(subseq, longseq, be=None):
+def dtw_subsequence_path(
+    subseq, longseq, be=None, global_constraint=None, sakoe_chiba_radius=None
+):
     r"""Compute sub-sequence Dynamic Time Warping (DTW) similarity measure
     between a (possibly multidimensional) query and a long time series and
     return both the path and the similarity.
@@ -687,6 +862,17 @@ def dtw_subsequence_path(subseq, longseq, be=None):
         the PyTorch backend is used.
         If `be` is `None`, the backend is determined by the input arrays.
         See our :ref:`dedicated user-guide page <backend>` for more information.
+    global_constraint : {"sakoe_chiba"} or None (default: None)
+        Global constraint to restrict admissible paths. If "sakoe_chiba", the
+        band is measured from the position where the match starts: if a path
+        starts at column `s` of `longseq`, only the cells `(i, j)` with
+        `|j - s - i| <= sakoe_chiba_radius` can be used. This keeps the
+        matched window close to the length of `subseq`.
+        "itakura" is not supported for subsequence matching.
+    sakoe_chiba_radius : int or None (default: None)
+        Radius to be used for the Sakoe-Chiba band. If None and
+        `global_constraint` is set to "sakoe_chiba", a radius of 1 is used.
+        Ignored if `global_constraint` is None.
 
     Returns
     -------
@@ -697,11 +883,35 @@ def dtw_subsequence_path(subseq, longseq, be=None):
     float
         Similarity score
 
+    Raises
+    ------
+    ValueError
+        If a global constraint is given and no admissible path exists (for
+        instance if `sakoe_chiba_radius` is too small for `longseq` to be
+        shorter than `subseq`).
+
     Examples
     --------
     >>> path, dist = dtw_subsequence_path([2., 3.], [1., 2., 2., 3., 4.])
     >>> path
     [(0, 2), (1, 3)]
+    >>> float(dist)
+    0.0
+
+    With a Sakoe-Chiba band measured from the start of the match, the matched
+    window cannot stretch much more than the query:
+
+    >>> query = [0., 0., 0., 1., 2.]
+    >>> series = [5., 0., 1., 2., 5., 5., 5.]
+    >>> _, dist = dtw_subsequence_path(query, series)
+    >>> float(dist)
+    0.0
+    >>> _, dist = dtw_subsequence_path(query, series, global_constraint="sakoe_chiba",
+    ...                                sakoe_chiba_radius=0)
+    >>> round(float(dist), 3)
+    5.477
+    >>> _, dist = dtw_subsequence_path(query, series, global_constraint="sakoe_chiba",
+    ...                                sakoe_chiba_radius=2)
     >>> float(dist)
     0.0
 
@@ -714,6 +924,22 @@ def dtw_subsequence_path(subseq, longseq, be=None):
     be = instantiate_backend(be, subseq, longseq)
     subseq = to_time_series(subseq, be=be)
     longseq = to_time_series(longseq, be=be)
+    radius = _sakoe_chiba_start_radius(global_constraint, sakoe_chiba_radius)
+    if radius is not None:
+        subseq = to_time_series(subseq, remove_nans=True, be=be)
+        longseq = to_time_series(longseq, remove_nans=True, be=be)
+        acc_cost_mat, starts = _band_cost_matrix_and_starts(
+            subseq, longseq, radius, be
+        )
+        last_row = acc_cost_mat[-1, :]
+        end = int(be.argmin(last_row))
+        if not bool(last_row[end] < be.inf):
+            raise ValueError(
+                "No admissible path for this global constraint: increase "
+                "sakoe_chiba_radius."
+            )
+        path = _band_path(subseq, longseq, radius, starts[end], end, be)
+        return path, be.sqrt(last_row[end])
     acc_cost_mat = subsequence_cost_matrix(subseq=subseq, longseq=longseq, be=be)
     global_optimal_match = be.argmin(acc_cost_mat[-1, :])
     path = subsequence_path(acc_cost_mat, global_optimal_match, be=be)
