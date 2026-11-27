@@ -414,6 +414,144 @@ def test_dtw_subseq_path():
             assert isinstance(path, list)
 
 
+def _brute_force_banded_subsequence(subseq, longseq, radius):
+    """Reference implementation: for each start `s`, run a plain DP restricted to
+    the cells (i, j) with |j - s - i| <= radius. Returns the best accumulated
+    cost for each end position (inf if none), and the best start."""
+    subseq = np.asarray(subseq, dtype=float).reshape(len(subseq), -1)
+    longseq = np.asarray(longseq, dtype=float).reshape(len(longseq), -1)
+    l1, l2 = len(subseq), len(longseq)
+    best = np.full(l2, np.inf)
+    best_start = np.full(l2, -1)
+    for s in range(l2):
+        acc = {(0, s): float(np.sum((subseq[0] - longseq[s]) ** 2))}
+        for i in range(1, l1):
+            for j in range(s, l2):
+                if abs(j - s - i) > radius:
+                    continue
+                prev = [
+                    acc.get((i - 1, j - 1), np.inf),
+                    acc.get((i - 1, j), np.inf),
+                    acc.get((i, j - 1), np.inf),
+                ]
+                m = min(prev)
+                if m < np.inf:
+                    acc[(i, j)] = m + float(np.sum((subseq[i] - longseq[j]) ** 2))
+        for j in range(s, l2):
+            c = acc.get((l1 - 1, j), np.inf)
+            if c < best[j]:
+                best[j] = c
+                best_start[j] = s
+    return best, best_start
+
+
+def _path_cost_and_check(path, subseq, longseq, radius):
+    subseq = np.asarray(subseq, dtype=float).reshape(len(subseq), -1)
+    longseq = np.asarray(longseq, dtype=float).reshape(len(longseq), -1)
+    assert path[0][0] == 0 and path[-1][0] == len(subseq) - 1
+    start = path[0][1]
+    for (i, j), (i2, j2) in zip(path[:-1], path[1:]):
+        assert (i2 - i, j2 - j) in [(1, 0), (1, 1), (0, 1)]
+    for i, j in path:
+        assert abs(j - start - i) <= radius
+    return sum(float(np.sum((subseq[i] - longseq[j]) ** 2)) for i, j in path)
+
+
+def test_dtw_subseq_sakoe_chiba_from_start():
+    rng = np.random.RandomState(0)
+    for be in backends:
+        for trial in range(30):
+            d = 1 + trial % 2
+            l1 = rng.randint(2, 6)
+            l2 = rng.randint(l1, 14)
+            subseq = rng.randn(l1, d)
+            longseq = rng.randn(l2, d)
+            for radius in [0, 1, 2, 5]:
+                ref, _ = _brute_force_banded_subsequence(subseq, longseq, radius)
+                cost_matrix = tslearn.metrics.subsequence_cost_matrix(
+                    subseq,
+                    longseq,
+                    be=be,
+                    global_constraint="sakoe_chiba",
+                    sakoe_chiba_radius=radius,
+                )
+                np.testing.assert_allclose(
+                    np.asarray(cost_matrix[-1]), ref, rtol=1e-6, atol=1e-6
+                )
+                path, dist = tslearn.metrics.dtw_subsequence_path(
+                    subseq,
+                    longseq,
+                    be=be,
+                    global_constraint="sakoe_chiba",
+                    sakoe_chiba_radius=radius,
+                )
+                np.testing.assert_allclose(
+                    float(dist) ** 2, ref.min(), rtol=1e-6, atol=1e-6
+                )
+                cost = _path_cost_and_check(path, subseq, longseq, radius)
+                np.testing.assert_allclose(cost, ref.min(), rtol=1e-6, atol=1e-6)
+
+
+def test_dtw_subseq_sakoe_chiba_changes_the_match():
+    # Without a constraint the query is stretched over the five 0s.
+    query = [0.0, 1.0, 2.0]
+    series = [5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 5.0]
+    path, dist = tslearn.metrics.dtw_subsequence_path(query, series)
+    assert path[0][0] == 0 and path[0][1] == 5
+    path, dist = tslearn.metrics.dtw_subsequence_path(
+        query, series, global_constraint="sakoe_chiba", sakoe_chiba_radius=0
+    )
+    assert path == [(0, 5), (1, 6), (2, 7)]
+    np.testing.assert_allclose(dist, 0.0)
+    # A stretched query is only found when the radius allows it.
+    query = [0.0, 0.0, 0.0, 1.0, 2.0]
+    series = [5.0, 0.0, 1.0, 2.0, 5.0, 5.0, 5.0]
+    _, free_dist = tslearn.metrics.dtw_subsequence_path(query, series)
+    _, band_dist = tslearn.metrics.dtw_subsequence_path(
+        query, series, global_constraint="sakoe_chiba", sakoe_chiba_radius=0
+    )
+    _, wide_dist = tslearn.metrics.dtw_subsequence_path(
+        query, series, global_constraint="sakoe_chiba", sakoe_chiba_radius=2
+    )
+    np.testing.assert_allclose(free_dist, 0.0)
+    assert float(band_dist) > 0.0
+    np.testing.assert_allclose(wide_dist, 0.0)
+
+
+def test_dtw_subseq_sakoe_chiba_defaults_and_errors():
+    query = [0.0, 1.0, 2.0]
+    series = [5.0, 0.0, 1.0, 2.0, 5.0]
+    # Default radius is 1 and None means no constraint.
+    p1, d1 = tslearn.metrics.dtw_subsequence_path(
+        query, series, global_constraint="sakoe_chiba"
+    )
+    p2, d2 = tslearn.metrics.dtw_subsequence_path(
+        query, series, global_constraint="sakoe_chiba", sakoe_chiba_radius=1
+    )
+    assert p1 == p2
+    np.testing.assert_allclose(d1, d2)
+    # A very large radius gives the unconstrained result.
+    path, dist = tslearn.metrics.dtw_subsequence_path(
+        query, series, global_constraint="sakoe_chiba", sakoe_chiba_radius=10**9
+    )
+    path0, dist0 = tslearn.metrics.dtw_subsequence_path(query, series)
+    np.testing.assert_allclose(dist, dist0)
+    with pytest.raises(ValueError):
+        tslearn.metrics.dtw_subsequence_path(query, series, global_constraint="itakura")
+    with pytest.raises(ValueError):
+        tslearn.metrics.subsequence_cost_matrix(
+            query, series, global_constraint="sakoe_chiba", sakoe_chiba_radius=-1
+        )
+    # No admissible path: the query is longer than the series and the band too narrow.
+    with pytest.raises(ValueError):
+        tslearn.metrics.dtw_subsequence_path(
+            [0.0, 1.0, 2.0, 3.0],
+            [0.0, 1.0],
+            global_constraint="sakoe_chiba",
+            sakoe_chiba_radius=0,
+        )
+
+
 def test_masks():
     for be in backends:
         for array_type in array_types:
