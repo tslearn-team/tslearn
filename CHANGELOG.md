@@ -11,6 +11,10 @@ Changelogs for this project are recorded in this file since v0.2.0.
 
 ## [Towards v0.11.0]
 
+### Added
+
+* `dtw_subsequence_path` and `subsequence_cost_matrix` accept `global_constraint="sakoe_chiba"` and `sakoe_chiba_radius`. The band is measured from the position where the match starts. Default behaviour is unchanged ([#337](https://github.com/tslearn-team/tslearn/issues/337))
+
 ### Fixed
 
 * Consistent early checking of datasets feature size added in `cdist_dtw`, `cdist_soft_dtw`, `cdist_soft_dtw_normalized`, `cdist_gak` and `cdist_frechet`([#834](https://github.com/tslearn-team/tslearn/issues/834))
