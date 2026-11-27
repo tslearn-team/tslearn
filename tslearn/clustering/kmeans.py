@@ -280,10 +280,11 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
                     X, Y, n_jobs=self.n_jobs, verbose=self.verbose, **kernel_params
                 )
             except ZeroDivisionError:
+                sigma_is_auto = self.kernel_params.get("sigma") == "auto"
                 raise RuntimeError(
                     "The{} `sigma` parameter is close to 0 and "
                     "cannot be used with gak kernel."
-                    .format(" auto computed" if self.kernel_params.get("sigma") == "auto" else ""))
+                    .format(" auto computed" if sigma_is_auto else ""))
 
         else:
             X_sklearn = to_sklearn_dataset(X)
@@ -358,6 +359,60 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
         # successful run required.
         self.n_iter_ = 0
 
+        self._set_sigma_gak(X, rs)
+
+        n_samples = X.shape[0]
+        K = self._get_kernel(X)
+        sw = sample_weight if sample_weight is not None else numpy.ones(n_samples)
+        self.sample_weight_ = sw
+
+        best_labels = None
+        best_inertia = numpy.inf
+        n_attempts = 0
+        n_successful = 0
+        while n_successful < self.n_init and n_attempts < max_attempts:
+            try:
+                if self.verbose and self.n_init > 1:
+                    print("Init %d" % (n_successful + 1))
+                n_attempts += 1
+                self._fit_one_init(K, rs)
+                if self.inertia_ < best_inertia:
+                    best_labels = self.labels_
+                    best_inertia = self.inertia_
+                    self.n_iter_ = self._iter
+                n_successful += 1
+            except EmptyClusterError:
+                if self.verbose:
+                    print("Resumed because of empty cluster")
+        if n_successful > 0:
+            self._keep_best_init(X, best_labels, best_inertia)
+        else:
+            self._discard_failed_inits()
+        return self
+
+    def _keep_best_init(self, X, best_labels, best_inertia):
+        self.labels_ = best_labels
+        self.inertia_ = best_inertia
+        self._X_fit = X
+        self.n_features_in_ = X.shape[-1]
+
+    def _discard_failed_inits(self):
+        # Every initialization raised EmptyClusterError: discard the
+        # attributes left over from the last failed attempt so that the
+        # model does not look fitted.
+        self.labels_ = None
+        self.inertia_ = numpy.inf
+        warnings.warn(
+            "All initializations of %s led to at least one empty "
+            "cluster, so no valid clustering could be found. The model "
+            "is left unfitted (labels_ is None, and predict will raise "
+            "NotFittedError). Consider decreasing n_clusters or "
+            "increasing n_init."
+            % type(self).__name__,
+            ConvergenceWarning
+        )
+
+    def _set_sigma_gak(self, X, rs):
         # Reset sigma_gak_ to ensure proper recompute
         if hasattr(self, 'sigma_gak_'):
             del self.sigma_gak_
@@ -369,51 +424,6 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
                 self.sigma_gak_ = sigma_gak(X, random_state=rs)
         else:
             self.sigma_gak_ = None
-
-        n_samples = X.shape[0]
-        K = self._get_kernel(X)
-        sw = sample_weight if sample_weight is not None else numpy.ones(n_samples)
-        self.sample_weight_ = sw
-
-        last_correct_labels = None
-        min_inertia = numpy.inf
-        n_attempts = 0
-        n_successful = 0
-        while n_successful < self.n_init and n_attempts < max_attempts:
-            try:
-                if self.verbose and self.n_init > 1:
-                    print("Init %d" % (n_successful + 1))
-                n_attempts += 1
-                self._fit_one_init(K, rs)
-                if self.inertia_ < min_inertia:
-                    last_correct_labels = self.labels_
-                    min_inertia = self.inertia_
-                    self.n_iter_ = self._iter
-                n_successful += 1
-            except EmptyClusterError:
-                if self.verbose:
-                    print("Resumed because of empty cluster")
-        if n_successful > 0:
-            self.labels_ = last_correct_labels
-            self.inertia_ = min_inertia
-            self._X_fit = X
-            self.n_features_in_ = X.shape[-1]
-        else:
-            # Every initialization raised EmptyClusterError: discard the
-            # attributes left over from the last failed attempt so that the
-            # model does not look fitted.
-            self.labels_ = None
-            self.inertia_ = numpy.inf
-            warnings.warn(
-                "All initializations of %s led to at least one empty "
-                "cluster, so no valid clustering could be found. The model "
-                "is left unfitted (labels_ is None, and predict will raise "
-                "NotFittedError). Consider decreasing n_clusters or "
-                "increasing n_init."
-                % type(self).__name__,
-                ConvergenceWarning
-            )
-        return self
 
     def _compute_dist(self, K, dist):
         """Compute a n_samples x n_clusters distance matrix using the kernel
@@ -430,9 +440,10 @@ class KernelKMeans(TimeSeriesMixin, ClusterMixin, BaseEstimator, BaseModelPackag
 
             # NB: we use a normalized kernel so k(x,x) = 1 for all x
             # (including the centroid)
-            dist[:, j] = (
-                2 - 2 * numpy.sum(sw[mask] * K[:, mask], axis=1) / sw[mask].sum()
-            )
+            cluster_weights = sw[mask]
+            mean_similarity = (numpy.sum(cluster_weights * K[:, mask], axis=1)
+                               / cluster_weights.sum())
+            dist[:, j] = 2 - 2 * mean_similarity
 
     @staticmethod
     def _compute_inertia(dist_sq):

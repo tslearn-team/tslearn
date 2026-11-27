@@ -146,6 +146,132 @@ def test_kernel_kmeans_all_inits_empty_cluster():
     np.testing.assert_array_equal(model.predict(X), model.labels_)
 
 
+# KernelKMeans.fit: results on a worked example with and without weights, the
+# best of n_init runs, and the error raised for a sigma close to 0.
+def _rbf_kernel_kmeans_inertia(clusters, weights):
+    # kernel trick with k(x, x) = 1: the distance from x to the centroid
+    # of C is 2 - 2 * sum_{c in C} w_c k(x, c) / sum_{c in C} w_c
+    inertia = 0.
+    for points, w in zip(clusters, weights):
+        for x in points:
+            sim = sum(w_c * math.exp(-(x - c) ** 2)
+                      for c, w_c in zip(points, w))
+            inertia += 2 - 2 * sim / sum(w)
+    return inertia
+
+
+@pytest.mark.parametrize("sample_weight", [None, [1., 3., 1., 1., 2.]])
+def test_kernel_kmeans_rbf_worked_example(sample_weight):
+    X = np.array([0., .1, .3, 5., 5.1])[:, None, None]
+    weights = [1.] * 5 if sample_weight is None else sample_weight
+
+    model = KernelKMeans(n_clusters=2, kernel="rbf",
+                         kernel_params={"gamma": 1.}, random_state=0)
+    model.fit(X, sample_weight=sample_weight)
+
+    labels = model.labels_
+    assert labels[0] == labels[1] == labels[2] != labels[3] == labels[4]
+    np.testing.assert_array_equal(model.predict(X), labels)
+    expected = _rbf_kernel_kmeans_inertia(
+        [[0., .1, .3], [5., 5.1]], [weights[:3], weights[3:]])
+    assert model.inertia_ == pytest.approx(expected, rel=1e-12)
+
+
+def test_kernel_kmeans_gak_auto_sigma_results():
+    X = np.random.RandomState(0).randn(15, 10, 3)
+    model = KernelKMeans(n_clusters=3, max_iter=5,
+                         kernel_params={"sigma": "auto"}, random_state=0)
+    model.fit(X)
+
+    # current output on main, pinned before the refactoring
+    assert model.sigma_gak_ == pytest.approx(6.738414908437266)
+    assert model.inertia_ == pytest.approx(10.709613083132563)
+    assert model.n_iter_ == 4
+    np.testing.assert_array_equal(
+        model.labels_, [0, 2, 2, 2, 0, 1, 0, 1, 1, 0, 2, 1, 1, 2, 1])
+    np.testing.assert_array_equal(model.predict(X), model.labels_)
+
+
+def test_kernel_kmeans_keeps_the_best_init():
+    X = np.random.RandomState(1).randn(20, 6, 1)
+    params = dict(n_clusters=3, kernel="rbf", kernel_params={"gamma": .1},
+                  random_state=8)
+
+    single = KernelKMeans(**params).fit(X)
+    best = KernelKMeans(n_init=5, **params).fit(X)
+
+    # with random_state=8 the 4th of the 5 runs is the best: neither the
+    # first nor the last (current output on main, pinned)
+    assert single.inertia_ == pytest.approx(16.035897986210692)
+    assert single.n_iter_ == 4
+    assert best.inertia_ == pytest.approx(14.787966566331729)
+    assert best.n_iter_ == 6
+    np.testing.assert_array_equal(
+        best.labels_,
+        [2, 2, 1, 0, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 2])
+    np.testing.assert_array_equal(best.predict(X), best.labels_)
+
+
+def test_kernel_kmeans_one_member_cluster():
+    X = np.array([0., .1, 5.])[:, None, None]
+    model = KernelKMeans(n_clusters=2, kernel="rbf",
+                         kernel_params={"gamma": 1.}, random_state=0)
+    model.fit(X)
+
+    labels = model.labels_
+    assert labels[0] == labels[1] != labels[2]
+    expected = _rbf_kernel_kmeans_inertia([[0., .1], [5.]], [[1., 1.], [1.]])
+    assert model.inertia_ == pytest.approx(expected, rel=1e-12)
+
+
+def test_kernel_kmeans_keeps_the_first_of_tied_inits():
+    # every run finds the same split, so all inertias are equal; with
+    # random_state=0 the later runs number the two clusters the other way
+    X = np.array([0., .1, .3, 5., 5.1])[:, None, None]
+    params = dict(n_clusters=2, kernel="rbf", kernel_params={"gamma": 1.},
+                  random_state=0)
+
+    single = KernelKMeans(**params).fit(X)
+    tied = KernelKMeans(n_init=3, **params).fit(X)
+
+    np.testing.assert_array_equal(single.labels_, [1, 1, 1, 0, 0])
+    np.testing.assert_array_equal(tied.labels_, single.labels_)
+
+
+@pytest.mark.parametrize("verbose, n_init, random_state, expected", [
+    (0, 2, 3, ""),
+    (1, 1, 3, "2.000 --> 0.000 --> \n"),
+    (1, 2, 3, "Init 1\n2.000 --> 0.000 --> \n"
+              "Init 2\nResumed because of empty cluster\n"
+              "Init 2\n3.333 --> 0.000 --> \n"),
+    # 10 attempts at most (max(n_init, 10)): 9 for the first run, 1 failing
+    (1, 2, 1, "Init 1\nResumed because of empty cluster\n" * 8
+              + "Init 1\n0.843 --> 0.000 --> \n"
+              "Init 2\nResumed because of empty cluster\n"),
+])
+def test_kernel_kmeans_verbose_output(capsys, verbose, n_init, random_state,
+                                      expected):
+    X = np.repeat([0., 1., 5.], 2)[:, None, None]
+    model = KernelKMeans(n_clusters=3, kernel="rbf", n_init=n_init,
+                         verbose=verbose, max_iter=2,
+                         random_state=random_state)
+    model.fit(X)
+    assert capsys.readouterr().out == expected
+
+
+@pytest.mark.parametrize("sigma, auto", [(0, ""), ("auto", " auto computed")])
+def test_kernel_kmeans_sigma_close_to_zero(sigma, auto):
+    # constant series make the auto-computed sigma 0
+    X = (np.zeros((4, 5, 1)) if sigma == "auto"
+         else np.random.RandomState(0).randn(4, 5, 1))
+    model = KernelKMeans(n_clusters=2, kernel_params={"sigma": sigma})
+    msg = ("The%s `sigma` parameter is close to 0 and cannot be used with "
+           "gak kernel." % auto)
+    with pytest.raises(RuntimeError) as excinfo:
+        model.fit(X)
+    assert str(excinfo.value) == msg
+
+
 def test_kmeans():
     n, sz, d = 15, 10, 3
     rng = np.random.RandomState(0)
