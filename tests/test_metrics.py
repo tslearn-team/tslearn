@@ -112,6 +112,15 @@ def test_dtw():
             np.testing.assert_array_equal(dists, parallel_dists)
             assert backend.belongs_to_backend(parallel_dists)
 
+            parallel_dists = tslearn.metrics.cdist_dtw(
+                cast([[1, 2, 2, 3], [1.0, 2.0, 3.0, 4.0]], array_type),
+                [[1, 2, 3], [2, 3, 4, 5]],  # The second dataset can not be cast to array because of its shape
+                n_jobs=-1,
+                be=be
+            )
+            np.testing.assert_array_equal(dists, parallel_dists)
+            assert backend.belongs_to_backend(parallel_dists)
+
 
 def test_ctw():
     for be in backends:
@@ -878,7 +887,7 @@ def test_cdist_soft_dtw():
     )
     np.testing.assert_array_equal(
         tslearn.metrics.cdist_soft_dtw_normalized(dataset1, dataset2),
-        tslearn.metrics.cdist_soft_dtw_normalized(dataset1, dataset2, n_jobs=2)
+        tslearn.metrics.cdist_soft_dtw_normalized(dataset1, dataset2, n_jobs=-1)
     )
 
 
