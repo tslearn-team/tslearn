@@ -33,6 +33,10 @@ from ._frechet import (
     _cdist_frechet,
     accumulated_matrix as frechet_accumulated_matrix
 )
+from ._lb_keogh import (
+    lb_envelope,
+    lb_keogh
+)
 from ._gak import (
     sigma_gak,
     _sigma_gak,
@@ -56,8 +60,6 @@ from .dtw_variants import (
    subsequence_path,
    subsequence_cost_matrix,
    dtw_subsequence_path,
-   lb_envelope,
-   lb_keogh,
    lcss,
    lcss_path,
    lcss_path_from_metric
