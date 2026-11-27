@@ -455,6 +455,27 @@ def test_silhouette():
     )
 
 
+@pytest.mark.parametrize(
+    "params",
+    [
+        {"metric_params": {"sakoe_chiba_radius": 0}},
+        {"sakoe_chiba_radius": 0},
+        {"metric_params": {"sakoe_chiba_radius": 3}, "sakoe_chiba_radius": 0},
+    ],
+    ids=["metric-params", "direct-keyword", "keyword-overrides"],
+)
+def test_silhouette_score_forwards_callable_metric_params(params):
+    X = np.array([[0., 0., 1., 1.], [0., 1., 1., 1.],
+                  [1., 1., 0., 0.], [1., 0., 0., 0.]])[:, :, None]
+    labels = [0, 0, 1, 1]
+
+    # A radius of zero restricts equal-length DTW to the diagonal path.
+    expected = silhouette_score(X, labels, metric="euclidean")
+    actual = silhouette_score(X, labels, metric=dtw, **params)
+
+    assert actual == pytest.approx(expected)
+
+
 def test_silhouette_samples():
     np.random.seed(0)
     X = random_walks(n_ts=20, sz=16, d=1)

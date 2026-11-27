@@ -179,7 +179,6 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
         metric_params_ = {}
     else:
         metric_params_ = metric_params.copy()
-    kwds.pop("be", None)
     metric_params_.update(kwds)
     for k in ("be", "n_jobs", "verbose"):
         metric_params_.pop(k, None)
@@ -219,14 +218,14 @@ def silhouette_score(X, labels, metric=None, sample_size=None,
                                 backend=be),
                 _to_time_series(y.reshape(sz, d),
                                 remove_nans=True,
-                                backend=be)
+                                backend=be),
+                **metric_params_
             )
     return sklearn_silhouette(X=sklearn_X,
                               labels=labels,
                               metric=sklearn_metric,
                               sample_size=sample_size,
-                              random_state=random_state,
-                              **kwds)
+                              random_state=random_state)
 
 
 def silhouette_samples(X, labels, metric=None, metric_params=None,
